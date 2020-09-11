@@ -1,0 +1,2 @@
+recursive-include python/apogee_drp/etc *
+recursive-include cextern/**/*
