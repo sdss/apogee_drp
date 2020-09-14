@@ -5,10 +5,11 @@
 ;      runs runapred if plate not already done
 ;      runs mkhtml,mkhtmlsum,mkmonitor when all plates for a given MJD are done
 ;-
-pro autored,mjds,vers=vers,norun=norun,apogees=apogees,override=override
+pro autored,mjds,vers=vers,norun=norun,apogees=apogees,override=override,aspcap=aspcap,suffix=suffix
 
 ; setup version and directories
 if keyword_set(vers) then apsetver,vers=vers else stop,'need to set vers'
+if ~keyword_set(aspcap) then aspcap='a'
 
 if keyword_set(apogees) then begin
   prefix='as' 
@@ -72,7 +73,7 @@ for i=0,n_elements(mjds)-1 do begin
           openw,out,dir+cmjd+'.csh',/get_lun
           printf,out,'#!/bin/csh'
           printf,out,'cd $APOGEE_REDUX/'+vers
-          printf,out,'runapred '+vers+' exposures/'+instrument+'/'+cmjd+'/plan/'+prefix+'MJD*.par'
+          printf,out,'apred exposures/'+instrument+'/'+cmjd+'/plan/'+prefix+'MJD*.par'
           free_lun,out
           print,'running apMJD...'
           if ~keyword_set(norun) then spawn,'csh '+dir+cmjd+'.csh >&'+dir+cmjd+'.log'
@@ -120,7 +121,7 @@ for i=0,n_elements(mjds)-1 do begin
           free_lun,out
           openw,out,dir+cmjd+'.slurm',/get_lun
           printf,out,'#!/bin/csh'
-          printf,out,'#SBATCH --account=sdss-kp'
+          printf,out,'#SBATCH --account=sdss-kp-fast'
           printf,out,'#SBATCH --partition=sdss-kp'
           printf,out,'#SBATCH --ntasks=16'
           printf,out,'#SBATCH --time=240:00:00'
@@ -175,7 +176,7 @@ if dosum then begin
 ;  print,'running summary...'
 ;  if ~keyword_set(norun) then spawn,'csh '+dir+'sum.csh >&'+dir+'sum.log'
 mkmonitor
-mkhtmlsum,/nocheck,apred=vers,apstar='stars',aspcap='a',results='v'
+mkhtmlsum,/nocheck,apred=vers,apstar='stars',aspcap=aspcap,results='v',suffix=suffix
 endif
 
 end
