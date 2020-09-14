@@ -43,7 +43,7 @@ module-whatis "Sets up $product/$version in your environment."
 # The PRODUCT_ROOT and PRODUCT_DIR variables are used to set other
 # environment variables, exported to the actual environment, by sdss4install
 #
-set PRODUCT_ROOT /uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/apogee_drp
+set PRODUCT_ROOT /uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss
 set PRODUCT_DIR $PRODUCT_ROOT/$product/$version
 #
 # This line creates an environment variable pointing to the install
