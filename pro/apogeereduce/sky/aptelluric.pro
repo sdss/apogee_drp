@@ -271,7 +271,7 @@ for iter=0,niter-1 do begin
     j=where(visitstr.fiberid eq starfiberid[i])
     undefine,grid
     wave=[frame.chipa.wavelength[*,starind[i]],frame.chipb.wavelength[*,starind[i]],frame.chipc.wavelength[*,starind[i]]]
-    apgetgrid,'apg_rvsynthgrid.fits',grid=grid,wave=reverse(wave)/(1.+visitstr[j].vrel/3.e5)
+    apgetgrid,'apg_rvsynthgrid.fits.gz',grid=grid,wave=reverse(wave)/(1.+visitstr[j].vrel/3.e5)
     bestgrid=where(grid.teff eq visitstr[j].rv_teff and grid.logg eq visitstr[j].rv_logg and grid.metals eq visitstr[j].rv_feh)
     template=reverse(reform(grid.ndata[bestgrid,*]))
 ;stop

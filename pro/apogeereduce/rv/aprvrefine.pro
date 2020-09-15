@@ -44,9 +44,9 @@ ENDELSE
  apvisitcomb,allstr,allvisits,starstr,/nolsffit,sinc=sinc,log=log,/quick
  ;GET SYNTHETIC GRID TO MAKE TEMPLATES 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- ;synthfile = 'apg_rvsynthgrid_v2.fits'
+ ;synthfile = 'apg_rvsynthgrid_v2.fits.gz'
  ;apgetgrid,synthfile,grid=grid,wave=starstr.wave
- synthfile = 'apg_synthgrid.fits'
+ synthfile = 'apg_synthgrid.fits.gz'
  apgetgrid,synthfile,grid=grid,/apstar
  IF keyword_set(trimgrid) THEN grid = aptrimgrid(grid, allvisits[0])
  ;DOES THIS NEED TO BE INSIDE THE WHILE? Don't think the pixel limits update. 

@@ -40,7 +40,7 @@ endif
 ; read synthetic grid, which should be in vacuum waveengths and continuum normalized
 ; HDU1 has parameter table, HDU2 spectra on apStar grid, HDU3 spectra on higher sampling for visit spectra
 ; data arrays have wavelength in axis 0 
-if synthfile eq 'apg_synthgrid.fits' then begin
+if synthfile eq 'apg_synthgrid.fits.gz' then begin
 if n_elements(grid) eq 0 then begin
   head=mrdfits(synth_dir+synthfile,0)
   stepar=mrdfits(synth_dir+synthfile,1)
