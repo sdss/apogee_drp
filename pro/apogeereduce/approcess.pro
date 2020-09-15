@@ -79,8 +79,6 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
     endfor
   endfor
 
-  stop
-
   ;; Perform 2D -> 1D Processing
   ;;----------------------------
   ; ap2dproc does all 3 chips together
