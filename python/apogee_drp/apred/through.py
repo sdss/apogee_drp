@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-from tools import plots
-from tools import html
-from astropy.io import fits
-from astropy.io import ascii
+from holtztools import plots,html
+from astropy.io import fits,ascii
 import numpy as np
 import math
 import pdb

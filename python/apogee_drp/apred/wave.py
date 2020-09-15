@@ -20,18 +20,16 @@ import os
 import glob
 import pdb
 from functools import wraps
-from astropy.io import ascii
-from astropy.io import fits
-from scipy import signal
+from astropy.io import ascii, fits
+from scipy import signal, interpolate
 from scipy.optimize import curve_fit
 from scipy.special import erf, erfc
 from scipy.signal import medfilt, convolve, boxcar
-from scipy import interpolate
-from apogee_drp.utils import apload, yanny
-from tools import plots, html
-#from sdss import yanny
+from ..utils import apload, yanny
+from holtztools import plots, html
 from astropy.table import Table
-from pyvista import tv
+#from pyvista import tv
+# pyvista.tv is only used by compare() but not used by anything
 
 chips=['a','b','c']
 colors=['r','g','b','c','m','y']

@@ -11,15 +11,15 @@ import esutil
 import pickle
 import yaml
 from astropy.io import fits
-from apogee_drp.utils import apload, applot, bitmask, spectra, norm, yanny
-from tools import plots, html, match, struct
+from ..utils import apload, applot, bitmask, spectra, norm, yanny
+from holtztools import plots, html, match, struct
 #from sdss import yanny
 from scipy import interpolate
 from scipy.signal import correlate
 from scipy.ndimage.filters import median_filter, gaussian_filter
 
-colors=['r','g','b','c','m','y','k']
-chips=['a','b','c']
+colors = ['r','g','b','c','m','y','k']
+chips = ['a','b','c']
 
 
 def allField(files=['apo*/*/apField-*.fits','apo*/*/apFieldC-*.fits','lco*/*/apField-*.fits'],out='allField.fits',verbose=False) :

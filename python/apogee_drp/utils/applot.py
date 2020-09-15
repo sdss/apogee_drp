@@ -1,5 +1,5 @@
 import numpy as np
-from tools import plots
+from holtztools import plots
 import pdb
 
 def chip(a,row=150,ax=None,pixel=False,visit=False,color=None) :

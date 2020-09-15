@@ -3,8 +3,8 @@ import tempfile
 from esutil import htm
 from astropy.table import Table, Column
 from astropy.io import fits
-from apogee_drp.utils import bitmask
-from tools import match
+from . import bitmask
+from holtztools import match
 import os
 import pdb
 from astroquery.gaia import Gaia

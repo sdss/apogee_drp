@@ -4,9 +4,8 @@
 import pdb
 import numpy as np
 import matplotlib.pyplot as plt
-from apogee_drp.utils import apload
-from tools import match
-from tools import plots
+from .utils import apload
+from holtztools import match,plots
 
 def dr_compare() :
     # load the DRs, select stars with SN>150

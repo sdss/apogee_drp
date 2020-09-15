@@ -1,14 +1,12 @@
 from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
-from astropy.io import ascii
-from astropy.io import fits
+from astropy.io import ascii,fits
 from astropy.modeling import models,fitting
 from astropy.convolution import convolve, Box2DKernel
-from apogee_drp.utils import apload
-from pyvista import image
-from tools import plots
-from tools import html
+from ..utils import apload
+#from pyvista import image
+from holtztools import plots,html
 import os
 import pdb
 from sklearn.cluster import KMeans

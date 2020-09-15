@@ -1,14 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
-from tools import plots
-#from sdss import yanny
-from apogee_drp.utils import apload, yanny
+from holtztools import plots
+from ..utils import apload, yanny
 import os
 import pdb
 
-chips=['a','b','c']
-colors=['r','g','b']
+chips = ['a','b','c']
+colors = ['r','g','b']
 
 # APOGEE-N
 fig,ax=plots.multi(1,3,hspace=0.001,sharex=True,sharey=True)

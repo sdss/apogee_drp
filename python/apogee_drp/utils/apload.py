@@ -21,11 +21,10 @@ except :
 import pdb
 import sys
 
-#from sdss import yanny
 import numpy as np
 
-from apogee_drp.apred import wave,sincint
-from apogee_drp.utils import spectra,yanny
+from ..apred import wave,sincint
+from . import spectra,yanny
 
 class ApSpec() :
     """ a simple class to hold APOGEE spectra

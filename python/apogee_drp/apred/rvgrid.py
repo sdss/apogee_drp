@@ -1,13 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from astropy.io import ascii
-from astropy.io import fits
-from apogee_drp.aspcap import aspcap
-from apogee_drp.speclib import sample
-from apogee_drp.speclib import synth
-from apogee_drp.speclib import lsf
-from apogee_drp.utils import spectra
+from astropy.io import ascii, fits
+from ..aspcap import aspcap
+from ..speclib import sample, synth, lsf
+from ..utils import spectra
 from scipy import interpolate, ndimage
 
 import pdb

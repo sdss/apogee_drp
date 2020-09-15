@@ -5,9 +5,9 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import pdb
-from apogee_drp.utils import apload
+from ..utils import apload
 
-chips=['a','b','c']
+chips = ['a','b','c']
 
 def getresp(plate,mjd,apred='r12',telescope='apo25m',plot=False) :
     """ Solve for response function and apply it

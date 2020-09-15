@@ -1,6 +1,6 @@
 import numpy as np
 from astropy.io import fits
-from tools import plots
+from holtztools import plots
 import pdb
 import matplotlib.pyplot as plt
 

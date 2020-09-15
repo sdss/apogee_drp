@@ -1,7 +1,7 @@
-from apogee_drp.utils import apload
-from pyvista import tv
+from ..utils import apload
+#from pyvista import tv
 import matplotlib.pyplot as plt
-from tools import plots
+from holtztools import plots
 import numpy as np
 import pdb
 
