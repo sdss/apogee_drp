@@ -40,7 +40,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
 
   if keyword_set(vers) and keyword_set(telescope) then apsetver,vers=vers,telescope=telescope
   dirs=getdir(apo_dir,cal_dir,spectro_dir,apo_vers,lib_dir)
-  
+stop  
 ; get default file name if file not specified
   if keyword_set(file) then begin
     if  strpos(file,'/') lt 0 then file=file_dirname(dirs.calfile)+'/'+file 

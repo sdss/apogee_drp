@@ -24,7 +24,7 @@ function getdir,apogeedir,caldir,spectrodir,vers,libdir,prefix,v=v,apred_vers=ap
   apogeedir=getenv('APOGEE_REDUX')
   speclib=getenv('APOGEE_SPECLIB')
   aspcap=getenv('APOGEE_ASPCAP')
-  pipedir = getenv('APOGEE_DIR')
+  pipedir = getenv('APOGEE_DRP_DIR')
   libdir=pipedir+'/data/'
   if telescop eq 'apo1m' then begin
     datadir=getenv('APOGEE_DATA_1M')+'/'

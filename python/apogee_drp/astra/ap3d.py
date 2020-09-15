@@ -5,23 +5,38 @@ import glob
 import pickle
 from astra.tasks import BaseTask
 from astra.tasks.io import ApPlanFile # This task does not exist yet!
-from sdss import yanny
+from apogee_drp.utils import apload,yanny
 
 from luigi.util import inherits
 
 # Inherit the parameters needed to define an ApPlanFile, since we will need these to
 # require() the correct ApPlanFile.
 @inherits(ApPlanFile)
-class RunAP3D(BaseTask):
+class AP3D(BaseTask):
+
+    """ Run the 3D to 2D portion of the APOGEE pipeline."""
+
+    # Parameters
+    apred = luigi.Parameter()
+    instrument = luigi.Parameter()
+    telescope = luigi.Parameter()
+    field = luigi.Parameter()
+    plate = luigi.IntParameter()
+    mjd = luigi.Parameter()
+
 
     def requires(self):
         # We require plan files to exist!
+        load = apload.ApLoad(apred=self.apred,telescope=self.telescope,instrument=self.instrument)
+        planfile = load.filename('Plan',field=self.field,mjd=self.mjd, plate=self.plate)
         return ApPlanFile(**self.get_common_param_kwargs(ApPlanFile))
+
 
     def output(self):
         # Store the 2D images in the same directory as the plan file.
         output_path_prefix, ext = os.path.splitext(self.input().path)
         return luigi.LocalTarget(f"{output_path_prefix}-done")
+
 
     def run(self):
         # Run the IDL program!
