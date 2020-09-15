@@ -23,10 +23,8 @@ from esutil import htm
 
 import numpy as np
 import copy
-from tools import html
-from tools import plots
-from tools import match
-from apogee.utils import bitmask
+from tools import html,plots,match
+from apogee_drp.utils import bitmask
 import matplotlib.pyplot as plt
 
 def select(data,badval=None,badstar=None,logg=[-1,10],teff=[0,10000],mh=[-100.,100.],alpha=[-100.,100.],sn=[0,1000], raw=False, 

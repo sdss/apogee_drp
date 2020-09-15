@@ -2,7 +2,7 @@ import pdb
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from apogee.aspcap import aspcap
+from apogee_drp.aspcap import aspcap
 from tools import plots
 
 def apinspect(load,aptype,xval,yval,zval,xr=None,yr=None,zr=None,

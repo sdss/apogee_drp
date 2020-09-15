@@ -4,7 +4,7 @@
 import pdb
 import numpy as np
 import matplotlib.pyplot as plt
-from apogee.utils import apload
+from apogee_drp.utils import apload
 from tools import match
 from tools import plots
 

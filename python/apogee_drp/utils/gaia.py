@@ -3,7 +3,7 @@ import tempfile
 from esutil import htm
 from astropy.table import Table, Column
 from astropy.io import fits
-from apogee.utils import bitmask
+from apogee_drp.utils import bitmask
 from tools import match
 import os
 import pdb

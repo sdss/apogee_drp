@@ -2,5 +2,5 @@
 
 # The version/telescope can then be modified by any routine as needed
 
-from apogee.utils import apload
+from apogee_drp.utils import apload
 load=apload.ApLoad()
