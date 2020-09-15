@@ -10,10 +10,10 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-from sdss import yanny
-from apogee.speclib import atmos
-from apogee.utils import spectra
-from apogee.plan import mkslurm
+#from sdss import yanny
+from apogee_drp.speclib import atmos
+from apogee_drp.utils import spectra,yanny
+from apogee_drp.plan import mkslurm
 
 def mkgriddirs(configfile,nosynth=False,synthonly=False,writeraw=False,queryport=1052) :
     """ Script to create output directories and plan and batch queue files for all grids listed in master grid configuration file

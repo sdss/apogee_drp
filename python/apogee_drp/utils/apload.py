@@ -20,12 +20,12 @@ except :
     print('sdss_access or dependencies not available!')
 import pdb
 import sys
-from sdss import yanny
+
+#from sdss import yanny
 import numpy as np
 
-from apogee.apred import wave
-from apogee.apred import sincint
-from apogee.utils import spectra
+from apogee_drp.apred import wave,sincint
+from apogee_drp.utils import spectra,yanny
 
 class ApSpec() :
     """ a simple class to hold APOGEE spectra

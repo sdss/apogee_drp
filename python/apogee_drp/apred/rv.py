@@ -537,7 +537,7 @@ def repeatspec(a) :
 import doppler 
 import multiprocessing as mp
 from astropy.table import Table, Column
-from apogee.apred import bc
+from apogee_drp.apred import bc
 
 def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',obj=None,
                nobj=0,threads=8,maxvisit=500,snmin=3,
@@ -1361,9 +1361,9 @@ def overlap(fields) :
     fp.write('</TABLE>')
     fp.close()
 
-from apogee.aspcap import aspcap
-from apogee.apred import wave
-from apogee.apred import sincint
+from apogee_drp.aspcap import aspcap
+from apogee_drp.apred import wave
+from apogee_drp.apred import sincint
 
 def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.5],bconly=False,
               plot=False,write=True,dorvfit=True) :
