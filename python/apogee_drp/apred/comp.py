@@ -1,8 +1,8 @@
 import os
 import numpy as np
 from tools import plots
-from apogee.utils import apload
-from apogee.utils import bitmask
+from apogee_drp.utils import apload
+from apogee_drp.utils import bitmask
 from astropy.io import fits
 
 chips=['a','b','c']

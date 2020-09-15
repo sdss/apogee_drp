@@ -3,11 +3,11 @@ import numpy as np
 import os
 from astropy.io import ascii
 from astropy.io import fits
-from apogee.aspcap import aspcap
-from apogee.speclib import sample
-from apogee.speclib import synth
-from apogee.speclib import lsf
-from apogee.utils import spectra
+from apogee_drp.aspcap import aspcap
+from apogee_drp.speclib import sample
+from apogee_drp.speclib import synth
+from apogee_drp.speclib import lsf
+from apogee_drp.utils import spectra
 from scipy import interpolate, ndimage
 
 import pdb

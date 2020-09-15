@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 from tools import plots
-from sdss import yanny
-from apogee.utils import apload
+#from sdss import yanny
+from apogee_drp.utils import apload, yanny
 import os
 import pdb
 

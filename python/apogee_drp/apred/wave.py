@@ -27,10 +27,9 @@ from scipy.optimize import curve_fit
 from scipy.special import erf, erfc
 from scipy.signal import medfilt, convolve, boxcar
 from scipy import interpolate
-from apogee.utils import apload
-from tools import plots
-from tools import html
-from sdss import yanny
+from apogee_drp.utils import apload, yanny
+from tools import plots, html
+#from sdss import yanny
 from astropy.table import Table
 from pyvista import tv
 

@@ -11,16 +11,9 @@ import esutil
 import pickle
 import yaml
 from astropy.io import fits
-from apogee.utils import apload
-from apogee.utils import applot
-from apogee.utils import bitmask
-from apogee.utils import spectra
-from apogee.aspcap import norm
-from tools import plots
-from tools import html
-from tools import match
-from tools import struct
-from sdss import yanny
+from apogee_drp.utils import apload, applot, bitmask, spectra, norm, yanny
+from tools import plots, html, match, struct
+#from sdss import yanny
 from scipy import interpolate
 from scipy.signal import correlate
 from scipy.ndimage.filters import median_filter, gaussian_filter

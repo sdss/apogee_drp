@@ -5,7 +5,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import pdb
-from apogee.utils import apload
+from apogee_drp.utils import apload
 
 chips=['a','b','c']
 

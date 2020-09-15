@@ -1,4 +1,4 @@
-from apogee.utils import apload
+from apogee_drp.utils import apload
 from pyvista import tv
 import matplotlib.pyplot as plt
 from tools import plots

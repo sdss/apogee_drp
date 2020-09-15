@@ -1,6 +1,7 @@
 import glob
 import os
-from sdss import yanny
+from apogee_drp.utils import yanny
+#from sdss import yanny
 import numpy as np
 
 def check(apred='r12',mjdmax=58360,mjdmin=55800) :
