@@ -1,4 +1,4 @@
-pro apxcorr_newgrid,grid,spec,err,rvout,bestgrid,mask=mask,sum=sum,pl=pl,prior=prior
+pro apxcorr_newgrid,grid,spec,err,rvout,bestgrid,mask=mask,sum=sum,pl=pl
 ;+
 ; APXCORR_NEWGRID
 ;
@@ -26,7 +26,6 @@ endfor
 sz=size(grid.data)
 if sz[0] gt 1 then ntemp=sz[1] else ntemp=1
 for i=0,ntemp-1 do begin
-
   ; chip loop
   for j=0,2 do begin
     lo=pixlim[0,j] & hi=pixlim[1,j]
@@ -41,7 +40,7 @@ for i=0,ntemp-1 do begin
 
   ; do the xcorrs fast to get chisq without fitting peak
 ;pl=1
-  apxcorr,wave,grid.ndata[i,*],spec,err,rvout,sum=sum,pixlim=pixlim,prior=prior,/nofit;,pl=pl
+  apxcorr,wave,grid.ndata[i,*],spec,err,rvout,sum=sum,pixlim=pixlim,/nofit;,pl=pl
   ;apxcorr,wave,temp[i,*],spec,err,rvout,sum=sum,pl=pl,/nofit
   ;print,'template: ',i,rvout.vrel,rvout.chisq,ntemp
   if i eq 0 then allrv=rvout else allrv=[allrv,rvout]
@@ -51,7 +50,7 @@ chisqmin=min(allrv.chisq,bestgrid)
 rvout=allrv[bestgrid]
 ; now redo the best fit one to get the peak
 ;pl=1
-apxcorr,wave,grid.ndata[bestgrid,*],spec,err,rvout,sum=sum,pl=pl,pixlim=pixlim,prior=prior
+apxcorr,wave,grid.ndata[bestgrid,*],spec,err,rvout,sum=sum,pl=pl,pixlim=pixlim
 if keyword_set(pl) then begin
   !p.multi=[0,0,0]
   sz=size(spec)

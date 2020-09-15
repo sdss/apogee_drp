@@ -122,6 +122,9 @@ if file_test(finalfile+'.lock') then begin
 endif
 
 ; Does the file exist?
+; open .lock file
+openw,lock,/get_lun,finalfile+'.lock'
+free_lun,lock
 
 if file_test(finalfile) eq 1 and keyword_set(clobber) then begin
   if not keyword_set(silent) then $
@@ -130,16 +133,10 @@ if file_test(finalfile) eq 1 and keyword_set(clobber) then begin
 endif
 if file_test(finalfile) eq 1 and ~keyword_set(clobber) then begin
   if not keyword_set(silent) then $
-    print,finalfile,' exists already'
-  return
-  ;if not keyword_set(silent) then $
-  ;  print,finalfile,' exists already.  Writing compressed file to ',finalfile+'.1'
-  ;finalfile = finalfile+'.1'
+    print,finalfile,' exists already.  Writing compressed file to ',finalfile+'.1'
+  finalfile = finalfile+'.1'
 endif
 
-; open .lock file
-openw,lock,/get_lun,finalfile+'.lock'
-free_lun,lock
 
 ; uncompress the input file to a temporary file
 ; get a unique filename (and delete the created empty file)

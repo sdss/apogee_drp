@@ -1,5 +1,5 @@
 pro apxcorr,wave,tempspec,obsspec,obserr,outstr,auto=auto,pl=pl,sum=sum,maxlag=maxlag,nofit=nofit,$
-            pixlim=pixlim,errccf=errccf, fail=fail,prior=prior
+            pixlim=pixlim,errccf=errccf, fail=fail
 
 ;+
 ;
@@ -15,9 +15,6 @@ pro apxcorr,wave,tempspec,obsspec,obserr,outstr,auto=auto,pl=pl,sum=sum,maxlag=m
 ;  tempspec template spectrum: normalized and on log-lambda scale
 ;  obsspec  observed spectra: normalized and sampled on tempspec scale
 ;  obserr   observed error; normalized and sampled on tempspec scale
-;  =prior   Set a Gaussian prior on the cross-correlation.  The first
-;             term is the central position (in pixel shift) and the
-;             second term is the Gaussian sigma (in pixels).
 ;  /sum     set to sum the multiple cross-correlation functions; used
 ;           if we have three chips of data that are stacked
 ;  /pl      Plot the cross-correlation function and best-fit
@@ -49,7 +46,7 @@ nerr = n_elements(obserr)
 
 ; Not enough inputs
 if nwave eq 0 or ntempspec eq 0 or nspec eq 0 or nerr eq 0 then begin
-  print,'Syntax - apspecshift,wave,tempspec,spec,err,outstr,auto=auto,pl=pl,prior=prior'
+  print,'Syntax - apspecshift,wave,tempspec,spec,err,outstr,auto=auto,pl=pl'
   return
 endif
 
@@ -160,9 +157,6 @@ for i=0,nspec-1 do begin
       ccf = APC_CORRELATE(template[lo:hi],spec[lo:hi],lag)
       ;ccf = C_CORRELATE(template[lo:hi],spec[lo:hi],lag)
 
-      ; Apply Gaussian prior with unit amplitude
-      if n_elements(prior) gt 0 then ccf *= exp(-0.5*((lag-prior[0])^2/prior[1]^2))
-      
       if keyword_set(pl) then begin
         plot,spec[lo:hi],yrange=[-0.5,0.2]+1
         oplot,template[lo:hi],color=250 ;2
