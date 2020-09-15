@@ -38,66 +38,83 @@ if keyword_set(jchip) then begin
 endif else begin
   j1=0 & j2=2
 endelse
-chip=['a','b','c']
+chip = ['a','b','c']
 
+
+;; Perform Processing
+;;-------------------
 if keyword_set(doproc) or keyword_set(doap3dproc) then begin 
- ; use approcess as front end for ap3dproc and ap2dproc only 
- for ichip=j1,j2 do begin
-  ; set up calibration file names
-  if darkid gt 0 then $
-    bpmcorr=caldir+'bpm/'+dirs.prefix+string(format='("BPM-",a,"-",i8.8,".fits")',chip[ichip],darkid)
-  if darkid gt 0 then $
-    darkcorr=caldir+'darkcorr/'+dirs.prefix+string(format='("Dark-",a,"-",i8.8,".fits")',chip[ichip],darkid)
-  if flatid gt 0 then $
-    flatcorr=caldir+'flatcorr/'+dirs.prefix+string(format='("Flat-",a,"-",i8.8,".fits")',chip[ichip],flatid)
-  apgundef,littrowcorr
-  if littrowid gt 0 and ichip eq 1 then $
-    littrowcorr=caldir+'littrow/'+dirs.prefix+string(format='("Littrow-",a,"-",i8.8,".fits")',chip[ichip],littrowid)
-  if persistid gt 0 then $
-    persistcorr=caldir+'persist/'+dirs.prefix+string(format='("Persist-",a,"-",i8.8,".fits")',chip[ichip],persistid)
-  for inum=0,n_elements(nums)-1 do begin
-   num=nums[inum]
-   if not keyword_set(cmjd) then cmjd=getcmjd(num)
-   if not keyword_set(outdir) then outdir=dirs.expdir+cmjd+'/'
-   ifile=dirs.prefix+string(format='("R-",a,"-",i8.8)',chip[ichip],num) 
-   ofile=dirs.prefix+string(format='("2D-",a,"-",i8.8)',chip[ichip],num) 
-   if file_test(outdir,/directory) eq 0 then file_mkdir,outdir
-   if nfs eq 0 then uptheramp=1 else uptheramp=0
-print,'calling ap3dproc...'
-   ap3dproc,datadir+cmjd+'/'+ifile+'.apz',outdir+ofile+'.fits',$
-     flatcorr=flatcorr,darkcorr=darkcorr,bpmcorr=bpmcorr,littrowcorr=littrowcorr,$
-     persistcorr=persistcorr,$
-     nocr=nocr,uptheramp=uptheramp,nfowler=nfs,fitsdir=getlocaldir(),clobber=clobber,maxread=maxread[ichip]
+  ;; 3D -> 2D Processing
+  ;;--------------------
+  ; use approcess as front end for ap3dproc and ap2dproc only 
+  for ichip=j1,j2 do begin
+    ; set up calibration file names
+    ;if detid gt 0 then $
+    ;  detcorr = apogee_filename('Detector',num=detid,chip=chip[ichip])
+    if darkid gt 0 then $
+      bpmcorr = apogee_filename('BPM',num=darkid,chip=chip[ichip])
+    if darkid gt 0 then $
+      darkcorr = apogee_filename('Dark',num=darkid,chip=chip[ichip])
+    if flatid gt 0 then $
+      flatcorr = apogee_filename('Flat',num=flatid,chip=chip[ichip])
+    apgundef,littrowcorr
+    if littrowid gt 0 and ichip eq 1 then $
+      littrowcorr = apogee_filename('Littrow',num=littrowid,chip=chip[ichip])
+    if persistid gt 0 then $
+      persistcorr = apogee_filename('Persist',num=persistid,chip=chip[ichip])
+    ;; Exposure loop
+    for inum=0,n_elements(nums)-1 do begin
+      num = nums[inum]
+      if not keyword_set(cmjd) then cmjd=getcmjd(num)
+      if not keyword_set(outdir) then outdir=dirs.expdir+cmjd+'/'
+      ifile = apogee_filename('R',num=num,chip=chip[ichip],mjd=cmjd)
+      ofile = apogee_filename('2D',num=num,chip=chip[ichip])
+      if file_test(outdir,/directory) eq 0 then file_mkdir,outdir
+      if nfs eq 0 then uptheramp=1 else uptheramp=0
+      print,'calling ap3dproc...'
+      AP3DPROC,ifile,ofile,$
+               flatcorr=flatcorr,darkcorr=darkcorr,bpmcorr=bpmcorr,littrowcorr=littrowcorr,$
+               persistcorr=persistcorr,$
+               nocr=nocr,uptheramp=uptheramp,nfowler=nfs,fitsdir=getlocaldir(),clobber=clobber,maxread=maxread[ichip]
+    endfor
   endfor
- endfor
- ; ap2dproc does all 3 chips together
- if keyword_set(doproc) then begin
-  for inum=0,n_elements(nums)-1 do begin
-   num=nums[inum]
-   tracefile=caldir+'psf/'+string(format='(i8.8)',psfid)
-   wavefile=0
-   if keyword_set(waveid) then wavefile=caldir+'wave/'+string(format='(i8.8)',waveid)
-   ap2dproc,dirs.expdir+cmjd+'/'+string(format='(i8.8)',num),$
-            tracefile,4,outdir=outdir,wavefile=wavefile,clobber=clobber,skywave=skywave
 
-   chiptag=['a','b','c']
-   files = apogee_filename('2D',num=num,chip=chiptag)
-   modfiles = apogee_filename('2Dmodel',num=num,chip=chiptag)
-   for jj=0,n_elements(files)-1 do begin
-      if file_test(files[jj]) then begin
-        file_delete,files[jj]+'.fz',/allow_nonexistent
-        ;SPAWN,['fpack','-D','-Y',files[jj]],/noshell
-      endif
-      if file_test(modfiles[jj]) then begin
-        file_delete,modfiles[jj]+'.fz',/allow_nonexistent
-        SPAWN,['fpack','-D','-Y',modfiles[jj]],/noshell
-      endif
-   endfor
+  stop
 
-  endfor
- endif
- return,0
+  ;; Perform 2D -> 1D Processing
+  ;;----------------------------
+  ; ap2dproc does all 3 chips together
+  if keyword_set(doproc) then begin
+    ;; Exposure loop
+    for inum=0,n_elements(nums)-1 do begin
+      num = nums[inum]
+      tracefile = file_dirname(apogee_filename('PSF',num=psfid,chip='c'))+string(format='(i8.8)',psfid) 
+      wavefile = 0
+      if keyword_set(waveid) then wavefile = file_dirname(apogee_filename('Wave',num=waveid,chip='c'))+string(format='(i8.8)',waveid)
+      ;wavefile=caldir+'wave/'+string(format='(i8.8)',waveid)
+      AP2DPROC,dirs.expdir+cmjd+'/'+string(format='(i8.8)',num),$
+               tracefile,4,outdir=outdir,wavefile=wavefile,clobber=clobber,skywave=skywave
+
+      chiptag = ['a','b','c']
+      files = apogee_filename('2D',num=num,chip=chiptag)
+      modfiles = apogee_filename('2Dmodel',num=num,chip=chiptag)
+      for jj=0,n_elements(files)-1 do begin
+         if file_test(files[jj]) then begin
+           file_delete,files[jj]+'.fz',/allow_nonexistent
+           ;SPAWN,['fpack','-D','-Y',files[jj]],/noshell
+         endif
+         if file_test(modfiles[jj]) then begin
+           file_delete,modfiles[jj]+'.fz',/allow_nonexistent
+           SPAWN,['fpack','-D','-Y',modfiles[jj]],/noshell
+         endif
+      endfor
+
+    endfor
+  endif  ; /doproc
+
+  return,0
 endif
+
 
 print,'rogue reduction....!?'
 
