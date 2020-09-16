@@ -1,9 +1,28 @@
-;======================================================================
-pro darkhtml,caldir
+;+
+;
+; DARKHTML
+;
+; Makes a simple diagnostic HTML page for an APOGEE superdark
+; calibration product.
+;
+; INPUTS:
+;  darkdir  The dark calibration directory.
+;
+; OUTPUTS:
+;  An html file is created with name darkdir/html/darks.html
+;
+; USAGE:
+;  IDL>darkhtml,darkdir
+;
+; By J. Holtzman, 2011?
+; Added doc strings and cleanup by D. Nidever, Sep 2020
+;-
 
-darks=file_search(caldir+'darkcorr/*.tab')
-if not file_test(caldir+'/darkcorr/html',/dir) then file_mkdir,caldir+'/darkcorr/html'
-openw,lun,/get_lun,caldir+'darkcorr/html/darks.html'
+pro darkhtml,darkdir
+
+darks = file_search(darkdir+'/*.tab')
+if not file_test(darkdir+'/html',/dir) then file_mkdir,darkdir+'/html'
+openw,lun,/get_lun,darkdir+'/html/darks.html'
 printf,lun,'<HTML><BODY><TABLE BORDER=1>'
 printf,lun,'<TR><TD>ID'
 printf,lun,'<TD>CHIP'
@@ -17,7 +36,7 @@ printf,lun,'<TD>NBAD'
 printf,lun,'<TD>NNEG'
 chips=['a','b','c']
 for i=0,n_elements(darks)-1 do begin
-  darklog=mrdfits(darks[i],1)
+  darklog = mrdfits(darks[i],1)
   for ichip=0,2 do begin
     if ichip eq 0 then printf,lun,'<TR><TD>',darklog[ichip].num else printf,lun,'<TR><TD>'
     printf,lun,'<TD><center>',chips[ichip]
@@ -29,7 +48,7 @@ for i=0,n_elements(darks)-1 do begin
     printf,lun,'<TD><center>',darklog[ichip].nhotneigh
     printf,lun,'<TD><center>',darklog[ichip].nbad
     printf,lun,'<TD><center>',darklog[ichip].nneg
-    file=string(format='("apDark-",a,"-",i8.8)',chips[ichip],darklog[ichip].num) 
+    file = string(format='("apDark-",a,"-",i8.8)',chips[ichip],darklog[ichip].num) 
     printf,lun,'<TD><center><a href=../plots/'+file+'.jpg>Image</a>'
     printf,lun,'<TD><center><a href=../plots/'+file+'.gif>Plots</a>'
   endfor
