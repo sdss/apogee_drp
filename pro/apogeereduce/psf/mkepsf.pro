@@ -76,7 +76,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
       apmkpsf_epsf,red[*,*,ichip],caldir,outid,ichip,dmax=dmax,sparseid=sparseid,average=average,thresh=thresh,scat=scat
     endfor
     sparse = dirs.prefix+string(format='("Sparse-",i8.8)',outid)
-    mwrfits,red,file_dirname(file)+sparse+'.fits',/create
+    mwrfits,red,file_dirname(file)+'/'+sparse+'.fits',/create
   
     file_delete,file+'.lock'
   endif
