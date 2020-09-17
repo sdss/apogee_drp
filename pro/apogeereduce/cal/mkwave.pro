@@ -1,43 +1,70 @@
-;======================================================================
-pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,clobber=clobber,nowait=nowait,nofit=nofit
+;+
+;
+; MKWAVE
+;
+; Procedure to make an APOGEE wavelength calibration file from
+; arc lamp exposures.  This is a wrapper around the python
+; apmultiwavecal program.
+;
+; INPUT:
+;  waveid      The ID8 numbers of the arc lamp exposures to use.
+;  =name       Output filename base.  By default waveid[0] is used.
+;  =darkid     Dark frame to be used if images are reduced.
+;  =flatid     Flat frame to be used if images are reduced.
+;  =psfid      PSF frame to be used if images are reduced.
+;  =fiberid    ETrace frame to be used if images are reduced.
+;  /nowait     If file is already being made then don't wait
+;                just return.
+;  /clobber    Overwrite existing files.
+;  /nofit      Skip fit (find lines only).
+;
+; OUTPUT:
+;  A set of apWave-[abc]-ID8.fits files in the appropriate location
+;   determined by the SDSS/APOGEE tree directory structure.
+;
+; USAGE:
+;  IDL>mkwave,ims,name=name,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,/clobber
+;
+; By J. Holtzman, 2011
+;  Added doc strings, updates to use data model  D. Nidever, Sep 2020 
+;-
 
-  if ~keyword_set(name) then name=string(waveid[0])
-  dirs=getdir(apodir,caldir,spectrodir,vers)
-  caldir=dirs.caldir
-  file=dirs.prefix+string(format='("Wave-",i8.8)',name)
-  ;if another process is alreadying make this file, wait!
-  while file_test(caldir+'wave/'+file+'.lock') do begin
+pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
+           fiberid=fiberid,clobber=clobber,nowait=nowait,nofit=nofit
+
+  if n_elements(name) eq 0 then name=string(waveid[0])
+  dirs = getdir(apodir,caldir,spectrodir,vers)
+  wavedir = apogee_filename('Wave',num=name,chip='a',/dir)
+  file = dirs.prefix+string(format='("Wave-",i8.8)',name)
+  ;; If another process is alreadying make this file, wait!
+  while file_test(wavedir+file+'.lock') do begin
     if keyword_set(nowait) then return
     apwait,file,10
   endwhile
-  ; does product already exist?
-  if file_test(caldir+'/wave/'+file+'.dat') and not keyword_set(clobber) then begin
-    print,' Wavecal file: ', file+'.dat', ' already made'
+  ;; Does product already exist?
+  if file_test(wavedir+file+'.dat') and not keyword_set(clobber) then begin
+    print,' Wavecal file: ', wavedir+file+'.dat', ' already made'
     return
   endif
 
-  print,'making wave: ', waveid
-  ; open .lock file
-  openw,lock,/get_lun,caldir+'wave/'+file+'.lock'
+  print,'Making wave: ', waveid
+  ;; Open .lock file
+  openw,lock,/get_lun,wavedir+file+'.lock'
   free_lun,lock
 
-  ; process the frames
-  cmjd=getcmjd(psfid)
-  mkpsf,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid
-  w=approcess(waveid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc)
+  ;; Process the frames
+  cmjd = getcmjd(psfid)
+  MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid
+  w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc)
 
-  ; new Python version! 
+  ;; New Python version! 
   if keyword_set(nofit) then nofit='--nofit' else nofit=''
-  cmd=['apmultiwavecal','--name',name,'--vers',dirs.apred,nofit,'--plot','--hard','--inst',dirs.instrument,'--verbose']
+  cmd = ['apmultiwavecal','--name',name,'--vers',dirs.apred,nofit,'--plot','--hard','--inst',dirs.instrument,'--verbose']
   for i=0,n_elements(waveid)-1 do cmd=[cmd,string(waveid[i])]
   spawn,cmd,/noshell
-  openw,lock,/get_lun,caldir+'wave/'+file+'.dat'
+  openw,lock,/get_lun,wavedir+file+'.dat'
   free_lun,lock
 
-  ;psffile = caldir+'psf/'+string(format='(i8.8)',psfid)
-  ;wavefile = dirs.expdir+cmjd+'/'+string(format='(i8.8)',waveid)
-  ;apmultiwavecal,wavefile,psfid=psffile,name=name,/save,clobber=clobber ;,/pl
-
-  file_delete,caldir+'wave/'+file+'.lock'
+  file_delete,wavedir+file+'.lock'
 
 end
