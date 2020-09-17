@@ -1,7 +1,5 @@
-
 function getvers
   dirs=getdir()
-;  return,v
-  return,getenv('APOGEE_VER')
+  return,getenv('APOGEE_DRP_VER')
 end
 

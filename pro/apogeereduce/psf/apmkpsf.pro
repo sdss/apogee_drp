@@ -11,6 +11,7 @@
 ;                concatenated.
 ;  outdir      The directory to write the apTrace files to.
 ;                This should normally be SPECTRO_DIR/cal/trace/
+;  =fiberid    ID8 number for the ETrace calibration file to use. 
 ;  /no_epsf    Don't create the empirical PSF.
 ;  =peakthresh The threshold to use for finding peaks/fibers.
 ;  /pl         Plot the fits

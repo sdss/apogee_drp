@@ -17,7 +17,7 @@
 ;   determined by the SDSS/APOGEE tree directory structure.
 ;
 ; USAGE:
-;  IDL>mkdark,ims,cmjd=cmjd,darkid=darkid,/clobber,/kludge,nrep=nrep
+;  IDL>mkflat,ims,cmjd=cmjd,darkid=darkid,/clobber,/kludge,nrep=nrep
 ;
 ; By J. Holtzman, 2011?
 ;  Added doc strings, updates to use data model  D. Nidever, Sep 2020 

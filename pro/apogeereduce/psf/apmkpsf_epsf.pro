@@ -5,10 +5,11 @@
 ; This creates an empirical PSF for APMKPSF.
 ;
 ; INPUTS
-;  frame    A structure containing the 2D chip image of
-;            the flat field image from which to make the PSF.
-;            This should include FLUX, ERR and MASK.
-;  /silent  Don't print anything to the screen
+;  frame     A structure containing the 2D chip image of
+;              the flat field image from which to make the PSF.
+;              This should include FLUX, ERR and MASK.
+;  =fiberid  ID8 number for the ETrace calibration file to use.
+;  /silent   Don't print anything to the screen
 ;
 ; OUTPUTS
 ;  outpsf   An Ntrace structure giving the empirical PSF
