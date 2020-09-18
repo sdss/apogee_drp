@@ -1,14 +1,31 @@
-
-pro getrn,ims,cmjd=cmjd,noref=noref,indiv=indiv
-
-; attempts to determine readout noise from several methods
+;+
 ;
+; GETRN
+;
+; Attempts to determine readout noise from several methods.
+;
+; INPUTS:
+;  ims     Array of image numbers to use.
+;  =cmjd   MJD for output directory for ap2D/ap1D images.
+;  /noref  Don't apply reference correction in reduction.
+;  /indiv  Apply /indiv flag when doing reduction.
+;
+; OUTPUTS:
 ;  rn1:  readout noise from single exposure (does not account for any bias structure)
 ;  rn2:  readout noise from difference of two images
 ;  rn3:  readout noise from difference of successive reads in single image
 ;
 ;  In all cases, noise is determined from various Fowler samplings as well as UTR sampling
 ;  The values are reduced to single-read readout noise based on the Rauscher et al formula
+;
+; USAGE:
+;  IDL>getrns,ims
+;
+; By J. Holtzman, 2011
+;   Added doc strings, updates to use data model  D. Nidever, Sep 2020 
+;-
+
+pro getrn,ims,cmjd=cmjd,noref=noref,indiv=indiv
 
 dirs=getdir(apogeedir,caldir,spectrodir,vers)
 
@@ -256,80 +273,6 @@ endfor
 printf,lun,'</table></body></html>'
 free_lun,lun
 
-;openw,lun,/get_lun,'rn.html'
-;printf,lun,'<HTML><BODY>'
-;
-;printf,lun,'Readout noise measurements, frames: ',im1,im2,'<br>'
-;printf,lun,'Left panels are single frame measurements, i.e. rms of a quadrant on a single dark subtracted dark frame, using robust_sigma<br>'
-;printf,lun,'Right panels are difference frame measurements, i.e. rms of a quadrant in the difference between two dark frames<br>'
-;printf,lun,'Squares are measured noise, triangles are "corrected" to DCS (i.e. multiplied by sqrt(nfowler)) <br>'
-;printf,lun,'Different colors are different quadrants<br>'
-;printf,lun,'<b> UNITS ARE DN </b><br>'
-;printf,lun,'<i> Comments: <br>'
-;printf,lun,'difference frame readout noise is a bit smaller than single frame, suggesting some remaining bias structure (that repeats in these two frames)<br>'
-;printf,lun,'increasing fowler sampling/UTR decreases noise almost, but not quite as much, as expected<br></i>'
-;printf,lun,'<img src=rn.gif>'
-;printf,lun,'<p>Readout noise measurements from frame ',im1
-;printf,lun,' <b> in DN </b>; robust sigma after superdark subtraction'
-;printf,lun,'<TABLE BORDER=2>'
-;printf,lun,'<TR><TD>chip<TD>Fowler<TD>quad1<TD>quad2<TD>quad3<TD>quad4'
-;for ichip=0,2 do begin
-;;  for i=0,5 do begin
-;   printf,lun,'<TR><TD>',ichip,'<TD>',i
-;   for j=0,3 do printf,lun,format='(a,f8.2)','<TD>',rn[j,i,ichip]
-;  endfor
-;endfor
-;printf,lun,'</table>'
-;printf,lun,'<p>Readout noise measurements from difference frame ',im1, im2
-;printf,lun,' <b> in DN </b>; robust sigma after superdark subtraction'
-;printf,lun,'<TABLE BORDER=2>'
-;printf,lun,'<TR><TD>chip<TD>Fowler<TD>quad1<TD>quad2<TD>quad3<TD>quad4'
-;for ichip=0,2 do begin
-;  for i=0,5 do begin
-;   printf,lun,'<TR><TD>',ichip,'<TD>',i
-;   for j=0,3 do printf,lun,format='(a,f8.2)','<TD>',rn2[j,i,ichip]/sqrt(2)
-;  endfor
-;endfor
-;printf,lun,'</table><p>'
-;
-;free_lun,lun
-;
-
-;free_lun,lun
-;  if keyword_set(dolog) then begin
-;   set_plot,'ps'
-;   device,file='bias.eps',/encap,/color
-;   !p.multi=[0,2,2,0,0]
-;   smcolor
-;   m=fltarr(4,3)
-;   s=fltarr(4,3)
-;   for i=0,3 do begin
-;    for fs=3,1,-1 do begin
-;      d=fsamp(red,fs)
-;      sect=d[i*512+5:(i+1)*512-5,5:2040]
-;      good=where(abs(sect) lt 100 and sect ne 0)
-;      m[i,fs-1]=mean(sect[good])
-;      s[i,fs-1]=stddev(sect[good])
-;      if fs eq 3 then plothist,sect[good],xrange=[-100,100],color=fs+1 $
-;      else plothist,sect[good],/over,color=fs+1
-;    endfor
-;   endfor
-;   device,/close
-;   file=string(format='("bias-",a,"-",i8.8)',chip,num)
-;   spawn,'convert bias.eps '+file+'.gif'
-;   for fs=1,3 do print,num,chip[ichip],fs,m[*,fs-1],s[*,fs-1]
-;   printf,lun,'<TR><TD>',num,'<TD>',chip[ichip],'<TD><TABLE border=1><TR><TD>NF<TD>Q1<TD>Q2<TD>Q3<TD>Q4'
-;   for fs=1,3 do begin
-;     line=string(format='(a,i2,a,f8.1,a,f8.1,a,f8.1,a,f8.1)','<TR><TD>',fs,'<TD>',m[0,fs-1],'<TD>',m[1,fs-1],'<TD>',m[2,fs-1],'<TD>',m[3,fs-1])
-;     printf,lun,line
-;   endfor
-;   printf,lun,'</TABLE><TD><TABLE border=1><TR><TD>NF<TD>Q1<TD>Q2<TD>Q3<TD>Q4'
-;   for fs=1,3 do begin
-;     line=string(format='(a,i2,a,f8.1,a,f8.1,a,f8.1,a,f8.1)','<TR><TD>',fs,'<TD>',s[0,fs-1],'<TD>',s[1,fs-1],'<TD>',s[2,fs-1],'<TD>',s[3,fs-1])
-;     printf,lun,line
-;   endfor
-;   printf,lun,'</TABLE><TD><IMG SRC='+file+'.gif>'
-;  endif
 end
 
 apsetver,vers='current',telescope='apo25m'
