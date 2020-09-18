@@ -54,6 +54,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   ;; Read calibration master file into calibration structures
   READCAL,file,darkstr,flatstr,sparsestr,fiberstr,badfiberstr,fixfiberstr,wavestr,lsfstr,bpmstr,$
           fluxstr,detstr,littrowstr,persiststr,persistmodelstr,responsestr,multiwavestr
+
   ;; Make detector file as called for
   if keyword_set(det) then begin
     print,'makecal det: ', det

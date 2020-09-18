@@ -36,6 +36,7 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
 
   file = apogee_filename('Flux',num=ims[0],chip='c',/base,/nochip)
   fluxdir = apogee_filename('Flux',num=ims[0],chip='c',/dir)
+  if file_test(fluxdir,/directory) eq 0 then file_mkdir,fluxdir
   ;; If another process is alreadying making this file, wait!
   while file_test(fluxdir+file+'.lock') do apwait,file,10
   ;; Does product already exist?
@@ -52,7 +53,7 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
 
   ;; Need to make sure extraction is done without flux calibration
   i1 = ims[0]
-  files = apogee_filename('1D',num=i1,chips=['a','b','c'])
+  files = apogee_filename('1D',num=i1,chip=['a','b','c'])
   if total(file_test(files),/int) gt 0 then file_delete,files,/allow
   if keyword_set(cmjd) then $
     d = approcess(ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,littrowid=littrowid,persistid=persistid,/nocr,nfs=1,/doproc) $
