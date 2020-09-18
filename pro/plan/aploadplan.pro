@@ -1,6 +1,3 @@
-pro aploadplan,planfile,planstr,verbose=verbose,silent=silent,struct=struct,$
-               expand=expand,plugmapm=plugmapm,stp=stp,error=error,newlog=newlog
-
 ;+
 ;
 ; APLOADPLAN
@@ -25,6 +22,9 @@ pro aploadplan,planfile,planstr,verbose=verbose,silent=silent,struct=struct,$
 ;
 ; By D.Nidever  May 2010
 ;-
+
+pro aploadplan,planfile,planstr,verbose=verbose,silent=silent,struct=struct,$
+               expand=expand,plugmapm=plugmapm,stp=stp,error=error,newlog=newlog
 
 apgundef,error,planstr
 
@@ -97,28 +97,6 @@ tags = TAG_NAMES(planstr)
 apgundef,hdr,allseq
 
 ; Load all keywords like aploadplugmap.pro
-
-;;----------
-;; Find keywords from the header
-;keywords = ['plateid','mjd','planfile','logfile','plotfile','plugmap',$
-;            'detid','bpmid','darkid','flatid','psfid','waveid','lsfid',$
-;            'fluxid','extract_type','raw_dir','red_dir','plate_dir','star_dir','apogeereduceVersion']
-;nkeywords = n_elements(keywords)
-;for j=0,nkeywords-1 do begin
-;  ; NOTE, the keywords are CASE SENSITIVE
-;  value = YANNY_PAR(planstr.hdr,keywords[j],count=count)
-;  if count eq 0 then begin
-;    error = 'KEYWORD '+keywords[j]+' NOT FOUND IN '+planfile
-;    if not keyword_set(silent) then print,error
-;    return
-;  endif
-;  tagind = where(tags eq strupcase(keywords[j]))
-;  type = size(planstr.(tagind),/type)
-;  planstr.(tagind) = fix(value,type=type)
-;  ; Print out the keyword/value pair
-;  if keyword_set(verbose) then print,keywords[j],' = ',fix(value,type=type)
-;end
- 
 
 ; Get the header keywords
 gdline = where(strtrim(strmid(planstr.hdr,0,1),2) ne '#' and $
@@ -206,11 +184,12 @@ if keyword_set(expand) then begin
 
   ; Get data directories/version from environment
   if tag_exist(planstr,'data_dir') then apsetver,datadir=planstr.data_dir
-  dirs=getdir(apogee_dir,cal_dir,spectro_dir,apred_vers,datadir=datadir)
+  dirs = getdir(apogee_dir,cal_dir,spectro_dir,apred_vers,datadir=datadir)
 
   calkeys = ['DETID','BPMID','LITTROWID','PERSISTID','PERSISTMODELID','DARKID','FLATID','PSFID','FLUXID','RESPONSEID','WAVEID','LSFID']
   caltype = ['Detector','BPM','Littrow','Persist','PersistModel','Dark','Flat','PSF','Flux','Response','Wave','LSF']
-  caldirs = cal_dir+['detector/','bpm/','littrow/','persist/','persist/','darkcorr/','flatcorr/','psf/','flux/','flux/','wave/','lsf/']
+  caldirs = strarr(n_elements(caltype))
+  for i=0,n_elements(caltype)-1 do caldirs[i]=apogee_filename(caltype[i],num=0,chip='a',/dir)
   ncalkeys = n_elements(calkeys)
 
   tags = tag_names(planstr)
@@ -272,9 +251,10 @@ if keyword_set(expand) then begin
 
 endif ; expand path/directories
 
-; create log file if one is specified so we can append to it
+;; Create log file if one is specified so we can append to it
 if keyword_set(newlog) then begin
-  logfile=apogee_filename('Diag',plate=planstr.plateid,mjd=planstr.mjd)
+  logfile = apogee_filename('Diag',plate=planstr.plateid,mjd=planstr.mjd)
+  if file_test(file_dirname(logfile),/directory) eq 0 then file_mkdir,file_dirname(logfile)
   tags = tag_names(planstr)
   dum = where(tags eq 'LOGFILE',nlog)
   if nlog gt 0 then begin
@@ -283,7 +263,7 @@ if keyword_set(newlog) then begin
   endif
 endif
 
-; Make sure MJD is there
+;; Make sure MJD is there
 tags = tag_names(planstr)
 dum = where(tags eq 'MJD',nmjd)
 if nmjd eq 0 then planstr=CREATE_STRUCT(planstr,'MJD','')

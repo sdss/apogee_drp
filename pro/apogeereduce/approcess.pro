@@ -49,11 +49,12 @@
 ;-
 
 ; approcess reduces a sequence of images, all 3 chips, and writes out
-function approcess,nums,cmjd=cmjd,step=step,clobber=clobber,onedclobber=onedclobber,$
-       detid=detid,darkid=darkid,flatid=flatid,traceid=traceid,psfid=psfid,fluxid=fluxid,$
-       waveid=waveid,littrowid=littrowid,persistid=persistid,nocr=nocr,stp=stp,jchip=jchip,nfs=nfs,nofs=nofs,$
-       doproc=doproc,doap3dproc=doap3dproc,doap2dproc=doap2dproc,logfile=logfile,outdir=outdir,maxread=maxread,$
-       skywave=skywave,step=step
+function approcess,nums,cmjd=cmjd,clobber=clobber,onedclobber=onedclobber,detid=detid,$
+                   darkid=darkid,flatid=flatid,traceid=traceid,psfid=psfid,fluxid=fluxid,$
+                   waveid=waveid,littrowid=littrowid,persistid=persistid,nocr=nocr,stp=stp,$
+                   jchip=jchip,nfs=nfs,nofs=nofs,doproc=doproc,doap3dproc=doap3dproc,$
+                   doap2dproc=doap2dproc,logfile=logfile,outdir=outdir,maxread=maxread,$
+                   skywave=skywave,step=step
 
 common savedepsf, savedepsffiles, epsfchip
 savedepsffiles = [' ',' ',' ']

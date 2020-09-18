@@ -31,7 +31,8 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   caldir = dirs.caldir
 
   litdir = apogee_filename('Littrow',num=littrowid,chip='b',/dir)
-  file = apogee_filename('Littrow',num=littrowid,chip='b',/base)
+  if file_test(litdir,/directory) eq 0 then file_mkdir,litdir
+  file = apogee_filename('Littrow',num=littrowid,/base,/nochip)
   ;; If another process is alreadying making this file, wait!
   while file_test(litdir+file+'.lock') do apwait,file,10
   ;; Does product already exist?
@@ -48,7 +49,7 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   ;; Process the frame with this PSF to get model that does not have Littrow ghost
   psfdir = apogee_filename('PSF',num=littrowid,chip='b',/dir)
   wavefile = 0
-  indir = apogee_filename('2D',num=littrowid,/dir,chip='b',/dir)
+  indir = apogee_filename('2D',num=littrowid,chip='b',/dir)
   AP2DPROC,indir+'/'+string(format='(i8.8)',littrowid),$
            psfdir+'/'+string(format='(i8.8)',littrowid),4,wavefile=wavefile,/clobber
 
@@ -89,6 +90,6 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   files = file_search(apogee_filename('2Dmodel',num=littrowid,chip='b',/dir)+'/*2Dmodel*'+string(format='(i8.8)',littrowid)+'*.fits')
   file_move,files,outdir,/over
 
-  file = apogee_filename('Littrow',num=littrowid,chip='b',/base)
+  file = apogee_filename('Littrow',num=littrowid,chip='b',/base,/nochip)
   file_delete,litdir+file+'.lock'
 end

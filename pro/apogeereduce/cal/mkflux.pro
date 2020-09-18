@@ -34,7 +34,7 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
   dirs = getdir(apodir,caldir,spectrodir,vers)
   caldir = dirs.caldir
 
-  file = apogee_filename('Flux',num=ims[0],chip='c',/base)
+  file = apogee_filename('Flux',num=ims[0],chip='c',/base,/nochip)
   fluxdir = apogee_filename('Flux',num=ims[0],chip='c',/dir)
   ;; If another process is alreadying making this file, wait!
   while file_test(fluxdir+file+'.lock') do apwait,file,10
@@ -162,13 +162,11 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
       sxaddhist,leadstr+info.user_name+' on '+info.machine_name,head
       sxaddhist,leadstr+'IDL '+!version.release+' '+!version.os+' '+!version.arch,head
       sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+getvers(),head
-      file = apoee_filename('Response',num=ims[0],chip=chipos[i])
-      ;file = dirs.prefix+string(format='("Response-",a,"-",i8.8)',chips[i],ims[0])
+      file = apogee_filename('Response',num=ims[0],chip=chipos[i])
       MWRFITS,bbflux/flux,fluxdir+file,head
     endfor
 
-    file = apogee_filename('Response',num=ims[0],chip='c',/base)
-    ;file = dirs.prefix+string(format='("Response-c-",i8.8)',ims[0])
+    file = apogee_filename('Response',num=ims[0],chip='c',/base,/nochip)
     file_delete,fluxdir+file+'.lock'
   endif
  

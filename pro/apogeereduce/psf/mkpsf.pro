@@ -26,6 +26,7 @@
 ; By J. Holtzman, 2011
 ;  Added doc strings, updates to use data model  D. Nidever, Sep 2020
 ;-
+
 pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
           littrowid=littrowid,average=average,clobber=clobber
 
@@ -33,7 +34,7 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
   caldir = dirs.caldir
 
   psfdir = apogee_filename('PSF',num=psfid[0],chip='c',/dir)
-  file = apogee_filename('PSF',num=psfid[0],chip='c',/base)
+  file = apogee_filename('PSF',num=psfid[0],/base,/nochip)
 
   ;; If another process is alreadying make this file, wait!
   while file_test(psfdir+file+'.lock') do apwait,file,10
@@ -47,13 +48,13 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
 
   print,'Making PSF: ', psfid[0]
   ;; Open .lock file
-  openw,lock,/get_lun,file+'.lock'
+  openw,lock,/get_lun,psfdir+file+'.lock'
   free_lun,lock
 
   cmjd = getcmjd(psfid)
   print,'mkpsf approcess...'
   d = approcess(psfid,darkid=darkid,flatid=flatid,littrowid=littrowid,/nocr,nfs=1,/doap3dproc)
-  psffile = apogee_filename('2D',num=psfid[0],chip='c'))+'/'+string(format='(i8.8)',psfid)
+  psffile = apogee_filename('2D',num=psfid[0],chip='c',/dir)+'/'+string(format='(i8.8)',psfid)
   APMKPSF,psffile,psfdir,sparseid=sparseid,fiberid=fiberid,average=average,clobber=clobber
 
   file_delete,psfdir+file+'.lock'
