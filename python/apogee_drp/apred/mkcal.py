@@ -163,17 +163,32 @@ def readcal(calfile):
     return caldict
 
 
-def getcal(mjd):
+def parsecaldict(caldict,mjd):
+    """ Smaller helper function for getcal() to select the entry in a calibration
+    dictionary that is valid for a MJD."""
+    gd,ngd = dln.where( (mjd >= caldict['mjd1']) & (mjd <= caldict['mjd2']) )
+    if ngd>0:
+       if ngd>1:
+          gd = gd[-1]
+          print('Multiple cal products found for mjd '+str(mjd)+' will use last: '+caldict['name'][gd])
+       return caldict['name'][gd]
+    else:
+       return None
+
+
+def getcal(calfile,mjd):
     """ Return the needed calibration products for a given night."""
 
-    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
-    calfile = caldir+'apogee-n.par'
+    #caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
+    #calfile = caldir+'apogee-n.par'
 
+    # Read in the master calibration index
     allcaldict = readcal(calfile)
 
     # Loop over the calibration types and get the ones we need
+    caldict = OrderedDict()
     for caltype in allcaldict.keys():
-        pass
+       caldict[caltype] = parsecaldict(allcaldict[caltype],mjd)
 
     return caldict
 
