@@ -125,14 +125,13 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
     endfor
   endif
 
-  file = apogee_filename('Flux',num=ims[0],chip='c')
-  ;file = dirs.prefix+string(format='("Flux-c-",i8.8)',ims[0])
+  file = apogee_filename('Flux',num=ims[0],chip='c',/base,/nochip)
   file_delete,fluxdir+file+'.lock'
 
   response:
   ;; Extra block if we are calculating response function 
   if n_elements(temp) gt 0 then begin
-    file = apogee_filename('Response',num=ims[0],chip='c',/base)
+    file = apogee_filename('Response',num=ims[0],chip='c',/base,/nochip)
     ;file = dirs.prefix+string(format='("Response-c-",i8.8)',ims[0])
     ;; If another process is alreadying making this file, wait!
     while file_test(fluxdir+file+'.lock') do apwait,file,10
