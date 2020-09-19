@@ -12,29 +12,29 @@ if keyword_set(vers) then apsetver,vers=vers else stop,'need to set vers'
 if ~keyword_set(aspcap) then aspcap='a'
 
 if keyword_set(apogees) then begin
-  prefix='as' 
-  telescope='lco25m'
-  instrument='apogee-s'
-  apogee_data=getenv('APOGEE_DATA_2S')
-  mapper_data=getenv('MAPPER_DATA_2S')
+  prefix = 'as' 
+  telescope = 'lco25m'
+  instrument = 'apogee-s'
+  apogee_data = getenv('APOGEE_DATA_S')
+  mapper_data = getenv('MAPPER_DATA_S')
 endif else begin
-  prefix='ap'
-  telescope='apo25m'
-  instrument='apogee-n'
-  apogee_data=getenv('APOGEE_DATA')
-  mapper_data=getenv('MAPPER_DATA')
+  prefix = 'ap'
+  telescope = 'apo25m'
+  instrument = 'apogee-n'
+  apogee_data = getenv('APOGEE_DATA_N')
+  mapper_data = getenv('MAPPER_DATA_N')
 endelse
 apsetver,vers=vers,telescope=telescope
 
-dirs=getdir(a,c,s)
-dir=s+'/autored/'+telescope+'/'
+dirs = getdir(a,c,s)
+dir = s+'/autored/'+telescope+'/'
 file_mkdir,dir
 
 ; loop over each MJD
-dosum=0
+dosum = 0
 for i=0,n_elements(mjds)-1 do begin
-  mjd=mjds[i]
-  cmjd=string(format='(i5.5)',mjd)
+  mjd = mjds[i]
+  cmjd = string(format='(i5.5)',mjd)
   print,mjd,cmjd
   ; if this MJD is done, we are done
   if ~file_test(dir+cmjd+'.done') then begin
@@ -42,13 +42,13 @@ for i=0,n_elements(mjds)-1 do begin
     if file_test(dir+cmjd+'.plans') then begin
       ; if it has been started, are all the jobs done? If so, run the MJD summary
       readcol,dir+cmjd+'.plans',format='(a)',plans
-      done=1
+      done = 1
       for j=0,n_elements(plans)-1 do begin
-        junk=strsplit(file_basename(plans[j],'.par'),'-',/ext)
-        cplate=junk[1]
+        junk = strsplit(file_basename(plans[j],'.par'),'-',/ext)
+        cplate = junk[1]
         if strpos(plans[j],'Dark') ge 0 or strpos(plans[j],'Cal') ge 0 then $
-           qafile=apogee_filename('QAcal',plate=cplate,mjd=cmjd) else $
-           qafile=apogee_filename('QA',plate=cplate,mjd=cmjd)
+           qafile = apogee_filename('QAcal',plate=cplate,mjd=cmjd) else $
+           qafile = apogee_filename('QA',plate=cplate,mjd=cmjd)
         ;if cplate eq '0000' then qafile=prefix+'QAcal-'+cmjd+'.fits' else $
         ;                         qafile='html/'+prefix+'QA-'+cplate+'-'+junk[2]+'.html'
         ;if ~file_test(s+'/'+telescope+'/'+cplate+'/'+junk[2]+'/'+qafile) and $

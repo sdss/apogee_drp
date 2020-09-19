@@ -29,21 +29,21 @@ pro apmkplan,mjd,planfiles=planfiles,apogees=apogees,vers=vers
 if ~keyword_set(vers) then stop,'need to set vers'
 
 if keyword_set(apogees) then begin
-  prefix='as'
-  telescope='lco25m'
-  instrument='apogee-s'
-  apogee_data=getenv('APOGEE_DATA_2S')
+  prefix = 'as'
+  telescope = 'lco25m'
+  instrument = 'apogee-s'
+  apogee_data = getenv('APOGEE_DATA_S')
 endif else begin
-  prefix='ap'
-  telescope='apo25m'
-  instrument='apogee-n'
-  apogee_data=getenv('APOGEE_DATA')
+  prefix = 'ap'
+  telescope = 'apo25m'
+  instrument = 'apogee-n'
+  apogee_data = getenv('APOGEE_DATA_N')
 endelse
 
 ; main procedure to scan through apz files and collect exposure data
 
 ; get character MJD and search for files
-cmjd=string(mjd,format='(i5.5)')
+cmjd = string(mjd,format='(i5.5)')
 openw,out,getenv('APOGEEREDUCEPLAN_DIR')+'/pro/'+telescope+'/'+telescope+'_'+cmjd+'auto.pro',/get_lun
 
 printf,out,"apsetver,telescope='"+telescope+"'"

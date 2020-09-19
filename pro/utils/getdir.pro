@@ -49,17 +49,17 @@ function getdir,apogeedir,caldir,spectrodir,vers,libdir,prefix,$
   if telescop eq 'apo1m' then begin
     datadir = getenv('APOGEE_DATA_1M')+'/'
   endif else if telescop eq 'lco25m' then begin
-    datadir = getenv('APOGEE_DATA_2S')+'/' 
+    datadir = getenv('APOGEE_DATA_S')+'/' 
   endif else begin
-    datadir = getenv('APOGEE_DATA')+'/' 
+    datadir = getenv('APOGEE_DATA_N')+'/' 
   endelse
   if instrume eq 'apogee-n' then begin
     prefix = 'ap'
-    mapperdir = getenv('MAPPER_DATA')+'/'
+    mapperdir = getenv('MAPPER_DATA_N')+'/'
     calfile = libdir+'cal/apogee-n.par'
   endif else begin
     prefix = 'as'
-    mapperdir = getenv('MAPPER_DATA_2S')+'/'
+    mapperdir = getenv('MAPPER_DATA_S')+'/'
     calfile = libdir+'cal/apogee-s.par'
   endelse
   spectrodir = apogeedir+'/'+apred_vers+'/'

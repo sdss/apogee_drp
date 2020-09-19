@@ -21,8 +21,8 @@ openw,lock,/get_lun,spectrodir+'index.html.lock'
 free_lun,lock
 
 ; find all .log.html files, get all MJDs with data
-logs=[file_search(getenv('APOGEE_DATA')+'/*/*.log.html'),$
-      file_search(getenv('APOGEE_DATA_2S')+'/*/*.log.html'),$
+logs=[file_search(getenv('APOGEE_DATA_N')+'/*/*.log.html'),$
+      file_search(getenv('APOGEE_DATA_S')+'/*/*.log.html'),$
       file_search(getenv('APOGEE_DATA_1M')+'/*/*.log.html')]
 mjd=lonarr(n_elements(logs))
 for i=0,n_elements(logs)-1 do begin
@@ -247,7 +247,7 @@ endfor
 device,/close
 ps2gif,'galactic.eps',chmod='664'o,/delete,/eps
 
-printf,html,'<p>APOGEE sky coverage: red=APOGEE1 (yellow: commissioning), green=APOGEE2, magenta=APOGEE2S, cyan=MaNGA-APOGEE2<p>'
+printf,html,'<p>APOGEE sky coverage: red=APOGEE1 (yellow: commissioning), green=APOGEEN, magenta=APOGEE-S, cyan=MaNGA-APOGEE2<p>'
 printf,html,'<img src=sky.gif width=45%>'
 printf,html,'<img src=galactic.gif width=45%>'
 printf, html,'<p>Summary files:'
