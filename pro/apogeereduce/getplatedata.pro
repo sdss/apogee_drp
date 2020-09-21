@@ -1,69 +1,92 @@
-function getplatedata,plate,cmjd,plugid=plugid,asdaf=asdaf,mapa=mapa,obj1m=obj1m,fixfiberid=fixfiberid,noobject=noobject,stop=stop,skip=skip,twilight=twilight,badfiberid=badfiberid,apogees=apogees,mapper_data=mapper_data,starfiber=starfiber
-
-; getplatedata loads up a structure with plate information and information about the 300 APOGEE fibers
+;+
+;
+; GETPLATEDATA
+;
+; Getplatedata loads up a structure with plate information and information about the 300 APOGEE fibers
 ;  This is obtained from a plPlugMapA file or from a 
 ;  plPlugMapM+plateHolesSorted combination
 ; returned structure includes:
 ;    fiberid, ra, dec, eta, zeta, hmag, objtype, obj (name)
 ;  for each of 300 APOGEE (spectrographid=2) files
+;
+; INPUTS:
+;  plate          ID for the desired plate.
+;  cmjd           MJD for the plugmap information.
+;  =plugid        Name of plugmap file.
+;  =asdaf         Array of fiberIDs for stars in a ASDAF
+;                   (Any-Star-Down-Any Fiber) observation.
+;  /mapa          Use "plPlugMapA" file, otherwise "plPlugMapM".
+;  /obj1m         APO-1m observation.
+;  /fixfiberid    Fix issues with fibers.
+;  /noobject      Don't load the apogeeObject targeting information.
+;  /twilight      This is a twilight observation, no stars.
+;  =badiberid     Array of fiberIDs of bad fibers.
+;  =mapper_data   Directory for mapper information (optional).
+;  =starfiber     FiberID of the star for APO-1m observations.
+;  /skip          Don't load the plugmap information.
+;  /stp           Stop at the end of the program.
+;  /apogees       Obsolete parameter.
+;
+; OUTPUTS:
+;  plandata  Targeting information for an APOGEE plate.
+;
+; USAGE:
+;  IDL>plugmap=getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),plugid=planstr.plugmap,$
+;                           fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data)
+;
+; By J. Holtzman, 2011?
+;  Doc updates by D. Nidever, Sep 2020
+;-
 
-dirs=getdir(apodir,datadir=datadir)
+function getplatedata,plate,cmjd,plugid=plugid,asdaf=asdaf,mapa=mapa,obj1m=obj1m,fixfiberid=fixfiberid,$
+                      noobject=noobject,stop=stop,skip=skip,twilight=twilight,badfiberid=badfiberid,$
+                      apogees=apogees,mapper_data=mapper_data,starfiber=starfiber
+
+dirs = getdir(apodir,datadir=datadir)
 if n_elements(mapper_data) eq 0 then mapper_data=dirs.mapperdir
 if size(plate,/type) eq 7 then begin
-  cplate=plate 
-  platenum=0L
+  cplate = plate 
+  platenum = 0L
 endif else begin
-  cplate=strtrim(string(format='(i6.4)',plate),2)
-  platenum=long(plate)
+  cplate = strtrim(string(format='(i6.4)',plate),2)
+  platenum = long(plate)
 endelse
-mjd=0L
+mjd = 0L
 reads,cmjd,mjd
 
-; create the output fiber structure
-tmp={fiberid: 0, ra: 0.d0, dec: 0.d0, eta: 0.d0, zeta: 0.d0, hmag: 0., objtype: 'none', holetype: 'OBJECT', object: '', tmass_style: '', target1: 0L, target2: 0L, target3: 0L, spectrographid: 2, mag: fltarr(5), ak_targ: -99., ak_targ_method : 'none', ak_wise: -99., sfd_ebv: -99.}
-guide=replicate(tmp,16)
-loc=0L
+;; Create the output fiber structure
+tmp = {fiberid:0, ra:0.d0, dec:0.d0, eta:0.d0, zeta:0.d0, hmag:0., objtype:'none', holetype:'OBJECT',$
+       object:'', tmass_style:'', target1:0L, target2:0L, target3:0L, spectrographid:2, mag:fltarr(5),$
+       ak_targ:-99., ak_targ_method :'none', ak_wise:-99., sfd_ebv:-99.}
+guide = replicate(tmp,16)
+loc = 0L
+;; APO-1M observations
 if keyword_set(obj1m) then begin
   if keyword_set(fixfiberid) then begin
     if fixfiberid eq 1 then begin
-      fiberid=[218,220,222,223,226,227,228,229,230,231]
+      fiberid = [218,220,222,223,226,227,228,229,230,231]
       if ~keyword_set(starfiber) then starfiber=229
     endif
   endif else begin
-    fiberid=[218,219,221,223,226,228,230]
+    fiberid = [218,219,221,223,226,228,230]
     if ~keyword_set(starfiber) then starfiber=223
   endelse
-  ;fiber=replicate(tmp,9)
-  fiber=replicate(tmp,n_elements(fiberid))
-  platedata={plate: platenum, mjd: mjd, plateid: cplate, locationid: 1L, field: ' ', programname: '', $
-             cmjd: cmjd, ha: [-99.,-99.,-99.], fiberdata: fiber, guidedata: guide}
+  fiber = replicate(tmp,n_elements(fiberid))
+  platedata = {plate:platenum, mjd:mjd, plateid:cplate, locationid:1L, field:' ', programname:'', $
+               cmjd:cmjd, ha:[-99.,-99.,-99.], fiberdata:fiber, guidedata:guide}
   platedata.field = cplate
-  ;fiber.fiberid=[218,219,220,221,223,226,228,230,231]
-  ;fiber.objtype=['SKY','SKY','SKY','SKY','STAR','SKY','SKY','SKY','SKY']
-  ;if n_elements(fixfiberid) gt 0 then begin
-  ;  if fixfiberid eq 1 then begin
-  ;    fiber.fiberid=[218,220,222,223,226,227,228,229,230,231]
-  ;    fiber.objtype=['SKY','SKY','SKY','SKY','SKY','SKY','SKY','SKY','SKY','SKY']
-  ;    if ~keyword_set(starfiber) then starfiber=229
-  ;  endif
-  ;endif else begin
-  ;  fiber.fiberid=[218,219,221,223,226,228,230]
-  ;  fiber.objtype=['SKY','SKY','SKY','STAR','SKY','SKY','SKY']
-  ;  fiber.objtype=['SKY','SKY','SKY','SKY','SKY','SKY','SKY']
-  ;  if ~keyword_set(starfiber) then starfiber=223
-  ;endelse
-  fiber.fiberid=fiberid
-  fiber.objtype=replicate('SKY',n_elements(fiberid))
-  j=where(fiber.fiberid eq starfiber)
+  fiber.fiberid = fiberid
+  fiber.objtype = replicate('SKY',n_elements(fiberid))
+  j = where(fiber.fiberid eq starfiber)
   fiber[j].objtype = 'STAR'
-  j=where(fiber.objtype eq 'SKY')
+  j = where(fiber.objtype eq 'SKY')
   fiber[j].target2 = 2L^4
-  obj=mrdfits(getenv('APOGEEREDUCEPLAN_DIR')+'/data/1m/'+cplate+'.fits',1,status=status)
+  obj = mrdfits(getenv('APOGEEREDUCEPLAN_DIR')+'/data/1m/'+cplate+'.fits',1,status=status)
 
   if status eq 0 then begin
-   j=where(strtrim(obj.name,2) eq strtrim(obj1m,2),nj)
+   j = where(strtrim(obj.name,2) eq strtrim(obj1m,2),nj)
    if nj gt 0 then begin
-    ifiber=where(fiber.fiberid eq starfiber)
+    ifiber = where(fiber.fiberid eq starfiber)
     fiber[ifiber].object = obj[j].name
     fiber[ifiber].tmass_style = strtrim(obj[j].name,2)
     fiber[ifiber].hmag = obj[j].h
@@ -76,46 +99,46 @@ if keyword_set(obj1m) then begin
   platedata.fiberdata = fiber  
   return,platedata
 endif
+;; Twilight observations
 if keyword_set(twilight) then begin
-  fiber=replicate(tmp,300)
-  platedata={plate: platenum, mjd: mjd, plateid: cplate, locationid: 1L, field: ' ', programname: '', cmjd: cmjd, ha: [-99.,-99.,-99.], fiberdata: fiber, guidedata: guide}
+  fiber = replicate(tmp,300)
+  platedata = {plate:platenum, mjd:mjd, plateid:cplate, locationid:1L, field:' ', programname:'', cmjd:cmjd,$
+               ha:[-99.,-99.,-99.], fiberdata:fiber, guidedata:guide}
   platedata.field = cplate
-  ;j=where(indgen(300) mod 10 eq 0)
-  ;fiber[j].target2 = 2L^4
-  ;fiber[j].objtype = 'SKY'
-  fiber.hmag=10.
-  fiber.mag=[10.,10.,10.,10.,10.]
-  fiber.objtype='STAR'
+  fiber.hmag = 10.
+  fiber.mag = [10.,10.,10.,10.,10.]
+  fiber.objtype = 'STAR'
   fiber.fiberid = indgen(300)+1
   platedata.fiberdata = fiber  
   return,platedata
 endif
-fiber=replicate(tmp,300)
+fiber = replicate(tmp,300)
 reads,cplate,platenum
-platedata={plate: platenum, mjd: mjd, plateid: cplate, locationid: 0L, field: ' ', programname: '', cmjd: cmjd, ha: [-99.,-99.,-99.], fiberdata: fiber, guidedata: guide}
+platedata = {plate:platenum, mjd:mjd, plateid:cplate, locationid:0L, field:' ', programname:'', cmjd:cmjd,$
+              ha:[-99.,-99.,-99.], fiberdata:fiber, guidedata:guide}
 platedata.field = apogee_field(loc,platenum,survey,programname)
 platedata.locationid = loc
 platedata.programname = programname
 
-; do we want to use a plPlugMapA file with the matching already done?
-havematch=0
+;; Do we want to use a plPlugMapA file with the matching already done?
+havematch = 0
 if keyword_set(mapa) then root = 'plPlugMapA' else root='plPlugMapM'
 if keyword_set(plugid) then begin
-  tmp=file_basename(plugid,'.par')
+  tmp = file_basename(plugid,'.par')
   if strpos(tmp,'plPlug') ge 0 then tplugid=strmid(tmp,11) else tplugid=tmp
-  plugfile=root+'-'+tplugid+'.par'
+  plugfile = root+'-'+tplugid+'.par'
 endif else begin
-  tplugid=root+'-'+cplate
-  plugfile=root+'-'+cplate+'.par'
+  tplugid = root+'-'+cplate
+  plugfile = root+'-'+cplate+'.par'
 endelse
 if keyword_set(mapa) then plugdir=datadir+cmjd+'/' else begin
-  tmp=strsplit(tplugid,'-',/extract)
-  plugmjd=tmp[1]
-  plugdir=mapper_data+'/'+plugmjd+'/'
+  tmp = strsplit(tplugid,'-',/extract)
+  plugmjd = tmp[1]
+  plugdir = mapper_data+'/'+plugmjd+'/'
 endelse
 
-; Does the plugfile exist? If so, load it
-if file_test(plugdir+'/'+plugfile) then aploadplugmap,plugdir+'/'+plugfile,plugmap,fixfiberid=fixfiberid else $
+;; Does the plugfile exist? If so, load it
+if file_test(plugdir+'/'+plugfile) then APLOADPLUGMAP,plugdir+'/'+plugfile,plugmap,fixfiberid=fixfiberid else $
    if keyword_set(skip) then return,0 else stop,'halt: cannot find plugmap file '+plugdir+'/'+plugfile
 
 platedata.locationid = plugmap.locationid
@@ -123,25 +146,24 @@ platedata.ha[0] = plugmap.ha[0]
 platedata.ha[1] = plugmap.ha_observable_min[0]
 platedata.ha[2] = plugmap.ha_observable_max[0]
 if not keyword_set(mapa) then begin
-  ; get the plateHolesSorted file for thie plate and read it
-  ;reads,cplate,plate
-  platestr=string(format='(i6.6)',platenum)
-  platedir=getenv('PLATELIST_DIR')+'/plates/'+strmid(platestr,0,4)+'XX/'+platestr
-  holefile='plateHolesSorted-'+platestr+'.par'
+  ;; Get the plateHolesSorted file for thie plate and read it
+  platestr = string(format='(i6.6)',platenum)
+  platedir = getenv('PLATELIST_DIR')+'/plates/'+strmid(platestr,0,4)+'XX/'+platestr
+  holefile = 'plateHolesSorted-'+platestr+'.par'
   print,'yanny_read,'+platedir+'/'+holefile
-  yanny_read,platedir+'/'+holefile,pdata,/anon,hdr=hdr
-  p=*pdata
-  yanny_free,pdata
-  ; use locationid from plateHoles files as there are a few cases where plugmapM is
-  ;  wrong
-  j=where(strpos(strupcase(hdr),'LOCATIONID') ge 0)
-  tmp=strsplit(hdr[j],/ext)
-  loc=0L
+  YANNY_READ,platedir+'/'+holefile,pdata,/anon,hdr=hdr
+  p =* pdata
+  YANNY_FREE,pdata
+  ;; Use locationid from plateHoles files as there are a few cases where plugmapM is
+  ;;  wrong
+  j = where(strpos(strupcase(hdr),'LOCATIONID') ge 0)
+  tmp = strsplit(hdr[j],/ext)
+  loc = 0L
   reads,tmp[1],loc
   platedata.locationid = loc
 endif
 
-; load guide stars
+;; Load guide stars
 for i=0,15 do begin
   m=where(plugmap.fiberdata.holetype eq 'GUIDE' and $
           plugmap.fiberdata.fiberid eq i,nm)
