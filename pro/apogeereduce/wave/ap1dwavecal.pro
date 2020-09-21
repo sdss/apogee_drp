@@ -9,6 +9,7 @@
 ;  frame     A structure with the header/data information for an
 ;                undersampled frame.  This must have the LSF and
 ;                WAVELENGTH information already appended to the structure.
+;  =plugmap  Plugmap structure with information on the sky fibers.
 ;  /noshift  Don't shift, just use the wavelength coefficients as is.
 ;  /silent   Don't print anything to the screen.
 ;  /verbose  Print lots of information to the screen
