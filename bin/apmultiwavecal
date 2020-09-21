@@ -24,7 +24,7 @@ import numpy as np
 import pdb
 matplotlib.use('Agg')
 
-from apogee.apred import wave
+from apogee_drp.apred import wave
 
 if __name__ == '__main__' :
 

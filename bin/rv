@@ -21,7 +21,7 @@ import pdb
 import time
 import datetime
 
-from apogee.apred import rv
+from apogee_drp.apred import rv
 
 if __name__ == '__main__' :
 
