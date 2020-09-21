@@ -31,9 +31,9 @@ from astropy.table import Table
 #from pyvista import tv
 # pyvista.tv is only used by compare() but not used by anything
 
-chips=['a','b','c']
-colors=['r','g','b','c','m','y']
-xlim=[[16400,17000],[15900,16500],[15100,15800]]
+chips = ['a','b','c']
+colors = ['r','g','b','c','m','y']
+xlim = [[16400,17000],[15900,16500],[15100,15800]]
 
 def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],npoly=4,reject=3,
             plot=False,hard=True,verbose=False,clobber=False,init=False,nofit=False,test=False) :
@@ -57,7 +57,7 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         nofit (bool) : only find lines, skip fit (default=False)
         test (bool) : if True, use polynomial from first set, only let centers shift for all other sets
     """
-    load=apload.ApLoad(apred=vers,instrument=inst)
+    load = apload.ApLoad(apred=vers,instrument=inst)
 
     if name is None : name = nums[0]
     if test : name = int(name/10000)*10000+9999
@@ -444,7 +444,7 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=
         hdu[0].header['COMMENT']='HDU#4 : rms from fit [300,ngroup]'
         hdu[0].header['COMMENT']='HDU#5 : sig from fit [300,ngroup]'
         if allpars is not None : hdu[0].header['COMMENT']='HDU#3 : wavecal fit parameter array [npoly+3*ngroup,300]'
-        hdu[0].header.add_comment('APOGEE_VER:'+os.environ['APOGEE_VER'])
+        hdu[0].header.add_comment('APOGEE_DRP_VER:'+os.environ['APOGEE_DRP_VER'])
         hdu.append(fits.ImageHDU(chippars))
         hdu.append(fits.ImageHDU(chipwaves))
         hdu.append(fits.ImageHDU(pars))
@@ -473,9 +473,9 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
     Returns :
         structure with identified lines, with tags chip, row, wave, peak, pixrel, dpixel, frameid
     """
-    num=int(os.path.basename(frame['a'][0].header['FILENAME']).split('-')[1])
-    nlines=len(lines)
-    nrows=len(rows)
+    num = int(os.path.basename(frame['a'][0].header['FILENAME']).split('-')[1])
+    nlines = len(lines)
+    nrows = len(rows)
     linestr = np.zeros(nlines*nrows,dtype=[
                        ('chip','i4'), ('row','i4'), ('wave','f4'), ('peak','f4'), ('pixel','f4'),
                        ('dpixel','f4'), ('wave_found','f4'), ('frameid','i4')
@@ -488,18 +488,18 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
         for irow,row in enumerate(np.append([rows[0]],rows)) :
             # subtract off median-filtered spectrum to remove background
             medspec = frame[chip][1].data[row,:]-medfilt(frame[chip][1].data[row,:],101)
-            j=np.where(lines['CHIPNUM'] == ichip+1)[0]
+            j = np.where(lines['CHIPNUM'] == ichip+1)[0]
             dpixel=[]
             # for dummy row, open up the search window by a factor of two
             if irow == 0 : estsig0=2*estsig
             else : estsig0=estsig
             for iline in j :
-                wave=lines['WAVE'][iline]
+                wave = lines['WAVE'][iline]
                 try :
-                    pix0=wave2pix(wave,waves[chip][row,:])+dpixel_median
+                    pix0 = wave2pix(wave,waves[chip][row,:])+dpixel_median
                     # find peak in median-filtered subtracted spectrum
-                    pars=peakfit(medspec,pix0,estsig=estsig0,
-                                 sigma=frame[chip][2].data[row,:],mask=frame[chip][3].data[row,:])
+                    pars = peakfit(medspec,pix0,estsig=estsig0,
+                                   sigma=frame[chip][2].data[row,:],mask=frame[chip][3].data[row,:])
                     if lines['USEWAVE'][iline] == 1 : dpixel.append(pars[1]-pix0)
                     if irow > 0 :
                         linestr['chip'][nline] = ichip+1
@@ -528,10 +528,10 @@ def gaussbin(x,a,x0,sig) :
     """ Evaluate integrated Gaussian function 
     """
     # bin width
-    xbin=1.
-    t1=(x-x0-xbin/2.)/np.sqrt(2.)/sig
-    t2=(x-x0+xbin/2.)/np.sqrt(2.)/sig
-    y=(myerf(t2)-myerf(t1))/xbin
+    xbin = 1.
+    t1 = (x -x0-xbin/2.)/np.sqrt(2.)/sig
+    t2 = (x-x0+xbin/2.)/np.sqrt(2.)/sig
+    y = (myerf(t2)-myerf(t1))/xbin
     return a*y
 
 def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin) :
@@ -548,22 +548,22 @@ def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin) :
     """
     x = np.arange(len(spec))
     cen = int(round(pix0))
-    sig=estsig
-    back=0.
+    sig = estsig
+    back = 0.
     for iter in range(11) :
         # window width to search
-        xwid=int(round(5*sig))
+        xwid = int(round(5*sig))
         if xwid < 3 : xwid=3
-        y=spec[cen-xwid:cen+xwid+1]
-        yerr=sigma[cen-xwid:cen+xwid+1]
+        y = spec[cen-xwid:cen+xwid+1]
+        yerr = sigma[cen-xwid:cen+xwid+1]
         x0 = y.argmax()+(cen-xwid)
         peak = y.max()
         sig = np.sqrt(y.sum()**2/peak**2/(2*np.pi))
-        pars=curve_fit(func,x[cen-xwid:cen+xwid+1],y,p0=[peak/sig/np.sqrt(2*np.pi),x0,sig],sigma=yerr)[0]
+        pars = curve_fit(func,x[cen-xwid:cen+xwid+1],y,p0=[peak/sig/np.sqrt(2*np.pi),x0,sig],sigma=yerr)[0]
         # iterate unless new array range is the same
         if int(round(5*pars[2])) == xwid and int(round(pars[1])) == cen : break
-        cen=int(round(pars[1]))
-        sig=pars[2]
+        cen = int(round(pars[1]))
+        sig = pars[2]
     if plot :
         plt.clf()
         plt.plot(x,spec)
@@ -576,10 +576,10 @@ def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin) :
 def test() :
     """ test routine for peakfity
     """
-    spec=np.zeros([200])
-    specbin=np.zeros([200])
-    spec[50:151]=gauss(np.arange(50,151),100.,99.5,0.78)
-    specbin[50:151]=gaussbin(np.arange(50,151),100.,99.5,0.78)
+    spec = np.zeros([200])
+    specbin = np.zeros([200])
+    spec[50:151] = gauss(np.arange(50,151),100.,99.5,0.78)
+    specbin[50:151] = gaussbin(np.arange(50,151),100.,99.5,0.78)
     plt.plot(spec)
     plt.plot(specbin)
     plt.show()
@@ -598,17 +598,17 @@ def func_multi_poly(x,*pars, **kwargs) :
         Returns :
          wave (float) : wavelength array for input pixel(s), parameters
     """
-    wave=np.zeros(x.shape[1])
+    wave = np.zeros(x.shape[1])
     ngroup = int(round(x[2,:].max()))+1
     nchip = 3
-    npoly=kwargs.get('npoly',None)
+    npoly = kwargs.get('npoly',None)
     if npoly is None : npoly = len(pars)-ngroup*nchip
     coef = pars[0:npoly]
     # loop over all chip/group combinations
     for ichip in range(nchip) :
         for igroup in range(ngroup) :
             offset = pars[npoly+igroup*nchip+ichip]
-            j=np.where((x[1,:] == ichip+1) & (np.round(x[2,:]).astype(int) == igroup))[0]
+            j = np.where((x[1,:] == ichip+1) & (np.round(x[2,:]).astype(int) == igroup))[0]
             xglobal = x[0,j] - 1023.5 + (ichip-1)*2048 + offset
             wave[j] = np.polyval(coef,xglobal)
     return wave
@@ -616,10 +616,10 @@ def func_multi_poly(x,*pars, **kwargs) :
 def getgroup(groups) :
     """ Given input list of group ids that may not be consecutive, return consecutive list
     """
-    group=sorted(set(groups))
+    group = sorted(set(groups))
     out = np.zeros(len(groups))
     for i in range(len(group)) :
-        j=np.where(groups == group[i])[0]
+        j = np.where(groups == group[i])[0]
         out[j] = i
     return out,group
 
@@ -629,18 +629,18 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
     """
     # read planfile
     if type(planfile) is dict :
-        p=planfile
-        dirname='.'
+        p = planfile
+        dirname = '.'
     else :
-        p=yanny.yanny(planfile)
-        dirname=os.path.dirname(planfile)
+        p = yanny.yanny(planfile)
+        dirname = os.path.dirname(planfile)
     if dirname == '' : dirname = '.'
     if inst is None : inst = p['instrument'].strip("'") if p.get('instrument') else 'apogee-n'
     if vers is None : vers = p['apred_vers'].strip("'") if p.get('apred_vers') else 'current'
     if waveid is None : waveid = int(p['waveid'].strip("'")) if p.get('waveid') else None
 
     # set up file reader
-    load=apload.ApLoad(apred=vers,instrument=inst,verbose=False)
+    load = apload.ApLoad(apred=vers,instrument=inst,verbose=False)
 
     # open output line data?
     if out is not None : f=open(out,'a') 
@@ -652,57 +652,57 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
     elif p['platetype'].strip("'") == 'single' : 
         if p['telescope'].strip("'") == 'apo1m' : 
             if int(p['fixfiberid']) == 1 :
-                fiberid=np.array([218,220,222,223,226,227,228,229,230,231])
+                fiberid = np.array([218,220,222,223,226,227,228,229,230,231])
             else :
-                fiberid=np.array([218,219,221,223,226,228,230])
+                fiberid = np.array([218,219,221,223,226,228,230])
             skyfibers = fiberid[np.where(fiberid != int(p['APEXP']['single'][0]))[0]]
             skyrows = np.sort(300-skyfibers)
             print(skyrows)
     else :
-        plugmjd=p['plugmap'].split('-')[1]
+        plugmjd = p['plugmap'].split('-')[1]
         if inst == 'apogee-s' : 
-            plugmap=yanny.yanny(
+            plugmap = yanny.yanny(
                     os.environ['MAPPER_DATA_S']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
         else :
-            plugmap=yanny.yanny(
-                    os.environ['MAPPER_DATA_N']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
+            plugmap = yanny.yanny(
+                os.environ['MAPPER_DATA_N']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
         skyind=np.where((np.array(plugmap['PLUGMAPOBJ']['objType']) == 'SKY') & 
                        (np.array(plugmap['PLUGMAPOBJ']['holeType']) == 'OBJECT') &
                        (np.array(plugmap['PLUGMAPOBJ']['spectrographId']) == 2) )[0]
         skyfibers = np.array(plugmap['PLUGMAPOBJ']['fiberId'])[skyind]
         skyrows = np.sort(300-skyfibers)
     if not nosky :
-        skylines=ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/skylines/'+skyfile+'.txt')
+        skylines = ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/skylines/'+skyfile+'.txt')
 
     # if we have a wavecal, get the wavelength array
     if waveid > 0 :
         #use wavelength solution from specified wavecal
         print('loading waveid: ', waveid)
-        waveframe=load.apWave(waveid)
-        npoly=waveframe['a'][0].header['NPOLY']
-        allpars=waveframe['a'][3].data
+        waveframe = load.apWave(waveid)
+        npoly = waveframe['a'][0].header['NPOLY']
+        allpars = waveframe['a'][3].data
         if len(waveframe['a']) == 6 : allpars,waves=refine(waveframe['a'][3].data)
         else : 
             waves={}
             for chip in chips : waves[chip]=waveframe[chip][2].data
     
     # loop over all frames in the planfile and assess skylines in each
-    grid=[]
-    ytit=[]
+    grid = []
+    ytit = []
     for iframe,name in enumerate(p['APEXP']['name']) :
         print('frame: ', name)
         frame = load.ap1D(int(name))
         if waveid > 0 :
             if not nosky : plot = dirname+'/plots/skypixshift-'+name+'-'+skyfile
             if group >= 0 :
-                allpars=waveframe['a'][3].data
-                waves={}
+                allpars = waveframe['a'][3].data
+                waves = {}
                 x = np.zeros([3,2048])
                 for ichip,chip in enumerate(chips) :
                     x[0,:] = np.arange(2048)
                     x[1,:] = ichip+1
                     x[2,:] = group
-                    waves[chip]=np.zeros([300,2048])
+                    waves[chip] = np.zeros([300,2048])
                     for row in np.arange(300) :
                         waves[chip][row,:] = func_multi_poly(x,*allpars[:,row],npoly=4)
         else :
@@ -721,15 +721,15 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
             niter = 0
             while (nuse < 0.9*len(gd)) & (niter < 0.75*len(skyrows)) :
                 linestr = findlines(frame,skyrows,waves,skylines,out=f,estsig=1.*fact)
-                use=[]
+                use = []
                 nuse = 0
                 for line in skylines['WAVE'][gd] :
-                    j=np.where((linestr['wave'] == line) & (linestr['peak'] > 500.) )[0]
+                    j = np.where((linestr['wave'] == line) & (linestr['peak'] > 500.) )[0]
                     print(line,len(j),linestr['wave_found'][j].mean(),linestr['wave_found'][j].std())
                     use.extend(j)
                     # if we found this line in more than 5 fibers, count it
                     if len(j) > 5: nuse+=1
-                use=np.array(use)
+                use = np.array(use)
                 print('fact : {:f} nuse: {:d}  ngd: {:d}'.format(fact,nuse,len(gd)))
                 fact *= 1.15
                 niter += 1
@@ -739,23 +739,23 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
                 mask = np.ones(len(use), dtype=bool) # all elements included/True.
                 bd = np.where((linestr['row'][use] > 200) & (linestr['chip'][use] == 3) )[0]
                 mask[bd] = False              # Set unwanted elements to False
-                use=use[mask]
+                use = use[mask]
 
             # solve for 4 parameter fit to dpixel, with linear trend with row, plus 2 chip offsets
-            design=np.zeros([len(use),4])
+            design = np.zeros([len(use),4])
             # global slope with rows
             design[:,0] = linestr['row'][use]
             # offset of each chip
             for ichip in range(3) :
                 gd = np.where(linestr['chip'][use] == ichip+1)[0]
                 design[gd,ichip+1] = 1.
-            y=linestr['dpixel'][use]
+            y = linestr['dpixel'][use]
             # reject outliers
-            med=np.median(y)
-            gd=np.where(np.abs(y-med) < 2.5)[0]
-            gd=np.where(np.abs(y-med) < 0.5)[0]
-            design=design[gd,:]
-            y=y[gd]
+            med = np.median(y)
+            gd = np.where(np.abs(y-med) < 2.5)[0]
+            gd = np.where(np.abs(y-med) < 0.5)[0]
+            design = design[gd,:]
+            y = y[gd]
             # if 1m, don't solve for a slope, not enough information
             if p['telescope'].strip("'") == 'apo1m' : design = design[:,1:4]
             # solve

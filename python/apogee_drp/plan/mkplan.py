@@ -174,7 +174,7 @@ def speclib_split(planfile,amsplit=True,cmsplit=True,nmsplit=True,oasplit=True,v
 def aspcap(field,apred='r13',telescope='apo25m',aspcap_vers='l33',aspcap_config='l33cnmask',ncpus=16, minmjdlast=None) :
 
     plan={}
-    plan['apogee_ver'] = os.environ['APOGEE_VER']
+    plan['apogee_drp_ver'] = os.environ['APOGEE_DRP_VER']
     plan['apvisit'] = 0
     plan['apred_vers'] = apred
     plan['telescope'] = telescope
