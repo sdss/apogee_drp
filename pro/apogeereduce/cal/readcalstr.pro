@@ -22,6 +22,8 @@
 
 function readcalstr,str,mjd
 
+  if n_elements(str) eq 0 then return,0L
+
   ;; Check for rows that are in the right date range
   gd = where(mjd ge str.mjd1 and mjd le str.mjd2,ngd)
   ;; Some found
