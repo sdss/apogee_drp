@@ -28,7 +28,7 @@
 ;  /apogees       Obsolete parameter.
 ;
 ; OUTPUTS:
-;  plandata  Targeting information for an APOGEE plate.
+;  plandata       Targeting information for an APOGEE plate.
 ;
 ; USAGE:
 ;  IDL>plugmap=getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),plugid=planstr.plugmap,$
@@ -39,7 +39,7 @@
 ;-
 
 function getplatedata,plate,cmjd,plugid=plugid,asdaf=asdaf,mapa=mapa,obj1m=obj1m,fixfiberid=fixfiberid,$
-                      noobject=noobject,stop=stop,skip=skip,twilight=twilight,badfiberid=badfiberid,$
+                      noobject=noobject,stp=stp,skip=skip,twilight=twilight,badfiberid=badfiberid,$
                       apogees=apogees,mapper_data=mapper_data,starfiber=starfiber
 
 dirs = getdir(apodir,datadir=datadir)
@@ -84,17 +84,17 @@ if keyword_set(obj1m) then begin
   obj = mrdfits(getenv('APOGEEREDUCEPLAN_DIR')+'/data/1m/'+cplate+'.fits',1,status=status)
 
   if status eq 0 then begin
-   j = where(strtrim(obj.name,2) eq strtrim(obj1m,2),nj)
-   if nj gt 0 then begin
-    ifiber = where(fiber.fiberid eq starfiber)
-    fiber[ifiber].object = obj[j].name
-    fiber[ifiber].tmass_style = strtrim(obj[j].name,2)
-    fiber[ifiber].hmag = obj[j].h
-    fiber[ifiber].mag[1] = obj[j].h
-    fiber[ifiber].ra = obj[j].ra
-    fiber[ifiber].dec = obj[j].dec
-    fiber[ifiber].target2 = 2L^22
-   endif
+    j = where(strtrim(obj.name,2) eq strtrim(obj1m,2),nj)
+    if nj gt 0 then begin
+      ifiber = where(fiber.fiberid eq starfiber)
+      fiber[ifiber].object = obj[j].name
+      fiber[ifiber].tmass_style = strtrim(obj[j].name,2)
+      fiber[ifiber].hmag = obj[j].h
+      fiber[ifiber].mag[1] = obj[j].h
+      fiber[ifiber].ra = obj[j].ra
+      fiber[ifiber].dec = obj[j].dec
+      fiber[ifiber].target2 = 2L^22
+    endif
   endif else stop,'halt: no file found with object information!'
   platedata.fiberdata = fiber  
   return,platedata
@@ -115,7 +115,7 @@ endif
 fiber = replicate(tmp,300)
 reads,cplate,platenum
 platedata = {plate:platenum, mjd:mjd, plateid:cplate, locationid:0L, field:' ', programname:'', cmjd:cmjd,$
-              ha:[-99.,-99.,-99.], fiberdata:fiber, guidedata:guide}
+             ha:[-99.,-99.,-99.], fiberdata:fiber, guidedata:guide}
 platedata.field = apogee_field(loc,platenum,survey,programname)
 platedata.locationid = loc
 platedata.programname = programname
@@ -154,8 +154,8 @@ if not keyword_set(mapa) then begin
   YANNY_READ,platedir+'/'+holefile,pdata,/anon,hdr=hdr
   p =* pdata
   YANNY_FREE,pdata
-  ;; Use locationid from plateHoles files as there are a few cases where plugmapM is
-  ;;  wrong
+  ;; Use locationid from plateHoles files as there are a few cases
+  ;;  where plugmapM is wrong
   j = where(strpos(strupcase(hdr),'LOCATIONID') ge 0)
   tmp = strsplit(hdr[j],/ext)
   loc = 0L
@@ -165,8 +165,8 @@ endif
 
 ;; Load guide stars
 for i=0,15 do begin
-  m=where(plugmap.fiberdata.holetype eq 'GUIDE' and $
-          plugmap.fiberdata.fiberid eq i,nm)
+  m = where(plugmap.fiberdata.holetype eq 'GUIDE' and $
+            plugmap.fiberdata.fiberid eq i,nm)
   guide[i].fiberid = plugmap.fiberdata[m].fiberid
   guide[i].ra = plugmap.fiberdata[m].ra 
   guide[i].dec = plugmap.fiberdata[m].dec 
@@ -176,24 +176,23 @@ for i=0,15 do begin
 endfor
 platedata.guidedata = guide
 
-; find matching plugged entry for each spectrum and load up the output information from correct source(s)
-;if dirs.instrument eq  'apogee-s' and mjd lt 57810 then plugmap.fiberdata.fiberid += 1
+;; Find matching plugged entry for each spectrum and load up the output information from correct source(s)
 for i=0,299 do begin
   fiber[i].spectrographid = -1
-  m=where(plugmap.fiberdata.holetype eq 'OBJECT' and $
-          plugmap.fiberdata.spectrographid eq 2 and $
-          plugmap.fiberdata.fiberid eq 300-i,nm)
+  m = where(plugmap.fiberdata.holetype eq 'OBJECT' and $
+            plugmap.fiberdata.spectrographid eq 2 and $
+            plugmap.fiberdata.fiberid eq 300-i,nm)
   if keyword_set(badfiberid) then begin
-    j=where(badfiberid eq 300-i,nbad)
+    j = where(badfiberid eq 300-i,nbad)
     if nbad gt 0 then begin
       print,'fiber index ',i,' declared as bad'
-      nm=0
+      nm = 0
     endif 
   endif
   if nm gt 1 then begin
-      print,'halt: more than one match for fiber id !! MARVELS??'
-      print,plugmap.fiberdata[m].fiberid,plugmap.fiberdata[m].primtarget,plugmap.fiberdata[m].sectarget
-      stop
+    print,'halt: more than one match for fiber id !! MARVELS??'
+    print,plugmap.fiberdata[m].fiberid,plugmap.fiberdata[m].primtarget,plugmap.fiberdata[m].sectarget
+    stop
   endif
   if nm eq 1 then begin
     fiber[i].fiberid = plugmap.fiberdata[m].fiberid
@@ -205,8 +204,9 @@ for i=0,299 do begin
     fiber[i].target2 = plugmap.fiberdata[m].secTarget
     fiber[i].spectrographid = plugmap.fiberdata[m].spectrographid
 
+    ;; Special for asdaf object plates
     if keyword_set(asdaf) then begin
-      ; special for asdaf object plates
+      ;; ASDAF fiber
       if 300-i eq asdaf then begin
         fiber[i].objtype = 'STAR'
         fiber[i].hmag = 0.
@@ -214,20 +214,22 @@ for i=0,299 do begin
         fiber[i].objtype = 'SKY'
         fiber[i].hmag = -99.999
       endelse
+
+    ;; Normal plate
     endif else begin
       fiber[i].objtype = plugmap.fiberdata[m].objtype
-      ; fix up objtype
+      ;; Fix up objtype
       fiber[i].objtype = 'STAR'
       fiber[i].holetype = plugmap.fiberdata[m].holetype
       if keyword_set(mapa) then begin
-        ; HMAG's are correct from plPlugMapA files
+        ;; HMAG's are correct from plPlugMapA files
         fiber[i].hmag = plugmap.fiberdata[m].mag[1]
         fiber[i].object = strtrim(plugmap.fiberdata[m].tmass_style,2)
         fiber[i].tmass_style = strtrim(plugmap.fiberdata[m].tmass_style,2)
         if is_bit_set(fiber[i].sectarget,9) eq 1 then fiber[i].objtype='HOT_STD'
         if is_bit_set(fiber[i].sectarget,4) eq 1 then fiber[i].objtype='SKY'
       endif else begin
-        ; get matching stars from coordinate match
+        ;; Get matching stars from coordinate match
         match = where(abs(p.target_ra-fiber[i].ra) lt 0.00002 and $
                       abs(p.target_dec-fiber[i].dec) lt 0.00002,nmatch)
         if nmatch gt 0 then begin
@@ -235,27 +237,27 @@ for i=0,299 do begin
             fiber[i].target1 = p[match].apogee2_target1
             fiber[i].target2 = p[match].apogee2_target2
             fiber[i].target3 = p[match].apogee2_target3
-            apogee2=1
+            apogee2 = 1
           endif else begin
             fiber[i].target1 = p[match].apogee_target1
             fiber[i].target2 = p[match].apogee_target2
-            apogee2=0
+            apogee2 = 0
           endelse
           if is_bit_set(fiber[i].target2,9) eq 1 then fiber[i].objtype='HOT_STD'
           if is_bit_set(fiber[i].target2,4) eq 1 then begin
-            object='SKY' 
-            hmag=99.99
+            object = 'SKY' 
+            hmag = 99.99
             fiber[i].mag = [hmag,hmag,hmag,hmag,hmag]
             fiber[i].objtype='SKY'
           endif else begin
-            tmp=strtrim(p[match].targetids,2)
-            len=strlen(tmp)
-            object=strmid(tmp,len-16)
+            tmp = strtrim(p[match].targetids,2)
+            len = strlen(tmp)
+            object = strmid(tmp,len-16)
             if strpos(tmp,'A') eq 0 then $
-             object='AP'+object else object='2M'+object
+              object='AP'+object else object='2M'+object
             hmag = p[match].tmass_h
             fiber[i].mag = [p[match].tmass_j,p[match].tmass_h,p[match].tmass_k,0.,0.]
-            ; adopt PM un-adjusted  coordinates
+            ;; Adopt PM un-adjusted  coordinates
             fiber[i].ra-=p[match].pmra/1000./3600./cos(fiber[i].dec*!pi/180.)*(p[match].epoch-2000.)
             fiber[i].dec-=p[match].pmdec/1000./3600.*(p[match].epoch-2000.)
           endelse
@@ -271,42 +273,45 @@ for i=0,299 do begin
   endelse
 endfor
 
-; load apogeeObject file to get proper name and coordinates
-; get apogeeObject catalog info for this field
+;; Load apogeeObject file to get proper name and coordinates
+;; Get apogeeObject catalog info for this field
 if apogee2 then apogeeobject='apogee2Object' else apogeeobject='apogeeObject'
-if ~keyword_set(noobject) then begin
- targetdir=getenv('APOGEE_TARGET')
- objectfile=targetdir+'/'+apogeeobject+'/'+apogeeobject+'_'+strtrim(apogee_field(platedata.locationid,platenum),2)+'.fits'
- if not file_test(objectfile) then begin
-  print,'cant find apogeeObject file: ', objectfile
- endif else begin
-  print,'reading apogeeObject file: ',objectfile
-  objects=mrdfits(objectfile,1)
-  spherematch,objects.ra,objects.dec,fiber.ra,fiber.dec,10./3600.,match1,match2,dist,maxmatch=1
-  for i=0,299 do begin
-   if fiber[i].objtype eq 'STAR' or fiber[i].objtype eq 'HOT_STD' then begin
-     j=where(match2 eq i,nj)
-     if nj gt 0 then begin
-      if strtrim(fiber[i].object,2) ne strtrim(objects[match1[j]].apogee_id) then begin
-        print,'apogeeObject differs from plateHoles: '
-        print,fiber[i].object+' '+objects[match1[j]].apogee_id
-        print,fiber[i].ra,' ',objects[match1[j]].ra
-        print,fiber[i].dec,' ',objects[match1[j]].dec
-      endif
-      fiber[i].tmass_style=objects[match1[j]].apogee_id
-      fiber[i].ra=objects[match1[j]].ra
-      fiber[i].dec=objects[match1[j]].dec
-      if finite(objects[match1[j]].ak_targ) then fiber[i].ak_targ=objects[match1[j]].ak_targ
-      fiber[i].ak_targ_method=objects[match1[j]].ak_targ_method
-      if finite(objects[match1[j]].ak_wise) then fiber[i].ak_wise=objects[match1[j]].ak_wise
-      if finite(objects[match1[j]].sfd_ebv) then fiber[i].sfd_ebv=objects[match1[j]].sfd_ebv
-     endif else print,'not halted, but no match in object file for ',fiber[i].object
-   endif 
-  endfor
- endelse
+if not keyword_set(noobject) then begin
+  targetdir = getenv('APOGEE_TARGET')
+  objectfile = targetdir+'/'+apogeeobject+'/'+apogeeobject+'_'+strtrim(apogee_field(platedata.locationid,platenum),2)+'.fits'
+  if not file_test(objectfile) then begin
+    print,'cant find apogeeObject file: ', objectfile
+  endif else begin
+    print,'reading apogeeObject file: ',objectfile
+    objects = mrdfits(objectfile,1)
+    spherematch,objects.ra,objects.dec,fiber.ra,fiber.dec,10./3600.,match1,match2,dist,maxmatch=1
+    for i=0,299 do begin
+      if fiber[i].objtype eq 'STAR' or fiber[i].objtype eq 'HOT_STD' then begin
+      j = where(match2 eq i,nj)
+      if nj gt 0 then begin
+        if strtrim(fiber[i].object,2) ne strtrim(objects[match1[j]].apogee_id) then begin
+          print,'apogeeObject differs from plateHoles: '
+          print,fiber[i].object+' '+objects[match1[j]].apogee_id
+          print,fiber[i].ra,' ',objects[match1[j]].ra
+          print,fiber[i].dec,' ',objects[match1[j]].dec
+        endif
+        fiber[i].tmass_style = objects[match1[j]].apogee_id
+        fiber[i].ra = objects[match1[j]].ra
+        fiber[i].dec = objects[match1[j]].dec
+        if finite(objects[match1[j]].ak_targ) then fiber[i].ak_targ=objects[match1[j]].ak_targ
+        fiber[i].ak_targ_method = objects[match1[j]].ak_targ_method
+        if finite(objects[match1[j]].ak_wise) then fiber[i].ak_wise=objects[match1[j]].ak_wise
+        if finite(objects[match1[j]].sfd_ebv) then fiber[i].sfd_ebv=objects[match1[j]].sfd_ebv
+       endif else print,'not halted, but no match in object file for ',fiber[i].object
+     endif 
+    endfor
+  endelse
 endif
 
 platedata.fiberdata = fiber
-if keyword_set(stop) then stop
+
+if keyword_set(stp) then stop
+
 return,platedata
+
 end
