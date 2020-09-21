@@ -1,6 +1,3 @@
-pro ap1dwavecal,frame,outframe,plugmap=plugmap,silent=silent,verbose=verbose,plot=plot,stp=stp,$
-                noshift=noshift,pfile=pfile
-
 ;+
 ;
 ; AP1DWAVECAL
@@ -16,6 +13,7 @@ pro ap1dwavecal,frame,outframe,plugmap=plugmap,silent=silent,verbose=verbose,plo
 ;  /silent   Don't print anything to the screen.
 ;  /verbose  Print lots of information to the screen
 ;  /plot     Make some plots
+;  =pfile    Filename for plot.
 ;  /stp      Stop at the end of the program.
 ;
 ; OUTPUTS:
@@ -27,6 +25,9 @@ pro ap1dwavecal,frame,outframe,plugmap=plugmap,silent=silent,verbose=verbose,plo
 ; By D. Nidever  March 2010
 ;-
 
+pro ap1dwavecal,frame,outframe,plugmap=plugmap,silent=silent,verbose=verbose,plot=plot,stp=stp,$
+                noshift=noshift,pfile=pfile
+
 apgundef,outframe
 
 ; Not enough inputs
@@ -36,7 +37,7 @@ if n_elements(frame) eq 0 then begin
 endif
 
 ; Get APOGEE directories
-dirs=getdir(apogee_dir,cal_dir,spectro_dir,apogee_vers,lib_dir)
+dirs = getdir(apogee_dir,cal_dir,spectro_dir,apogee_vers,lib_dir)
 linelist_dir = lib_dir+'skylines/'
 if FILE_TEST(linelist_dir,/directory) eq 0 then begin
   print,'LINELISTS Directory ',linelist_dir,' NOT FOUND'
@@ -50,8 +51,8 @@ for i=0,n_elements(needtags1)-1 do begin
   if (where(tags eq needtags1[i]))[0] eq -1 then begin
     print,'TAG ',needtags1[i],' NOT FOUND in input structure'
     return
-  end
-end
+  endif
+endfor
 needtags2 = ['HEADER','FLUX','ERR','MASK','WCOEF']
 for i=0,2 do begin
   tags2 = tag_names(frame.(i))
@@ -59,9 +60,9 @@ for i=0,2 do begin
     if (where(tags2 eq needtags2[j]))[0] eq -1 then begin
       print,'TAG ',needtags2[j],' NOT FOUND in input structure'
       return
-    end
-  end
-end
+    endif
+  endfor
+endfor
 
 sz = size(frame.chipa.flux)
 npix = sz[1]
@@ -71,7 +72,7 @@ xscale = 1    ; assume original non-dither combined spectrum
 if npix eq 4096 then xscale = 2
 
 ; Get the wavelength calibration frame for this dither pair
-;---------------------------------------------------------------
+;-----------------------------------------------------------
 wcoef1 = frame.chipa.wcoef
 wcoef2 = frame.chipb.wcoef
 wcoef3 = frame.chipc.wcoef
@@ -123,7 +124,7 @@ For i=0,2 do begin
   endif else begin
     outframe = CREATE_STRUCT(outframe,'chip'+chiptag[i],chstr)
   endelse
-end
+endfor
 if tag_exist(frame,'shift') then outframe = CREATE_STRUCT(outframe,'shift',frame.shift)
 
 ; No SHIFT, just use wavelength coefficients as is
@@ -180,7 +181,7 @@ if keyword_set(plugmap) then begin
   skyfiberid = plugmap.fiberdata[skyplugind].fiberid
   skyindex = 300-skyfiberid
 endif else skyindex=indgen(nfibers)
-nsky=n_elements(skyindex)
+nsky = n_elements(skyindex)
 
 ; Check if there is a previously saved linelist to use
 base = file_basename(frame.(0).filename,'.fits.fz')
@@ -441,7 +442,7 @@ For i=0,nsky-1 do begin
 
   ;stop
 
-End
+Endfor
 
 if keyword_set(verbose) then print,'---------------------'
 
@@ -539,7 +540,7 @@ For i=0,nfibers-1 do begin
 
   ;stop
 
-End
+Endfor
 
 ; Add the structures to FRAME
 frame = create_struct(temporary(frame),'LINESTR',allfiberlinestr,'WSHIFTSTR',shiftstr)
