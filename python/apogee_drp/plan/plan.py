@@ -43,7 +43,7 @@ def loadplan(planfile,verbose=False,expand=False,plugmapm=False):
     """
 
     # More than one file
-    if dln.size(planefile)>1:
+    if dln.size(planfile)>1:
         raise ValueError('Only plan file at a time.')
 
     # Check that the plan file exists
@@ -54,7 +54,7 @@ def loadplan(planfile,verbose=False,expand=False,plugmapm=False):
     plandata = yanny.yanny(planfile,np=True)
 
     # Make sure APEXP exists
-    if 'APEXP' not in plandta.keys():
+    if 'APEXP' not in plandata.keys():
         raise ValueError('No APEXP structure in plan file '+planfile)
 
     # Add paths to the calibration IDs and add directories
