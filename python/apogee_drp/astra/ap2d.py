@@ -11,9 +11,9 @@ from luigi.util import inherits
 # Inherit the parameters needed to define an ApPlanFile, since we will need these to
 # require() the correct ApPlanFile.
 @inherits(ApPlanFile)
-class AP3D(BaseTask):
+class AP2D(BaseTask):
 
-    """ Run the 3D to 2D portion of the APOGEE pipeline."""
+    """ Run the 2D to 1D portion of the APOGEE pipeline."""
 
     # Parameters
     apred = luigi.Parameter()
@@ -32,14 +32,14 @@ class AP3D(BaseTask):
 
 
     def output(self):
-        # Store the 2D images in the same directory as the plan file.
+        # Store the 1D frames in the same directory as the plan file.
         output_path_prefix, ext = os.path.splitext(self.input().path)
-        return luigi.LocalTarget(f"{output_path_prefix}-done3D")
+        return luigi.LocalTarget(f"{output_path_prefix}-done2D")
 
 
     def run(self):
         # Run the IDL program!
-        subprocess.call(["idl","-e","ap3d,",self.input().path])
+        subprocess.call(["idl","-e","ap2d,",self.input().path])
 
         # Load the plan file
         # (Note: I'd suggest moving all yanny files to YAML format and/or just supply the plan file
@@ -47,14 +47,14 @@ class AP3D(BaseTask):
         plan = yanny.yanny(self.input().path)
         exposures = plan['EXPOSURES']
 
-        # Check if three ap2D files per exposure were created
+        # Check if three apCframe files per exposure were created
         counter = 0
         for exp in exposures:
-            files = self.output().path+"ap2D-*-"+str(exp)+".fits"
+            files = self.output().path+"apCframe-*-"+str(exp)+".fits"
             check = glob.glob(files)
             if len(check) == 3: counter += 1
 
-        # Create "done" file if 2D frames exist
+        # Create "done" file if 1D frames exist
         if counter == len(exposures):
             with open(self.output().path, "w") as fp:
                 fp.write(" ")
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     #   $APOGEE_REDUX/{apred}/visit/{telescope}/{field}/{plate}/{mjd}/{prefix}Plan-{plate}-{mjd}.par
 
     # Define the task.
-    task = RunAP3D(
+    task = RunAP2D(
         apred="t14",
         telescope="apo25m",
         field="203+00",

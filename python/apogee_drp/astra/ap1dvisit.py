@@ -11,9 +11,9 @@ from luigi.util import inherits
 # Inherit the parameters needed to define an ApPlanFile, since we will need these to
 # require() the correct ApPlanFile.
 @inherits(ApPlanFile)
-class AP3D(BaseTask):
+class AP1DVISIT(BaseTask):
 
-    """ Run the 3D to 2D portion of the APOGEE pipeline."""
+    """ Run the 1D visit portion of the APOGEE pipeline."""
 
     # Parameters
     apred = luigi.Parameter()
@@ -32,30 +32,21 @@ class AP3D(BaseTask):
 
 
     def output(self):
-        # Store the 2D images in the same directory as the plan file.
+        # Store the 1D frames in the same directory as the plan file.
         output_path_prefix, ext = os.path.splitext(self.input().path)
-        return luigi.LocalTarget(f"{output_path_prefix}-done3D")
+        return luigi.LocalTarget(f"{output_path_prefix}-done1D")
 
 
     def run(self):
         # Run the IDL program!
-        subprocess.call(["idl","-e","ap3d,",self.input().path])
+        subprocess.call(["idl","-e","ap1dvisit,",self.input().path])
 
-        # Load the plan file
-        # (Note: I'd suggest moving all yanny files to YAML format and/or just supply the plan file
-        # inputs as variables to the task.)
-        plan = yanny.yanny(self.input().path)
-        exposures = plan['EXPOSURES']
+        # Check if some apVisits have been made
+        files = self.output().path+"a*Visit*.fits"
+        check = glob.glob(files)
 
-        # Check if three ap2D files per exposure were created
-        counter = 0
-        for exp in exposures:
-            files = self.output().path+"ap2D-*-"+str(exp)+".fits"
-            check = glob.glob(files)
-            if len(check) == 3: counter += 1
-
-        # Create "done" file if 2D frames exist
-        if counter == len(exposures):
+        # Create "done" file if apVisits exist
+        if len(check)>140:
             with open(self.output().path, "w") as fp:
                 fp.write(" ")
 
@@ -63,7 +54,7 @@ class AP3D(BaseTask):
 
 if __name__ == "__main__":
 
-    # The parameters for RunAP3D are the same as those needed to identify the ApPlanFile:
+    # The parameters for RunAP1DVISIT are the same as those needed to identify the ApPlanFile:
     # From the path definition at:
     #   https://sdss-access.readthedocs.io/en/latest/path_defs.html#dr16
 
@@ -71,7 +62,7 @@ if __name__ == "__main__":
     #   $APOGEE_REDUX/{apred}/visit/{telescope}/{field}/{plate}/{mjd}/{prefix}Plan-{plate}-{mjd}.par
 
     # Define the task.
-    task = RunAP3D(
+    task = RunAP1DVISIT(
         apred="t14",
         telescope="apo25m",
         field="203+00",
