@@ -16,7 +16,7 @@ def mjdcube(mjd, darkid=None, write=False, apred='current', clobber=False) :
   print('apred: ', apred)
   print('write: ', write)
   print('darkid: ', darkid)
-  datadir=os.getenv('APOGEE_DATA')
+  datadir=os.getenv('APOGEE_DATA_N')
   outdir=os.getenv('APOGEE_REDUX')+'/'+apred+'/exposures/apogee-n/'+str(mjd)+'/'
 
   for chip in ['a','b','c'] :

@@ -29,13 +29,13 @@ def mkpar(mjdstart,mjdend,out='wave',lco=False,yearout='multiwave', append=False
     indiv = []
     psf = []
     sky = []
-    bad=np.loadtxt(os.environ['APOGEE_DIR']+'/data/cal/bad',dtype=int)
+    bad=np.loadtxt(os.environ['APOGEE_DRP_DIR']+'/data/cal/bad',dtype=int)
     for mjd in range(mjdstart,mjdend) :
         # get the files for this dat
         if lco :
-            files = sorted(glob.glob(os.environ['APOGEE_DATA_2S']+'/'+str(mjd)+'/*-a-*.apz'))
+            files = sorted(glob.glob(os.environ['APOGEE_DATA_S']+'/'+str(mjd)+'/*-a-*.apz'))
         else :
-            files = sorted(glob.glob(os.environ['APOGEE_DATA']+'/'+str(mjd)+'/*-a-*.apz'))
+            files = sorted(glob.glob(os.environ['APOGEE_DATA_N']+'/'+str(mjd)+'/*-a-*.apz'))
         print(mjd)
         dome=0
         if len(files) > 3:

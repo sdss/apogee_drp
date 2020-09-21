@@ -13,7 +13,7 @@ colors = ['r','g','b']
 fig,ax=plots.multi(1,3,hspace=0.001,sharex=True,sharey=True)
 t11=apload.ApLoad(apred='t11')
 b=t11.ap1D(3190056)
-plug=yanny.yanny(os.environ['MAPPER_DATA']+'/55880/plPlugMapM-5585-55880-01.par')
+plug=yanny.yanny(os.environ['MAPPER_DATA_N']+'/55880/plPlugMapM-5585-55880-01.par')
 objType=np.array(plug['PLUGMAPOBJ']['objType'])
 fibers=np.array(plug['PLUGMAPOBJ']['fiberId'])
 tel=np.where(objType == 'SPECTROPHOTO_STD')[0]
@@ -81,7 +81,7 @@ plt.show()
 fig,ax=plots.multi(1,3,hspace=0.001,sharex=True,sharey=True)
 t11=apload.ApLoad(apred='t11',telescope='lco25m',verbose=True)
 b=t11.ap1D(26180012)
-plug=yanny.yanny(os.environ['MAPPER_DATA_2S']+'/58180/plPlugMapM-10426-58180-01.par')
+plug=yanny.yanny(os.environ['MAPPER_DATA_S']+'/58180/plPlugMapM-10426-58180-01.par')
 objType=np.array(plug['PLUGMAPOBJ']['objType'])
 fibers=np.array(plug['PLUGMAPOBJ']['fiberId'])
 tel=np.where(objType == 'SPECTROPHOTO_STD')[0]

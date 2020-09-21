@@ -92,7 +92,7 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
             # get correct arclines
             if frame['a'][0].header['LAMPUNE'] : lampfile = 'UNe.vac.apogee'
             if frame['a'][0].header['LAMPTHAR'] : lampfile = 'tharne.lines.vac.apogee'
-            arclines=ascii.read(os.environ['APOGEE_DIR']+'/data/arclines/'+lampfile)
+            arclines=ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
             j=np.where(arclines['USEWAVE'])[0]
             arclines=arclines[j]
             # find lines or use previous found lines
@@ -662,17 +662,17 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
         plugmjd=p['plugmap'].split('-')[1]
         if inst == 'apogee-s' : 
             plugmap=yanny.yanny(
-                    os.environ['MAPPER_DATA_2S']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
+                    os.environ['MAPPER_DATA_S']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
         else :
             plugmap=yanny.yanny(
-                    os.environ['MAPPER_DATA']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
+                    os.environ['MAPPER_DATA_N']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
         skyind=np.where((np.array(plugmap['PLUGMAPOBJ']['objType']) == 'SKY') & 
                        (np.array(plugmap['PLUGMAPOBJ']['holeType']) == 'OBJECT') &
                        (np.array(plugmap['PLUGMAPOBJ']['spectrographId']) == 2) )[0]
         skyfibers = np.array(plugmap['PLUGMAPOBJ']['fiberId'])[skyind]
         skyrows = np.sort(300-skyfibers)
     if not nosky :
-        skylines=ascii.read(os.environ['APOGEE_DIR']+'/data/skylines/'+skyfile+'.txt')
+        skylines=ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/skylines/'+skyfile+'.txt')
 
     # if we have a wavecal, get the wavelength array
     if waveid > 0 :

@@ -409,7 +409,7 @@ def dr14comp(a,b,av,bv):
 def standards(a,out=None) :
     """ Compare RVs to standards
     """
-    stan = fits.open(os.environ['APOGEE_DIR']+'/data/rv/rvstandards.fits')[1].data
+    stan = fits.open(os.environ['APOGEE_DRP_DIR']+'/data/rv/rvstandards.fits')[1].data
     h=esutil.htm.HTM()
     m1,m2,rad=h.match(a['ra'],a['dec'],stan['ra'],stan['dec'],1./3600.,maxmatch=500)
     fig,ax=plots.multi(1,1)
@@ -458,7 +458,7 @@ def all(a,name='DR16',dr='dr14') :
 def visitspec(load,plate,mjd,fiber,gridfile='apg_rvsynthgrid',apstar=False) :
     """ Crude beginnings of an RV routine
     """
-    grid = fits.open(os.environ['APOGEE_DIR']+'/data/synthgrid/'+gridfile+'.fits')
+    grid = fits.open(os.environ['APOGEE_DRP_DIR']+'/data/synthgrid/'+gridfile+'.fits')
     if gridfile == 'apg_rvsynthgrid' : hdu=1
     elif gridfile == 'apg_rvsynthgrid_v2': hdu=0
     elif apstar : hdu=2
