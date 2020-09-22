@@ -6,9 +6,12 @@
 ; spectra.
 ;
 ; INPUTS:
-;  planfiles  Input list of plate plan files
-;  /verbose   Print a lot of information to the screen
-;  /stp       Stop at the end of the prrogram
+;  planfiles     Input list of plate plan files
+;  =exttype      
+;  =mapper_data  Directory for mapper data.
+;  /verbose      Print a lot of information to the screen
+;  /clobber      Overwrite existing files.
+;  /stp          Stop at the end of the prrogram
 ;
 ; OUTPUTS:
 ;  1D extracted spectra are output.  One file for each frame.
@@ -24,9 +27,10 @@ pro ap2d,planfiles,verbose=verbose,stp=stp,clobber=clobber,exttype=exttype,mappe
 
 common savedepsf, savedepsffiles, epsfchip
 
-savedepsffiles=[' ',' ',' ']
-epsfchip=0
+savedepsffiles = [' ',' ',' ']
+epsfchip = 0
 
+;; Default parameters
 if n_elements(verbose) eq 0 then verbose=0  ; NOT verbose by default
 ; clobber will redo PSF, Flux and 1D frames (but not other fundamental calibration frames)
 if not keyword_set(clobber) then clobber=0  ; NOT clobber by default,
@@ -80,7 +84,6 @@ FOR i=0L,nplanfiles-1 do begin
   ; apPSF files 
   if planstr.sparseid ne 0 then makecal,sparse=planstr.sparseid
   if planstr.fiberid ne 0 then makecal,fiber=planstr.fiberid
-
   MAKECAL,psf=planstr.psfid,clobber=clobber
   tracefiles = apogee_filename('PSF',num=planstr.psfid,chip=chiptag)
   tracefile = file_dirname(tracefiles[0])+'/'+string(format='(i8.8)',planstr.psfid)
@@ -133,8 +136,9 @@ FOR i=0L,nplanfiles-1 do begin
     plugfile = planstr.plugmap
     if tag_exist(planstr,'fixfiberid') then fixfiberid=planstr.fixfiberid
     if tag_exist(planstr,'badfiberid') then badfiberid=planstr.badfiberid
+    ;; we only need the information on sky fibers
     plugmap = getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),plugid=planstr.plugmap,fixfiberid=fixfiberid,$
-                           badfiberid=badfiberid,mapper_data=mapper_data)
+                           badfiberid=badfiberid,mapper_data=mapper_data,/noobject)
     if n_elements(plugerror) gt 0 then stop,'halt: error with plugmap: ',plugfile
     plugmap.mjd = planstr.mjd   ; enter MJD from the plan file
   endelse
