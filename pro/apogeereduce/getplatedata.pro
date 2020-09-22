@@ -251,7 +251,6 @@ if not keyword_set(mapa) then begin
 
   ;; Read flag correction data
   have_flag_changes = 0
-  platedir = getenv('HOME')+'/platelist/trunk/'+'/plates/'+strmid(platestr,0,4)+'XX/'+platestr
   print,platedir+'/flagModifications-'+platestr+'.txt'
   if file_test(platedir+'/flagModifications-'+platestr+'.txt') then begin
     print,'Reading flagModifications file: ','flagModifications-'+platestr+'.txt'
