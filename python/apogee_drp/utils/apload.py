@@ -81,7 +81,7 @@ class ApSpec() :
         hdulist=fits.HDUList()
         hdu=fits.PrimaryHDU()
         hdu.header=self.header
-        hdu.header['HISTORY'] = 'APOGEE Reduction Pipeline Version: {:s}'.format(os.environ['APOGEE_VER'])
+        hdu.header['HISTORY'] = 'APOGEE Reduction Pipeline Version: {:s}'.format(os.environ['APOGEE_DRP_VER'])
         hdu.header['HISTORY'] = 'HDU0 : header'
         hdu.header['HISTORY'] = 'HDU1 : flux'
         hdu.header['HISTORY'] = 'HDU2 : flux uncertainty'

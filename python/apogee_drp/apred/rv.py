@@ -408,7 +408,7 @@ def dr14comp(a,b,av,bv):
 def standards(a,out=None) :
     """ Compare RVs to standards
     """
-    stan = fits.open(os.environ['APOGEE_DIR']+'/data/rv/rvstandards.fits')[1].data
+    stan = fits.open(os.environ['APOGEE_DRP_DIR']+'/data/rv/rvstandards.fits')[1].data
     h=esutil.htm.HTM()
     m1,m2,rad=h.match(a['ra'],a['dec'],stan['ra'],stan['dec'],1./3600.,maxmatch=500)
     fig,ax=plots.multi(1,1)
@@ -457,7 +457,7 @@ def all(a,name='DR16',dr='dr14') :
 def visitspec(load,plate,mjd,fiber,gridfile='apg_rvsynthgrid',apstar=False) :
     """ Crude beginnings of an RV routine
     """
-    grid = fits.open(os.environ['APOGEE_DIR']+'/data/synthgrid/'+gridfile+'.fits')
+    grid = fits.open(os.environ['APOGEE_DRP_DIR']+'/data/synthgrid/'+gridfile+'.fits')
     if gridfile == 'apg_rvsynthgrid' : hdu=1
     elif gridfile == 'apg_rvsynthgrid_v2': hdu=0
     elif apstar : hdu=2
@@ -1396,7 +1396,6 @@ def overlap(fields) :
     fp.write('</TABLE>')
     fp.close()
 
-from apogee_drp.aspcap import aspcap
 from apogee_drp.apred import wave
 from apogee_drp.apred import sincint
 
@@ -1410,7 +1409,7 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
 
     print('doing visitcomb for {:s} '.format(allvisit['APOGEE_ID'][0]))
 
-    wnew=aspcap.apStarWave()  
+    wnew=norm.apStarWave()  
     nwave=len(wnew)
     nvisit=len(allvisit)
 
@@ -1443,7 +1442,7 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
         pixelmask=bitmask.PixelBitMask()
 
         # rest-frame wavelengths transformed to this visit spectra
-        w=aspcap.apStarWave()*(1.0+vrel/cspeed)
+        w=norm.apStarWave()*(1.0+vrel/cspeed)
 
         # loop over the chips
         for chip in range(3) :
@@ -1508,8 +1507,8 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
         if len(bd) > 0 : stack.err[i,bd] *= np.sqrt(100)
 
         if plot :
-            ax[0].plot(aspcap.apStarWave(),stack.flux[i,:])
-            ax[1].plot(aspcap.apStarWave(),stack.flux[i,:]/stack.err[i,:])
+            ax[0].plot(norm.apStarWave(),stack.flux[i,:])
+            ax[1].plot(norm.apStarWave(),stack.flux[i,:]/stack.err[i,:])
             plt.draw()
             pdb.set_trace()
 
@@ -1531,11 +1530,11 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
     # create final spectrum
     zeros = np.zeros([nvisit+2,nwave])
     izeros = np.zeros([nvisit+2,nwave],dtype=int)
-    apstar=apload.ApSpec(zeros,err=zeros.copy(),bitmask=izeros,wave=aspcap.apStarWave(),
+    apstar=apload.ApSpec(zeros,err=zeros.copy(),bitmask=izeros,wave=norm.apStarWave(),
                 sky=zeros.copy(),skyerr=zeros.copy(),telluric=zeros.copy(),telerr=zeros.copy(),
                 cont=zeros.copy(),template=zeros.copy())
-    apstar.header['CRVAL1'] = aspcap.logw0
-    apstar.header['CDELT1'] = aspcap.dlogw
+    apstar.header['CRVAL1'] = norm.logw0
+    apstar.header['CDELT1'] = norm.dlogw
     apstar.header['CRPIX1'] = 1
     apstar.header['CTYPE1'] = ('LOG-LINEAR','Logarithmic wavelength scale in subsequent HDU')
     apstar.header['DC-FLAG'] = 1
@@ -1672,15 +1671,15 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
         gd=np.where((apstar.bitmask[0,:] & (pixelmask.badval()|pixelmask.getval('SIG_SKYLINE'))) == 0) [0]
         fig,ax=plots.multi(1,3,hspace=0.001,figsize=(48,6))
         med=np.nanmedian(apstar.flux[0,:])
-        plots.plotl(ax[0],aspcap.apStarWave(),apstar.flux[0,:],color='k',yr=[0,2*med])
-        ax[0].plot(aspcap.apStarWave()[gd],apstar.flux[0,gd],color='g')
+        plots.plotl(ax[0],norm.apStarWave(),apstar.flux[0,:],color='k',yr=[0,2*med])
+        ax[0].plot(norm.apStarWave()[gd],apstar.flux[0,gd],color='g')
         ax[0].set_ylabel('Flux')
         try :
-            ax[1].plot(aspcap.apStarWave()[gd],apstar.cont[gd],color='g')
+            ax[1].plot(norm.apStarWave()[gd],apstar.cont[gd],color='g')
             ax[1].set_ylabel('Normalized')
-            ax[1].plot(aspcap.apStarWave(),apstar.template,color='r')
+            ax[1].plot(norm.apStarWave(),apstar.template,color='r')
         except : pass
-        plots.plotl(ax[2],aspcap.apStarWave(),apstar.flux[0,:]/apstar.err[0,:],yt='S/N')
+        plots.plotl(ax[2],norm.apStarWave(),apstar.flux[0,:]/apstar.err[0,:],yt='S/N')
         for i in range(3) : ax[i].set_xlim(15100,17000)
         ax[0].set_xlabel('Wavelength')
         fig.savefig(outdir+'/plots/'+apstar.header['OBJID']+'.png')
@@ -1726,8 +1725,8 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
 
     # plot
     if plot : 
-        ax[0].plot(aspcap.apStarWave(),apstar.flux,color='k')
-        ax[1].plot(aspcap.apStarWave(),apstar.flux/apstar.err,color='k')
+        ax[0].plot(norm.apStarWave(),apstar.flux,color='k')
+        ax[1].plot(norm.apStarWave(),apstar.flux/apstar.err,color='k')
         plt.draw()
         pdb.set_trace()
 
@@ -1739,7 +1738,7 @@ def comp_apstar(field,apred='r13',telescope='apo25m') :
     apfield=load.apField(field)
 
     fig,ax=plots.multi(1,3,hspace=0.001)
-    w=aspcap.apStarWave() 
+    w=norm.apStarWave() 
     for i,star in enumerate(apfield[1].data['APOGEE_ID']) : 
         old=load.apStar(field,star)
         plots.plotl(ax[0],w,old[1].data[0,:]*1.e-17)
