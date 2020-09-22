@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import luigi
 import os
 import subprocess
