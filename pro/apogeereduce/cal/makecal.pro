@@ -200,7 +200,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       if n_elements(maxread) ne 3 then begin
         print,'sparse maxread does not have 3 elements! '
         stop
-     endif 
+      endif 
       MKEPSF,ims,darkid=darkid,flatid=flatid,darkims=darkims,dmax=sparsestr[i].dmax,$
              maxread=maxread,clobber=clobber,/filter,thresh=0.2,scat=2
     endif

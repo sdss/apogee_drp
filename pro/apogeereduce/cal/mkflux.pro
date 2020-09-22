@@ -34,13 +34,13 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
   dirs = getdir(apodir,caldir,spectrodir,vers)
   caldir = dirs.caldir
 
-  file = apogee_filename('Flux',num=ims[0],chip='c',/base,/nochip)
+  file = apogee_filename('Flux',num=ims[0],chip='c',/base)
   fluxdir = apogee_filename('Flux',num=ims[0],chip='c',/dir)
   if file_test(fluxdir,/directory) eq 0 then file_mkdir,fluxdir
   ;; If another process is alreadying making this file, wait!
   while file_test(fluxdir+file+'.lock') do apwait,file,10
   ;; Does product already exist?
-  if file_test(fluxdir+file+'.fits') and not keyword_set(clobber) then begin
+  if file_test(fluxdir+file) and not keyword_set(clobber) then begin
     print,' flux file: ',fluxdir+file,' already made'
     if n_elements(temp) ne 0 then goto,response
     return

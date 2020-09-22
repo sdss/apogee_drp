@@ -32,7 +32,7 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
 
   litdir = apogee_filename('Littrow',num=littrowid,chip='b',/dir)
   if file_test(litdir,/directory) eq 0 then file_mkdir,litdir
-  file = apogee_filename('Littrow',num=littrowid,/base,/nochip)
+  file = apogee_filename('Littrow',num=littrowid,chip='b',/base)
   ;; If another process is alreadying making this file, wait!
   while file_test(litdir+file+'.lock') do apwait,file,10
   ;; Does product already exist?
@@ -77,7 +77,7 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   sxaddhist,leadstr+info.user_name+' on '+info.machine_name,head
   sxaddhist,leadstr+'IDL '+!version.release+' '+!version.os+' '+!version.arch,head
   sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+getvers(),head
-  MWRFITS,litt,file,head
+  MWRFITS,litt,file,head,/create
 
   ;; Move PSFs to littrow directory since they are not a standard PSF!
   outdir = litdir
@@ -92,4 +92,6 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
 
   file = apogee_filename('Littrow',num=littrowid,chip='b',/base,/nochip)
   file_delete,litdir+file+'.lock'
+
 end
+
