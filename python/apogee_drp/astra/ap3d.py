@@ -30,9 +30,6 @@ class AP3D(BaseTask):
     release = luigi.Parameter()
 
     def requires(self):
-        # We require plan files to exist!
-        #load = apload.ApLoad(apred=self.apred,telescope=self.telescope,instrument=self.instrument)
-        #planfile = load.filename('Plan',field=self.field,mjd=self.mjd,plate=self.plate)
         return ApPlanFile(**self.get_common_param_kwargs(ApPlanFile))
 
 
@@ -43,9 +40,6 @@ class AP3D(BaseTask):
 
 
     def run(self):
-
-        import pdb; pdb.set_trace()
-
         # Run the IDL program!
         cmd = "ap3d,'"+self.input().path+"'"
         ret = subprocess.call(["idl","-e",cmd],shell=False)
@@ -59,10 +53,6 @@ class AP3D(BaseTask):
         # Check if three ap2D files per exposure were created
         # Get the exposures directory
         sdss_path = path.Path()
-        #if self.instrument == 'apogee-n':
-        #    prefix = 'ap'
-        #else:
-        #    prefix = 'as'
         expdir = os.path.dirname(sdss_path.full('ap2D',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
                                                 plate=self.plate,mjd=self.mjd,prefix=self.prefix,num=0,chip='a'))
         counter = 0
