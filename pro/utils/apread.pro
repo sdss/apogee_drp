@@ -19,7 +19,6 @@ for ichip=0,n_elements(files)-1 do begin
   endif
 
   d=mrdfits(file,0,head,/silent)
-
   if type eq 'Dark' then begin
     dark=mrdfits(file,ext,/silent)
     err=0.
@@ -43,12 +42,12 @@ for ichip=0,n_elements(files)-1 do begin
     temp={hdr: head, flux: d, err: err, mask: mask} 
     if ichip eq 0 then out=temp else out=struct_append(out,temp)
   endif else begin
-    d=mrdfits(file,ext,/silent)
     if type eq '2Dmodel' then begin
       d=mrdfits(file,0,/silent)
       err=0.
       mask=0
-    endif else  begin
+    endif else begin
+      d=mrdfits(file,ext,/silent)
       err=mrdfits(file,ext+1,/silent)
       mask=mrdfits(file,ext+2,/silent)
       if keyword_set(domask) then begin
