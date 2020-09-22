@@ -666,9 +666,9 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
         else :
             plugmap = yanny.yanny(
                 os.environ['MAPPER_DATA_N']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
-        skyind=np.where((np.array(plugmap['PLUGMAPOBJ']['objType']) == 'SKY') & 
-                       (np.array(plugmap['PLUGMAPOBJ']['holeType']) == 'OBJECT') &
-                       (np.array(plugmap['PLUGMAPOBJ']['spectrographId']) == 2) )[0]
+        skyind = np.where((np.array(plugmap['PLUGMAPOBJ']['objType']) == 'SKY') & 
+                          (np.array(plugmap['PLUGMAPOBJ']['holeType']) == 'OBJECT') &
+                          (np.array(plugmap['PLUGMAPOBJ']['spectrographId']) == 2) )[0]
         skyfibers = np.array(plugmap['PLUGMAPOBJ']['fiberId'])[skyind]
         skyrows = np.sort(300-skyfibers)
     if not nosky :
@@ -706,7 +706,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
                     for row in np.arange(300) :
                         waves[chip][row,:] = func_multi_poly(x,*allpars[:,row],npoly=4)
         else :
-            # use existing wavelength solution from ap1D file after ap1dwavecal has been run
+            # Use existing wavelength solution from ap1D file after ap1dwavecal has been run
             for chip in chips : waves[chip] = frame[chip][4].data
             if not nosky : plot = dirname+'/plots/skydeltapixshift-'+name+'-'+skyfile
 
@@ -714,7 +714,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
             w = np.zeros(4)
         else :
 
-            # only use USEWAVE=1 lines for fit (can output others to derive wavelengths)
+            # Only use USEWAVE=1 lines for fit (can output others to derive wavelengths)
             gd = np.where(skylines['USEWAVE'] == 1)[0]
             nuse = 0
             fact = 1.
@@ -727,38 +727,38 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
                     j = np.where((linestr['wave'] == line) & (linestr['peak'] > 500.) )[0]
                     print(line,len(j),linestr['wave_found'][j].mean(),linestr['wave_found'][j].std())
                     use.extend(j)
-                    # if we found this line in more than 5 fibers, count it
+                    # If we found this line in more than 5 fibers, count it
                     if len(j) > 5: nuse+=1
                 use = np.array(use)
                 print('fact : {:f} nuse: {:d}  ngd: {:d}'.format(fact,nuse,len(gd)))
                 fact *= 1.15
                 niter += 1
 
-            # remove persistence affected fibers
+            # Remove persistence affected fibers
             if int(p['mjd']) < 56860 and inst == 'apogee-n' :
                 mask = np.ones(len(use), dtype=bool) # all elements included/True.
                 bd = np.where((linestr['row'][use] > 200) & (linestr['chip'][use] == 3) )[0]
                 mask[bd] = False              # Set unwanted elements to False
                 use = use[mask]
 
-            # solve for 4 parameter fit to dpixel, with linear trend with row, plus 2 chip offsets
+            # Solve for 4 parameter fit to dpixel, with linear trend with row, plus 2 chip offsets
             design = np.zeros([len(use),4])
-            # global slope with rows
+            # Global slope with rows
             design[:,0] = linestr['row'][use]
-            # offset of each chip
+            # Offset of each chip
             for ichip in range(3) :
                 gd = np.where(linestr['chip'][use] == ichip+1)[0]
                 design[gd,ichip+1] = 1.
             y = linestr['dpixel'][use]
-            # reject outliers
+            # Reject outliers
             med = np.median(y)
             gd = np.where(np.abs(y-med) < 2.5)[0]
             gd = np.where(np.abs(y-med) < 0.5)[0]
             design = design[gd,:]
             y = y[gd]
-            # if 1m, don't solve for a slope, not enough information
+            # If 1m, don't solve for a slope, not enough information
             if p['telescope'].strip("'") == 'apo1m' : design = design[:,1:4]
-            # solve
+            # Solve
             try : w = np.linalg.solve(np.dot(design.T,design), np.dot(design.T, y))
             except : 
                 print('fit failed ....')
@@ -767,16 +767,16 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
             print('fit parameters: ', w)
 
         if waveid > 0 :
-            # adjust wavelength solution based on skyline fit
+            # Adjust wavelength solution based on skyline fit
             newpars=copy.copy(allpars)
             for ichip in range(3) :
                 newpars[npoly+ichip,:] -= (w[0]*np.arange(300) + w[ichip+1])
             allhdu = save_apWave(newpars,npoly=npoly)
 
-            # rewrite out 1D file with adjusted wavelength information
+            # Rewrite out 1D file with adjusted wavelength information
             outname=load.filename('1D',num=int(name),mjd=load.cmjd(int(name)),chips=True)
             for ichip,chip in enumerate(chips) :
-                hdu=fits.HDUList()
+                hdu = fits.HDUList()
                 frame[chip][0].header['HISTORY'] = 'Added wavelengths from SKYCAL, waveid: {:08d}'.format(waveid)
                 frame[chip][0].header['HISTORY'] = 'Wavelength shift parameters {:12.5e} {:8.3f} {:8.3f} {:8.3f}'.format(w[0],w[1],w[2],w[3])
                 frame[chip][0].header['WAVEFILE'] = load.allfile('Wave',num=waveid,chips=True)
@@ -790,7 +790,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
                 hdu.append(allhdu[ichip][1])
                 hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
 
-        # plots
+        # Plots
         if plot is not None :
             try: os.mkdir(dirname+'/plots')
             except: pass
@@ -806,14 +806,14 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
                             size=12,xt='Row',yt='Pixel shift')
                 plots.plotc(wax[ichip],linestr['wave'][use[gd]],y,linestr['row'][use[gd]],zr=[0,300],yr=[med-0.5,med+0.5],
                             xr=xlim[ichip],size=12,xt='Wavelength',yt='Pixel shift')
-                gdfit=np.where(np.abs(y-med) < 0.5)[0]
-                xx=np.arange(300)
+                gdfit = np.where(np.abs(y-med) < 0.5)[0]
+                xx = np.arange(300)
                 #if len(gdfit) > 1 :
                 #    p=np.polyfit(x[gdfit],y[gdfit],1)
                 #    xx=np.arange(300)
                 #    plots.plotl(ax,xx,p[0]*xx+p[1],color=colors[ichip])
-                yy=w[0]*xx
-                yy+=w[ichip+1]
+                yy = w[0]*xx
+                yy += w[ichip+1]
                 plots.plotl(ax,xx,yy,color=colors[ichip])
                 if waveid > 0 : label = 'Frame: {:s}  Waveid: {:8d}'.format(name,waveid)
                 else : label = 'Frame: {:s}  Delta from ap1dwavecal'.format(name)
@@ -824,23 +824,23 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
                 fig.savefig(plot+'.png')
                 grid.append(['../plots/'+os.path.basename(plot)+'.png','../plots/'+os.path.basename(plot)+'_wave.png'])
                 ytit.append(name)
-            else : 
+            else: 
                 plt.show()
                 plt.draw()
                 pdb.set_trace()
             plt.close('all')
 
         # Get shifts relative to first frame for each line/fiber
-        if iframe == 0 : 
+        if iframe == 0: 
             linestr0 = copy.copy(linestr)
             use0 = copy.copy(use)
             refnum = int(name)
         print(iframe,len(linestr0),len(linestr))
-        for line in range(len(use)) :
+        for line in range(len(use)):
             ref = np.where((linestr0['chip'][use0] == linestr['chip'][use[line]]) & 
                            (linestr0['row'][use0] == linestr['row'][use[line]]) &
                            (linestr0['wave'][use0] == linestr['wave'][use[line]]))[0]
-            if len(ref) > 0 : 
+            if len(ref) > 0:
                 linestr['pixel'][use[line]] -= linestr0['pixel'][use0[ref]].mean()
             else : linestr['pixel'][use[line]] = -999
         med = np.median(linestr['pixel'][use])
