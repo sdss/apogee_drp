@@ -544,54 +544,54 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
     """ Run DOPPLER RVs for a field
     """ 
   
-    plan=yaml.safe_load(open(planfile,'r'))
-    if plan['apogee_ver'] != os.environ['APOGEE_VER'] :
-        print('apogee_ver {:s} does not match running version {:s}'.format(plan['apogee_ver'],os.environ['APOGEE_VER']))
+    plan = yaml.safe_load(open(planfile,'r'))
+    if plan['apogee_drp_ver'] != os.environ['APOGEE_DRP_VER'] :
+        print('apogee_drp_ver {:s} does not match running version {:s}'.format(plan['apogee_drp_ver'],os.environ['APOGEE_DRP_VER']))
         pdb.set_trace()
 
-    apred=plan['apred_vers']
+    apred = plan['apred_vers']
     if apstar_vers is None : apstar_vers=plan['apstar_vers'] if plan.get('apstar_vers') else 'stars'
 
-    telescope=plan['telescope']
-    field=plan['field']
+    telescope = plan['telescope']
+    field = plan['field']
  
-    # get all the VisitSum files for this field and concatenate them
-    files=glob.glob(os.environ['APOGEE_REDUX']+'/'+apred+'/visit/'+telescope+'/'+field+'/apVisitSum*')
+    # Get all the VisitSum files for this field and concatenate them
+    files = glob.glob(os.environ['APOGEE_REDUX']+'/'+apred+'/visit/'+telescope+'/'+field+'/apVisitSum*')
     if len(files) == 0 :
         print('no apVisitSum files found for {:s}'.format(field))
         return
     else :
-        allvisits=struct.concat(files)
-    starmask=bitmask.StarBitMask()
-    gd=np.where(((allvisits['STARFLAG'] & starmask.badval()) == 0) & 
-                 (allvisits['APOGEE_ID'] != b'') &
-                 (allvisits['SNR'] > snmin) )[0]
+        allvisits = struct.concat(files)
+    starmask = bitmask.StarBitMask()
+    gd = np.where(((allvisits['STARFLAG'] & starmask.badval()) == 0) & 
+                  (allvisits['APOGEE_ID'] != b'') &
+                  (allvisits['SNR'] > snmin) )[0]
     print(len(allvisits),len(gd))
-    allvisits=Table(allvisits)
-    # change datatype of STARFLAG to 64-bit
+    allvisits = Table(allvisits)
+    # Change datatype of STARFLAG to 64-bit
     allvisits['STARFLAG'] = allvisits['STARFLAG'].astype(np.uint64)
 
-    # output directory
-    load=apload.ApLoad(apred=apred,telescope=telescope)
-    outfield=load.filename('Field',field=field)
+    # Output directory
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    outfield = load.filename('Field',field=field)
     if apstar_vers != 'stars' :
-        outfield=outfield.replace('/stars/','/'+apstar_vers+'/')
+        outfield = outfield.replace('/stars/','/'+apstar_vers+'/')
     try : os.makedirs(os.path.dirname(outfield))
     except FileExistsError: pass
-    outfieldvisits=load.filename('FieldVisits',field=field)
+    outfieldvisits = load.filename('FieldVisits',field=field)
     if apstar_vers != 'stars' :
-        outfieldvisits=outfieldvisits.replace('/stars/','/'+apstar_vers+'/')
+        outfieldvisits = outfieldvisits.replace('/stars/','/'+apstar_vers+'/')
 
-    # get all unique (or requested) objects
+    # Get all unique (or requested) objects
     if obj is None :
         if nobj > 0 :
-            allobj=set(allvisits['APOGEE_ID'][0:nobj])
+            allobj = set(allvisits['APOGEE_ID'][0:nobj])
         else :
-            allobj=set(allvisits['APOGEE_ID'])
+            allobj = set(allvisits['APOGEE_ID'])
     else :
         allobj = obj
 
-    # output apField structure
+    # Output apField structure
     fieldtype = np.dtype([('FILE','S64'),('APOGEE_ID','S20'),('TELESCOPE','S6'),('LOCATION_ID',int),('FIELD','S20'),
                           ('RA',float),('DEC',float),('GLON',float),('GLAT',float),
                           ('J',float),('J_ERR',float),('H',float),('H_ERR',float),('K',float),('K_ERR',float),
@@ -617,11 +617,11 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
     allfield['TELESCOPE'] = telescope
     allfield['FIELD'] = field
 
-    allfiles=[]
-    allv=[]
-    nobj=0
-    nvisit=0
-    pixelmask=bitmask.PixelBitMask()
+    allfiles = []
+    allv = []
+    nobj = 0
+    nvisit = 0
+    pixelmask = bitmask.PixelBitMask()
 
     # loop over requested objects, building up allfiles list of 
     #  [(field,obj,clobber,verbose,tweak,plot,windows),filenames....] to pass to dorv()
@@ -629,18 +629,18 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
         if type(star) is str : star=star.encode()
         allfield['APOGEE_ID'][iobj] = star
         # we will only consider good visits
-        visits=np.where(allvisits['APOGEE_ID'][gd] == star)[0]
+        visits = np.where(allvisits['APOGEE_ID'][gd] == star)[0]
         print('object: {:}  nvisits: {:d}'.format(star,len(visits)))
-        nobj+=1
-        nvisit+=len(visits)
+        nobj += 1
+        nvisit += len(visits)
 
         if len(visits) > 0 :
             allfiles.append([allvisits[gd[visits]],load,(field,star,clobber,verbose,tweak,plot,windows,apstar_vers)])
     print('total objects: ', nobj, ' total visits: ', nvisit) 
 
-    # now do the RVs, in parallel if requested
+    # Now do the RVs, in parallel if requested
     if threads == 0 :
-        output=[]
+        output = []
         for speclist in allfiles :
             print(speclist)
             output.append(dorv(speclist))
@@ -651,9 +651,9 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
         pool.join()
     print('done pool')
 
-    # load up the individual visit RV information
+    # Load up the individual visit RV information
 
-    # first rename old visit RV tags and initialize new ones
+    # First rename old visit RV tags and initialize new ones
     for col in ['VTYPE','VREL','VRELERR','VHELIO','BC','RV_TEFF','RV_LOGG','RV_FEH','RV_CARB','RV_ALPHA'] :
         allvisits.rename_column(col,'EST'+col)
         if col == 'VTYPE' : allvisits[col] = 0
@@ -666,15 +666,15 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
     rv_components = Column(name='RV_COMPONENTS',dtype=float,shape=(3),length=len(allvisits))
     allvisits.add_column(rv_components)
 
-    # now load the new ones with the dorv() output
-    allv=[]
+    # Now load the new ones with the dorv() output
+    allv = []
     for out,files in zip(output,allfiles) :
         if out is not None :
-            visits=[]
-            ncomponents=0
+            visits = []
+            ncomponents = 0
             for i,(v,g) in enumerate(zip(out[0][1],out[1])) :
                 # match by filename components in case there was an error reading in doppler
-                name=os.path.basename(v['filename']).replace('.fits','').split('-')
+                name = os.path.basename(v['filename']).replace('.fits','').split('-')
                 if telescope == 'apo1m' :
                     visit = np.where( np.char.strip(allvisits['FILE']).astype(str) == os.path.basename(v['filename'].strip()) )[0]
                     if len(visit) == 0 :
@@ -716,16 +716,16 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
                     allvisits[visit]['STARFLAG'] |= starmask.getval('RV_SUSPECT')
 
             if len(visits) > 0 :
-                visits=np.array(visits)
+                visits = np.array(visits)
                 # set up visit combination, removing visits with suspect RVs
-                apogee_id=files[-1][1].decode() 
+                apogee_id = files[-1][1].decode() 
                 gdrv = np.where((allvisits[visits]['STARFLAG'] & starmask.getval('RV_REJECT')) == 0)[0]
                 if len(gdrv) > 0 : 
                     allv.append([allvisits[visits[gdrv]],load,(field,apogee_id,clobber,apstar_vers,nres)])
 
-    # do the visit combination, in parallel if requested
+    # Do the visit combination, in parallel if requested
     if threads == 0 :
-        output=[]
+        output = []
         for v in allv :
             output.append(dovisitcomb(v))
     else :
@@ -735,35 +735,35 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
         pool.join()
     print('done visitcomb pool pool')
 
-    # now load the combined star information into allfield structure
-    # note that dovisitcomb() returns and apstar structure, with header
+    # Now load the combined star information into allfield structure
+    # Note that dovisitcomb() returns an apstar structure, with header
     # information in FITS header, which limits card names to 8 characters
     # Some of these are renamed in allField structure to use different
     # (longer, more clear) names
     for apstar,v in zip(output,allv) :
         j = np.where(allfield['APOGEE_ID'] == v[-1][1].encode())[0]
 
-        # basic target information
+        # Basic target information
         try: allfield['APOGEE_ID'][j] = apstar.header['OBJID']
         except: allfield['APOGEE_ID'][j] = v[-1][1]
-        keys=['RA','DEC','J','J_ERR','H','H_ERR','K','K_ERR',
-              'SRC_H','WASH_M','WASH_M_ERR','WASH_T2','WASH_T2_ERR',
-              'DDO51','DDO51_ERR','IRAC_3_6','IRAC_3_6_ERR',
-              'IRAC_4_5','IRAC_4_5_ERR','IRAC_5_8','IRAC_5_8_ERR',
-              'WISE_4_5','WISE_4_5_ERR','TARG_4_5','TARG_4_5_ERR',
-              'WASH_DDO51_GIANT_FLAG','WASH_DDO51_STAR_FLAG',
-              'AK_TARG','AK_TARG_METHOD','AK_WISE','SFD_EBV']
+        keys = ['RA','DEC','J','J_ERR','H','H_ERR','K','K_ERR',
+                'SRC_H','WASH_M','WASH_M_ERR','WASH_T2','WASH_T2_ERR',
+                'DDO51','DDO51_ERR','IRAC_3_6','IRAC_3_6_ERR',
+                'IRAC_4_5','IRAC_4_5_ERR','IRAC_5_8','IRAC_5_8_ERR',
+                'WISE_4_5','WISE_4_5_ERR','TARG_4_5','TARG_4_5_ERR',
+                'WASH_DDO51_GIANT_FLAG','WASH_DDO51_STAR_FLAG',
+                'AK_TARG','AK_TARG_METHOD','AK_WISE','SFD_EBV']
         for key in keys :
             try: allfield[key][j] = v[0][0][key]
             except KeyError: pass
 
-        # rename targeting proper motions
+        # Rename targeting proper motions
         keys = ['PMRA','PMDEC','PM_SRC']
         for key in keys :
             try: allfield['TARG_'+key][j] = v[0][0][key]
             except KeyError: pass
 
-        # targeting flags have different names
+        # Targeting flags have different names
         apogee_target1 = apstar.header['APTARG1']
         apogee_target2 = apstar.header['APTARG2']
         apogee_target3 = apstar.header['APTARG3']
@@ -778,29 +778,29 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
         allfield['APOGEE2_TARGET2'][j] = apogee2_target2
         allfield['APOGEE2_TARGET3'][j] = apogee2_target3
         allfield['APOGEE2_TARGET4'][j] = apogee2_target4
-        # add character string for target flags
+        # Add character string for target flags
         allfield['TARGFLAGS'][j] = (bitmask.targflags(apogee_target1,apogee_target2,apogee_target3,0,survey='apogee')+
                                     bitmask.targflags(apogee2_target1,apogee2_target2,apogee2_target3,apogee2_target4,survey='apogee2'))
-        # some modified names
+        # Some modified names
         allfield['N_COMPONENTS'][j] = apstar.header['N_COMP']
         allfield['VHELIO_AVG'][j] = apstar.header['VHELIO']
 
-        # mostly unmodified names
+        # Mostly unmodified names
         for key in ['STARFLAG','ANDFLAG','SNR','VSCATTER','VERR','RV_TEFF','RV_LOGG','RV_FEH','NVISITS','MEANFIB','SIGFIB' ] :
             allfield[key][j] = apstar.header[key]
-        # add character string for star flags
+        # Add character string for star flags
         allfield['STARFLAGS'][j] = starmask.getname(allfield['STARFLAG'][j])
         allfield['ANDFLAGS'][j] = starmask.getname(allfield['ANDFLAG'][j])
 
-        # tags that are not from apStar
+        # Tags that are not from apStar
         allfield['SURVEY'][j] =  ','.join(set(v[0]['SURVEY']))
         allfield['PROGRAMNAME'][j] = ','.join(set(v[0]['PROGRAMNAME']))
 
-    # add GAIA information
-    allfield=gaia.add_gaia(allfield)
+    # Add GAIA information
+    allfield = gaia.add_gaia(allfield)
 
-    #output apField and apFieldVisits
-    hdulist=fits.HDUList()
+    # Output apField and apFieldVisits
+    hdulist = fits.HDUList()
     hdulist.append(fits.table_to_hdu(Table(allfield)))
     hdulist.writeto(outfield,overwrite=True)
 
@@ -808,7 +808,7 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
     hdulist.append(fits.table_to_hdu(allvisits))
     hdulist.writeto(outfieldvisits,overwrite=True)
 
-    # make web page
+    # Make web page
     if obj is not None : suffix='_obj'
     else : suffix=''
     if tweak: suffix=suffix+'_tweak'
@@ -817,30 +817,31 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
 
     return allfield,allvisits
 
-def dorv(visitfiles) :            
-    """ do the rv jointfit from list of files
+def dorv(visitfiles):
+    """ Do the Doppler rv jointfit from list of files
     """
     # last list elements has configuration variables in a tuple
     allvisit = visitfiles[0]
     load = visitfiles[1]
-    field=visitfiles[-1][0]
-    obj=visitfiles[-1][1].decode('UTF-8')
-    clobber=visitfiles[-1][2]
-    verbose=visitfiles[-1][3]
-    tweak=visitfiles[-1][4]
-    plot=visitfiles[-1][5]
-    windows=visitfiles[-1][6]
-    apstar_vers=visitfiles[-1][7]
+    field = visitfiles[-1][0]
+    obj = visitfiles[-1][1]
+    if type(obj) is not str: obj=obj.decode('UTF-8')
+    clobber = visitfiles[-1][2]
+    verbose = visitfiles[-1][3]
+    tweak = visitfiles[-1][4]
+    plot = visitfiles[-1][5]
+    windows = visitfiles[-1][6]
+    apstar_vers = visitfiles[-1][7]
     #rvrange=visitfiles[-1][7]
     if tweak: suffix='_tweak'
     else : suffix='_out'
     outdir = os.path.dirname(load.filename('Star',field=field,obj=obj))
     if apstar_vers != 'stars' :
-        outdir=outdir.replace('/stars/','/'+apstar_vers+'/')
+        outdir = outdir.replace('/stars/','/'+apstar_vers+'/')
 
     if os.path.exists(outdir+'/'+obj+suffix+'.pkl') and not clobber:
         print(obj,' already done')
-        fp=open(outdir+'/'+obj+suffix+'.pkl','rb')
+        fp = open(outdir+'/'+obj+suffix+'.pkl','rb')
         try: 
             out=pickle.load(fp)
             fp.close()
@@ -849,49 +850,49 @@ def dorv(visitfiles) :
             print('error loading: ', obj+suffix+'.pkl')
             pass
 
-    speclist=[]
-    pixelmask=bitmask.PixelBitMask()
-    badval=pixelmask.badval()|pixelmask.getval('SIG_SKYLINE')|pixelmask.getval('LITTROW_GHOST')
+    speclist = []
+    pixelmask = bitmask.PixelBitMask()
+    badval = pixelmask.badval()|pixelmask.getval('SIG_SKYLINE')|pixelmask.getval('LITTROW_GHOST')
    
-    # if we have a significant number of low S/N visits, combine first using
+    # If we have a significant number of low S/N visits, combine first using
     #    barycentric correction only, use that to get an estimate of systemic
     #    velocity, then do RV determination restricting RVs to within 50 km/s
     #    of estimate. This seems to help significant for faint visits
     lowsnr_visits=np.where(allvisit['SNR']<10)[0]
     if (len(lowsnr_visits) > 1) & (len(lowsnr_visits)/len(allvisit) > 0.1) :
         try :
-            apstar_bc=visitcomb(allvisit,bconly=True,load=load,write=False,dorvfit=False,apstar_vers=apstar_vers) 
+            apstar_bc = visitcomb(allvisit,bconly=True,load=load,write=False,dorvfit=False,apstar_vers=apstar_vers) 
             apstar_bc.setmask(badval)
-            spec=doppler.Spec1D(apstar_bc.flux[0,:],err=apstar_bc.err[0,:],bitmask=apstar_bc.bitmask[0,:],
-                 mask=apstar_bc.mask[0,:],wave=apstar_bc.wave,lsfpars=np.array([0]),
-                 lsfsigma=apstar_bc.wave/22500/2.354,instrument='APOGEE',
-                 filename=apstar_bc.filename)
+            spec = doppler.Spec1D(apstar_bc.flux[0,:],err=apstar_bc.err[0,:],bitmask=apstar_bc.bitmask[0,:],
+                                  mask=apstar_bc.mask[0,:],wave=apstar_bc.wave,lsfpars=np.array([0]),
+                                  lsfsigma=apstar_bc.wave/22500/2.354,instrument='APOGEE',
+                                  filename=apstar_bc.filename)
             print('running BC jointfit for :',obj)
-            out= doppler.rv.jointfit([spec],verbose=verbose,plot=plot,tweak=tweak,maxvel=[-500,500])
-            rvrange=[out[1][0]['vrel']-50,out[1][0]['vrel']+50]
+            out = doppler.rv.jointfit([spec],verbose=verbose,plot=plot,tweak=tweak,maxvel=[-500,500])
+            rvrange = [out[1][0]['vrel']-50, out[1][0]['vrel']+50]
         except :
             print('  BC jointfit failed')
-            rvrange=[-500,500]
+            rvrange = [-500,500]
     elif allvisit['H'].max() > 13.5 : 
-        # if it's faint, restrict to +/- 500 km/s
-        rvrange=[-500,500]
-    else :
-        # otherwise, restrict to +/ 1000 km/s
-        rvrange=[-1000,1000]
+        # If it's faint, restrict to +/- 500 km/s
+        rvrange = [-500,500]
+    else:
+        # Otherwise, restrict to +/ 1000 km/s
+        rvrange = [-1000,1000]
 
-    for i in range(len(allvisit)) :
+    for i in range(len(allvisit)):
 
-        # load all of the visits into doppler Spec1D objects
+        # Load all of the visits into doppler Spec1D objects
         if load.telescope == 'apo1m' :
-            visitfile= load.allfile('Visit',plate=allvisit['PLATE'][i],
-                                 mjd=allvisit['MJD'][i],reduction=allvisit['APOGEE_ID'][i])
+            visitfile = load.allfile('Visit',plate=allvisit['PLATE'][i],
+                                    mjd=allvisit['MJD'][i],reduction=allvisit['APOGEE_ID'][i])
         else :
-            visitfile= load.allfile('Visit',plate=int(allvisit['PLATE'][i]),
-                                 mjd=allvisit['MJD'][i],fiber=allvisit['FIBERID'][i])
-        spec=doppler.read(visitfile,badval=badval)
+            visitfile = load.allfile('Visit',plate=int(allvisit['PLATE'][i]),
+                                     mjd=allvisit['MJD'][i],fiber=allvisit['FIBERID'][i])
+        spec = doppler.read(visitfile,badval=badval)
 
         if windows is not None :
-            # if we have spectral windows to mask, do so here
+            # If we have spectral windows to mask, do so here
             for ichip in range(3) :
                 mask = np.full_like(spec.mask[:,ichip],True)
                 gd = []
@@ -902,26 +903,26 @@ def dorv(visitfiles) :
                  
         if spec is not None : speclist.append(spec)
 
-    # now do the doppler jointfit to get RVs
-    # dump empty pickle to stand in case of failure (to prevent redo if not clobber)
+    # Now do the doppler jointfit to get RVs
+    # Dump empty pickle to stand in case of failure (to prevent redo if not clobber)
     try:
-        # dump empty pickle to stand in case of failure (to prevent redo if not clobber)
-        fp=open(outdir+'/'+obj+suffix+'.pkl','wb')
+        # Dump empty pickle to stand in case of failure (to prevent redo if not clobber)
+        fp = open(outdir+'/'+obj+suffix+'.pkl','wb')
         pickle.dump(None,fp)
         fp.close()
         print('running jointfit for : {:s}  rvrange:[{:.1f},{:.1f}]  nvisits: {:d}'.format(obj,*rvrange,len(speclist)))
-        out= doppler.rv.jointfit(speclist,maxvel=rvrange,verbose=verbose,
-                                 plot=plot,saveplot=plot,outdir=outdir+'/',tweak=tweak)
+        out = doppler.rv.jointfit(speclist,maxvel=rvrange,verbose=verbose,
+                                  plot=plot,saveplot=plot,outdir=outdir+'/',tweak=tweak)
         print('running decomp for :',obj)
         gout = gauss_decomp(out[1],phase='two',filt=True)
-        fp=open(outdir+'/'+obj+suffix+'.pkl','wb')
+        fp = open(outdir+'/'+obj+suffix+'.pkl','wb')
         pickle.dump([out,gout],fp)
         fp.close()
         print('running plots for :',obj,outdir)
-        try : os.makedirs(outdir+'/plots/')
-        except : pass
+        try: os.makedirs(outdir+'/plots/')
+        except: pass
         dop_plot(outdir+'/plots/',obj,out,decomp=gout)
-    except KeyboardInterrupt : 
+    except KeyboardInterrupt: 
         raise
     except ValueError as err:
         print('Exception raised in dorv for: ', field, obj)
@@ -936,7 +937,7 @@ def dorv(visitfiles) :
         print('Exception raised in dorv for: ', field, obj)
         return
 
-    # return summary RV info, visit RV info, decomp info 
+    # Rturn summary RV info, visit RV info, decomp info 
     return [out[0:2],gout]
 
 def dovisitcomb(allv) :

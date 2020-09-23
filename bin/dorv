@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Jon Holtzman, David Nidever
+# @Date: March 2018, Sep 2020
+# @Filename: apred
+# @License: BSD 3-Clause
+# @Copyright: Jon Holtzman
+
+# Run Doppler RV for a single star
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import subprocess
+import pdb
+import time
+import datetime
+import glob
+from holtztools import struct
+import numpy as np
+from astropy.table import Table
+
+from apogee_drp.apred import rv
+from apogee_drp.utils import bitmask,apload
+
+if __name__ == '__main__' :
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Runs RVs')
+
+    parser.add_argument('star', type=str, nargs=1,  help='Star Name')
+    parser.add_argument('apred', type=str, nargs=1, help='APOGEE reduction version')
+    parser.add_argument('instrument', type=str, nargs=1, help='APOGEE instrument')
+    parser.add_argument('field', type=str, nargs=1, help='Field name')
+    parser.add_argument("--nres",type=float,nargs=3,help='list of sinc widths',default=[5,4.25,3.5])
+    parser.add_argument("--windows",type=float,nargs=1,help='Spectral windows')
+    parser.add_argument('--tweak', action='store_true', help='do normalization tweak?')
+    parser.add_argument("--done")
+    parser.add_argument("--host")
+    parser.add_argument("--flag",type=str,default='11111')
+    parser.add_argument('-c','--clobber', action='store_true', help='Overwrite files?')
+    parser.add_argument('-v','--verbose', action='store_true', help='Verbose output')
+    parser.add_argument('-p','--plot', action='store_true', help='Make a plot')
+    args = parser.parse_args()
+
+    now = datetime.datetime.now()
+    start = time.time()
+    print("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+
+    # Code copied from rv.dopple_rv()
+    star = args.star[0]
+    apred = args.apred[0]
+    instrument = args.instrument[0]
+    if instrument=='apogee-n':
+        telescope = 'apo25m'
+    if instrument=='apogee-s':
+        telescope = 'lco25m'
+    field = args.field[0]
+    clobber = args.clobber
+    tweak = args.tweak
+    nres = args.nres
+    windows = args.windows
+    verbose = args.verbose
+    plot = args.plot
+    snmin = 3
+    apstar_vers = 'stars'
+
+    # Get all the VisitSum files for this field and concatenate them
+    files = glob.glob(os.environ['APOGEE_REDUX']+'/'+apred+'/visit/'+telescope+'/'+field+'/apVisitSum*')
+    if len(files) == 0 :
+        print('no apVisitSum files found for {:s}'.format(field))
+        sys.exit()
+    else :
+        allvisits = struct.concat(files)
+    starmask = bitmask.StarBitMask()
+    gd = np.where(((allvisits['STARFLAG'] & starmask.badval()) == 0) &
+                  (allvisits['APOGEE_ID'] != b'') &
+                  (allvisits['SNR'] > snmin) )[0]
+    print(len(allvisits),len(gd))
+    allvisits = Table(allvisits)
+    # Change datatype of STARFLAG to 64-bit
+    allvisits['STARFLAG'] = allvisits['STARFLAG'].astype(np.uint64)
+
+    # Output directory
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    outfield = load.filename('Field',field=field)
+    #outfield = outfield.replace('/stars/','/'+apstar_vers+'/')
+    try : os.makedirs(os.path.dirname(outfield))
+    except FileExistsError: pass
+
+    # Get visit files
+    starvisits = np.where(allvisits['APOGEE_ID'][gd] == star)[0]
+    nvisits = len(starvisits)
+    print('object: {:}  nvisits: {:d}'.format(star,nvisits))
+    if nvisits == 0:
+        print('No visit files for '+star)
+        sys.exit()
+
+    # The inputs for dorv()
+    speclist = [allvisits[gd[starvisits]],load,(field,star,clobber,verbose,tweak,plot,windows,apstar_vers)]
+
+    try:
+        rv.dorv(speclist)
+        print('rv completed successfully for {:s}'.format(star))
+    except:
+        print('rv failed for {:s}'.format(star))
+        raise
+
+    now = datetime.datetime.now()
+    print("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    print("elapsed: ",time.time()-start)
+
+    #if args.done is not None :
+    #    subprocess.call(['setdone',args.done])
+    #    try: 
+    #        subprocess.call(['setdone',done])
+    #    except: pass
+    #    print('host', args.host)
+    #    if args.host is not None :
+    #        try: os.remove(args.done+'.'+args.host)
+    #        except: pass
