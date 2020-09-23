@@ -817,6 +817,182 @@ def doppler_rv(planfile,survey='apogee',telescope='apo25m',apred='r13',apstar_ve
 
     return allfield,allvisits
 
+
+
+def doppler_rv_star(star,apred,instrument,field,nres=[5,4.25,3.5],windows=None,tweak=False,
+                    clobber=False,verbose=False,plot=False):
+    """
+    Run Doppler on one star and perform visit combination.
+
+    Parameters
+    ----------
+    star : str
+       The '2M' star name.
+    apred : str
+       APOGEE reduction version.
+    instrument : str
+       APOGEE instrument. 'apogee-n' or 'apogee-s'.
+    field : str
+       Field name.
+    nres : array
+       Array of sinc widths.  Default is nres=[5,4.25,3.5].
+    windows : array
+       Array of spectral windows to use.
+    tweak : bool, optional
+       Have Doppler tweak the continuum with the best-fit template.  Default is False.
+    clobber : bool, optional
+       Overwrite any existing files.
+    verbose : bool, optional
+       Verbose output to the screen.
+    plot : bool, optional
+       Make a plot of spectrum and best-fitting template.
+
+    Returns
+    -------
+    The program outputs Doppler files an apStar combined file to the appropriate
+    place specified in the SDSS/APOGEE tree product.
+
+    """
+
+    #parser.add_argument("--flag",type=str,default='11111')
+    if instrument=='apogee-n':
+        telescope = 'apo25m'
+    if instrument=='apogee-s':
+        telescope = 'lco25m'
+    snmin = 3
+    apstar_vers = 'stars'
+
+    # Get all the VisitSum files for this field and concatenate them
+    files = glob.glob(os.environ['APOGEE_REDUX']+'/'+apred+'/visit/'+telescope+'/'+field+'/apVisitSum*')
+    if len(files) == 0 :
+        print('no apVisitSum files found for {:s}'.format(field))
+        sys.exit()
+    else :
+        allvisits = struct.concat(files)
+    starmask = bitmask.StarBitMask()
+    gd = np.where(((allvisits['STARFLAG'] & starmask.badval()) == 0) &
+                  (allvisits['APOGEE_ID'] != b'') &
+                  (allvisits['SNR'] > snmin) )[0]
+    print(len(allvisits),len(gd))
+    allvisits = Table(allvisits)
+    # Change datatype of STARFLAG to 64-bit
+    allvisits['STARFLAG'] = allvisits['STARFLAG'].astype(np.uint64)
+
+    # Output directory
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    outfield = load.filename('Field',field=field)
+    #outfield = outfield.replace('/stars/','/'+apstar_vers+'/')
+    try : os.makedirs(os.path.dirname(outfield))
+    except FileExistsError: pass
+
+    # Get visit files
+    stargd = np.where(allvisits['APOGEE_ID'][gd] == star)[0]
+    nvisits = len(stargd)
+    print('object: {:}  nvisits: {:d}'.format(star,nvisits))
+    if nvisits == 0:
+        print('No visit files for '+star)
+        sys.exit()
+    starvisits = allvisits[gd[stargd]]
+
+    # The inputs for dorv()
+    speclist = [starvisits,load,(field,star,clobber,verbose,tweak,plot,windows,apstar_vers)]
+
+    try:
+        out = dorv(speclist)
+        print('rv completed successfully for {:s}'.format(star))
+    except:
+        print('rv failed for {:s}'.format(star))
+        raise
+
+
+    # First rename old visit RV tags and initialize new ones
+    for col in ['VTYPE','VREL','VRELERR','VHELIO','BC','RV_TEFF','RV_LOGG','RV_FEH','RV_CARB','RV_ALPHA']:
+        starvisits.rename_column(col,'EST'+col)
+        if col == 'VTYPE':
+            starvisits[col] = 0
+        else:
+            starvisits[col] = np.nan
+    for col in ['XCORR_VREL','XCORR_VRELERR','XCORR_VHELIO','BC']:
+        starvisits[col] = np.nan
+
+    # Add columns for RV components
+    starvisits['N_COMPONENTS'] = -1
+    rv_components = Column(name='RV_COMPONENTS',dtype=float,shape=(3),length=len(starvisits))
+    starvisits.add_column(rv_components)
+
+    # Now load the new ones with the dorv() output
+    allv = []
+    visits = []
+    ncomponents = 0
+    files = speclist
+    for i,(v,g) in enumerate(zip(out[0][1],out[1])) :
+        # Match by filename components in case there was an error reading in doppler
+        name = os.path.basename(v['filename']).replace('.fits','').split('-')
+        if telescope == 'apo1m':
+            visit = np.where( np.char.strip(starvisits['FILE']).astype(str) == os.path.basename(v['filename'].strip()) )[0]
+            if len(visit) == 0:
+                # special case for incremental release...yuck
+                visit = np.where( np.char.strip(starvisits['FILE']).astype(str) == 
+                                  os.path.basename(v['filename'].strip()).replace('-r13-','-r12-') )[0]
+        else:
+            visit = np.where( (np.char.strip(starvisits['PLATE']).astype(str) == name[-3]) &
+                              (starvisits['MJD'] == int(name[-2])) &
+                              (starvisits['FIBERID'] == int(name[-1])) )[0]
+        if len(visit) > 0:
+            visit = visit[0]
+        else:
+            continue
+        visits.append(visit)
+        starvisits[visit]['VREL'] = v['vrel']
+        starvisits[visit]['VRELERR'] = v['vrelerr']
+        starvisits[visit]['VHELIO'] = v['vhelio']
+        starvisits[visit]['XCORR_VREL'] = v['xcorr_vrel']
+        starvisits[visit]['XCORR_VRELERR'] = v['xcorr_vrelerr']
+        starvisits[visit]['XCORR_VHELIO'] = v['xcorr_vhelio']
+        starvisits[visit]['BC'] = v['bc']
+        starvisits[visit]['RV_TEFF'] = v['teff']
+        starvisits[visit]['RV_LOGG'] = v['logg']
+        starvisits[visit]['RV_FEH'] = v['feh']
+        if g is None:
+            starvisits[visit]['N_COMPONENTS']=0
+        else:
+            starvisits[visit]['N_COMPONENTS']=g['N_components']
+        if starvisits[visit]['N_COMPONENTS'] > 1 :
+            starvisits[visit]['STARFLAG'] |= starmask.getval('MULTIPLE_SUSPECT')
+            n = len(g['best_fit_parameters'])//3
+            gd = np.where(np.array(g['best_fit_parameters'])[0:n] > 0)[0]
+            rv_comp = np.array(g['best_fit_parameters'])[2*n+gd]
+            n_rv_comp = np.min([3,len(rv_comp)])
+            starvisits[visit]['RV_COMPONENTS'][0:n_rv_comp] = rv_comp[0:n_rv_comp]
+        # flag visits with suspect RVs
+        if starvisits[visit]['RV_TEFF'] < 6000:
+            bd_diff = 10
+        else:
+            bd_diff = 50.
+        if (np.abs(starvisits[visit]['VHELIO']-starvisits[visit]['XCORR_VHELIO']) > bd_diff) :
+            starvisits[visit]['STARFLAG'] |= starmask.getval('RV_REJECT')
+        elif (np.abs(starvisits[visit]['VHELIO']-starvisits[visit]['XCORR_VHELIO']) > 0) :
+            starvisits[visit]['STARFLAG'] |= starmask.getval('RV_SUSPECT')
+
+    if len(visits) > 0 :
+        visits = np.array(visits)
+        # set up visit combination, removing visits with suspect RVs
+        apogee_id = files[-1][1]
+        if type(apogee_id) is not str: apogee_id = apogee_id.decode() 
+        gdrv = np.where((starvisits[visits]['STARFLAG'] & starmask.getval('RV_REJECT')) == 0)[0]
+        if len(gdrv) > 0 : 
+            allv = [starvisits[visits[gdrv]],load,(field,apogee_id,clobber,apstar_vers,nres)]
+
+    # Do the visit combination
+    if len(allv)>0:
+        combout = dovisitcomb(allv)
+    else:
+        print('No good visits for '+star)
+        raise
+
+    return
+
+
 def dorv(visitfiles):
     """ Do the Doppler rv jointfit from list of files
     """
