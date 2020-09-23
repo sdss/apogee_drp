@@ -11,7 +11,7 @@ import esutil
 import pickle
 import yaml
 from astropy.io import fits
-from ..utils import apload, applot, bitmask, spectra, norm, yanny
+from ..utils import apload, applot, bitmask, spectra, norm, yanny, gaia
 from holtztools import plots, html, match, struct
 from scipy import interpolate
 from scipy.signal import correlate
