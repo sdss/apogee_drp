@@ -7,19 +7,24 @@ import subprocess
 import glob
 import pickle
 from astra.tasks import BaseTask
-from astra.tasks.io import ApPlanFile
+#from astra.tasks.io import ApVisitFile,ApStarFile
 from sdss_access.path import path
 from apogee_drp.utils import apload,yanny
+from apogee_drp.apred import rv
 from luigi.util import inherits
+from holtztools import struct
+from astropy.table import Table
 
-# Inherit the parameters needed to define an ApPlanFile, since we will need these to
-# require() the correct ApPlanFile.
-@inherits(ApPlanFile)
-class AP1DVISIT(BaseTask):
+# Inherit the parameters needed to define an ApStarFile, since we will need these to
+# require() the correct ApVisitFile.
+#@inherits(ApVisitFile)
+#@inherits(ApStarFile)
+class APSTAR(BaseTask):
 
     """ Run the RV and Visit combination part of the code."""
 
     # Parameters
+    star = luigi.Parameter()
     apred = luigi.Parameter()
     instrument = luigi.Parameter()
     telescope = luigi.Parameter()
@@ -29,43 +34,47 @@ class AP1DVISIT(BaseTask):
 
 
     def requires(self):
-        return ApPlanFile(**self.get_common_param_kwargs(ApPlanFile))
+        # Check that there are some Visit files for this star
+
+        # Get all the VisitSum files for this field and concatenate them
+        files = glob.glob(os.environ['APOGEE_REDUX']+'/'+self.apred+'/visit/'+self.telescope+'/'+self.field+'/apVisitSum*')
+        if len(files) == 0 :
+            print('no apVisitSum files found for {:s}'.format(self.field))
+            return
+        else:
+            allvisits = struct.concat(files)
+        starmask = bitmask.StarBitMask()
+        gd = np.where(((allvisits['STARFLAG'] & starmask.badval()) == 0) &
+                      (allvisits['APOGEE_ID'] != b'') &
+                      (allvisits['SNR'] > snmin) )[0]
+        allvisits = Table(allvisits)
+        # Get visit files
+        starvisits = np.where(allvisits['APOGEE_ID'][gd] == star)[0]
+        nvisits = len(starvisits)
+
+        return ApVisitFile(**self.get_common_param_kwargs(ApVisitFile))
 
 
     def output(self):
-        # Store the 1D frames in the same directory as the plan file.
-        output_path_prefix, ext = os.path.splitext(self.input().path)
-        return luigi.LocalTarget(f"{output_path_prefix}-done1D")
+        # Output is similar to apStar file
+        sdss_path = path.Path()
+        apstarfile = sdss_path.full('apStar',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
+                                    field=self.field,prefix=self.prefix,obj=self.star,apstar='stars')
+        output_path_prefix, ext = os.path.splitext(apstarfile)
+        return luigi.LocalTarget(f"{output_path_prefix}-doneRV")
 
 
     def run(self):
-        # Run the IDL program!
-        ret = subprocess.call(["rv",cmd])
+        # Run doppler_rv_star()
+        rv.doppler_rv_star(self.star,self.apred,self.instrument,self.field)
 
-        # Load the plan file
-        # (Note: I'd suggest moving all yanny files to YAML format and/or just supply the plan file
-        # inputs as variables to the task.)
-        plan = yanny.yanny(self.input().path,np=True)
-        exposures = plan['APEXP']
-        visitdir = os.path.dirname(self.input().path)
-
-        # Check that all of the apCframe files exist
-        cframe_counter = 0
-        for exp in exposures['name']:
-            if type(exp) is not str:  exp=exp.decode()
-            exists  = [os.path.exists(visitdir+"/apCframe-"+ch+"-"+str(exp)+".fits") for ch in ['a','b','c']]
-            if np.sum(exists) == 3: cframe_counter += 1
-
-        # Check if some apVisits have been made
-        visitfiles = glob.glob(visitdir+"/"+self.prefix+"Visit-"+self.apred+"-"+str(self.plate)+"-"+str(self.mjd)+"-???.fits")
-
-        # Check apVisitSum file
+        # Check that the apStar file was created
         sdss_path = path.Path()
-        apvisitsum = sdss_path.full('apVisitSum',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
-                                    field=self.field,plate=self.plate,mjd=self.mjd,prefix=self.prefix)
+        apstarfile = sdss_path.full('apStar',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
+                                    field=self.field,prefix=self.prefix,obj=self.star,apstar='stars')
 
-        # Create "done" file if apVisits exist
-        if (cframe_counter==len(exposures)) & (len(visitfiles)>50) & (os.path.exists(apvisitsum)==True):
+        # Create "done" file if apStar file exists
+        if os.path.exists(apstarfile)==True:
             with open(self.output().path, "w") as fp:
                 fp.write(" ")
 
@@ -80,13 +89,17 @@ if __name__ == "__main__":
     #   $APOGEE_REDUX/{apred}/visit/{telescope}/{field}/{plate}/{mjd}/{prefix}Plan-{plate}-{mjd}.par
 
     # Define the task.
-    task = AP1DVISIT(
+    task = APSTAR(
+        star="2M09321693+2827061",
+        #obj="2M09321693+2827061",
         apred="t14",
+        #apstar='stars',
         telescope="apo25m",
         instrument="apogee-n",
         field="200+45",
-        plate=8100,   # plate must be in
-        mjd="57680",
+        #mjd='55555',
+        #plate=8100,
+        #fiber=1,
         prefix="ap",
         release=None
     )
