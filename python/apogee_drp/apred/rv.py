@@ -866,7 +866,8 @@ def doppler_rv_star(star,apred,instrument,field,nres=[5,4.25,3.5],windows=None,t
     files = glob.glob(os.environ['APOGEE_REDUX']+'/'+apred+'/visit/'+telescope+'/'+field+'/apVisitSum*')
     if len(files) == 0 :
         print('no apVisitSum files found for {:s}'.format(field))
-        sys.exit()
+        import pdb; pdb.set_trace()
+        raise
     else :
         allvisits = struct.concat(files)
     starmask = bitmask.StarBitMask()
