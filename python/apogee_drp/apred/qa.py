@@ -14,7 +14,7 @@ import pdb
 
 # put pdb.set_trace() wherever you want stop
 
-#sdss_path = path.Path()
+sdss_path = path.Path()
 
 #sdss_path.full('ap2D',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
 #                        plate=self.plate,mjd=self.mjd,prefix=self.prefix,num=0,chip='a')
