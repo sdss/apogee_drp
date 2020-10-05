@@ -292,6 +292,182 @@ def run_mjd5_yaml(yamlfile):
     pass
 
 
-def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False):
-    """ Make a plan file."""
-    pass
+def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
+           vers=None,telescope=None,plugid=None,fixfiberid=None,
+           names=None,onem=None,hmags=None,mapper_data=None):
+    """
+    Makes plan files given input image numbers, MJD, psfid, fluxid
+    includes options for dark frames, calibration frames, sky frames,
+    ASDAF frames. This is called from the manually prepared MJD5.pro 
+    procedures
+    """
+
+    print('Making plan for MJD: ',mjd)
+
+    # Set up directories, plate, and MJD variables
+    load = apload.ApLoad(apred=vers,telescope=telescope)
+    #calfile = dirs.calfile
+
+    # Planfile name and directory
+    if cal==True:
+        planfile = load.filename('CalPlan',mjd=mjd,instrument=dirs.instrument)
+    elif dark==True:
+        planfile = load.filename('DarkPlan',mjd=mjd,instrument=dirs.instrument)
+    elif onem==True:
+        planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd) 
+        if suffix != '':
+            planfile = os.path.dirname(planfile)+'/'+os.path.splitext(os.path.basename(planfile,'.yaml'))[0]+suffix+'.yaml'
+    else:
+        planfile = load.filename('Plan',plate=plate,mjd=mjd)
+    outdir = os.path.dirname(planfile)+'/'
+    if os.path.exists(outdir)==False:
+        os.makedirs(outdir)
+    
+    # Get calibration files for this date
+    if fixfiberid is not None:
+        fix0 = fixfiberid
+    else:
+        fix0 = None
+    caldata = getcal(mjd,calfile)
+    #getcal,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,waveid=waveid,multiwaveid=multiwaveid,$
+    #responseid=responseid,lsfid=lsfid,detid=detid,sparseid=sparseid,fiberid=fiberid,badfiberid=badfiberid,$
+    #fixfiberid=fixfiberid,littrowid=littrowid,persistid=persistid,persistmodelid=persistmodelid
+    #if n_elements(fix0) gt 0 then fixfiberid=fix0
+
+    # outplan plan file name
+    if (stars is not None) & (onem is None):
+        planfile = os.path.dirname(planfile)+'/'+os.path.basename(planfile,'.yaml')+'star.yaml'
+    else:
+        if sky==True:
+            planfile = os.path.dirname(planfile)+'/'+os.path.basename(planfile,'.yaml')+'sky.yaml' 
+
+    if sky==True:
+        apdailycals(lsfs=ims,psf=psfid)
+    print,planfile
+
+    # open plan file and write header
+    if os.path.exists(planfile): os.remove(planfile)
+    out = {}
+    out['apogee_drp_ver'] = os.environ['APOGEE_DRP_VER'])
+    out['telescope'] = telescope
+    out['instrument'] = instrument
+    out['plateid'] = plate
+    out['mjd'] = mjd
+    out['planfile'] = os.path.basename(planfile)
+    out['logfile'] = 'apDiag-'+str(plate)+'-'+cmjd+'.log'
+    out['plotfile'] = 'apDiag-'+str(plate)+'-'+cmjd+'.ps'
+
+    # apred_vers keyword will override strict versioning using the plan file!
+    out['apred_vers'] = apred_vers
+
+    if onem is True:
+        out['data_dir'] = datadir+'/'
+        out['raw_dir'] = datadir+str(mjd)+'/'
+        out['plate_dir'] = outdir
+        out['star_dir'] = spectro_dir+'/fields/apo1m/'
+        out['survey'] = 'apo1m'
+        out['name'] = str(names[0]).strip()
+        out['fiber'] = stars[0]
+        if hmags is not None:
+            out['hmag'] = hmags[0]
+        out['telliter'] = 1
+        if suffix!='':
+            out['mjdfrac'] = 1
+
+    # platetype
+    if stars is not None:
+        out['platetype'] = 'single'
+    elif cal is not None:
+        out['platetype'] = 'cal'
+    elif sky is not None:
+        out['platetype'] = 'sky'
+    elif dark is not None:
+        out['platetype'] = 'dark'
+    elif test is not None:
+        out['platetype'] = 'test'
+    else:
+        out['platetype'] = 'normal'
+
+
+    # Note that q3fix is now done in ap3d.pro, not here!!
+    if (mjd>56930) & (mjd<57600):
+        out['q3fix'] = 1
+
+    rawfile = file.filename('R',chip='a',num=ims[0])
+    if os.path.exists(rawfile)==False:
+        raise ValueError('Cannot find file '+rawfile)
+    head = fits.getheader(rawfile,1)
+    plateid = head['PLATEID']
+    if (ignore==False):
+        if (plate!=0) & (plate!=plateid):
+            raise ValueError('plateid in header does not match plate!')
+
+    # plugmap
+    print(plugid)
+    if plugid is None:
+        rawfile = load.filename('R',chip='a',num=ims[0])
+        if os.path.exists(rawfile)==True:
+            head = fits.getheader(rawfile,1)
+            plugid = head['NAME']
+            if type(plugid) is not str:
+                plugid = 'header'
+        else:
+            plugid = 'header'
+    print(ims[0])
+    print(plugid)
+    if (cal is None) & (dark is None) & (onem is None):
+        tmp = strsplit(plugid,'-',/extract)
+        if os.path.exists(mapper_data+'/'+tmp[1]+'/plPlugMapM-'+plugid+'.par')==False:
+            print('Cannot find plugmap file ',plugid)
+            #spawn,'"ls" '+mapper_data+'/'+tmp[1]+'/plPlugMapA*'
+            if ignore is False:
+                raise Exception
+    if sky is None:
+        plug = getplatedata(cplate,cmjd,plugid=plugid,/noobj,mapper_data=mapper_data)
+        cloc = strtrim(string(format='(i)',plug.locationid),2)
+        file_mkdir,spectro_dir+'fields/'+telescope+'/'+cloc
+        field = load.field(plug.locationid,plate,survey)
+        out['survey'] = survey
+        #openw,file,spectro_dir+'fields/'+telescope+'/'+cloc+'/plan-'+cloc+'.lis',/get_lun,/append
+        #printf,file,telescope+'/'+cplate+'/'+cmjd+'/'+file_basename(planfile)
+        #free_lun,file
+    out['plugmap'] = plugid
+
+    # calibration frames to use
+    calnames = ['detid','bpmid','littrowid','persistid','persistmodelid','darkid','flatid',
+                'sparseid','fiberid','badfiberid','fixfiberid','psfid','fluxid','responseid',
+                'waveid','lsfid']
+    for c in calnames:
+        out[c] = cals[c]
+
+    # define plan structure
+    #out.append('typedef struct {')
+    #out.append(' char plateid[20];')
+    #out.append(' int mjd;')
+    #out.append(' char flavor[8];')
+    #out.append(' char name[8];')
+    #out.append(' int single;')
+    #out.append(' char singlename[20];')
+    #out.append('} APEXP;')
+    #star=-1 & name='none'
+
+    # object frames
+    out.append('APEXP')
+    for i in range(len(ims)):
+        if ims[i]>0:
+            if stars is not None:
+                star = stars[i]
+                name = names[i]
+            else:
+                star = -1
+                name = 'none'
+        cid = string(format='(i8.8)',ims[i])
+        out.append('APEXP '+cplate+' '+cmjd+' '+' object '+cid+string(format='(i6)',star)+' '+name
+
+    write open(planfile,'w') as ofile:
+        dum = yaml.dump(out,ofile)
+    os.chmod(planfile, 0664)
+
+    #dln.writelines(planfile,out)
+    #file_chmod,planfile,'664'o
+
