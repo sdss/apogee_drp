@@ -14,21 +14,16 @@ from dlnpyutils import utils as dln
 from apogee_drp.utils import spectra,yanny
 from apogee_drp.plan import mkslurm
 
+
 def args2dict(**kwargs):
+    """ Dummy function used by translate_idl_mjd5_script()."""
     return kwargs
 
-def parse_idl_line(line):
-    """ This parses through a line of IDL and returns a list of 'components'."""
-
-    # How about interpreting it as a dictionary
-    # or as **kwargs for a dummy function
-
-    # mkplan,ims,plate,mjd,psfid,fluxid,vers=vers,stars=[204,191],names=['J03322626+4603247','J03322626+4603247'] 
-
-    pass
-
-def fixcontinuation(lines):
-    """ Fix continuation lines."""
+def fixidlcontinuation(lines):
+    """
+    Fix continuation lines.
+    This is a small helper function for translate_idl_mjd5_script().
+    """
 
     # Fix continuation lines
     if np.sum(lines.find('$')>-1):
@@ -46,8 +41,11 @@ def fixcontinuation(lines):
 
     return lines
 
-def removekeyword(line,key):
-    """ Remove an IDL keyword input like ,/cal in a line."""
+def removeidlkeyword(line,key):
+    """
+    Remove an IDL keyword input like ,/cal in a line.
+    This is a small helper function for translate_idl_mjd5_script().
+    """
 
     out = ''
     lo = line.find(key)
@@ -60,8 +58,11 @@ def removekeyword(line,key):
         out = out[0:-1]
     return out
 
-def removecomments(lines):
-    """ Remove IDL comments from a list of lines."""
+def removeidlcomments(lines):
+    """
+    Remove IDL comments from a list of lines.
+    This is a small helper function for translate_idl_mjd5_script().
+    """
 
     flines = []
     for i in range(len(lines)):
@@ -76,7 +77,10 @@ def removecomments(lines):
     return np.char.array(flines)
 
 def replaceidlcode(lines,mjd,day=None):
-    """ Replace IDL code in lines with the results."""
+    """
+    Replace IDL code in lines with the results.
+    This is a small helper function for translate_idl_mjd5_script().
+    """
 
     # day
     #  psfid=day+138
@@ -127,7 +131,8 @@ def replaceidlcode(lines,mjd,day=None):
 
 def translate_idl_mjd5_script(scriptfile):
     """
-    Translate an IDL MJD5.pro script file to yaml.
+    Translate an IDL MJD5.pro script file to yaml.  It returns a list of strings
+    that can be written to a file.
 
     Example file, top part of apo25m_59085.pro
     apsetver,telescope='apo25m'
@@ -163,9 +168,9 @@ def translate_idl_mjd5_script(scriptfile):
 
 
     # Fix continuation lines
-    lines = fixcontinuation(lines)
+    lines = fixidlcontinuation(lines)
     # Remove comments
-    lines = removecomments(lines)
+    lines = removeidlcomments(lines)
 
     # Get telescope from apserver line
     ind,nind = dln.where(lines.strip().lower().find('apsetver')==0)
@@ -180,7 +185,7 @@ def translate_idl_mjd5_script(scriptfile):
         setverline = lines[ind[0]]
         telescope = setverline[setverline.lower().find('telescope=')+10:]
         telescope = telescope.replace("'","")
-    telescopeline = "telescope:'"+telescope+"'"
+    telescopeline = "telescope: "+telescope
 
     # Get MJD
     ind,nind = dln.where(lines.strip().lower().find('mjd=')==0)
@@ -188,7 +193,7 @@ def translate_idl_mjd5_script(scriptfile):
         raise ValueError('No MJD line found')
     mjdline = lines[ind[0]]
     mjd = int(mjdline[mjdline.find('=')+1:])
-    mjdline = mjdline.replace('=',':')
+    mjdline = 'mjd: '+str(mjd)
 
     # Get day number
     ind,nind = dln.where(lines.lower().find('day=')>-1)
@@ -211,7 +216,7 @@ def translate_idl_mjd5_script(scriptfile):
     lines = replaceidlcode(lines,mjd,day=day)
 
     # Initalize final lines
-    flines = []
+    flines = ['---']  # start of yaml file
 
     # Loop over mkplan blocks
     #  mkplan command is at the end of the block
@@ -224,14 +229,17 @@ def translate_idl_mjd5_script(scriptfile):
         lines1 = lines[lo:ind[i]+1]
         nlines1 = len(lines1)
         # Add TELESCOPE line
-        flines.append(telescopeline)
+        flines.append("- "+telescopeline)
         # Add MJD line
-        flines.append(mjdline)
+        flines.append("  "+mjdline)
         # Assume all lines in this block except for mkplan are key: value pairs
         kvlines = lines1[0:-1]
-        kvlines = kvlines.replace('=',':')        # replace = with :
-        kvlines = kvlines[kvlines.strip('')!='']  # remove any blank lines
-        flines += list(kvlines)
+        for kvl in kvlines:
+            if kvl.strip()!='':
+                lo = kvl.find('=')
+                key = kvl[0:lo].strip()
+                val = kvl[lo+1:].strip()
+                flines.append("  "+key+": "+val)
         # Deal with mkplan lines
         planline = lines1[-1]
         # Trim off the first bit that's always the same, "mkplan,ims,plate,mjd,psfid,fluxid,"
@@ -240,25 +248,20 @@ def translate_idl_mjd5_script(scriptfile):
         if planline.lower().find('vers=vers')==0:
             planline = planline[9:]
 
-
-        #What's this???
-        #@calsetup
-        #waveid=1370096
-
         # Deal with keywords
         if planline!='':
             if planline[0]==',':
                 planline = planline[1:]
             # Add lines for sky, dark, cal
             if planline.lower().find('/sky')>-1:
-                flines.append('sky: True')
-                planline = removekeyword(planline,'/sky')  # Trim off /sky
+                flines.append('  sky: True')
+                planline = removeidlkeyword(planline,'/sky')  # Trim off /sky
             if planline.lower().find('/dark')>-1:
-                flines.append('dark: True')
-                planline = removekeyword(planline,'/dark')  # Trim off /dark
+                flines.append('  dark: True')
+                planline = removeidlkeyword(planline,'/dark')  # Trim off /dark
             if planline.lower().find('/cal')>-1:
-                flines.append('cal: True')
-                planline = removekeyword(planline,'/cal')  # Trim off /cal
+                flines.append('  cal: True')
+                planline = removeidlkeyword(planline,'/cal')  # Trim off /cal
 
         # Deal with remaining arguments
         if planline!='':
@@ -269,38 +272,14 @@ def translate_idl_mjd5_script(scriptfile):
             for k in args.keys():
                 val = args[k]
                 if (type(val) is int) | (type(val) is str):
-                    flines.append(k+'='+str(val))
+                    flines.append("  "+k+": "+str(val))
                 else:
-                    flines.append(k+'='+str(list(val)))
+                    flines.append("  "+k+": "+str(list(val)))
 
-            #if planline.lower().find('plugid=')>-1:        
-            #    # apo25m_57043.pro:mkplan,ims,plate,mjd,psfid,fluxid,vers=vers,plugid='8257-57043-50'
-            #    flines.append()
-            #if planline.lower().find('plug=')>-1:        
-            #    # apo25m_55871.pro:mkplan,ims,plate,mjd,psfid,fluxid,vers=vers,plug='5267-55870-01B'
-            #    flines.append()
-            #if planline.lower().find('fixfiberid=')>-1:        
-            #    # apo25m_56773.pro:mkplan,ims,plate,mjd,psfid,fluxid,vers=vers,fixfiberid=1
-            #    flines.append()
-            #if planline.lower().find('test=')>-1:        
-            #    # apo25m_55846.pro:mkplan,ims,plate,mjd,psfid,fluxid,vers=vers,/test
-            #    flines.append()
-            #if planline.lower().find('stars=')>-1:
-            #    # apo25m_55815.pro:mkplan,ims,plate,mjd,psfid,fluxid,vers=vers,stars=[204,191],names=['J03322626+4603247','J03322626+4603247']
-            #    flines.append()
-            #if planline.lower().find('names=')>-1:
-            #    # apo25m_55815.pro:mkplan,ims,plate,mjd,psfid,fluxid,vers=vers,stars=[204,191],names=['J03322626+4603247','J03322626+4603247']
-            #    flines.append()
+    # End of yaml file
+    flines.append('...')
 
-
-        # Add blank line
-        flines.append(' ')
-
-    # Make sure the mkplan blocks are separated
-    
-    # add in cal, dark, sky values/lines
-
-    import pdb; pdb.set_trace()
+    return flines
 
 
 def make_mjd5_yaml(mjd):
