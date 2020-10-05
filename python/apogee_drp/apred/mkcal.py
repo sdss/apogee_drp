@@ -10,38 +10,27 @@ __authors__ = 'David Nidever <dnidever@montana.edu>'
 __version__ = '20200918'  # yyyymmdd                                                                                                                           
 
 import os
-#import sys, traceback
-#import contextlib, io, sys
-#import numpy as np
+import numpy as np
 #import warnings
 #from astropy.io import fits
 from astropy.table import Table
-#import astropy.units as u
-#from astropy.time import Time
-#from astropy.coordinates import SkyCoord, EarthLocation
-#from astropy.wcs import WCS
-#from scipy.ndimage.filters import median_filter,gaussian_filter1d
-#from scipy.optimize import curve_fit, least_squares
-#from scipy.interpolate import interp1d
-#import thecannon as tc
 from dlnpyutils import utils as dln
 from collections import OrderedDict
 
 
 def loadcaltype(lines,caltype,dt):
    """ A small helper function for readcal(). """
-   
-    # Add a space at the end to make sure we are getting the right calibration type
-    # e.g., "persist" and not "persistmodel"
-    gd,ngd = dln.where(lines.find(caltype+' ') == 0)
-    cat = None
-    if ngd>0:
-        cat = np.zeros(ngd,dtype=dt)
-        for i in range(ngd):
-            dum = lines[gd[i]].split()
-            for j,n in enumerate(cat.dtype.names):
-                cat[n][i] = dum[j+1]
-    return cat
+   # Add a space at the end to make sure we are getting the right calibration type
+   # e.g., "persist" and not "persistmodel"
+   gd,ngd = dln.where(lines.find(caltype+' ') == 0)
+   cat = None
+   if ngd>0:
+      cat = np.zeros(ngd,dtype=dt)
+      for i in range(ngd):
+         dum = lines[gd[i]].split()
+         for j,n in enumerate(cat.dtype.names):
+            cat[n][i] = dum[j+1]
+   return cat
 
 def readcal(calfile):
     """
@@ -128,8 +117,7 @@ def readcal(calfile):
     #  mjd1, mjd2, name, psfid
     #  littrow    55600 56860 06670109 6670109
     #  littrow    56861 99999 13400052 13400052
-    dtdict['littrow'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50),('darkid',int),
-                                  ('flatid',int)])
+    dtdict['littrow'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50),('psfid',int)])
     # -- Persist --
     #  mjd1, mjd2, name, darkid, flatid, thresh
     #  persist    55600 56860 04680019 4680019 4680018 0.03
@@ -157,8 +145,8 @@ def readcal(calfile):
 
     # Load the data
     for caltype in dtdict.keys():
-        cat = loadcaltype(lines,caltype,dtdict[caltype])
-        caldict[caltype.strip()] = cat
+       cat = loadcaltype(lines,caltype,dtdict[caltype])
+       caldict[caltype.strip()] = cat
 
     return caldict
 
@@ -197,34 +185,35 @@ def mkcal():
     """ This makes a particular calibration file."""
 
 def mkdet():
-    ret = subprocess.call(["idl","-e","mkdet,")
+   #ret = subprocess.call(["idl","-e","mkdet,"])
+   pass
 
 def mkbpm():
-    pass
+   pass
 
 def mkdark():
-    pass
+   pass
 
 def mkflat():
-    pass
+   pass
 
 def mkwave():
-    pass
+   pass
 
 def mkmultiwave():
-    pass
+   pass
 
 def mklittrow():
-    pass
+   pass
 
 def mklinearity():
-    pass
+   pass
 
 def mklsf():
-    pass
+   pass
 
 def mkpersist():
-    pass
+   pass
 
 def mkflux():
-    pass
+   pass
