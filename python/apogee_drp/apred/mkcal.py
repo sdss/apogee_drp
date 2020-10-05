@@ -138,10 +138,11 @@ def readcal(calfile):
     #  frame1, frame2
     #  rn 1380094 1380095
     #  rn 1380102 1380103
-    dtdict['rn'] = np.dtype([('frame1',int),('frame2',int)])
+    #dtdict['rn'] = np.dtype([('frame1',int),('frame2',int)])
     # Gain
     #  frame1, frame2
-    dtdict['gain'] = np.dtype([('frame1',int),('frame2',int)])
+    #dtdict['gain'] = np.dtype([('frame1',int),('frame2',int)])
+    # READNOISE and GAIN lines are NOT used
 
     # Load the data
     for caltype in dtdict.keys():
@@ -176,7 +177,10 @@ def getcal(calfile,mjd):
     # Loop over the calibration types and get the ones we need
     caldict = OrderedDict()
     for caltype in allcaldict.keys():
-       caldict[caltype] = parsecaldict(allcaldict[caltype],mjd)
+       val = parsecaldict(allcaldict[caltype],mjd)
+       if type(val) is np.ndarray:
+          if len(val)==1: val=val[0]
+       caldict[caltype] = val
 
     return caldict
 
