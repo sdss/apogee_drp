@@ -13,6 +13,7 @@ except ImportError:
 from dlnpyutils import utils as dln
 from apogee_drp.utils import spectra,yanny
 from apogee_drp.plan import mkslurm
+from apogee_drp.apred import mkcal
 
 
 def args2dict(**kwargs):
@@ -294,7 +295,7 @@ def run_mjd5_yaml(yamlfile):
 
 def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
            vers=None,telescope=None,plugid=None,fixfiberid=None,
-           names=None,onem=None,hmags=None,mapper_data=None):
+           names=None,onem=None,hmags=None,mapper_data=None,suffix=None):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -306,19 +307,30 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
 
     # Set up directories, plate, and MJD variables
     load = apload.ApLoad(apred=vers,telescope=telescope)
-    #calfile = dirs.calfile
+    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
+    calfile = caldir+load.instrument+'.par' 
+
+    # Mapper directory
+    if mapper_data is None:
+        if load.instrument=='apogee-n':
+            mapper_data = os.environ['MAPPER_DATA_N']
+        else:
+            mapper_data = os.environ['MAPPER_DATA_S']
 
     # Planfile name and directory
     if cal==True:
-        planfile = load.filename('CalPlan',mjd=mjd,instrument=dirs.instrument)
+        planfile = load.filename('CalPlan',mjd=mjd)
     elif dark==True:
-        planfile = load.filename('DarkPlan',mjd=mjd,instrument=dirs.instrument)
+        planfile = load.filename('DarkPlan',mjd=mjd)
     elif onem==True:
         planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd) 
-        if suffix != '':
+        if suffix is not None:
             planfile = os.path.dirname(planfile)+'/'+os.path.splitext(os.path.basename(planfile,'.yaml'))[0]+suffix+'.yaml'
     else:
         planfile = load.filename('Plan',plate=plate,mjd=mjd)
+    # Make sure the file ends with .yaml
+    if planfile.endswith('.yaml')==False:
+        planfile = planfile.replace(os.path.splitext(planfile)[-1],'.yaml')     # TEMPORARY KLUDGE!
     outdir = os.path.dirname(planfile)+'/'
     if os.path.exists(outdir)==False:
         os.makedirs(outdir)
@@ -328,11 +340,9 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
         fix0 = fixfiberid
     else:
         fix0 = None
-    caldata = getcal(mjd,calfile)
-    #getcal,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,waveid=waveid,multiwaveid=multiwaveid,$
-    #responseid=responseid,lsfid=lsfid,detid=detid,sparseid=sparseid,fiberid=fiberid,badfiberid=badfiberid,$
-    #fixfiberid=fixfiberid,littrowid=littrowid,persistid=persistid,persistmodelid=persistmodelid
-    #if n_elements(fix0) gt 0 then fixfiberid=fix0
+    caldata = mkcal.getcal(calfile,mjd)
+    if fix0 is not None:
+        fixfiberid = fix0
 
     # outplan plan file name
     if (stars is not None) & (onem is None):
@@ -342,24 +352,26 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
             planfile = os.path.dirname(planfile)+'/'+os.path.basename(planfile,'.yaml')+'sky.yaml' 
 
     if sky==True:
-        apdailycals(lsfs=ims,psf=psfid)
-    print,planfile
+        print('apdailycals')
+        #apdailycals(lsfs=ims,psf=psfid)
+    print(planfile)
 
     # open plan file and write header
     if os.path.exists(planfile): os.remove(planfile)
     out = {}
     out['apogee_drp_ver'] = os.environ['APOGEE_DRP_VER'])
     out['telescope'] = telescope
-    out['instrument'] = instrument
+    out['instrument'] = load.instrument
     out['plateid'] = plate
     out['mjd'] = mjd
     out['planfile'] = os.path.basename(planfile)
-    out['logfile'] = 'apDiag-'+str(plate)+'-'+cmjd+'.log'
-    out['plotfile'] = 'apDiag-'+str(plate)+'-'+cmjd+'.ps'
+    out['logfile'] = 'apDiag-'+str(plate)+'-'+str(mjd)+'.log'
+    out['plotfile'] = 'apDiag-'+str(plate)+'-'+str(mjd)+'.ps'
 
     # apred_vers keyword will override strict versioning using the plan file!
     out['apred_vers'] = apred_vers
 
+    # apo1m
     if onem is True:
         out['data_dir'] = datadir+'/'
         out['raw_dir'] = datadir+str(mjd)+'/'
@@ -393,7 +405,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     if (mjd>56930) & (mjd<57600):
         out['q3fix'] = 1
 
-    rawfile = file.filename('R',chip='a',num=ims[0])
+    rawfile = load.filename('R',chip='a',num=ims[0])
     if os.path.exists(rawfile)==False:
         raise ValueError('Cannot find file '+rawfile)
     head = fits.getheader(rawfile,1)
@@ -423,9 +435,10 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
             if ignore is False:
                 raise Exception
     if sky is None:
-        plug = getplatedata(cplate,cmjd,plugid=plugid,/noobj,mapper_data=mapper_data)
-        cloc = strtrim(string(format='(i)',plug.locationid),2)
-        file_mkdir,spectro_dir+'fields/'+telescope+'/'+cloc
+        print('getplatedata')
+        plug = getplatedata(plate,mjd,plugid=plugid,noobj=True,mapper_data=mapper_data)
+        #cloc = strtrim(string(format='(i)',plug.locationid),2)
+        #file_mkdir,spectro_dir+'fields/'+telescope+'/'+cloc
         field = load.field(plug.locationid,plate,survey)
         out['survey'] = survey
         #openw,file,spectro_dir+'fields/'+telescope+'/'+cloc+'/plan-'+cloc+'.lis',/get_lun,/append
@@ -438,22 +451,12 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
                 'sparseid','fiberid','badfiberid','fixfiberid','psfid','fluxid','responseid',
                 'waveid','lsfid']
     for c in calnames:
-        out[c] = cals[c]
-
-    # define plan structure
-    #out.append('typedef struct {')
-    #out.append(' char plateid[20];')
-    #out.append(' int mjd;')
-    #out.append(' char flavor[8];')
-    #out.append(' char name[8];')
-    #out.append(' int single;')
-    #out.append(' char singlename[20];')
-    #out.append('} APEXP;')
-    #star=-1 & name='none'
+        out[c] = caldata[c]
 
     # object frames
-    out.append('APEXP')
+    aplist = []
     for i in range(len(ims)):
+        aplist1 = {}
         if ims[i]>0:
             if stars is not None:
                 star = stars[i]
@@ -461,13 +464,11 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
             else:
                 star = -1
                 name = 'none'
-        cid = string(format='(i8.8)',ims[i])
-        out.append('APEXP '+cplate+' '+cmjd+' '+' object '+cid+string(format='(i6)',star)+' '+name
+        aplist1 = {'plateid':plate, 'mjd':mjd, 'flavor':'object', 'name':ims[i], 'single':star, 'singlename':name}
+        aplist.append(aplist1)
+    out['APEXP'] = aplist
 
+    # Write to yaml file
     write open(planfile,'w') as ofile:
         dum = yaml.dump(out,ofile)
     os.chmod(planfile, 0664)
-
-    #dln.writelines(planfile,out)
-    #file_chmod,planfile,'664'o
-
