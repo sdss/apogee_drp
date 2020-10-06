@@ -83,15 +83,17 @@ def apqa(tel='apo25m',field='200+45',plate='8100',mjd='57680',apred='t14',noplot
 
     # For normal plates, make plots and html (calling the re-write of plotmag.pro
     if platetype=='normal': 
-        x=makePlotsHtml(ims=ims,plateid=plateid,clobber=True,mapname=planstr.plugmap,noplot=True,
-                        fixfiberid=fixfiberid,badfiberid=badfiberid,survey=survey,mapper_data=mapper_data)
+        x=makePlotsHtml(telescope=tel,ims=ims,plateid=plate,clobber=True,mapname=plugmap,
+                        noplot=True,fixfiberid=fixfiberid,badfiberid=badfiberid,
+                        survey=survey,mapper_data=mapper_data)
 
-        x=makePlotsHtml(ims=None,plateid=plateid,mjd=mjd,clobber=True,mapname=planstr.plugmap,noplot=noplot,
-                        fixfiberid=fixfiberid,badfiberid=badfiberid,survey=survey,mapper_data=mapper_data)
+        x=makePlotsHtml(telescope=tel,ims=None,plateid=plate,mjd=mjd,clobber=True,
+                        mapname=plugmap,noplot=noplot,fixfiberid=fixfiberid,
+                        badfiberid=badfiberid,survey=survey,mapper_data=mapper_data)
 
         x=plotFlux(planfile)
 
-        x=makeHTMLplate(plateid=plateid,mjd=mjd,fluxid=fluxid)
+        x=makeHTMLplate(plateid=plate,mjd=mjd,fluxid=fluxid)
 
 #;        platefile=APOGEE_FILENAME('PlateSum',plate=plateid,mjd=cmjd)
 
@@ -256,7 +258,7 @@ def makeDarkFits(planstr=None,n_exposures=None):
 ''' Plotmag translation '''
 '''-----------------------------------------------------------------------------------------'''
 
-def makePlotsHtml(ims=None,plate=None,cmjd=None,flat=None,clobber=True,starfiber=None,
+def makePlotsHtml(telescope='apo25m',ims=None,plate=None,cmjd=None,flat=None,clobber=True,starfiber=None,
                   starnames=None,noplot=None,mapname=None,starmag=None,onem=None,fixfiberid=None,
                   badfiberid=None,survey=None,mapper_data=None):
 
@@ -378,10 +380,11 @@ def makePlotsHtml(ims=None,plate=None,cmjd=None,flat=None,clobber=True,starfiber
                  ('c2',np.float64),
                  ('c3',np.float64),
                  ('c4',np.float64),
-                 ('flux',float64,(nfiber)),
+                 ('flux',np.float64,(nfiber)),
                  ('type',np.int32)])
 
     skylines=np.zeros(2,dtype=dt)
+
     skylines['w1']=16230.0,15990.0
     skylines['w2']=16240.0,16028.0
     skylines['c1']=16215.0,15980.0
@@ -414,6 +417,42 @@ def makePlotsHtml(ims=None,plate=None,cmjd=None,flat=None,clobber=True,starfiber
     mjd1=0.
 
     # FITS table structure
+    dt=np.dtype([('telescope',np.str,6),
+                 ('plate',np.str,6),
+                 ('nreads',np.int32),
+                 ('dateobs',np.str,30),
+                 ('secz',np.float64),
+                 ('ha',np.float64),
+                 ('design_ha',np.float64,3),
+                 ('seeing',np.float64),
+                 ('fwhm',np.float64),
+                 ('gdrms',np.float64),
+                 ('cart',np.int32),
+                 ('plugid',np.int32),
+                 ('dither',np.float64),
+                 ('mjd',np.int32),
+                 ('im',np.int32),
+                 ('zero',np.float64),
+                 ('zerorms',np.float64),
+                 ('zeronorm',np.float64),
+                 ('sky',np.float64,3),
+                 ('sn',np.float64,3),
+                 ('snc',np.float64,3),
+                 ('altsn',np.float64,3),
+                 ('nsn',np.int32),
+                 ('snratio',np.float64),
+                 ('moondist',np.float64),
+                 ('moonphase',np.float64),
+                 ('tellfit',np.float64,(6,3))])
+    
+
+    platetab=np.zeros(len(ims),dtype=dt)
+
+
+    platetab['telescope']=-99.0
+    platetab['ha']=-99.0
+    platetab['design_ha']=-99.0
+
 
 
 
