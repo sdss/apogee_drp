@@ -11,7 +11,8 @@ except ImportError:
     from yaml import Loader, Dumper
 
 from dlnpyutils import utils as dln
-from apogee_drp.utils import spectra,yanny,apload,plugmap as plmap
+from apogee_drp.utils import spectra,yanny,apload
+from apogee_drp.utils import plugmap as plmap,bitmask as bmask
 from apogee_drp.plan import mkslurm
 from apogee_drp.apred import mkcal
 from sdss_access.path import path
@@ -214,6 +215,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=True,obj1m=Non
         m, = np.where((plugmap['fiberdata']['holeType'].astype(str) == 'OBJECT') &
                       (plugmap['fiberdata']['spectrographId'] == 2) &
                       (plugmap['fiberdata']['fiberId'] == 300-i))
+        nm = len(m)
         if badfiberid is not None:
             j, = np.where(badfiberid == 300-i)
             if len(j)>0:
@@ -225,6 +227,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=True,obj1m=Non
                   plugmap['fiberdata']['secTarget'][m])
             import pdb; pdb.set_trace()
         if nm==1:
+            m = m[0]
             fiber['fiberid'][i] = plugmap['fiberdata']['fiberId'][m]
             fiber['ra'][i] = plugmap['fiberdata']['ra'][m]
             fiber['dec'][i] = plugmap['fiberdata']['dec'][m]
@@ -235,7 +238,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=True,obj1m=Non
             fiber['spectrographid'][i] = plugmap['fiberdata']['spectrographId'][m]
             
             # Special for asdaf object plates
-            if keyword_set(asdaf):
+            if asdaf is not None:
                 # ASDAF fiber
                 if 300-i == asdaf:
                     fiber['objtype'][i] = 'STAR'
@@ -246,17 +249,17 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=True,obj1m=Non
 
             # Normal plate
             else:
-                fiber['objtype'][i] = plugmap['fiberdata']['objtype'][m]
+                fiber['objtype'][i] = plugmap['fiberdata']['objType'][m].astype(str)
                 # Fix up objtype
                 fiber['objtype'][i] = 'STAR'
-                fiber['holetype'][i] = plugmap['fiberdata']['holetype'][m]
+                fiber['holetype'][i] = plugmap['fiberdata']['holeType'][m].astype(str)
                 if mapa==True:
                     # HMAG's are correct from plPlugMapA files
                     fiber['hmag'][i] = plugmap['fiberdata']['mag'][m][1]
                     fiber['object'][i] = plugmap['fiberdata']['tmass_style'][m]
                     fiber['tmass_style'][i] = plugmap['fiberdata']['tmass_style'][m]
-                    if is_bit_set(fiber['secTarget'][i],9) == 1: fiber['objtype'][i]='HOT_STD'
-                    if is_bit_set(fiber['secTarget'][i],4) == 1: fiber['objtype'][i]='SKY'
+                    if bmask.is_bit_set(fiber['target2'][i],9) == 1: fiber['objtype'][i]='HOT_STD'
+                    if bmask.is_bit_set(fiber['target2'][i],4) == 1: fiber['objtype'][i]='SKY'
                 else:
                     # Get matching stars from coordinate match
                     match, = np.where((np.abs(p.target_ra-fiber['ra'][i]) < 0.00002) and
@@ -281,30 +284,30 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=True,obj1m=Non
                             fiber['target2'][i] = p['apogee_target2'][match]
                             apogee2 = 0
 
-                    if is_bit_set(fiber['target2'][i],9) == 1:
-                        fiber['objtype'][i] = 'HOT_STD'
-                    if is_bit_set(fiber['target2'][i],4) == 1:
-                        object = 'SKY' 
-                        hmag = 99.99
-                        fiber['mag'][i] = [hmag,hmag,hmag,hmag,hmag]
-                        fiber['objtype'][i] = 'SKY'
-                    else:
-                        tmp = p['targetids'][match]
-                        objname = tmp[-16:]
-                        if tmp.find('A')==0:
-                            objname = 'AP'+objname
+                        if bmask.is_bit_set(fiber['target2'][i],9) == 1:
+                            fiber['objtype'][i] = 'HOT_STD'
+                        if bmask.is_bit_set(fiber['target2'][i],4) == 1:
+                            object = 'SKY' 
+                            hmag = 99.99
+                            fiber['mag'][i] = [hmag,hmag,hmag,hmag,hmag]
+                            fiber['objtype'][i] = 'SKY'
                         else:
-                            objname = '2M'+objname
-                        hmag = p['tmass_h'][match]
-                        fiber['mag'][i] = [p['tmass_j'][match],p['tmass_h'][match],p['tmass_k'][match],0.,0.]
-                        # Adopt PM un-adjusted  coordinates
-                        fiber['ra'][i] -= p['pmra'][match]/1000./3600./cos(fiber['dec'][i]*np.pi/180.)*(p['epoch'][match]-2000.)
-                        fiber['dec'][i] -= p['pmdec'][match]/1000./3600.*(p['epoch'][match]-2000.)
-                    fiber['hmag'][i] = hmag
-                    fiber['object'][i] = objname
-                    fiber['tmass_style'][i] = objname
-                else:
-                    raise Exception('no match found in plateHoles!',fiber['ra'][i],fiber['dec'][i], i)
+                            tmp = p['targetids'][match]
+                            objname = tmp[-16:]
+                            if tmp.find('A')==0:
+                                objname = 'AP'+objname
+                            else:
+                                objname = '2M'+objname
+                            hmag = p['tmass_h'][match]
+                            fiber['mag'][i] = [p['tmass_j'][match],p['tmass_h'][match],p['tmass_k'][match],0.,0.]
+                            # Adopt PM un-adjusted  coordinates
+                            fiber['ra'][i] -= p['pmra'][match]/1000./3600./cos(fiber['dec'][i]*np.pi/180.)*(p['epoch'][match]-2000.)
+                            fiber['dec'][i] -= p['pmdec'][match]/1000./3600.*(p['epoch'][match]-2000.)
+                        fiber['hmag'][i] = hmag
+                        fiber['object'][i] = objname
+                        fiber['tmass_style'][i] = objname
+                    else:
+                        raise Exception('no match found in plateHoles!',fiber['ra'][i],fiber['dec'][i], i)
         else:
             fiber['fiberid'][i] = -1
             print('no match for fiber index',i)
@@ -312,7 +315,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=True,obj1m=Non
 
 
 
-    #q# Load apogeeObject file to get proper name and coordinates
+    ## Load apogeeObject file to get proper name and coordinates
     ## Get apogeeObject catalog info for this field
     #if apogee2 then apogeeobject='apogee2Object' else apogeeobject='apogeeObject'
     #if not keyword_set(noobject):

@@ -5,6 +5,45 @@ Routines for handling ASPCAP bitmasks
 import numpy as np
 import pdb
 
+def is_bit_set(bitmasks,qbit):
+    """
+    Determines which given hexadecimal bitmasks have the Xth bit(s) set
+
+    Parameters
+    ----------
+    bitmask      Array of 32-bit integers, sum of 2^bits
+    qbit Bit # user wants to know the status of (yes/no)
+
+    Returns
+    -------
+    Returns array of 1's and 0's, corresponding to whether each bitmask has the given bit set
+    (if only querying 1 bitmask, result will be scalar)
+
+    Example
+    -------
+    IDL> arr = is_bit_set([-2147483640, -2147352576], 17)
+    IDL> print, arr
+        0  1
+    To find, e.g., calibration cluster stars in data structure "data":
+    IDL> clust = where( is_bit_set(data.apogee_target2, 10) eq 1,nclust )
+
+    GZ Jan 2012
+    """
+
+    bitmasks = np.atleast_1d(bitmasks)
+    n = len(bitmasks)
+    output = np.zeros(n,int)
+
+    for i in range(n):
+        if (bitmasks[i] & 2**qbit) > 0:
+            output[i] = 1
+
+    if n==1:
+        return output[0]
+    else:
+        return output
+
+
 class BitMask():
     '''
     Base class for bitmasks, define common methods
