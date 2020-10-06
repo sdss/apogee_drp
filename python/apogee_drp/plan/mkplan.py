@@ -11,7 +11,7 @@ except ImportError:
     from yaml import Loader, Dumper
 
 from dlnpyutils import utils as dln
-from apogee_drp.utils import spectra,yanny,apload
+from apogee_drp.utils import spectra,yanny,apload,platedata
 from apogee_drp.plan import mkslurm
 from apogee_drp.apred import mkcal
 from sdss_access.path import path
@@ -297,7 +297,7 @@ def run_mjd5_yaml(yamlfile):
 def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
            vers=None,telescope=None,plugid=None,fixfiberid=None,stars=None,
            names=None,onem=None,hmags=None,mapper_data=None,suffix=None,
-           ignore=False):
+           ignore=False,test=False):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -355,7 +355,8 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
 
     if sky==True:
         print('apdailycals')
-        #apdailycals(lsfs=ims,psf=psfid)
+        import pdb; pdb.set_trace()
+        dailycals(lsfs=ims,psf=psfid)
     print(planfile)
 
     # open plan file and write header
@@ -391,17 +392,16 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     # platetype
     if stars is not None:
         out['platetype'] = 'single'
-    elif cal is not None:
+    elif cal==True:
         out['platetype'] = 'cal'
-    elif sky is not None:
+    elif sky==True:
         out['platetype'] = 'sky'
-    elif dark is not None:
+    elif dark==True:
         out['platetype'] = 'dark'
-    elif test is not None:
+    elif test==True:
         out['platetype'] = 'test'
     else:
         out['platetype'] = 'normal'
-
 
     # Note that q3fix is now done in ap3d.pro, not here!!
     if (mjd>56930) & (mjd<57600):
@@ -439,27 +439,32 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
             #spawn,'"ls" '+mapper_data+'/'+tmp[1]+'/plPlugMapA*'
             if ignore is False:
                 raise Exception
-    if sky is None:
+    if sky==False:
         print('getplatedata')
-        plug = plugdata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data)
+        plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,apred=vers,telescope=telescope)
         loc = plug['locationid']
+        spectro_dir = os.environ['APOGEE_REDUX']+'/'+vers+'/'
         if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:
-            os.mkdirs(spectro_dir+'fields/'+telescope+'/'+str(loc))
-        plugdir = mapper_dir
-        field = load.field(plug['locationid'],plate,survey)
+            os.makedirs(spectro_dir+'fields/'+telescope+'/'+str(loc))
+        field,survey,program = apload.apfield(plate,plug['locationid'])
         out['survey'] = survey
         with open(spectro_dir+'fields/'+telescope+'/'+str(loc)+'/plan-'+str(loc)+'.lis','w+') as file:
             file.write(telescope+'/'+str(plate)+'/'+str(mjd)+'/'+os.path.basename(planfile))
         file.close()
     out['plugmap'] = plugid
 
-    # calibration frames to use
+    # Calibration frames to use
     calnames = ['det','bpm','littrow','persist','persistmodel','dark','flat',
                 'sparse','fiber','badfiber','fixfiber','response','wave','lsf']
     for c in calnames:
         val = caldata[c]
         if str(val).isdigit(): val=int(val)
         out[c+'id'] = val
+    # We use multiwaveid for waveid
+    waveid = caldata['multiwave']
+    if str(waveid).isdigit(): waveid=int(waveid)
+    out['waveid'] = waveid
+    # Input PSFID and FLUXID
     out['psfid'] = psfid
     out['fluxid'] = fluxid
 
