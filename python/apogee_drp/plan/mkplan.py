@@ -441,22 +441,27 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
                 raise Exception
     if sky is None:
         print('getplatedata')
-        plug = getplatedata(plate,mjd,plugid=plugid,noobj=True,mapper_data=mapper_data)
-        #cloc = strtrim(string(format='(i)',plug.locationid),2)
-        #file_mkdir,spectro_dir+'fields/'+telescope+'/'+cloc
-        field = load.field(plug.locationid,plate,survey)
+        plug = plugdata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data)
+        loc = plug['locationid']
+        if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:
+            os.mkdirs(spectro_dir+'fields/'+telescope+'/'+str(loc))
+        plugdir = mapper_dir
+        field = load.field(plug['locationid'],plate,survey)
         out['survey'] = survey
-        #openw,file,spectro_dir+'fields/'+telescope+'/'+cloc+'/plan-'+cloc+'.lis',/get_lun,/append
-        #printf,file,telescope+'/'+cplate+'/'+cmjd+'/'+file_basename(planfile)
-        #free_lun,file
+        with open(spectro_dir+'fields/'+telescope+'/'+str(loc)+'/plan-'+str(loc)+'.lis','w+') as file:
+            file.write(telescope+'/'+str(plate)+'/'+str(mjd)+'/'+os.path.basename(planfile))
+        file.close()
     out['plugmap'] = plugid
 
     # calibration frames to use
-    calnames = ['detid','bpmid','littrowid','persistid','persistmodelid','darkid','flatid',
-                'sparseid','fiberid','badfiberid','fixfiberid','psfid','fluxid','responseid',
-                'waveid','lsfid']
+    calnames = ['det','bpm','littrow','persist','persistmodel','dark','flat',
+                'sparse','fiber','badfiber','fixfiber','response','wave','lsf']
     for c in calnames:
-        out[c] = caldata[c]
+        val = caldata[c]
+        if str(val).isdigit(): val=int(val)
+        out[c+'id'] = val
+    out['psfid'] = psfid
+    out['fluxid'] = fluxid
 
     # object frames
     aplist = []
@@ -475,5 +480,5 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
 
     # Write to yaml file
     with open(planfile,'w') as ofile:
-        dum = yaml.dump(out,ofile)
+        dum = yaml.dump(out,ofile,default_flow_style=False, sort_keys=False)
     os.chmod(planfile, 0o664)
