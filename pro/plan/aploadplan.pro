@@ -54,37 +54,73 @@ if file_test(planfile) eq 0 then begin
   return
 endif
 
-;----------
-; Strip path from plan file name, and change to that directory
-thisplan = file_basename(planfile)
-thispath = file_dirname(planfile)
-CD, thispath, current=origdir
 
-;----------
-; Find the desired structure
-if not keyword_set(struct) then struct='APEXP'
-YANNY_READ, thisplan, pdata, hdr=hdr, errcode=errcode ;,/anonymous
-if errcode ne 0 then begin
-  error = 'ERROR LOADING '+planfile
-  if not keyword_set(silent) then print,error
-  return
-endif
-if size(pdata,/type) eq 10 then begin
+;; YAML FILE
+;;----------
+IF strpos(planfile,'.yaml') gt -1 then begin
+
+  ;; No IDL yaml reading program, call the python version
+  temp = MKTEMP('ldpln',outdir='/tmp/')
+  cmd = '#!/usr/bin/env python'
+  push,cmd,'from apogee_drp.utils import plan'
+  push,cmd,'from astropy.io import fits'
+  push,cmd,'from astropy.table import Table'
+  push,cmd,'plandata = plan.load("'+planfile+'",np=True)'
+  push,cmd,'Table(plandata["APEXP"]).write("'+temp+'.fits")'
+  push,cmd,'del plandata["APEXP"]'
+  push,cmd,'with open("'+temp+'.txt","w") as file:'
+  push,cmd,'    for k in plandata.keys():'
+  push,cmd,'        file.write(k+"    "+str(plandata[k])+"\n")'
+  push,cmd,'file.close()'
+  writeline,temp+'.py',cmd
+  file_chmod,temp+'.py','755'o
+  ;spawn,['python','-c',temp+'.py']
+  spawn,temp+'.py',/noshell
+  if file_test(temp+'.fits') eq 0 or file_test(temp+'.txt') eq 0 then begin
+    print,'Problem loading the yaml file'
+    return
+  endif
+  allseq = mrdfits(temp+'.fits',1,/silent)
+  readline,temp+'.txt',hdr
+  file_delete,[temp,temp+'.py',temp+'.fits',temp+'.txt'],/allow
+
+;; YANNY FILE
+;;------------
+ENDIF ELSE BEGIN
+
+  ;----------
+  ; Strip path from plan file name, and change to that directory
+  thisplan = file_basename(planfile)
+  thispath = file_dirname(planfile)
+  CD, thispath, current=origdir
+
+  ;----------
+  ; Find the desired structure
+  if not keyword_set(struct) then struct='APEXP'
+  YANNY_READ, thisplan, pdata, hdr=hdr, errcode=errcode ;,/anonymous
+  if errcode ne 0 then begin
+    error = 'ERROR LOADING '+planfile
+    if not keyword_set(silent) then print,error
+    return
+  endif
+  if size(pdata,/type) eq 10 then begin
   for i=0, N_elements(pdata)-1 do begin
-   if (tag_names(*pdata[i], /structure_name) EQ struct) then $
-    allseq = *pdata[i]
-  endfor
-endif else allseq=0
-YANNY_FREE, pdata
+     if (tag_names(*pdata[i], /structure_name) EQ struct) then $
+      allseq = *pdata[i]
+    endfor
+  endif else allseq=0
+  YANNY_FREE, pdata
 
-if (N_elements(allseq) EQ 0) then begin
-  ;splog, 'ABORT: No APEXP structures in plan file ' + thisplan
-  error = 'ABORT: No APEXP structure in plan file ' + planfile
-  if not keyword_set(silent) then print,error
-  CD, origdir
-;  return
-endif
-CD,origdir
+  if (N_elements(allseq) EQ 0) then begin
+    ;splog, 'ABORT: No APEXP structures in plan file ' + thisplan
+    error = 'ABORT: No APEXP structure in plan file ' + planfile
+    if not keyword_set(silent) then print,error
+    CD, origdir
+  ;  return
+  endif
+  CD,origdir
+
+endelse
 
 ; Make the PLANSTR structure
 ;----------------------------
@@ -92,6 +128,7 @@ CD,origdir
 ;           plugmap:'',detid:'',bpmid:'',darkid:'',flatid:'',psfid:'',waveid:'',lsfid:'',fluxid:'',$
 ;           extract_type:0,raw_dir:'',red_dir:'',plate_dir:'',star_dir:'',apogeereduceversion:''}
 planstr = {hdr:hdr}
+if not keyword_set(struct) then struct='APEXP'
 if n_elements(allseq) ne 0 then add_tag,planstr,struct,allseq,planstr
 tags = TAG_NAMES(planstr)
 apgundef,hdr,allseq
@@ -142,7 +179,7 @@ for j=0,nkeywords-1 do begin
       len = strlen(keywords[j])
       value = strtrim(strmid(line,len),2)
       count = 1
-    end
+    endif
   endif
 
   ; No match
@@ -172,12 +209,13 @@ for j=0,nkeywords-1 do begin
   ;planstr.(tagind) = fix(value,type=type)
   ; Print out the keyword/value pair
   if keyword_set(verbose) then print,keywords[j],' = ',fix(value,type=type)
-end
+endfor
 
 if tag_exist(planstr,'apred_vers') then begin
   apsetver,vers=planstr.apred_vers
   if tag_exist(planstr,'telescope') then apsetver,vers=planstr.apred_vers,telescope=planstr.telescope
 endif
+
 
 ; Add paths to the calibration IDs and add directories
 if keyword_set(expand) then begin
