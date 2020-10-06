@@ -294,8 +294,8 @@ def run_mjd5_yaml(yamlfile):
     pass
 
 
-def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
-           vers=None,telescope=None,plugid=None,fixfiberid=None,stars=None,
+def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
+           dark=False,sky=False,plugid=None,fixfiberid=None,stars=None,
            names=None,onem=None,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False):
     """
@@ -305,10 +305,15 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     procedures
     """
 
+    if apred is None:
+        raise ValueError('apred must be input')
+    if telescope is None:
+        raise ValueError('telescope must be input')
+
     print('Making plan for MJD: ',mjd)
 
     # Set up directories, plate, and MJD variables
-    load = apload.ApLoad(apred=vers,telescope=telescope)
+    load = apload.ApLoad(apred=apred,telescope=telescope)
     caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
     calfile = caldir+load.instrument+'.par' 
 
@@ -355,8 +360,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
 
     if sky==True:
         print('apdailycals')
-        import pdb; pdb.set_trace()
-        dailycals(lsfs=ims,psf=psfid)
+        dailycals(lsfs=ims,psf=psfid,apred=apred,telescope=telescope)
     print(planfile)
 
     # open plan file and write header
@@ -372,7 +376,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     out['plotfile'] = 'apDiag-'+str(plate)+'-'+str(mjd)+'.ps'
 
     # apred_vers keyword will override strict versioning using the plan file!
-    out['apred_vers'] = vers
+    out['apred_vers'] = apred
 
     # apo1m
     if onem is True:
@@ -441,9 +445,9 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
                 raise Exception
     if sky==False:
         print('getplatedata')
-        plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,apred=vers,telescope=telescope)
+        plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,apred=apred,telescope=telescope)
         loc = plug['locationid']
-        spectro_dir = os.environ['APOGEE_REDUX']+'/'+vers+'/'
+        spectro_dir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
         if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:
             os.makedirs(spectro_dir+'fields/'+telescope+'/'+str(loc))
         field,survey,program = apload.apfield(plate,plug['locationid'])
@@ -487,3 +491,38 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     with open(planfile,'w') as ofile:
         dum = yaml.dump(out,ofile,default_flow_style=False, sort_keys=False)
     os.chmod(planfile, 0o664)
+
+
+def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
+    """ Create plan file for daily calibration products."""
+
+    if waves is not None and psf is None:
+        raise ValueError('psf keyword must be given with waves keyword')
+    if apred is None:
+        raise ValueError('apred must be input')
+    if telescope is None:
+        raise ValueError('telescope must be input')
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    cal_dir = os.path.dirname(os.path.dirname(load.filename('BPM',num=0,chips='a')))+'/'
+    if os.path.exists(cal_dir)==False:
+        os.makedirs(cal_dir)
+
+    parfile = cal_dir+'dailycal.par'
+    with open(parfile,'a'):
+        psf = int(psf)   # must be int
+        if waves is not None:
+            waves = np.array(waves)  # in case a list was input
+            if waves.ndim != 2:
+                waves = np.atleast_2d(waves).T
+            dum,nw = waves.shape
+            for i in range(nw):
+                file.write('wave     99999 99999   %08i   %08i,%08i   %08i\n' % (waves[0,i],waves[0,i],waves[1,i],psf))
+                file.write('lsf     99999 99999   %08i   %08i   %08i\n' % (waves[0,i],waves[0,i],psf))
+                file.write('lsf     99999 99999   %08i   %08i   %08i\n' % (waves[1,i],waves[1,i],psf))
+        if lsfs is not None:
+            lsfs = np.atleast_1d(lsfs)
+            nl = len(lsfs)
+            for i in range(nl):
+                file.write('lsf      99999 99999   %08i   %08i   %08i\n' % (lsfs[i],lsfs[i],psf))
+    file.close()
