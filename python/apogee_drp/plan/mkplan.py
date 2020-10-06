@@ -294,15 +294,135 @@ def run_mjd5_yaml(yamlfile):
     pass
 
 
+
+def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
+    """
+    Create plan file for daily calibration products.
+
+    Parameters
+    ----------
+    waves : numpy int array
+        Array of wavecal exposure numbers.
+    psf : int
+        Exposure number for PSF cal.
+    lsfs : numpy int array
+        Array of LSF exposure numbers.
+    apred : str
+        APOGEE reduction version.
+    telescope : str
+        APOGEE telescope.
+
+    Returns
+    -------
+    The dailycal.par file for the relevant instrument is updated.
+
+    Examples
+    --------
+    mkplan.dailycals(lsfs=ims,psf=psfid)
+
+    By J.Holtzman, 2011
+    translated to python, D.Nidever  Oct 2020
+    """
+
+    if waves is not None and psf is None:
+        raise ValueError('psf keyword must be given with waves keyword')
+    if apred is None:
+        raise ValueError('apred must be input')
+    if telescope is None:
+        raise ValueError('telescope must be input')
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    cal_dir = os.path.dirname(os.path.dirname(load.filename('BPM',num=0,chips='a')))+'/'
+    if os.path.exists(cal_dir)==False:
+        os.makedirs(cal_dir)
+
+    parfile = cal_dir+'dailycal.par'
+    with open(parfile,'a'):
+        psf = int(psf)   # must be int
+        if waves is not None:
+            waves = np.array(waves)  # in case a list was input
+            if waves.ndim != 2:
+                waves = np.atleast_2d(waves).T
+            dum,nw = waves.shape
+            for i in range(nw):
+                file.write('wave     99999 99999   %08i   %08i,%08i   %08i\n' % (waves[0,i],waves[0,i],waves[1,i],psf))
+                file.write('lsf     99999 99999   %08i   %08i   %08i\n' % (waves[0,i],waves[0,i],psf))
+                file.write('lsf     99999 99999   %08i   %08i   %08i\n' % (waves[1,i],waves[1,i],psf))
+        if lsfs is not None:
+            lsfs = np.atleast_1d(lsfs)
+            nl = len(lsfs)
+            for i in range(nl):
+                file.write('lsf      99999 99999   %08i   %08i   %08i\n' % (lsfs[i],lsfs[i],psf))
+    file.close()
+
+
 def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
            dark=False,sky=False,plugid=None,fixfiberid=None,stars=None,
-           names=None,onem=None,hmags=None,mapper_data=None,suffix=None,
+           names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
     ASDAF frames. This is called from the manually prepared MJD5.pro 
     procedures
+
+    Parameters
+    ----------
+    ims : numpy int array
+        List of array of exposure numbers to include in planfile.
+    plate : int
+        Plate number for this observation.
+    mjd : int
+        MJD number for this observation.
+    psfid : int
+        PSF cal exposure number.
+    fluxid : int
+        Flux cal frame exposure number.
+    apred : str
+        APOGEE reduction version.
+    telescope : str
+        APOGEE telescope.
+    cal : bool, optional
+        This is a calibration plan file.
+    dark : bool, optional
+        This is a dark sequence plan file.
+    sky : bool, optional
+        This is a sky flat sequence plan file.
+    plugid : int, optional
+        Base name of the plugmap filename.
+    fixfiberid : int, optional
+        Fiber fixing needed (1 or 2).
+    stars : numpy int array, optional
+        FiberID for apo1m or ASDAF observations.
+    names : numpy int array, optional
+        Name of the star for apo1m or ASDAF observations.
+    onem : bool, optional
+        This is for a apo1m observation.
+    hmags : numpy float array, optional
+        2MASS H-magnitude for star in apo1m observation.
+    mapper_data : str, optional
+        Directory for the mapper data.
+    suffix : str, optional
+        Extra suffix to use (before the extension) on the planfile name.
+    ignore : bool, optional
+        Ignore warnings and continue.
+    test : bool, optional
+        Just a test.
+
+    Returns
+    -------
+    This creates a planfile with the given inputs and places it in
+    the appropriate place in the SDSS/APOGEE directory tree.  For
+    science visits this will be in $APOGEE_REDUX/{apred}/visit/{telescope}/{field}/{plate}/{mjd}/.
+    Calibration, dark and sky plan files live in
+    $APOGEE_REDUX/{apred}/cal/{instrument}/plan/{mjd}/
+
+    Examples
+    --------
+    mkplan.mkplan(ims,plate,mjd,psfid,fluxid,apred=apred,telescope=telescope)
+
+    By J.Holtzman, 2011?
+    translated to python, D.Nidever  Oct 2020
     """
 
     if apred is None:
@@ -349,10 +469,10 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         fix0 = None
     caldata = mkcal.getcal(calfile,mjd)
     if fix0 is not None:
-        fixfiberid = fix0
+        caldata['fixfiber'] = fix0
 
     # outplan plan file name
-    if (stars is not None) & (onem is None):
+    if (stars is not None) & (onem==False):
         planfile = os.path.dirname(planfile)+'/'+os.path.basename(planfile,'.yaml')+'star.yaml'
     else:
         if sky==True:
@@ -379,7 +499,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     out['apred_vers'] = apred
 
     # apo1m
-    if onem is True:
+    if onem==True:
         out['data_dir'] = datadir+'/'
         out['raw_dir'] = datadir+str(mjd)+'/'
         out['plate_dir'] = outdir
@@ -436,7 +556,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
             plugid = 'header'
     print(ims[0])
     print(plugid)
-    if (cal is None) & (dark is None) & (onem is None):
+    if (cal is None) & (dark is None) & (onem==False):
         tmp = plugid.split('=')
         if os.path.exists(mapper_data+'/'+tmp[1]+'/plPlugMapM-'+plugid+'.par')==False:
             print('Cannot find plugmap file ',plugid)
@@ -492,37 +612,3 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         dum = yaml.dump(out,ofile,default_flow_style=False, sort_keys=False)
     os.chmod(planfile, 0o664)
 
-
-def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
-    """ Create plan file for daily calibration products."""
-
-    if waves is not None and psf is None:
-        raise ValueError('psf keyword must be given with waves keyword')
-    if apred is None:
-        raise ValueError('apred must be input')
-    if telescope is None:
-        raise ValueError('telescope must be input')
-
-    load = apload.ApLoad(apred=apred,telescope=telescope)
-    cal_dir = os.path.dirname(os.path.dirname(load.filename('BPM',num=0,chips='a')))+'/'
-    if os.path.exists(cal_dir)==False:
-        os.makedirs(cal_dir)
-
-    parfile = cal_dir+'dailycal.par'
-    with open(parfile,'a'):
-        psf = int(psf)   # must be int
-        if waves is not None:
-            waves = np.array(waves)  # in case a list was input
-            if waves.ndim != 2:
-                waves = np.atleast_2d(waves).T
-            dum,nw = waves.shape
-            for i in range(nw):
-                file.write('wave     99999 99999   %08i   %08i,%08i   %08i\n' % (waves[0,i],waves[0,i],waves[1,i],psf))
-                file.write('lsf     99999 99999   %08i   %08i   %08i\n' % (waves[0,i],waves[0,i],psf))
-                file.write('lsf     99999 99999   %08i   %08i   %08i\n' % (waves[1,i],waves[1,i],psf))
-        if lsfs is not None:
-            lsfs = np.atleast_1d(lsfs)
-            nl = len(lsfs)
-            for i in range(nl):
-                file.write('lsf      99999 99999   %08i   %08i   %08i\n' % (lsfs[i],lsfs[i],psf))
-    file.close()
