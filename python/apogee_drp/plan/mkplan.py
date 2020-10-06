@@ -11,10 +11,11 @@ except ImportError:
     from yaml import Loader, Dumper
 
 from dlnpyutils import utils as dln
-from apogee_drp.utils import spectra,yanny
+from apogee_drp.utils import spectra,yanny,apload
 from apogee_drp.plan import mkslurm
 from apogee_drp.apred import mkcal
-
+from sdss_access.path import path
+from astropy.io import fits
 
 def args2dict(**kwargs):
     """ Dummy function used by translate_idl_mjd5_script()."""
@@ -294,8 +295,9 @@ def run_mjd5_yaml(yamlfile):
 
 
 def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
-           vers=None,telescope=None,plugid=None,fixfiberid=None,
-           names=None,onem=None,hmags=None,mapper_data=None,suffix=None):
+           vers=None,telescope=None,plugid=None,fixfiberid=None,stars=None,
+           names=None,onem=None,hmags=None,mapper_data=None,suffix=None,
+           ignore=False):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -359,7 +361,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     # open plan file and write header
     if os.path.exists(planfile): os.remove(planfile)
     out = {}
-    out['apogee_drp_ver'] = os.environ['APOGEE_DRP_VER'])
+    out['apogee_drp_ver'] = os.environ['APOGEE_DRP_VER']
     out['telescope'] = telescope
     out['instrument'] = load.instrument
     out['plateid'] = plate
@@ -369,7 +371,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     out['plotfile'] = 'apDiag-'+str(plate)+'-'+str(mjd)+'.ps'
 
     # apred_vers keyword will override strict versioning using the plan file!
-    out['apred_vers'] = apred_vers
+    out['apred_vers'] = vers
 
     # apo1m
     if onem is True:
@@ -405,7 +407,9 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     if (mjd>56930) & (mjd<57600):
         out['q3fix'] = 1
 
-    rawfile = load.filename('R',chip='a',num=ims[0])
+    sdss_path = path.Path()
+    rawfile = sdss_path.full('apR',num=ims[0],chip='a',mjd=mjd)
+    #rawfile = load.filename('R',chip='a',num=ims[0])
     if os.path.exists(rawfile)==False:
         raise ValueError('Cannot find file '+rawfile)
     head = fits.getheader(rawfile,1)
@@ -417,7 +421,8 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     # plugmap
     print(plugid)
     if plugid is None:
-        rawfile = load.filename('R',chip='a',num=ims[0])
+        rawfile = sdss_path.full('apR',num=ims[0],chip='a',mjd=mjd)
+        #rawfile = load.filename('R',chip='a',num=ims[0])
         if os.path.exists(rawfile)==True:
             head = fits.getheader(rawfile,1)
             plugid = head['NAME']
@@ -428,7 +433,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     print(ims[0])
     print(plugid)
     if (cal is None) & (dark is None) & (onem is None):
-        tmp = strsplit(plugid,'-',/extract)
+        tmp = plugid.split('=')
         if os.path.exists(mapper_data+'/'+tmp[1]+'/plPlugMapM-'+plugid+'.par')==False:
             print('Cannot find plugmap file ',plugid)
             #spawn,'"ls" '+mapper_data+'/'+tmp[1]+'/plPlugMapA*'
@@ -469,6 +474,6 @@ def mkplan(ims,plate,mjd,psfid,fluxid,cal=False,dark=False,sky=False,
     out['APEXP'] = aplist
 
     # Write to yaml file
-    write open(planfile,'w') as ofile:
+    with open(planfile,'w') as ofile:
         dum = yaml.dump(out,ofile)
-    os.chmod(planfile, 0664)
+    os.chmod(planfile, 0o664)
