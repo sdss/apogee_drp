@@ -153,7 +153,7 @@ def readcal(calfile):
 
 
 def parsecaldict(caldict,mjd):
-    """ Smaller helper function for getcal() to select the entry in a calibration
+    """ Small helper function for getcal() to select the entry in a calibration
     dictionary that is valid for a MJD."""
     gd,ngd = dln.where( (mjd >= caldict['mjd1']) & (mjd <= caldict['mjd2']) )
     if ngd>0:

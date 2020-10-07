@@ -1,7 +1,8 @@
 import copy
 import numpy as np
 import os
-import glob
+import shutil
+from glob import glob
 import pdb
 import subprocess
 import yaml
@@ -16,6 +17,8 @@ from apogee_drp.plan import mkslurm
 from apogee_drp.apred import mkcal
 from sdss_access.path import path
 from astropy.io import fits
+from collections import OrderedDict
+
 
 def args2dict(**kwargs):
     """ Dummy function used by translate_idl_mjd5_script()."""
@@ -80,8 +83,8 @@ def removeidlcomments(lines):
 
 def replaceidlcode(lines,mjd,day=None):
     """
-    Replace IDL code in lines with the results.
-    This is a small helper function for translate_idl_mjd5_script().
+    Replace IDL code in lines (array of strings) with the results of code
+    execution. This is a small helper function for translate_idl_mjd5_script().
     """
 
     # day
@@ -136,6 +139,20 @@ def translate_idl_mjd5_script(scriptfile):
     Translate an IDL MJD5.pro script file to yaml.  It returns a list of strings
     that can be written to a file.
 
+    Parameters
+    ----------
+    scriptfile : str
+         Name of MJD5.pro script file.
+
+    Returns
+    -------
+    flines : numpy char array
+         The lines of the script file translated to yaml.
+
+    Examples
+    --------
+    flines = mkplan.translate_idl_mjd5_script('apo25m_59085.pro')
+
     Example file, top part of apo25m_59085.pro
     apsetver,telescope='apo25m'
     mjd=59085
@@ -158,6 +175,7 @@ def translate_idl_mjd5_script(scriptfile):
     ims=[35230033,35230034,35230035,35230036]
     mkplan,ims,plate,mjd,psfid,fluxid,vers=vers
 
+    By D.Nidever,  Oct 2020
     """
 
     # Check that the file exists
@@ -284,17 +302,6 @@ def translate_idl_mjd5_script(scriptfile):
     return flines
 
 
-def make_mjd5_yaml(mjd):
-    """ Make a MJD5 yaml file."""
-    pass
-
-
-def run_mjd5_yaml(yamlfile):
-    """ Run the MJD5 yaml file and create the relevant plan files."""
-    pass
-
-
-
 def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
     """
     Create plan file for daily calibration products.
@@ -411,6 +418,8 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
 
     Returns
     -------
+    planfile : str
+         The name of the plan file created
     This creates a planfile with the given inputs and places it in
     the appropriate place in the SDSS/APOGEE directory tree.  For
     science visits this will be in $APOGEE_REDUX/{apred}/visit/{telescope}/{field}/{plate}/{mjd}/.
@@ -556,25 +565,25 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
             plugid = 'header'
     print(ims[0])
     print(plugid)
-    if (cal is None) & (dark is None) & (onem==False):
-        tmp = plugid.split('=')
+    if (cal==False) & (dark==False) & (onem==False):
+        tmp = plugid.split('-')
         if os.path.exists(mapper_data+'/'+tmp[1]+'/plPlugMapM-'+plugid+'.par')==False:
             print('Cannot find plugmap file ',plugid)
             #spawn,'"ls" '+mapper_data+'/'+tmp[1]+'/plPlugMapA*'
             if ignore is False:
                 raise Exception
-    if sky==False:
-        print('getplatedata')
-        plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,apred=apred,telescope=telescope)
-        loc = plug['locationid']
-        spectro_dir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
-        if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:
-            os.makedirs(spectro_dir+'fields/'+telescope+'/'+str(loc))
-        field,survey,program = apload.apfield(plate,plug['locationid'])
-        out['survey'] = survey
-        with open(spectro_dir+'fields/'+telescope+'/'+str(loc)+'/plan-'+str(loc)+'.lis','w+') as file:
-            file.write(telescope+'/'+str(plate)+'/'+str(mjd)+'/'+os.path.basename(planfile))
-        file.close()
+        if sky==False:
+            print('getting plate data')
+            plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,apred=apred,telescope=telescope)
+            loc = plug['locationid']
+            spectro_dir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
+            if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:
+                os.makedirs(spectro_dir+'fields/'+telescope+'/'+str(loc))
+            field,survey,program = apload.apfield(plate,plug['locationid'])
+            out['survey'] = survey
+            with open(spectro_dir+'fields/'+telescope+'/'+str(loc)+'/plan-'+str(loc)+'.lis','w+') as file:
+                file.write(telescope+'/'+str(plate)+'/'+str(mjd)+'/'+os.path.basename(planfile))
+            file.close()
     out['plugmap'] = plugid
 
     # Calibration frames to use
@@ -612,3 +621,248 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         dum = yaml.dump(out,ofile,default_flow_style=False, sort_keys=False)
     os.chmod(planfile, 0o664)
 
+    return planfile
+
+
+def getexpinfo(files):
+    """
+    Get header information about raw APOGEE files.
+
+    Parameters
+    ----------
+    files : list of str
+        List of APOGEE apz filenames.
+
+    Returns
+    -------
+    cat : numpy structured array
+        Table with information for each file grabbed from the header.
+
+    Examples
+    --------
+    cat = getexpinfo(files)
+
+    By D.Nidever,  Oct 2020
+    """
+
+    nfiles = len(files)
+    dtype = np.dtype([('num',int),('nread',int),('exptype',np.str,20),('plateid',np.str,20),
+                      ('exptime',float),('dateobs',np.str,50)])
+    cat = np.zeros(nfiles,dtype=dtype)
+    # Loop over the files
+    for i in range(nfiles):
+        head = fits.getheader(files[i],1)
+        base,ext = os.path.splitext(os.path.basename(files[i]))
+        # apR-c-12345678.apz
+        num = base.split('-')[2]
+        cat['num'][i] = num
+        cat['nread'][i] = head['nread']
+        cat['exptype'][i] = head['exptype']
+        cat['plateid'][i] = head['plateid']
+        cat['exptime'][i] = head['exptime']
+        cat['dateobs'][i] = head['date-obs']
+    return cat
+
+
+def make_mjd5_yaml(mjd,apred,telescope,clobber=False):
+    """
+    Make a MJD5 yaml file that can be used to create plan files.
+
+    Parameters
+    ----------
+    mjd : int
+        MJD number for this night.
+    apred : str
+        APOGEE reduction version.
+    telescope : str
+        APOGEE telescope: apo25m, apo1m, lco25m.
+    clobber : bool
+        Overwrite any existing files.
+
+    Returns
+    -------
+    out : list of dictionaries
+       The list of dictionaries that contain the information needed to
+       make the plan files.
+    planfiles : list of str
+       The names of the plan files that would be created.
+    The yaml files are also written to disk in APOGEEREDUCEPLAN product
+    directory.
+
+    Examples
+    --------
+    out,planfiles = mkplan.make_mjd5_yaml(57680,'t15','apo25m')
+
+    By J.Holtzman, 2011
+    translated/rewritten, D.Nidever  Oct2020
+    """
+
+    print('Making MJD5.yaml file for MJD='+str(mjd))
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
+               'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
+
+    # Output file/directory
+    outfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd)+'auto.yaml'
+    if os.path.exists(os.path.dirname(outfile))==False:
+        os.makedirs(os.path.dirname(outfile))
+    # File already exists and clobber not set
+    if os.path.exists(outfile) and clobber==False:
+        print(outfile+' already EXISTS and clobber==False')
+        return
+
+    # Get the exposures and info about them
+    files = glob(datadir+'/'+str(mjd)+'/*-c*.apz')
+    files = np.array(files)
+    nfiles = len(files)
+    print(str(nfiles)+' exposures found')
+    files = files[np.argsort(files)]  # sort
+    info = getexpinfo(files)
+
+    # Print summary information about the data
+    expindex = dln.create_index(info['exptype'])
+    for i in range(len(expindex['value'])):
+        print('  '+expindex['value'][i]+': '+str(expindex['num'][i]))
+    objind, = np.where(info['exptype']=='OBJECT')
+    if len(objind)>0:
+        plates = np.unique(info['plateid'][objind])
+        print('Observations of '+str(len(plates))+' plates')
+        plateindex = dln.create_index(info['plateid'][objind])
+        for i in range(len(plateindex['value'])):
+            print('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
+
+    # Scan through all files, accumulate IDs of the various types
+    dark, cal, exp, sky, dome, calpsfid = [], [], [], [], None, None
+    out, planfiles = [], []
+    for i in range(nfiles):
+        # Load image number in variable according to exptype and nreads
+        #   discard images with nread<3
+        if info['nread'][i]<3:
+            print(info['num'][i],' has less than the required 3 reads')
+
+        # Dark
+        if (info['exptype'][i]=='DARK') and info['nread'][i]>=3:
+            dark.append(int(info['num'][i]))
+        # Internal flat
+        #   reduced only to 2D, hence treated like darks
+        if (info['exptype'][i]=='INTERNALFLAT') and info['nread'][i]>=3:
+            dark.append(int(info['num'][i]))
+        # Dome flat
+        if (info['exptype'][i]=='QUARTZFLAT') and info['nread'][i]>=3:
+            cal.append(int(info['num'][i]))
+            calpsfid = int(info['num'][i])
+        # Arc lamps
+        if (info['exptype'][i]=='ARCLAMP') and info['nread'][i]>=3:
+            cal.append(int(info['num'][i]))
+        # Sky frame
+        #   identify sky frames as object frames with 10<nread<15
+        if (info['exptype'][i]=='OBJECT') and (info['nread'][i]<15 and info['nread'][i]>10):
+            sky.append(int(info['num'][i]))
+        # Object exposure
+        if (info['exptype'][i]=='OBJECT') and info['nread'][i]>15:
+            exp.append(int(info['num'][i]))
+        # Dome flat
+        if (info['exptype'][i]=='DOMEFLAT') and info['nread'][i]>3:
+            dome = int(info['num'][i])
+
+        # End of this plate block
+        #  if plateid changed or last exposure
+        platechange = info['plateid'][i] != info['plateid'][np.minimum(i+1,nfiles-1)]
+        if (platechange or i==nfiles-1) and len(exp)>0 and dome is not None:
+            # Object plate visit
+            objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
+                       'plate':int(info['plateid'][i]), 'psfid':dome, 'fluxid':dome, 'ims':exp}
+            out.append(objplan)
+            planfile = os.path.basename(load.filename('Plan',plate=int(info['plateid'][i]),mjd=mjd))
+            planfiles.append(planfile)
+            exp = []
+            # Sky exposures
+            #   use same cals as for object
+            if len(sky)>0:
+                skyplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
+                           'plate':int(info['plateid'][i]), 'psfid':dome, 'fluxid':dome, 
+                           'ims':sky, 'sky':True}
+                out.append(skyplan)
+                skyplanfile = planfile.replace('.yaml','sky.yaml')
+                planfiles.append(skyplanfile)
+                sky = []
+
+    # Dark frame information
+    cplate = '0000'
+    if len(dark)>0:
+        darkplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
+                    'plate':0, 'psfid':0, 'fluxid':0, 'ims':dark, 'dark':True}
+        out.append(darkplan)
+        planfile = os.path.basename(load.filename('DarkPlan',mjd=mjd))
+        planfiles.append(planfile)
+    # Calibration frame information
+    if len(cal)>0 and calpsfid is not None:
+        calplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
+                   'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':cal, 'cal':True}
+        out.append(calplan)
+        planfile = os.path.basename(load.filename('CalPlan',mjd=mjd))
+        planfiles.append(planfile)
+
+    # Write out the MJD5 file
+    if os.path.exists(outfile): os.remove(outfile)
+    print('Writing MJD5.yaml file to '+outfile)
+    with open(outfile,'w') as file:
+        dum = yaml.dump(out,file,default_flow_style=False, sort_keys=False)
+    # Copy it to the non-"auto" version
+    outfile2 = outfile.replace('auto','')
+    if os.path.exists(outfile2): os.remove(outfile2)
+    shutil.copyfile(outfile,outfile2)
+
+    return out, planfiles
+
+
+def run_mjd5_yaml(yamlfile):
+    """
+    Run the MJD5 yaml file and create the relevant plan files.
+
+    Parameters
+    ----------
+    yamlfile : str
+         Name of the MJD5 yaml file.
+
+    Returns
+    -------
+    planfiles : list of str
+         List of the created plan file names.
+
+    Examples
+    --------
+    planfiles = mkplan.run_mjd5_yaml(yamlfile)
+
+    By D.Nidever, Oct 2020
+    """
+    
+    if os.path.exists(yamlfile)==False:
+        raise ValueError(yamlfile+' NOT FOUND')
+
+    # Load the yaml file
+    with open(yamlfile) as file:
+        data = yaml.full_load(file)
+
+    if type(data) is not list:
+        data = [data]
+    ndata = len(data)
+    print('Information for '+str(ndata)+' plan files')
+
+    # Loop over the plan blocks and run mkplan()
+    planfiles = []
+    for i in range(ndata):
+        print(' ')
+        print('Plan file '+str(i+1))
+        print('------------')
+        pargs = data[i]
+        ims = pargs.pop('ims')
+        plate = pargs.pop('plate')
+        mjd = pargs.pop('mjd')
+        psfid = pargs.pop('psfid')
+        fluxid = pargs.pop('fluxid')
+        planfile = mkplan(ims,plate,mjd,psfid,fluxid,**pargs)
+        planfiles.append(planfile)
+
+    return planfiles
