@@ -1,0 +1,30 @@
+#!/bin/csh
+##module load apogeereduce/v3_31
+#module load apogeereduce/4.0.7
+###autored
+
+#cd $APOGEE_REDUX/current/autored/apo25m
+#idl << endidl
+#  ;spawn,['ls','-t','$APOGEE_DATA','|','head','-50'],mjds,/noshell
+#  spawn,'ls -t $APOGEE_DATA | head -35',mjds
+#  help,mjds
+#  print,mjds
+#  ;autored,mjds,vers='apogee2'
+#  autored,mjds,vers='t9'
+#endidl
+
+
+module purge
+module load apogee/0.14.14
+##autored
+
+cd $APOGEE_REDUX/r13/autored/apo25m
+idl << endidl
+  ;spawn,['ls','-t','$APOGEE_DATA','|','head','-50'],mjds,/noshell
+  spawn,'ls -t $APOGEE_DATA | head -35',mjds
+  help,mjds
+  print,mjds
+  autored,mjds,vers='r13',aspcap='l33',suffix='-r13-l33-58672.fits'
+endidl
+
+mv galactic.gif sky.gif $APOGEE_REDUX/r13/
