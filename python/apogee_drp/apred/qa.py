@@ -349,7 +349,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
     if len(glob.glob(outdir))==0: subprocess.call(['mkdir',outdir])
 
     htmldir = platedir+'/html/'
-    if len(glob.glob(htmldir))==0: subprocess.call(['htmldir',outdir])
+    if len(glob.glob(htmldir))==0: subprocess.call(['mkdir',htmldir])
 
     #----------------------------------------------------------------------------------------
     # Open the output HTML file for this plate.
