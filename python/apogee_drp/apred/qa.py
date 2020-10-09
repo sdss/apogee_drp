@@ -123,9 +123,13 @@ def apqa(field='200+45',plate='8100',mjd='57680',telescope='apo25m',apred='t14',
                         badfiberid=badfiberid,survey=survey,mapper_data=mapper_data,
                         field=field,apred=apred)
 
+        # NOTE: No translations for plotflux and makeHTMLplate yet.
+
 #;        x=plotFlux(planfile)
 #;        x=makeHTMLplate(plateid=plate,mjd=mjd,fluxid=fluxid)
         platesumfile = load.filename('PlateSum',plate=int(plate),mjd=mjd,chips=True)
+
+        # NOTE: Not sure what the below command does
 #;        sntab,tabs=platefile,outfile=platefile+'.dat'
 
     #----------------------------------------------------------------------------------------
