@@ -1,0 +1,14 @@
+#!/bin/csh
+
+module purge
+module load apogee/0.14.14
+
+cd $APOGEE_REDUX/r13/autored/apo25m
+idl << endidl
+  spawn,'ls -t $APOGEE_DATA | head -35',mjds
+  help,mjds
+  print,mjds
+  autored,mjds,vers='r13',aspcap='l33',suffix='-r13-l33-58672.fits'
+endidl
+
+mv galactic.gif sky.gif $APOGEE_REDUX/r13/

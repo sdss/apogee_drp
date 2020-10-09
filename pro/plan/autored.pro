@@ -30,17 +30,17 @@ dirs = getdir(a,c,s)
 dir = s+'/autored/'+telescope+'/'
 file_mkdir,dir
 
-; loop over each MJD
+; Loop over each MJD
 dosum = 0
 for i=0,n_elements(mjds)-1 do begin
   mjd = mjds[i]
   cmjd = string(format='(i5.5)',mjd)
   print,mjd,cmjd
-  ; if this MJD is done, we are done
+  ; If this MJD is done, we are done
   if ~file_test(dir+cmjd+'.done') then begin
-    ; if not done has it been started?
+    ; If not done has it been started?
     if file_test(dir+cmjd+'.plans') then begin
-      ; if it has been started, are all the jobs done? If so, run the MJD summary
+      ; If it has been started, are all the jobs done? If so, run the MJD summary
       readcol,dir+cmjd+'.plans',format='(a)',plans
       done = 1
       for j=0,n_elements(plans)-1 do begin
@@ -49,9 +49,6 @@ for i=0,n_elements(mjds)-1 do begin
         if strpos(plans[j],'Dark') ge 0 or strpos(plans[j],'Cal') ge 0 then $
            qafile = apogee_filename('QAcal',plate=cplate,mjd=cmjd) else $
            qafile = apogee_filename('QA',plate=cplate,mjd=cmjd)
-        ;if cplate eq '0000' then qafile=prefix+'QAcal-'+cmjd+'.fits' else $
-        ;                         qafile='html/'+prefix+'QA-'+cplate+'-'+junk[2]+'.html'
-        ;if ~file_test(s+'/'+telescope+'/'+cplate+'/'+junk[2]+'/'+qafile) and $
         if ~file_test(qafile) and $
            strpos(file_basename(plans[j]),'sky') lt 0 and $
            strpos(file_basename(plans[j]),'dark') lt 0 $
@@ -61,6 +58,7 @@ for i=0,n_elements(mjds)-1 do begin
         print,qafile
         print,file_test(qafile), done
       endfor
+      ; This MJD is done, running apMJD
       if done then begin
         print,'all reductions complete'
         if ~file_test(s+'/exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html') then begin
@@ -87,14 +85,18 @@ for i=0,n_elements(mjds)-1 do begin
       endif else begin
         print,'reductions still running'
       endelse
+
+    ; Has not been started yet
     endif else begin
-      ; if not started, make the plan files and start the reductions if transfer is complete
+
+      ; If not started, make the plan files and start the reductions if transfer is complete
       if file_test(apogee_data+'/'+cmjd+'/'+cmjd+'.log') then begin
+        ; Check if the data transfer is complete
         readcol,apogee_data+'/'+cmjd+'/'+cmjd+'.log',n,f,skip=3,format='(i,a)'
-        complete=1
+        complete = 1
         for j=0,n_elements(f)-1 do begin
           if ~file_test(apogee_data+'/'+cmjd+'/'+f[j]) then complete=0 else begin
-            ; check to see if plugmap is available
+            ; Check to see if plugmap is available
             h=headfits(apogee_data+'/'+cmjd+'/'+f[j],ext=1)
             exptype=strtrim(sxpar(h,'exptype'),2)
             if exptype eq 'OBJECT' then begin
@@ -107,10 +109,11 @@ for i=0,n_elements(mjds)-1 do begin
             endif
           endelse
         endfor
+        ; Data transfer is complete, make plan files and start reductions
         if complete then begin
           print,cmjd+' not done and transferred, creating plan files and running'
           undefine,planfiles
-          ; make the automatic reduction file and copy to MJD5.pro if it doesn't exist
+          ; Make the automatic reduction file and copy to MJD5.pro if it doesn't exist
           apmkplan,mjd,planfiles=planfiles,apogees=apogees,vers=vers
           if ~file_test(getenv('APOGEEREDUCEPLAN_DIR')+'/pro/'+telescope+'/'+telescope+'_'+cmjd+'.pro') then begin
             file_copy,getenv('APOGEEREDUCEPLAN_DIR')+'/pro/'+telescope+'/'+telescope+'_'+cmjd+'auto.pro',$
@@ -145,38 +148,18 @@ for i=0,n_elements(mjds)-1 do begin
           free_lun,out
           spawn,'sbatch '+dir+cmjd+'.slurm'
 
-          ;openw,out,dir+cmjd+'.csh',/get_lun
-          ;printf,out,'#!/bin/csh'
-          ;printf,out,'idl << endidl'
-          ;printf,out," vers='"+vers+"'"
-          ;printf,out,' apsetver,vers=vers'
-          ;printf,out,' @'+telescope+'_'+cmjd+'.pro'
-          ;printf,out,'endidl'
-          ;printf,out,'cd $APOGEE_REDUX/'+vers
-          ;if ~keyword_set(norun) then printf,out,'runapred '+vers+' visit/'+telescope+'/*/*/'+cmjd+'/'+prefix+'Plan*.par'+' cal/'+instrument+'/'+cmjd+'/*Plan*.par'
-          ;free_lun,out
-          ;spawn,'csh '+dir+cmjd+'.csh >&'+dir+cmjd+'.log &'
         endif else print,cmjd+' not done, but still transferring'
       endif else print,'no data log file yet...'
     endelse
   endif else print,' already done'
-endfor
+endfor  ; mjd loop
 
 help,dosum
 
+; Making summary/monitoring pages
 if dosum then begin
-;  openw,out,dir+'sum.csh',/get_lun
-;  printf,out,'#!/bin/csh'
-;  printf,out,'cd $APOGEE_REDUX/'+vers
-;  printf,out,'idl << endidl'
-;  printf,out," mkhtmlsum,/nocheck,apred='"+vers+"',apstar='stars',aspcap='a',results='v'"
-;  printf,out,' mkmonitor'
-;  printf,out,'endidl'
-;  free_lun,out
-;  print,'running summary...'
-;  if ~keyword_set(norun) then spawn,'csh '+dir+'sum.csh >&'+dir+'sum.log'
-mkmonitor
-mkhtmlsum,/nocheck,apred=vers,apstar='stars',aspcap=aspcap,results='v',suffix=suffix
+  mkmonitor
+  mkhtmlsum,/nocheck,apred=vers,apstar='stars',aspcap=aspcap,results='v',suffix=suffix
 endif
 
 end

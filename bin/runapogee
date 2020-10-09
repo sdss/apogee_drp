@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+#
+# Run the daily APOGEE data reduction.  Newer version of autored.pro
+
+import os
+import time
+from astropy.io import fits
+from astropy.table import Table
+from argparse import ArgumentParser
+from dlnpyutils import utils as dln
+import subprocess
+from apogee_drp.plan import runapogee
+
+# Main command-line program
+if __name__ == "__main__":
+    parser = ArgumentParser(description='Run APOGEE daily data reduction.')
+    parser.add_argument('observatory', type=str, nargs='1', help='Observatory (apo or lco)')
+    parser.add_argument('-v', '--vers', type=str, nargs='1', default='t14', help='APOGEE Reduction version')
+    args = parser.parse_args()
+
+    t0 = time.time()
+    observatory = args.observatory[0]
+    vers = args.vers[0]
+
+    # Run daily reduction
+    runapogee.run_daily(observatory,apred=vers)

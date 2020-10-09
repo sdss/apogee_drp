@@ -366,7 +366,7 @@ def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
 def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
            dark=False,sky=False,plugid=None,fixfiberid=None,stars=None,
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
-           ignore=False,test=False):
+           ignore=False,test=False,logger=None):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -434,12 +434,15 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     translated to python, D.Nidever  Oct 2020
     """
 
+    # Logger
+    if logger is None: logger=dln.basiclogger()
+
     if apred is None:
         raise ValueError('apred must be input')
     if telescope is None:
         raise ValueError('telescope must be input')
 
-    print('Making plan for MJD: ',mjd)
+    logger.info('Making plan for MJD: '+str(mjd))
 
     # Set up directories, plate, and MJD variables
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -488,9 +491,9 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
             planfile = os.path.dirname(planfile)+'/'+os.path.basename(planfile,'.yaml')+'sky.yaml' 
 
     if sky==True:
-        print('apdailycals')
+        logger.info('apdailycals')
         dailycals(lsfs=ims,psf=psfid,apred=apred,telescope=telescope)
-    print(planfile)
+    logger.info(planfile)
 
     # open plan file and write header
     if os.path.exists(planfile): os.remove(planfile)
@@ -552,7 +555,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
             raise ValueError('plateid in header does not match plate!')
 
     # plugmap
-    print(plugid)
+    logger.info(str(plugid))
     if plugid is None:
         rawfile = sdss_path.full('apR',num=ims[0],chip='a',mjd=mjd)
         #rawfile = load.filename('R',chip='a',num=ims[0])
@@ -563,17 +566,17 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
                 plugid = 'header'
         else:
             plugid = 'header'
-    print(ims[0])
-    print(plugid)
+    logger.info(str(ims[0]))
+    logger.info(str(plugid))
     if (cal==False) & (dark==False) & (onem==False):
         tmp = plugid.split('-')
         if os.path.exists(mapper_data+'/'+tmp[1]+'/plPlugMapM-'+plugid+'.par')==False:
-            print('Cannot find plugmap file ',plugid)
+            logger.info('Cannot find plugmap file '+str(plugid))
             #spawn,'"ls" '+mapper_data+'/'+tmp[1]+'/plPlugMapA*'
             if ignore is False:
                 raise Exception
         if sky==False:
-            print('getting plate data')
+            logger.info('getting plate data')
             plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,apred=apred,telescope=telescope)
             loc = plug['locationid']
             spectro_dir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
@@ -664,7 +667,7 @@ def getexpinfo(files):
     return cat
 
 
-def make_mjd5_yaml(mjd,apred,telescope,clobber=False):
+def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     """
     Make a MJD5 yaml file that can be used to create plan files.
 
@@ -697,7 +700,10 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False):
     translated/rewritten, D.Nidever  Oct2020
     """
 
-    print('Making MJD5.yaml file for MJD='+str(mjd))
+    # Logger
+    if logger is None: logger=dln.basiclogger()
+
+    logger.info('Making MJD5.yaml file for MJD='+str(mjd))
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
@@ -709,28 +715,28 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False):
         os.makedirs(os.path.dirname(outfile))
     # File already exists and clobber not set
     if os.path.exists(outfile) and clobber==False:
-        print(outfile+' already EXISTS and clobber==False')
+        logger.info(outfile+' already EXISTS and clobber==False')
         return
 
     # Get the exposures and info about them
     files = glob(datadir+'/'+str(mjd)+'/*-c*.apz')
     files = np.array(files)
     nfiles = len(files)
-    print(str(nfiles)+' exposures found')
+    logger.info(str(nfiles)+' exposures found')
     files = files[np.argsort(files)]  # sort
     info = getexpinfo(files)
 
     # Print summary information about the data
     expindex = dln.create_index(info['exptype'])
     for i in range(len(expindex['value'])):
-        print('  '+expindex['value'][i]+': '+str(expindex['num'][i]))
+        logger.info('  '+expindex['value'][i]+': '+str(expindex['num'][i]))
     objind, = np.where(info['exptype']=='OBJECT')
     if len(objind)>0:
         plates = np.unique(info['plateid'][objind])
-        print('Observations of '+str(len(plates))+' plates')
+        logger.info('Observations of '+str(len(plates))+' plates')
         plateindex = dln.create_index(info['plateid'][objind])
         for i in range(len(plateindex['value'])):
-            print('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
+            logger.info('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
 
     # Scan through all files, accumulate IDs of the various types
     dark, cal, exp, sky, dome, calpsfid = [], [], [], [], None, None
@@ -739,7 +745,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False):
         # Load image number in variable according to exptype and nreads
         #   discard images with nread<3
         if info['nread'][i]<3:
-            print(info['num'][i],' has less than the required 3 reads')
+            logger.info(info['num'][i],' has less than the required 3 reads')
 
         # Dark
         if (info['exptype'][i]=='DARK') and info['nread'][i]>=3:
@@ -774,7 +780,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False):
             objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                        'plate':int(info['plateid'][i]), 'psfid':dome, 'fluxid':dome, 'ims':exp}
             out.append(objplan)
-            planfile = os.path.basename(load.filename('Plan',plate=int(info['plateid'][i]),mjd=mjd))
+            planfile = load.filename('Plan',plate=int(info['plateid'][i]),mjd=mjd)
             planfiles.append(planfile)
             exp = []
             # Sky exposures
@@ -794,19 +800,19 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False):
         darkplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                     'plate':0, 'psfid':0, 'fluxid':0, 'ims':dark, 'dark':True}
         out.append(darkplan)
-        planfile = os.path.basename(load.filename('DarkPlan',mjd=mjd))
+        planfile = load.filename('DarkPlan',mjd=mjd)
         planfiles.append(planfile)
     # Calibration frame information
     if len(cal)>0 and calpsfid is not None:
         calplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                    'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':cal, 'cal':True}
         out.append(calplan)
-        planfile = os.path.basename(load.filename('CalPlan',mjd=mjd))
+        planfile = load.filename('CalPlan',mjd=mjd)
         planfiles.append(planfile)
 
     # Write out the MJD5 file
     if os.path.exists(outfile): os.remove(outfile)
-    print('Writing MJD5.yaml file to '+outfile)
+    logger.info('Writing MJD5.yaml file to '+outfile)
     with open(outfile,'w') as file:
         dum = yaml.dump(out,file,default_flow_style=False, sort_keys=False)
     # Copy it to the non-"auto" version
@@ -817,7 +823,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False):
     return out, planfiles
 
 
-def run_mjd5_yaml(yamlfile):
+def run_mjd5_yaml(yamlfile,logger=None):
     """
     Run the MJD5 yaml file and create the relevant plan files.
 
@@ -837,6 +843,9 @@ def run_mjd5_yaml(yamlfile):
 
     By D.Nidever, Oct 2020
     """
+
+    # Logger
+    if logger is None: logger=dln.basiclogger()
     
     if os.path.exists(yamlfile)==False:
         raise ValueError(yamlfile+' NOT FOUND')
@@ -848,21 +857,21 @@ def run_mjd5_yaml(yamlfile):
     if type(data) is not list:
         data = [data]
     ndata = len(data)
-    print('Information for '+str(ndata)+' plan files')
+    logger.info('Information for '+str(ndata)+' plan files')
 
     # Loop over the plan blocks and run mkplan()
     planfiles = []
     for i in range(ndata):
-        print(' ')
-        print('Plan file '+str(i+1))
-        print('------------')
+        logger.info(' ')
+        logger.info('Plan file '+str(i+1))
+        logger.info('------------')
         pargs = data[i]
         ims = pargs.pop('ims')
         plate = pargs.pop('plate')
         mjd = pargs.pop('mjd')
         psfid = pargs.pop('psfid')
         fluxid = pargs.pop('fluxid')
-        planfile = mkplan(ims,plate,mjd,psfid,fluxid,**pargs)
+        planfile = mkplan(ims,plate,mjd,psfid,fluxid,**pargs,logger=logger)
         planfiles.append(planfile)
 
     return planfiles

@@ -21,6 +21,7 @@ except :
 import pdb
 import sys
 import numpy as np
+import healpy as hp
 
 from ..apred import wave,sincint
 from . import spectra,yanny
@@ -810,3 +811,23 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m') : #,plans=None
 
     return field, survey, programname
 
+def healpix(tmassname,nside=128):
+    """ Calculate healpix number for a star given it's 2MASS-style name."""
+
+    # apogeetarget/pro/make_2mass_style_id.pro makes these
+    # APG-Jhhmmss[.]ss±ddmmss[.]s
+    # http://www.ipac.caltech.edu/2mass/releases/allsky/doc/sec1_8a.html
+
+    # Parse 2MASS-style name
+    #  2M00034301-7717269
+    name = tmassname[-16:]  # remove any prefix by counting from the end  
+    # RA: 00034301 = 00h 03m 43.02s
+    ra = np.float64(name[0:2]) + np.float64(name[2:4])/60. + np.float64(name[4:8])/100./3600.
+    ra *= 15     # convert to degrees
+    # DEC: -7717269 = -71d 17m 26.9s
+    dec = np.float64(name[9:11]) + np.float64(name[11:13])/60. + np.float64(name[13:])/10./3600.
+    dec *= np.float(name[8]+'1')  # dec sign
+    
+    # Calculate HEALPix number
+    pix = hp.ang2pix(nside,ra,dec,lonlat=True)
+    return pix
