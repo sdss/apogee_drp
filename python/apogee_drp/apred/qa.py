@@ -416,7 +416,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
     else:
         plugid = platehdr['NAME']
 
-    # NOTE: not sure if plate should be int for this.
+    # NOTE: Not sure if plate should be int for this.
     if onem is None:
         platedata = platedata(plate=int(plate),mjd=mjd,plugid=plugid,fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data) 
     else: 
@@ -803,6 +803,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
         html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
         html.write('<TR><TD>z<TD><TD>'+str("%5.2f" % round(zero,2))+'\n')
         html.write('<TR><TD>znorm<TD><TD>'+str("%5.2f" % round(zeronorm,2))+'\n')
+        # NOTE: Haven't tried to translate the below to Python yet.
 #;        html.write('<TR><TD>sky'+string(format='("<TD>",f5.1,"<TD>",f5.1,"<TD>",f5.1)',medsky)+'\n')
 #;        html.write('<TR><TD>S/N'+string(format='("<TD>",f5.1,"<TD>",f5.1,"<TD>",f5.1)',achievedsn)+'\n')
 #;        html.write('<TR><TD>S/N(c)'+string(format='("<TD>",f5.1,"<TD>",f5.1,"<TD>",f5.1)',achievedsnc)+'\n')
@@ -868,6 +869,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
         if len(cframe)>1: dither = cframehdr['DITHSH']
         htmlsum.write('<TD>'+str("%6.2f" % round(secz,2))+'\n')
         htmlsum.write('<TD>'+str("%6.2f" % round(ha,2))+'\n')
+        # NOTE: Haven't tried to translate the below to Python yet.
 #;        htmlsum.write('<TD>'+string(format='(f6.0,",",f6.0,",",f6.0)',design_ha)+'\n')
         htmlsum.write('<TD>'+str("%6.2f" % round(seeing,2))+'\n')
         htmlsum.write('<TD>'+str("%6.2f" % round(fwhm,2))+'\n')
@@ -881,6 +883,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
         htmlsum.write('<TD>',str("%5.2f" % round(zero,2))+'\n')
         htmlsum.write('<TD>',str("%5.2f" % round(zerorms,2))+'\n')
         htmlsum.write('<TD>',str("%5.2f" % round(zeronorm,2))+'\n')
+        # NOTE: Haven't tried to translate the below to Python yet.
 #;        htmlsum.write('<TD>',str(format='("[",f5.2,",",f5.2,",",f5.2,"]")',medsky)+'\n')
 #;        htmlsum.write('<TD>',str(format='("[",f5.1,",",f5.1,",",f5.1,"]")',achievedsn)+'\n')
 #;        htmlsum.write('<TD>',str(format='("[",f5.1,",",f5.1,",",f5.1,"]")',achievedsnc)+'\n')
@@ -899,7 +902,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
         if ims is not None:
             tellfile = load.filename('Tellstar',plate=int(plate),mjd=mjd)
             telstr = fits.getdata(tellfile)
-            # Should type == dict?
+            # NOTE: Should type == dict?
             if type(telstr)==astropy.io.fits.fitsrec.FITS_rec:
                 jtell = np.where(telstr['IM']==ims[i])
                 ntell = len(jtell[0])
@@ -973,8 +976,6 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
             jcam = np.where((gcam['MJD']>mjd0) & (gcam['MJD']<mjd1))
             nj = len(jcam[0]) 
             print("PLOTS 6: Guider RMS plots will be made here.")
-#;            plot,gcam[jcam].mjd,gcam[jcam].gdrms
-#;            file='guider-'+name
 
         #----------------------------------------------------------------------------------------
         # PLOT 7: make plot of sky levels for this plate
@@ -983,13 +984,6 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
         html.write('<TABLE BORDER=2><TR>\n')
         file = 'sky-'+name
         print("PLOTS 7: Sky level plots will be made here.")
-#;        xtit='Image number'
-#;        ytit='Continuum sky per pixel'
-#;        xr=[(ims[0] mod 10000)-1,(ims[n_elements(ims)-1] mod 10000)+1]
-#;        yr=[max(allsky)+0.3,min(allsky)-0.3]
-#;        plot,ims,allsky,yr=yr,ps=8,xr=xr,xtit=xtit,ytit=ytit
-#;        for i=0,2 do oplot,ims mod 10000,allsky[*,i],color=i+2,ps=8
-#;        ps2gif,outdir+file+'.eps',/eps,chmod='664'o,/delete
 
         html.write('<TD><IMG SRC=../plots/'+file+'.gif>\n)'
 
@@ -999,26 +993,19 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
         #----------------------------------------------------------------------------------------
         file = 'zero-'+name
         print("PLOTS 8: Zeropoints plots will be made here.")
-#;        device,file=outdir+file+'.eps',/encap,ysize=8,/color
-#;        xtit='Image number'
-#;        ytit='Zeropoint sky per pixel'
-#;        xr=[(ims[0] mod 10000)-1,(ims[n_elements(ims)-1] mod 10000)+1]
-#;        yr=[max(allzero)+0.3,min(allzero)-0.3]
-#;        plot,ims,allzero,yr=yr,ps=8,xr=xr,xtit=xtit,ytit=ytit
-#;        for i=0,2 do oplot,ims mod 10000,allzero[*,i],color=i+2,ps=8
 
         html.write('<TD><IMG SRC=../plots/'+file+'.gif>\n')
         html.write('</TABLE>\n')
 
     else:
 
-        # The following does not give apPlate-a-plate-mjd. It gives apPlate-plate-mjd, hence the replace part
+        # NOTE: The following does not give apPlate-a-plate-mjd. It gives apPlate-plate-mjd, hence the replace part
         file = load.filename('Plate',plate=int(plate),mjd=mjd,chips='a').replace('Plate-','Plate-a-')
         tmp = fits.open(file)
         shiftstr = tmp[13].data
         pairstr = tmp[14].data
         npairs = len(pairstr)
-        # Should type == dict?
+        # NOTE: Should type == dict?
         if (type(pairstr==astropy.io.fits.fitsrec.FITS_rec) & (npairs>0):
             #----------------------------------------------------------------------------------------
             # Pair table.
