@@ -61,16 +61,16 @@ print,'flag: ', flag
 print,'planfile: ', planfile
 print,'clobber: ', clobber
 
-if planfile eq 'cal.par' then begin
-print,'cal.par'
+if planfile eq 'cal.yaml' then begin
+print,'cal.yaml'
   if (bin and 1) ne 0 then makecal,/dark
   if (bin and 2) ne 0 then makecal,/flat
   if (bin and 4) ne 0 then makecal,/bpm
   if (bin and 8) ne 0 then makecal,/wave
   if (bin and 16) ne 0 then makecal,/lsf
 
-endif else if planfile eq 'dailycal.par' then begin
-print,'dailycal.par'
+endif else if planfile eq 'dailycal.yaml' then begin
+print,'dailycal.yaml'
   if (bin and 1) ne 0 then makecal,/dark,file=planfile
   if (bin and 2) ne 0 then makecal,/flat,file=planfile
   if (bin and 4) ne 0 then makecal,/bpm,file=planfile
@@ -81,15 +81,15 @@ endif else if strpos(planfile,'.cal') ge 0 then begin
 print,'.cal'
   cmjd=strsplit(planfile,'.',/extract)
   mjd=cmjd[0]
-  if (bin and 1) ne 0 then makecal,/dark,file='dailycal.par',mjd=mjd
-  if (bin and 2) ne 0 then makecal,/flat,file='dailycal.par',mjd=mjd
-  if (bin and 4) ne 0 then makecal,/bpm,file='dailycal.par',mjd=mjd
-  if (bin and 8) ne 0 then makecal,/wave,file='dailycal.par',mjd=mjd
-  if (bin and 16) ne 0 then makecal,/lsf,file='dailycal.par',mjd=mjd
+  if (bin and 1) ne 0 then makecal,/dark,file='dailycal.yaml',mjd=mjd
+  if (bin and 2) ne 0 then makecal,/flat,file='dailycal.yaml',mjd=mjd
+  if (bin and 4) ne 0 then makecal,/bpm,file='dailycal.yaml',mjd=mjd
+  if (bin and 8) ne 0 then makecal,/wave,file='dailycal.yaml',mjd=mjd
+  if (bin and 16) ne 0 then makecal,/lsf,file='dailycal.yaml',mjd=mjd
 
 endif else if strpos(planfile,'apPlan-') ge 0 or strpos(planfile,'apCalPlan-') ge 0 or strpos(planfile,'apDarkPlan-') ge 0 or $
               strpos(planfile,'asPlan-') ge 0 or strpos(planfile,'asCalPlan-') ge 0 or strpos(planfile,'asDarkPlan-') ge 0 then  begin
-print,'.par'
+print,'.yaml'
   if (bin and 1) ne 0 then ap3d,planfile,clobber=clobber
   if (bin and 2) ne 0 then ap2d,planfile,clobber=clobber
   if (bin and 4) ne 0 then ap1dvisit,planfile,clobber=clobber

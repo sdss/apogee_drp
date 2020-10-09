@@ -811,7 +811,7 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m') : #,plans=None
 
     return field, survey, programname
 
-def healpix(tmassname,nside=32):
+def healpix(tmassname,nside=128):
     """ Calculate healpix number for a star given it's 2MASS-style name."""
 
     # apogeetarget/pro/make_2mass_style_id.pro makes these
