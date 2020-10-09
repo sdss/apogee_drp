@@ -94,6 +94,8 @@ def apqa(field='200+45',plate='8100',mjd='57680',telescope='apo25m',apred='t14',
     # Get mapper data.
     #----------------------------------------------------------------------------------------
     mapper_data = None
+    # NOTE: need to find mapper file path.
+
 #;    dirs=getdir(apodir,datadir=datadir)
 #;    mapper_data=dirs.mapperdir
 
@@ -105,7 +107,7 @@ def apqa(field='200+45',plate='8100',mjd='57680',telescope='apo25m',apred='t14',
     #----------------------------------------------------------------------------------------
     # For darks and flats, get mean and stdev of column-medianed quadrants.
     #----------------------------------------------------------------------------------------
-    if platetype=='dark': x = makeDarkFits(ims=all_ims,mjd=mjd)
+    if platetype=='dark': x = makeDarkFits(planfile=planfile,ims=all_ims,mjd=mjd)
 
     #----------------------------------------------------------------------------------------
     # For normal plates, make plots and html.
@@ -185,11 +187,15 @@ def makeCalFits(ims=None,mjd=None,instrument=None):
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     #----------------------------------------------------------------------------------------
     for i in range(n_exposures):
+        oneDfile=load.filename('1D',plate=int(plate),mjd=mjd,num=ims[i],chips=True)
+        oneD = fits.getdata(oneDfile)
+        oneDhdr = fits.getheader(oneDfile)
+
         oneD = load.ap1D(ims[i])
         hdr = oneD['a'][0].header
 
         if type(oneD)==dict:
-            # not sure the below lines are needed?? They won't work anyway
+            # NOTE: Not sure the below lines are needed. They won't work anyway.
             keylist = list(oneD.keys())
             if oneD.get('FLUX') is None:
                 fluxid = -1
@@ -198,13 +204,13 @@ def makeCalFits(ims=None,mjd=None,instrument=None):
 
             struct['NAME'][i] =    ims[i]
             struct['MJD'][i] =     mjd
-            struct['JD'][i] =      hdr['JD-MID']
-            struct['NFRAMES'][i] = hdr['NFRAMES']
-            struct['NREAD'][i] =   hdr['NREAD']
-            struct['EXPTIME'][i] = hdr['EXPTIME']
-            struct['QRTZ'][i] =    hdr['LAMPQRTZ']
-            struct['THAR'][i] =    hdr['LAMPTHAR']
-            struct['UNE'][i] =     hdr['LAMPUNE']
+            struct['JD'][i] =      oneDhdr['JD-MID']
+            struct['NFRAMES'][i] = oneDhdr['NFRAMES']
+            struct['NREAD'][i] =   oneDhdr['NREAD']
+            struct['EXPTIME'][i] = oneDhdr['EXPTIME']
+            struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
+            struct['THAR'][i] =    oneDhdr['LAMPTHAR']
+            struct['UNE'][i] =     oneDhdr['LAMPUNE']
 
         #----------------------------------------------------------------------------------------
         # Quartz exposures.
@@ -227,7 +233,8 @@ def makeCalFits(ims=None,mjd=None,instrument=None):
 
             for iline in range(nlines):
                 for ichip in range(nchips):
-                    print("calling appeakfit")
+                    print("Calling appeakfit... no, not really because it's a long IDL code.")
+                    # NOTE: no translation for appeakfit
 #;                    APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
                     for ifiber in range(nfibers):
                         fibers = fibers[ifiber]
@@ -239,6 +246,8 @@ def makeCalFits(ims=None,mjd=None,instrument=None):
                             struct['GAUSS'][:,ifiber,ichip,iline][i] = linestr['GPAR'][j][jline]
                             sz = a['WCOEF'][ichip].shape
                             if sz[0]==2:
+                                print("pix2wave is still an IDL code, you're hosed.")
+                                # NOTE: no translation for pix2wave
 #;                                struct['WAVE'][i][ifiber,ichip,iline] = pix2wave(linestr['GAUSSX'][j][jline],a['WCOEF'][ichip][fiber,:])
                             struct['FLUX'][i][fiber,ichip] = linestr['SUMFLUX'][j][jline]
 
@@ -250,7 +259,7 @@ def makeCalFits(ims=None,mjd=None,instrument=None):
 ''' MAKEDARKFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants)   '''
 '''-----------------------------------------------------------------------------------------'''
 
-def makeDarkFits(ims=None,mjd=None):
+def makeDarkFits(planfile=None,ims=None,mjd=None):
     n_exposures = len(ims)
 
     nchips = 3
@@ -268,7 +277,7 @@ def makeDarkFits(ims=None,mjd=None):
                    ('QRTZ',np.int32),
                    ('UNE',np.int32),
                    ('THAR',np.int32),
-                   ('EXPTYPE',np.str,(300,nchips)),
+                   ('EXPTYPE',np.str,30),
                    ('MEAN',np.float64,(nchips,nquad)),
                    ('SIG',np.float64,(nchips,nquad))])
 
@@ -279,25 +288,26 @@ def makeDarkFits(ims=None,mjd=None):
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap2D-21180073.fits
     #----------------------------------------------------------------------------------------
     for i in range(n_exposures):
-        twoD = load.ap2D(ims[i])
-        hdr = twoD['a'][0].header
+        twoDfile=load.filename('2D',plate=int(plate),mjd=mjd,num=21180073,chips=True)
+        twoD = fits.getdata(twoDfile)
+        twoDhdr = fits.getheader(twoDfile)
 
         if type(twoD)==dict:
             struct['NAME'][i] =    ims[i]
             struct['MJD'][i] =     mjd
-            struct['JD'][i] =      hdr['JD-MID']
-            struct['NFRAMES'][i] = hdr['NFRAMES']
-            struct['NREAD'][i] =   hdr['NREAD']
-            struct['EXPTIME'][i] = hdr['EXPTIME']
-            struct['QRTZ'][i] =    hdr['LAMPQRTZ']
-            struct['THAR'][i] =    hdr['LAMPTHAR']
-            struct['UNE'][i] =     hdr['LAMPUNE']
+            struct['JD'][i] =      twoDhdr['JD-MID']
+            struct['NFRAMES'][i] = twoDhdr['NFRAMES']
+            struct['NREAD'][i] =   twoDhdr['NREAD']
+            struct['EXPTIME'][i] = twoDhdr['EXPTIME']
+            struct['QRTZ'][i] =    twoDhdr['LAMPQRTZ']
+            struct['THAR'][i] =    twoDhdr['LAMPTHAR']
+            struct['UNE'][i] =     twoDhdr['LAMPUNE']
 
             for ichip in range(nchips):
                 i1 = 10
                 i2 = 500
                 for iquad in range(quad):
-                    sm = np.median(a['FLUX'][ichip][i1:i2,10:2000],axis=0)
+                    sm = np.median(twoD['FLUX'][ichip][i1:i2,10:2000],axis=0)
                     struct['MEAN'][i,ichip,iquad] = np.mean(sm)
                     struct['SIG'][i,ichip,iquad] = np.std(sm)
                     i1 = i1+512
@@ -325,8 +335,11 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
     #----------------------------------------------------------------------------------------
     # Set up directory names.
     #----------------------------------------------------------------------------------------
+    # NOTE: the below commented lines probably aren't needed.
+
 #;    dirs=GETDIR(apodir,caldir,spectrodir,vers,apred_vers=apred_vers)
 #;    reddir=spectrodir+'red/'+mjd
+
     platedir = os.path.dirname(load.filename('Plate',plate=int(plate),mjd=mjd,chips=True))
     outdir = platedir+'/plots/'
     if len(glob.glob(outdir))==0: subprocess.call(['mkdir',outdir])
@@ -399,17 +412,21 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
     else:
         plugid = platehdr['NAME']
 
+    # NOTE: not sure if plate should be int for this.
     if onem is None:
-        platedata = platedata(plate=plate,mjd=mjd,plugid=plugid,fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data) 
+        platedata = platedata(plate=int(plate),mjd=mjd,plugid=plugid,fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data) 
     else: 
         reduction_id = starnames[0]
-        platedata = platedata(plate=plate,mjd=mjd,plugid=plugid,obj1m=starnames[0],starfiber=starfiber,fixfiberid=fixfiberid) 
+        platedata = platedata(plate=int(plate),mjd=mjd,plugid=plugid,obj1m=starnames[0],starfiber=starfiber,fixfiberid=fixfiberid) 
 
     gd = np.where(platedata['FIBERDATA']['FIBERID']>0)
     fiber = platedata['FIBERDATA'][gd]
     nfiber = len(fiber)
     rows = 300-fiber['FIBERID']
     guide = platedata['GUIDEDATA']
+
+    # NOTE: I don't know how to translate this to python.
+
 #;    ADD_TAG,fiber,'sn',fltarr(n_elements(ims),3),fiber
 #;    ADD_TAG,fiber,'obsmag',fltarr(n_elements(ims),3),fiber
 
@@ -446,7 +463,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
     skylines = np.zeros(2,dtype=dt)
 
     skylines['W1']   = 16230.0,15990.0
-    skylines['w2']   = 16240.0,16028.0
+    skylines['W2']   = 16240.0,16028.0
     skylines['C1']   = 16215.0,15980.0
     skylines['C2']   = 16225.0,15990.0
     skylines['C3']   = 16245.0,0.0
@@ -457,11 +474,14 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
     # Loop through all the images for this plate, and make the plots.
     # Load up and save information for this plate in a FITS table.
     #----------------------------------------------------------------------------------------
-    allsky = np.zeros(n_exposures,3),dtype=np.float64)
-    allzero = np.zeros(n_exposures,3),dtype=np.float64)
-    allzerorms = np.zeros(n_exposures,3),dtype=np.float64)
+    allsky = np.zeros((n_exposures,3),dtype=np.float64)
+    allzero = np.zeros((n_exposures,3),dtype=np.float64)
+    allzerorms = np.zeros((n_exposures,3),dtype=np.float64)
     ra = platehdr['RADEG']
     dec = platehdr['DECDEG']
+
+    # NOTE: Not sure if the following lines are needed.
+
 #;    mjd=0L
 #;    READS,cmjd,mjd
 
@@ -470,14 +490,22 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
     #----------------------------------------------------------------------------------------
 #:    MOONPOS,2400000+mjd,ramoon,decmoon
 #;    GCIRC,2,ra,dec,ramoon,decmoon,moondist
-#;    moondist/=3600.
 #;    MPHASE,2400000+mjd,moonphase
+
+    # NOTE: Currently hard-coding values for mjd 57680 until I find a python way.
+    ramoon=57.323959
+    decmoon=14.920379
+    moondist=282147.24012227560
+    moondist/=3600.
+    moonphase=0.91864227
 
     #----------------------------------------------------------------------------------------
     # Get guider information.
     #----------------------------------------------------------------------------------------
     if onem is None:
-        print("No translation for get_gcam!")
+        print("No translation for get_gcam! Give up hope!")
+        gcam=None
+        # NOTE: get_gcam has not been translated
 #;        gcam=get_gcam(cmjd)
     mjd0 = 99999
     mjd1 = 0.
@@ -533,7 +561,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
         else:
             pfile = os.path.basename(load.filename('1D',plate=int(plate),num=ims[0],mjd=mjd,chips=True)).replace('.fits','')
 
-        if (clobber is True) or (len(glob.glob(outdir+pfile+'.tab'))!=0):
+        if (clobber is True) | (len(glob.glob(outdir+pfile+'.tab'))!=0):
             if ims is None:
                 d = load.apPlate(int(plate),mjd) 
             else:
@@ -550,7 +578,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
             if ims is None:
                 cframe = load.apPlate(int(plate),mjd)
             else:
-                cframefile = load.filename('Cframe',plate=int(plate),mjd=mjd,num=ims[i],chips='c').replace('Cframe-','Cframe-c')
+                cframefile = load.filename('Cframe',plate=int(plate),mjd=mjd,num=ims[i],chips='c')
 
                 if len(glob.glob(cframefile[0]))!=0:
                     cframe = load.apCframe(field,int(plate),mjd,ims[i])
@@ -596,7 +624,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
             if flat is None:
                 for iline in range(len(skylines)):
                     skyline = skylines[iline]
-#;                    GETFLUX,d,skyline,rows
+                    skyline = getflux(d=d,skyline=skyline,rows=rows)
                     skylines[iline] = skyline
 
             #----------------------------------------------------------------------------------------
@@ -659,6 +687,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
             nsn = 0
 
             zero = np.median(fiber['HMAG'][[fiberobj,fibertelluric]]+(2.5*np.log10(obs[[fiberobj,fibertelluric],1])))
+            # NOTE: not sure what to use for robust_sigma.
 #:            zerorms=ROBUST_SIGMA(fiber[[fiberobj,fibertelluric]].hmag+2.5*alog10(obs[[fiberobj,fibertelluric],1]))
             faint = np.where((fiber['HMAG'][fiberobj,fibertelluric]+(2.5*np.log10(obs[[fiberobj,fibertelluric],1])-zero)<-0.5))
             nfaint = len(faint[0])
@@ -721,7 +750,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
                 # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257//plots/apPlate-5583-56257-299.jpg
                 #----------------------------------------------------------------------------------------
 
-                # Not sure if this mod statement does the trick!
+                # NOTE: Not sure if this mod statement does the trick!
                 if (j%300)>-1:
                     if noplot is None:
                         print("PLOTS 1: Spectrum plots will be made here.")
@@ -798,7 +827,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
             mjd0 = min([mjd0,mjdstart])
             mjd1 = max([mjd1,mjdend])
             nj = 0
-            # Not sure if type will actually be dict
+            # NOTE: Not sure if type will actually be dict.
             if type(gcam)==dict:
                 jcam = np.where((gcam['MJD']>mjdstart) & (gcam['MJD']<mjdend))
                 nj = len(jcam[0])
@@ -821,12 +850,12 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
         htmlsum.write('<TD><A HREF=../../../../plates/'+plate+'/'+mjd+'/html/'+plate+'-'+mjd+'.html>'+str(dhdr['PLATEID'])+'</A>\n')
         htmlsum.write('<TD>'+str(dhdr['CARTID']+'\n')
         alt = dhdr['ALT']
-        # Not sure if the below is correct
+        # NOTE: Not sure if the below is correct
         count = len(alt)
         if count>0:
             secz = 1./np.cos((90.-alt)*(math.pi/180.))
         else:
-            # Is the below a typo? Why not "AIRMASS"?
+            # NOTE: Is the below a typo? Why not "AIRMASS"?
             secz = dhdr['ARMASS']
         seeing = dhdr['SEEING']
         ha = dhdr['HA']
@@ -1024,10 +1053,46 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
     html.close()
     htmlsum.close()
 
+'''-----------------------------------------------------------------------------------------'''
+''' GETFLUX: Translation of getflux.pro                                                     '''
+'''-----------------------------------------------------------------------------------------'''
 
+def getflux(d=None,skyline=None,rows=None):
+    nnrows = len(rows)
+    if skyline['W1'] gt d['WAVE'][0][2047,150]:
+        ichip = 0
+    else:
+        if skyline['W1']>d['WAVE'][1][2047,150]:
+            ichip = 1
+        else:
+            ichip = 2
 
+    cont = np.zeros(nnrows)
+    line = np.zeros(nnrows)
+    nline = np.zeros(nnrows)
 
+    for i in range(nnrows):
+        wave = d['WAVE'][ichip][:,rows[i]]
+        data = d['FLUX'][ichip][:,rows[i]]
 
+        icont = np.where(((wave>skyline['C1']) & (wave<skyline['C2'])) | ((wave<skyline['C3']) & (wave<skyline['C4'])))
+
+        # NOTE: not sure if the below if is correct.
+        if len(icont[0])>=0: cont[i] = np.median(d['FLUX'][ichip][icont,rows[i]])
+
+        iline = np.where((wave>skyline['W1']) & (wave<skyline['W2']))
+
+        # NOTE: not sure if the below if is correct.
+        if len(iline[0])>=0:
+            tmp = d['FLUX'][ichip][iline,rows[i]]
+            line[i] = np.sum(tmp,where=math.isnan(tmp) is False)
+            tmp = d['FLUX'][ichip][iline,rows[i]]/d['FLUX'][ichip][iline,rows[i]]
+            line[i] = np.sum(tmp,where=math.isnan(tmp) is False)
+
+    skyline['FLUX'] = line-(nline*cont)
+    if skyline['TYPE']==0: skyline['FLUX']/=cont
+
+    return skyline
 
 
 
