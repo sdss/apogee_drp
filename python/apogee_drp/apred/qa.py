@@ -46,17 +46,17 @@ def apqa(field='200+45',plate='8100',mjd='57680',telescope='apo25m',apred='t14',
     #----------------------------------------------------------------------------------------
     load = apload.ApLoad(apred=apred,telescope=telescope)
     planfile = load.filename('Plan',plate=int(plate),mjd=mjd)
-    planstr = plan.load(planfile)
+    planstr = plan.load(planfile,np=True)
 
     #----------------------------------------------------------------------------------------
     # Get values from plan file.
     #----------------------------------------------------------------------------------------
-    fixfiberid = planstr['fixfiberid'].astype(int)
-    badfiberid = planstr['badfiberid'].astype(int)
+    fixfiberid = planstr['fixfiberid']
+    badfiberid = planstr['badfiberid']
     survey =     planstr['survey']
     platetype =  planstr['platetype']
     plugmap =    planstr['plugmap']
-    fluxid =     planstr['fluxid'].astype(int)
+    fluxid =     planstr['fluxid']
     instrument = planstr['instrument']
 
     #----------------------------------------------------------------------------------------
@@ -73,31 +73,20 @@ def apqa(field='200+45',plate='8100',mjd='57680',telescope='apo25m',apred='t14',
     #----------------------------------------------------------------------------------------
     # Get array of object exposures and find out how many are objects.
     #----------------------------------------------------------------------------------------
-    objind = np.zeros(len(planstr['APEXP']))
-    all_ims = np.empty(len(planstr['APEXP']))
+    flavor = planstr['APEXP']['flavor']
+    all_ims = planstr['APEXP']['name']
 
-    for i in range(len(planstr['APEXP'])):
-        all_ims[i] = planstr['APEXP'][i]['name']
-        check = np.where(planstr['APEXP'][i]['flavor']=='object')
-        if len(check[0])>0: objind[i] = 1
-
-    obj=np.where(objind==1)
-    n_ims = len(obj[0])
+    gd,=np.where(flavor=='object')
+    n_ims = len(gd)
 
     if n_ims<1: 
         print("No object images. You are hosed. Give up hope.")
         ims = None
-    else:
-        ims = all_ims[obj].astype(int)
 
     #----------------------------------------------------------------------------------------
     # Get mapper data.
     #----------------------------------------------------------------------------------------
-    mapper_data = None
-    # NOTE: need to find mapper file path.
-
-#;    dirs=getdir(apodir,datadir=datadir)
-#;    mapper_data=dirs.mapperdir
+    mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
 
     #----------------------------------------------------------------------------------------
     # For calibration plates, measure lamp brightesses and/or line widths, etc. and write to FITS file.
@@ -114,14 +103,14 @@ def apqa(field='200+45',plate='8100',mjd='57680',telescope='apo25m',apred='t14',
     #----------------------------------------------------------------------------------------
     if platetype=='normal': 
         x = makePlotsHtml(telescope=telescope,ims=ims,plateid=plate,clobber=True,
-                        mapname=plugmap,noplot=True,fixfiberid=fixfiberid,
-                        badfiberid=badfiberid,survey=survey,mapper_data=mapper_data,
-                        field=field,apred=apred)
+                          mapname=plugmap,noplot=True,fixfiberid=fixfiberid,
+                          badfiberid=badfiberid,survey=survey,mapper_data=mapper_data,
+                          field=field,apred=apred)
 
         x = makePlotsHtml(telescope=telescope,ims=None,plateid=plate,mjd=mjd,clobber=True,
-                        mapname=plugmap,noplot=noplot,fixfiberid=fixfiberid,
-                        badfiberid=badfiberid,survey=survey,mapper_data=mapper_data,
-                        field=field,apred=apred)
+                          mapname=plugmap,noplot=noplot,fixfiberid=fixfiberid,
+                          badfiberid=badfiberid,survey=survey,mapper_data=mapper_data,
+                          field=field,apred=apred)
 
         # NOTE: No translations for plotflux and makeHTMLplate yet.
 
@@ -129,7 +118,7 @@ def apqa(field='200+45',plate='8100',mjd='57680',telescope='apo25m',apred='t14',
 #;        x=makeHTMLplate(plateid=plate,mjd=mjd,fluxid=fluxid)
         platesumfile = load.filename('PlateSum',plate=int(plate),mjd=mjd,chips=True)
 
-        # NOTE: Not sure what the below command does
+        # NOTE: No python translation for sntab.
 #;        sntab,tabs=platefile,outfile=platefile+'.dat'
 
     #----------------------------------------------------------------------------------------
@@ -155,7 +144,8 @@ def makeCalFits(ims=None,mjd=None,instrument=None):
     n_exposures = len(ims)
 
     nlines = 2
-    nchips = 3
+    chips=['a','b','c']
+    nchips = len(chips)
 
     tharline = np.array([[940.,1128.,1130.],[1724.,623.,1778.]])
     uneline =  np.array([[603.,1213.,1116.],[1763.,605.,1893.]])
@@ -191,20 +181,17 @@ def makeCalFits(ims=None,mjd=None,instrument=None):
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     #----------------------------------------------------------------------------------------
     for i in range(n_exposures):
-        oneDfile=load.filename('1D',plate=int(plate),mjd=mjd,num=ims[i],chips=True)
-        oneD = fits.getdata(oneDfile)
-        oneDhdr = fits.getheader(oneDfile)
-
         oneD = load.ap1D(ims[i])
-        hdr = oneD['a'][0].header
+        oneD = load.ap1D(ims[i])
+        oneDhdr = oneD['a'][0].header
 
-        if type(oneD)==dict:
+        if type(oneD)==numpy.ndarray:
             # NOTE: Not sure the below lines are needed. They won't work anyway.
-            keylist = list(oneD.keys())
-            if oneD.get('FLUX') is None:
-                fluxid = -1
-            else: 
-                fluxid = np.where(keylist=='data')
+            #keylist = list(oneD.keys())
+            #if oneD.get('FLUX') is None:
+            #    fluxid = -1
+            #else: 
+            #    fluxid = np.where(keylist=='data')
 
             struct['NAME'][i] =    ims[i]
             struct['MJD'][i] =     mjd
@@ -216,44 +203,48 @@ def makeCalFits(ims=None,mjd=None,instrument=None):
             struct['THAR'][i] =    oneDhdr['LAMPTHAR']
             struct['UNE'][i] =     oneDhdr['LAMPUNE']
 
-        #----------------------------------------------------------------------------------------
-        # Quartz exposures.
-        #----------------------------------------------------------------------------------------
-        # NOTE: this won't work.
-        if struct['QRTZ'][i]==1: struct['FLUX'][i] = np.median(oneD[fluxid],axis=0)
 
-        #----------------------------------------------------------------------------------------
-        # Arc lamp exposures.
-        #----------------------------------------------------------------------------------------
-        if struct['THAR'][i]==1 or struct['UNE'][i]==1:
-            line=tharline
-            if struct['THAR'][i]!=1: line = uneline
+            #----------------------------------------------------------------------------------------
+            # Quartz exposures.
+            #----------------------------------------------------------------------------------------
+            # NOTE: this probably won't work.
+            if struct['QRTZ'][i]==1: struct['FLUX'][i] = np.median(oneD['a'][1].data,axis=0)
 
-            struct['LINES'][i] = line
+            #----------------------------------------------------------------------------------------
+            # Arc lamp exposures.
+            #----------------------------------------------------------------------------------------
+            if (struct['THAR'][i]==1) | (struct['UNE'][i]==1):
+                line=tharline
+                if struct['THAR'][i]!=1: line = uneline
 
-            sz = type(line)
-            nlines = 1
-            if line.shape[0]!=1: nlines = line.shape[1]
+                struct['LINES'][i] = line
 
-            for iline in range(nlines):
-                for ichip in range(nchips):
-                    print("Calling appeakfit... no, not really because it's a long IDL code.")
-                    # NOTE: no translation for appeakfit
-#;                    APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
-                    for ifiber in range(nfibers):
-                        fibers = fibers[ifiber]
-                        j = np.where(linestr['FIBER']==fiber)
-                        nj = len(j)
-                        if nj>0:
-                            junk = np.min(np.absolute(linestr['GAUSSX'][j]-line[ichip,iline]))
-                            jline = np.argmin(np.absolute(linestr['GAUSSX'][j]-line[ichip,iline])
-                            struct['GAUSS'][:,ifiber,ichip,iline][i] = linestr['GPAR'][j][jline]
-                            sz = a['WCOEF'][ichip].shape
-                            if sz[0]==2:
-                                print("pix2wave is still an IDL code, you're hosed.")
-                                # NOTE: no translation for pix2wave
-#;                                struct['WAVE'][i][ifiber,ichip,iline] = pix2wave(linestr['GAUSSX'][j][jline],a['WCOEF'][ichip][fiber,:])
-                            struct['FLUX'][i][fiber,ichip] = linestr['SUMFLUX'][j][jline]
+                sz = type(line)
+                nlines = 1
+                if line.shape[0]!=1: nlines = line.shape[1]
+
+                for iline in range(nlines):
+                    for ichip in range(nchips):
+                        print("Calling appeakfit... no, not really because it's a long IDL code.")
+                        # NOTE: no translation for appeakfit
+                        # NOTE: see wave.py module peakfit function or something.
+    #;                    APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
+                        for ifiber in range(nfibers):
+                            fibers = fibers[ifiber]
+                            j = np.where(linestr['FIBER']==fiber)
+                            nj = len(j)
+                            if nj>0:
+                                junk = np.min(np.absolute(linestr['GAUSSX'][j]-line[ichip,iline]))
+                                jline = np.argmin(np.absolute(linestr['GAUSSX'][j]-line[ichip,iline])
+                                struct['GAUSS'][:,ifiber,ichip,iline][i] = linestr['GPAR'][j][jline]
+                                sz = a['WCOEF'][ichip].shape
+                                if sz[0]==2:
+                                    print("pix2wave is still an IDL code, you're hosed.")
+                                    # NOTE: no translation for pix2wave
+    #;                                struct['WAVE'][i][ifiber,ichip,iline] = pix2wave(linestr['GAUSSX'][j][jline],a['WCOEF'][ichip][fiber,:])
+                                struct['FLUX'][i][fiber,ichip] = linestr['SUMFLUX'][j][jline]
+        else:
+            print("type(1D) does not equal numpy.ndarray. This is probably a problem.")
 
     outfile = load.filename('QAcal',plate=int(plate),mjd=mjd) 
     Table(struct).write(outfile)
@@ -266,7 +257,8 @@ def makeCalFits(ims=None,mjd=None,instrument=None):
 def makeDarkFits(planfile=None,ims=None,mjd=None):
     n_exposures = len(ims)
 
-    nchips = 3
+    chips=['a','b','c']
+    nchips = len(chips)
     nquad = 4
 
     #----------------------------------------------------------------------------------------
@@ -292,11 +284,12 @@ def makeDarkFits(planfile=None,ims=None,mjd=None):
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap2D-21180073.fits
     #----------------------------------------------------------------------------------------
     for i in range(n_exposures):
-        twoDfile=load.filename('2D',plate=int(plate),mjd=mjd,num=21180073,chips=True)
-        twoD = fits.getdata(twoDfile)
-        twoDhdr = fits.getheader(twoDfile)
+        twoD = load.ap2D(ims[i])
+        twoDhdr = twoD['a'][0].header
 
-        if type(twoD)==dict:
+        #twoDfile=load.filename('2D',plate=int(plate),mjd=mjd,num=21180073,chips=True)
+
+        if type(twoD)==numpy.ndarray:
             struct['NAME'][i] =    ims[i]
             struct['MJD'][i] =     mjd
             struct['JD'][i] =      twoDhdr['JD-MID']
@@ -311,13 +304,15 @@ def makeDarkFits(planfile=None,ims=None,mjd=None):
                 i1 = 10
                 i2 = 500
                 for iquad in range(quad):
-                    sm = np.median(twoD['FLUX'][ichip][i1:i2,10:2000],axis=0)
+                    sm = np.median(twoD[chips[ichip]][1].data[i1:i2,10:2000],axis=0)
                     struct['MEAN'][i,ichip,iquad] = np.mean(sm)
                     struct['SIG'][i,ichip,iquad] = np.std(sm)
                     i1 = i1+512
                     i2 = i2+512
+        else:
+            print("type(2D) does not equal numpy.ndarray. This is probably a problem.")
 
-    outfile = os.path.dirname(planfile)+'/apQAdarkflat-'+mjd+'.fits'
+    outfile = load.filename('QAcal',plate=int(plate),mjd=mjd).replace('apQAcal','apQAdarkflat')
     Table(struct).write(outfile)
 
 
@@ -331,7 +326,7 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
 
     if ims is not None: n_exposures = len(ims)
 
-    # I'm not sure this is needed
+    # NOTE: I'm not sure this is needed
     if cmjd is None: cmjd = load.cmjd(ims[0])
 
     if type(plate)==int: plate = str(plate)
@@ -497,18 +492,18 @@ def makePlotsHtml(telescope=None,ims=None,plate=None,cmjd=None,flat=None,clobber
 #;    MPHASE,2400000+mjd,moonphase
 
     # NOTE: Currently hard-coding values for mjd 57680 until I find a python way.
-    ramoon=57.323959
-    decmoon=14.920379
-    moondist=282147.24012227560
-    moondist/=3600.
-    moonphase=0.91864227
+    ramoon = 57.323959
+    decmoon = 14.920379
+    moondist = 282147.24012227560
+    moondist /= 3600.
+    moonphase = 0.91864227
 
     #----------------------------------------------------------------------------------------
     # Get guider information.
     #----------------------------------------------------------------------------------------
     if onem is None:
         print("No translation for get_gcam! Give up hope!")
-        gcam=None
+        gcam = None
         # NOTE: get_gcam has not been translated
 #;        gcam=get_gcam(cmjd)
     mjd0 = 99999
