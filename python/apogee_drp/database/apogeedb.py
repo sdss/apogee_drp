@@ -57,21 +57,24 @@ class DBSession(object):
         """ Close the database connection."""
         self.connection.close()
 
-    def query(self,table,cols='*',where=None,groupby=None,raw=False,verbose=False):
+    def query(self,table=None,cols='*',where=None,groupby=None,sql=None,raw=False,verbose=False):
         """
         Query the APOGEE DRP database.
 
         Parameters
         ----------
-        table : str
+        table : str, optional
             Name of table to query.  Default is to use the apogee_drp schema, but
               table names with schema (e.g. catalogdb.gaia_dr2_source) can also be input.
+              If the sql command is given directly, then this is not needed.
         cols : str, optional
             Comma-separated list of columns to return.  Default is "*", all columns.
         where : str, optional
             Constraints on the selection.
         groupby : str, optional
             Column to group data by.
+        sql : str, optional
+            Enter the SQL command directly.
         raw : bool, optional
             Return the raw database output.  The default is to return the
               data as a numpy structured array.
@@ -88,60 +91,106 @@ class DBSession(object):
         --------
         cat = db.query('visit',where="apogee_id='2M09241296+2723318'")
 
+        cat = db.query(sql='select * from apgoee_drp.visit as v join catalogdb.something as c on v.apogee_id=c.2mass_type')
+
         """
 
         cur = self.connection.cursor()
 
-        # Schema
-        if table.find('.')>-1:
-            schema,tab = table.split('.')
-        else:
-            schema = 'apogee_drp'
-            tab = table
+        # Simple table query
+        if sql is None:
 
-        # Start the SELECT statement
-        cmd = 'SELECT '+cols+' FROM '+schema+'.'+tab
+            # Schema
+            if table.find('.')>-1:
+                schema,tab = table.split('.')
+            else:
+                schema = 'apogee_drp'
+                tab = table
 
-        # Add WHERE statement
-        if where is not None:
-            cmd += ' WHERE '+where
+            # Start the SELECT statement
+            cmd = 'SELECT '+cols+' FROM '+schema+'.'+tab
 
-        # Add GROUP BY statement
-        if groupby is not None:
-            cmd += ' GROUP BY '+groupby
+            # Add WHERE statement
+            if where is not None:
+                cmd += ' WHERE '+where
+
+            # Add GROUP BY statement
+            if groupby is not None:
+                cmd += ' GROUP BY '+groupby
         
-        # Execute the select command
-        if verbose:
-            print('CMD = '+cmd)
-        cur.execute(cmd)
-        data = cur.fetchall()
+            # Execute the select command
+            if verbose:
+                print('CMD = '+cmd)
+            cur.execute(cmd)
+            data = cur.fetchall()
 
-        if len(data)==0:
-            cur.close()
-            return np.array([])
+            if len(data)==0:
+                cur.close()
+                return np.array([])
 
-        # Return the raw results
-        if raw is True:
-            cur.close()
-            return data
+            # Return the raw results
+            if raw is True:
+                cur.close()
+                return data
     
-        # Get table column names and data types
-        cur.execute("select column_name,data_type from information_schema.columns where table_schema='"+schema+"' and table_name='"+tab+"'")
-        head = cur.fetchall()
-        cur.close()
+            # Get table column names and data types
+            cur.execute("select column_name,data_type from information_schema.columns where table_schema='"+schema+"' and table_name='"+tab+"'")
+            head = cur.fetchall()
+            cur.close()
 
-        d2d = {'smallint':np.int, 'integer':np.int, 'bigint':np.int, 'real':np.float32, 'double precision':np.float64,
-               'text':(np.str,200),'char':(np.str,5)}
-        colnames = [h[0] for h in head]
-        dt = []
-        for h in head:
-            dt.append( (h[0], d2d[h[1]]) )
-        dtype = np.dtype(dt)
+            d2d = {'smallint':np.int, 'integer':np.int, 'bigint':np.int, 'real':np.float32, 'double precision':np.float64,
+                   'text':(np.str,200),'char':(np.str,5)}
+            colnames = [h[0] for h in head]
+            dt = []
+            for h in head:
+                dt.append( (h[0], d2d[h[1]]) )
+            dtype = np.dtype(dt)
 
-        # Convert to numpy structured array
-        cat = np.zeros(len(data),dtype=dtype)
-        cat[...] = data
-        del(data)
+            # Convert to numpy structured array
+            cat = np.zeros(len(data),dtype=dtype)
+            cat[...] = data
+            del(data)
+
+        # SQL command input
+        else:
+
+            # Execute the command
+            if verbose:
+                print('CMD = '+sql)
+            cur.execute(sql)
+            data = cur.fetchall()
+
+            if len(data)==0:
+                cur.close()
+                return np.array([])
+
+            # Return the raw results
+            if raw is True:
+                cur.close()
+                return data
+    
+            # Get table column names and data types
+            colnames = [desc[0] for desc in cur.description]
+            colnames = np.array(colnames)
+            # Fix duplicate column names
+            cindex = dln.create_index(colnames)
+            bd,nbd = dln.where(cindex['num']>1)
+            for i in range(nbd):
+                ind = cindex['index'][cindex['lo'][bd[i]]:cindex['hi'][bd[i]]+1]
+                ind.sort()
+                nind = len(ind)
+                for j in np.arange(1,nind):
+                    colnames[ind[j]] += str(j+1)
+            
+            # Use the data returned to get the type
+            dt = []
+            for i,c in enumerate(colnames):
+                dt.append( (c, type(data[0][i])) )
+
+            # Convert to numpy structured array
+            cat = np.zeros(len(data),dtype=dtype)
+            cat[...] = data
+            del(data)            
 
         return cat
 
