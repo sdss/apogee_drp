@@ -1,0 +1,9 @@
+#!/bin/bash
+# usage: loadapogeedb table fitsfile
+# run this file like: % loadapogeedb visit apVisitSum-8100-57680.fits
+
+if [[ $# -lt 2 ]]; then
+  echo "Usage: loadapogeedb table fitsfile"
+else
+  fits2db -v --sql=postgres --table=apogee_drp.${1}  ${2} | psql -d sdss5db -U sdss -h operations.sdss.org
+fi
