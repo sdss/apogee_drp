@@ -14,8 +14,9 @@ from astropy.time import Time
 import astropy.coordinates as coords
 from dlnpyutils import utils as dln, coords as dcoords
 import time
-import psycopg2 as pq
+import psycopg2 as pg
 from psycopg2.extras import execute_values
+import datetime
 
 
 from psycopg2.extensions import register_adapter, AsIs
@@ -41,6 +42,36 @@ register_adapter(np.int16, addapt_np_int16)
 register_adapter(np.int32, addapt_np_int32)
 register_adapter(np.int64, addapt_np_int64)
 
+from psycopg2.extensions import register_type
+def cast_date(value, cursor):
+    return value
+oids = (1082, 1114, 1184) 
+new_type = pg.extensions.new_type(oids, "DATE", cast_date)
+register_type(new_type) 
+
+
+def register_date_typecasters(connection):
+    """
+    Casts date and timestamp values to string, resolves issues with out of
+    range dates (e.g. BC) which psycopg2 can't handle
+    """
+
+    def cast_date(value, cursor):
+        return value
+
+    cursor = connection.cursor()
+    cursor.execute("SELECT NULL::date")
+    date_oid = cursor.description[0][1]
+    cursor.execute("SELECT NULL::timestamp")
+    timestamp_oid = cursor.description[0][1]
+    cursor.execute("SELECT NULL::timestamp with time zone")
+    timestamptz_oid = cursor.description[0][1]
+    oids = (date_oid, timestamp_oid, timestamptz_oid)
+    #oids = (1082, 1114, 1184)
+    new_type = psycopg2.extensions.new_type(oids, "DATE", cast_date)
+    pg.extensions.register_type(new_type) 
+
+
 class DBSession(object):
 
     def __init__(self):
@@ -49,7 +80,7 @@ class DBSession(object):
 
     def open(self):
         """ Open the database connection."""
-        connection = pq.connect(user="sdss",host="operations.sdss.org",
+        connection = pg.connect(user="sdss",host="operations.sdss.org",
                                 password="",port = "5432",database = "sdss5db")
         self.connection = connection
 
@@ -139,7 +170,7 @@ class DBSession(object):
             cur.close()
 
             d2d = {'smallint':np.int, 'integer':np.int, 'bigint':np.int, 'real':np.float32, 'double precision':np.float64,
-                   'text':(np.str,200),'char':(np.str,5)}
+                   'text':(np.str,200),'char':(np.str,5),'timestamp':(np.str,50), 'timestamp with time zone':(np.str,50)}
             colnames = [h[0] for h in head]
             dt = []
             for h in head:
