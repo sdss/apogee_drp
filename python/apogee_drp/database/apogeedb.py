@@ -280,7 +280,7 @@ class DBSession(object):
             for t in list(cat)
         ]
 
-        insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s'
+        insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s ON CONFLICT DO NOTHING'
         execute_values(cur,insert_query,data,template=None)
 
         self.connection.commit()

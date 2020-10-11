@@ -14,8 +14,8 @@ except ImportError:
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata
 from ..apred import mkcal
+from ..database import apogeedb
 from . import mkplan
-from . import apogeedb
 from sdss_access.path import path
 from astropy.io import fits
 from collections import OrderedDict
@@ -42,7 +42,7 @@ def nextmjd5(observatory,apred='t14'):
     """ Figure out the next MJD to process."""
 
     # Check MJD5.done in $APOGEE_REDUX/apred/daily/
-    dailydir = os.environ['APOGEE_REDUX']+'/'+apred+'/daily/'+observatory+''/'
+    dailydir = os.environ['APOGEE_REDUX']+'/'+apred+'/daily/'+observatory+'/'
     if os.path.exists(dailydir)==True:
         donefiles = glob(dailydir+'?????.done')
         ndonefiles = len(donefiles)
@@ -81,7 +81,7 @@ def getNextMJD(observatory,apred='t14'):
 
         return finalmjd
 
-def queue_wait(queue,sleeptime=60):
+def queue_wait(queue,sleeptime=60,verbose=True):
     """ Wait for the pbs queue to finish."""
 
     # Wait for jobs to complete
@@ -89,6 +89,8 @@ def queue_wait(queue,sleeptime=60):
     while running:
         time.sleep(sleeptime)
         percent_complete = queue.get_percent_complete()
+        if verbose==True:
+            print('percent complete = %d' % percent_complete)
         if percent_complete == 100:
             running = False
 
@@ -128,6 +130,9 @@ def run_daily(observatory,mjd5=None,apred='t14'):
 
     rootLogger.info('Running daily APOGEE data reduction for '+str(observatory).upper()+' '+str(mjd5))
 
+    # Initialize the DB connection
+    db = apogeedb.DBSession()
+
     # Check that daily data transfer completed
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     datadir += '/'+str(mjd5)+'/'
@@ -138,43 +143,39 @@ def run_daily(observatory,mjd5=None,apred='t14'):
 
     # Get exposure information and load into database
     rootLogger.info('Getting exposure information')
-    files = glob(datadir+'/??R-c-????????.apz')
-    if len(files)==0:
+    expinfo = mkplan.getexpinfo(observatory,mjd5)
+    nexp = len(expinfo)
+    if nexp==0:
         rootLogger.error('No raw APOGEE files found.')
         return        
-    files = np.array(files)
-    nfiles = len(files)
-    files = files[np.argsort(files)]  # sort
-    rootLogger.info(str(nfiles)+' exposures')
-    expinfo = mkplan.getexpinfo(files)
-    #apogeedb.write('exposure',expinfo)
+    rootLogger.info(str(nexp)+' exposures')
+    db.load('exposure',expinfo)  # load into database
 
     # Make MJD5 and plan files
     rootLogger.info('Making plan files')
     plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
-    #apogeedb.write('plans',planfiles)  # load plans into db
+    #db.load('plan',planfiles)  # load plans into db
     dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'auto.yaml'
     planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
     # Write planfiles to MJD5.plans
     dln.writelines(dailydir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
 
-    import pdb;pdb.set_trace()
-
     # Use "pbs" packages to run "apred" on all visits
     queue = pbsqueue(verbose=True)
-    queue.create(label='apred', nodes=2, ppn=16, cpus=15, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
+    cpus = np.minimum(len(planfiles),30)
+    queue.create(label='apred', nodes=2, ppn=16, cpus=cpus, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
     for pf in planfiles:
-        queue.append('apred {0}'.format(pf), outfile=pf.replace('yaml','.log'), errfile=pf.replace('.yaml','.err'))
+        queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','.log'), errfile=pf.replace('.yaml','.err'))
     import pdb;pdb.set_trace()
     queue.commit(hard=True,submit=True)
-    queue_wait(queue)  # wait for jobs to complete
+    queue_wait(queue,sleeptime=120,verbose=True)  # wait for jobs to complete
     del queue
 
     import pdb;pdb.set_trace()
 
     # Run "rv" on all stars
     queue = pbsqueue(verbose=True)
-    vcat = apogeedb.query('SELECT * from apogee_drp.visit where MJD=%d' % MJD5)
+    vcat = db.query('SELECT * from apogee_drp.visit where MJD=%d' % MJD5)
     queue.create(label='rv', nodes=2, ppn=16, cpus=15, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
     for obj in vcat['APOGEE_ID']:
         queue.append('rvstar %s %s %s %s' % (obj,apred,instrument,field))

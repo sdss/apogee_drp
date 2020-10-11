@@ -12,7 +12,7 @@ except ImportError:
     from yaml import Loader, Dumper
 
 from dlnpyutils import utils as dln
-from apogee_drp.utils import spectra,yanny,apload,platedata
+from apogee_drp.utils import spectra,yanny,apload,platedata,utils
 from apogee_drp.plan import mkslurm
 from apogee_drp.apred import mkcal
 from sdss_access.path import path
@@ -627,13 +627,19 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     return planfile
 
 
-def getexpinfo(files):
+def getexpinfo(observatory=None,mjd5=None,files=None):
     """
     Get header information about raw APOGEE files.
+    This program can be run with observatory+mjd5 or
+    by giving a list of files.
 
     Parameters
     ----------
-    files : list of str
+    observatory : str, optional
+        APOGEE observatory (apo or lco).
+    mjd5 : int, optional
+        The MJD5 night to get exposure information for.
+    files : list of str, optional
         List of APOGEE apz filenames.
 
     Returns
@@ -648,9 +654,24 @@ def getexpinfo(files):
     By D.Nidever,  Oct 2020
     """
 
+    if (observatory is None or mjd5 is None) and files is None:
+        raise ValueError('observatory+mjd5 or list of files must be input')
+
+    # Get the exposures info for this MJD5        
+    if files is None:
+        if observatory not in ['apo','lco']:
+            raise ValueError('observatory must be apo or lco')
+        datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
+        files = glob(datadir+'/'+str(mjd5)+'/a?R-c*.apz')
+        files = np.array(files)
+        nfiles = len(files)
+        if nfiles==0:
+            return None
+        files = files[np.argsort(files)]  # sort        
+
     nfiles = len(files)
     dtype = np.dtype([('num',int),('nread',int),('exptype',np.str,20),('plateid',np.str,20),
-                      ('exptime',float),('dateobs',np.str,50)])
+                      ('exptime',float),('dateobs',np.str,50),('mjd',int),('observatory',(np.str,10))])
     cat = np.zeros(nfiles,dtype=dtype)
     # Loop over the files
     for i in range(nfiles):
@@ -664,6 +685,15 @@ def getexpinfo(files):
         cat['plateid'][i] = head['plateid']
         cat['exptime'][i] = head['exptime']
         cat['dateobs'][i] = head['date-obs']
+        if mjd5 is not None:
+            cat['mjd'] = mjd5
+        else:
+            cat['mjd'] = utils.getmjd5(head['date-obs'])
+        if observatory is not None:
+            cat['observatory'] = observatory
+        else:
+            cat['observatory'] = {'p':'apo','s':'lco'}[base[1]]
+
     return cat
 
 
@@ -708,6 +738,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     load = apload.ApLoad(apred=apred,telescope=telescope)
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
+    observatory = telescope[0:3]
 
     # Output file/directory
     outfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd)+'auto.yaml'
@@ -719,12 +750,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         return
 
     # Get the exposures and info about them
-    files = glob(datadir+'/'+str(mjd)+'/*-c*.apz')
-    files = np.array(files)
-    nfiles = len(files)
+    info = getexpinfo(observatory,mjd)
+    nfiles = len(info)
     logger.info(str(nfiles)+' exposures found')
-    files = files[np.argsort(files)]  # sort
-    info = getexpinfo(files)
 
     # Print summary information about the data
     expindex = dln.create_index(info['exptype'])
