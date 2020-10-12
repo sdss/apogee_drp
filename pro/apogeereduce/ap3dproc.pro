@@ -741,7 +741,11 @@ FOR f=0,nfiles-1 do begin
       endif
 
     ; set lock to notify other jobs that this file is being worked on
-    openw,lock,/get_lun,lockfile
+    openw,lock,/get_lun,lockfile,error=err
+    IF (err NE 0) then begin
+      PRINTF, -2, !ERROR_STATE.MSG
+      print,file_search('/scratch/local','*')
+    endif
     free_lun,lock
   endif
 

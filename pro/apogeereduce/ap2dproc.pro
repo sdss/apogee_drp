@@ -291,7 +291,9 @@ while file_test(lockfile) do apwait,lockfile,10
 
 err=1
 while err ne 0 do begin
-  file_mkdir,file_dirname(lockfile)
+  if file_test(file_dirname(lockfile),/directory) eq 0 then begin
+    file_mkdir,file_dirname(lockfile)
+  endif
   openw,lock,/get_lun,lockfile, error=err
   IF (err NE 0) then begin
      PRINTF, -2, !ERROR_STATE.MSG
