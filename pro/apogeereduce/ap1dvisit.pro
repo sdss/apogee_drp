@@ -612,20 +612,20 @@ FOR i=0L,nplanfiles-1 do begin
   platemjd5 = strtrim(plate,2)+'-'+strtrim(mjd,2)
   if keyword_set(stp) then stop
 
+  ;; Loop over the objects
   apgundef,allvisitstr
   for istar=0,n_elements(objind)-1 do begin
-    visitfile=apogee_filename('Visit',plate=planstr.plateid,mjd=planstr.mjd,fiber=objdata[istar].fiberid,reduction=obj)
+    visitfile = apogee_filename('Visit',plate=planstr.plateid,mjd=planstr.mjd,fiber=objdata[istar].fiberid,reduction=obj)
     if tag_exist(planstr,'mjdfrac') then if planstr.mjdfrac eq 1 then begin
-      cmjd=strtrim(mjd,2)
-      s=strsplit(visitfile,cmjd,/extract,/regex)
-      visitfile=s[0]+cmjd+s[1]+string(format='(f8.2)',mjdfrac)+s[2]
+      cmjd = strtrim(mjd,2)
+      s = strsplit(visitfile,cmjd,/extract,/regex)
+      visitfile = s[0]+cmjd+s[1]+string(format='(f8.2)',mjdfrac)+s[2]
     endif
 
-    visitstr = {apogee_id:'',target_id:'',file:'',fiberid:0,plate:'0',mjd:0L,telescope:'',$
+    visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',mjd:0L,telescope:'',$
            survey:'',field:'',programname:'',alt_id:'',$
            location_id:0,ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
-           j:0.0,j_err:0.0,h:0.0,h_err:0.0,k:0.0,k_err:0.0,$
-           src_h : '',$
+           j:0.0,j_err:0.0,h:0.0,h_err:0.0,k:0.0,k_err:0.0,src_h:'',$
            wash_m:0.0,wash_m_err:0.0,wash_t2:0.0,wash_t2_err:0.0,ddo51:0.0,ddo51_err:0.0,$
            irac_3_6:0.0,irac_3_6_err:0.0,irac_4_5:0.0,irac_4_5_err:0.0,$
            irac_5_8:0.0,irac_5_8_err:0.0,irac_8_0:0.0,irac_8_0_err:0.0,$
@@ -637,63 +637,69 @@ FOR i=0L,nplanfiles-1 do begin
            targflags:'',snr: 0.0, starflag:0L,starflags: '',$
            dateobs:'',jd:0.0d0,BC:0.0,vtype:0,$
            VREL:999999.0,vrelerr:999999.0,VHELIO:999999.0,Vlsr:999999.0,Vgsr:999999.0,$
-           chisq:0.0,rv_teff:0.0,rv_feh:99.9,rv_logg:99.9,rv_alpha: 99.9,rv_carb: 99.9,synthfile:''}
+           chisq:0.0,rv_teff:0.0,rv_feh:99.9,rv_logg:99.9,rv_alpha: 99.9,rv_carb: 99.9, synthfile:''}
 
-    visitstr.apogee_id=obj[istar]
-    visitstr.target_id=targid[istar]
-    visitstr.fiberid=objdata[istar].fiberid
-    visitstr.plate=planstr.plateid
-    visitstr.mjd=planstr.mjd
-    visitstr.location_id=locid
-    visitstr.telescope=dirs.telescope
-    visitstr.apogee_target1=targ1[istar]
-    visitstr.apogee_target2=targ2[istar]
-    visitstr.apogee_target3=targ3[istar]
-    visitstr.apogee_target4=targ4[istar]
-    visitstr.targflags=targflag(targ1[istar],targ2[istar],targ3[istar],targ4[istar],survey=survey)
-    visitstr.survey=survey
-    visitstr.field=plugmap.field
-    visitstr.programname=plugmap.programname
-    visitstr.ak_targ=plugmap.fiberdata[objind[istar]].ak_targ
-    visitstr.ak_targ_method=plugmap.fiberdata[objind[istar]].ak_targ_method
-    visitstr.ak_wise=plugmap.fiberdata[objind[istar]].ak_wise
-    visitstr.sfd_ebv=plugmap.fiberdata[objind[istar]].sfd_ebv
+    visitstr.apogee_id = obj[istar]
+    visitstr.target_id = targid[istar]
+    visitstr.file = file_basename(visitfile)
+    ;; URI is what you need to get the file, either on the web or at Utah
+    mwm_root = getenv('MWM_ROOT')
+    len = strlen(mwm_root)+1
+    visitstr.uri = strmid(visitfile,len)
+    visitstr.apred_vers = apred_vers
+    visitstr.fiberid = objdata[istar].fiberid
+    visitstr.plate = strtrim(planstr.plateid,2)
+    visitstr.mjd = planstr.mjd
+    visitstr.location_id = locid
+    visitstr.telescope = dirs.telescope
+    visitstr.apogee_target1 = targ1[istar]
+    visitstr.apogee_target2 = targ2[istar]
+    visitstr.apogee_target3 = targ3[istar]
+    visitstr.apogee_target4 = targ4[istar]
+    visitstr.targflags = targflag(targ1[istar],targ2[istar],targ3[istar],targ4[istar],survey=survey)
+    visitstr.survey = survey
+    visitstr.field = plugmap.field
+    visitstr.programname = plugmap.programname
+    visitstr.ak_targ = plugmap.fiberdata[objind[istar]].ak_targ
+    visitstr.ak_targ_method = plugmap.fiberdata[objind[istar]].ak_targ_method
+    visitstr.ak_wise = plugmap.fiberdata[objind[istar]].ak_wise
+    visitstr.sfd_ebv = plugmap.fiberdata[objind[istar]].sfd_ebv
 
-    objects = plugmap.fiberdata[objind[istar]]
-    visitstr.ra=objects.ra
-    visitstr.dec=objects.dec
-    visitstr.ak_targ_method=objects.ak_targ_method
-    visitstr.j=objects.j
-    visitstr.j_err=objects.j_err
-    visitstr.h=objects.h
-    visitstr.h_err=objects.h_err
-    visitstr.k=objects.k
-    visitstr.k_err=objects.k_err
-    visitstr.alt_id=objects.alt_id
-    visitstr.src_h=objects.src_h
-    visitstr.wash_m=objects.wash_m
-    visitstr.wash_m_err=objects.wash_m_err
-    visitstr.wash_t2=objects.wash_t2
-    visitstr.wash_t2_err=objects.wash_t2_err
-    visitstr.ddo51=objects.ddo51
-    visitstr.ddo51_err=objects.ddo51_err
-    visitstr.irac_3_6=objects.irac_3_6
-    visitstr.irac_3_6_err=objects.irac_3_6_err
-    visitstr.irac_4_5=objects.irac_4_5
-    visitstr.irac_4_5_err=objects.irac_4_5_err
-    visitstr.irac_5_8=objects.irac_5_8
-    visitstr.irac_5_8_err=objects.irac_5_8_err
-    visitstr.irac_8_0=objects.irac_8_0
-    visitstr.irac_8_0_err=objects.irac_8_0_err
-    visitstr.wise_4_5=objects.wise_4_5
-    visitstr.wise_4_5_err=objects.wise_4_5_err
-    visitstr.targ_4_5=objects.targ_4_5
-    visitstr.targ_4_5_err=objects.targ_4_5_err
-    visitstr.wash_ddo51_giant_flag=objects.wash_ddo51_giant_flag
-    visitstr.wash_ddo51_star_flag=objects.wash_ddo51_star_flag
-    visitstr.pmra=objects.pmra
-    visitstr.pmdec=objects.pmdec
-    visitstr.pm_src=objects.pm_src
+    objects  =  plugmap.fiberdata[objind[istar]]
+    visitstr.ra = objects.ra
+    visitstr.dec = objects.dec
+    visitstr.ak_targ_method = objects.ak_targ_method
+    visitstr.j = objects.j
+    visitstr.j_err = objects.j_err
+    visitstr.h = objects.h
+    visitstr.h_err = objects.h_err
+    visitstr.k = objects.k
+    visitstr.k_err = objects.k_err
+    visitstr.alt_id = objects.alt_id
+    visitstr.src_h = objects.src_h
+    visitstr.wash_m = objects.wash_m
+    visitstr.wash_m_err = objects.wash_m_err
+    visitstr.wash_t2 = objects.wash_t2
+    visitstr.wash_t2_err = objects.wash_t2_err
+    visitstr.ddo51 = objects.ddo51
+    visitstr.ddo51_err = objects.ddo51_err
+    visitstr.irac_3_6 = objects.irac_3_6
+    visitstr.irac_3_6_err = objects.irac_3_6_err
+    visitstr.irac_4_5 = objects.irac_4_5
+    visitstr.irac_4_5_err = objects.irac_4_5_err
+    visitstr.irac_5_8 = objects.irac_5_8
+    visitstr.irac_5_8_err = objects.irac_5_8_err
+    visitstr.irac_8_0 = objects.irac_8_0
+    visitstr.irac_8_0_err = objects.irac_8_0_err
+    visitstr.wise_4_5 = objects.wise_4_5
+    visitstr.wise_4_5_err = objects.wise_4_5_err
+    visitstr.targ_4_5 = objects.targ_4_5
+    visitstr.targ_4_5_err = objects.targ_4_5_err
+    visitstr.wash_ddo51_giant_flag = objects.wash_ddo51_giant_flag
+    visitstr.wash_ddo51_star_flag = objects.wash_ddo51_star_flag
+    visitstr.pmra = objects.pmra
+    visitstr.pmdec = objects.pmdec
+    visitstr.pm_src = objects.pm_src
 
     ; get a few things from apVisit file (done in aprv also, but not
     ;   if that is skipped....)
@@ -740,9 +746,12 @@ FOR i=0L,nplanfiles-1 do begin
   ; HDU1 - structure
   MWRFITS,allvisitstr,visitstrfile,/silent
 
+  ;; Load the apVisitSum information into the apogee_drp database
+  DBLOAD_VISIT,allvisitstr
  endfor
+
  BOMB:
-ENDFOR
+ENDFOR   ; plan files
 
 print,'AP1DVISIT finished'
 writelog,logfile,'AP1DVISIT '+file_basename(planfile)+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
