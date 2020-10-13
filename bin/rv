@@ -41,8 +41,6 @@ if __name__ == '__main__' :
     parser.add_argument("--nres",type=float,nargs=3,help='list of sinc widths',default=[5,4.25,3.5])
     parser.add_argument("--windows",type=float,nargs=1,help='Spectral windows')
     parser.add_argument('--tweak', action='store_true', help='do normalization tweak?')
-    parser.add_argument("--done")
-    parser.add_argument("--host")
     parser.add_argument("--flag",type=str,default='11111')
     parser.add_argument('-c','--clobber', action='store_true', help='Overwrite files?')
     parser.add_argument('-v','--verbose', action='store_true', help='Verbose output')
@@ -61,10 +59,9 @@ if __name__ == '__main__' :
     telescope = args.telescope[0]
 
     # Run doppler_rv_star() for this star
-    rv.doppler_rv_star(star,apred,telescope,clobber=args.clobber,tweak=args.tweak,
-                       nres=args.nres,windows=args.windows,verbose=args.verbose,
-                       plot=args.plot,logger=logger)
-
+    rv.doppler_rv(star,apred,telescope,clobber=args.clobber,tweak=args.tweak,
+                  nres=args.nres,windows=args.windows,verbose=args.verbose,
+                  plot=args.plot,logger=logger)
 
     now = datetime.datetime.now()
     logger.info("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
