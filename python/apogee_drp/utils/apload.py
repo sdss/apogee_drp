@@ -709,7 +709,7 @@ class ApLoad :
 
     def allfile(self,root,
                 location=None,obj=None,reduction=None,plate=None,mjd=None,num=None,fiber=None,chips=False,field=None,
-                download=True,fz=False) :
+                healpix=None,download=True,fz=False) :
         '''
         Uses sdss_access to create filenames and download files if necessary
         '''
@@ -744,21 +744,31 @@ class ApLoad :
         if chips == False :
             # First make sure the file doesn't exist locally
             #print(sdssroot,apred,apstar,aspcap,results,location,obj,self.telescope,field,prefix)
+
+            # apStar, calculate HEALPix
+            if root=='Star':
+                healpix = obj2healpix(obj)
+            else:
+                healpix = None
+
             filePath = self.sdss_path.full(sdssroot,
-                                      apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
-                                      field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
-                                      telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument)
+                                           apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
+                                           field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
+                                           telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
+                                           healpix=healpix)
             if self.verbose: print('filePath',filePath)
             if os.path.exists(filePath) is False and download: 
                 downloadPath = self.sdss_path.url(sdssroot,
                                       apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
                                       field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
-                                      telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument)
+                                      telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
+                                      healpix=healpix)
                 if self.verbose: print('downloadPath',downloadPath)
                 self.http_access.get(sdssroot,
                                 apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
                                 field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
-                                telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument)
+                                telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
+                                healpix=healpix)
             return filePath
         else :
             for chip in ['a','b','c'] :
@@ -811,8 +821,8 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m') : #,plans=None
 
     return field, survey, programname
 
-def healpix(tmassname,nside=128):
-    """ Calculate healpix number for a star given it's 2MASS-style name."""
+def obj2coords(tmassname):
+    """ Get RA/DEC coordinates (in deg) from 2MASS-style name."""
 
     # apogeetarget/pro/make_2mass_style_id.pro makes these
     # APG-Jhhmmss[.]ss±ddmmss[.]s
@@ -827,7 +837,16 @@ def healpix(tmassname,nside=128):
     # DEC: -7717269 = -71d 17m 26.9s
     dec = np.float64(name[9:11]) + np.float64(name[11:13])/60. + np.float64(name[13:])/10./3600.
     dec *= np.float(name[8]+'1')  # dec sign
+
+    return ra,dec
+
+
+def obj2healpix(tmassname,nside=128):
+    """ Calculate healpix number for a star given it's 2MASS-style name."""
     
+    # Get coordinates from the 2MASS-style name
+    ra,dec = obj2coords(tmassname)
+
     # Calculate HEALPix number
     pix = hp.ang2pix(nside,ra,dec,lonlat=True)
     return pix

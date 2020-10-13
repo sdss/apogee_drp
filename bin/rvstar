@@ -37,8 +37,7 @@ if __name__ == '__main__' :
 
     parser.add_argument('star', type=str, nargs=1,  help='Star Name')
     parser.add_argument('apred', type=str, nargs=1, help='APOGEE reduction version')
-    parser.add_argument('instrument', type=str, nargs=1, help='APOGEE instrument')
-    parser.add_argument('field', type=str, nargs=1, help='Field name')
+    parser.add_argument('telescope', type=str, nargs=1, help='APOGEE telescope (apo25m, lco25m, apo1m)')
     parser.add_argument("--nres",type=float,nargs=3,help='list of sinc widths',default=[5,4.25,3.5])
     parser.add_argument("--windows",type=float,nargs=1,help='Spectral windows')
     parser.add_argument('--tweak', action='store_true', help='do normalization tweak?')
@@ -50,35 +49,23 @@ if __name__ == '__main__' :
     parser.add_argument('-p','--plot', action='store_true', help='Make a plot')
     args = parser.parse_args()
 
+    logger = dln.basiclogger()
+
     now = datetime.datetime.now()
     start = time.time()
-    print("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
 
     # Code copied from rv.dopple_rv()
     star = args.star[0]
     apred = args.apred[0]
-    instrument = args.instrument[0]
-    if instrument=='apogee-n':
-        telescope = 'apo25m'
-    if instrument=='apogee-s':
-        telescope = 'lco25m'
-    field = args.field[0]
+    telescope = args.telescope[0]
 
     # Run doppler_rv_star() for this star
-    rv.doppler_rv_star(star,apred,instrument,field,clobber=args.clobber,tweak=args.tweak,
-                       nres=args.nres,windows=args.windows,verbose=args.verbose,plot=args.plot)
+    rv.doppler_rv_star(star,apred,telescope,clobber=args.clobber,tweak=args.tweak,
+                       nres=args.nres,windows=args.windows,verbose=args.verbose,
+                       plot=args.plot,logger=logger)
 
 
     now = datetime.datetime.now()
-    print("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
-    print("elapsed: ",time.time()-start)
-
-    #if args.done is not None :
-    #    subprocess.call(['setdone',args.done])
-    #    try: 
-    #        subprocess.call(['setdone',done])
-    #    except: pass
-    #    print('host', args.host)
-    #    if args.host is not None :
-    #        try: os.remove(args.done+'.'+args.host)
-    #        except: pass
+    logger.info("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("elapsed: ",time.time()-start)
