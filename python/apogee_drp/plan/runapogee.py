@@ -119,52 +119,6 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         nexp = len(expstr)
         load = apload.ApLoad(apred=apred_vers,telescope=telescope)
 
-        # apred check
-        # planfile
-        # apred_vers
-        # instrument
-        # telescope
-        # platetype
-        # mjd
-        # plate
-        # nexposures
-        # pbs key
-        # started timestamp
-        # ap3d_nexp_success: number of exposures successfully processed
-        # ap3d_success: True or False
-        # ap2d_nexp_success: number of exposures successfully processed
-        # ap2d_success: True or False
-        # ap1dvisit: 
-        # ap1dvisit_success: True or False
-
-        # ap3d check
-        # planfile
-        # apred_vers
-        # instrument
-        # telescope
-        # platetype
-        # mjd
-        # plate
-        # pbs key
-        # started timestamp
-        # num
-        # nreads
-        # success: timestamp
-
-        # ap2d check
-        # planfile
-        # apred_vers
-        # instrument
-        # telescope
-        # platetype
-        # mjd
-        # plate
-        # pbs key
-        # started timestamp
-        # num
-        # nreads
-        # success: timestamp
-
         # Science exposures
         if platetype=='normal':
 
@@ -413,7 +367,12 @@ def run_daily(observatory,mjd5=None,apred='t14'):
 
     import pdb;pdb.set_trace()
 
-    # Use "pbs" packages to run "apred" on all visits
+    # Run APRED on all planfiles using "pbs" package
+    rootLogger.info('')
+    rootLogger.info('--------------')
+    rootLogger.info('Running APRED')
+    rootLogger.info('==============')
+    rootLogger.info('')
     queue = pbsqueue(verbose=True)
     cpus = np.minimum(len(planfiles),30)
     queue.create(label='apred', nodes=2, ppn=16, cpus=cpus, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
@@ -428,14 +387,29 @@ def run_daily(observatory,mjd5=None,apred='t14'):
     import pdb;pdb.set_trace()
 
     # Run "rv" on all stars
-    queue = pbsqueue(verbose=True)
-    vcat = db.query('SELECT * from apogee_drp.visit where MJD=%d' % MJD5)
-    queue.create(label='rv', nodes=2, ppn=16, cpus=15, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
-    for obj in vcat['APOGEE_ID']:
-        queue.append('rvstar %s %s %s %s' % (obj,apred,instrument,field))
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue)  # wait for jobs to complete
-    del queue
+    rootLogger.info('')
+    rootLogger.info('------------------------------')
+    rootLogger.info('Running RV+Visit Combination')
+    rootLogger.info('==============================')
+    rootLogger.info('')
+    vcat = db.query('visit',cols='*',where='MJD=%d'%mjd5)
+    if len(vcat)>0:
+        queue = pbsqueue(verbose=True)
+        cpus = np.minimum(len(vcat),30)
+        queue.create(label='rv', nodes=2, ppn=16, cpus=cpus, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
+        for obj in vcat['apogee_id']:
+            apstarfile = load.filename('Star',obj=obj)
+            outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
+            if os.path.exists(outdir)==False:
+                os.makedirs(outdir)
+            queue.append('rv %s %s %s' % (obj,apred,telescope),outfile=apstarfile.replace('.fits','_pbs.log'),
+                         errfile=apstarfile.replace('.fits','_pbs.err'))
+        queue.commit(hard=True,submit=True)
+        queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
+        #check_rv(vcat,queue.key)
+        del queue
+    else:
+        rootLogger.info('No visit files for MJD=%d' % mjd5)
 
     import pdb;pdb.set_trace()
 

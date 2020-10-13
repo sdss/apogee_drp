@@ -11,7 +11,8 @@ import esutil
 import pickle
 import yaml
 from astropy.io import fits
-from ..utils import apload, applot, bitmask, spectra, norm, yanny, gaia
+from ..utils import apload, applot, bitmask, spectra, norm, yanny
+from ..database import apogeedb
 from holtztools import plots, html, match, struct
 from dlnpyutils import utils as dln
 from scipy import interpolate
@@ -47,7 +48,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     tweak : bool, optional
        Have Doppler tweak the continuum with the best-fit template.  Default is False.
     clobber : bool, optional
-       Overwrite any existing files.
+       Overwrite any existing files (both RV and visit combined).
     verbose : bool, optional
        Verbose output to the screen.
     plot : bool, optional
@@ -68,7 +69,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     snmin = 3
     apstar_vers = 'stars'
 
-    logger.info('Running Doppler and performing visit combination for %s and telescope=%s' % (apogee_id,telescope))
+    logger.info('Running Doppler and performing visit combination for %s and telescope=%s' % (star,telescope))
 
     # Get the visit files for this star and telescope
     db = apogeedb.DBSession()
@@ -76,17 +77,17 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     nallvisits = len(allvisits)
     if nallvisits==0:
         logger.info('No visit files found')
-        sys.exit()
-    logger.info('%d visit files found' % nallvisits)
+        return
+    logger.info('%d visit file(s) found' % nallvisits)
 
     # Select good visit spectra
     starmask = bitmask.StarBitMask()
     gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
                    (allvisits['snr'] > snmin) )
     if len(gd)==0:
-        logger.info('No visits pass QA cuts')
-        sys.exit()
-    logger.info('%d visits pass QA cuts' % len(gd))
+        logger.info('No visits passed QA cuts')
+        return
+    logger.info('%d visit(s) passed QA cuts' % len(gd))
     starvisits = Table(allvisits[gd])
     nvisits = len(gd)
     # Change datatype of STARFLAG to 64-bit
@@ -110,7 +111,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
 
 
     # First rename old visit RV tags and initialize new ones
-    for col in ['vtype','vre','vrelerr','vhelio','bc','rv_teff','rv_logg','rv_feh','rv_carb','rv_alpha']:
+    for col in ['vtype','vrel','vrelerr','vhelio','bc','rv_teff','rv_logg','rv_feh','rv_carb','rv_alpha']:
         starvisits.rename_column(col,'est'+col)
         if col == 'vtype':
             starvisits[col] = 0
@@ -125,10 +126,8 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     starvisits.add_column(rv_components)
 
     # Now load the new ones with the dorv() output
-    allv = []
     visits = []
     ncomponents = 0
-    files = speclist
     for i,(v,g) in enumerate(zip(dopvisitstr,gaussout)) :
         # Match by filename components in case there was an error reading in doppler
         name = os.path.basename(v['filename']).replace('.fits','').split('-')
@@ -162,7 +161,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         else:
             starvisits[vind]['n_components'] = g['N_components']
         if starvisits[vind]['n_components'] > 1 :
-            starvisits[vind]['starflag'] |= starmask.getval('multiple_suspect')
+            starvisits[vind]['starflag'] |= starmask.getval('MULTIPLE_SUSPECT')
             n = len(g['best_fit_parameters'])//3
             gd, = np.where(np.array(g['best_fit_parameters'])[0:n] > 0)
             rv_comp = np.array(g['best_fit_parameters'])[2*n+gd]
@@ -174,19 +173,19 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         else:
             bd_diff = 50.
         if (np.abs(starvisits[vind]['vhelio']-starvisits[vind]['xcorr_vhelio']) > bd_diff) :
-            starvisits[vind]['starflag'] |= starmask.getval('rv_reject')
-        elif (np.abs(starvinds[visit]['vhelio']-starvinds[visit]['xcorr_vhelio']) > 0) :
-            starvinds[visit]['starflag'] |= starmask.getval('rv_suspect')
+            starvisits[vind]['starflag'] |= starmask.getval('RV_REJECT')
+        elif (np.abs(starvisits[vind]['vhelio']-starvisits[vind]['xcorr_vhelio']) > 0) :
+            starvisits[vind]['starflag'] |= starmask.getval('RV_SUSPECT')
 
     # Get the good visits
     if len(visits)>0:
         visits = np.array(visits)
-        gdrv, = np.where((starvisits[visits]['starflag'] & starmask.getval('rv_reject')) == 0)        
+        gdrv, = np.where((starvisits[visits]['starflag'] & starmask.getval('RV_REJECT')) == 0)
 
     # Do the visit combination
     if len(gdrv)>0:
-        apstar = visitcomb(starvisits[visits[gdrv]],load=load,clobber=clobber,apstar_vers=apstar_vers,
-                           nres=nres,logger=logger,logger=logger)
+        apstar = visitcomb(starvisits[visits[gdrv]],load=load,apstar_vers=apstar_vers,
+                           nres=nres,logger=logger)
     else:
         logger.info('No good visits for '+star)
         raise
@@ -202,34 +201,38 @@ def dorv(allvisit,obj=None,telescope=None,apred=None,clobber=False,verbose=False
     if logger is None:
         logger = dln.basiclogger()
 
-    if type(obj) is not str:
-        obj = obj.decode('UTF-8')
     if tweak==True:
         suffix = '_tweak'
     else:
         suffix = '_out'
     if obj is None:
-        obj = allvisit['apogee_id'][0]
+        obj = str(allvisit['apogee_id'][0])
+    if type(obj) is not str:
+        obj = obj.decode('UTF-8')
     if apred is None:
-        apred = allvisit['apred_vers'][0]
+        apred = str(allvisit['apred_vers'][0])
     if telescope is None:
-        telescope = allvisit['telescope'][0]
+        telescope = str(allvisit['telescope'][0])
     load = apload.ApLoad(apred=apred,telescope=telescope)
-    outdir = os.path.dirname(load.filename('Star',obj=obj))
+    outfile = load.filename('Star',obj=obj)
+    outdir = os.path.dirname(outfile)
+    outbase = os.path.splitext(os.path.basename(outfile))[0]
+    if os.path.exists(outdir)==False:
+        os.makedirs(outdir)
     if apstar_vers != 'stars':
         outdir = outdir.replace('/stars/','/'+apstar_vers+'/')
 
-    if os.path.exists(outdir+'/'+obj+suffix+'_doppler.pkl') and not clobber:
+    if os.path.exists(outdir+'/'+outbase+suffix+'_doppler.pkl') and not clobber:
         logger.info(obj+' already done')
-        fp = open(outdir+'/'+obj+suffix+'_doppler.pkl','rb')
+        fp = open(outdir+'/'+outbase+suffix+'_doppler.pkl','rb')
         try: 
             out = pickle.load(fp)
             sumstr,finalstr,bmodel,specmlist,gout = out
             fp.close()
             return sumstr,finalstr,gout
         except: 
-            print('error loading: ', obj+suffix+'_doppler.pkl')
-            pass
+            logger.warning('error loading: '+outbase+suffix+'_doppler.pkl')
+            #pass
 
     speclist = []
     pixelmask = bitmask.PixelBitMask()
@@ -239,7 +242,7 @@ def dorv(allvisit,obj=None,telescope=None,apred=None,clobber=False,verbose=False
     #    barycentric correction only, use that to get an estimate of systemic
     #    velocity, then do RV determination restricting RVs to within 50 km/s
     #    of estimate. This seems to help significant for faint visits
-    lowsnr_visits = np.where(allvisit['SNR']<10)[0]
+    lowsnr_visits, = np.where(allvisit['snr']<10)
     if (len(lowsnr_visits) > 1) & (len(lowsnr_visits)/len(allvisit) > 0.1) :
         try :
             apstar_bc = visitcomb(allvisit,bconly=True,load=load,write=False,dorvfit=False,apstar_vers=apstar_vers) 
@@ -264,15 +267,13 @@ def dorv(allvisit,obj=None,telescope=None,apred=None,clobber=False,verbose=False
     # Loop over visits
     for i in range(len(allvisit)):
 
-        visitfile = allvisit['file'][i]
-
-        ## Load all of the visits into doppler Spec1D objects
-        #if load.telescope == 'apo1m' :
-        #    visitfile = load.allfile('Visit',plate=allvisit['plate'][i],
-        #                            mjd=allvisit['mjd'][i],reduction=allvisit['apogee_id'][i])
-        #else :
-        #    visitfile = load.allfile('Visit',plate=int(allvisit['plate'][i]),
-        #                             mjd=allvisit['mjd'][i],fiber=allvisit['fiberid'][i])
+        # Load all of the visits into doppler Spec1D objects
+        if load.telescope == 'apo1m' :
+            visitfile = load.allfile('Visit',plate=allvisit['plate'][i],
+                                    mjd=allvisit['mjd'][i],reduction=allvisit['apogee_id'][i])
+        else :
+            visitfile = load.allfile('Visit',plate=int(allvisit['plate'][i]),
+                                     mjd=allvisit['mjd'][i],fiber=allvisit['fiberid'][i])
         spec = doppler.read(visitfile,badval=badval)
 
         if windows is not None :
@@ -291,22 +292,22 @@ def dorv(allvisit,obj=None,telescope=None,apred=None,clobber=False,verbose=False
     # Dump empty pickle to stand in case of failure (to prevent redo if not clobber)
     try:
         # Dump empty pickle to stand in case of failure (to prevent redo if not clobber)
-        fp = open(outdir+'/'+obj+suffix+'_doppler.pkl','wb')
+        fp = open(outdir+'/'+outbase+suffix+'_doppler.pkl','wb')
         pickle.dump(None,fp)
         fp.close()
-        logger.info('Running Doppler jointfit for : {:s}  rvrange:[{:.1f},{:.1f}]  nvisits: {:d}'.format(obj,*rvrange,len(speclist)))
-        sumstr,finalstr,bmodel,specmlist = doppler.rv.jointfit(speclist,maxvel=rvrange,verbose=verbose,
-                                                               plot=plot,saveplot=plot,outdir=outdir+'/',tweak=tweak)
-        logger.info('Running CCF decomposition for :'+obj)
+        logger.info('Running Doppler jointfit for: {:s}  rvrange:[{:.1f},{:.1f}]  nvisits: {:d}'.format(obj,*rvrange,len(speclist)))
+        sumstr,finalstr,bmodel,specmlist,dt = doppler.rv.jointfit(speclist,maxvel=rvrange,verbose=verbose,
+                                                                  plot=plot,saveplot=plot,outdir=outdir+'/',tweak=tweak)
+        logger.info('Running CCF decomposition for: '+obj)
         gout = gauss_decomp(finalstr,phase='two',filt=True)
-        fp = open(outdir+'/'+obj+suffix+'_doppler.pkl','wb')
+        fp = open(outdir+'/'+outbase+suffix+'_doppler.pkl','wb')
         pickle.dump([sumstr,finalstr,bmodel,specmlist,gout],fp)
         fp.close()
         # Making plots
         logger.info('Making plots for :'+obj+' '+outdir)
         try: os.makedirs(outdir+'/plots/')
         except: pass
-        dop_plot(outdir+'/plots/',obj,[sumstr,finalstr,bmodel,specmlist],decomp=gout)
+        dop_plot(outdir+'/plots/',outbase,[sumstr,finalstr,bmodel,specmlist],decomp=gout)
     except KeyboardInterrupt: 
         raise
     except ValueError as err:
@@ -355,9 +356,9 @@ def gauss_decomp(out,phase='one',alpha1=0.5,alpha2=1.5,thresh=[4,4],plot=None,fi
     gout=[]
     if plot is not None : fig,ax=plots.multi(1,len(out),hspace=0.001,figsize=(6,2+n))
     for i,final in enumerate(out) :
-        gd=np.where(np.isfinite(final['x_ccf']))[0]
-        x=final['x_ccf'][gd]
-        y=final['ccf'][gd] 
+        gd, = np.where(np.isfinite(final['x_ccf']))
+        x = final['x_ccf'][gd]
+        y = final['ccf'][gd] 
         # high pass filter for better performance
         if filt : final['ccf'][gd]-= gaussian_filter(final['ccf'][gd],50,mode='nearest')
         try : 
@@ -428,14 +429,14 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
     for i,(mod,spec) in enumerate(zip(bmodel,specmlist)) :
         ax[i].plot(spec.wave,spec.flux,color='k')
         for iorder in range(3) :
-            gd = np.where(~spec.mask[:,iorder])[0]
+            gd, = np.where(~spec.mask[:,iorder])
             ax[i].plot(spec.wave[gd,iorder],spec.flux[gd,iorder],color='g')
         ax[i].plot(mod.wave,mod.flux,color='r')
         ax[i].text(0.1,0.1,'{:d}'.format(spec.head['MJD5']),transform=ax[i].transAxes)
         for iwind,wind in enumerate(windows) :
             ax2[i,iwind].plot(spec.wave,spec.flux,color='k')
             for iorder in range(3) :
-                gd = np.where(~spec.mask[:,iorder])[0]
+                gd, = np.where(~spec.mask[:,iorder])
                 ax2[i,iwind].plot(spec.wave[gd,iorder],spec.flux[gd,iorder],color='g')
             ax2[i,iwind].plot(mod.wave,mod.flux,color='r')
             ax2[i,iwind].set_xlim(wind[0],wind[1])
@@ -454,8 +455,8 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
     # Plot cross correlation functions with final model
     fig,ax = plots.multi(1,n,hspace=0.001,figsize=(6,2+n))
     ax = np.atleast_1d(ax)
-    vmed = np.median(out[1]['vrel'])
-        for i,(final,spec) in enumerate(zip(finalstr,specmlist)) :
+    vmed = np.median(finalstr['vrel'])
+    for i,(final,spec) in enumerate(zip(finalstr,specmlist)):
         ax[i].plot(final['x_ccf'],final['ccf'],color='k')
         ax[i].plot(final['x_ccf'],final['ccferr'],color='r')
         ax[i].plot([final['vrel'],final['vrel']],ax[i].get_ylim(),color='g',label='fit RV')
@@ -539,7 +540,7 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
             # Get a smoothed, filtered spectrum to use as replacement for bad values
             cont = gaussian_filter(median_filter(apvisit.flux[chip,:],[501],mode='reflect'),100)
             errcont = gaussian_filter(median_filter(apvisit.flux[chip,:],[501],mode='reflect'),100)
-            bd = np.where(apvisit.bitmask[chip,:]&pixelmask.badval())[0]
+            bd, = np.where(apvisit.bitmask[chip,:]&pixelmask.badval())
             if len(bd) > 0: 
                 apvisit.flux[chip,bd] = cont[bd] 
                 apvisit.err[chip,bd] = errcont[bd] 
@@ -598,7 +599,7 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
             pdb.set_trace()
 
         # Accumulate for header of combined frame. Turn off visit specific RV flags first
-        visitflag = visit['starflag'] & ~starmask.getval('rv_reject') & ~starmask.getval('rv_suspect')
+        visitflag = visit['starflag'] & ~starmask.getval('RV_REJECT') & ~starmask.getval('RV_SUSPECT')
         starflag |= visitflag
         andflag &= visitflag
         if visit['survey'] == 'apogee' :
@@ -657,7 +658,7 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
     apstar.header['H_ERR'] = (allvisit['h_err'].max(), '2MASS H magnitude uncertainty')
     apstar.header['K'] = (allvisit['k'].max(), '2MASS K magnitude')
     apstar.header['K_ERR'] = (allvisit['k_err'].max(), '2MASS K magnitude uncertainty')
-    try: apstar.header['SRC_H'] = (allvisit[0]['src_h'], 'source of H magnitude')
+    try: apstar.header['SRC_H'] = (allvisit['src_h'][0], 'source of H magnitude')
     except KeyError: pass
     keys = ['wash_m','wash_t2','ddo51','irac_3_6',
             'irac_4_5','irac_5_8','wise_4_5','targ_4_5'] 
@@ -666,7 +667,7 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
         except KeyError: pass
 
     apstar.header['AKTARG'] = (allvisit['ak_targ'].max(), 'Extinction used for targeting')
-    apstar.header['AKMETHOD'] = (allvisit[0]['ak_targ_method'],'Extinction method using for targeting')
+    apstar.header['AKMETHOD'] = (allvisit['ak_targ_method'][0],'Extinction method using for targeting')
     apstar.header['AKWISE'] = (allvisit['ak_wise'].max(),'WISE all-sky extinction')
     apstar.header['SFD_EBV'] = (allvisit['sfd_ebv'].max(),'SFD E(B-V)')
     apstar.header['APTARG1'] = (apogee_target1, 'APOGEE_TARGET1 targeting flag')
@@ -690,7 +691,7 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
     apstar.header['RV_LOGG'] = (allvisit['rv_logg'].max(),'Surface gravity from RV fit')
     apstar.header['RV_FEH'] = (allvisit['rv_feh'].max(),'Metallicity from RV fit')
 
-    if len(allvisit) > 0: meanfib=(allvisit['fiberid']*allvisit['SNR']).sum()/allvisit['SNR'].sum()
+    if len(allvisit) > 0: meanfib=(allvisit['fiberid']*allvisit['snr']).sum()/allvisit['snr'].sum()
     else: meanfib = 999999.
     if len(allvisit) > 1: sigfib=allvisit['fiberid'].std(ddof=1)
     else: sigfib = 0.
@@ -738,6 +739,7 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
     # Write the spectrum to file
     if write:
         outfile = load.filename('Star',obj=apstar.header['OBJID'])
+        outbase = os.path.splitext(os.path.basename(outfile))[0]
         if apstar_vers != 'stars' :
             outfile = outfile.replace('/stars/','/'+apstar_vers+'/')
         outdir = os.path.dirname(outfile)
@@ -760,7 +762,7 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
         plots.plotl(ax[2],norm.apStarWave(),apstar.flux[0,:]/apstar.err[0,:],yt='S/N')
         for i in range(3) : ax[i].set_xlim(15100,17000)
         ax[0].set_xlabel('Wavelength')
-        fig.savefig(outdir+'/plots/'+apstar.header['OBJID']+'.png')
+        fig.savefig(outdir+'/plots/'+outbase+'.png')
 
     # Plot
     if plot: 

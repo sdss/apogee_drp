@@ -17,17 +17,20 @@ from __future__ import unicode_literals
 import argparse
 import os
 import sys
-import subprocess
-import pdb
 import time
 import datetime
 import glob
 from holtztools import struct
 import numpy as np
 from astropy.table import Table,Column
+import logging
 
 from apogee_drp.apred import rv
 from apogee_drp.utils import bitmask,apload
+from dlnpyutils import utils as dln
+
+import warnings
+warnings.filterwarnings("ignore", message="Possible nested set")
 
 if __name__ == '__main__' :
 
@@ -48,10 +51,12 @@ if __name__ == '__main__' :
     args = parser.parse_args()
 
     logger = dln.basiclogger()
+    logger.handlers[0].setFormatter(logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s"))
+    logger.handlers[0].setStream(sys.stdout)   
 
     now = datetime.datetime.now()
     start = time.time()
-    logger.info("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("Start: "+now.strftime("%Y-%m-%d %H:%M:%S"))
 
     # Code copied from rv.dopple_rv()
     star = args.star[0]
@@ -64,5 +69,5 @@ if __name__ == '__main__' :
                   plot=args.plot,logger=logger)
 
     now = datetime.datetime.now()
-    logger.info("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
-    logger.info("elapsed: ",time.time()-start)
+    logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("elapsed: %0.1f sec." % (time.time()-start))
