@@ -4,12 +4,6 @@ import os
 import shutil
 from glob import glob
 import pdb
-import subprocess
-import yaml
-try:
-    from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError:
-    from yaml import Loader, Dumper
 
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan
@@ -19,7 +13,8 @@ from . import mkplan
 from sdss_access.path import path
 from astropy.io import fits
 from collections import OrderedDict
-from astropy.time import Time
+#from astropy.time import Time
+from datetime import datetime
 import logging
 from pbs import queue as pbsqueue
 import time
@@ -98,18 +93,29 @@ def queue_wait(queue,sleeptime=60,verbose=True,logger=None):
             running = False
 
 
-def check_apred(expinfo,pbskey,planfiles):
+def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
     """ Check that apred ran okay and load into database."""
 
+    if logger is None:
+        logger = dln.basiclogger()
+
+    if verbose==True:
+        logger.info('')
+        logger.info('--------------------')
+        logger.info('Checking APRED runs')
+        logger.info('====================')
+
     # Loop over the planfiles
-    for pf in planfiles:
-        plan = plan.load(pf,np=True)
-        apred_vers = plan['apred_vers']
-        telescope = plan['telescope']
-        platetype = plan['platetype']
-        mjd = plan['mjd']
-        plate = plan['plateid']
-        expstr = plan['APEXP']
+    nplanfiles = len(planfiles)
+    for ip,pfile in enumerate(planfiles):
+        planstr = plan.load(pfile,np=True)
+        apred_vers = planstr['apred_vers']
+        telescope = planstr['telescope']
+        instrument = planstr['instrument']
+        platetype = planstr['platetype']
+        mjd = planstr['mjd']
+        plate = planstr['plateid']
+        expstr = planstr['APEXP']
         nexp = len(expstr)
         load = apload.ApLoad(apred=apred_vers,telescope=telescope)
 
@@ -159,23 +165,22 @@ def check_apred(expinfo,pbskey,planfiles):
         # nreads
         # success: timestamp
 
-
-
         # Science exposures
         if platetype=='normal':
 
             # Load the plugmap information
-            plugmap = platedata.getdata(plate,mjd,apred_vers,telescope,plugid=plan['plugmap'])
+            plugmap = platedata.getdata(plate,mjd,apred_vers,telescope,plugid=planstr['plugmap'])
             fiberdata = plugmap['fiberdata']
+
 
             # AP3D
             # ----
             # -ap2D and ap2Dmodel files for all exposures
             dtype3d = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('instrument',(np.str,20)),
                                 ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
-                                ('pbs_key',(np.str,50)),('checktime',np.datetime64),('num',int),('nread',int),('success',bool)])
+                                ('pbskey',(np.str,50)),('checktime',(np.str,100)),('num',int),('nread',int),('success',bool)])
             chk3d = np.zeros(nexp,dtype=dtype3d)
-            chk3d['planfile'] = pf
+            chk3d['planfile'] = pfile
             chk3d['apred_vers'] = apred_vers
             chk3d['instrument'] = instrument
             chk3d['telescope'] = telescope
@@ -192,19 +197,18 @@ def check_apred(expinfo,pbskey,planfiles):
                 base = load.filename('2D',num=num,mjd=mjd,chips=True)
                 chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
-                chk3d['checktime'][i] = Time.now().datetime64
+                chk3d['checktime'][i] = str(datetime.now())
                 if np.sum(exists)==3:
                     chk3d['success'][i] = True
-
 
             # AP2D
             # ----
             # -ap1D files for all exposures
             dtype2d = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('instrument',(np.str,20)),
                                 ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
-                                ('pbskey',(np.str,50)),('checktime',np.datetime64),('num',int),('nread',int),('success',bool)])
+                                ('pbskey',(np.str,50)),('checktime',(np.str,100)),('num',int),('success',bool)])
             chk2d = np.zeros(nexp,dtype=dtype2d)
-            chk2d['planfile'] = pf
+            chk2d['planfile'] = pfile
             chk2d['apred_vers'] = apred_vers
             chk2d['instrument'] = instrument
             chk2d['telescope'] = telescope
@@ -218,7 +222,7 @@ def check_apred(expinfo,pbskey,planfiles):
                 base = load.filename('1D',num=num,mjd=mjd,chips=True)
                 chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
-                chk2d['checktime'][i] = Time.now().datetime64
+                chk2d['checktime'][i] = str(datetime.now())
                 if np.sum(exists)==3:
                     chk2d['success'][i] = True
 
@@ -227,9 +231,9 @@ def check_apred(expinfo,pbskey,planfiles):
             # -apCframe files for all exposures
             dtypeCf = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('instrument',(np.str,20)),
                                 ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
-                                ('pbskey',(np.str,50)),('checktime',np.datetime64),('num',int),('success',bool)])
+                                ('pbskey',(np.str,50)),('checktime',(np.str,100)),('num',int),('success',bool)])
             chkCf = np.zeros(nexp,dtype=dtypeCf)
-            chkCf['planfile'] = pf
+            chkCf['planfile'] = pfile
             chkCf['apred_vers'] = apred_vers
             chkCf['instrument'] = instrument
             chkCf['telescope'] = telescope
@@ -243,22 +247,27 @@ def check_apred(expinfo,pbskey,planfiles):
                 base = load.filename('Cframe',num=num,mjd=mjd,chips=True)
                 chfiles = [base.replace('Cframe-','Cframe-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
-                chkCf['checktime'][i] = Time.now().datetime64
+                chkCf['checktime'][i] = str(datetime.now())
                 if np.sum(exists)==3:
                     chkCf['success'][i] = True
+
+            # could combine 3d/2d/cframe tables into one
 
             # -apPlate
             # -apVisit files
             # -apVisitSum file
-            dtypeap = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('instrument',(np.str,20)),
+            dtypeap = np.dtype([('planfile',(np.str,300)),('logfile',(np.str,300)),('errfile',(np.str,300)),
+                                ('apred_vers',(np.str,20)),('instrument',(np.str,20)),
                                 ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
-                                ('nobj',int),('pbskey',(np.str,50)),('checktime',np.datetime64),('ap3d_success',bool),
+                                ('nobj',int),('pbskey',(np.str,50)),('checktime',(np.str,100)),('ap3d_success',bool),
                                 ('ap3d_nexp_success',int),('ap2d_success',bool),('ap2d_nexp_success',int),
                                 ('apcframe_success',bool),('apcframe_nexp_success',int),('applate_success',bool),
-                                ('apvisit_success',bool),('apvisit_nobj',int),('apvisit_nobj_success',int),
-                                ('apvisitsum_success',bool)])
-            chkap = np.zeros(nexp,dtype=dtypeap)
-            chkap['planfile'] = pf
+                                ('apvisit_success',bool),('apvisit_nobj_success',int),
+                                ('apvisitsum_success',bool),('success',bool)])
+            chkap = np.zeros(1,dtype=dtypeap)
+            chkap['planfile'] = pfile
+            chkap['logfile'] = pfile.replace('.yaml','_pbs.log')
+            chkap['errfile'] = pfile.replace('.yaml','_pbs.err')
             chkap['apred_vers'] = apred_vers
             chkap['instrument'] = instrument
             chkap['telescope'] = telescope
@@ -267,6 +276,8 @@ def check_apred(expinfo,pbskey,planfiles):
             chkap['plate'] = plate
             chkap['nobj'] = np.sum(fiberdata['objtype']!='SKY')  # stars and tellurics
             chkap['pbskey'] = pbskey
+            chkap['checktime'] = str(datetime.now())
+            # ap3D, ap2D, apCframe success
             chkap['ap3d_nexp_success'] = np.sum(chk3d['success'])
             chkap['ap3d_success'] = np.sum(chk3d['success'])==nexp
             chkap['ap2d_nexp_success'] = np.sum(chk2d['success'])
@@ -279,16 +290,58 @@ def check_apred(expinfo,pbskey,planfiles):
             chfiles = [base.replace('Plate-','Plate-'+ch+'-') for ch in ['a','b','c']]
             exists = [os.path.exists(chf) for chf in chfiles]
             if np.sum(exists)==3:
-                chkap['applate_success'][i] = True
+                chkap['applate_success'] = True
+            # apVisit
             base = load.filename('Visit',plate=plate,mjd=mjd,fiber=1) 
-            nvisitfiles = glob(base.replace('-001.fits','-???.fits'))
+            visitfiles = glob(base.replace('-001.fits','-???.fits'))
+            nvisitfiles = len(visitfiles)
             chkap['apvisit_nobj_success']  = nvisitfiles
             chkap['apvisit_success'] = nvisitfiles==chkap['nobj']
             apvisitsumfile = load.filename('VisitSum',plate=plate,mjd=mjd)
             chkap['apvisitsum_success'] = os.path.exists(apvisitsumfile)
+            chkap['success'] = chkap['ap3d_success'][0] and chkap['ap2d_success'][0] and chkap['apcframe_success'][0] and \
+                               chkap['applate_success'][0] and chkap['apvisit_success'][0] and chkap['apvisitsum_success'][0]
 
+            if verbose:
+                logger.info('')
+                logger.info('%d/%d' % (ip+1,nplanfiles))
+                logger.info('planfile: '+pfile)
+                logger.info('log/errfile: '+os.path.basename(chkap['logfile'][0])+', '+os.path.basename(chkap['errfile'][0]))
+                logger.info('platetype: %s' % platetype)
+                logger.info('mjd: %d' % mjd)
+                logger.info('plate: %d' % plate)
+                logger.info('nexp: %d' % nexp)
+                logger.info('Nobj: %d' % chkap['nobj'][0])
+                logger.info('3D/2D/Cframe:')
+                logger.info('Num    EXPID   NREAD  3D    2D   Cframe')
+                for i,num in enumerate(expstr['name']):
+                    logger.info('%2d %10d %4d %6s %6s %6s' % (i+1,chk3d['num'][i],chk3d['nread'][i],
+                                                                 chk3d['success'][i],chk2d['success'][i],chkCf['success'][i]))
+
+                logger.info('apPlate files: %s ' % chkap['applate_success'][0])
+                logger.info('N apVisit files: %d ' % chkap['apvisit_nobj_success'][0])
+                logger.info('apVisitSum file: %s ' % chkap['apvisitsum_success'][0])
+
+
+            import pdb; pdb.set_trace()
+                
+            # Load into the database
+            db = apogeedb.DBSession()
+            db.load('ap3d',chk3d)
+            db.load('ap2d',chk2d)
+            db.load('apcframe',chkCf)
+            db.load('apred',chkap)
+            db.close()
+
+
+            import pdb; pdb.set_trace()
 
         # Calibration exposures
+        else:
+            logger.info('calibration exposures')
+
+    import pdb; pdb.set_trace()
+
         
 
 def run_daily(observatory,mjd5=None,apred='t14'):
@@ -356,6 +409,10 @@ def run_daily(observatory,mjd5=None,apred='t14'):
     # Write planfiles to MJD5.plans
     dln.writelines(dailydir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
 
+    check_apred(expinfo,planfiles,'dummy',verbose=True,logger=rootLogger)
+
+    import pdb;pdb.set_trace()
+
     # Use "pbs" packages to run "apred" on all visits
     queue = pbsqueue(verbose=True)
     cpus = np.minimum(len(planfiles),30)
@@ -365,6 +422,7 @@ def run_daily(observatory,mjd5=None,apred='t14'):
     import pdb;pdb.set_trace()
     queue.commit(hard=True,submit=True)
     queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
+    check_apred(expinfo,planfiles,queue.key)
     del queue
 
     import pdb;pdb.set_trace()
