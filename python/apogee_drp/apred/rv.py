@@ -100,10 +100,20 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     try : os.makedirs(os.path.dirname(stardir))
     except FileExistsError: pass
 
+    # Get the star version number
+    #  this gets incremented whenever we have a new visit
+    #  and a new apStar file gets generated
+    starstr = db.query('star',where="apogee_id='%s'" % star)
+    if len(starstr)==0:
+        starver = 'v1'
+    else:
+        starver = 'v'+str(np.max([int(v[1:]) for v in starstr['starver']])+1)
+        # DON'T INCREMENT if we are redoing, so check number of visits and MJD range
+
     # Run Doppler with dorv()
     try:
-        dopsumstr,dopvisitstr,gaussout = dorv(starvisits,clobber=clobber,verbose=verbose,tweak=tweak,plot=plot,
-                                              windows=windows,apstar_vers=apstar_vers,logger=logger)
+        dopsumstr,dopvisitstr,gaussout = dorv(starvisits,starver,clobber=clobber,verbose=verbose,tweak=tweak,
+                                              plot=plot,windows=windows,apstar_vers=apstar_vers,logger=logger)
         logger.info('Doppler completed successfully for {:s}'.format(star))
     except:
         logger.info('Doppler failed for {:s}'.format(star))
@@ -184,16 +194,20 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
 
     # Do the visit combination
     if len(gdrv)>0:
-        apstar = visitcomb(starvisits[visits[gdrv]],load=load,apstar_vers=apstar_vers,
+        apstar = visitcomb(starvisits[visits[gdrv]],starver,load=load,apstar_vers=apstar_vers,
                            nres=nres,logger=logger)
     else:
         logger.info('No good visits for '+star)
         raise
 
+    # Load visit RV information into "visitrv" table.
+    # Load star summary information into "star" table.
+
+
     return
 
 
-def dorv(allvisit,obj=None,telescope=None,apred=None,clobber=False,verbose=False,tweak=False,
+def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbose=False,tweak=False,
          plot=False,windows=None,apstar_vers='stars',logger=None):
     """ Do the Doppler rv jointfit from list of files
     """
@@ -217,6 +231,7 @@ def dorv(allvisit,obj=None,telescope=None,apred=None,clobber=False,verbose=False
     outfile = load.filename('Star',obj=obj)
     outdir = os.path.dirname(outfile)
     outbase = os.path.splitext(os.path.basename(outfile))[0]
+    outbase += '-'+starver  # add star version
     if os.path.exists(outdir)==False:
         os.makedirs(outdir)
     if apstar_vers != 'stars':
@@ -740,12 +755,18 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
     if write:
         outfile = load.filename('Star',obj=apstar.header['OBJID'])
         outbase = os.path.splitext(os.path.basename(outfile))[0]
+        outbase += '-'+starver   # add star version
         if apstar_vers != 'stars' :
             outfile = outfile.replace('/stars/','/'+apstar_vers+'/')
         outdir = os.path.dirname(outfile)
         try: os.makedirs(os.path.dirname(outfile))
         except: pass
         apstar.write(outfile)
+        # Create symlink no file with no version
+        outfilenover = outfile.replace('-'+starver+'.fits','.fits')  # no version
+        if os.path.exists(outfilenover)==True: os.remove(outfilenover)
+        os.symlink(outfile,outfilenover)
+        
 
         # Plot
         gd, = np.where((apstar.bitmask[0,:] & (pixelmask.badval()|pixelmask.getval('SIG_SKYLINE'))) == 0)

@@ -93,17 +93,12 @@ print,'.yaml'
   if (bin and 1) ne 0 then ap3d,planfile,clobber=clobber
   if (bin and 2) ne 0 then ap2d,planfile,clobber=clobber
   if (bin and 4) ne 0 then ap1dvisit,planfile,clobber=clobber
-  if (bin and 8) ne 0 then apqa,planfile
 
-endif else if strpos(planfile,'apStar-') ge 0 or strpos(planfile,'asStar-') ge 0 then  begin
-print,'apstar'
-  apstar,planfile,/sinc,/log,clobber=clobber
-
-endif else if strpos(planfile,'apMJD-') ge 0 or strpos(planfile,'asMJD-') ge 0 then  begin
-print,'apMJD'
-  ;aploadplan,planfile,planstr
-  ;if tag_exist(planstr,'apred_vers') then apsetver,planstr.apred_vers
-  mkhtml,planstr.mjd
+;endif else if strpos(planfile,'apMJD-') ge 0 or strpos(planfile,'asMJD-') ge 0 then  begin
+;print,'apMJD'
+;  ;aploadplan,planfile,planstr
+;  ;if tag_exist(planstr,'apred_vers') then apsetver,planstr.apred_vers
+;  mkhtml,planstr.mjd
 
 endif else begin
   print,'Unrecognized plan option: ', planfile

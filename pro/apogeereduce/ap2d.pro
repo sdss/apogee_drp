@@ -135,7 +135,9 @@ FOR i=0L,nplanfiles-1 do begin
     print,'' & print,'Plug Map file information:'
     plugfile = planstr.plugmap
     if tag_exist(planstr,'fixfiberid') then fixfiberid=planstr.fixfiberid
+    if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then if strtrim(fixfiberid,2) eq 'null' then undefine,fixfiberid ; null
     if tag_exist(planstr,'badfiberid') then badfiberid=planstr.badfiberid
+    if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then if strtrim(badfiberid,2) eq 'null' then undefine,badfiberid ; null
     ;; we only need the information on sky fibers
     plugmap = getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),plugid=planstr.plugmap,fixfiberid=fixfiberid,$
                            badfiberid=badfiberid,mapper_data=mapper_data,/noobject)
