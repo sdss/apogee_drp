@@ -52,6 +52,9 @@ if file_test(plugfile) eq 0 then begin
   return
 endif
 
+if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then if strtrim(fixfiberid,2) eq 'null' then undefine,fixfiberid  ;; null
+
+
 ;----------
 ; Strip path from plug file name, and change to that directory
 thisplug = file_basename(plugfile)
@@ -94,7 +97,6 @@ CD,origdir
 ;-----------------------------------
 ADD_TAG,plugdata,'ZETA',0.0d0,plugdata
 ADD_TAG,plugdata,'ETA',0.0d0,plugdata
-
 
 ; Make the PLUGMAP structure
 ;----------------------------

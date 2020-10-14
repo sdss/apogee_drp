@@ -39,8 +39,6 @@ if __name__ == '__main__' :
     parser.add_argument("--frameid", type=int, help='Override for single frame', default=None)
     parser.add_argument("--apred", type=str, help='apred_vers for single frame', default='current')
     parser.add_argument("--telescope", type=str, help='telescope for single frame', default='apo25m')
-    parser.add_argument("--done")
-    parser.add_argument("--host")
     parser.add_argument('--clobber', help='Overwrite files?',action="store_true")
     parser.add_argument("--flag",default='11111')
 
@@ -56,14 +54,3 @@ if __name__ == '__main__' :
     now = datetime.datetime.now()
     print ("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
     print("elapsed: ",time.time()-start)
-
-    if args.done is not None :
-        subprocess.call(['setdone',args.done])
-        try:
-            subprocess.call(['setdone',done])
-        except: pass
-        print('host', args.host)
-        if args.host is not None :
-            try: os.remove(args.done+'.'+args.host)
-            except: pass
-

@@ -25,7 +25,7 @@ from scipy import signal, interpolate
 from scipy.optimize import curve_fit
 from scipy.special import erf, erfc
 from scipy.signal import medfilt, convolve, boxcar
-from ..utils import apload, yanny
+from ..utils import apload, yanny, plan
 from holtztools import plots, html
 from astropy.table import Table
 #from pyvista import tv
@@ -632,7 +632,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
         p = planfile
         dirname = '.'
     else :
-        p = yanny.yanny(planfile)
+        p = plan.load(planfile,np=True)
         dirname = os.path.dirname(planfile)
     if dirname == '' : dirname = '.'
     if inst is None : inst = p['instrument'].strip("'") if p.get('instrument') else 'apogee-n'
