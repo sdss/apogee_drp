@@ -11,7 +11,7 @@ from numpy.lib.recfunctions import append_fields
 from astroplan import moon_illumination, get_moon
 from astropy.coordinates import SkyCoord
 from astropy import units as astropyUnits
-from apogee_drp.utils import plan,apload,yanny,plugmap,platedata
+from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask
 from apogee_drp.apred import wave
 from dlnpyutils import utils as dln
 from sdss_access.path import path
@@ -223,7 +223,7 @@ def makeCalFits(ims=None, mjd=None, instrument=None):
                         # https://github.com/sdss/apogee/blob/master/pro/apogeereduce/appeakfit.pro
                         # https://github.com/sdss/apogee/blob/master/python/apogee/apred/wave.py
 
-    #;                    APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
+#;                        APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
                         linestr = wave.findlines(oneD, rows=fibers, lines=line)
                         linestr = wave.peakfit(oneD[chips[ichip]][1].data)
 
@@ -238,7 +238,7 @@ def makeCalFits(ims=None, mjd=None, instrument=None):
                                 sz = a['WCOEF'][ichip].shape
                                 if sz[0] == 2:
                                     # NOTE: the below has not been tested
-    #;                                struct['WAVE'][i][ifiber,ichip,iline] = pix2wave(linestr['GAUSSX'][j][jline],oneD['WCOEF'][ichip][fiber,:])
+#;                                    struct['WAVE'][i][ifiber,ichip,iline] = pix2wave(linestr['GAUSSX'][j][jline],oneD['WCOEF'][ichip][fiber,:])
                                     pix = linestr['GAUSSX'][j][jline]
                                     wave0 = a['WCOEF'][ichip][fiber,:]
                                     struct['WAVE'][i][ifiber,ichip,iline] = wave.pix2wave(pix, wave0)
@@ -326,7 +326,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
 
     if ims is not None: n_exposures = len(ims)
 
-    chips=np.array(['a','b','c'])
+    chips = np.array(['a','b','c'])
     nchips = len(chips)
 
     #----------------------------------------------------------------------------------------
@@ -407,10 +407,11 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
     else:
         plugid = platehdr['NAME']
 
+
     if onem is None:
         platedata = platedata.getdata(plate=int(plate), mjd=mjd, apred=apred, telescope=telescope,
                                       plugid=plugid, fixfiberid=fixfiberid, badfiberid=badfiberid,
-                                      mapper_data=mapper_data) 
+                                      mapper_data=mapper_data, mapa=False) 
     else: 
         reduction_id = starnames[0]
         platedata = platedata.getdata(plate=int(plate), mjd=mjd, apred=apred, telescope=telescope,
@@ -423,7 +424,6 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
     rows = 300-fiber['fiberid']
     guide = platedata['guidedata']
 
-    # NOTE: Hopefully the below works. There might be a more efficient way.
     dtype = np.dtype([('sn', np.float64, (n_exposures,3))])
     newColumn = np.zeros(nfiber, dtype=dtype)
     fiber = append_fields(fiber, 'sn', newColumn, usemask=False)
@@ -455,7 +455,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
     #----------------------------------------------------------------------------------------
     # Find sky fibers.
     #----------------------------------------------------------------------------------------
-    fibersky = np.where(fiber['OBJTYPE'] == 'SKY')
+    fibersky = np.where(fiber['objtype'] == 'SKY')
     nsky = len(fibersky[0])
     sky = rows[fibersky]
 
@@ -586,6 +586,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
             if ims is not None:
                 cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
                 cframefile = cframefile.replace('apCframe-','apCframe-c-')
+
                 if len(glob.glob(cframefile)) != 0:
                     cframe = load.apCframe(field, int(plate), mjd, ims[i])
 
@@ -671,9 +672,9 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
                         i1 = int(np.floor(900 * sz[1] / 2048))
                         i2 = int(np.floor(1000 * sz[1] / 2048))
                         for itell in range(ntelluric):
-                            p1 = np.mean(fluxarr[i1:i2*(int(np.floor(sz[1]/2048))),telluric[itell]])
-                            p2 = np.std(fluxarr[i1:i2,telluric[itell]] - medfilt[i1:i2,itell])
-                            snt[fibertelluric[itell],ichip] = p1/p2
+                            p1 = np.mean(fluxarr[i1:i2 * (int(np.floor(sz[1] / 2048))), telluric[itell]])
+                            p2 = np.std(fluxarr[i1:i2, telluric[itell]] - medfilt[i1:i2,itell])
+                            snt[fibertelluric[itell], ichip] = p1/p2
 
             #----------------------------------------------------------------------------------------
             # Calculate zeropoints from known H band mags.
@@ -742,8 +743,8 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
                 objhtml.write('<TD>Target flags should go here but you need to translate TARGFLAG.PRO!\n)
 #;                objhtml.write('<TD>'+TARGFLAG(fiber[j].target1,fiber[j].target2,fiber[j].target3,survey=survey)+'\n')
 
-                if (ims is None) & (fiber['FIBERID'][j]>=0:
-                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber['FIBERID'][j])
+                if (ims is None) & (fiber['fiberid'][j]>=0:
+                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber['fiberid'][j])
                     if len(glob.glob(vfile))!=0:
                         h = fits.getheader(vfile)
                         if type(h) == astropy.io.fits.header.Header:
@@ -838,7 +839,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
             exptime = dhdr['EXPTIME']
             tt = Time(dateobs)
             mjdstart = tt.mjd
-            mjdend = mjdstart+(exptime/86400.)
+            mjdend = mjdstart + (exptime/86400.)
             mjd0 = min([mjd0,mjdstart])
             mjd1 = max([mjd1,mjdend])
             nj = 0
@@ -868,7 +869,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         secz = 1. / np.cos((90.-alt) * (math.pi/180.))
         seeing = dhdr['SEEING']
         ha = dhdr['HA']
-        design_ha = platedata['HA']
+        design_ha = platedata['ha']
         dither = -99.
         if len(cframe) > 1: dither = cframehdr['DITHSH']
         htmlsum.write('<TD>'+str("%6.2f" % round(secz,2))+'\n')
