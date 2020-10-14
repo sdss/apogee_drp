@@ -1,6 +1,5 @@
 import glob
 import os
-import sys
 import subprocess
 import math
 import numpy as np
@@ -9,9 +8,12 @@ from astropy.io import fits, ascii
 from astropy.table import Table
 from astropy.time import Time
 from numpy.lib.recfunctions import append_fields
-
-from apogee_drp.utils import plan,apload,yanny,plugmap,platedata # platedata.getdata
+from astroplan import moon_illumination, get_moon
+from astropy.coordinates import SkyCoord
+from astropy import units as astropyUnits
+from apogee_drp.utils import plan,apload,yanny,plugmap,platedata
 from apogee_drp.apred import wave
+from dlnpyutils import utils as dln
 from sdss_access.path import path
 import pdb
 
@@ -236,7 +238,7 @@ def makeCalFits(ims=None, mjd=None, instrument=None):
                                 sz = a['WCOEF'][ichip].shape
                                 if sz[0] == 2:
                                     # NOTE: the below has not been tested
-    #;                                struct['WAVE'][i][ifiber,ichip,iline] = pix2wave(linestr['GAUSSX'][j][jline],a['WCOEF'][ichip][fiber,:])
+    #;                                struct['WAVE'][i][ifiber,ichip,iline] = pix2wave(linestr['GAUSSX'][j][jline],oneD['WCOEF'][ichip][fiber,:])
                                     pix = linestr['GAUSSX'][j][jline]
                                     wave0 = a['WCOEF'][ichip][fiber,:]
                                     struct['WAVE'][i][ifiber,ichip,iline] = wave.pix2wave(pix, wave0)
@@ -381,11 +383,14 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
     htmlsum.write(txt1+txt2+'\n')
 
     #----------------------------------------------------------------------------------------
-    # Get the fiber association for this plate.
+    # Get the fiber association for this plate. Also get some other values
     #----------------------------------------------------------------------------------------
     if ims is None: tot = load.apPlate(int(plate), mjd)
     if ims is not None: tot = load.ap1D(ims[0])
     platehdr = tot['a'][0].header
+    ra = platehdr['RADEG']
+    dec = platehdr['DECDEG']
+    DateObs = platehdr['DATE-OBS']
 
     if type(tot) != dict:
         html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
@@ -480,44 +485,38 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
     # Loop through all the images for this plate, and make the plots.
     # Load up and save information for this plate in a FITS table.
     #----------------------------------------------------------------------------------------
-    allsky = np.zeros((n_exposures,3), dtype=np.float64)
-    allzero = np.zeros((n_exposures,3), dtype=np.float64)
+    allsky =     np.zeros((n_exposures,3), dtype=np.float64)
+    allzero =    np.zeros((n_exposures,3), dtype=np.float64)
     allzerorms = np.zeros((n_exposures,3), dtype=np.float64)
-    ra = platehdr['RADEG']
-    dec = platehdr['DECDEG']
-
-    # NOTE: Not sure if the following lines are needed.
-
-#;    mjd=0L
-#;    READS,cmjd,mjd
 
     #----------------------------------------------------------------------------------------
-    # Get moon information for this observation.
+    # Get moon distance and phase.
     #----------------------------------------------------------------------------------------
-#:    MOONPOS,2400000+mjd,ramoon,decmoon
-#;    GCIRC,2,ra,dec,ramoon,decmoon,moondist
-#;    MPHASE,2400000+mjd,moonphase
-
-    # NOTE: Currently hard-coding values for mjd 57680 until I find a python way.
-    ramoon = 57.323959
-    decmoon = 14.920379
-    moondist = 282147.24012227560
-    moondist /= 3600.
-    moonphase = 0.91864227
+    tt = Time(DateObs, format='fits')
+    moonpos = get_moon(tt)
+    moonra = moonpos.ra.deg
+    moondec = moonpos.dec.deg
+    c1 = SkyCoord(ra*astropyUnits.deg, dec*astropyUnits.deg)
+    c2 = SkyCoord(moonra*astropyUnits.deg, moondec*astropyUnits.deg)
+    sep = c1.separation(c2)
+    moondist = sep.deg
+    moonphase = moon_illumination(tt)
 
     #----------------------------------------------------------------------------------------
     # Get guider information.
     #----------------------------------------------------------------------------------------
     if onem is None:
-        # https://github.com/sdss/apogee/blob/master/bin/gcam_process
-        # https://github.com/sdss/apogee/blob/master/pro/utils/get_gcam.pro
         expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
         gcamfile = expdir+'/'+mjd+'/gcam-'+mjd+'.fits'
         gcamfilecheck = glob.glob(gcamfile)
         if len(gcamfilecheck) == 0:
-            # Note: gcam_process.py has not been loaded!!
-            x = gcam_process(mjd=mjd, instrument=instrument, outfile=gcamfile)
+            # NOTE: hopefully this works
+            subprocess.call(['gcam_process', telescope, instrument, gcamfile])
+        gcamfilecheck = glob.glob(gcamfile)
+        if len(gcamfilecheck) != 0:
             gcam = fits.getdata(gcamfile)
+        else:
+            print("Problem running gcam_process!")
 
     mjd0 = 99999
     mjd1 = 0.
@@ -568,30 +567,26 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         #----------------------------------------------------------------------------------------
         # Read image.
         #----------------------------------------------------------------------------------------
-        if ims is None:
-            pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('fits','')
-        else:
-            pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True)).replace('.fits','')
+        if ims is None: pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
+        if ims is not None: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
+        pfile = pfile.replace('.fits','')
 
-        if (clobber is True) | (len(glob.glob(outdir+pfile+'.tab'))!=0):
-            if ims is None:
-                d = load.apPlate(int(plate), mjd) 
-            else:
-                d = load.ap1D(ims[i])
+        if (clobber is True) | (len(glob.glob(outdir+pfile+'.tab')) != 0):
+            if ims is None:     d = load.apPlate(int(plate), mjd) 
+            if ims is not None: d = load.ap1D(ims[i])
 
             dhdr = d['a'][0].header
 
             if type(d)!=dict:
-                if ims is None: print("Problem with apPlate!!!")
+                if ims is None:  print("Problem with apPlate!!!")
                 if ims not None: print("Problem with ap1D!!!")
 
             cframe = None
-            if ims is None:
-                cframe = load.apPlate(int(plate), mjd)
-            else:
+            if ims is None: cframe = load.apPlate(int(plate), mjd)
+            if ims is not None:
                 cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
                 cframefile = cframefile.replace('apCframe-','apCframe-c-')
-                if len(glob.glob(cframefile))!=0:
+                if len(glob.glob(cframefile)) != 0:
                     cframe = load.apCframe(field, int(plate), mjd, ims[i])
 
             cframehdr = cframe['a'][0].header
@@ -624,9 +619,8 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
             # For each fiber, get an observed mag from a median value.
             #----------------------------------------------------------------------------------------
             for j in range(nfiber):
-                for ichip in range(nchips):
-                    obs[j,ichip] = np.median(d['FLUX'][ichip][:,rows[j]])
-            endfor
+                for ichip in range(nchips): 
+                    obs[j,ichip] = np.median(d[chips[ichip]][1].data[:,rows[j]])
 
             if flat is None:
                 for iline in range(len(skylines)):
@@ -638,17 +632,18 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
             #----------------------------------------------------------------------------------------
             for ichip in range(nchips):
                 chip = chips[ichip]
+
                 fluxarr = d[chip][1].data
                 errarr = d[chip][2].data
                 cfluxarr = cframe[chip][1].data
                 cerrarr = cframe[chip][2].data
 
-                if ims is None: medsky = 0.
+                if ims is None:     medsky = 0.
                 if ims is not None: medsky = np.median(obs[fibersky,ichip])
 
-                if nobj > 0: obs[fiberobj,ichip] = np.median(fluxarr[:,obj], axis=0)-medsky
+                if nobj > 0: obs[fiberobj,ichip] = np.median(fluxarr[:,obj], axis=0) - medsky
 
-                if ntelluric > 0: obs[fibertelluric,ichip] = np.median(fluxarr[:,telluric], axis=0)-medsky
+                if ntelluric > 0: obs[fibertelluric,ichip] = np.median(fluxarr[:,telluric], axis=0) - medsky
 
                 if nobj > 0:
                     sn[fiberobj,ichip] = np.median((fluxarr[:,obj]-medsky) / errarr[:,obj], axis=0)
@@ -662,8 +657,8 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
                         # NOTE: the below will not work because medfilt not defined.
 #;                        medfilt = MEDFILT2D(cfluxarr[:,telluric],50,dim=1)
                         sz = cfluxarr.shape
-                        i1 = int(np.floor(900*sz[0]/2048))
-                        i2 = int(np.floor(1000*sz[0]/2048))
+                        i1 = int(np.floor(900 * sz[0] / 2048))
+                        i2 = int(np.floor(1000 * sz[0] / 2048))
                         for itell in range(ntelluric):
                             p1 = np.std(cfluxarr[i1:i2,telluric[itell]])
                             p2 = np.std(cfluxarr[i1:i2,telluric[itell]] - medfilt[i1:i2,itell])
@@ -673,8 +668,8 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
                         snc[fibertelluric,ichip] = sn[fibertelluric,ichip]
 #;                        medfilt=MEDFILT2D(fluxarr[:,telluric],50,dim=1)
                         sz = fluxarr.shape
-                        i1 = int(np.floor(900*sz[1]/2048))
-                        i2 = int(np.floor(1000*sz[1]/2048))
+                        i1 = int(np.floor(900 * sz[1] / 2048))
+                        i2 = int(np.floor(1000 * sz[1] / 2048))
                         for itell in range(ntelluric):
                             p1 = np.mean(fluxarr[i1:i2*(int(np.floor(sz[1]/2048))),telluric[itell]])
                             p2 = np.std(fluxarr[i1:i2,telluric[itell]] - medfilt[i1:i2,itell])
@@ -686,7 +681,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
             #----------------------------------------------------------------------------------------
             nreads = dhdr['NFRAMES']
             exptime = dhdr['EXPTIME']
-            skyzero = 14.75+(2.5*np.log10(nreads))
+            skyzero = 14.75 + (2.5 * np.log10(nreads))
             zero = 0
             zerorms = 0.
             faint = -1
@@ -696,15 +691,14 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
             altsn = [0.,0.,0.]
             nsn = 0
 
-            # NOTE: The below subscripting type is not allowed in Python.
-            tmp = fiber['hmag'][[fiberobj,fibertelluric]]+(2.5*np.log10(obs[[fiberobj,fibertelluric],1]))
+            # NOTE: The below subscripting type will not work.
+            tmp = fiber['hmag'][[fiberobj,fibertelluric]] + (2.5 * np.log10(obs[[fiberobj,fibertelluric],1]))
             zero = np.median(tmp)
-            # NOTE: zerorms will be undefined
-#:            zerorms=ROBUST_SIGMA(fiber[[fiberobj,fibertelluric]].hmag+2.5*alog10(obs[[fiberobj,fibertelluric],1]))
-            faint = np.where((tmp-zero) < -0.5)
+            zerorms = dln.mad(fiber['hmag'][[fiberobj,fibertelluric]] + (2.5 * np.log10(obs[[fiberobj,fibertelluric],1])))
+            faint = np.where((tmp - zero) < -0.5)
             nfaint = len(faint[0])
 
-            zeronorm = zero-(2.5*np.log10(nreads))
+            zeronorm = zero - (2.5 * np.log10(nreads))
 
             #----------------------------------------------------------------------------------------
             # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
@@ -716,7 +710,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
                 objhtml.write('<TR>\n')
 
                 color = 'white'
-                if (fiber['objtype'][j] == 'SPECTROPHOTO_STD') | (fiber['objtype'][j]=='HOT_STD'): color = 'cyan'
+                if (fiber['objtype'][j] == 'SPECTROPHOTO_STD') | (fiber['objtype'][j] == 'HOT_STD'): color = 'cyan'
                 if fiber['objtype'][j] == 'SKY': color = 'lightgreen'
 
                 visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber['fiberid'][j]))
@@ -752,7 +746,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
                     vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber['FIBERID'][j])
                     if len(glob.glob(vfile))!=0:
                         h = fits.getheader(vfile)
-                        if type(h)==astropy.io.fits.header.Header:
+                        if type(h) == astropy.io.fits.header.Header:
                             # NOTE: starflag.pro not converted to Python yet
                             objhtml.write('<TD>Star flags should go here but you need to translate STARFLAG.PRO!\n)
 #;                            objhtml.write('<BR>'+STARFLAG(h['STARFLAG'])+'\n')
@@ -763,7 +757,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
                 #----------------------------------------------------------------------------------------
 
                 # NOTE: Not sure if this mod statement does the trick!
-                if (j%300)>-1:
+                if (j%300) > -1:
                     if noplot is None:
                         print("PLOTS 1: Spectrum plots will be made here.")
                     else:
@@ -779,7 +773,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
             if (flat is None) & (onem is None):
                 print('PLOTS 2: 5-panel plot will be made here.')
             else:
-                achievedsn = np.median(sn[obj,:],axis=0)
+                achievedsn = np.median(sn[obj,:], axis=0)
 
             #----------------------------------------------------------------------------------------
             # PLOTS 3-5: spatial residuals, , , 
@@ -802,11 +796,11 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         medsky = np.zeros(3, dtype=np.float64)
         for ichip in range(nchips):
             if np.median(obs[fibersky,ichip]) > 0:
-                medsky[ichip] = -2.5*np.log10(np.median(obs[fibersky,ichip]))+skyzero
+                medsky[ichip] = -2.5 * np.log10(np.median(obs[fibersky,ichip])) + skyzero
             else: 
                 medsky[ichip] = 99.999
 
-        html.write('<TR><TD><A HREF=../html/'+file+'.html>'+str(ims[i])+'</A>\n')
+        html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(ims[i])+'</A>\n')
         html.write('<TD>'+string(nreads)+'\n')
         html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
         html.write('<TR><TD>z<TD><TD>'+str("%5.2f" % round(zero,2))+'\n')
@@ -825,16 +819,16 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         html.write('<TR><TD>S/N(c)'+txt+'\n')
 
         if ntelluric>0:
-           html.write('<TR><TD>SN(E/C)<TD<TD>'+str("%5.2f" % round(np.median(snt[telluric,1]/snc[telluric,1]),2)+'\n')
+           html.write('<TR><TD>SN(E/C)<TD<TD>'+str("%5.2f" % round(np.median(snt[telluric,1] / snc[telluric,1]),2)+'\n')
         else: 
             html.write('<TR><TD>SN(E/C)<TD<TD>\n')
 
         html.write('</TABLE>\n')
-        html.write('<TD><IMG SRC=../plots/'+file+'.gif>\n')
-        html.write('<TD> <IMG SRC=../plots/'+file+'.jpg>\n')
-        html.write('<TD> <IMG SRC=../plots/'+file+'sky.jpg>\n')
-        html.write('<TD> <IMG SRC=../plots/'+file+'skycont.jpg>\n')
-        html.write('<TD> <IMG SRC=../plots/'+file+'telluric.jpg>\n')
+        html.write('<TD><IMG SRC=../plots/'+pfile+'.gif>\n')
+        html.write('<TD> <IMG SRC=../plots/'+pfile+'.jpg>\n')
+        html.write('<TD> <IMG SRC=../plots/'+pfile+'sky.jpg>\n')
+        html.write('<TD> <IMG SRC=../plots/'+pfile+'skycont.jpg>\n')
+        html.write('<TD> <IMG SRC=../plots/'+pfile+'telluric.jpg>\n')
 
         #----------------------------------------------------------------------------------------
         # Get guider info.
@@ -848,11 +842,11 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
             mjd0 = min([mjd0,mjdstart])
             mjd1 = max([mjd1,mjdend])
             nj = 0
-            # NOTE: Not sure if type will actually be dict.
-            if type(gcam)==dict:
+            # NOTE: Hopefully this will be the right gcam type.
+            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
                 jcam = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
                 nj = len(jcam[0])
-            if nj>1: 
+            if nj > 1: 
                 fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
                 gdrms = np.median(gcam['GDRMS'][jcam])
             else:
@@ -867,16 +861,16 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         #----------------------------------------------------------------------------------------
         # Summary plate web page.
         #----------------------------------------------------------------------------------------
-        htmlsum.write('<TR><TD><A HREF=../html/'+file+'.html>'+str(ims[i])+'</A>\n')
+        htmlsum.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(ims[i])+'</A>\n')
         htmlsum.write('<TD><A HREF=../../../../plates/'+plate+'/'+mjd+'/html/'+plate+'-'+mjd+'.html>'+str(dhdr['PLATEID'])+'</A>\n')
         htmlsum.write('<TD>'+str(dhdr['CARTID'])+'\n')
         alt = dhdr['ALT']
-        secz = 1./np.cos((90.-alt)*(math.pi/180.))
+        secz = 1. / np.cos((90.-alt) * (math.pi/180.))
         seeing = dhdr['SEEING']
         ha = dhdr['HA']
         design_ha = platedata['HA']
         dither = -99.
-        if len(cframe)>1: dither = cframehdr['DITHSH']
+        if len(cframe) > 1: dither = cframehdr['DITHSH']
         htmlsum.write('<TD>'+str("%6.2f" % round(secz,2))+'\n')
         htmlsum.write('<TD>'+str("%6.2f" % round(ha,2))+'\n')
         txt = '[ '+str(int(round(design_ha[0])))+
@@ -887,7 +881,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         htmlsum.write('<TD>'+str("%6.2f" % round(fwhm,2))+'\n')
         htmlsum.write('<TD>'+str("%6.2f" % round(gdrms,2))+'\n')
         htmlsum.write('<TD>'+str(nreads)+'\n')
-        if len(cframe)>1:
+        if len(cframe) > 1:
             htmlsum.write('<TD>'+str("%f8.2" % round(dither,2))+'\n')
         else:
             htmlsum.write('<TD>\n)'
@@ -909,7 +903,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         htmlsum.write('<TD>\n')
         for j in range(unplugged): htmlsum.write(str(300-unplugged[j])+'\n')
         htmlsum.write('<TD>\n')
-        if faint[0]>0:
+        if faint[0] > 0:
             for j in range(nfaint): htmlsum.write(str(fiber['fiberid'][faint][j])+'\n')
         allsky[i,:] = medsky
         allzero[i,:] = zero
@@ -924,7 +918,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
             if type(telstr) == astropy.io.fits.fitsrec.FITS_rec:
                 jtell = np.where(telstr['IM'] == ims[i])
                 ntell = len(jtell[0])
-                if ntell>0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
+                if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
             else:
                 print('Error reading Tellstar file: '+tellfile)
 
@@ -947,11 +941,11 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         platetab['ALTSN'][i] =     altsn
         platetab['NSN'][i] =       nsn
         platetab['SNC'][i] =       achievedsnc
-        if ntelluric>0: platetab['SNRATIO'][i] = np.median(snt[telluric,1]/snc[telluric,1])
+        if ntelluric > 0: platetab['SNRATIO'][i] = np.median(snt[telluric,1]/snc[telluric,1])
 
         for j in range(len(fiber)):
             fiber['SN'][j][i,:] = sn[j,:]
-            fiber['OBSMAG'][j][i,:] = -2.5*np.log10(obs[j,:])+zero
+            fiber['OBSMAG'][j][i,:] = -2.5 * np.log10(obs[j,:]) + zero
 
     #----------------------------------------------------------------------------------------
     # write out the FITS table.
@@ -959,13 +953,16 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
     platefile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     if ims is not None:
         # Note sure the following will work
-        Table(platetab).write(platefile)
-        Table(fiber).write(platefile)
+        platetab.write(platefile)
+        hdulist = fits.open(outfile)
+        hdu = fits.table_to_hdu(Table(fiber))
+        hdulist.append(hdu)
+        hdulist.writeto(platefile,overwrite=True)
+        hdulist.close()
 #;        mwrfits,platetab,platefile,/create
 #;        mwrfits,fiber,platefile
 
     if ims is None:
-        # Note sure the following will work
         Table(platetab).write(platefile)
         Table(fiber).write(platefile)
 #;        mwrfits,platetab,platefile
@@ -977,18 +974,15 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
     # For individual frames, make plots of variation of sky and zeropoint.
     # For combined frames, make table of combination parameters.
     #----------------------------------------------------------------------------------------
-
-    if onem is not None: 
-        name = starnames[0]+'-'+mjd
-    else:
-        name = plate+'-'+mjd
+    if onem is None: name = plate+'-'+mjd
+    if onem is not None: name = starnames[0]+'-'+mjd
 
     if ims is not None:
         if onem is None:
         #----------------------------------------------------------------------------------------
         # PLOT 6: guider rms plot
         #----------------------------------------------------------------------------------------
-        if type(gcam)==dict:
+        if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
             jcam = np.where((gcam['MJD'] > mjd0) & (gcam['MJD'] < mjd1))
             nj = len(jcam[0]) 
             print("PLOTS 6: Guider RMS plots will be made here.")
@@ -998,19 +992,19 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257sky.gif
         #----------------------------------------------------------------------------------------
         html.write('<TABLE BORDER=2><TR>\n')
-        file = 'sky-'+name
+        skyfile = 'sky-'+name
         print("PLOTS 7: Sky level plots will be made here.")
 
-        html.write('<TD><IMG SRC=../plots/'+file+'.gif>\n)'
+        html.write('<TD><IMG SRC=../plots/'+skyfile+'.gif>\n)'
 
         #----------------------------------------------------------------------------------------
         # PLOT 8: make plot of zeropoints for this plate
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257zero.gif
         #----------------------------------------------------------------------------------------
-        file = 'zero-'+name
+        zerofile = 'zero-'+name
         print("PLOTS 8: Zeropoints plots will be made here.")
 
-        html.write('<TD><IMG SRC=../plots/'+file+'.gif>\n')
+        html.write('<TD><IMG SRC=../plots/'+zerofile+'.gif>\n')
         html.write('</TABLE>\n')
     else:
         pfile = load.apPlate(int(plate), mjd)
@@ -1047,25 +1041,29 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
     htmlsum.write('</TABLE>\n')
 
     if onem is not None:
-        file = mjd+'-'+starnames[0]
-        htmlsum.write('<a href=../plots/apVisit-'+apred+'-'+file+'.jpg><IMG src='+'../plots/apVisit-'+apred+'-'+file+'.jpg></A>\n')
+        onemfile = mjd+'-'+starnames[0]
+        htmlsum.write('<a href=../plots/apVisit-'+apred+'-'+onemfile+'.jpg><IMG src='+'../plots/apVisit-'+apred+'-'+onemfile+'.jpg></A>\n')
 
     htmlsum.write('</BODY></HTML>')
 
     html.close()
     htmlsum.close()
 
+
 '''-----------------------------------------------------------------------------------------'''
 ''' GETFLUX: Translation of getflux.pro                                                     '''
 '''-----------------------------------------------------------------------------------------'''
 
 def getflux(d=None, skyline=None, rows=None):
+
     chips = np.array(['a','b','c'])
     nnrows = len(rows)
-    if skyline['W1']>d['a'][4].data[2047,150]:
+
+    # NOTE: pretty sure that [2047,150] subscript won't work
+    if skyline['W1'] > d['a'][4].data[2047,150]:
         ichip = 0
     else:
-        if skyline['W1']>d['b'][4].data[2047,150]:
+        if skyline['W1'] > d['b'][4].data[2047,150]:
             ichip = 1
         else:
             ichip = 2
@@ -1076,24 +1074,26 @@ def getflux(d=None, skyline=None, rows=None):
 
     for i in range(nnrows):
         wave = d[chips[ichip]][4].data[:,rows[i]]
+        flux = d[chips[ichip]][1].data
 
         icont = np.where(((wave > skyline['C1']) & 
                           (wave < skyline['C2'])) | 
                          ((wave < skyline['C3']) & 
                           (wave < skyline['C4'])))
 
-        if len(icont[0]) >= 0: cont[i] = np.median(d[chips[ichip]][1].data[icont,rows[i]])
+        if len(icont[0]) >= 0: cont[i] = np.median(flux[icont,rows[i]])
 
         iline = np.where((wave > skyline['W1']) & (wave < skyline['W2']))
 
         if len(iline[0]) >= 0:
-            tmp = d[chips[ichip]][1].data[iline,rows[i]]
-            line[i] = np.sum(tmp, where=math.isnan(tmp) is False)
-            tmp = d[chips[ichip]][1].data[iline,rows[i]]/d[chips[ichip]][1].data[iline,rows[i]]
-            nline[i] = np.sum(tmp, where=math.isnan(tmp) is False)
+            tmp = flux[iline,rows[i]]
+            line[i] = np.sum(tmp, where = math.isnan(tmp) is False)
 
-    skylineFlux = line - (nline*cont)
-    if skyline['TYPE']==0: skylineFlux /= cont
+            tmp = flux[iline,rows[i]] / flux[iline,rows[i]]
+            nline[i] = np.sum(tmp, where = math.isnan(tmp) is False)
+
+    skylineFlux = line - (nline * cont)
+    if skyline['TYPE'] == 0: skylineFlux /= cont
 
     return skylineFlux
 
