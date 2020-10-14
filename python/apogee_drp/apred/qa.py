@@ -207,9 +207,9 @@ def makeCalFits(ims=None, mjd=None, instrument=None):
             #----------------------------------------------------------------------------------------
             # Arc lamp exposures.
             #----------------------------------------------------------------------------------------
-            if (struct['THAR'][i]==1) | (struct['UNE'][i]==1):
-                if struct['THAR'][i]==1: line = tharline
-                if struct['THAR'][i]!=1: line = uneline
+            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
+                if struct['THAR'][i] == 1: line = tharline
+                if struct['THAR'][i] != 1: line = uneline
 
                 struct['LINES'][i] = line
 
@@ -229,11 +229,11 @@ def makeCalFits(ims=None, mjd=None, instrument=None):
 
                         for ifiber in range(nfibers):
                             fibers = fibers[ifiber]
-                            j = np.where(linestr['FIBER']==fiber)
+                            j = np.where(linestr['FIBER'] == fiber)
                             nj = len(j)
                             if nj>0:
-                                junk = np.min(np.absolute(linestr['GAUSSX'][j]-line[ichip,iline]))
-                                jline = np.argmin(np.absolute(linestr['GAUSSX'][j]-line[ichip,iline])
+                                junk = np.min(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
+                                jline = np.argmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline])
                                 struct['GAUSS'][:,ifiber,ichip,iline][i] = linestr['GPAR'][j][jline]
                                 sz = a['WCOEF'][ichip].shape
                                 if sz[0] == 2:
@@ -942,11 +942,11 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         platetab['ALTSN'][i] =     altsn
         platetab['NSN'][i] =       nsn
         platetab['SNC'][i] =       achievedsnc
-        if ntelluric > 0: platetab['SNRATIO'][i] = np.median(snt[telluric,1]/snc[telluric,1])
+        if ntelluric > 0: platetab['SNRATIO'][i] = np.median(snt[telluric,1] / snc[telluric,1])
 
         for j in range(len(fiber)):
             fiber['SN'][j][i,:] = sn[j,:]
-            fiber['OBSMAG'][j][i,:] = -2.5 * np.log10(obs[j,:]) + zero
+            fiber['OBSMAG'][j][i,:] = (-2.5 * np.log10(obs[j,:])) + zero
 
     #----------------------------------------------------------------------------------------
     # write out the FITS table.
