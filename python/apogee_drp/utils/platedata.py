@@ -18,7 +18,9 @@ from apogee_drp.apred import mkcal
 from sdss_access.path import path
 from astropy.io import fits
 
-def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=True,obj1m=None,
+# filter the warnings
+
+def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=None,
             fixfiberid=False,noobject=False,skip=False,twilight=False,
             badfiberid=None,mapper_data=None,starfiber=None):
     """
@@ -178,12 +180,23 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=True,obj1m=Non
     platedata['ha'][0] = plugmap['ha'][0]
     platedata['ha'][1] = plugmap['ha_observable_min'][0]
     platedata['ha'][2] = plugmap['ha_observable_max'][0]
+
+    ## Need to get tmass_style IDs from plateHolesSorted
+    #platedir = os.environ['PLATELIST_DIR']+'/plates/%04dXX/%06d' % (plate//100,plate)
+    #holefile = 'plateHolesSorted-%06d.par' % plate
+    #print('yanny_read,'+platedir+'/'+holefile)
+    #pdata = yanny.yanny(platedir+'/'+holefile,np=True)
+    #gd, = np.where(pdata['STRUCT1']['holetype'].astype(str)=='APOGEE')   
+    #pdata['STRUCT1']['targetids'][gd].astype(str)
+
     if mapa==False:
         # Get the plateHolesSorted file for this plate and read it
-        platedir = os.environ['PLATELIST_DIR']+'/plates/'+str(plate)[0:4]+'XX/'+str(plate)
-        holefile = 'plateHolesSorted-'+str(plate)+'.par'
+        platestr = '{:06d}'.format(8100)
+        platedir = os.environ['PLATELIST_DIR']+'/plates/%04dXX/%06d' % (plate//100,plate)
+        holefile = 'plateHolesSorted-'+platestr+'.par'
         print('yanny_read,'+platedir+'/'+holefile)
         pdata = yanny.yanny(platedir+'/'+holefile,np=True)
+        ph = pdata['STRUCT1']
         # Use locationid from plateHoles files as there are a few cases
         #  where plugmapM is wrong
         loc = pdata['locationId']
@@ -207,7 +220,6 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=True,obj1m=Non
         guide['zeta'][i] = plugmap['fiberdata']['zeta'][gi]
         guide['spectrographid'][i] = plugmap['fiberdata']['spectrographId'][gi]
     platedata['guidedata'] = guide
-
     
     # Find matching plugged entry for each spectrum and load up the output information from correct source(s)
     for i in range(300):
@@ -262,47 +274,47 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=True,obj1m=Non
                     if bmask.is_bit_set(fiber['target2'][i],4) == 1: fiber['objtype'][i]='SKY'
                 else:
                     # Get matching stars from coordinate match
-                    match, = np.where((np.abs(p.target_ra-fiber['ra'][i]) < 0.00002) and
-                                      (np.abs(p.target_dec-fiber['dec'][i]) < 0.00002))
+                    match, = np.where((np.abs(ph['target_ra']-fiber['ra'][i]) < 0.00002) &
+                                      (np.abs(ph['target_dec']-fiber['dec'][i]) < 0.00002))
                     if len(match)>0:
-                        if ('apogee2_target1' in p.keys()) and (platenum > 7500):
-                            fiber['target1'][i] = p['apogee2_target1'][match]
-                            fiber['target2'][i] = p['apogee2_target2'][match]
-                            fiber['target3'][i] = p['apogee2_target3'][match]
+                        if ('apogee2_target1' in ph.dtype.names) and (plate > 7500):
+                            fiber['target1'][i] = ph['apogee2_target1'][match]
+                            fiber['target2'][i] = ph['apogee2_target2'][match]
+                            fiber['target3'][i] = ph['apogee2_target3'][match]
                             apogee2 = 1
                             if have_flag_changes==True:
                                 jj, = np.where((flag_changes['PlateID'] == plate) &
-                                               (flag_changes['TARGETID'] == p['targetids'][match]))
+                                               (flag_changes['TARGETID'] == ph['targetids'][match]))
                                 if len(jj)>0:
-                                    print('modifying flags for',p['targetids'][match])
+                                    print('modifying flags for',ph['targetids'][match])
                                     fiber['target1'][i] = flag_changes['at1'][jj]
                                     fiber['target2'][i] = flag_changes['at2'][jj]
                                     fiber['target3'][i] = flag_changes['at3'][jj]
                                     fiber['target4'][i] = flag_changes['at4'][jj]
                         else:
-                            fiber['target1'][i] = p['apogee_target1'][match]
-                            fiber['target2'][i] = p['apogee_target2'][match]
+                            fiber['target1'][i] = ph['apogee_target1'][match]
+                            fiber['target2'][i] = ph['apogee_target2'][match]
                             apogee2 = 0
 
                         if bmask.is_bit_set(fiber['target2'][i],9) == 1:
                             fiber['objtype'][i] = 'HOT_STD'
                         if bmask.is_bit_set(fiber['target2'][i],4) == 1:
-                            object = 'SKY' 
+                            objname = 'SKY' 
                             hmag = 99.99
                             fiber['mag'][i] = [hmag,hmag,hmag,hmag,hmag]
                             fiber['objtype'][i] = 'SKY'
                         else:
-                            tmp = p['targetids'][match]
+                            tmp = ph['targetids'][match][0].astype(str)
                             objname = tmp[-16:]
                             if tmp.find('A')==0:
                                 objname = 'AP'+objname
                             else:
                                 objname = '2M'+objname
-                            hmag = p['tmass_h'][match]
-                            fiber['mag'][i] = [p['tmass_j'][match],p['tmass_h'][match],p['tmass_k'][match],0.,0.]
+                            hmag = ph['tmass_h'][match]
+                            fiber['mag'][i] = [ph['tmass_j'][match],ph['tmass_h'][match],ph['tmass_k'][match],0.,0.]
                             # Adopt PM un-adjusted  coordinates
-                            fiber['ra'][i] -= p['pmra'][match]/1000./3600./cos(fiber['dec'][i]*np.pi/180.)*(p['epoch'][match]-2000.)
-                            fiber['dec'][i] -= p['pmdec'][match]/1000./3600.*(p['epoch'][match]-2000.)
+                            fiber['ra'][i] -= ph['pmra'][match]/1000./3600./np.cos(fiber['dec'][i]*np.pi/180.)*(ph['epoch'][match]-2000.)
+                            fiber['dec'][i] -= ph['pmdec'][match]/1000./3600.*(ph['epoch'][match]-2000.)
                         fiber['hmag'][i] = hmag
                         fiber['object'][i] = objname
                         fiber['tmass_style'][i] = objname

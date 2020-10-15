@@ -29,9 +29,6 @@ from apogee_drp.apred import rv
 from apogee_drp.utils import bitmask,apload
 from dlnpyutils import utils as dln
 
-import warnings
-warnings.filterwarnings("ignore", message="Possible nested set")
-
 if __name__ == '__main__' :
 
     parser = argparse.ArgumentParser(

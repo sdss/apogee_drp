@@ -32,6 +32,9 @@ import six
 if six.PY3:
     long = int
 
+import warnings
+warnings.filterwarnings("ignore", message="Possible nested set")
+
 #
 # Classes
 #

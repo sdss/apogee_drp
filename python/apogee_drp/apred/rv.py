@@ -109,6 +109,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     else:
         starver = 'v'+str(np.max([int(v[1:]) for v in starstr['starver']])+1)
         # DON'T INCREMENT if we are redoing, so check number of visits and MJD range
+    logger.info('Version='+starver)
 
     # Run Doppler with dorv()
     try:
@@ -260,7 +261,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     lowsnr_visits, = np.where(allvisit['snr']<10)
     if (len(lowsnr_visits) > 1) & (len(lowsnr_visits)/len(allvisit) > 0.1) :
         try :
-            apstar_bc = visitcomb(allvisit,bconly=True,load=load,write=False,dorvfit=False,apstar_vers=apstar_vers) 
+            apstar_bc = visitcomb(allvisit,starver,bconly=True,load=load,write=False,dorvfit=False,apstar_vers=apstar_vers) 
             apstar_bc.setmask(badval)
             spec = doppler.Spec1D(apstar_bc.flux[0,:],err=apstar_bc.err[0,:],bitmask=apstar_bc.bitmask[0,:],
                                   mask=apstar_bc.mask[0,:],wave=apstar_bc.wave,lsfpars=np.array([0]),
@@ -497,7 +498,7 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
 from apogee_drp.apred import wave
 from apogee_drp.apred import sincint
 
-def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.5],bconly=False,
+def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.5],bconly=False,
               plot=False,write=True,dorvfit=True,apstar_vers='stars',logger=None):
     """ Combine multiple visits with individual RVs to rest frame sum
     """
@@ -743,29 +744,32 @@ def visitcomb(allvisit,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.
             apstar.cont = out[3][0].flux
             apstar.template = out[2][0].flux
         except ValueError as err:
-            info.error('Exception raised in visitcomb RV for: ', apstar.header['FIELD'],apstar.header['OBJID'])
-            info.error("ValueError: {0}".format(err))
+            logger.error('Exception raised in visitcomb RV for: ', apstar.header['FIELD'],apstar.header['OBJID'])
+            logger.error("ValueError: {0}".format(err))
         except RuntimeError as err:
-            info.error('Exception raised in visitcomb RV for: ', apstar.header['FIELD'],apstar.header['OBJID'])
-            info.error("Runtime error: {0}".format(err))
+            logger.error('Exception raised in visitcomb RV for: ', apstar.header['FIELD'],apstar.header['OBJID'])
+            logger.error("Runtime error: {0}".format(err))
         except: 
-            info.error('Exception raised in visitcomb RV fit for: ',apstar.header['FIELD'],apstar.header['OBJID'])
+            logger.error('Exception raised in visitcomb RV fit for: ',apstar.header['FIELD'],apstar.header['OBJID'])
 
     # Write the spectrum to file
     if write:
-        outfile = load.filename('Star',obj=apstar.header['OBJID'])
-        outbase = os.path.splitext(os.path.basename(outfile))[0]
+        outfilenover = load.filename('Star',obj=apstar.header['OBJID'])
+        outdir = os.path.dirname(outfilenover)
+        outbase = os.path.splitext(os.path.basename(outfilenover))[0]
         outbase += '-'+starver   # add star version
+        outfile = outdir+'/'+outbase+'.fits'
         if apstar_vers != 'stars' :
             outfile = outfile.replace('/stars/','/'+apstar_vers+'/')
         outdir = os.path.dirname(outfile)
         try: os.makedirs(os.path.dirname(outfile))
         except: pass
+        logger.info('Writing apStar file to '+outfile)
         apstar.write(outfile)
         # Create symlink no file with no version
-        outfilenover = outfile.replace('-'+starver+'.fits','.fits')  # no version
-        if os.path.exists(outfilenover)==True: os.remove(outfilenover)
-        os.symlink(outfile,outfilenover)
+        import pdb; pdb.set_trace()        
+        if os.path.exists(outfilenover) or os.path.islink(outfilenover): os.remove(outfilenover)
+        os.symlink(os.path.basename(outfile),outfilenover)  # relative path
         
 
         # Plot
