@@ -335,6 +335,8 @@ class SdssvApogeeTarget0(BitMask) :
               'MWM_GG','MWM_DUST','MWM_TESSRGB','BHM_CSC_APOGEE','MWM_RV_LONG-FPS','MWM_RV_SHORT-FPS',
               '','','','',''])
 
+test
+
 class Apogee2Target1(BitMask) :
     '''
     BitMask class for APOGEE2_TARGET1
