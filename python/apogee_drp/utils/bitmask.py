@@ -454,3 +454,20 @@ def targflags(targ1,targ2,targ3,targ4,survey='apogee2') :
             mask1=ApogeeTarget1()
             mask2=ApogeeTarget2()
             return ','.join([mask1.getname(targ1),mask2.getname(targ2)]).strip(',')
+
+def starflags(starflag,survey='apogee2') :
+    mask1=StarBitMask()
+    return ','.join([mask1.getname(starflag)]).strip(',')
+
+
+
+
+
+
+
+
+
+
+
+
+
