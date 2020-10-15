@@ -329,11 +329,15 @@ class SdssvApogeeTarget0(BitMask) :
     '''
     BitMask class for SDSSV_APOGEE_TARGET0
     '''
-    name = ([ 'MWM_SKY','MWM_TELLURIC','','','','','','MWM_SNC_100PC','MWM_SNC_250PC','MWM_RV_LONG-BPLATES',
-              'MWM_RV_SHORT-BPLATES','MWM_RV_LONG-RM','MWM_RV_SHORT-RM','MWM_PLANET_TESS','MWM_YSO_CMZ',
-              'MWM_YSO_OB','MWM_YSO_S1','MWM_YSO_S2','MWC_YSO_S2-5','MWM_YSO_S3','MWM_YSO_CLUSTER',
-              'MWM_GG','MWM_DUST','MWM_TESSRGB','BHM_CSC_APOGEE','MWM_RV_LONG-FPS','MWM_RV_SHORT-FPS',
-              '','','','',''])
+
+    name = ([ 'MWM_SKY','MWM_TELLURIC','','',
+              '','','','MWM_SNC_100PC',
+              'MWM_SNC_250PC','MWM_RV_LONG-BPLATES','MWM_RV_SHORT-BPLATES','MWM_RV_LONG-RM',
+              'MWM_RV_SHORT-RM','MWM_PLANET_TESS','MWM_YSO_CMZ','MWM_YSO_OB',
+              'MWM_YSO_S1','MWM_YSO_S2','MWC_YSO_S2-5','MWM_YSO_S3',
+              'MWM_YSO_CLUSTER','MWM_GG','MWM_DUST','MWM_TESSRGB',
+              'BHM_CSC_APOGEE','MWM_RV_LONG-FPS','MWM_RV_SHORT-FPS','',
+              '','','',''])
 
 class Apogee2Target1(BitMask) :
     '''
@@ -434,13 +438,19 @@ class ApogeeTarget4(BitMask) :
 
 def targflags(targ1,targ2,targ3,targ4,survey='apogee2') :
 
-    if 'apogee2' in survey :
-        mask1=Apogee2Target1()
-        mask2=Apogee2Target2()
-        mask3=Apogee2Target3()
-        mask4=Apogee2Target4()
-        return ','.join([mask1.getname(targ1),mask2.getname(targ2),mask3.getname(targ3),mask4.getname(targ4)]).strip(',')
-    else :
-        mask1=ApogeeTarget1()
-        mask2=ApogeeTarget2()
-        return ','.join([mask1.getname(targ1),mask2.getname(targ2)]).strip(',')
+    survey=survey.lower()
+
+    if ('mwm' in survey) | ('sdssv' in survey) | ('sdss-v' in survey):
+        mask1=SdssvApogeeTarget0()
+        return ','.join([mask1.getname(targ1)]).strip(',')
+    else:
+        if 'apogee2' in survey :
+            mask1=Apogee2Target1()
+            mask2=Apogee2Target2()
+            mask3=Apogee2Target3()
+            mask4=Apogee2Target4()
+            return ','.join([mask1.getname(targ1),mask2.getname(targ2),mask3.getname(targ3),mask4.getname(targ4)]).strip(',')
+        else :
+            mask1=ApogeeTarget1()
+            mask2=ApogeeTarget2()
+            return ','.join([mask1.getname(targ1),mask2.getname(targ2)]).strip(',')
