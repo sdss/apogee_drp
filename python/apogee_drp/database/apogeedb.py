@@ -284,6 +284,19 @@ class DBSession(object):
             for t in list(cat)
         ]
 
+        # Check for arrays and replace with a list
+        hasarrays = False
+        for d in data[0]:
+            hasarrays |= hasattr(d,'__len__') and type(d) is not str
+        if hasarrays:
+            data1 = data.copy()
+            data = [
+                tuple(list(i) if  hasattr(i,'__len__') and type(d) is not str and type(i) is not np.str_ else i for i in t)
+                for t in list(data1)
+            ]
+            del data1
+            
+        
         insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s ON CONFLICT DO NOTHING'
         execute_values(cur,insert_query,data,template=None)
 

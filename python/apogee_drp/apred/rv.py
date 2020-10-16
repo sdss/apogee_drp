@@ -80,6 +80,10 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         return
     logger.info('%d visit file(s) found' % nallvisits)
 
+    # Get the star version number
+    starver = str(np.max(allvisits['mjd']))
+    logger.info('Version='+starver)
+    
     # Select good visit spectra
     starmask = bitmask.StarBitMask()
     gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
@@ -100,16 +104,6 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     try : os.makedirs(os.path.dirname(stardir))
     except FileExistsError: pass
 
-    # Get the star version number
-    #  this gets incremented whenever we have a new visit
-    #  and a new apStar file gets generated
-    starstr = db.query('star',where="apogee_id='%s'" % star)
-    if len(starstr)==0:
-        starver = 'v1'
-    else:
-        starver = 'v'+str(np.max([int(v[1:]) for v in starstr['starver']])+1)
-        # DON'T INCREMENT if we are redoing, so check number of visits and MJD range
-    logger.info('Version='+starver)
 
     # Run Doppler with dorv()
     try:
@@ -201,9 +195,15 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         logger.info('No good visits for '+star)
         raise
 
+
+    apstar.filename = 'filename'
+    apstar.uri = 'uri'
+    apstar.mjdbeg = np.min(allvisits['mjd'])
+    apstar.mjdend = np.max(allvisits['mjd'])
+    
     # Load visit RV information into "visitrv" table.
     # Load star summary information into "star" table.
-
+    dbload(apstar,starvisits[visits[gdrv]])
 
     return
 
@@ -660,8 +660,10 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     apstar.telerr[2:,:] = stack.telerr
 
     # Populate header
-    apstar.header['FIELD'] = (allvisit['field'][0], 'APOGEE field name')
     apstar.header['OBJID'] = (allvisit['apogee_id'][0], 'APOGEE object name')
+    apstar.header['APRED'] = (apred, 'APOGEE reduction version')
+    apstar.header['STARVER'] = (starver, 'apStar version')
+    apstar.header['HEALPIX'] = ( apload.obj2healpix(allvisit['apogee_id'][0]), 'HEALPix location')
     try :apstar.header['SNR'] = (np.nanmedian(apstar.flux/apstar.err), 'Median S/N per apStar pixel')
     except :apstar.header['SNR'] = (0., 'Median S/N per apStar pixel')
     apstar.header['RA'] = (allvisit['ra'].max(), 'right ascension, deg, J2000')
@@ -766,8 +768,8 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         except: pass
         logger.info('Writing apStar file to '+outfile)
         apstar.write(outfile)
+        apstar.filename = outfile
         # Create symlink no file with no version
-        import pdb; pdb.set_trace()        
         if os.path.exists(outfilenover) or os.path.islink(outfilenover): os.remove(outfilenover)
         os.symlink(os.path.basename(outfile),outfilenover)  # relative path
         
@@ -797,4 +799,72 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         pdb.set_trace()
 
     return apstar
+
+def dbload(apstar,allvisit):
+    """ Load the star and visit information into the database."""
+
+    # Open db session
+    db = apogeedb.DBSession()
+
+    # Create star table, columns to transfer from apstar header
+    cols = ['OBJID','TARGET_ID','STARVER','APRED','HEALPIX','SNR','RA','DEC','GLON','GLAT','J','J_ERR',
+            'H','H_ERR','K','K_ERR','SRC_H','AKTARG','AKMETHOD','AKWISE','SFD_EBV',
+            'APTARG1','APTARG2','APTARG3','AP2TARG1','AP2TARG2','AP2TARG3','AP2TARG4',
+            'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHELIO',
+            'VSCATTER','VERR','RV_TEFF','RV_LOGG','RV_FEH','MEANFIB','SIGFIB','NRES']    
+    # Star table
+    startab = Table()
+    startab['STARVER'] = [apstar.header['STARVER']]   # gives table the dimension
+    for c in cols:
+        startab[c] = apstar.header[c]
+    # Rename names
+    startab['OBJID'].name = 'APOGEE_ID'
+    startab['APRED'].name = 'APRED_VERS'
+    startab['J'].name = 'JMAG'
+    startab['J_ERR'].name = 'JMAG_ERR'
+    startab['H'].name = 'HMAG'
+    startab['H_ERR'].name = 'HMAG_ERR'
+    startab['K'].name = 'KMAG'
+    startab['K_ERR'].name = 'KMAG_ERR'    
+    startab['APTARG1'].name = 'APOGEE_TARGET1'
+    startab['APTARG2'].name = 'APOGEE_TARGET2'
+    startab['APTARG3'].name = 'APOGEE_TARGET3'
+    startab['APTARG4'].name = 'APOGEE_TARGET4'
+    startab['APT2ARG1'].name = 'APOGEE2_TARGET1'
+    startab['APT2ARG2'].name = 'APOGEE2_TARGET2'
+    startab['APT2ARG3'].name = 'APOGEE2_TARGET3'
+    startab['N_COMP'].name = 'N_COMPONENTS'
+    # Add other columns
+    startab['TELESCOPE'] = allvisit['telescope'][0]
+    startab['FILE'] = os.path.basename(apstar.filename)
+    mwm_root = os.environ['MWM_ROOT']
+    startab['URI'] = apstar.filename[len(mwm_root)+1:]
+    startab['MJDBEG'] = apstar.mjdbeg
+    startab['MJDEND'] = apstar.mjdend
+    
+    db.load('star',startab)
+    
+
+    # Visit table
+    starout = db.query('star',where="apogee_id='"+apogee_id+"' and apred_vers='"+apred+"' and telescope='"+telescope+"' and starver='"+starver"'")
+    allvisit['star_pk'] = starout['pk'][0]
+    #  delete many duplicate columns
+    delcols = ['TARGET_ID','SURVEY','FIELD','PROGRAMNAME','ALT_ID','LOCATION_ID','J','J_ERR','H_ERR',
+               'K','K_ERR','SRC_H','WASH_M','WASH_M_ERR','WASH_T2','WASH_T2_ERR',
+               'WASH_T2_ERR','DDO51','DDO51_ERR','IRAC_3_6','IRAF_3_6_ERR','IRAC_4_5','IRAC_4_5_ERR',
+               'IRAC_5_8','IRAC_5_8_ERR','IRAC_8_0','IRAC_8_0_ERR','WISE_4_5','WISE_4_5_ERR',
+               'TARG_4_5','TARG_4_5_ERR','WASH_DDO51_GIANT_FLAG','WASH_DDO51_STAR_FLAG','PMRA','PMDEC',
+               'PM_SRC','AK_TARG','AK_TARG_METHOD','AK_WISE','SFD_EBV','APOGEE_TARGET1','APOGEE_TARGET2',
+               'APOGEE_TARGET3','APOGEE_TARGET4','TARGFLAGS','STARFLAG','STARFLAGS','VLSR','VGSR',
+               'RV_ALPHA','RV_CARB','SYNTHFILE']
+    for c in delcols:
+        del allvisit[c]
+    # Rename columns
+    allvisit['H'].name = 'HMAG'
+    allvisit['PK'].name = 'VISIT_PK'
+
+    db.load('rv_visit',allvisit)
+
+    # Close db session
+    db.close()
 
