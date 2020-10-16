@@ -180,8 +180,14 @@ class DBSession(object):
                    'text':(np.str,200),'char':(np.str,5),'timestamp':(np.str,50), 'timestamp with time zone':(np.str,50)}
             colnames = [h[0] for h in head]
             dt = []
-            for h in head:
-                dt.append( (h[0], d2d[h[1]]) )
+            for i,h in enumerate(head):
+                if h[1]=='ARRAY':
+                    # Get number if elements and type from the data itself
+                    narr = len(data[0][i])
+                    type1 = type(data[0][i][0])
+                    dt.append( (h[0], type1, narr) )
+                else:
+                    dt.append( (h[0], d2d[h[1]]) )
             dtype = np.dtype(dt)
 
             # Convert to numpy structured array
@@ -223,8 +229,13 @@ class DBSession(object):
             # Use the data returned to get the type
             dt = []
             for i,c in enumerate(colnames):
-                if type(data[0][i]) is str:
+                type1 = type(data[0][i])
+                if type1 is str:
                     dt.append( (c, type(data[0][i]), 300) )
+                elif type1 is list:  # convert list to array
+                    nlist = len(data[0][i])
+                    dtype1 = type(data[0][i][0])
+                    dt.append( (c, dtype1, nlist) )
                 else:
                     dt.append( (c, type(data[0][i])) )
             dtype = np.dtype(dt)
