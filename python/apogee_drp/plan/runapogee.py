@@ -248,7 +248,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 logger.info('3D/2D/Cframe:')
                 logger.info('Num    EXPID   NREAD  3D    2D   Cframe')
                 for num in expstr['name']:
-                    ind, = np.where(expinfo['num']==num))
+                    ind, = np.where(expinfo['num']==num)
                     ind3d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP3D'))
                     ind2d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP2D'))
                     indcf, = np.where((chkexp['num']==num) & (chkexp['proctype']=='APCFRAME'))
@@ -277,8 +277,13 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
 
     import pdb; pdb.set_trace()
 
-def create_sumfiles(mjd5,apred,telescope):
+def create_sumfiles(mjd5,apred,telescope,logger=None):
     """ Create allVisit/allStar files and summary of objects for this night."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    load = apload.ApLoad(apred,telescope)
 
     # Start db session
     db = apogeedb.DBSession()
@@ -291,27 +296,59 @@ def create_sumfiles(mjd5,apred,telescope):
     #  We then select the particular row (with all columns) using apogee_id+apred_vers+telescope+starver
     #    from this subquery.
     allstar = db.query(sql="select * from apogee_drp.star where (apogee_id, apred_vers, telescope, starver) in "+\
-                       "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\   # subquery
+                       "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\
                        "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    allstarfile = load.filename('allStar')
+    logger.info('Writing allStar file to '+allstarfile)
+    if os.path.exists(os.path.dirname(allstarfile))==False:
+        os.makedirs(os.path.dirname(allstarfile))
+    Table(allstar).write(allstarfile,overwrite=True)
 
+    # allVisit
     # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
     #   Get more info by joining with the visit table.
-    allstar = db.query(sql="select * from apogee_drp.rv_visit where (apogee_id, apred_vers, telescope, starver) in "+\
-                       "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.rv_visit where "+\   # subquery
-                       "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
+             'field', 'programname', 'alt_id', 'location_id', 'ra', 'dec', 'glon', 'glat', 'j', 'j_err', 'h',
+             'h_err', 'k', 'k_err', 'src_h', 'wash_m', 'wash_m_err', 'wash_t2', 'wash_t2_err', 'ddo51',
+             'ddo51_err', 'irac_3_6', 'irac_3_6_err', 'irac_4_5', 'irac_4_5_err', 'irac_5_8', 'irac_5_8_err',
+             'irac_8_0', 'irac_8_0_err', 'wise_4_5', 'wise_4_5_err', 'targ_4_5', 'targ_4_5_err',
+             'wash_ddo51_giant_flag', 'wash_ddo51_star_flag', 'pmra', 'pmdec', 'pm_src', 'ak_targ',
+             'ak_targ_method', 'ak_wise', 'sfd_ebv', 'apogee_target1', 'apogee_target2', 'apogee_target3',
+             'apogee_target4', 'targflags', 'snr', 'starflag', 'starflags','dateobs','jd']
+    rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vhelio', 'chisq', 'rv_teff', 'rv_feh',
+              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vhelio', 'n_components', 'rv_components']
+    cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
+    allvisit = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
+                        "where (rv.apogee_id, rv.apred_vers, rv.telescope, rv.starver) in "+\
+                        "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.rv_visit where "+\
+                        "rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    allvisitfile = load.filename('allVisit')
+    logger.info('Writing allVisit file to '+allvisitfile)
+    if os.path.exists(os.path.dirname(allvisitfile))==False:
+        os.makedirs(os.path.dirname(allvisitfile))
+    Table(allvisit).write(allvisitfile,overwrite=True)
 
-    allvisit = db.query(sql='select * from apogee_drp.star where (apogee_id, starver) in '+\
-                       '(select apogee_id, max(starver) from apogee_drp.star group by apogee_id)')
+    # Nightly allVisit and allStar, allVisitMJD/allStarMJD
+    gdstar, = np.where(allstar['starver']==str(mjd5))
+    allstarmjd = allstar[gdstar]
+    gdvisit, = np.where(allvisit['mjd']==int(mjd5))
+    allvisitmjd = allvisit[gdvisit]
 
-
-    # allVisit and allStar for this night, allVisitMJD/allStarMJD
-    starmjd = db.query(sql="select * from apogee_drp.star where apred_vers='"+apred+"' and telescope='"+telescope+"' and "+\
-                       "starver='"+str(mjd5)+"'")
-    visitmjd = db.query(sql="select * from apogee_drp.visit where apred_vers='"+apred+"' and telescope='"+telescope+"' and "+\
-                       "starver='"+str(mjd5)+"'")
-
+    # maybe in summary/MJD/ or qa/MJD/ ?
+    allstarmjdfile = load.filename('allStarMJD')
+    logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
+    if os.path.exists(os.path.dirname(allstarmjdfile))==False:
+        os.makedirs(os.path.dirname(allstarmjdfile))
+    Table(allstarmjd).write(allstarmjdfile,overwrite=True)
+    allvisitmjdfile = load.filename('allVisitMJD')
+    logger.info('Writing Nightly allVisitMJD file to '+allvisitmjdfile)
+    if os.path.exists(os.path.dirname(allvisitmjdfile))==False:
+        os.makedirs(os.path.dirname(allvisitmjdfile))
+    Table(allvisitmjd).write(allvisitmjdfile,overwrite=True)
 
     import pdb; pdb.set_trace()
+
+    db.close()
 
 def run_daily(observatory,mjd5=None,apred='t14'):
     """ Perform daily APOGEE data reduction."""
