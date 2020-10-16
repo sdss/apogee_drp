@@ -190,19 +190,18 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     # Do the visit combination
     if len(gdrv)>0:
         apstar = visitcomb(starvisits[visits[gdrv]],starver,load=load,apstar_vers=apstar_vers,
-                           nres=nres,logger=logger)
+                           apred=apred,nres=nres,logger=logger)
     else:
         logger.info('No good visits for '+star)
         raise
 
 
-    apstar.filename = 'filename'
-    apstar.uri = 'uri'
+    # Add MJD range
     apstar.mjdbeg = np.min(allvisits['mjd'])
     apstar.mjdend = np.max(allvisits['mjd'])
-    
-    # Load visit RV information into "visitrv" table.
-    # Load star summary information into "star" table.
+
+    # Load star summary information into "star" table.    
+    # Load visit RV information into "rv_visit" table.
     dbload(apstar,starvisits[visits[gdrv]])
 
     return
@@ -807,7 +806,7 @@ def dbload(apstar,allvisit):
     db = apogeedb.DBSession()
 
     # Create star table, columns to transfer from apstar header
-    cols = ['OBJID','TARGET_ID','STARVER','APRED','HEALPIX','SNR','RA','DEC','GLON','GLAT','J','J_ERR',
+    cols = ['OBJID','STARVER','APRED','HEALPIX','SNR','RA','DEC','GLON','GLAT','J','J_ERR',
             'H','H_ERR','K','K_ERR','SRC_H','AKTARG','AKMETHOD','AKWISE','SFD_EBV',
             'APTARG1','APTARG2','APTARG3','AP2TARG1','AP2TARG2','AP2TARG3','AP2TARG4',
             'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHELIO',
@@ -829,10 +828,10 @@ def dbload(apstar,allvisit):
     startab['APTARG1'].name = 'APOGEE_TARGET1'
     startab['APTARG2'].name = 'APOGEE_TARGET2'
     startab['APTARG3'].name = 'APOGEE_TARGET3'
-    startab['APTARG4'].name = 'APOGEE_TARGET4'
-    startab['APT2ARG1'].name = 'APOGEE2_TARGET1'
-    startab['APT2ARG2'].name = 'APOGEE2_TARGET2'
-    startab['APT2ARG3'].name = 'APOGEE2_TARGET3'
+    startab['AP2TARG1'].name = 'APOGEE2_TARGET1'
+    startab['AP2TARG2'].name = 'APOGEE2_TARGET2'
+    startab['AP2TARG3'].name = 'APOGEE2_TARGET3'
+    startab['AP2TARG4'].name = 'APOGEE2_TARGET4'
     startab['N_COMP'].name = 'N_COMPONENTS'
     # Add other columns
     startab['TELESCOPE'] = allvisit['telescope'][0]
@@ -845,23 +844,31 @@ def dbload(apstar,allvisit):
     db.load('star',startab)
     
 
-    # Visit table
-    starout = db.query('star',where="apogee_id='"+apogee_id+"' and apred_vers='"+apred+"' and telescope='"+telescope+"' and starver='"+starver"'")
+    # rv_visit table
+    starout = db.query('star',where="apogee_id='"+startab['APOGEE_ID'][0]+"' and apred_vers='"+startab['APRED_VERS'][0]+"' "+\
+                       "and telescope='"+startab['TELESCOPE'][0]+"' and starver='"+startab['STARVER'][0]+"'")
     allvisit['star_pk'] = starout['pk'][0]
-    #  delete many duplicate columns
-    delcols = ['TARGET_ID','SURVEY','FIELD','PROGRAMNAME','ALT_ID','LOCATION_ID','J','J_ERR','H_ERR',
-               'K','K_ERR','SRC_H','WASH_M','WASH_M_ERR','WASH_T2','WASH_T2_ERR',
-               'WASH_T2_ERR','DDO51','DDO51_ERR','IRAC_3_6','IRAF_3_6_ERR','IRAC_4_5','IRAC_4_5_ERR',
-               'IRAC_5_8','IRAC_5_8_ERR','IRAC_8_0','IRAC_8_0_ERR','WISE_4_5','WISE_4_5_ERR',
-               'TARG_4_5','TARG_4_5_ERR','WASH_DDO51_GIANT_FLAG','WASH_DDO51_STAR_FLAG','PMRA','PMDEC',
-               'PM_SRC','AK_TARG','AK_TARG_METHOD','AK_WISE','SFD_EBV','APOGEE_TARGET1','APOGEE_TARGET2',
-               'APOGEE_TARGET3','APOGEE_TARGET4','TARGFLAGS','STARFLAG','STARFLAGS','VLSR','VGSR',
-               'RV_ALPHA','RV_CARB','SYNTHFILE']
+    #  delete many columns that are already in the visit table
+    delcols = ['target_id','survey', 'field', 'programname', 'alt_id', 'location_id', 'glon','glat',
+               'j','j_err', 'h_err', 'k', 'k_err', 'src_h', 'wash_m',
+               'wash_m_err', 'wash_t2', 'wash_t2_err', 'ddo51',
+               'ddo51_err', 'irac_3_6', 'irac_3_6_err', 'irac_4_5',
+               'irac_4_5_err', 'irac_5_8', 'irac_5_8_err', 'irac_8_0',
+               'irac_8_0_err', 'wise_4_5', 'wise_4_5_err', 'targ_4_5',
+               'targ_4_5_err', 'wash_ddo51_giant_flag',
+               'wash_ddo51_star_flag', 'pmra', 'pmdec', 'pm_src', 'ak_targ',
+               'ak_targ_method', 'ak_wise', 'sfd_ebv', 'apogee_target1',
+               'apogee_target2', 'apogee_target3', 'apogee_target4',
+               'targflags', 'starflag', 'starflags', 'vlsr', 'vgsr',
+               'estbc','estvtype','estvrel','estvrelerr','estvhelio','estrv_teff',
+               'estrv_logg','estrv_feh','estrv_alpha','estrv_carb','modified',
+               'rv_alpha', 'rv_carb', 'synthfile']
     for c in delcols:
         del allvisit[c]
     # Rename columns
-    allvisit['H'].name = 'HMAG'
-    allvisit['PK'].name = 'VISIT_PK'
+    allvisit['h'].name = 'hmag'
+    allvisit['pk'].name = 'visit_pk'
+    allvisit['starver'] = starout['starver'][0]
 
     db.load('rv_visit',allvisit)
 

@@ -34,6 +34,8 @@ def addapt_np_int32(np_int32):
     return AsIs(np_int32)
 def addapt_np_int64(np_int64):
     return AsIs(np_int64)
+def addapt_np_uint64(np_uint64):
+    return AsIs(np_uint64)
 def addapt_np_bool(np_bool):
     return AsIs(np_bool)
 register_adapter(np.float16, addapt_np_float16)
@@ -43,6 +45,7 @@ register_adapter(np.int8, addapt_np_int8)
 register_adapter(np.int16, addapt_np_int16)
 register_adapter(np.int32, addapt_np_int32)
 register_adapter(np.int64, addapt_np_int64)
+register_adapter(np.uint64, addapt_np_uint64)
 register_adapter(np.bool, addapt_np_bool)
 register_adapter(np.bool_, addapt_np_bool)
 
