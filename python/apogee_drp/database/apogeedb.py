@@ -223,13 +223,40 @@ class DBSession(object):
             # Use the data returned to get the type
             dt = []
             for i,c in enumerate(colnames):
-                dt.append( (c, type(data[0][i])) )
+                if type(data[0][i]) is str:
+                    dt.append( (c, type(data[0][i]), 300) )
+                else:
+                    dt.append( (c, type(data[0][i])) )
+            dtype = np.dtype(dt)
 
             # Convert to numpy structured array
             cat = np.zeros(len(data),dtype=dtype)
             cat[...] = data
-            del(data)            
+            del(data)
 
+
+            # For string columns change size to maximum length of that column
+            dt2 = []
+            names = dtype.names
+            nplen = np.vectorize(len)
+            needcopy = False
+            for i in range(len(dtype)):
+                type1 = type(cat[names[i]][0])
+                if type1 is str or type1 is np.str_:
+                    maxlen = np.max(nplen(cat[names[i]]))
+                    dt2.append( (names[i], str, maxlen+10) )
+                    needcopy = True
+                else:
+                    dt2.append(dt[i])  # reuse dt value
+            # We need to copy
+            if needcopy==True:
+                dtype2 = np.dtype(dt2)
+                cat2 = np.zeros(len(cat),dtype=dtype2)
+                for n in names:
+                    cat2[n] = cat[n]
+                cat = cat2
+                del cat2
+                    
         return cat
 
 
