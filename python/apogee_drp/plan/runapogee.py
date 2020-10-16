@@ -277,11 +277,41 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
 
     import pdb; pdb.set_trace()
 
-def create_sumfiles(mjd5):
+def create_sumfiles(mjd5,apred,telescope):
     """ Create allVisit/allStar files and summary of objects for this night."""
 
-    pass
-        
+    # Start db session
+    db = apogeedb.DBSession()
+
+    # Full allVisit and allStar files
+    #  apogee_id+apred_vers+telescope+starver uniquely identifies a particular star row
+    #  For each apogee_id+apred_vers+telescope we want the maximum starver
+    #  The subquery does this for us by grouping by apogee_id+apred_vers+telescope and
+    #    calculating the aggregate value MAX(starver).
+    #  We then select the particular row (with all columns) using apogee_id+apred_vers+telescope+starver
+    #    from this subquery.
+    allstar = db.query(sql="select * from apogee_drp.star where (apogee_id, apred_vers, telescope, starver) in "+\
+                       "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\   # subquery
+                       "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+
+    # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
+    #   Get more info by joining with the visit table.
+    allstar = db.query(sql="select * from apogee_drp.rv_visit where (apogee_id, apred_vers, telescope, starver) in "+\
+                       "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.rv_visit where "+\   # subquery
+                       "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+
+    allvisit = db.query(sql='select * from apogee_drp.star where (apogee_id, starver) in '+\
+                       '(select apogee_id, max(starver) from apogee_drp.star group by apogee_id)')
+
+
+    # allVisit and allStar for this night, allVisitMJD/allStarMJD
+    starmjd = db.query(sql="select * from apogee_drp.star where apred_vers='"+apred+"' and telescope='"+telescope+"' and "+\
+                       "starver='"+str(mjd5)+"'")
+    visitmjd = db.query(sql="select * from apogee_drp.visit where apred_vers='"+apred+"' and telescope='"+telescope+"' and "+\
+                       "starver='"+str(mjd5)+"'")
+
+
+    import pdb; pdb.set_trace()
 
 def run_daily(observatory,mjd5=None,apred='t14'):
     """ Perform daily APOGEE data reduction."""
@@ -408,8 +438,8 @@ def run_daily(observatory,mjd5=None,apred='t14'):
     queue_wait(queue)  # wait for jobs to complete
     del queue
 
-    # Create new allVisit/allStar files and file objects for this night
-    #create_sumfiles,mjd5
+    # Create daily and full allVisit/allStar files
+    #create_sumfiles(mjd5,apred,telescope)
 
     import pdb;pdb.set_trace()
 
