@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+
+# This is a script to the change the current version of the APOGEE reduction pipeline
+#  This changes the "current" version in apogee_drp.version database table and
+#  the "current" symlink in $APOGEE_REDUX
+
+import os
+from apogee_drp.database import apogeedb
+import argparse
+
+if __name__ == '__main__' :
+
+    parser = argparse.ArgumentParser(prog=os.path.basename(sys.argv[0]),
+        description='Update current APOGEE reduction version')
+    parser.add_argument('apred', type=str, nargs=1,  help='New APOGEE reduction version')
+    parser.add_argument('--datarelease', type=str, nargs=1, default='', help='Data release name')
+    parser.add_argument('-t','--type', type=str, nargs=1, default='normal', help='Type of reduction version')
+    args = parser.parse_args()
+    newver = str(args.apred[0])
+    vertype = str(args.type[0])
+    datarelease = str(args.datarelease[0])
+
+    # Warn the user and them if they really want to do this
+    print('WARNING!  This will change the current APOGEE reduction pipeline version')
+    print,'Are you sure you want to continue?')
+    # query user, yes/no
+
+    print('Changing APOGEE reduction pipeline version to >> '+newver+' <<')
+
+    # Update the version table in the database
+    db = apogeedb.DBSession()
+    # Get the current "current" version
+    oldver = db.query('version',where="current==True")
+    # Change old version current=False
+    #db.load('version',old,update=True)
+    # Add row for new current version
+    newcat = np.zeros(1,dtype=np.dtype([('name',(np.str,20)),('type',(np.str,30)),('current',bool),('datalrelease',(np.str,20))]))
+    newcat['name'] = newver
+    newcat['type'] = vertype
+    newcat['current'] = True
+    newcat['datarelease'] = datarelease
+    db.load('version',newcat)
+
+    db.close()
+
+    # Create new directory if it doesn't exist
+    reduxdir = os.environ['APOGEE_REDUX']
+    if os.path.exists(reduxdir+'/'+newver)==False:
+        os.makedirs(reduxdir+'/'+newver)
+    # Update the symlink in $APOGEE_REDUX
+    if os.path.exists(reduxdir+'/current'): os.remove(reduxdir+'/current')
+    os.symlink(newver,reduxdir+'/current')
+    
