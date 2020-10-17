@@ -332,7 +332,7 @@ class DBSession(object):
         if hasarrays:
             data1 = data.copy()
             data = [
-                tuple(list(i) if  hasattr(i,'__len__') and type(d) is not str and type(i) is not np.str_ else i for i in t)
+                tuple(list(i) if  hasattr(i,'__len__') and type(i) is not str and type(i) is not np.str_ else i for i in t)
                 for t in list(data1)
             ]
             del data1
