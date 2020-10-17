@@ -74,6 +74,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     # Get the visit files for this star and telescope
     db = apogeedb.DBSession()
     allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"'")
+    db.close()
     nallvisits = len(allvisits)
     if nallvisits==0:
         logger.info('No visit files found')
@@ -81,7 +82,8 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     logger.info('%d visit file(s) found' % nallvisits)
 
     # Get the star version number
-    starver = str(np.max(allvisits['mjd']))
+    #  this is the largest MJD5 in the FULL list of visits
+    starver = str(np.max(int(allvisits['mjd'])))
     logger.info('Version='+starver)
     
     # Select good visit spectra
@@ -96,6 +98,8 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     nvisits = len(gd)
     # Change datatype of STARFLAG to 64-bit
     starvisits['starflag'] = starvisits['starflag'].astype(np.uint64)
+    # Add STARVER                                                                                                                                             
+    starvisits['starver'] = starver
 
     # Output directory
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -196,12 +200,9 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         raise
 
 
-    # Add MJD range
-    apstar.mjdbeg = np.min(allvisits['mjd'])
-    apstar.mjdend = np.max(allvisits['mjd'])
-
-    # Load star summary information into "star" table.    
-    # Load visit RV information into "rv_visit" table.
+    # Load information into the database                                                                                                                      
+    apstar.header['MJDBEG'] = (np.max(int(allvisits['mjd'])), 'Beginning MJD')
+    apstar.header['MJDEND'] = (np.max(int(allvisits['mjd'])), 'Ending MJD')
     dbload(apstar,starvisits[visits[gdrv]])
 
     return
@@ -768,6 +769,8 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         logger.info('Writing apStar file to '+outfile)
         apstar.write(outfile)
         apstar.filename = outfile
+        mwm_root = os.environ['MWM_ROOT']
+        apstar.uri = outfile[len(mwm_root)+1:]
         # Create symlink no file with no version
         if os.path.exists(outfilenover) or os.path.islink(outfilenover): os.remove(outfilenover)
         os.symlink(os.path.basename(outfile),outfilenover)  # relative path
@@ -809,11 +812,11 @@ def dbload(apstar,allvisit):
     cols = ['OBJID','STARVER','APRED','HEALPIX','SNR','RA','DEC','GLON','GLAT','J','J_ERR',
             'H','H_ERR','K','K_ERR','SRC_H','AKTARG','AKMETHOD','AKWISE','SFD_EBV',
             'APTARG1','APTARG2','APTARG3','AP2TARG1','AP2TARG2','AP2TARG3','AP2TARG4',
-            'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHELIO',
-            'VSCATTER','VERR','RV_TEFF','RV_LOGG','RV_FEH','MEANFIB','SIGFIB','NRES']    
+            'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHELIO','VSCATTER','VERR',
+            'RV_TEFF','RV_LOGG','RV_FEH','MEANFIB','SIGFIB','NRES','MJDBEG','MJDEND']
     # Star table
     startab = Table()
-    startab['STARVER'] = [apstar.header['STARVER']]   # gives table the dimension
+    startab['STARVER'] = [apstar.header['STARVER']]   # first column must be an array to give it the size/rows
     for c in cols:
         startab[c] = apstar.header[c]
     # Rename names
@@ -836,19 +839,17 @@ def dbload(apstar,allvisit):
     # Add other columns
     startab['TELESCOPE'] = allvisit['telescope'][0]
     startab['FILE'] = os.path.basename(apstar.filename)
-    mwm_root = os.environ['MWM_ROOT']
-    startab['URI'] = apstar.filename[len(mwm_root)+1:]
-    startab['MJDBEG'] = apstar.mjdbeg
-    startab['MJDEND'] = apstar.mjdend
+    startab['URI'] = apstar.uri
     
-    db.load('star',startab)
+    db.load('star',startab)   # load summary information into "star" table
     
 
-    # rv_visit table
+    # Load visit RV information into "rv_visit" table
+    #  get star_pk from "star" table
     starout = db.query('star',where="apogee_id='"+startab['APOGEE_ID'][0]+"' and apred_vers='"+startab['APRED_VERS'][0]+"' "+\
                        "and telescope='"+startab['TELESCOPE'][0]+"' and starver='"+startab['STARVER'][0]+"'")
     allvisit['star_pk'] = starout['pk'][0]
-    #  delete many columns that are already in the visit table
+    # Remove some unnecessary columns (duplicates what's in visit table)
     delcols = ['target_id','survey', 'field', 'programname', 'alt_id', 'location_id', 'glon','glat',
                'j','j_err', 'h_err', 'k', 'k_err', 'src_h', 'wash_m',
                'wash_m_err', 'wash_t2', 'wash_t2_err', 'ddo51',
@@ -866,11 +867,11 @@ def dbload(apstar,allvisit):
     for c in delcols:
         del allvisit[c]
     # Rename columns
-    allvisit['h'].name = 'hmag'
     allvisit['pk'].name = 'visit_pk'
+    allvisit['h'].name = 'hmag'
     allvisit['starver'] = starout['starver'][0]
 
-    db.load('rv_visit',allvisit)
+    db.load('rv_visit',np.array(allvisit))   # Load the visit information into the table  
 
     # Close db session
     db.close()
