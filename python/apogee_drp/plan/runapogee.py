@@ -92,6 +92,29 @@ def queue_wait(queue,sleeptime=60,verbose=True,logger=None):
         if percent_complete == 100:
             running = False
 
+def dbload_plans(planfiles):
+    """  Load plan files into the database."""
+    db = apogeedb.DBSession()   # open db session
+    nplans = len(planfiles)
+    
+    # Loop over the planfiles
+    dtype = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('telescope',(np.str,10)),
+                      ('instrument',(np.str,20)),('mjd',int),('plate',int),('platetype',(np.str,20))])
+    plantab = np.zeros(nplans,dtype=dtype)
+    for i,planfile in enumerate(planfiles):
+        planstr = plan.load(planfile)
+        plantab['planfile'][i] = planfile
+        plantab['apred_vers'][i] = planstr['apred_vers']
+        plantab['telescope'][i] = planstr['telescope']
+        plantab['instrument'][i] = planstr['instrument']
+        plantab['mjd'][i] = planstr['mjd']
+        plantab['plate'][i] = planstr['plateid']
+        plantab['platetype'][i] = planstr['platetype']
+
+    # Load into the database
+    db.load('plan',plantab)
+    db.close()   # close db session
+
 
 def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
     """ Check that apred ran okay and load into database."""
@@ -277,6 +300,73 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
 
     import pdb; pdb.set_trace()
 
+    return chkexp,chkap
+
+
+def check_rv(visits,pbskey,verbose=False,logger=None):
+    """ Check that rv ran okay and load into database."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    db = apogeedb.DBSession()  # open db session
+
+    if verbose==True:
+        logger.info('')
+        logger.info('-------------------------------------')
+        logger.info('Checking RV + Visit Combination runs')
+        logger.info('=====================================')
+
+    apred_vers = visits['apred_vers'][0]
+    telescope = visits['telescope'][0]
+    load = apload.ApLoad(apred=apred_vers,telescope=telescope)
+
+    if verbose:
+        logger.info('')
+        logger.info('%d stars' % len(visits))
+        logger.info('apred_vers: %s' % apred_vers)
+        logger.info('telescope: %s' % telescope)
+        logger.info(' NUM         APOGEE_ID       HEALPIX NVISITS SUCCESS')
+
+    # Loop over the stars
+    nstars = len(visits)
+    dtype = np.dtype([('apogee_id',(np.str,50)),('apred_vers',(np.str,20)),('telescope',(np.str,10)),
+                      ('healpix',int),('nvisits',int),('pbskey',(np.str,50)),
+                      ('file',(np.str,300)),('checktime',(np.str,100)),('success',bool)])
+    chkrv = np.zeros(nstars,dtype=dtype)
+    chkrv['apred_vers'] = apred_vers
+    chkrv['telescope'] = telescope
+    chkrv['pbskey'] = pbskey
+    for i,visit in enumerate(visits):
+        starfilenover = load.filename('Star',obj=visit['apogee_id'])
+        # add version number, should be MJD of of the latest visit
+        stardir = os.path.dirname(starfilenover)
+        starbase = os.path.splitext(os.path.basename(starfilenover))[0]
+        starbase += '-'+str(visit['mjd'])   # add star version 
+        starfile = stardir+'/'+starbase+'.fits'
+        # Get nvisits for this star
+        starvisits = db.query('visit',cols='*',where="apogee_id='"+visit['apogee_id']+"' and "+\
+                              "telescope='"+telescope+"' and apred_vers='"+apred_vers+"'")
+        chkrv['apogee_id'][i] = visit['apogee_id']
+        chkrv['healpix'][i] = apload.obj2healpix(visit['apogee_id'])
+        chkrv['nvisits'][i] = len(starvisits)
+        chkrv['file'][i] = starfile
+        chkrv['checktime'][i] = str(datetime.now())
+        chkrv['success'][i] = os.path.exists(starfile)
+
+        if verbose:
+            logger.info('%5d %20s %8d %5d %9s' % (i+1,chkrv['apogee_id'][i],chkrv['healpix'][i],
+                                                  chkrv['nvisits'][i],chkrv['success'][i]))
+    success, = np.where(chkrv['success']==True)
+    logger.info('%d/%d succeeded' % (len(success),nstars))
+    
+    # Load into the database
+    db.load('rv_status',chkrv)
+    db.close()        
+
+    return chkrv
+
+
 def create_sumfiles(mjd5,apred,telescope,logger=None):
     """ Create allVisit/allStar files and summary of objects for this night."""
 
@@ -411,6 +501,7 @@ def run_daily(observatory,mjd5=None,apred='t14'):
     # Make MJD5 and plan files
     rootLogger.info('Making plan files')
     plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
+    dbload_plans(planfiles)  # load plans into db
     #db.load('plan',planfiles)  # load plans into db
     dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'auto.yaml'
     planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
@@ -435,7 +526,7 @@ def run_daily(observatory,mjd5=None,apred='t14'):
     import pdb;pdb.set_trace()
     queue.commit(hard=True,submit=True)
     queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-    check_apred(expinfo,planfiles,queue.key)
+    chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key)
     del queue
 
     import pdb;pdb.set_trace()
@@ -460,7 +551,7 @@ def run_daily(observatory,mjd5=None,apred='t14'):
                          errfile=apstarfile.replace('.fits','_pbs.err'))
         queue.commit(hard=True,submit=True)
         queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-        #check_rv(vcat,queue.key)
+        chkrv = check_rv(vcat,queue.key)
         del queue
     else:
         rootLogger.info('No visit files for MJD=%d' % mjd5)
@@ -476,8 +567,10 @@ def run_daily(observatory,mjd5=None,apred='t14'):
     del queue
 
     # Create daily and full allVisit/allStar files
-    #create_sumfiles(mjd5,apred,telescope)
+    create_sumfiles(mjd5,apred,telescope)
 
     import pdb;pdb.set_trace()
 
     rootLogger.info('Daily APOGEE reduction finished for MJD=%d and observatory=%s' % (mjd5,observatory))
+
+    db.close()    # close db session
