@@ -5,8 +5,17 @@
 #  the "current" symlink in $APOGEE_REDUX
 
 import os
+import sys
+import numpy as np
+from datetime import datetime
 from apogee_drp.database import apogeedb
 import argparse
+
+# raw_input() was renamed input() in python3
+try:
+    _raw_input = raw_input
+except NameError:
+    raw_input = input
 
 if __name__ == '__main__' :
 
@@ -16,34 +25,68 @@ if __name__ == '__main__' :
     parser.add_argument('--datarelease', type=str, nargs=1, default='', help='Data release name')
     parser.add_argument('-t','--type', type=str, nargs=1, default='normal', help='Type of reduction version')
     args = parser.parse_args()
-    newver = str(args.apred[0])
-    vertype = str(args.type[0])
-    datarelease = str(args.datarelease[0])
+    newver = args.apred[0]
+    vertype = args.type
+    if type(vertype) is list:
+        vertype = vertype[0]
+    datarelease = args.datarelease
+    if type(datarelease) is list:
+        datarelease = datarelease[0]
 
     # Warn the user and them if they really want to do this
     print('WARNING!  This will change the current APOGEE reduction pipeline version')
-    print,'Are you sure you want to continue?')
-    # query user, yes/no
+    ans = raw_input('Are you sure you want to continue? [y/n] ')
+    if ans[0].lower()!='y':
+        sys.exit()
 
     print('Changing APOGEE reduction pipeline version to >> '+newver+' <<')
 
     # Update the version table in the database
     db = apogeedb.DBSession()    # open the db session
     # Get the current "current" version
-    oldver = db.query('version',where="current==True")
+    oldver = db.query('version',where="current=True")
     # Change old version current=False
-    #db.load('version',old,update=True)
-    # Add row for new current version
-    newcat = np.zeros(1,dtype=np.dtype([('name',(np.str,20)),('type',(np.str,30)),('current',bool),('datalrelease',(np.str,20))]))
-    newcat['name'] = newver
-    newcat['type'] = vertype
-    newcat['current'] = True
-    newcat['datarelease'] = datarelease
-    db.load('version',newcat)
+    if len(oldver)>0:
+        updold = np.zeros(1,dtype=np.dtype([('pk',int),('current',bool)]))
+        updold['pk'] = oldver['pk'][0]
+        updold['current'] = False
+        db.update('version',updold)
+    # Add/update row for new current version
+    #  check if the name already exists
+    out = db.query('version',where="name='"+newver+"'")
+    # Already exists, update
+    if len(out)>0:
+        updcat = np.zeros(1,dtype=np.dtype([('pk',int),('name',(np.str,20)),('type',(np.str,30)),('current',bool),
+                                            ('datarelease',(np.str,20)),('modified',(np.str,100))]))
+        updcat['pk'] = out['pk'][0]
+        updcat['name'] = newver
+        updcat['type'] = vertype
+        updcat['current'] = True
+        updcat['datarelease'] = datarelease
+        updcat['modified'] = str(datetime.now())
+        db.update('version',updcat)
+    # New row, ingest
+    else:
+        newcat = np.zeros(1,dtype=np.dtype([('name',(np.str,20)),('type',(np.str,30)),('current',bool),
+                                            ('datarelease',(np.str,20)),('modified',(np.str,100))]))
+        newcat['name'] = newver
+        newcat['type'] = vertype
+        newcat['current'] = True
+        newcat['datarelease'] = datarelease
+        newcat['modified'] = str(datetime.now())
+        db.ingest('version',newcat)
 
-    # Double-check that the database update was successful
+    # Double-check that the database update/insert was successful
     out = db.query('version',where="current=True")
-
+    if len(out)==0:
+        print('ERROR: No current version. The table might be corrupted.')
+        sys.exit()
+    if len(out)>1:
+        print('ERROR: More than ONE current version.  Something went wrong.')
+    if len(out)==1:
+        if out['name'][0]!=newver:
+            print('ERROR: The current versios was NOT successfully changed in the database.')
+            sys.exit()
     db.close()  # close the db session
 
     # Create new directory if it doesn't exist

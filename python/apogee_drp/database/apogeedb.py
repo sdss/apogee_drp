@@ -188,7 +188,8 @@ class DBSession(object):
 
             # Get numpy data types
             d2d = {'smallint':np.int, 'integer':np.int, 'bigint':np.int, 'real':np.float32, 'double precision':np.float64,
-                   'text':(np.str,200),'char':(np.str,5),'timestamp':(np.str,50), 'timestamp with time zone':(np.str,50)}
+                   'text':(np.str,200),'char':(np.str,5),'timestamp':(np.str,50), 'timestamp with time zone':(np.str,50),
+                   'timestamp without time zone':(np.str,50),'boolean':np.bool}
             dt = []
             for i,h in enumerate(head):
                 if h[1]=='ARRAY':
@@ -263,27 +264,27 @@ class DBSession(object):
             del(data)
 
 
-            # For string columns change size to maximum length of that column
-            dt2 = []
-            names = dtype.names
-            nplen = np.vectorize(len)
-            needcopy = False
-            for i in range(len(dtype)):
-                type1 = type(cat[names[i]][0])
-                if type1 is str or type1 is np.str_:
-                    maxlen = np.max(nplen(cat[names[i]]))
-                    dt2.append( (names[i], str, maxlen+10) )
-                    needcopy = True
-                else:
-                    dt2.append(dt[i])  # reuse dt value
-            # We need to copy
-            if needcopy==True:
-                dtype2 = np.dtype(dt2)
-                cat2 = np.zeros(len(cat),dtype=dtype2)
-                for n in names:
-                    cat2[n] = cat[n]
-                cat = cat2
-                del cat2
+        # For string columns change size to maximum length of that column
+        dt2 = []
+        names = dtype.names
+        nplen = np.vectorize(len)
+        needcopy = False
+        for i in range(len(dtype)):
+            type1 = type(cat[names[i]][0])
+            if type1 is str or type1 is np.str_:
+                maxlen = np.max(nplen(cat[names[i]]))
+                dt2.append( (names[i], str, maxlen+10) )
+                needcopy = True
+            else:
+                dt2.append(dt[i])  # reuse dt value
+        # We need to copy
+        if needcopy==True:
+            dtype2 = np.dtype(dt2)
+            cat2 = np.zeros(len(cat),dtype=dtype2)
+            for n in names:
+                cat2[n] = cat[n]
+            cat = cat2
+            del cat2
 
         # Convert to astropy table
         if fmt=='table':
