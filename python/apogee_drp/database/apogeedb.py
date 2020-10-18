@@ -447,3 +447,58 @@ class DBSession(object):
 
         if verbose:
             print(str(len(cat))+' rows updated in '+schema+'.'+tab)
+
+    def delete(self,table,cat,verbose=False):
+        """
+        Delete values in a database table.
+
+        Parameters
+        ----------
+        table : str
+            Name of table to query.  Default is to use the apogee_drp schema, but
+              table names with schema (e.g. catalogdb.gaia_dr2_source) can also be input.
+        cat : numpy structured array
+            Catalog that contains unique values/keys of rows to delete.  Only the first
+             column is used.
+        verbose : bool, optional
+            Verbose output to screen.
+
+        Returns
+        -------
+        The values are deleted in the table.
+        Nothing is returned.
+
+        Examples
+        --------
+        db.delete('visit',cat)
+
+        """
+
+        ncat = dln.size(cat)
+        cur = self.connection.cursor()
+
+        # Schema
+        if table.find('.')>-1:
+            schema,tab = table.split('.')
+        else:
+            schema = 'apogee_drp'
+            tab = table
+
+        # Make sure the table already exists
+        cur.execute("select table_name from information_schema.tables where table_schema='"+schema+"'")
+        qtabs = cur.fetchall()
+        alltabs = [q[0] for q in qtabs]
+        if tab not in alltabs:
+            raise Exception(tab+' table not in '+schema+' schema')
+
+        keyname = cat.dtype.names[0]
+        data = [(d,) for d in cat[keyname]]
+        delete_query = "DELETE FROM "+schema+"."+tab+" WHERE "+keyname+" in (%s)"
+        execute_values(cur,delete_query,data,template=None)
+
+        self.connection.commit()
+        cur.close()
+
+        if verbose:
+            print(str(len(cat))+' rows deleted from '+schema+'.'+tab)
+
