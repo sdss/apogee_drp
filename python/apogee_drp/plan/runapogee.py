@@ -375,6 +375,8 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     # Start db session
     db = apogeedb.DBSession()
 
+    # USE STAR_LATEST AND VISIT_LATEST "VIEWS" IN THE FUTURE!
+
     # Full allVisit and allStar files
     #  apogee_id+apred_vers+telescope+starver uniquely identifies a particular star row
     #  For each apogee_id+apred_vers+telescope we want the maximum starver
