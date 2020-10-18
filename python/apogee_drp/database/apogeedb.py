@@ -95,7 +95,7 @@ class DBSession(object):
         """ Close the database connection."""
         self.connection.close()
 
-    def query(self,table=None,cols='*',where=None,groupby=None,sql=None,raw=False,verbose=False):
+    def query(self,table=None,cols='*',where=None,groupby=None,sql=None,fmt='numpy',verbose=False):
         """
         Query the APOGEE DRP database.
 
@@ -113,9 +113,12 @@ class DBSession(object):
             Column to group data by.
         sql : str, optional
             Enter the SQL command directly.
-        raw : bool, optional
-            Return the raw database output.  The default is to return the
-              data as a numpy structured array.
+        fmt : str, optional
+            The output format:
+              -numpy: numpy structured array (default)
+              -table: astropy table
+              -list: list of tuples, first row has column names
+              -raw: raw output, list of tuples
         verbose : bool, optional
             Print verbose output to screen.  False by default.
 
@@ -167,7 +170,7 @@ class DBSession(object):
                 return np.array([])
 
             # Return the raw results
-            if raw is True:
+            if fmt=='raw':
                 cur.close()
                 return data
     
@@ -175,10 +178,17 @@ class DBSession(object):
             cur.execute("select column_name,data_type from information_schema.columns where table_schema='"+schema+"' and table_name='"+tab+"'")
             head = cur.fetchall()
             cur.close()
+            colnames = [h[0] for h in head]
 
+            # Return fmt="list" format
+            if fmt=='list':
+                data = [tuple(colnames)]+data
+                cur.close()
+                return data
+
+            # Get numpy data types
             d2d = {'smallint':np.int, 'integer':np.int, 'bigint':np.int, 'real':np.float32, 'double precision':np.float64,
                    'text':(np.str,200),'char':(np.str,5),'timestamp':(np.str,50), 'timestamp with time zone':(np.str,50)}
-            colnames = [h[0] for h in head]
             dt = []
             for i,h in enumerate(head):
                 if h[1]=='ARRAY':
@@ -209,10 +219,17 @@ class DBSession(object):
                 return np.array([])
 
             # Return the raw results
-            if raw is True:
+            if fmt=='raw':
                 cur.close()
                 return data
     
+            # Return fmt="list" format
+            if fmt=='list':
+                colnames = [desc[0] for desc in cur.description]
+                data = [tuple(colnames)]+data
+                cur.close()
+                return data
+
             # Get table column names and data types
             colnames = [desc[0] for desc in cur.description]
             colnames = np.array(colnames)
@@ -267,6 +284,10 @@ class DBSession(object):
                     cat2[n] = cat[n]
                 cat = cat2
                 del cat2
+
+        # Convert to astropy table
+        if fmt=='table':
+            cat = Table(cat)
                     
         return cat
 

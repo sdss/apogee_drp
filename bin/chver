@@ -28,7 +28,7 @@ if __name__ == '__main__' :
     print('Changing APOGEE reduction pipeline version to >> '+newver+' <<')
 
     # Update the version table in the database
-    db = apogeedb.DBSession()
+    db = apogeedb.DBSession()    # open the db session
     # Get the current "current" version
     oldver = db.query('version',where="current==True")
     # Change old version current=False
@@ -41,7 +41,10 @@ if __name__ == '__main__' :
     newcat['datarelease'] = datarelease
     db.load('version',newcat)
 
-    db.close()
+    # Double-check that the database update was successful
+    out = db.query('version',where="current=True")
+
+    db.close()  # close the db session
 
     # Create new directory if it doesn't exist
     reduxdir = os.environ['APOGEE_REDUX']
