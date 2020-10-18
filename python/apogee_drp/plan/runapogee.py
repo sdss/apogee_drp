@@ -282,23 +282,20 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 logger.info('N apVisit files: %d ' % chkap['apvisit_nobj_success'][0])
                 logger.info('apVisitSum file: %s ' % chkap['apvisitsum_success'][0])
 
-
-            import pdb; pdb.set_trace()
-                
             # Load into the database
             db = apogeedb.DBSession()
             db.ingest('exposure_status',chkexp)
             db.ingest('apred_status',chkap)
             db.close()
 
-
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
 
         # Calibration exposures
         else:
             logger.info('calibration exposures')
+            # STILL NEED TO DO THIS PART!!!
 
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
 
     return chkexp,chkap
 
@@ -440,11 +437,19 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
 
     db.close()
 
-def run_daily(observatory,mjd5=None,apred='t14'):
+def run_daily(observatory,mjd5=None,apred=None):
     """ Perform daily APOGEE data reduction."""
 
     telescope = observatory+'25m'
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
+
+    # No version input, get from database
+    if apred is None:
+        db = apogeedb.DBSession()
+        verout = db.query('version',where="current=True")
+        if len(verout)==0:
+            raise Exception('No curent version in database')
+        apred = verout['name'][0]
 
     # Daily reduction directory
     dailydir = os.environ['APOGEE_REDUX']+'/'+apred+'/daily/'+observatory+'/'
@@ -473,7 +478,7 @@ def run_daily(observatory,mjd5=None,apred='t14'):
     rootLogger.addHandler(consoleHandler)
     rootLogger.setLevel(logging.NOTSET)
 
-    rootLogger.info('Running daily APOGEE data reduction for '+str(observatory).upper()+' '+str(mjd5))
+    rootLogger.info('Running daily APOGEE data reduction for '+str(observatory).upper()+' '+str(mjd5)+' '+apred)
 
     # Initialize the DB connection
     db = apogeedb.DBSession()
