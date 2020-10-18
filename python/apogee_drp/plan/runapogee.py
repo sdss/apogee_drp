@@ -111,8 +111,8 @@ def dbload_plans(planfiles):
         plantab['plate'][i] = planstr['plateid']
         plantab['platetype'][i] = planstr['platetype']
 
-    # Load into the database
-    db.load('plan',plantab)
+    # Insert into the database
+    db.ingest('plan',plantab)
     db.close()   # close db session
 
 
@@ -287,8 +287,8 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 
             # Load into the database
             db = apogeedb.DBSession()
-            db.load('exposure_status',chkexp)
-            db.load('apred_status',chkap)
+            db.ingest('exposure_status',chkexp)
+            db.ingest('apred_status',chkap)
             db.close()
 
 
@@ -360,8 +360,8 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
     success, = np.where(chkrv['success']==True)
     logger.info('%d/%d succeeded' % (len(success),nstars))
     
-    # Load into the database
-    db.load('rv_status',chkrv)
+    # Inset into the database
+    db.ingest('rv_status',chkrv)
     db.close()        
 
     return chkrv
@@ -494,7 +494,7 @@ def run_daily(observatory,mjd5=None,apred='t14'):
         rootLogger.error('No raw APOGEE files found.')
         return        
     rootLogger.info(str(nexp)+' exposures')
-    db.load('exposure',expinfo)  # load into database
+    db.ingest('exposure',expinfo)  # insert into database
     expinfo0 = expinfo.copy()
     expinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (mjd5,observatory))
 
@@ -502,7 +502,7 @@ def run_daily(observatory,mjd5=None,apred='t14'):
     rootLogger.info('Making plan files')
     plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
     dbload_plans(planfiles)  # load plans into db
-    #db.load('plan',planfiles)  # load plans into db
+    #db.ingest('plan',planfiles)  # load plans into db
     dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'auto.yaml'
     planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
     # Write planfiles to MJD5.plans

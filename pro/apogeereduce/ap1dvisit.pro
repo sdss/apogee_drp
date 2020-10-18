@@ -749,8 +749,8 @@ FOR i=0L,nplanfiles-1 do begin
   ; HDU1 - structure
   MWRFITS,allvisitstr,visitstrfile,/silent
 
-  ;; Load the apVisitSum information into the apogee_drp database
-  DBLOAD_VISIT,allvisitstr
+  ;; Insert the apVisitSum information into the apogee_drp database
+  DBINGEST_VISIT,allvisitstr
  endfor
 
  BOMB:

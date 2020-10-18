@@ -73,7 +73,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
 
     # Get the visit files for this star and telescope
     db = apogeedb.DBSession()
-    allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"'")
+    allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"'")
     db.close()
     nallvisits = len(allvisits)
     if nallvisits==0:
@@ -199,11 +199,10 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         logger.info('No good visits for '+star)
         raise
 
-
-    # Load information into the database                                                                                                                      
+    # Load information into the database
     apstar.header['MJDBEG'] = (np.max(int(allvisits['mjd'])), 'Beginning MJD')
     apstar.header['MJDEND'] = (np.max(int(allvisits['mjd'])), 'Ending MJD')
-    dbload(apstar,starvisits[visits[gdrv]])
+    dbingest(apstar,starvisits[visits[gdrv]])
 
     return
 
@@ -802,8 +801,8 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
     return apstar
 
-def dbload(apstar,allvisit):
-    """ Load the star and visit information into the database."""
+def dbingest(apstar,allvisit):
+    """ Insert the star and visit information into the database."""
 
     # Open db session
     db = apogeedb.DBSession()
@@ -841,7 +840,7 @@ def dbload(apstar,allvisit):
     startab['FILE'] = os.path.basename(apstar.filename)
     startab['URI'] = apstar.uri
     
-    db.load('star',startab)   # load summary information into "star" table
+    db.ingest('star',startab)   # load summary information into "star" table
     
 
     # Load visit RV information into "rv_visit" table
@@ -871,7 +870,7 @@ def dbload(apstar,allvisit):
     allvisit['h'].name = 'hmag'
     allvisit['starver'] = starout['starver'][0]
 
-    db.load('rv_visit',np.array(allvisit))   # Load the visit information into the table  
+    db.ingest('rv_visit',np.array(allvisit))   # Load the visit information into the table  
 
     # Close db session
     db.close()
