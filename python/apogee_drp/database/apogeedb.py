@@ -292,9 +292,9 @@ class DBSession(object):
         return cat
 
 
-    def load(self,table,cat,verbose=False):
+    def ingest(self,table,cat,verbose=False):
         """
-        Load a catalog into the database.
+        Insert/ingest data into the database.
 
         Parameters
         ----------
@@ -313,7 +313,7 @@ class DBSession(object):
 
         Examples
         --------
-        db.load('visit',cat)
+        db.ingest('visit',cat)
 
         """
 
@@ -367,3 +367,82 @@ class DBSession(object):
 
         if verbose:
             print(str(len(cat))+' rows inserted into '+schema+'.'+tab)
+
+
+    def update(self,table,cat,verbose=False):
+        """
+        Update values in a database table.
+
+        Parameters
+        ----------
+        table : str
+            Name of table to query.  Default is to use the apogee_drp schema, but
+              table names with schema (e.g. catalogdb.gaia_dr2_source) can also be input.
+        cat : numpy structured array
+            Catalog as numpy structured array to insert into table.  The first column
+             must be a unique ID or key.
+        verbose : bool, optional
+            Verbose output to screen.
+
+        Returns
+        -------
+        The values are updated in the table.
+        Nothing is returned.
+
+        Examples
+        --------
+        db.update('visit',cat)
+
+        """
+
+        ncat = dln.size(cat)
+        cur = self.connection.cursor()
+
+        # Schema
+        if table.find('.')>-1:
+            schema,tab = table.split('.')
+        else:
+            schema = 'apogee_drp'
+            tab = table
+
+        # Make sure the table already exists
+        cur.execute("select table_name from information_schema.tables where table_schema='"+schema+"'")
+        qtabs = cur.fetchall()
+        alltabs = [q[0] for q in qtabs]
+        if tab not in alltabs:
+            raise Exception(tab+' table not in '+schema+' schema')
+
+        # Get the column names
+        cnames = cat.dtype.names
+        cdict = dict(cat.dtype.fields)
+        # Insert statement
+        columns = [n.lower() for n in cnames]
+        
+        # Replace nan with 'nan'  
+        data = [
+            tuple('nan' if isinstance(i, np.floating) and np.isnan(i) else i for i in t)
+            for t in list(cat)
+        ]
+
+        # Check for arrays and replace with a list
+        hasarrays = False
+        for d in data[0]:
+            hasarrays |= hasattr(d,'__len__') and type(d) is not str
+        if hasarrays:
+            data1 = data.copy()
+            data = [
+                tuple(list(i) if  hasattr(i,'__len__') and type(i) is not str and type(i) is not np.str_ else i for i in t)
+                for t in list(data1)
+            ]
+            del data1
+            
+        setcmd = ','.join([c+'=d.'+c for c in columns[1:]])
+        update_query = 'UPDATE '+schema+'.'+tab+' AS t SET '+setcmd+' FROM (VALUES %s) '+\
+                       ' AS d ('+','.join(columns)+') WHERE t.'+columns[0]+'=d.'+columns[0]
+        execute_values(cur,update_query,data,template=None)
+
+        self.connection.commit()
+        cur.close()
+
+        if verbose:
+            print(str(len(cat))+' rows updated in '+schema+'.'+tab)
