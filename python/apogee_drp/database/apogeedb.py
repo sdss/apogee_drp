@@ -194,9 +194,9 @@ class DBSession(object):
             for i,h in enumerate(head):
                 if h[1]=='ARRAY':
                     # Get number if elements and type from the data itself
-                    narr = len(data[0][i])
-                    type1 = type(data[0][i][0])
-                    dt.append( (h[0], type1, narr) )
+                    shp = np.array(data[0][i]).shape
+                    type1 = np.array(data[0][i]).dtype.type
+                    dt.append( (h[0], type1, shp) )
                 else:
                     dt.append( (h[0], d2d[h[1]]) )
             dtype = np.dtype(dt)
@@ -333,7 +333,7 @@ class DBSession(object):
 
         # Convert astropy table to numpy structured array
         if isinstance(cat,Table):
-            cat = np.array.cat)
+            cat = np.array(cat)
 
         # Schema
         if table.find('.')>-1:
@@ -368,7 +368,7 @@ class DBSession(object):
         if hasarrays:
             data1 = data.copy()
             data = [
-                tuple(list(i) if  hasattr(i,'__len__') and type(i) is not str and type(i) is not np.str_ else i for i in t)
+                tuple(i.tolist() if  hasattr(i,'__len__') and type(i) is not str and type(i) is not np.str_ else i for i in t)
                 for t in list(data1)
             ]
             del data1
@@ -436,7 +436,7 @@ class DBSession(object):
 
         # Convert astropy table to numpy structured array
         if isinstance(cat,Table):
-            cat = np.array.cat)
+            cat = np.array(cat)
 
         # Schema
         if table.find('.')>-1:
@@ -471,7 +471,7 @@ class DBSession(object):
         if hasarrays:
             data1 = data.copy()
             data = [
-                tuple(list(i) if  hasattr(i,'__len__') and type(i) is not str and type(i) is not np.str_ else i for i in t)
+                tuple(i.tolist() if  hasattr(i,'__len__') and type(i) is not str and type(i) is not np.str_ else i for i in t)
                 for t in list(data1)
             ]
             del data1
@@ -519,7 +519,7 @@ class DBSession(object):
 
         # Convert astropy table to numpy structured array
         if isinstance(cat,Table):
-            cat = np.array.cat)
+            cat = np.array(cat)
 
         # Schema
         if table.find('.')>-1:
