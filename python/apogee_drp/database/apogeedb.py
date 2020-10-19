@@ -302,8 +302,8 @@ class DBSession(object):
         table : str
             Name of table to query.  Default is to use the apogee_drp schema, but
               table names with schema (e.g. catalogdb.gaia_dr2_source) can also be input.
-        cat : numpy structured array
-            Catalog as numpy structured array to insert into table.
+        cat : numpy structured array or astropy table
+            Catalog as (1) numpy structured array or (2) astropy table to insert into db table.
         onconflict: str, optional
             What to do when there is a uniqueness requirement on the table and there is
               a conflict (i.e. one of the inserted rows will create a duplicate).  The
@@ -330,6 +330,10 @@ class DBSession(object):
 
         ncat = dln.size(cat)
         cur = self.connection.cursor()
+
+        # Convert astropy table to numpy structured array
+        if isinstance(cat,Table):
+            cat = np.array.cat)
 
         # Schema
         if table.find('.')>-1:
@@ -410,9 +414,9 @@ class DBSession(object):
         table : str
             Name of table to query.  Default is to use the apogee_drp schema, but
               table names with schema (e.g. catalogdb.gaia_dr2_source) can also be input.
-        cat : numpy structured array
-            Catalog as numpy structured array to insert into table.  The first column
-             must be a unique ID or key.
+        cat : numpy structured array or astropy table
+            Catalog as (1) numpy structured array or (2) astropy table to insert into db
+              table. The first column must be a unique ID or key.
         verbose : bool, optional
             Verbose output to screen.
 
@@ -429,6 +433,10 @@ class DBSession(object):
 
         ncat = dln.size(cat)
         cur = self.connection.cursor()
+
+        # Convert astropy table to numpy structured array
+        if isinstance(cat,Table):
+            cat = np.array.cat)
 
         # Schema
         if table.find('.')>-1:
@@ -479,6 +487,7 @@ class DBSession(object):
         if verbose:
             print(str(len(cat))+' rows updated in '+schema+'.'+tab)
 
+
     def delete(self,table,cat,verbose=False):
         """
         Delete values in a database table.
@@ -488,9 +497,9 @@ class DBSession(object):
         table : str
             Name of table to query.  Default is to use the apogee_drp schema, but
               table names with schema (e.g. catalogdb.gaia_dr2_source) can also be input.
-        cat : numpy structured array
-            Catalog that contains unique values/keys of rows to delete.  Only the first
-             column is used.
+        cat : numpy structured array or astropy table
+            Catalog as (1) numpy structured array or (2) astropy table that contains
+             unique ID/keys of rows to delete.  Only the first column is used.
         verbose : bool, optional
             Verbose output to screen.
 
@@ -507,6 +516,10 @@ class DBSession(object):
 
         ncat = dln.size(cat)
         cur = self.connection.cursor()
+
+        # Convert astropy table to numpy structured array
+        if isinstance(cat,Table):
+            cat = np.array.cat)
 
         # Schema
         if table.find('.')>-1:
