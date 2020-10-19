@@ -293,7 +293,7 @@ class DBSession(object):
         return cat
 
 
-    def ingest(self,table,cat,verbose=False):
+    def ingest(self,table,cat,onconflict='update',constraintname=None,verbose=False):
         """
         Insert/ingest data into the database.
 
@@ -304,6 +304,16 @@ class DBSession(object):
               table names with schema (e.g. catalogdb.gaia_dr2_source) can also be input.
         cat : numpy structured array
             Catalog as numpy structured array to insert into table.
+        onconflict: str, optional
+            What to do when there is a uniqueness requirement on the table and there is
+              a conflict (i.e. one of the inserted rows will create a duplicate).  The
+              options are:
+              'update': update the existing row with the information from the new insert (default).
+              'nothing': do nothing, leave the existing row as is and do not insert the
+                          new conflicting row.
+        constraintname : str, optional
+            If onconflict='update', then this should be the name of the unique columns
+              (comma-separated list of column names).
         verbose : bool, optional
             Verbose output to screen.
 
@@ -360,7 +370,28 @@ class DBSession(object):
             del data1
             
         
-        insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s ON CONFLICT DO NOTHING'
+        # On conflict do nothing
+        if onconflict=='nothing':
+            insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s ON CONFLICT DO NOTHING'
+        # On conflict do update
+        elif onconflict=='update':
+            # Get the unique constraint from database
+            if constraintname is None:
+                cur.execute("select conname from pg_constraint where contype='u' and conrelid='"+schema+"."+tab+"'::regclass::oid")
+                out = cur.fetchall()
+                if len(out)>1:
+                    raise Exception('More than ONE unique constraint found for '+schema+'.'+tab)
+                constraintname = out[0][0]
+                constraintstr = 'ON CONSTRAINT '+constraintname
+            # Constraint column names input
+            else:
+                constraintstr = '('+constraintname+')'
+            excluded = ','.join(['"'+c+'"=excluded."'+c+'"' for c in columns])
+            insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s ON CONFLICT '+constraintstr+\
+                           ' DO UPDATE SET '+excluded
+        else:
+            raise ValueError(onconflict+' not supported')
+        # Perform the insert
         execute_values(cur,insert_query,data,template=None)
 
         self.connection.commit()
