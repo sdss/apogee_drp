@@ -439,8 +439,11 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
 
     db.close()
 
+
 def run_daily(observatory,mjd5=None,apred=None):
     """ Perform daily APOGEE data reduction."""
+
+    begtime = str(datetime.now())
 
     telescope = observatory+'25m'
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
@@ -488,8 +491,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     # Check that daily data transfer completed
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     datadir += '/'+str(mjd5)+'/'
-    donefile = datadir+str(mjd5)+'.md5sum'
-    if os.path.exists(donefile)==False:
+    if os.path.exists(datadir)==False:
         rootLogger.error('Data has not finished transferring yet')
         return
 
@@ -506,6 +508,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     expinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (mjd5,observatory))
 
     # Make MJD5 and plan files
+    #--------------------------
     rootLogger.info('Making plan files')
     plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
     dbload_plans(planfiles)  # load plans into db
@@ -515,11 +518,23 @@ def run_daily(observatory,mjd5=None,apred=None):
     # Write planfiles to MJD5.plans
     dln.writelines(dailydir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
 
-    check_apred(expinfo,planfiles,'dummy',verbose=True,logger=rootLogger)
+    # Start entry in daily_status table
+    daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
+                                        ('nexposures',int),('begtime',(np.str,50)),('success',bool)]))
+    daycat['mjd'] = mjd5
+    daycat['telescope'] = telescope
+    daycat['nplanfiles'] = len(planfiles)
+    daycat['nexposures'] = len(expinfo)
+    daycat['begtime'] = begtime
+    daycat['success'] = False
+    db.ingest('daily_status',daycat)
+
+
 
     import pdb;pdb.set_trace()
 
     # Run APRED on all planfiles using "pbs" package
+    #------------------------------------------------
     rootLogger.info('')
     rootLogger.info('--------------')
     rootLogger.info('Running APRED')
@@ -533,12 +548,14 @@ def run_daily(observatory,mjd5=None,apred=None):
     import pdb;pdb.set_trace()
     queue.commit(hard=True,submit=True)
     queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-    chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key)
+    chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
     del queue
 
     import pdb;pdb.set_trace()
 
+
     # Run "rv" on all stars
+    #----------------------
     rootLogger.info('')
     rootLogger.info('------------------------------')
     rootLogger.info('Running RV+Visit Combination')
@@ -566,6 +583,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     import pdb;pdb.set_trace()
 
     # Run QA script
+    #--------------
     queue = pbsqueue(verbose=True)
     queue.create(label='qa', nodes=1, ppn=16, cpus=1, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
     queue.append('apqa {0}'.format(mjd5))
@@ -575,6 +593,23 @@ def run_daily(observatory,mjd5=None,apred=None):
 
     # Create daily and full allVisit/allStar files
     create_sumfiles(mjd5,apred,telescope)
+
+    # Update daily_status table
+    daycat = np.zeros(1,dtype=np.dtype([('pk',int),('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
+                                        ('nexposures',int),('begtime',(np.str,50)),('endtime',(np.str,50)),('success',bool)]))
+    daycat['mjd'] = mjd5
+    daycat['telescope'] = telescope
+    daycat['nplanfiles'] = len(planfiles)
+    daycat['nexposures'] = len(expinfo)
+    daycat['begtime'] = begtime
+    daycat['endtime'] = str(datetime.now())
+    if (np.sum(chkvisit['success']==False)==0) & (np.sum(chkrv['success']==False)==0):
+        daycat['success'] = True
+    else:
+        daycat['success'] = False
+    dayout = db.query('daily_status',where="mjd="+str(mjd5)+" and telescope='"+telescope+"' and begtime='"+begtime+"'")
+    daycat['pk'] = dayout['pk'][0]
+    db.update('daily_status',daycat)
 
     import pdb;pdb.set_trace()
 
