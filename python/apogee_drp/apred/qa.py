@@ -688,7 +688,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         i1 = int(np.floor((900 * sz[1]) / 2048))
                         i2 = int(np.floor((1000 * sz[1]) / 2048))
                         for itell in range(ntelluric):
-                            p1 = np.std(cfluxarr[telluric[itell], i1:i2])
+                            p1 = np.mean(cfluxarr[telluric[itell], i1:i2])
                             p2 = np.std(cfluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
                             import pdb; pdb.set_trace()
                             snt[fibertelluric[itell], ichip] = p1 / p2
