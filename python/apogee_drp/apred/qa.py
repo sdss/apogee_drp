@@ -109,15 +109,16 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     # For normal plates, make plots and html.
     #----------------------------------------------------------------------------------------
     if platetype == 'normal': 
-        import pdb; pdb.set_trace()
         x = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, clobber=True,
                           mapname=plugmap, noplot=True, survey=survey, mapper_data=mapper_data,
                           field=field, apred=apred) 
+
 #fixfiberid=fixfiberid,badfiberid=badfiberid)
 
         x = makePlotsHtml(load=load, telescope=telescope, ims=None, plate=plate, mjd=mjd, 
-                          clobber=True, mapname=plugmap, noplot=noplot, survey=survey, mapper_data=mapper_data,
-                          field=field, apred=apred) 
+                          clobber=True, mapname=plugmap, noplot=noplot, survey=survey, 
+                          mapper_data=mapper_data, field=field, apred=apred) 
+
 #fixfiberid=fixfiberid, badfiberid=badfiberid
 
         x = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
@@ -355,10 +356,10 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 ''' MAKEPLOTSHTML: Plotmag translation                                                      '''
 '''-----------------------------------------------------------------------------------------'''
 
-def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, flat=None, clobber=True, 
+def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, clobber=True, 
                   starfiber=None, starnames=None, noplot=False, mapname=None, starmag=None,
                   onem=None, survey=None, mapper_data=None, field=None, apred=None): 
-
+#, flat=None,
 #, fixfiberid=None, badfiberid=None):
 
     print("--------------------------------------------------------------------")
