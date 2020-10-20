@@ -669,7 +669,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 if ims is None:     medsky = 0.
                 if ims is not None: medsky = np.median(obs[fibersky, ichip])
 
-                if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=0) - medsky
+                if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
 
                 if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=0) - medsky
 
