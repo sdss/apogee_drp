@@ -169,7 +169,9 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     #print("platedir: "+platedir+"\n")
     #print(platedir+platesumfile)
     if os.path.exists(platesum) is False:
-        exit("PROBLEM!!! "+platesumfile+" does not exist.\n Halting execution...")
+        err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
+        err2 = "You need to run MAKEPLOTSHTML first to make the file."
+        sys.exit(err1 + err2)
 
     #----------------------------------------------------------------------------------------
     # Make the html directory if it doesn't already exist
