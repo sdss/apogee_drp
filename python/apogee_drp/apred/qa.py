@@ -246,7 +246,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     #----------------------------------------------------------------------------------------
     # Table of exposure pairs.
     #----------------------------------------------------------------------------------------
-    import pdb; pdb.set_trace()
     npairs = len(pairstr)
     if (type(pairstr) == 'astropy.io.fits.fitsrec.FITS_rec') & (npairs > 0):
         #----------------------------------------------------------------------------------------
