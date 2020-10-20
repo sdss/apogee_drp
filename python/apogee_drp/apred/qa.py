@@ -111,7 +111,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     if platetype == 'normal': 
         q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, field=field, clobber=True, 
                           noplot=True, mapname=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
-                          onem=None, starfiber=None, starnames=None, starmag=None) 
+                          onem=None, starfiber=None, starnames=None, starmag=None ,flat=None) 
 
 #fixfiberid=fixfiberid,badfiberid=badfiberid)
 
@@ -358,7 +358,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 
 def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, field=None, clobber=True, 
                   noplot=False, mapname=None, survey=None, mapper_data=None, apred=None,
-                  onem=None, starfiber=None, starnames=None, starmag=None): 
+                  onem=None, starfiber=None, starnames=None, starmag=None, flat=None): 
 #, flat=None,
 #, fixfiberid=None, badfiberid=None):
 
