@@ -784,6 +784,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 objhtml.write('<TD>'+str("%8.2f" % round(fiber['hmag'][j]+2.5*np.log10(obs[j,1])-zero,2))+'\n')
                 objhtml.write('<TD>'+str("%8.2f" % round(sn[j,1],2))+'\n')
                 objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
+                import pdb; pdb.set_trace()
                 targflagtxt = bitmask.targflags(fiber['target1'][j], fiber['target2'][j], fiber['target3'][j], survey=survey)
                 objhtml.write('<TD>'+targflagtxt+'\n')
 
