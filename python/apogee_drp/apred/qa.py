@@ -149,7 +149,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
 def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, telescope=None):
     print("--------------------------------------------------------------------")
-    print("Making MASTERQAPAGE for plate "+plate+", mjd "+mjd+"\n")
+    print("Making MASTERQAPAGE for plate "+plate+", mjd "+mjd)
     print("--------------------------------------------------------------------\n")
 
     chips = np.array(['a','b','c'])
@@ -167,7 +167,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     #----------------------------------------------------------------------------------------
     # Check for existence of plateSum file
     #----------------------------------------------------------------------------------------
-    print(platedir+platesumfile)
+    #print(platedir+platesumfile)
     if os.path.exists(platesum) is False:
         print("Problem: "+platesumfile+" does not exist.")
 
@@ -245,10 +245,10 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD>'+'['+txt+']\n')
         q = tab1['SN'][i]
         txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
-        html.write('<TD>'+'['+txt[1:]+']\n')
+        html.write('<TD>'+'['+txt+']\n')
         q = tab1['SNC'][i]
         txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
-        html.write('<TD>'+'['+txt[1:]+']\n')
+        html.write('<TD>'+'['+txt+']\n')
     html.write('</TABLE>\n')
 
     #----------------------------------------------------------------------------------------
@@ -344,7 +344,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.close()
 
     print("--------------------------------------------------------------------")
-    print("Done with MASTERQAPAGE for plate "+plate+", mjd "+mjd+"\n")
+    print("Done with MASTERQAPAGE for plate "+plate+", mjd "+mjd)
     print("--------------------------------------------------------------------\n")
 
 '''-----------------------------------------------------------------------------------------'''
