@@ -1,3 +1,4 @@
+import sys
 import glob
 import os
 import subprocess
@@ -158,18 +159,17 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     prefix = 'ap'
     if telescope == 'lco25m': prefix = 'as'
 
+    #----------------------------------------------------------------------------------------
+    # Check for existence of plateSum file
+    #----------------------------------------------------------------------------------------
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
     platesumfile = os.path.basename(platesum)
     platedir = os.path.dirname(platesum)+'/'
 
     #print("platedir: "+platedir+"\n")
-
-    #----------------------------------------------------------------------------------------
-    # Check for existence of plateSum file
-    #----------------------------------------------------------------------------------------
     #print(platedir+platesumfile)
     if os.path.exists(platesum) is False:
-        print("Problem: "+platesumfile+" does not exist.")
+        sys.exit("PROBLEM!!! "+platesumfile+" does not exist.\n Halting execution...")
 
     #----------------------------------------------------------------------------------------
     # Make the html directory if it doesn't already exist
