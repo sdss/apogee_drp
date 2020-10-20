@@ -751,7 +751,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
             cfile = open(outdir+pfile+'.csh','w')
             jsort = np.sort(fiber['fiberid'])
-            for jj in range(len(fiber)):
+            for jj in range(len(jsort)):
                 j = jsort[jj]
                 objhtml.write('<TR>\n')
 
