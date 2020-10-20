@@ -267,10 +267,9 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         #----------------------------------------------------------------------------------------
         html.write('<BR><TABLE BORDER=2>\n')
         for iframe in range(len(shiftstr)):
-            import pdb; pdb.set_trace()
-            html.write('<TR><TD>'+shiftstr['FRAMENUM'][iframe]+'\n')
-            html.write('<TD>'+shiftstr['SHIFT'][iframe]+'\n')
-            html.write('<TD>'+shiftstr['SN'][iframe]+'\n')
+            html.write('<TR><TD>'+str(shiftstr['FRAMENUM'][iframe])+'\n')
+            html.write('<TD>'+str("%.3f" % round(shiftstr['SHIFT'][iframe],3))+'\n')
+            html.write('<TD>'+str("%.3f" % round(shiftstr['SN'][iframe],3))+'\n')
     html.write('</TABLE>\n')
 
     #----------------------------------------------------------------------------------------
