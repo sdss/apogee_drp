@@ -987,13 +987,13 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
 
     if ims is not None:
         if onem is None:
-        #----------------------------------------------------------------------------------------
-        # PLOT 6: guider rms plot
-        #----------------------------------------------------------------------------------------
-        if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
-            jcam = np.where((gcam['MJD'] > mjd0) & (gcam['MJD'] < mjd1))
-            nj = len(jcam[0]) 
-            print("PLOTS 6: Guider RMS plots will be made here.")
+            #----------------------------------------------------------------------------------------
+            # PLOT 6: guider rms plot
+            #----------------------------------------------------------------------------------------
+            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
+                jcam = np.where((gcam['MJD'] > mjd0) & (gcam['MJD'] < mjd1))
+                nj = len(jcam[0]) 
+                print("PLOTS 6: Guider RMS plots will be made here.")
 
         #----------------------------------------------------------------------------------------
         # PLOT 7: make plot of sky levels for this plate
