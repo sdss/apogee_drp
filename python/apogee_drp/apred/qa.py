@@ -1309,11 +1309,10 @@ def getflux(d=None, skyline=None, rows=None):
         wave = d[chips[ichip]][4].data[rows[i],:]
         flux = d[chips[ichip]][1].data
 
-        icont = np.where(((wave > skyline['C1']) & 
-                          (wave < skyline['C2'])) | 
-                         ((wave < skyline['C3']) & 
-                          (wave < skyline['C4'])))
+        icont = np.where(((wave > skyline['C1']) & (wave < skyline['C2'])) | 
+                         ((wave < skyline['C3']) & (wave < skyline['C4'])))
 
+        import pdb; pdb.set_trace()
         if len(icont[0]) >= 0: cont[i] = np.median(flux[rows[i],icont])
 
         iline = np.where((wave > skyline['W1']) & (wave < skyline['W2']))
