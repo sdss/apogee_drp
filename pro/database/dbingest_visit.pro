@@ -50,6 +50,4 @@ endif
 
 FILE_DELETE,[tbase,tbase+'.fits',tbase+'.py'],/allow
 
-stop
-
 end
