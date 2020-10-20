@@ -148,6 +148,9 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 '''-----------------------------------------------------------------------------------------'''
 
 def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, telescope=None):
+    print("--------------------------------------------------------------------\n")
+    print("Making MASTERQAPAGE for plate "+plate+", mjd "+mjd+"\n")
+    print("--------------------------------------------------------------------\n")
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -155,12 +158,11 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     prefix = 'ap'
     if telescope == 'lco25m': prefix = 'as'
 
-    print("Making master apQA webpage for plate "+plate+", mjd "+mjd+"\n")
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
     platesumfile = os.path.basename(platesum)
     platedir = os.path.dirname(platesum)+'/'
 
-    print("platedir: "+platedir+"\n")
+    #print("platedir: "+platedir+"\n")
 
     #----------------------------------------------------------------------------------------
     # Check for existence of plateSum file
@@ -174,7 +176,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     #----------------------------------------------------------------------------------------
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
     qafiledir = os.path.dirname(qafile)
-    print("opening "+platedir+"/html/apQA")
+    #print("opening "+platedir+"/html/apQA")
     if os.path.exists(qafiledir) is False: subprocess.call(['mkdir',qafiledir])
 
     html = open(qafile, 'w')
@@ -238,9 +240,15 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
             html.write('<TD><TD>\n')
         html.write('<TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
         html.write('<TD>'+str("%.2f" % round(tab1['ZERORMS'][i],2))+'\n')
-        html.write('<TD>'+str(np.round(tab1['SKY'][i],2))+'\n')
-        html.write('<TD>'+str(np.round(tab1['SN'][i],1))+'\n')
-        html.write('<TD>'+str(np.round(tab1['SNC'][i],1))+'\n')
+        q = tab1['SKY'][i]
+        txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
+        html.write('<TD>'+'['+txt+']\n')
+        q = tab1['SN'][i]
+        txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
+        html.write('<TD>'+'['+txt+']\n')
+        q = tab1['SNC'][i]
+        txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
+        html.write('<TD>'+'['+txt+']\n')
     html.write('</TABLE>\n')
 
     #----------------------------------------------------------------------------------------
@@ -334,6 +342,10 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 
     html.write('</BODY></HTML>\n')
     html.close()
+
+    print("--------------------------------------------------------------------\n")
+    print("Done with MASTERQAPAGE for plate "+plate+", mjd "+mjd+"\n")
+    print("--------------------------------------------------------------------\n")
 
 '''-----------------------------------------------------------------------------------------'''
 ''' MAKEPLOTSHTML: Plotmag translation                                                      '''
