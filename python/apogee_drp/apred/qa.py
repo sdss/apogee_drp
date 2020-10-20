@@ -97,12 +97,12 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     #----------------------------------------------------------------------------------------
     # For calibration plates, measure lamp brightesses and/or line widths, etc. and write to FITS file.
     #----------------------------------------------------------------------------------------
-    #if platetype == 'cal': x = makeCalFits(ims=all_ims, mjd=mjd, instrument=instrument)
+    #if platetype == 'cal': x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
 
     #----------------------------------------------------------------------------------------
     # For darks and flats, get mean and stdev of column-medianed quadrants.
     #----------------------------------------------------------------------------------------
-    #if platetype == 'dark': x = makeDarkFits(planfile=planfile, ims=all_ims, mjd=mjd)
+    #if platetype == 'dark': x = makeDarkFits(load=load, planfile=planfile, ims=all_ims, mjd=mjd)
 
     #----------------------------------------------------------------------------------------
     # For normal plates, make plots and html.
@@ -147,7 +147,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 ''' MASTERQAPAGE: mkhtmlplate translation                                                   '''
 '''-----------------------------------------------------------------------------------------'''
 
-def masterQApage(plate=None, mjd=None, field=None, fluxid=None, telescope=None):
+def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, telescope=None):
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -338,7 +338,7 @@ def masterQApage(plate=None, mjd=None, field=None, fluxid=None, telescope=None):
 ''' MAKEPLOTSHTML: Plotmag translation                                                      '''
 '''-----------------------------------------------------------------------------------------'''
 
-def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clobber=True, 
+def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, flat=None, clobber=True, 
                   starfiber=None, starnames=None, noplot=None, mapname=None, starmag=None,
                   onem=None, fixfiberid=None, badfiberid=None, survey=None, mapper_data=None,
                   field=None, apred=None):
@@ -1064,7 +1064,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
 ''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.)               '''
 '''-----------------------------------------------------------------------------------------'''
 
-def makeCalFits(ims=None, mjd=None, instrument=None):
+def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     n_exposures = len(ims)
 
     nlines = 2
@@ -1175,7 +1175,7 @@ def makeCalFits(ims=None, mjd=None, instrument=None):
 ''' MAKEDARKFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants)   '''
 '''-----------------------------------------------------------------------------------------'''
 
-def makeDarkFits(planfile=None, ims=None, mjd=None):
+def makeDarkFits(load=None, planfile=None, ims=None, mjd=None):
     n_exposures = len(ims)
 
     chips=np.array(['a','b','c'])
