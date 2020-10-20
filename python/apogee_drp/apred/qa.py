@@ -109,15 +109,17 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     # For normal plates, make plots and html.
     #----------------------------------------------------------------------------------------
     if platetype == 'normal': 
-        q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, field=field, clobber=True, 
-                          noplot=True, mapname=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
-                          onem=None, starfiber=None, starnames=None, starmag=None ,flat=None) 
+        q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
+                          field=field, instrument=instrument, clobber=True, noplot=True, 
+                          mapname=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
+                          onem=None, starfiber=None, starnames=None, starmag=None,flat=None) 
 
 #fixfiberid=fixfiberid,badfiberid=badfiberid)
 
         #x = makePlotsHtml(load=load, telescope=telescope, ims=None, plate=plate, mjd=mjd, 
-        #                  clobber=True, mapname=plugmap, noplot=noplot, survey=survey, 
-        #                  mapper_data=mapper_data, field=field, apred=apred) 
+        #                  field=field, instrument=instrument, clobber=True, noplot=noplot,
+        #                  mapname=plugmap, survey=survey, mapper_data=mapper_data,apred=apred
+        #                  onem=None, starfiber=None, starnames=None, starmag=None,flat=None) 
 
 #fixfiberid=fixfiberid, badfiberid=badfiberid
 
@@ -356,9 +358,10 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 ''' MAKEPLOTSHTML: Plotmag translation                                                      '''
 '''-----------------------------------------------------------------------------------------'''
 
-def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, field=None, clobber=True, 
-                  noplot=False, mapname=None, survey=None, mapper_data=None, apred=None,
-                  onem=None, starfiber=None, starnames=None, starmag=None, flat=None): 
+def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, field=None, 
+                  instrument=None, clobber=True, noplot=False, mapname=None, survey=None,
+                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
+                  starmag=None, flat=None): 
 #, flat=None,
 #, fixfiberid=None, badfiberid=None):
 
