@@ -805,7 +805,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         print("PLOTS 1: Spectrum plots will be made here.")
                     else:
                         objhtml.write('<TD>No plots for individual exposures, see plate plots\n')
-                import pdb; pdb.set_trace()
 
             objhtml.close()
             cfile.close()
