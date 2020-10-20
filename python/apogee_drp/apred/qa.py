@@ -310,7 +310,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 
     for i in range(len(tab1)):
         im=tab1['IM'][i]
-        oneDfile = os.path.basename(load.filename('1D', im, chips=True)).replace('.fits','')
+        oneDfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True)).replace('.fits','')
         html.write('<TR><TD><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
         html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
         html.write('<TR><TD>z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
