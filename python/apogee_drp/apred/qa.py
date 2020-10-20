@@ -459,7 +459,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugid,
                                  obj1m=starnames[0], starfiber=starfiber) 
 
-    gd = np.where(plug['fiberdata']['fiberid'] > 0)
+    gd, = np.where(plug['fiberdata']['fiberid'] > 0)
     fiber = plug['fiberdata'][gd]
     nfiber = len(fiber)
     rows = 300-fiber['fiberid']
@@ -479,31 +479,31 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     #----------------------------------------------------------------------------------------
     # Find telluric fibers.
     #----------------------------------------------------------------------------------------
-    fibertelluric = np.where((fiber['objtype'] == 'SPECTROPHOTO_STD') |
-                             (fiber['objtype'] == 'HOT_STD'))
-    ntelluric = len(fibertelluric[0])
+    fibertelluric, = np.where((fiber['objtype'] == 'SPECTROPHOTO_STD') |
+                              (fiber['objtype'] == 'HOT_STD'))
+    ntelluric = len(fibertelluric)
     telluric = rows[fibertelluric]
 
     #----------------------------------------------------------------------------------------
     # Find science fibers.
     #----------------------------------------------------------------------------------------
-    fiberobj = np.where((fiber['objtype'] == 'STAR_BHB') | 
-                        (fiber['objtype'] == 'STAR') | 
-                        (fiber['objtype'] == 'EXTOBJ'))
-    nobj = len(fiberobj[0])
+    fiberobj, = np.where((fiber['objtype'] == 'STAR_BHB') | 
+                         (fiber['objtype'] == 'STAR') | 
+                         (fiber['objtype'] == 'EXTOBJ'))
+    nobj = len(fiberobj)
     obj = rows[fiberobj]
 
     #----------------------------------------------------------------------------------------
     # Find sky fibers.
     #----------------------------------------------------------------------------------------
-    fibersky = np.where(fiber['objtype'] == 'SKY')
-    nsky = len(fibersky[0])
+    fibersky, = np.where(fiber['objtype'] == 'SKY')
+    nsky = len(fibersky)
     sky = rows[fibersky]
 
     #----------------------------------------------------------------------------------------
     # Find all fiber placed on stars.
     #----------------------------------------------------------------------------------------
-    fiberstar = np.concatenate([fiberobj[0],fibertelluric[0]]);  fiberstar.sort()
+    fiberstar = np.concatenate([fiberobj,fibertelluric]);  fiberstar.sort()
 
     #----------------------------------------------------------------------------------------
     # Define skylines structure which we will use to get crude sky levels in lines.
@@ -557,7 +557,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         gcamfilecheck = glob.glob(gcamfile)
         if len(gcamfilecheck) == 0:
             # NOTE: hopefully this works
-            subprocess.call(['gcam_process', telescope, instrument, gcamfile])
+            subprocess.call(['gcam_process', '--mjd', int(mjd), '--instrument', instrument])
         gcamfilecheck = glob.glob(gcamfile)
         if len(gcamfilecheck) != 0:
             gcam = fits.getdata(gcamfile)
@@ -669,25 +669,26 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 if ims is None:     medsky = 0.
                 if ims is not None: medsky = np.median(obs[fibersky, ichip])
 
-                if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=0) - medsky
+                # NOTE: using axis=0 caused error, so trying axis=0
+                if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
 
-                if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=0) - medsky
+                if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
 
                 if nobj > 0:
-                    sn[fiberobj, ichip] = np.median((fluxarr[obj, :]-medsky) / errarr[obj, :], axis=0)
+                    sn[fiberobj, ichip] = np.median((fluxarr[obj, :]-medsky) / errarr[obj, :], axis=1)
                     if len(cframe) > 1:
-                        snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=0)
+                        snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=1)
 
                 if ntelluric > 0:
-                    sn[fibertelluric, ichip] = np.median((fluxarr[telluric,:]-medsky) / errarr[telluric, :], axis=0)
+                    sn[fibertelluric, ichip] = np.median((fluxarr[telluric,:] - medsky) / errarr[telluric, :], axis=1)
                     if len(cframe) > 1:
-                        snc[fibertelluric, ichip] = np.median(cfluxarr[telluric, :] / cerrarr[telluric, :], axis=0)
+                        snc[fibertelluric, ichip] = np.median(cfluxarr[telluric, :] / cerrarr[telluric, :], axis=1)
                         medfilt = ScipyMedfilt2D(cfluxarr[telluric, :], kernel_size=(1,49))
                         sz = cfluxarr.shape
                         i1 = int(np.floor((900 * sz[1]) / 2048))
                         i2 = int(np.floor((1000 * sz[1]) / 2048))
                         for itell in range(ntelluric):
-                            p1 = np.std(cfluxarr[telluric[itell], i1:i2])
+                            p1 = np.mean(cfluxarr[telluric[itell], i1:i2])
                             p2 = np.std(cfluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
                             snt[fibertelluric[itell], ichip] = p1 / p2
 
@@ -750,8 +751,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
             cfile = open(outdir+pfile+'.csh','w')
             jsort = np.sort(fiber['fiberid'])
-            for jj in range(len(fiber)):
-                j = jsort[jj]
+            for j in range(nfiber):
+                #j = jsort[jj]
+                #print(str(j))
                 objhtml.write('<TR>\n')
 
                 color = 'white'
@@ -783,7 +785,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 objhtml.write('<TD>'+str("%8.2f" % round(fiber['hmag'][j]+2.5*np.log10(obs[j,1])-zero,2))+'\n')
                 objhtml.write('<TD>'+str("%8.2f" % round(sn[j,1],2))+'\n')
                 objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
-                targflagtxt = bitmask.targflags(fiber['target1'][j], fiber['target2'][j], fiber['target3'][j], survey=survey)
+                targflagtxt = bitmask.targflags(fiber['target1'][j], fiber['target2'][j], fiber['target3'][j], fiber['target4'][j], survey=survey)
                 objhtml.write('<TD>'+targflagtxt+'\n')
 
                 if (ims is None) & (fiber['fiberid'][j] >= 0):
@@ -843,7 +845,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 medsky[ichip] = 99.999
 
         html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(ims[i])+'</A>\n')
-        html.write('<TD>'+string(nreads)+'\n')
+        html.write('<TD>'+str(nreads)+'\n')
         html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
         html.write('<TR><TD>z<TD><TD>'+str("%5.2f" % round(zero,2))+'\n')
         html.write('<TR><TD>znorm<TD><TD>'+str("%5.2f" % round(zeronorm,2))+'\n')
@@ -1309,20 +1311,17 @@ def getflux(d=None, skyline=None, rows=None):
         wave = d[chips[ichip]][4].data[rows[i],:]
         flux = d[chips[ichip]][1].data
 
-        icont = np.where(((wave > skyline['C1']) & (wave < skyline['C2'])) | 
-                         ((wave < skyline['C3']) & (wave < skyline['C4'])))
+        icont, = np.where(((wave > skyline['C1']) & (wave < skyline['C2'])) | 
+                          ((wave < skyline['C3']) & (wave < skyline['C4'])))
 
-        import pdb; pdb.set_trace()
-        if len(icont[0]) >= 0: cont[i] = np.median(flux[rows[i],icont])
+        #import pdb; pdb.set_trace()
+        if len(icont) >= 0: cont[i] = np.median(flux[rows[i],icont])
 
-        iline = np.where((wave > skyline['W1']) & (wave < skyline['W2']))
+        iline, = np.where((wave > skyline['W1']) & (wave < skyline['W2']))
 
-        if len(iline[0]) >= 0:
-            tmp = flux[rows[i],iline]
-            line[i] = np.sum(tmp, where = math.isnan(tmp) is False)
-
-            tmp = flux[rows[i],iline] / flux[rows[i],iline]
-            nline[i] = np.sum(tmp, where = math.isnan(tmp) is False)
+        if len(iline) >= 0:
+            line[i] = np.nansum(flux[rows[i],iline])
+            nline[i] = np.nansum(flux[rows[i],iline] / flux[rows[i],iline])
 
     skylineFlux = line - (nline * cont)
     if skyline['TYPE'] == 0: skylineFlux /= cont
