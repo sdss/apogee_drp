@@ -110,15 +110,15 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     if platetype == 'normal': 
         x = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
-        x = makePlotsHtml(load=load, telescope=telescope, ims=ims, plateid=plate, clobber=True,
-                          mapname=plugmap, noplot=True, fixfiberid=fixfiberid,
-                          badfiberid=badfiberid, survey=survey, mapper_data=mapper_data,
-                          field=field, apred=apred)
+        #x = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, clobber=True,
+        #                  mapname=plugmap, noplot=True, fixfiberid=fixfiberid,
+        #                  badfiberid=badfiberid, survey=survey, mapper_data=mapper_data,
+        #                  field=field, apred=apred)
 
-        x = makePlotsHtml(load=load, telescope=telescope, ims=None, plateid=plate, mjd=mjd, 
-                          clobber=True, mapname=plugmap, noplot=noplot, fixfiberid=fixfiberid,
-                          badfiberid=badfiberid, survey=survey, mapper_data=mapper_data,
-                          field=field, apred=apred)
+        #x = makePlotsHtml(load=load, telescope=telescope, ims=None, plate=plate, mjd=mjd, 
+        #                  clobber=True, mapname=plugmap, noplot=noplot, fixfiberid=fixfiberid,
+        #                  badfiberid=badfiberid, survey=survey, mapper_data=mapper_data,
+        #                  field=field, apred=apred)
 
         # NOTE: No translations for plotflux yet.
 
@@ -247,7 +247,8 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     # Table of exposure pairs.
     #----------------------------------------------------------------------------------------
     npairs = len(pairstr)
-    if (type(pairstr) == 'astropy.io.fits.fitsrec.FITS_rec') & (npairs > 0):
+    #if (type(pairstr) == 'astropy.io.fits.fitsrec.FITS_rec') & (npairs > 0):
+    if npairs > 0:
         #----------------------------------------------------------------------------------------
         # Pair table.
         #----------------------------------------------------------------------------------------
