@@ -390,8 +390,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     platefile = gfile
     if ims is None: gfile = 'sum'+gfile
 
-    import pdb; pdb.set_trace()
-
     html = open(htmldir+gfile+'.html','w')
     htmlsum = open(htmldir+gfile+'sum.html','w')
 
