@@ -20,7 +20,7 @@ import pdb
 
 sdss_path = path.Path()
 
-# put pdb.set_trace() wherever you want stop
+# put import pdb; pdb.set_trace() wherever you want stop
 
 #sdss_path.full('ap2D',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
 #                        plate=self.plate,mjd=self.mjd,prefix=self.prefix,num=0,chip='a')
@@ -230,6 +230,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD>'+str(tab1['NREADS'][i])+'\n')
         j = np.where(shiftstr['FRAMENUM'] == str(tab1['IM'][i]))
         nj = len(j[0])
+        import pdb; pdb.set_trace()
         if nj > 0:
             html.write('<TD>'+str("%.4f" % round(shiftstr['SHIFT'][j],4))+'\n')
             html.write('<TD>'+str("%.2f" % round(shiftstr['PIXSHIFT'][j],2))+'\n')
