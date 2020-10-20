@@ -169,7 +169,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     #print("platedir: "+platedir+"\n")
     #print(platedir+platesumfile)
     if os.path.exists(platesum) is False:
-        sys.exit("PROBLEM!!! "+platesumfile+" does not exist.\n Halting execution...")
+        exit("PROBLEM!!! "+platesumfile+" does not exist.\n Halting execution...")
 
     #----------------------------------------------------------------------------------------
     # Make the html directory if it doesn't already exist
