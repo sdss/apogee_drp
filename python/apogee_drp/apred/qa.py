@@ -109,11 +109,8 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     # For normal plates, make plots and html.
     #----------------------------------------------------------------------------------------
     if platetype == 'normal': 
-        noplot = True
-        clobber = True
-        import pdb; pdb.set_trace()
-        q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=None, field=field, clobber=clobber, 
-                          noplot=noplot, mapname=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
+        q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, field=field, clobber=True, 
+                          noplot=True, mapname=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
                           onem=None, starfiber=None, starnames=None, starmag=None) 
 
 #fixfiberid=fixfiberid,badfiberid=badfiberid)
