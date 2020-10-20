@@ -669,19 +669,20 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 if ims is None:     medsky = 0.
                 if ims is not None: medsky = np.median(obs[fibersky, ichip])
 
+                # NOTE: using axis=0 caused error, so trying axis=0
                 if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
 
-                if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=0) - medsky
+                if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
 
                 if nobj > 0:
-                    sn[fiberobj, ichip] = np.median((fluxarr[obj, :]-medsky) / errarr[obj, :], axis=0)
+                    sn[fiberobj, ichip] = np.median((fluxarr[obj, :]-medsky) / errarr[obj, :], axis=1)
                     if len(cframe) > 1:
-                        snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=0)
+                        snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=1)
 
                 if ntelluric > 0:
-                    sn[fibertelluric, ichip] = np.median((fluxarr[telluric,:]-medsky) / errarr[telluric, :], axis=0)
+                    sn[fibertelluric, ichip] = np.median((fluxarr[telluric,:] - medsky) / errarr[telluric, :], axis=1)
                     if len(cframe) > 1:
-                        snc[fibertelluric, ichip] = np.median(cfluxarr[telluric, :] / cerrarr[telluric, :], axis=0)
+                        snc[fibertelluric, ichip] = np.median(cfluxarr[telluric, :] / cerrarr[telluric, :], axis=1)
                         medfilt = ScipyMedfilt2D(cfluxarr[telluric, :], kernel_size=(1,49))
                         sz = cfluxarr.shape
                         i1 = int(np.floor((900 * sz[1]) / 2048))
