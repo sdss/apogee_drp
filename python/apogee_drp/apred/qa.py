@@ -829,8 +829,8 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         html.write('<TR><TD>S/N(c)'+txt+'\n')
 
         if ntelluric > 0:
-           html.write('<TR><TD>SN(E/C)<TD<TD>'+str("%5.2f" % round(np.median(snt[telluric,1] / snc[telluric,1]),2)+'\n')
-        else: 
+           html.write('<TR><TD>SN(E/C)<TD<TD>'+str("%5.2f" % round(np.median(snt[telluric,1] / snc[telluric,1]),2))+'\n')
+        else:
             html.write('<TR><TD>SN(E/C)<TD<TD>\n')
 
         html.write('</TABLE>\n')
