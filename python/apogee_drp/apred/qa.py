@@ -356,6 +356,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fla
                   onem=None, fixfiberid=None, badfiberid=None, survey=None, mapper_data=None,
                   field=None, apred=None):
 
+    print("--------------------------------------------------------------------")
+    print("Running MAKEPLOTSHTML for plate "+plate+", mjd "+mjd)
+    print("--------------------------------------------------------------------\n")
+
     if ims is not None: n_exposures = len(ims)
 
     chips = np.array(['a','b','c'])
@@ -1072,12 +1076,20 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fla
     html.close()
     htmlsum.close()
 
+    print("--------------------------------------------------------------------")
+    print("Done with MAKEPLOTSHTML for plate "+plate+", mjd "+mjd)
+    print("--------------------------------------------------------------------\n")
+
 
 '''-----------------------------------------------------------------------------------------'''
 ''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.)               '''
 '''-----------------------------------------------------------------------------------------'''
 
 def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
+    print("--------------------------------------------------------------------")
+    print("Running MAKECALFITS for plate "+plate+", mjd "+mjd)
+    print("--------------------------------------------------------------------\n")
+
     n_exposures = len(ims)
 
     nlines = 2
@@ -1183,12 +1195,21 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     outfile = load.filename('QAcal', plate=int(plate), mjd=mjd) 
     Table(struct).write(outfile)
 
+    print("--------------------------------------------------------------------")
+    print("Done with MAKECALFITS for plate "+plate+", mjd "+mjd)
+    print("Made "+outfile)
+    print("--------------------------------------------------------------------\n")
+
 
 '''-----------------------------------------------------------------------------------------'''
 ''' MAKEDARKFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants)   '''
 '''-----------------------------------------------------------------------------------------'''
 
 def makeDarkFits(load=None, planfile=None, ims=None, mjd=None):
+    print("--------------------------------------------------------------------")
+    print("Running MAKEDARKFITS for plate "+plate+", mjd "+mjd)
+    print("--------------------------------------------------------------------\n")
+
     n_exposures = len(ims)
 
     chips=np.array(['a','b','c'])
@@ -1247,6 +1268,10 @@ def makeDarkFits(load=None, planfile=None, ims=None, mjd=None):
     outfile = load.filename('QAcal', plate=int(plate), mjd=mjd).replace('apQAcal','apQAdarkflat')
     Table(struct).write(outfile)
 
+    print("--------------------------------------------------------------------")
+    print("Done with MAKEDARKFITS for plate "+plate+", mjd "+mjd)
+    print("Made "+outfile)
+    print("--------------------------------------------------------------------\n")
 
 
 '''-----------------------------------------------------------------------------------------'''
