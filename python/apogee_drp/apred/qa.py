@@ -753,6 +753,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             jsort = np.sort(fiber['fiberid'])
             for jj in range(len(jsort)):
                 j = jsort[jj]
+                print(str(j))
                 objhtml.write('<TR>\n')
 
                 color = 'white'
