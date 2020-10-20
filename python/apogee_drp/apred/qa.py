@@ -109,17 +109,18 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     # For normal plates, make plots and html.
     #----------------------------------------------------------------------------------------
     if platetype == 'normal': 
+        x = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, clobber=True,
+                          mapname=plugmap, noplot=True, fixfiberid=fixfiberid,
+                          badfiberid=badfiberid, survey=survey, mapper_data=mapper_data,
+                          field=field, apred=apred)
+
+        x = makePlotsHtml(load=load, telescope=telescope, ims=None, plate=plate, mjd=mjd, 
+                          clobber=True, mapname=plugmap, noplot=noplot, fixfiberid=fixfiberid,
+                          badfiberid=badfiberid, survey=survey, mapper_data=mapper_data,
+                          field=field, apred=apred)
+
         x = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
-        #x = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, clobber=True,
-        #                  mapname=plugmap, noplot=True, fixfiberid=fixfiberid,
-        #                  badfiberid=badfiberid, survey=survey, mapper_data=mapper_data,
-        #                  field=field, apred=apred)
-
-        #x = makePlotsHtml(load=load, telescope=telescope, ims=None, plate=plate, mjd=mjd, 
-        #                  clobber=True, mapname=plugmap, noplot=noplot, fixfiberid=fixfiberid,
-        #                  badfiberid=badfiberid, survey=survey, mapper_data=mapper_data,
-        #                  field=field, apred=apred)
 
         # NOTE: No translations for plotflux yet.
 
@@ -385,6 +386,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fla
     if (flat is None) & (onem is None): gfile = plate+'-'+mjd
     platefile = gfile
     if ims is None: gfile = 'sum'+gfile
+
+    import pdb; pdb.set_trace()
 
     html = open(htmldir+gfile+'.html','w')
     htmlsum = open(htmldir+gfile+'sum.html','w')
