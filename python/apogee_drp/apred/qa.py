@@ -479,31 +479,31 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     #----------------------------------------------------------------------------------------
     # Find telluric fibers.
     #----------------------------------------------------------------------------------------
-    fibertelluric = np.where((fiber['objtype'] == 'SPECTROPHOTO_STD') |
-                             (fiber['objtype'] == 'HOT_STD'))
-    ntelluric = len(fibertelluric[0])
+    fibertelluric, = np.where((fiber['objtype'] == 'SPECTROPHOTO_STD') |
+                              (fiber['objtype'] == 'HOT_STD'))
+    ntelluric = len(fibertelluric)
     telluric = rows[fibertelluric]
 
     #----------------------------------------------------------------------------------------
     # Find science fibers.
     #----------------------------------------------------------------------------------------
-    fiberobj = np.where((fiber['objtype'] == 'STAR_BHB') | 
-                        (fiber['objtype'] == 'STAR') | 
-                        (fiber['objtype'] == 'EXTOBJ'))
-    nobj = len(fiberobj[0])
+    fiberobj, = np.where((fiber['objtype'] == 'STAR_BHB') | 
+                         (fiber['objtype'] == 'STAR') | 
+                         (fiber['objtype'] == 'EXTOBJ'))
+    nobj = len(fiberobj)
     obj = rows[fiberobj]
 
     #----------------------------------------------------------------------------------------
     # Find sky fibers.
     #----------------------------------------------------------------------------------------
-    fibersky = np.where(fiber['objtype'] == 'SKY')
-    nsky = len(fibersky[0])
+    fibersky, = np.where(fiber['objtype'] == 'SKY')
+    nsky = len(fibersky)
     sky = rows[fibersky]
 
     #----------------------------------------------------------------------------------------
     # Find all fiber placed on stars.
     #----------------------------------------------------------------------------------------
-    fiberstar = np.concatenate([fiberobj[0],fibertelluric[0]]);  fiberstar.sort()
+    fiberstar = np.concatenate([fiberobj,fibertelluric]);  fiberstar.sort()
 
     #----------------------------------------------------------------------------------------
     # Define skylines structure which we will use to get crude sky levels in lines.
@@ -690,7 +690,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         for itell in range(ntelluric):
                             p1 = np.mean(cfluxarr[telluric[itell], i1:i2])
                             p2 = np.std(cfluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
-                            import pdb; pdb.set_trace()
                             snt[fibertelluric[itell], ichip] = p1 / p2
 
                     else:
