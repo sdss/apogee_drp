@@ -323,10 +323,10 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TR><TD><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
         html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
         html.write('<TR><TD>z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
-        html.write('<TR><TD>z<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][i],2))+'\n')
+        html.write('<TR><TD>znorm<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][i],2))+'\n')
         html.write('<TR><TD>sky'+str(np.round(tab1['SKY'][i],1)).replace('[',' ').replace(' ','<TD>')[:-1]+'\n')
-        html.write('<TR><TD>sky'+str(np.round(tab1['SN'][i],1)).replace('[',' ').replace(' ','<TD>')[:-1]+'\n')
-        html.write('<TR><TD>sky'+str(np.round(tab1['SNC'][i],1)).replace('[',' ').replace(' ','<TD>')[:-1]+'\n')
+        html.write('<TR><TD>S/N'+str(np.round(tab1['SN'][i],1)).replace('[',' ').replace(' ','<TD>')[:-1]+'\n')
+        html.write('<TR><TD>S/N(c)'+str(np.round(tab1['SNC'][i],1)).replace('[',' ').replace(' ','<TD>')[:-1]+'\n')
         #if tag_exist(tab1[i],'snratio'):
         html.write('<TR><TD>SN(E/C)<TD<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
         html.write('</TABLE>\n')
