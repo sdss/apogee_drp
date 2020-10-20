@@ -228,12 +228,11 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD>'+str("%.2f" % round(tab1['FWHM'][i],2))+'\n')
         html.write('<TD>'+str("%.2f" % round(tab1['GDRMS'][i],2))+'\n')
         html.write('<TD>'+str(tab1['NREADS'][i])+'\n')
-        j = np.where(shiftstr['FRAMENUM'] == str(tab1['IM'][i]))
-        nj = len(j[0])
-        import pdb; pdb.set_trace()
+        jj = np.where(shiftstr['FRAMENUM'] == str(tab1['IM'][i]))
+        nj = len(jj[0])
         if nj > 0:
-            html.write('<TD>'+str("%.4f" % round(shiftstr['SHIFT'][j],4))+'\n')
-            html.write('<TD>'+str("%.2f" % round(shiftstr['PIXSHIFT'][j],2))+'\n')
+            html.write('<TD>'+str("%.4f" % round(shiftstr['SHIFT'][j][0],4))+'\n')
+            html.write('<TD>'+str("%.2f" % round(shiftstr['PIXSHIFT'][j][0],2))+'\n')
         else:
             html.write('<TD><TD>\n')
             html.write('<TD><TD>\n')
