@@ -1153,7 +1153,7 @@ def makeCalFits(ims=None, mjd=None, instrument=None):
                             nj = len(j)
                             if nj>0:
                                 junk = np.min(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
-                                jline = np.argmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline])
+                                jline = np.argmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
                                 struct['GAUSS'][:,ifiber,ichip,iline][i] = linestr['GPAR'][j][jline]
                                 sz = a['WCOEF'][ichip].shape
                                 if sz[0] == 2:
