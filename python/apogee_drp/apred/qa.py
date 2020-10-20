@@ -845,7 +845,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 medsky[ichip] = 99.999
 
         html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(ims[i])+'</A>\n')
-        html.write('<TD>'+string(nreads)+'\n')
+        html.write('<TD>'+str(nreads)+'\n')
         html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
         html.write('<TR><TD>z<TD><TD>'+str("%5.2f" % round(zero,2))+'\n')
         html.write('<TR><TD>znorm<TD><TD>'+str("%5.2f" % round(zeronorm,2))+'\n')
