@@ -118,6 +118,9 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         logger.info('Doppler failed for {:s}'.format(star))
         raise
 
+    # KLUDGE, rename vhelio->vheliobary
+    if 'vhelio' in starvisits.colnames:
+        starvisits['vhelio'].name = 'vheliobary'
 
     # First rename old visit RV tags and initialize new ones
     for col in ['vtype','vrel','vrelerr','vheliobary','bc','rv_teff','rv_logg','rv_feh','rv_carb','rv_alpha']:
@@ -700,7 +703,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
     try: apstar.header['N_COMP'] = (allvisit['n_components'].max(),'Maximum number of components in RV CCFs')
     except: pass
-    apstar.header['VHELIOBARY'] = ((allvisit['vheliobary']*allvisit['snr']).sum() / allvisit['snr'].sum(),'S/N weighted mean barycentric RV')
+    apstar.header['VHBARY'] = ((allvisit['vheliobary']*allvisit['snr']).sum() / allvisit['snr'].sum(),'S/N weighted mean barycentric RV')
     if len(allvisit) > 1 : apstar.header['vscatter'] = (allvisit['vheliobary'].std(ddof=1), 'standard deviation of visit RVs')
     else: apstar.header['VSCATTER'] = (0., 'standard deviation of visit RVs')
     apstar.header['VERR'] = (0.,'unused')
@@ -728,7 +731,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         apstar.header['BC{:d}'.format(i)] = (visit['bc'],' Barycentric correction (km/s), visit {:d}'.format(i))
         apstar.header['VRAD{:d}'.format(i)] = (visit['vrel'],' Doppler shift (km/s) of visit {:d}'.format(i))
         #apstar.header['VERR%d'.format(i)] = 
-        apstar.header['VHELIOBARY{:d}'.format(i)] = (visit['vheliobary'],' Barycentric velocity (km/s), visit {:d}'.format(i))
+        apstar.header['VHBARY{:d}'.format(i)] = (visit['vheliobary'],' Barycentric velocity (km/s), visit {:d}'.format(i))
         apstar.header['SNRVIS{:d}'.format(i)] = (visit['snr'],' Signal/Noise ratio, visit {:d}'.format(i))
         apstar.header['FLAG{:d}'.format(i)] = (visit['starflag'],' STARFLAG for visit {:d}'.format(i))
         apstar.header.insert('SFILE{:d}'.format(i),('COMMENT','VISIT {:d} INFORMATION'.format(i)))
@@ -811,7 +814,7 @@ def dbingest(apstar,allvisit):
     cols = ['OBJID','STARVER','APRED','HEALPIX','SNR','RA','DEC','GLON','GLAT','J','J_ERR',
             'H','H_ERR','K','K_ERR','SRC_H','AKTARG','AKMETHOD','AKWISE','SFD_EBV',
             'APTARG1','APTARG2','APTARG3','AP2TARG1','AP2TARG2','AP2TARG3','AP2TARG4',
-            'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHELIOBARY','VSCATTER','VERR',
+            'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHBARY','VSCATTER','VERR',
             'RV_TEFF','RV_LOGG','RV_FEH','MEANFIB','SIGFIB','NRES','MJDBEG','MJDEND']
     # Star table
     startab = Table()
@@ -835,6 +838,7 @@ def dbingest(apstar,allvisit):
     startab['AP2TARG3'].name = 'APOGEE2_TARGET3'
     startab['AP2TARG4'].name = 'APOGEE2_TARGET4'
     startab['N_COMP'].name = 'N_COMPONENTS'
+    startab['VHBARY'].name = 'VHELIOBARY'
     # Add other columns
     startab['TELESCOPE'] = allvisit['telescope'][0]
     startab['FILE'] = os.path.basename(apstar.filename)
