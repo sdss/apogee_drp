@@ -1003,7 +1003,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         skyfile = 'sky-'+name
         print("PLOTS 7: Sky level plots will be made here.")
 
-        html.write('<TD><IMG SRC=../plots/'+skyfile+'.gif>\n)'
+        html.write('<TD><IMG SRC=../plots/'+skyfile+'.gif>\n')
 
         #----------------------------------------------------------------------------------------
         # PLOT 8: make plot of zeropoints for this plate
