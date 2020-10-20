@@ -557,7 +557,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         gcamfilecheck = glob.glob(gcamfile)
         if len(gcamfilecheck) == 0:
             # NOTE: hopefully this works
-            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--outfile', gcamfile])
+            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument])
         gcamfilecheck = glob.glob(gcamfile)
         if len(gcamfilecheck) != 0:
             gcam = fits.getdata(gcamfile)
@@ -1315,14 +1315,11 @@ def getflux(d=None, skyline=None, rows=None):
         #import pdb; pdb.set_trace()
         if len(icont) >= 0: cont[i] = np.median(flux[rows[i],icont])
 
-        iline = np.where((wave > skyline['W1']) & (wave < skyline['W2']))
+        iline, = np.where((wave > skyline['W1']) & (wave < skyline['W2']))
 
-        if len(iline[0]) >= 0:
-            tmp = flux[rows[i],iline]
-            line[i] = np.sum(tmp, where = math.isnan(tmp) is False)
-
-            tmp = flux[rows[i],iline] / flux[rows[i],iline]
-            nline[i] = np.sum(tmp, where = math.isnan(tmp) is False)
+        if len(iline) >= 0:
+            line[i] = np.nansum(flux[rows[i],iline])
+            nline[i] = np.nansum(flux[rows[i],iline] / flux[rows[i],iline])
 
     skylineFlux = line - (nline * cont)
     if skyline['TYPE'] == 0: skylineFlux /= cont
