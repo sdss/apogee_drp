@@ -599,7 +599,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
 
             if type(d)!=dict:
                 if ims is None:  print("Problem with apPlate!!!")
-                if ims not None: print("Problem with ap1D!!!")
+                if ims is not None: print("Problem with ap1D!!!")
 
             cframe = None
             if ims is None: cframe = load.apPlate(int(plate), mjd)
