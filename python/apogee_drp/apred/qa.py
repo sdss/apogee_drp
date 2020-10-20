@@ -179,7 +179,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 
     html = open(qafile, 'w')
     html.write('<HTML><BODY>\n')
-    html.write('<H2> PLATE:'+plate+' MJD: '+mjd+' FIELD: '+field+'</H2>\n')
+    html.write('<H2> PLATE: '+plate+' MJD: '+mjd+' FIELD: '+field+'</H2>\n')
 
     #----------------------------------------------------------------------------------------
     # Read the plateSum file
@@ -231,7 +231,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         j = np.where(shiftstr['FRAMENUM'] == str(tab1['IM'][i]))
         nj = len(j[0])
         if nj > 0:
-            html.write('<TD>'+str("%.4f" % round(shiftstr['SHIFT'][j][0],4))+'\n')
+            html.write('<TD>'+str("%.4f" % round(shiftstr['SHIFT'][j][0],4)).rjust(7)+'\n')
             html.write('<TD>'+str("%.2f" % round(shiftstr['PIXSHIFT'][j][0],2))+'\n')
         else:
             html.write('<TD><TD>\n')
@@ -239,8 +239,8 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
         html.write('<TD>'+str("%.2f" % round(tab1['ZERORMS'][i],2))+'\n')
         html.write('<TD>'+str(np.round(tab1['SKY'][i],2))+'\n')
-        html.write('<TD>'+str(np.around(tab1['SN'][i],1))+'\n')
-        html.write('<TD>'+str(np.around(tab1['SNC'][i],1))+'\n')
+        html.write('<TD>'+str(np.round(tab1['SN'][i],1))+'\n')
+        html.write('<TD>'+str(np.round(tab1['SNC'][i],1))+'\n')
     html.write('</TABLE>\n')
 
     #----------------------------------------------------------------------------------------
