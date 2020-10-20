@@ -355,7 +355,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 '''-----------------------------------------------------------------------------------------'''
 
 def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, flat=None, clobber=True, 
-                  starfiber=None, starnames=None, noplot=None, mapname=None, starmag=None,
+                  starfiber=None, starnames=None, noplot=False, mapname=None, starmag=None,
                   onem=None, survey=None, mapper_data=None, field=None, apred=None): 
 
 #, fixfiberid=None, badfiberid=None):
