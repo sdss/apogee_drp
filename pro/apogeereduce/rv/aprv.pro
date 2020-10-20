@@ -125,7 +125,7 @@ if abs(xcorr.vrel) gt 1000 then begin
 endif
 ADD_TAG,str,'vrel',xcorr.vrel,str
 ADD_TAG,str,'vrelerr',xcorr.vrelerr,str
-ADD_TAG,str,'vhelio',xcorr.vrel+str.bc,str
+ADD_TAG,str,'vheliobary',xcorr.vrel+str.bc,str
 ADD_TAG,str,'syn_wave',grid.wave,str
 ADD_TAG,str,'syn_spec',reform(grid.ndata[bestgrid,*]),str
 str = CREATE_STRUCT(str,'xcorr',xcorr)
@@ -167,7 +167,7 @@ endif else begin
   str.vrelerr = str.xcorr.vrelerr
   visitstr.vtype = 2
 endelse
-str.vhelio = str.vrel+str.bc
+str.vheliobary = str.vrel+str.bc
 
 ; Final chisq
 ;--------------
@@ -211,10 +211,10 @@ print,'Final chisq = ',stringize(str.chisq,ndec=2)
 
 ;stop
 
-print,' Vhelio = ',stringize(str.vhelio,ndec=3),' km/s'
+print,' Vheliobary = ',stringize(str.vheliobary,ndec=3),' km/s'
 
 ; Calculate VLSR, VGSR
-VCONV,str.vhelio,str.glon,str.glat,vlsr,vgsr
+VCONV,str.vheliobary,str.glon,str.glat,vlsr,vgsr
 add_tag,str,'VLSR',vlsr,str
 add_tag,str,'VGSR',vgsr,str
 
@@ -237,7 +237,7 @@ sxaddpar,head,'VRADERR',str.vrelerr,' VRAD error (km/s)'
 if n_elements(radvel_error) eq 0 then $
   sxaddpar,head,'VSCATTER',str.radvel.sigvrel,' km/s' else $
   sxaddpar,head,'VSCATTER',999999.,' km/s'
-sxaddpar,head,'VHELIO',str.vhelio,' heliocentric velocity (km/s)'
+sxaddpar,head,'VHELIOBAR',str.vheliobary,' heliocentric velocity (km/s)'
 sxaddpar,head,'VLSR',str.vlsr,' LSR velocity (km/s)'
 sxaddpar,head,'VGSR',str.vgsr,' GSR velocity (km/s)'
 sxaddpar,head,'RVTEFF',visitstr.rv_teff,' Teff (K) from mini-grid x correlation'
@@ -265,7 +265,7 @@ endif
 ; Update VISITSTR
 visitstr.vrel = str.vrel
 visitstr.vrelerr = str.vrelerr
-visitstr.vhelio = str.vhelio
+visitstr.vheliobary = str.vheliobary
 visitstr.vlsr = str.vlsr
 visitstr.vgsr = str.vgsr
 if tag_exist(visitstr,'CHISQ') eq 0 then add_tag,visitstr,'CHISQ',0.0,visitstr
@@ -323,7 +323,7 @@ if keyword_set(pl) or keyword_set(save) then begin
                color=co,charsize=1.2
       if k eq 1 then $
         xyouts,mean(xr)/1e4,yr[1]-0.15*range(yr),'Vrel='+stringize(str.vrel,ndec=2)+' '+$
-               ' Vhelio='+stringize(str.vhelio,ndec=2)+'+/-'+stringize(str.vrelerr,ndec=2)+' km/s',$
+               ' Vheliobary='+stringize(str.vheliobary,ndec=2)+'+/-'+stringize(str.vrelerr,ndec=2)+' km/s',$
                align=0.5,color=co,charsize=1.2
       if k eq 2 then $
         xyouts,mean(xr)/1e4,yr[1]-0.15*range(yr),'Best RV-grid (not ASPCAP!) Model Spectrum: [Fe/H]='+stringize(visitstr.rv_feh,ndec=2)+$

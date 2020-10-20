@@ -120,13 +120,13 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
 
 
     # First rename old visit RV tags and initialize new ones
-    for col in ['vtype','vrel','vrelerr','vhelio','bc','rv_teff','rv_logg','rv_feh','rv_carb','rv_alpha']:
+    for col in ['vtype','vrel','vrelerr','vheliobary','bc','rv_teff','rv_logg','rv_feh','rv_carb','rv_alpha']:
         starvisits.rename_column(col,'est'+col)
         if col == 'vtype':
             starvisits[col] = 0
         else:
             starvisits[col] = np.nan
-    for col in ['xcorr_vrel','xcorr_vrelerr','xcorr_vhelio','bc']:
+    for col in ['xcorr_vrel','xcorr_vrelerr','xcorr_vheliobary','bc']:
         starvisits[col] = np.nan
 
     # Add columns for RV components
@@ -157,10 +157,10 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         visits.append(vind)
         starvisits[vind]['vrel'] = v['vrel']
         starvisits[vind]['vrelerr'] = v['vrelerr']
-        starvisits[vind]['vhelio'] = v['vhelio']
+        starvisits[vind]['vheliobary'] = v['vhelio']
         starvisits[vind]['xcorr_vrel'] = v['xcorr_vrel']
         starvisits[vind]['xcorr_vrelerr'] = v['xcorr_vrelerr']
-        starvisits[vind]['xcorr_vhelio'] = v['xcorr_vhelio']
+        starvisits[vind]['xcorr_vheliobary'] = v['xcorr_vhelio']
         starvisits[vind]['bc'] = v['bc']
         starvisits[vind]['rv_teff'] = v['teff']
         starvisits[vind]['rv_logg'] = v['logg']
@@ -181,9 +181,9 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
             bd_diff = 10
         else:
             bd_diff = 50.
-        if (np.abs(starvisits[vind]['vhelio']-starvisits[vind]['xcorr_vhelio']) > bd_diff) :
+        if (np.abs(starvisits[vind]['vheliobary']-starvisits[vind]['xcorr_vheliobary']) > bd_diff) :
             starvisits[vind]['starflag'] |= starmask.getval('RV_REJECT')
-        elif (np.abs(starvisits[vind]['vhelio']-starvisits[vind]['xcorr_vhelio']) > 0) :
+        elif (np.abs(starvisits[vind]['vheliobary']-starvisits[vind]['xcorr_vheliobary']) > 0) :
             starvisits[vind]['starflag'] |= starmask.getval('RV_SUSPECT')
 
     # Get the good visits
@@ -700,8 +700,8 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
     try: apstar.header['N_COMP'] = (allvisit['n_components'].max(),'Maximum number of components in RV CCFs')
     except: pass
-    apstar.header['VHELIO'] = ((allvisit['vhelio']*allvisit['snr']).sum() / allvisit['snr'].sum(),'S/N weighted mean barycentric RV')
-    if len(allvisit) > 1 : apstar.header['vscatter'] = (allvisit['vhelio'].std(ddof=1), 'standard deviation of visit RVs')
+    apstar.header['VHELIOBARY'] = ((allvisit['vheliobary']*allvisit['snr']).sum() / allvisit['snr'].sum(),'S/N weighted mean barycentric RV')
+    if len(allvisit) > 1 : apstar.header['vscatter'] = (allvisit['vheliobary'].std(ddof=1), 'standard deviation of visit RVs')
     else: apstar.header['VSCATTER'] = (0., 'standard deviation of visit RVs')
     apstar.header['VERR'] = (0.,'unused')
     apstar.header['RV_TEFF'] = (allvisit['rv_teff'].max(),'Effective temperature from RV fit')
@@ -728,7 +728,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         apstar.header['BC{:d}'.format(i)] = (visit['bc'],' Barycentric correction (km/s), visit {:d}'.format(i))
         apstar.header['VRAD{:d}'.format(i)] = (visit['vrel'],' Doppler shift (km/s) of visit {:d}'.format(i))
         #apstar.header['VERR%d'.format(i)] = 
-        apstar.header['VHELIO{:d}'.format(i)] = (visit['vhelio'],' Barycentric velocity (km/s), visit {:d}'.format(i))
+        apstar.header['VHELIOBARY{:d}'.format(i)] = (visit['vheliobary'],' Barycentric velocity (km/s), visit {:d}'.format(i))
         apstar.header['SNRVIS{:d}'.format(i)] = (visit['snr'],' Signal/Noise ratio, visit {:d}'.format(i))
         apstar.header['FLAG{:d}'.format(i)] = (visit['starflag'],' STARFLAG for visit {:d}'.format(i))
         apstar.header.insert('SFILE{:d}'.format(i),('COMMENT','VISIT {:d} INFORMATION'.format(i)))
@@ -811,7 +811,7 @@ def dbingest(apstar,allvisit):
     cols = ['OBJID','STARVER','APRED','HEALPIX','SNR','RA','DEC','GLON','GLAT','J','J_ERR',
             'H','H_ERR','K','K_ERR','SRC_H','AKTARG','AKMETHOD','AKWISE','SFD_EBV',
             'APTARG1','APTARG2','APTARG3','AP2TARG1','AP2TARG2','AP2TARG3','AP2TARG4',
-            'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHELIO','VSCATTER','VERR',
+            'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHELIOBARY','VSCATTER','VERR',
             'RV_TEFF','RV_LOGG','RV_FEH','MEANFIB','SIGFIB','NRES','MJDBEG','MJDEND']
     # Star table
     startab = Table()
@@ -860,7 +860,7 @@ def dbingest(apstar,allvisit):
                'ak_targ_method', 'ak_wise', 'sfd_ebv', 'apogee_target1',
                'apogee_target2', 'apogee_target3', 'apogee_target4',
                'targflags', 'starflag', 'starflags', 'vlsr', 'vgsr',
-               'estbc','estvtype','estvrel','estvrelerr','estvhelio','estrv_teff',
+               'estbc','estvtype','estvrel','estvrelerr','estvheliobary','estrv_teff',
                'estrv_logg','estrv_feh','estrv_alpha','estrv_carb','modified',
                'rv_alpha', 'rv_carb', 'synthfile']
     for c in delcols:

@@ -639,7 +639,7 @@ FOR i=0L,nplanfiles-1 do begin
            apogee_target1:0L,apogee_target2:0L,apogee_target3:0L,apogee_target4:0L,$
            targflags:'',snr: 0.0, starflag:0L,starflags: '',$
            dateobs:'',jd:0.0d0,BC:0.0,vtype:0,$
-           VREL:999999.0,vrelerr:999999.0,VHELIO:999999.0,Vlsr:999999.0,Vgsr:999999.0,$
+           VREL:999999.0,vrelerr:999999.0,VHELIOBARY:999999.0,Vlsr:999999.0,Vgsr:999999.0,$
            chisq:0.0,rv_teff:0.0,rv_feh:99.9,rv_logg:99.9,rv_alpha: 99.9,rv_carb: 99.9, synthfile:''}
 
     visitstr.apogee_id = obj[istar]
