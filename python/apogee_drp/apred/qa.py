@@ -891,7 +891,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
         if len(cframe) > 1:
             htmlsum.write('<TD>'+str("%f8.2" % round(dither,2))+'\n')
         else:
-            htmlsum.write('<TD>\n)'
+            htmlsum.write('<TD>\n')
         htmlsum.write('<TD>'+str("%5.2f" % round(zero,2))+'\n')
         htmlsum.write('<TD>'+str("%5.2f" % round(zerorms,2))+'\n')
         htmlsum.write('<TD>'+str("%5.2f" % round(zeronorm,2))+'\n')
