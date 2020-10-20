@@ -108,15 +108,15 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     # For normal plates, make plots and html.
     #----------------------------------------------------------------------------------------
     if platetype == 'normal': 
-        x = masterQApage(plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
+        x = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
-        x = makePlotsHtml(telescope=telescope, ims=ims, plateid=plate, clobber=True,
+        x = makePlotsHtml(load=load, telescope=telescope, ims=ims, plateid=plate, clobber=True,
                           mapname=plugmap, noplot=True, fixfiberid=fixfiberid,
                           badfiberid=badfiberid, survey=survey, mapper_data=mapper_data,
                           field=field, apred=apred)
 
-        x = makePlotsHtml(telescope=telescope, ims=None, plateid=plate, mjd=mjd, clobber=True,
-                          mapname=plugmap, noplot=noplot, fixfiberid=fixfiberid,
+        x = makePlotsHtml(load=load, telescope=telescope, ims=None, plateid=plate, mjd=mjd, 
+                          clobber=True, mapname=plugmap, noplot=noplot, fixfiberid=fixfiberid,
                           badfiberid=badfiberid, survey=survey, mapper_data=mapper_data,
                           field=field, apred=apred)
 
