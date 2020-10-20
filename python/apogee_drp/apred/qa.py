@@ -459,7 +459,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugid,
                                  obj1m=starnames[0], starfiber=starfiber) 
 
-    gd = np.where(plug['fiberdata']['fiberid'] > 0)
+    gd, = np.where(plug['fiberdata']['fiberid'] > 0)
     fiber = plug['fiberdata'][gd]
     nfiber = len(fiber)
     rows = 300-fiber['fiberid']
