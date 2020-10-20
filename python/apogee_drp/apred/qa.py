@@ -622,7 +622,7 @@ def makePlotsHtml(telescope=None, ims=None, plate=None, mjd=None, flat=None, clo
             #----------------------------------------------------------------------------------------
             for j in range(nfiber):
                 for ichip in range(nchips): 
-                    obs[j,ichip] = np.median(d[chips[ichip]][1].data[rows[j]],:)
+                    obs[j, ichip] = np.median(d[chips[ichip]][1].data[rows[j], :])
 
             if flat is None:
                 for iline in range(len(skylines)):
