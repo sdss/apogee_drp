@@ -124,6 +124,7 @@ def gproc(mjd=None, instrument=None, outfile=None):
     if outfile is None: 
         outfile='gcam-{mjd}.fits'.format(mjd=mjd)
     #fitsio.write('gcam-{mjd}.fits'.format(mjd=mjd), gcam, clobber=True)
+    print('Writing output to '+outfile)
     fitsio.write(outfile, gcam, clobber=True)
 
 

@@ -25,6 +25,7 @@ import numpy as np
 from astropy.table import Table,Column
 from astropy.io import fits
 import logging
+import traceback
 
 from apogee_drp.apred import rv
 from apogee_drp.utils import bitmask,apload,plan
@@ -92,8 +93,7 @@ if __name__ == '__main__' :
                           nres=args.nres,windows=args.windows,verbose=args.verbose,
                           plot=args.plot,logger=logger)
         except:
-            logger.warning('Error running Doppler on '+star)
-            logger.warning(sys.exc_info()[0])
+            logger.exception('Error running Doppler on '+star)
 
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
