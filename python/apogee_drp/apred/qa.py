@@ -470,8 +470,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     fiber = append_fields(fiber, 'sn', newColumn, usemask=False)
     fiber = append_fields(fiber, 'obsmag', newColumn, usemask=False)
 
-    unplugged = np.where(fiber['fiberid'] < 0)
-    nunplugged = len(unplugged[0])
+    unplugged, = np.where(fiber['fiberid'] < 0)
+    nunplugged = len(unplugged)
     if flat is not None:
         fiber['hmag'] = 12
         fiber['object'] = 'FLAT'
@@ -551,18 +551,20 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     #----------------------------------------------------------------------------------------
     # Get guider information.
     #----------------------------------------------------------------------------------------
-    if onem is None:
-        expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
-        gcamfile = expdir+'/'+mjd+'/gcam-'+mjd+'.fits'
-        gcamfilecheck = glob.glob(gcamfile)
-        if len(gcamfilecheck) == 0:
+
+    # NOTE: skipping gcam stuff until I get gcam_process to work
+#    if onem is None:
+#        expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
+#        gcamfile = expdir+'/'+mjd+'/gcam-'+mjd+'.fits'
+#        gcamfilecheck = glob.glob(gcamfile)
+#        if len(gcamfilecheck) == 0:
             # NOTE: hopefully this works
-            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument], shell=False)
-        gcamfilecheck = glob.glob(gcamfile)
-        if len(gcamfilecheck) != 0:
-            gcam = fits.getdata(gcamfile)
-        else:
-            print("Problem running gcam_process!")
+#            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument], shell=False)
+#        gcamfilecheck = glob.glob(gcamfile)
+#        if len(gcamfilecheck) != 0:
+#            gcam = fits.getdata(gcamfile)
+#        else:
+#            print("Problem running gcam_process!")
 
     mjd0 = 99999
     mjd1 = 0.
@@ -792,8 +794,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber['fiberid'][j])
                     if os.path.exists(vfile):
                         h = fits.getheader(vfile)
-                        if type(h) == astropy.io.fits.header.Header:
-                            objhtml.write('<BR>'+bitmask.StarBitMask().getname(h['STARFLAG'])+'\n')
+                        # NOTE: the below if statement does not work. Ignoring and hoping for the best.
+#                        if type(h) == astropy.io.fits.header.Header:
+                        objhtml.write('<BR>'+bitmask.StarBitMask().getname(h['STARFLAG'])+'\n')
 
                 #----------------------------------------------------------------------------------------
                 # PLOT 1: spectrum 
@@ -880,19 +883,23 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             mjd0 = min([mjd0,mjdstart])
             mjd1 = max([mjd1,mjdend])
             nj = 0
-            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
-                jcam = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
-                nj = len(jcam[0])
-            if nj > 1: 
-                fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
-                gdrms = np.median(gcam['GDRMS'][jcam])
-            else:
-                fwhm = -1.
-                gdrms = -1.
-                print("not halted: no matching mjd range in gcam...")
-        else:
-            fwhm = -1
-            gdrms = -1
+        # NOTE: skipping gcam stuff until I get gcam_process to work
+#            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
+#                jcam = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
+#                nj = len(jcam[0])
+#            if nj > 1: 
+#                fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
+#                gdrms = np.median(gcam['GDRMS'][jcam])
+#            else:
+#                fwhm = -1.
+#                gdrms = -1.
+#                print("not halted: no matching mjd range in gcam...")
+#        else:
+#            fwhm = -1
+#            gdrms = -1
+
+        fwhm = -1
+        gdrms = -1
 
 
         #----------------------------------------------------------------------------------------
@@ -904,8 +911,12 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         alt = dhdr['ALT']
         secz = 1. / np.cos((90.-alt) * (math.pi/180.))
         seeing = dhdr['SEEING']
-        ha = dhdr['HA']
-        design_ha = plug['ha']
+        # NOTE: 'HA' is not in the ap1D header... setting ha=0 for now
+#        ha = dhdr['HA']
+        ha=0
+        # NOTE: 'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
+#        design_ha = plug['ha']
+        design_ha = [0,0,0]
         dither = -99.
         if len(cframe) > 1: dither = cframehdr['DITHSH']
         htmlsum.write('<TD>'+str("%6.2f" % round(secz,2))+'\n')
@@ -930,7 +941,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         txt = '['+str("%5.1f" % round(achievedsnc[0],1))+','+str("%5.1f" % round(achievedsnc[1],1))+','+str("%5.1f" % round(achievedsnc[2],1))+']'
         htmlsum.write('<TD>'+txt+'\n')
         htmlsum.write('<TD>\n')
-        for j in range(unplugged): htmlsum.write(str(300-unplugged[j])+'\n')
+        for j in range(nunplugged): htmlsum.write(str(300-unplugged[j])+'\n')
         htmlsum.write('<TD>\n')
         if faint[0] > 0:
             for j in range(nfaint): htmlsum.write(str(fiber['fiberid'][faint][j])+'\n')
@@ -944,12 +955,13 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         if ims is not None:
             tellfile = load.filename('Tellstar', plate=int(plate), mjd=mjd)
             telstr = fits.getdata(tellfile)
-            if type(telstr) == astropy.io.fits.fitsrec.FITS_rec:
-                jtell = np.where(telstr['IM'] == ims[i])
-                ntell = len(jtell[0])
-                if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
-            else:
-                print('Error reading Tellstar file: '+tellfile)
+            # NOTE: the below if statement will not work. Ignoring it and hoping for the best
+#            if type(telstr) == astropy.io.fits.fitsrec.FITS_rec:
+            jtell = np.where(telstr['IM'] == ims[i])
+            ntell = len(jtell[0])
+            if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
+#            else:
+#                print('Error reading Tellstar file: '+tellfile)
 
         platetab['IM'][i] =        ims[i]
         platetab['NREADS'][i] =    nreads
@@ -1014,14 +1026,15 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     if onem is not None: name = starnames[0]+'-'+mjd
 
     if ims is not None:
-        if onem is None:
+        # NOTE: skipping gcam stuff until I get gcam_process to work
+#        if onem is None:
             #----------------------------------------------------------------------------------------
             # PLOT 6: guider rms plot
             #----------------------------------------------------------------------------------------
-            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
-                jcam = np.where((gcam['MJD'] > mjd0) & (gcam['MJD'] < mjd1))
-                nj = len(jcam[0]) 
-                print("PLOTS 6: Guider RMS plots will be made here.")
+#            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
+#                jcam = np.where((gcam['MJD'] > mjd0) & (gcam['MJD'] < mjd1))
+#                nj = len(jcam[0]) 
+#                print("PLOTS 6: Guider RMS plots will be made here.")
 
         #----------------------------------------------------------------------------------------
         # PLOT 7: make plot of sky levels for this plate
