@@ -446,7 +446,7 @@ if keyword_set(pl) then begin
   ;oplot,x,yfit1*smspec,co=250,linestyle=2
   oplot,x,telnorm*smspec,co=250,linestyle=2
   oplot,x,spec/telnorm,co=150
-  legend,['Original','Telluric','Corrected'],textcolor=[co,250,150],/bottom,/left
+  legend_old,['Original','Telluric','Corrected'],textcolor=[co,250,150],/bottom,/left
   xyouts,mean(xr),yr[1]-0.05*range(yr),'N ormalization='+strjoin(stringize(par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
 
   ;if keyword_set(save) then ps_close

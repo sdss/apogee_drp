@@ -141,8 +141,10 @@ mjd = 0L
 reads,cmjd,mjd
 
 ;; Deal with null values from yaml file
-if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then if strtrim(fixfiberid,2) eq 'null' then undefine,fixfiberid ; null
-if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then if strtrim(badfiberid,2) eq 'null' then undefine,badfiberid ; null
+if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then $
+  if (strtrim(fixfiberid,2) eq 'null' or strtrim(strlowcase(fixfiberid),2) eq 'none') then undefine,fixfiberid  ;; null/none  
+if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
+  if (strtrim(badfiberid,2) eq 'null' or strtrim(strlowcase(badfiberid),2) eq 'none') then undefine,badfiberid  ;; null/none  
 
 ;; Create the output fiber structure
 tmp = create_struct('fiberid',0, 'ra',0.d0, 'dec',0.d0, 'eta',0.d0, 'zeta',0.d0, 'hmag',0., 'objtype','none', $

@@ -52,8 +52,8 @@ if file_test(plugfile) eq 0 then begin
   return
 endif
 
-if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then if strtrim(fixfiberid,2) eq 'null' then undefine,fixfiberid  ;; null
-
+if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then $
+  if (strtrim(fixfiberid,2) eq 'null' or strtrim(strlowcase(fixfiberid),2) eq 'none') then undefine,fixfiberid  ;; null/none
 
 ;----------
 ; Strip path from plug file name, and change to that directory
