@@ -191,7 +191,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
     if mapa==False:
         # Get the plateHolesSorted file for this plate and read it
-        platestr = '{:06d}'.format(8100)
+        platestr = '{:06d}'.format(plate)
         platedir = os.environ['PLATELIST_DIR']+'/plates/%04dXX/%06d' % (plate//100,plate)
         holefile = 'plateHolesSorted-'+platestr+'.par'
         print('yanny_read,'+platedir+'/'+holefile)

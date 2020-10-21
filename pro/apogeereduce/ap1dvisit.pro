@@ -94,10 +94,11 @@ FOR i=0L,nplanfiles-1 do begin
   ;------------------------------
   print,'' & print,'Plug Map file information:'
   if tag_exist(planstr,'fixfiberid') then fixfiberid=planstr.fixfiberid 
-  if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then if strtrim(fixfiberid,2) eq 'null' then undefine,fixfiberid ; null
+  if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then $
+    if (strtrim(fixfiberid,2) eq 'null' or strtrim(strlowcase(fixfiberid),2) eq 'none') then undefine,fixfiberid  ;; null/none  
   if tag_exist(planstr,'badfiberid') then badfiberid=planstr.badfiberid 
-  if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then if strtrim(badfiberid,2) eq 'null' then undefine,badfiberid ; null
-
+  if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
+    if (strtrim(badfiberid,2) eq 'null' or strtrim(strlowcase(badfiberid),2) eq 'none') then undefine,badfiberid  ;; null/none  
   if planstr.platetype eq 'single' then begin
    plugfile=getenv('APOGEEREDUCE_DIR')+'/data/plPlugMapA-0001.par' 
    plugmap=getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),obj1m=planstr.apexp[0].singlename,starfiber=planstr.apexp[0].single,fixfiberid=fixfiberid)
