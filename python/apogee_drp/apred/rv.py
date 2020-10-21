@@ -306,6 +306,9 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
                  
         if spec is not None : speclist.append(spec)
 
+    if len(speclist)==0:
+        raise Exception('No visit spectra loaded')
+
     # Now do the Doppler jointfit to get RVs
     # Dump empty pickle to stand in case of failure (to prevent redo if not clobber)
     try:
