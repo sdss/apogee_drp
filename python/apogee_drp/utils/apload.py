@@ -474,8 +474,10 @@ class ApLoad :
             print('Usage: apVisit(plate,mjd,fiber)')
         else :
             try :
-                file = self.allfile(
-                   'Visit',plate=args[0],mjd=args[1],fiber=args[2])
+                if kwargs.get('field') is None:
+                    file = self.allfile('Visit',plate=args[0],mjd=args[1],fiber=args[2])
+                else:
+                    file = self.allfile('Visit',plate=args[0],mjd=args[1],fiber=args[2],field=kwargs['field'])
                 if load : 
                     hdulist=self._readhdu(file)
                     spec=ApSpec(hdulist[1].data,header=hdulist[0].header,
@@ -738,7 +740,7 @@ class ApLoad :
         else :
             sdssroot = 'ap'+root
 
-        if plate is not None :
+        if (plate is not None) and (field is None):
             field = apfield(plate,telescope=self.telescope)[0]
  
         if chips == False :
@@ -805,7 +807,7 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m') : #,plans=None
     if plans == None : 
         print('reading platePlans')
         plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par')['PLATEPLANS']
-    j = np.where(np.array(plans['plateid']) == plateid)[0][0]
+    j = np.where(np.array(plans['plateid']) == int(plateid))[0][0]
 
     survey = plans['survey'][j]
     programname = plans['programname'][j]

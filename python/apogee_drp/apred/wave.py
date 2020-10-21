@@ -637,7 +637,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
     if dirname == '' : dirname = '.'
     if inst is None : inst = p['instrument'].strip("'") if p.get('instrument') else 'apogee-n'
     if vers is None : vers = p['apred_vers'].strip("'") if p.get('apred_vers') else 'current'
-    if waveid is None : waveid = int(p['waveid'].strip("'")) if p.get('waveid') else None
+    if waveid is None : waveid = int(str(p['waveid']).strip("'")) if p.get('waveid') else None
 
     # set up file reader
     load = apload.ApLoad(apred=vers,instrument=inst,verbose=False)
@@ -690,6 +690,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
     grid = []
     ytit = []
     for iframe,name in enumerate(p['APEXP']['name']) :
+        name = str(name)  # make sure it's a string
         print('frame: ', name)
         frame = load.ap1D(int(name))
         if waveid > 0 :

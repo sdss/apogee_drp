@@ -584,6 +584,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
                 os.makedirs(spectro_dir+'fields/'+telescope+'/'+str(loc))
             field,survey,program = apload.apfield(plate,plug['locationid'])
             out['survey'] = survey
+            out['field'] = field
             with open(spectro_dir+'fields/'+telescope+'/'+str(loc)+'/plan-'+str(loc)+'.lis','w+') as file:
                 file.write(telescope+'/'+str(plate)+'/'+str(mjd)+'/'+os.path.basename(planfile))
             file.close()
