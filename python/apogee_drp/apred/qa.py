@@ -986,8 +986,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
         for j in range(len(fiber)):
             import pdb; pdb.set_trace()
-            fiber['SN'][j][i,:] = sn[j,:]
-            fiber['OBSMAG'][j][i,:] = (-2.5 * np.log10(obs[j,:])) + zero
+            fiber['sn'][j][i,:] = sn[j,:]
+            fiber['obsmag'][j][i,:] = (-2.5 * np.log10(obs[j,:])) + zero
 
     #----------------------------------------------------------------------------------------
     # write out the FITS table.
