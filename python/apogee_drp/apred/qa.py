@@ -557,7 +557,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         gcamfilecheck = glob.glob(gcamfile)
         if len(gcamfilecheck) == 0:
             # NOTE: hopefully this works
-            subprocess.call(['gcam_process', '--mjd', int(mjd), '--instrument', instrument])
+            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument], shell=False)
         gcamfilecheck = glob.glob(gcamfile)
         if len(gcamfilecheck) != 0:
             gcam = fits.getdata(gcamfile)
