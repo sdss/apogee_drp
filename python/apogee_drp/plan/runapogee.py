@@ -511,10 +511,9 @@ def run_daily(observatory,mjd5=None,apred=None):
     #--------------------------
     rootLogger.info('Making plan files')
     plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
-    dbload_plans(planfiles)  # load plans into db
-    #db.ingest('plan',planfiles)  # load plans into db
     dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'auto.yaml'
     planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
+    dbload_plans(planfiles)  # load plans into db
     # Write planfiles to MJD5.plans
     dln.writelines(dailydir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
 
@@ -530,9 +529,6 @@ def run_daily(observatory,mjd5=None,apred=None):
     db.ingest('daily_status',daycat)
 
 
-
-    import pdb;pdb.set_trace()
-
     # Run APRED on all planfiles using "pbs" package
     #------------------------------------------------
     rootLogger.info('')
@@ -545,7 +541,6 @@ def run_daily(observatory,mjd5=None,apred=None):
     queue.create(label='apred', nodes=2, ppn=16, cpus=cpus, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
     for pf in planfiles:
         queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
-    import pdb;pdb.set_trace()
     queue.commit(hard=True,submit=True)
     queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
     chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)

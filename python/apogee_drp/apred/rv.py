@@ -287,11 +287,11 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
 
         # Load all of the visits into doppler Spec1D objects
         if load.telescope == 'apo1m' :
-            visitfile = load.allfile('Visit',plate=allvisit['plate'][i],
-                                    mjd=allvisit['mjd'][i],reduction=allvisit['apogee_id'][i])
+            visitfile = load.allfile('Visit',plate=allvisit['plate'][i],mjd=allvisit['mjd'][i],
+                                     reduction=allvisit['apogee_id'][i],field=allvisit['field'][i])
         else :
-            visitfile = load.allfile('Visit',plate=int(allvisit['plate'][i]),
-                                     mjd=allvisit['mjd'][i],fiber=allvisit['fiberid'][i])
+            visitfile = load.allfile('Visit',plate=int(allvisit['plate'][i]),mjd=allvisit['mjd'][i],
+                                     fiber=allvisit['fiberid'][i],field=allvisit['field'][i])
         spec = doppler.read(visitfile,badval=badval)
 
         if windows is not None :
