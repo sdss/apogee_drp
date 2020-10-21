@@ -971,6 +971,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         platetab['SEEING'][i] =    seeing
         platetab['FWHM'][i] =      fwhm
         platetab['GDRMS'][i] =     gdrms
+        import pdb; pdb.set_trace()
         platetab['cart'][i] =      dhdr['CARTID']
         platetab['dateobs'][i] =   dhdr['DATE-OBS']
         platetab['DITHER'][i] =    dither
