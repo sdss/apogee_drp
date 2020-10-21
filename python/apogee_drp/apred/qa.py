@@ -196,7 +196,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     #----------------------------------------------------------------------------------------
 
     tmp = fits.open(platesum)
-    import pdb; pdb.set_trace()
     tab1 = tmp[1].data
     tab2 = tmp[2].data
     tab3 = tmp[3].data
@@ -466,7 +465,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     rows = 300-fiber['fiberid']
     guide = plug['guidedata']
 
-    dtype = np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
     snColumn = np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
     obsmagColumn = np.zeros(nfiber, dtype=[('obsmag', 'float32', (n_exposures, nchips))])
     fiber = merge_arrays([fiber, snColumn, obsmagColumn], flatten=True)
@@ -560,7 +558,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #        gcamfilecheck = glob.glob(gcamfile)
 #        if len(gcamfilecheck) == 0:
             # NOTE: hopefully this works
-#            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument], shell=False)
+            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument], shell=False)
 #        gcamfilecheck = glob.glob(gcamfile)
 #        if len(gcamfilecheck) != 0:
 #            gcam = fits.getdata(gcamfile)
