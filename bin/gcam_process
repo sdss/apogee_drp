@@ -36,9 +36,9 @@ def gproc(mjd=None, instrument=None, outfile=None):
     """
 
     if(instrument == 'apogee-s'):
-        gdir = os.path.join(os.getenv('GCAM_DATA_2S'), str(mjd))
+        gdir = os.path.join(os.environ['GCAM_DATA_S'], str(mjd))
     else:
-        gdir = os.path.join(os.getenv('GCAM_DATA'), str(mjd))
+        gdir = os.path.join(os.environ['GCAM_DATA_N'], str(mjd))
     files = os.listdir(gdir)
     gcam0_dtype = [('gdrms', np.dtype(np.float32)),
                    ('seeing', np.dtype(np.float32)),
@@ -71,6 +71,8 @@ def gproc(mjd=None, instrument=None, outfile=None):
         if(file.startswith('proc-')):
             count = count + 1
     gcam = np.zeros(count, dtype=gcam0_dtype)
+
+    print(str(len(files))+' files')
 
     count = 0
     for file in sorted(files):

@@ -54,7 +54,7 @@ if __name__ == '__main__' :
     planstr = plan.load(planfile,np=True)
     apred = planstr['apred_vers'].strip("'")
     telescope = planstr['telescope'].strip("'")
-    plate = planstr['plateid'].strip("'")
+    plate = str(planstr['plateid']).strip("'")
     mjd = planstr['mjd']
     if planstr.get('field') is not None:
         field = planstr['field'].strip("'")
