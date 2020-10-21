@@ -116,7 +116,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
 #fixfiberid=fixfiberid,badfiberid=badfiberid)
 
-        #x = makePlotsHtml(load=load, telescope=telescope, ims=None, plate=plate, mjd=mjd, 
+        #x = makePlotsHtml(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
         #                  field=field, instrument=instrument, clobber=True, noplot=noplot,
         #                  mapname=plugmap, survey=survey, mapper_data=mapper_data,apred=apred
         #                  onem=None, starfiber=None, starnames=None, starmag=None,flat=None) 
@@ -369,7 +369,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     print("Running MAKEPLOTSHTML for plate "+plate+", mjd "+mjd)
     print("--------------------------------------------------------------------\n")
 
-    if ims is not None: n_exposures = len(ims)
+    n_exposures = len(ims)
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -391,7 +391,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     if onem is not None: gfile = mjd+'-'+starnames[0] 
     if (flat is None) & (onem is None): gfile = plate+'-'+mjd
     platefile = gfile
-    if ims is None: gfile = 'sum'+gfile
+    if ims[0] == 0: gfile = 'sum'+gfile
 
     html = open(htmldir+gfile+'.html','w')
     htmlsum = open(htmldir+gfile+'sum.html','w')
@@ -430,8 +430,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     #----------------------------------------------------------------------------------------
     # Get the fiber association for this plate. Also get some other values
     #----------------------------------------------------------------------------------------
-    if ims is None: tot = load.apPlate(int(plate), mjd)
-    if ims is not None: tot = load.ap1D(ims[0])
+    if ims[0] == 0: tot = load.apPlate(int(plate), mjd)
+    if ims[0] != 0: tot = load.ap1D(ims[0])
     platehdr = tot['a'][0].header
     ra = platehdr['RADEG']
     dec = platehdr['DECDEG']
@@ -465,8 +465,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     rows = 300-fiber['fiberid']
     guide = plug['guidedata']
 
-    dtype = np.dtype([('sn', np.float64, (n_exposures,3))])
-    newColumn = np.zeros(nfiber, dtype=dtype)
+    #dtype = np.dtype([('sn', np.float64, (n_exposures,3))])
+    #newColumn = np.zeros(nfiber, dtype=dtype)
+    newColumn = np.zeros((n_exposures, nchips), dtype=np.float64)
     fiber = append_fields(fiber, 'sn', newColumn, usemask=False)
     fiber = append_fields(fiber, 'obsmag', newColumn, usemask=False)
 
@@ -615,23 +616,23 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         #----------------------------------------------------------------------------------------
         # Read image.
         #----------------------------------------------------------------------------------------
-        if ims is None: pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-        if ims is not None: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
+        if ims[0] == 0: pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
+        if ims[0] != 0: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
         pfile = pfile.replace('.fits','')
 
         if (clobber is True) | (len(glob.glob(outdir+pfile+'.tab')) != 0):
-            if ims is None:     d = load.apPlate(int(plate), mjd) 
-            if ims is not None: d = load.ap1D(ims[i])
+            if ims[0] == 0: d = load.apPlate(int(plate), mjd) 
+            if ims[0] != 0: d = load.ap1D(ims[i])
 
             dhdr = d['a'][0].header
 
             if type(d)!=dict:
-                if ims is None:  print("Problem with apPlate!!!")
-                if ims is not None: print("Problem with ap1D!!!")
+                if ims[0] == 0:  print("Problem with apPlate!!!")
+                if ims[0] != 0: print("Problem with ap1D!!!")
 
             cframe = None
-            if ims is None: cframe = load.apPlate(int(plate), mjd)
-            if ims is not None:
+            if ims[0] == 0: cframe = load.apPlate(int(plate), mjd)
+            if ims[0] != 0:
                 cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
                 cframefile = cframefile.replace('apCframe-','apCframe-c-')
 
@@ -668,8 +669,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 cfluxarr = cframe[chip][1].data
                 cerrarr = cframe[chip][2].data
 
-                if ims is None:     medsky = 0.
-                if ims is not None: medsky = np.median(obs[fibersky, ichip])
+                if ims[0] == 0:     medsky = 0.
+                if ims[0] != 0: medsky = np.median(obs[fibersky, ichip])
 
                 # NOTE: using axis=0 caused error, so trying axis=0
                 if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
@@ -737,7 +738,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             objhtml.write('<HEAD><script type=text/javascript src=../../../../html/sorttable.js></script></head>\n')
             objhtml.write('<BODY>\n')
 
-            if ims is not None:
+            if ims[0] != 0:
                 objhtml.write('<H2>'+pfile+'</H2>\n')
                 tmp = load.apPlate(int(plate), mjd)
                 for chip in chips: 
@@ -765,15 +766,13 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber['fiberid'][j]))
 
                 cfib = str(fiber['fiberid'][j]).zfill(3)
-                if ims is None:
-                    objhtml.write('<TD><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
-                else:
-                    objhtml.write('<TD>'+cfib+'\n')
+                if ims[0] == 0: objhtml.write('<TD><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
+                if ims[0] != 0: objhtml.write('<TD>'+cfib+'\n')
 
-                if ims is None:
-                    objhtml.write('<TD BGCOLOR='+color+'><a href=../plots/'+visitfile.replace('.fits','.jpg')+'>'+fiber['object'][j]+'</A>\n')
-                else:
-                    objhtml.write('<TD BGCOLOR='+color+'>'+cfib+'\n')
+                if ims[0] == 0:
+                    vplotfile = visitfile.replace('.fits','.jpg')
+                    objhtml.write('<TD BGCOLOR='+color+'><a href=../plots/'+vplotfile+'>'+fiber['object'][j]+'</A>\n')
+                if ims[0] != 0: objhtml.write('<TD BGCOLOR='+color+'>'+cfib+'\n')
 
                 rastring = str("%8.5f" % round(fiber['ra'][j],5))
                 decstring = str("%8.5f" % round(fiber['dec'][j],5))
@@ -790,7 +789,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 targflagtxt = bitmask.targflags(fiber['target1'][j], fiber['target2'][j], fiber['target3'][j], fiber['target4'][j], survey=survey)
                 objhtml.write('<TD>'+targflagtxt+'\n')
 
-                if (ims is None) & (fiber['fiberid'][j] >= 0):
+                if (ims[0] == 0) & (fiber['fiberid'][j] >= 0):
                     vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber['fiberid'][j])
                     if os.path.exists(vfile):
                         h = fits.getheader(vfile)
@@ -952,7 +951,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         #----------------------------------------------------------------------------------------
         # Summary information in apPlateSum FITS file.
         #----------------------------------------------------------------------------------------
-        if ims is not None:
+        if ims[0] != 0:
             tellfile = load.filename('Tellstar', plate=int(plate), mjd=mjd)
             telstr = fits.getdata(tellfile)
             # NOTE: the below if statement will not work. Ignoring it and hoping for the best
@@ -993,7 +992,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     # write out the FITS table.
     #----------------------------------------------------------------------------------------
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-    if ims is not None:
+    if ims[0] != 0:
         # NOTE: the only different between below if statement is that if ims is none, /create is not set in mwrfits
         # ... not sure if we care.
 
@@ -1006,7 +1005,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #;        mwrfits,platetab,platesum,/create
 #;        mwrfits,fiber,platesum
 
-    if ims is None:
+    if ims[0] == 0:
         hdulist = fits.open(platesum)
         hdu1 = fits.table_to_hdu(Table(platetab))
         hdu2 = fits.table_to_hdu(Table(fiber))
@@ -1026,7 +1025,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     if onem is None: name = plate+'-'+mjd
     if onem is not None: name = starnames[0]+'-'+mjd
 
-    if ims is not None:
+    if ims[0] != 0:
         # NOTE: skipping gcam stuff until I get gcam_process to work
 #        if onem is None:
             #----------------------------------------------------------------------------------------
