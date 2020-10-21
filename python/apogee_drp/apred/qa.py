@@ -983,7 +983,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         if ntelluric > 0: platetab['SNRATIO'][i] = np.median(snt[telluric,1] / snc[telluric,1])
 
         for j in range(len(fiber)):
-            if j>50: import pdb; pdb.set_trace()
             fiber['sn'][j][i,:] = sn[j,:]
             fiber['obsmag'][j][i,:] = (-2.5 * np.log10(obs[j,:])) + zero
 
