@@ -910,6 +910,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         alt = dhdr['ALT']
         secz = 1. / np.cos((90.-alt) * (math.pi/180.))
         seeing = dhdr['SEEING']
+        import pdb; pdb.set_trace()
         ha = dhdr['HA']
         design_ha = plug['ha']
         dither = -99.
