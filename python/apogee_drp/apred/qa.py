@@ -910,8 +910,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         alt = dhdr['ALT']
         secz = 1. / np.cos((90.-alt) * (math.pi/180.))
         seeing = dhdr['SEEING']
-        # NOTE: 'HA' is not in the ap1D header... skipping
+        # NOTE: 'HA' is not in the ap1D header... setting ha=0 for now
 #        ha = dhdr['HA']
+        ha=0
         design_ha = plug['ha']
         dither = -99.
         if len(cframe) > 1: dither = cframehdr['DITHSH']
@@ -961,9 +962,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         platetab['IM'][i] =        ims[i]
         platetab['NREADS'][i] =    nreads
         platetab['SECZ'][i] =      secz
-        # NOTE: 'HA' is not in the ap1D header... setting to zero for now
-#        platetab['HA'][i] =        ha
-        platetab['HA'][i] =        0
+        platetab['HA'][i] =        ha
         platetab['DESIGN_HA'][i] = design_ha
         platetab['SEEING'][i] =    seeing
         platetab['FWHM'][i] =      fwhm
