@@ -551,18 +551,20 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     #----------------------------------------------------------------------------------------
     # Get guider information.
     #----------------------------------------------------------------------------------------
-    if onem is None:
-        expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
-        gcamfile = expdir+'/'+mjd+'/gcam-'+mjd+'.fits'
-        gcamfilecheck = glob.glob(gcamfile)
-        if len(gcamfilecheck) == 0:
+
+    # NOTE: skipping gcam stuff until I get gcam_process to work
+#    if onem is None:
+#        expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
+#        gcamfile = expdir+'/'+mjd+'/gcam-'+mjd+'.fits'
+#        gcamfilecheck = glob.glob(gcamfile)
+#        if len(gcamfilecheck) == 0:
             # NOTE: hopefully this works
-            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument], shell=False)
-        gcamfilecheck = glob.glob(gcamfile)
-        if len(gcamfilecheck) != 0:
-            gcam = fits.getdata(gcamfile)
-        else:
-            print("Problem running gcam_process!")
+#            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument], shell=False)
+#        gcamfilecheck = glob.glob(gcamfile)
+#        if len(gcamfilecheck) != 0:
+#            gcam = fits.getdata(gcamfile)
+#        else:
+#            print("Problem running gcam_process!")
 
     mjd0 = 99999
     mjd1 = 0.
@@ -880,19 +882,23 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             mjd0 = min([mjd0,mjdstart])
             mjd1 = max([mjd1,mjdend])
             nj = 0
-            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
-                jcam = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
-                nj = len(jcam[0])
-            if nj > 1: 
-                fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
-                gdrms = np.median(gcam['GDRMS'][jcam])
-            else:
-                fwhm = -1.
-                gdrms = -1.
-                print("not halted: no matching mjd range in gcam...")
-        else:
-            fwhm = -1
-            gdrms = -1
+        # NOTE: skipping gcam stuff until I get gcam_process to work
+#            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
+#                jcam = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
+#                nj = len(jcam[0])
+#            if nj > 1: 
+#                fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
+#                gdrms = np.median(gcam['GDRMS'][jcam])
+#            else:
+#                fwhm = -1.
+#                gdrms = -1.
+#                print("not halted: no matching mjd range in gcam...")
+#        else:
+#            fwhm = -1
+#            gdrms = -1
+
+        fwhm = -1
+        gdrms = -1
 
 
         #----------------------------------------------------------------------------------------
@@ -1014,14 +1020,15 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     if onem is not None: name = starnames[0]+'-'+mjd
 
     if ims is not None:
-        if onem is None:
+        # NOTE: skipping gcam stuff until I get gcam_process to work
+#        if onem is None:
             #----------------------------------------------------------------------------------------
             # PLOT 6: guider rms plot
             #----------------------------------------------------------------------------------------
-            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
-                jcam = np.where((gcam['MJD'] > mjd0) & (gcam['MJD'] < mjd1))
-                nj = len(jcam[0]) 
-                print("PLOTS 6: Guider RMS plots will be made here.")
+#            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
+#                jcam = np.where((gcam['MJD'] > mjd0) & (gcam['MJD'] < mjd1))
+#                nj = len(jcam[0]) 
+#                print("PLOTS 6: Guider RMS plots will be made here.")
 
         #----------------------------------------------------------------------------------------
         # PLOT 7: make plot of sky levels for this plate
