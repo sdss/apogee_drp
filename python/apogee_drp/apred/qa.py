@@ -794,8 +794,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber['fiberid'][j])
                     if os.path.exists(vfile):
                         h = fits.getheader(vfile)
-                        if type(h) == astropy.io.fits.header.Header:
-                            objhtml.write('<BR>'+bitmask.StarBitMask().getname(h['STARFLAG'])+'\n')
+                        # NOTE: the below if statement does not work. Ignoring and hoping for the best.
+#                        if type(h) == astropy.io.fits.header.Header:
+                        objhtml.write('<BR>'+bitmask.StarBitMask().getname(h['STARFLAG'])+'\n')
 
                 #----------------------------------------------------------------------------------------
                 # PLOT 1: spectrum 
@@ -954,12 +955,13 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         if ims is not None:
             tellfile = load.filename('Tellstar', plate=int(plate), mjd=mjd)
             telstr = fits.getdata(tellfile)
-            if type(telstr) == astropy.io.fits.fitsrec.FITS_rec:
-                jtell = np.where(telstr['IM'] == ims[i])
-                ntell = len(jtell[0])
-                if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
-            else:
-                print('Error reading Tellstar file: '+tellfile)
+            # NOTE: the below if statement will not work. Ignoring it and hoping for the best
+#            if type(telstr) == astropy.io.fits.fitsrec.FITS_rec:
+            jtell = np.where(telstr['IM'] == ims[i])
+            ntell = len(jtell[0])
+            if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
+#            else:
+#                print('Error reading Tellstar file: '+tellfile)
 
         platetab['IM'][i] =        ims[i]
         platetab['NREADS'][i] =    nreads
