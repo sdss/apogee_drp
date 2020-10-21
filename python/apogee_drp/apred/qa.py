@@ -8,7 +8,7 @@ from pathlib import Path
 from astropy.io import fits, ascii
 from astropy.table import Table
 from astropy.time import Time
-from numpy.lib.recfunctions import append_fields
+from numpy.lib.recfunctions import append_fields, merge_arrays
 from astroplan import moon_illumination
 from astropy.coordinates import SkyCoord, get_moon
 from astropy import units as astropyUnits
@@ -465,11 +465,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     rows = 300-fiber['fiberid']
     guide = plug['guidedata']
 
-    #dtype = np.dtype([('sn', np.float64, (n_exposures,3))])
-    #newColumn = np.zeros(nfiber, dtype=dtype)
-    newColumn = np.zeros((n_exposures, nchips), dtype=np.float64)
-    fiber = append_fields(fiber, 'sn', newColumn, usemask=False)
-    fiber = append_fields(fiber, 'obsmag', newColumn, usemask=False)
+    dtype = np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
+    snColumn = np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
+    obsmagColumn = np.zeros(nfiber, dtype=[('obsmag', 'float32', (n_exposures, nchips))])
+    fiber = merge_arrays([fiber, snColumn, obsmagColumn], flatten=True)
 
     unplugged, = np.where(fiber['fiberid'] < 0)
     nunplugged = len(unplugged)
