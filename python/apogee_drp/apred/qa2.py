@@ -252,20 +252,13 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     moonphase = moon_illumination(tt)
 
     # Get guider information.
-
-    ### NOTE:skipping gcam stuff until I get gcam_process to work
-#    if onem is None:
-#        expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
-#        gcamfile = expdir+'/'+mjd+'/gcam-'+mjd+'.fits'
-#        gcamfilecheck = glob.glob(gcamfile)
-#        if len(gcamfilecheck) == 0:
-            ### NOTE:hopefully this works
-#            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument], shell=False)
-#        gcamfilecheck = glob.glob(gcamfile)
-#        if len(gcamfilecheck) != 0:
-#            gcam = fits.getdata(gcamfile)
-#        else:
-#            print("Problem running gcam_process!")
+    if onem is None:
+        expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
+        gcamfile = expdir+'/'+mjd+'/gcam-'+mjd+'.fits'
+        if os.path.exists(gcamfile) is False:
+            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument], shell=False)
+        else:
+            gcam = fits.getdata(gcamfile)
 
     mjd0 = 99999
     mjd1 = 0.
