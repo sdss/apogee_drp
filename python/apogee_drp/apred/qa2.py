@@ -147,6 +147,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 '''-----------------------------------------------------------------------------------------'''
 ''' MAKEPLATESUM: Plotmag translation                                                       '''
 '''-----------------------------------------------------------------------------------------'''
+# /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/visit/apo25m/200+45/8100/57680/apPlateSum-8100-57680.fits
 def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, field=None, 
                  instrument=None, clobber=True, noplot=False, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
@@ -301,7 +302,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     platetab = np.zeros(n_exposures,dtype=dt)
 
     platetab['PLATE'] =     plate
-    platetab['TELESCOPE'] = -99.0
+    platetab['TELESCOPE'] = telescope
     platetab['HA'] =        -99.0
     platetab['DESIGN_HA'] = -99.0
     platetab['PLUGID'] =    plugmap
@@ -514,6 +515,8 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     # write out the FITS table.
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+    if (clobber is True) & (os.path.exists(platesum) is True):
+        subprocess.call(['rm', platesum])
     if ims[0] != 0:
         ### NOTE:the only different between below if statement is that if ims is none, /create is not set in mwrfits
         # ... not sure if we care.
