@@ -257,7 +257,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         gcamfile = expdir+mjd+'/gcam-'+mjd+'.fits'
         print(gcamfile)
         if os.path.exists(gcamfile) is False:
-            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--outfile', gcamfile], shell=False)
+            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--output', gcamfile], shell=False)
         else:
             gcam = fits.getdata(gcamfile)
 
