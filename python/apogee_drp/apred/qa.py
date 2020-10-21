@@ -918,6 +918,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         if len(cframe) > 1: dither = cframehdr['DITHSH']
         htmlsum.write('<TD>'+str("%6.2f" % round(secz,2))+'\n')
         htmlsum.write('<TD>'+str("%6.2f" % round(ha,2))+'\n')
+        import pdb; pdb.set_trace()
         txt = '[ '+str(int(round(design_ha[0])))+','+str(int(round(design_ha[1])))+','+str(int(round(design_ha[2])))+']'
         htmlsum.write('<TD>'+txt+'\n')
         htmlsum.write('<TD>'+str("%6.2f" % round(seeing,2))+'\n')
