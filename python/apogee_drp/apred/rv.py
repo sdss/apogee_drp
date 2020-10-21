@@ -868,7 +868,7 @@ def dbingest(apstar,allvisit):
                'apogee_target2', 'apogee_target3', 'apogee_target4',
                'targflags', 'starflag', 'starflags', 'vlsr', 'vgsr',
                'estbc','estvtype','estvrel','estvrelerr','estvheliobary','estrv_teff',
-               'estrv_logg','estrv_feh','estrv_alpha','estrv_carb','modified',
+               'estrv_logg','estrv_feh','estrv_alpha','estrv_carb','created',
                'rv_alpha', 'rv_carb', 'synthfile']
     for c in delcols:
         del allvisit[c]
