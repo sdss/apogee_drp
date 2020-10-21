@@ -995,11 +995,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         # NOTE: the only different between below if statement is that if ims is none, /create is not set in mwrfits
         # ... not sure if we care.
 
-        Table(platetab).write(platesum)
+        Table(platetab).write(platesum, overwrite=True)
         hdulist = fits.open(platesum)
         hdu = fits.table_to_hdu(Table(fiber))
         hdulist.append(hdu)
-        hdulist.writeto(platesum,overwrite=True)
+        hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 #;        mwrfits,platetab,platesum,/create
 #;        mwrfits,fiber,platesum
@@ -1010,7 +1010,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         hdu2 = fits.table_to_hdu(Table(fiber))
         hdulist.append(hdu1)
         hdulist.append(hdu2)
-        hdulist.writeto(platesum,overwrite=True)
+        hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 #;        mwrfits,platetab,platesum
 #;        mwrfits,fiber,platesum
