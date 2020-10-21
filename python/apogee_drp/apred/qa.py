@@ -598,7 +598,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                    ('SNRATIO',   np.float64),
                    ('MOONDIST',  np.float64),
                    ('MOONPHASE', np.float64),
-                   ('TELLFIT',   np.float64, (6,3))])
+                   ('TELLFIT',   np.float64, (3,6))])
 
     platetab = np.zeros(n_exposures,dtype=dt)
 
