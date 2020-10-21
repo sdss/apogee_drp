@@ -385,14 +385,22 @@ class DBSession(object):
                 out = cur.fetchall()
                 if len(out)>1:
                     raise Exception('More than ONE unique constraint found for '+schema+'.'+tab)
-                constraintname = out[0][0]
-                constraintstr = 'ON CONSTRAINT '+constraintname
+                if len(out)>0:
+                    constraintname = out[0][0]
+                    constraintstr = 'ON CONSTRAINT '+constraintname
+                else:
+                    # No constraint
+                    constraintname = None
             # Constraint column names input
             else:
                 constraintstr = '('+constraintname+')'
-            excluded = ','.join(['"'+c+'"=excluded."'+c+'"' for c in columns])
-            insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s ON CONFLICT '+constraintstr+\
-                           ' DO UPDATE SET '+excluded
+            # There is a constraint, use on conflict do update
+            if constraintname is not None:
+                excluded = ','.join(['"'+c+'"=excluded."'+c+'"' for c in columns])
+                insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s ON CONFLICT '+constraintstr+\
+                               ' DO UPDATE SET '+excluded
+            else: # no constraint
+                insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s ON CONFLICT DO NOTHING'
         else:
             raise ValueError(onconflict+' not supported')
         # Perform the insert
