@@ -304,7 +304,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     platetab['TELESCOPE'] = -99.0
     platetab['HA'] =        -99.0
     platetab['DESIGN_HA'] = -99.0
-    platetab['PLUGID'] =    plugid
+    platetab['PLUGID'] =    plugmap
     platetab['MJD'] =       mjd
     platetab['MOONDIST'] =  moondist
     platetab['MOONPHASE'] = moonphase
