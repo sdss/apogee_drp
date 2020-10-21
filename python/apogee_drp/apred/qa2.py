@@ -255,6 +255,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     if onem is None:
         expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
         gcamfile = expdir+'/'+mjd+'/gcam-'+mjd+'.fits'
+        print(gcamfile)
         if os.path.exists(gcamfile) is False:
             subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument], shell=False)
         else:
