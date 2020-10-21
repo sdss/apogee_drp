@@ -470,8 +470,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     fiber = append_fields(fiber, 'sn', newColumn, usemask=False)
     fiber = append_fields(fiber, 'obsmag', newColumn, usemask=False)
 
-    unplugged = np.where(fiber['fiberid'] < 0)
-    nunplugged = len(unplugged[0])
+    unplugged, = np.where(fiber['fiberid'] < 0)
+    nunplugged = len(unplugged)
     if flat is not None:
         fiber['hmag'] = 12
         fiber['object'] = 'FLAT'
@@ -940,7 +940,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         txt = '['+str("%5.1f" % round(achievedsnc[0],1))+','+str("%5.1f" % round(achievedsnc[1],1))+','+str("%5.1f" % round(achievedsnc[2],1))+']'
         htmlsum.write('<TD>'+txt+'\n')
         htmlsum.write('<TD>\n')
-        for j in range(unplugged): htmlsum.write(str(300-unplugged[j])+'\n')
+        for j in range(nunplugged): htmlsum.write(str(300-unplugged[j])+'\n')
         htmlsum.write('<TD>\n')
         if faint[0] > 0:
             for j in range(nfaint): htmlsum.write(str(fiber['fiberid'][faint][j])+'\n')
