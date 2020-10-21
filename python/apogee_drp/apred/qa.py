@@ -957,8 +957,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             telstr = fits.getdata(tellfile)
             # NOTE: the below if statement will not work. Ignoring it and hoping for the best
 #            if type(telstr) == astropy.io.fits.fitsrec.FITS_rec:
-            jtell = np.where(telstr['IM'] == ims[i])
-            ntell = len(jtell[0])
+            jtell, = np.where(telstr['IM'] == ims[i])
+            ntell = len(jtell)
             if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
 #            else:
 #                print('Error reading Tellstar file: '+tellfile)
