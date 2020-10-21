@@ -196,6 +196,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     #----------------------------------------------------------------------------------------
 
     tmp = fits.open(platesum)
+    import pdb; pdb.set_trace()
     tab1 = tmp[1].data
     tab2 = tmp[2].data
     tab3 = tmp[3].data
