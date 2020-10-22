@@ -921,7 +921,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 for chip in chips: 
                     objhtml.write('<A HREF=../'+tmp[chip].filename()+'>'+tmp[chip].filename()+'</A>\n')
             else:
-                objhtml.write('<H2>'+gfile+'</H2>\n')
+                objhtml.write('<H2>'+platefile+'</H2>\n')
                 if noplot is not None:
                     objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
                     objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
