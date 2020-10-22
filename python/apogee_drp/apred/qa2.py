@@ -115,12 +115,11 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
                           onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
                           fixfiberid=fixfiberid, badfiberid=badfiberid) 
 
-
-#        q = makePlotsHtml(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
-#                          field=field, instrument=instrument, clobber=True, noplot=noplot,
-#                          plugmap=plugmap, survey=survey, mapper_data=mapper_data,apred=apred
-#                          onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-#                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
+        q = makePlotsHtml(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
+                          field=field, instrument=instrument, clobber=True, noplot=noplot,
+                          plugmap=plugmap, survey=survey, mapper_data=mapper_data,apred=apred
+                          onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
+                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
 
 
 
