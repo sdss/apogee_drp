@@ -330,10 +330,10 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
         cframehdr = cframe['a'][0].header
 
-        obs = np.zeros((nfiber,3), dtype=np.float64)
-        sn  = np.zeros((nfiber,3), dtype=np.float64)
-        snc = np.zeros((nfiber,3), dtype=np.float64)
-        snt = np.zeros((nfiber,3), dtype=np.float64)
+        obs = np.zeros((nfiber,nchips), dtype=np.float64)
+        sn  = np.zeros((nfiber,nchips), dtype=np.float64)
+        snc = np.zeros((nfiber,nchips), dtype=np.float64)
+        snt = np.zeros((nfiber,nchips), dtype=np.float64)
 
         # For each fiber, get an observed mag from a median value.
         for j in range(nfiber):
@@ -391,56 +391,56 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                         p2 = np.std(fluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
                         snt[fibertelluric[itell], ichip] = p1 / p2
 
-            # Calculate zeropoints from known H band mags.
-            # Use a static zeropoint to calculate sky brightness.
-            nreads = dhdr['NFRAMES']
-            exptime = dhdr['EXPTIME']
-            skyzero = 14.75 + (2.5 * np.log10(nreads))
-            zero = 0
-            zerorms = 0.
-            faint = -1
-            nfaint = 0
-            achievedsn = np.zeros(nchips)
-            achievedsnc = np.zeros(nchips)
-            altsn = np.zeros(nchips)
-            nsn = 0
+        # Calculate zeropoints from known H band mags.
+        # Use a static zeropoint to calculate sky brightness.
+        nreads = dhdr['NFRAMES']
+        exptime = dhdr['EXPTIME']
+        skyzero = 14.75 + (2.5 * np.log10(nreads))
+        zero = 0
+        zerorms = 0.
+        faint = -1
+        nfaint = 0
+        achievedsn = np.zeros(nchips)
+        achievedsnc = np.zeros(nchips)
+        altsn = np.zeros(nchips)
+        nsn = 0
 
-            tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
-            zero = np.median(tmp)
-            zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
-            faint = np.where((tmp - zero) < -0.5)
-            nfaint = len(faint[0])
+        tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
+        zero = np.median(tmp)
+        zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
+        faint = np.where((tmp - zero) < -0.5)
+        nfaint = len(faint[0])
 
-            zeronorm = zero - (2.5 * np.log10(nreads))
+        zeronorm = zero - (2.5 * np.log10(nreads))
 
-            if (flat is None) & (onem is None):
-                # Target line that has S/N=100 for 3 hour exposure at H=12.2
-                sntarget = 100 * np.sqrt(exptime / (3.0 * 3600))
-                sntargetmag = 12.2
+        if (flat is None) & (onem is None):
+            # Target line that has S/N=100 for 3 hour exposure at H=12.2
+            sntarget = 100 * np.sqrt(exptime / (3.0 * 3600))
+            sntargetmag = 12.2
 
-                # Get typical S/N for this plate
-                snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2))
+            # Get typical S/N for this plate
+            snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2))
+            nsn = len(snstars)
+            scale = 1
+            if nsn < 3:
+                bright, = np.where(fiber['hmag'] < 12)
+                hmax = np.max(fiber['hmag'][bright])
+                snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
                 nsn = len(snstars)
-                scale = 1
-                if nsn < 3:
-                    bright, = np.where(fiber['hmag'] < 12)
-                    hmax = np.max(fiber['hmag'][bright])
-                    snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
-                    nsn = len(snstars)
-                    scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
+                scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
 
-                achievedsn = np.median(sn[snstars,:], axis=1) * scale
+            achievedsn = np.median(sn[snstars,:], axis=1) * scale
 
-                # Alternative S/N as computed from median of all stars with H<12.2, scaled
-                snstars, = np.where(fiber['hmag'] < 12.2)
-                scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
-                altsn = achievedsn * 0.
-                for ichip in range(nchips): altsn[ichip] = np.median(sn[snstars,ichip] * scale)
-                achievedsnc = np.median(snc[snstars,:], axis=1) * scale
+            # Alternative S/N as computed from median of all stars with H<12.2, scaled
+            snstars, = np.where(fiber['hmag'] < 12.2)
+            scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
+            altsn = achievedsn * 0.
+            for ichip in range(nchips): altsn[ichip] = np.median(sn[snstars,ichip] * scale)
+            achievedsnc = np.median(snc[snstars,:], axis=1) * scale
 
-            else:
-                if onem is not None:
-                    achievedsn = np.median([sn[obj,:]], axis=1)
+        else:
+            if onem is not None:
+                achievedsn = np.median([sn[obj,:]], axis=1)
 
         medsky = np.zeros(3, dtype=np.float64)
         for ichip in range(nchips):
@@ -448,7 +448,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                 medsky[ichip] = -2.5 * np.log10(np.median(obs[fibersky,ichip])) + skyzero
             else: 
                 medsky[ichip] = 99.999
-
 
         # Get guider info.
         if onem is None:
