@@ -481,8 +481,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         dither = -99.
         if len(cframe) > 1: dither = cframehdr['DITHSH']
 
-        if len(faint) > 0:
-            for j in range(nfaint): htmlsum.write(str(fiber['fiberid'][faint][j])+'\n')
         allsky[i,:] = medsky
         allzero[i,:] = zero
         allzerorms[i,:] = zerorms
@@ -958,8 +956,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if os.path.exists(vfile):
                         h = fits.getheader(vfile)
                         ### NOTE:the below if statement does not work. Ignoring and hoping for the best.
+                        if isinstance(h, fits.header.Header):
 #                        if type(h) == astropy.io.fits.header.Header:
-                        objhtml.write('<BR>'+bitmask.StarBitMask().getname(h['STARFLAG'])+'\n')
+                            objhtml.write('<BR>'+bitmask.StarBitMask().getname(h['STARFLAG'])+'\n')
 
 
                 # PLOT 1: spectrum 
@@ -1064,10 +1063,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         htmlsum.write('<TD>\n')
         if faint[0] > 0:
             for j in range(nfaint): htmlsum.write(str(fiber['fiberid'][faint][j])+'\n')
-        allsky[i,:] = medsky
-        allzero[i,:] = zero
-        allzerorms[i,:] = zerorms
-
 
     html.write('</TABLE>\n')
 
