@@ -266,7 +266,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     # FITS table structure.
     dt = np.dtype([('TELESCOPE', np.str, 6),
-                   ('PLATE',     np.str, 6),
+                   ('PLATE',     np.int32),
                    ('NREADS',    np.int32),
                    ('DATEOBS',   np.str, 30),
                    ('SECZ',      np.float64),
@@ -295,7 +295,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     platetab = np.zeros(n_exposures,dtype=dt)
 
-    platetab['PLATE'] =     plate
+    platetab['PLATE'] =     int(plate)
     platetab['TELESCOPE'] = telescope
     platetab['HA'] =        0.0
     platetab['DESIGN_HA'] = -99.0
