@@ -916,6 +916,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             objhtml.write('<BODY>\n')
 
             if ims[0] != 0:
+                print("gfile = "+gfile)
                 objhtml.write('<H2>'+gfile+'</H2>\n')
                 tmp = load.apPlate(int(plate), mjd)
                 for chip in chips: 
