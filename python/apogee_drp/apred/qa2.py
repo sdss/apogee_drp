@@ -438,7 +438,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             for ichip in range(nchips): 
                 altsn[ichip] = np.median(sn[snstars,ichip] * scale)
                 achievedsnc[ichip] = np.median(snc[snstars,ichip] * scale)
-            import pdb; pdb.set_trace()
         else:
             if onem is not None:
                 achievedsn = np.median([sn[obj,:]], axis=0)
