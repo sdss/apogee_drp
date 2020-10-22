@@ -962,7 +962,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 objhtml.write('<TD>'+str("%.2f" % round(plSum2['SN'][j][0][1],2))+'\n')
 #                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
                 targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
-                targflagtxt = targflagtext.replace('APOGEE2_','')
+                targflagtxt = targflagtxt.replace('APOGEE2_','')
                 objhtml.write('<TD>'+targflagtxt+'\n')
 
                 if (ims[0] == 0) & (plSum2['FIBERID'][j] >= 0):
