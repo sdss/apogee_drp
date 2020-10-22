@@ -408,8 +408,8 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
         zero = np.median(tmp)
         zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
-        faint = np.where((tmp - zero) < -0.5)
-        nfaint = len(faint[0])
+        faint, = np.where((tmp - zero) < -0.5)
+        nfaint = len(faint)
 
         zeronorm = zero - (2.5 * np.log10(nreads))
 
@@ -429,18 +429,18 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                 nsn = len(snstars)
                 scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
 
-            achievedsn = np.median(sn[snstars,:], axis=1) * scale
+            achievedsn = np.median(sn[snstars,:], axis=0) * scale
 
             # Alternative S/N as computed from median of all stars with H<12.2, scaled
             snstars, = np.where(fiber['hmag'] < 12.2)
             scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
             altsn = achievedsn * 0.
             for ichip in range(nchips): altsn[ichip] = np.median(sn[snstars,ichip] * scale)
-            achievedsnc = np.median(snc[snstars,:], axis=1) * scale
+            achievedsnc = np.median(snc[snstars,:], axis=0) * scale
             import pdb; pdb.set_trace()
         else:
             if onem is not None:
-                achievedsn = np.median([sn[obj,:]], axis=1)
+                achievedsn = np.median([sn[obj,:]], axis=0)
 
         medsky = np.zeros(3, dtype=np.float64)
         for ichip in range(nchips):
@@ -482,7 +482,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         dither = -99.
         if len(cframe) > 1: dither = cframehdr['DITHSH']
 
-        if faint[0] > 0:
+        if len(faint) > 0:
             for j in range(nfaint): htmlsum.write(str(fiber['fiberid'][faint][j])+'\n')
         allsky[i,:] = medsky
         allzero[i,:] = zero
