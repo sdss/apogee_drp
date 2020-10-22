@@ -44,7 +44,8 @@ sdss_path = path.Path()
 '''-----------------------------------------------------------------------------------------'''
 '''APQA: Wrapper for running QA subprocedures                                               '''
 '''-----------------------------------------------------------------------------------------'''
-def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14', noplot=False):
+def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14', noplot=False,
+         overwritePlateSum=False):
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
@@ -99,11 +100,14 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
     # Normal plates:.
     if platetype == 'normal': 
-        q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
-                         field=field, instrument=instrument, clobber=True, noplot=True, 
-                         plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
-                         onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-                         fixfiberid=fixfiberid, badfiberid=badfiberid)
+        if overwritePlateSum:
+            q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
+                             field=field, instrument=instrument, clobber=True, noplot=True, 
+                             plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
+                             onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
+                             fixfiberid=fixfiberid, badfiberid=badfiberid)
+
+        q = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
 #        q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
 #                          field=field, instrument=instrument, clobber=True, noplot=True, 
@@ -118,7 +122,6 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 #                          onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
 #                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
 
-#        x = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
 
         ### NOTE:No translations for plotflux yet.
