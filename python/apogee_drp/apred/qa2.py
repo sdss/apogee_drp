@@ -879,7 +879,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     nstar = len(fiberstar)
     star = rows[fiberstar]
 
-
     # Loop over the exposures.
     for i in range(n_exposures):
         if ims[0] == 0: pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -926,7 +925,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
 
             objhtml.write('<TABLE BORDER=2 CLASS=sortable>\n')
-            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
+            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>S/N<TD><TD>Target flags\n')
+#            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
             cfile = open(outdir+pfile+'.csh','w')
             jsort = np.sort(plSum2['FIBERID'])
