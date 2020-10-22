@@ -971,9 +971,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if os.path.exists(vfile):
                         h = fits.getheader(vfile)
                         ### NOTE:the below if statement does not work. Ignoring and hoping for the best.
-                        if isinstance(h, fits.header.Header):
+#                        if isinstance(h, fits.header.Header):
 #                        if type(h) == astropy.io.fits.header.Header:
-                            objhtml.write('<BR>'+bitmask.StarBitMask().getname(h['STARFLAG'])+'\n')
+                        starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).capitalize()
+                        objhtml.write('<BR>'+starflagtxt+'\n')
 
 
                 # PLOT 1: spectrum 
