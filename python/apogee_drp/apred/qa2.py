@@ -959,9 +959,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     txt2 = 'Ident='+rastring+'+%09'+decstring+'++&submit=SIMBAD+search"> (SIMBAD) </A>'
                     objhtml.write(txt1+txt2+'\n')
 
-                objhtml.write('<TD>'+str("%8.3f" % round(plSum2['HMAG'][j],3))+'\n')
+                objhtml.write('<TD>'+str("%.3f" % round(plSum2['HMAG'][j],3))+'\n')
 #                objhtml.write('<TD>'+str("%8.2f" % round(plSum2['HMAG'][j]+2.5*np.log10(obs[j,1])-zero,2))+'\n')
-                objhtml.write('<TD>'+str("%8.2f" % round(plSum2['SN'][j][1],2))+'\n')
+                import pdb; pdb.set_trace()
+                objhtml.write('<TD>'+str("%.2f" % round(plSum2['SN'][j][1],2))+'\n')
 #                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
                 targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
                 objhtml.write('<TD>'+targflagtxt+'\n')
