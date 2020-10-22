@@ -400,9 +400,9 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             zerorms = 0.
             faint = -1
             nfaint = 0
-            achievedsn = [0.,0.,0.]
-            achievedsnc = [0.,0.,0.]
-            altsn = [0.,0.,0.]
+            achievedsn = np.zeros(nchips)
+            achievedsnc = np.zeros(nchips)
+            altsn = np.zeros(nchips)
             nsn = 0
 
             tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
@@ -435,12 +435,12 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                 snstars, = np.where(fiber['hmag'] < 12.2)
                 scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
                 altsn = achievedsn * 0.
-                for ichip in range(nchips): altsn[ichip] = np.median(sn[snstars,ichip]*  scale)
+                for ichip in range(nchips): altsn[ichip] = np.median(sn[snstars,ichip] * scale)
+                achievedsnc = np.median(snc[snstars,:], axis=1) * scale
+
             else:
                 if onem is not None:
                     achievedsn = np.median([sn[obj,:]], axis=1)
-
-
 
         medsky = np.zeros(3, dtype=np.float64)
         for ichip in range(nchips):
@@ -516,7 +516,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['ZERORMS'][i] =   zerorms
         platetab['ZERONORM'][i] =  zeronorm
         platetab['SKY'][i] =       medsky
-        import pdb; pdb.set_trace()
         platetab['SN'][i] =        achievedsn
         platetab['ALTSN'][i] =     altsn
         platetab['NSN'][i] =       nsn
