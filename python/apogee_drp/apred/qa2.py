@@ -410,7 +410,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
         faint, = np.where((tmp - zero) < -0.5)
         nfaint = len(faint)
-
+        import pdb; pdb.set_trace()
         zeronorm = zero - (2.5 * np.log10(nreads))
 
         if (flat is None) & (onem is None):
