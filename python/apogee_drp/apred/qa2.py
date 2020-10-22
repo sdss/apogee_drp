@@ -935,8 +935,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 objhtml.write('<TR>\n')
 
                 color = 'white'
-                if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'): color = 'cyan'
-                if plSum2['OBJTYPE'][j] == 'SKY': color = 'lightgreen'
+                if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'): color = 'plum'
+                if plSum2['OBJTYPE'][j] == 'SKY': color = 'silver'
 
                 visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]))
 
