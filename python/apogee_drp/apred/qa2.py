@@ -887,7 +887,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         if ims[0] != 0: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
         pfile = pfile.replace('.fits', '')
 
-        if (clobber is True) | (len(glob.glob(outdir+pfile+'.tab')) != 0):
+        if (clobber is True) | (os.path.exists(outdir+pfile+'.tab') != 0):
             if ims[0] == 0: d = load.apPlate(int(plate), mjd) 
             if ims[0] != 0: d = load.ap1D(ims[i])
 
@@ -921,7 +921,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 for chip in chips: 
                     objhtml.write('<A HREF=../'+tmp[chip].filename()+'>'+tmp[chip].filename()+'</A>\n')
             else:
-                objhtml.write('<H2>'+platefile+'</H2>\n')
+                objhtml.write('<H2>apPlate-'+platefile+'</H2>\n')
                 if noplot is not None:
                     objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
                     objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
