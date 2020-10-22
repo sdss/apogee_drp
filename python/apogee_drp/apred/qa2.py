@@ -929,7 +929,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
             cfile = open(outdir+pfile+'.csh','w')
-            jsort = plSum2['FIBERID'][::-1]
+            jsort = np.sort(plSum2['FIBERID'])
             for jj in range(nfiber):
                 j = jsort[jj]
                 #print(str(j))
