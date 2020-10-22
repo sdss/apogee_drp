@@ -777,8 +777,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     # Read the plateSum file
     ### NOTE:apLoad.py does not have an option for loading apPlateSum, so using astropy instead
     tmp = fits.open(platesum)
-    plateSumTab1 = tmp[1].data
-    plateSumTab2 = tmp[2].data
+    plSum1 = tmp[1].data
+    plSum2 = tmp[2].data
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -930,44 +930,44 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
             cfile = open(outdir+pfile+'.csh','w')
-            jsort = np.sort(plateSumTab2['FIBERID'])
+            jsort = np.sort(plSum2['FIBERID'])
             for j in range(nfiber):
                 #j = jsort[jj]
                 #print(str(j))
                 objhtml.write('<TR>\n')
 
                 color = 'white'
-                if (plateSumTab2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plateSumTab2['OBJTYPE'][j] == 'HOT_STD'): color = 'cyan'
-                if plateSumTab2['OBJTYPE'][j] == 'SKY': color = 'lightgreen'
+                if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'): color = 'cyan'
+                if plSum2['OBJTYPE'][j] == 'SKY': color = 'lightgreen'
 
-                visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plateSumTab2['FIBERID'][j]))
+                visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]))
 
-                cfib = str(plateSumTab2['FIBERID'][j]).zfill(3)
+                cfib = str(plSum2['FIBERID'][j]).zfill(3)
                 if ims[0] == 0: objhtml.write('<TD><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
                 if ims[0] != 0: objhtml.write('<TD>'+cfib+'\n')
 
                 if ims[0] == 0:
                     vplotfile = visitfile.replace('.fits','.jpg')
-                    objhtml.write('<TD BGCOLOR='+color+'><a href=../plots/'+vplotfile+'>'+plateSumTab2['OBJECT'][j]+'</A>\n')
+                    objhtml.write('<TD BGCOLOR='+color+'><a href=../plots/'+vplotfile+'>'+plSum2['OBJECT'][j]+'</A>\n')
                 if ims[0] != 0: objhtml.write('<TD BGCOLOR='+color+'>'+cfib+'\n')
 
-                rastring = str("%8.5f" % round(plateSumTab2['RA'][j],5))
-                decstring = str("%8.5f" % round(plateSumTab2['DEC'][j],5))
+                rastring = str("%8.5f" % round(plSum2['RA'][j],5))
+                decstring = str("%8.5f" % round(plSum2['DEC'][j],5))
 
-                if (plateSumTab2['OBJTYPE'][j]!='SKY') & (plateSumTab2['FIBERID'][j]>=0):
+                if (plSum2['OBJTYPE'][j]!='SKY') & (plSum2['FIBERID'][j]>=0):
                     txt1 = '<BR><A HREF="http://simbad.decstring.harvard.edu/simbad/sim-basic?'
                     txt2 = 'Ident='+rastring+'+%09'+decstring+'++&submit=SIMBAD+search"> (SIMBAD) </A>'
                     objhtml.write(txt1+txt2+'\n')
 
-                objhtml.write('<TD>'+str("%8.3f" % round(plateSumTab2['HMAG'][j],3))+'\n')
-#                objhtml.write('<TD>'+str("%8.2f" % round(plateSumTab2['HMAG'][j]+2.5*np.log10(obs[j,1])-zero,2))+'\n')
-                objhtml.write('<TD>'+str("%8.2f" % round(plateSumTab2['SN'][j,1],2))+'\n')
+                objhtml.write('<TD>'+str("%8.3f" % round(plSum2['HMAG'][j],3))+'\n')
+#                objhtml.write('<TD>'+str("%8.2f" % round(plSum2['HMAG'][j]+2.5*np.log10(obs[j,1])-zero,2))+'\n')
+                objhtml.write('<TD>'+str("%8.2f" % round(plSum2['SN'][j,1],2))+'\n')
 #                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
-                targflagtxt = bitmask.targflags(plateSumTab2['TARGET1'][j], plateSumTab2['TARGET2'][j], plateSumTab2['TARGET3'][j], plateSumTab2['TARGET4'][j], survey=survey)
+                targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
                 objhtml.write('<TD>'+targflagtxt+'\n')
 
-                if (ims[0] == 0) & (plateSumTab2['FIBERID'][j] >= 0):
-                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plateSumTab2['FIBERID'][j])
+                if (ims[0] == 0) & (plSum2['FIBERID'][j] >= 0):
+                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
                     if os.path.exists(vfile):
                         h = fits.getheader(vfile)
                         ### NOTE:the below if statement does not work. Ignoring and hoping for the best.
@@ -1012,16 +1012,16 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
 
         # Put all of the info and plots on the plate web page.
-        html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plateSumTab1['IM'][i])+'</A>\n')
-        html.write('<TD>'+str(plateSumTab1['NREADS'][i])+'\n')
+        html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
+        html.write('<TD>'+str(plSum1['NREADS'][i])+'\n')
         html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
         html.write('<TR><TD>z<TD><TD>'+str("%.2f" % round(zero,2))+'\n')
         html.write('<TR><TD>znorm<TD><TD>'+str("%.2f" % round(zeronorm,2))+'\n')
-        txt = '<TD> '+str("%.1f" % round(plateSumTab1['SKY'][i][0],1))+'<TD> '+str("%.1f" % round(plateSumTab1['SKY'][i][1],1))+'<TD> '+str("%.1f" % round(plateSumTab1['SKY'][i][2],1))
+        txt = '<TD> '+str("%.1f" % round(plSum1['SKY'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SKY'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SKY'][i][2],1))
         html.write('<TR><TD>sky'+txt+'\n')
-        txt = '<TD> '+str("%.1f" % round(plateSumTab1['SN'][i][0],1))+'<TD> '+str("%.1f" % round(plateSumTab1['SN'][i][1],1))+'<TD> '+str("%.1f" % round(plateSumTab1['SN'][i][2],1))
+        txt = '<TD> '+str("%.1f" % round(plSum1['SN'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SN'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SN'][i][2],1))
         html.write('<TR><TD>S/N'+txt+'\n')
-        txt = '<TD> '+str("%.1f" % round(plateSumTab1['SNC'][i][0],1))+'<TD> '+str("%.1f" % round(plateSumTab1['SNC'][i][1],1))+'<TD> '+str("%.1f" % round(plateSumTab1['SNC'][i][2],1))
+        txt = '<TD> '+str("%.1f" % round(plSum1['SNC'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SNC'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SNC'][i][2],1))
         html.write('<TR><TD>S/N(c)'+txt+'\n')
 
         if ntelluric > 0:
@@ -1039,35 +1039,35 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
 
         # Summary plate web page.
-        htmlsum.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plateSumTab1['IM'][i])+'</A>\n')
-        htmlsum.write('<TD><A HREF=../../../../plates/'+plate+'/'+mjd+'/html/'+plate+'-'+mjd+'.html>'+str(plateSumTab1['PLATE'])+'</A>\n')
-        htmlsum.write('<TD>'+str(plateSumTab1['CART'])+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plateSumTab1['SECZ'][i],2))+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plateSumTab1['HA'][i],2))+'\n')
-        txt = '[ '+str(int(round(plateSumTab1['DESIGN_HA'][i][0])))+','+str(int(round(plateSumTab1['DESIGN_HA'][i][1])))+','+str(int(round(plateSumTab1['DESIGN_HA'][i][2])))+']'
+        htmlsum.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
+        htmlsum.write('<TD><A HREF=../../../../plates/'+plate+'/'+mjd+'/html/'+plate+'-'+mjd+'.html>'+str(plSum1['PLATE'])+'</A>\n')
+        htmlsum.write('<TD>'+str(plSum1['CART'])+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['SECZ'][i],2))+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['HA'][i],2))+'\n')
+        txt = '[ '+str(int(round(plSum1['DESIGN_HA'][i][0])))+','+str(int(round(plSum1['DESIGN_HA'][i][1])))+','+str(int(round(plSum1['DESIGN_HA'][i][2])))+']'
         htmlsum.write('<TD>'+txt+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plateSumTab1['SEEING'][i],2))+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plateSumTab1['FWHM'][i],2))+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plateSumTab1['GDRMS'][i],2))+'\n')
-        htmlsum.write('<TD>'+str(plateSumTab1['NREADS'][i])+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['SEEING'][i],2))+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['FWHM'][i],2))+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['GDRMS'][i],2))+'\n')
+        htmlsum.write('<TD>'+str(plSum1['NREADS'][i])+'\n')
         if len(cframe) > 1:
-            htmlsum.write('<TD>'+str("%f.4" % round(plateSumTab1['DITHER'][i],4))+'\n')
+            htmlsum.write('<TD>'+str("%f.4" % round(plSum1['DITHER'][i],4))+'\n')
         else:
             htmlsum.write('<TD>\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plateSumTab1['ZERO'][i],2))+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plateSumTab1['ZERORMS'][i],2))+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plateSumTab1['ZERONORM'][i],2))+'\n')
-        txt = '['+str("%.2f" % round(plateSumTab1['SKY'][i][0],2))+','+str("%.2f" % round(plateSumTab1['SKY'][i][1],2))+','+str("%.2f" % round(plateSumTab1['SKY'][i][2],2))+']'
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERO'][i],2))+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERORMS'][i],2))+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERONORM'][i],2))+'\n')
+        txt = '['+str("%.2f" % round(plSum1['SKY'][i][0],2))+','+str("%.2f" % round(plSum1['SKY'][i][1],2))+','+str("%.2f" % round(plSum1['SKY'][i][2],2))+']'
         htmlsum.write('<TD>'+txt+'\n')
-        txt = '['+str("%.1f" % round(plateSumTab1['SN'][i][0],1))+','+str("%.1f" % round(plateSumTab1['SN'][i][1],1))+','+str("%.1f" % round(plateSumTab1['SN'][i][2],1))+']'
+        txt = '['+str("%.1f" % round(plSum1['SN'][i][0],1))+','+str("%.1f" % round(plSum1['SN'][i][1],1))+','+str("%.1f" % round(plSum1['SN'][i][2],1))+']'
         htmlsum.write('<TD>'+txt+'\n')
-        txt = '['+str("%.1f" % round(plateSumTab1['SNC'][i][0],1))+','+str("%.1f" % round(plateSumTab1['SNC'][i][1],1))+','+str("%.1f" % round(plateSumTab1['SNC'][i][2],1))+']'
+        txt = '['+str("%.1f" % round(plSum1['SNC'][i][0],1))+','+str("%.1f" % round(plSum1['SNC'][i][1],1))+','+str("%.1f" % round(plSum1['SNC'][i][2],1))+']'
         htmlsum.write('<TD>'+txt+'\n')
         htmlsum.write('<TD>\n')
         for j in range(nunplugged): htmlsum.write(str(300-unplugged[j])+'\n')
         htmlsum.write('<TD>\n')
         if faint[0] > 0:
-            for j in range(nfaint): htmlsum.write(str(plateSumTab2['FIBERID'][faint][j])+'\n')
+            for j in range(nfaint): htmlsum.write(str(plSum2['FIBERID'][faint][j])+'\n')
 
     html.write('</TABLE>\n')
 
