@@ -414,6 +414,34 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
             zeronorm = zero - (2.5 * np.log10(nreads))
 
+            if (flat is None) & (onem is None):
+                # Target line that has S/N=100 for 3 hour exposure at H=12.2
+                sntarget = 100 * np.sqrt(exptime / (3.0 * 3600))
+                sntargetmag = 12.2
+
+                # Get typical S/N for this plate
+                snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2)
+                nsn = len(snstars)
+                scale = 1
+                if nsn < 3:
+                    bright, = np.where(fiber['hmag'] < 12)
+                    hmax = np.max(fiber['hmag'][bright])
+                    snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
+                    nsn = len(snstars)
+                    scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
+                endif
+                achievedsn = np.median(sn[snstars,:], axis=1) * scale
+
+                # Alternative S/N as computed from median of all stars with H<12.2, scaled
+                snstars, = np.where(fiber['hmag'] < 12.2)
+                scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
+                altsn = achievedsn * 0.
+                for ichip in range(nchips): altsn[ichip] = np.median(sn[snstars,ichip]*  scale)
+            else:
+                if onem is not None:
+                    achievedsn = np.median([sn[obj,:]], axis=1)
+
+
 
         medsky = np.zeros(3, dtype=np.float64)
         for ichip in range(nchips):
