@@ -941,8 +941,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]))
 
                 cfib = str(plSum2['FIBERID'][j]).zfill(3)
-                if ims[0] == 0: objhtml.write('<TD><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
-                if ims[0] != 0: objhtml.write('<TD>'+cfib+'\n')
+                if ims[0] == 0: objhtml.write('<TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
+                if ims[0] != 0: objhtml.write('<TD BGCOLOR='+color+'>'+cfib+'\n')
 
                 if ims[0] == 0:
                     vplotfile = visitfile.replace('.fits','.jpg')
@@ -957,13 +957,13 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     txt2 = 'Ident='+rastring+'+%09'+decstring+'++&submit=SIMBAD+search"> (SIMBAD) </A>'
                     objhtml.write(txt1+txt2+'\n')
 
-                objhtml.write('<TD align ="right">'+str("%.3f" % round(plSum2['HMAG'][j],3))+'\n')
+                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.3f" % round(plSum2['HMAG'][j],3))+'\n')
 #                objhtml.write('<TD>'+str("%8.2f" % round(plSum2['HMAG'][j]+2.5*np.log10(obs[j,1])-zero,2))+'\n')
-                objhtml.write('<TD align ="right">'+str("%.2f" % round(plSum2['SN'][j][0][1],2))+'\n')
+                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.2f" % round(plSum2['SN'][j][0][1],2))+'\n')
 #                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
                 targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
                 targflagtxt = targflagtxt.replace('APOGEE2_','').replace('_',' ').replace(',',', ').capitalize()
-                objhtml.write('<TD align="center">'+targflagtxt+'\n')
+                objhtml.write('<TD BGCOLOR='+color+' align="center">'+targflagtxt+'\n')
 
                 if (ims[0] == 0) & (plSum2['FIBERID'][j] >= 0):
                     vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
@@ -983,7 +983,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if noplot is None:
                         print("PLOTS 1: Spectrum plots will be made here.")
                     else:
-                        objhtml.write('<TD>No plots for individual exposures, see plate plots\n')
+                        objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
 
             objhtml.close()
             cfile.close()
