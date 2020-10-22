@@ -925,13 +925,13 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
 
             objhtml.write('<TABLE BORDER=2 CLASS=sortable>\n')
-            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>S/N<TD><TD>Target flags\n')
+            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>S/N<TD>Target flags<TD>Plot\n')
 #            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
             cfile = open(outdir+pfile+'.csh','w')
-            jsort = np.sort(plSum2['FIBERID'])
-            for j in range(nfiber):
-                #j = jsort[jj]
+            jsort = plSum2['FIBERID'][::-1]
+            for jj in range(nfiber):
+                j = jsort[jj]
                 #print(str(j))
                 objhtml.write('<TR>\n')
 
