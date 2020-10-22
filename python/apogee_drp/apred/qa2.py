@@ -778,6 +778,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     tmp = fits.open(platesum)
     plSum1 = tmp[1].data
     plSum2 = tmp[2].data
+    fibord = np.argsort(plSum2['FIBERID'])
+    plSum2 = plSum2[fibord]
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -929,10 +931,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
             cfile = open(outdir+pfile+'.csh','w')
-            jsort = np.sort(plSum2['FIBERID'])
-            for jj in range(nfiber):
-                j = jsort[jj]
-                #print(str(j))
+            for j in range(nfiber):
                 objhtml.write('<TR>\n')
 
                 color = 'white'
