@@ -428,7 +428,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                     snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
                     nsn = len(snstars)
                     scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
-                endif
+
                 achievedsn = np.median(sn[snstars,:], axis=1) * scale
 
                 # Alternative S/N as computed from median of all stars with H<12.2, scaled
