@@ -358,7 +358,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             if ims[0] != 0: medsky = np.median(obs[fibersky, ichip])
 
             ### NOTE: using axis=0 caused error, so trying axis=0
-            if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
+            if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=0) - medsky
 
             if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
 
