@@ -109,11 +109,11 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
         q = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
-#        q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
-#                          field=field, instrument=instrument, clobber=True, noplot=True, 
-#                          plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
-#                          onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-#                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
+        q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
+                          field=field, instrument=instrument, clobber=True, noplot=True, 
+                          plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
+                          onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
+                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
 
 
 #        q = makePlotsHtml(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
@@ -769,7 +769,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
-
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
