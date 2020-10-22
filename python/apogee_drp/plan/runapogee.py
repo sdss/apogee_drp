@@ -6,7 +6,7 @@ from glob import glob
 import pdb
 
 from dlnpyutils import utils as dln
-from ..utils import spectra,yanny,apload,platedata,plan
+from ..utils import spectra,yanny,apload,platedata,plan,email
 from ..apred import mkcal
 from ..database import apogeedb
 from . import mkplan
@@ -154,7 +154,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                                 ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
                                 ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
                                 ('num',int),('success',bool)])
-            chkexp = np.zeros(nexp*3,dtype=dtype3d)
+            chkexp = np.zeros(nexp*3,dtype=dtype)
             chkexp['planfile'] = pfile
             chkexp['apred_vers'] = apred_vers
             chkexp['instrument'] = instrument
@@ -198,7 +198,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 chkexp['exposure_pk'][cnt] = exposure_pk
                 chkexp['num'][cnt] = num
                 chkexp['proctype'][cnt] = 'APCFRAME'
-                base = load.filename('Cframe',num=num,mjd=mjd,chips=True)
+                base = load.filename('Cframe',num=num,mjd=mjd,plate=plate,chips=True)
                 chfiles = [base.replace('Cframe-','Cframe-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
                 chkexp['checktime'][cnt] = str(datetime.now())
@@ -234,12 +234,15 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkap['pbskey'] = pbskey
             chkap['checktime'] = str(datetime.now())
             # ap3D, ap2D, apCframe success
-            chkap['ap3d_nexp_success'] = np.sum(chk3d['success'])
-            chkap['ap3d_success'] = np.sum(chk3d['success'])==nexp
-            chkap['ap2d_nexp_success'] = np.sum(chk2d['success'])
-            chkap['ap2d_success'] = np.sum(chk2d['success'])==nexp
-            chkap['apcframe_nexp_success'] = np.sum(chkCf['success'])
-            chkap['apcframe_success'] = np.sum(chkCf['success'])==nexp
+            ind3d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP3D'))
+            chkap['ap3d_nexp_success'] = np.sum(chkexp['success'][ind3d])
+            chkap['ap3d_success'] = np.sum(chkexp['success'][ind3d])==nexp
+            ind2d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP2D'))
+            chkap['ap2d_nexp_success'] = np.sum(chkexp['success'][ind2d])
+            chkap['ap2d_success'] = np.sum(chkexp['success'][ind2d])==nexp
+            indcf, = np.where((chkexp['num']==num) & (chkexp['proctype']=='APCFRAME'))
+            chkap['apcframe_nexp_success'] = np.sum(chkexp['success'][indcf])
+            chkap['apcframe_success'] = np.sum(chkexp['success'][indcf])==nexp
             # apPlate
             chkap['applate_success'] = False
             base = load.filename('Plate',plate=plate,mjd=mjd,chips=True)
@@ -270,22 +273,23 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 logger.info('Nobj: %d' % chkap['nobj'][0])
                 logger.info('3D/2D/Cframe:')
                 logger.info('Num    EXPID   NREAD  3D    2D   Cframe')
-                for num in expstr['name']:
+                for k,num in enumerate(expstr['name']):
                     ind, = np.where(expinfo['num']==num)
                     ind3d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP3D'))
                     ind2d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP2D'))
                     indcf, = np.where((chkexp['num']==num) & (chkexp['proctype']=='APCFRAME'))
-                    logger.info('%2d %10d %4d %6s %6s %6s' % (i+1,chkexp['num'][ind3d],expinfo['nread'][ind],
-                                                              chkexp['success'][ind3d],chkexp['success'][ind2d],
-                                                              chkexp['success'][indcf]))
+                    logger.info('%2d %10d %4d %6s %6s %6s' % (k+1,chkexp['num'][ind3d],expinfo['nread'][ind],
+                                                              chkexp['success'][ind3d[0]],chkexp['success'][ind2d[0]],
+                                                              chkexp['success'][indcf[0]]))
                 logger.info('apPlate files: %s ' % chkap['applate_success'][0])
                 logger.info('N apVisit files: %d ' % chkap['apvisit_nobj_success'][0])
                 logger.info('apVisitSum file: %s ' % chkap['apvisitsum_success'][0])
+                logger.info('apVisit success: %s ' % chkap['success'][0])
 
             # Load into the database
             db = apogeedb.DBSession()
             db.ingest('exposure_status',chkexp)
-            db.ingest('apred_status',chkap)
+            db.ingest('visit_status',chkap)
             db.close()
 
             #import pdb; pdb.set_trace()
@@ -439,6 +443,14 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
 
     db.close()
 
+def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
+    """ Send a summary email."""
+
+    address = 'apogee-pipeline@sdss.org'
+    subject = 'Daily APOGEE Reduction %s %s' % (observatory,mjd5)
+    message = 'QA link'
+    email.send(address,subject,message,logfiles)
+
 
 def run_daily(observatory,mjd5=None,apred=None):
     """ Perform daily APOGEE data reduction."""
@@ -537,6 +549,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     rootLogger.info('==============')
     rootLogger.info('')
     queue = pbsqueue(verbose=True)
+    queue.client.config.notification = False
     cpus = np.minimum(len(planfiles),30)
     queue.create(label='apred', nodes=2, ppn=16, cpus=cpus, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
     for pf in planfiles:
@@ -559,6 +572,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     vcat = db.query('visit',cols='*',where='MJD=%d'%mjd5)
     if len(vcat)>0:
         queue = pbsqueue(verbose=True)
+        queue.client.config.notification = False
         cpus = np.minimum(len(vcat),30)
         queue.create(label='rv', nodes=2, ppn=16, cpus=cpus, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
         for obj in vcat['apogee_id']:
@@ -580,6 +594,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     # Run QA script
     #--------------
     queue = pbsqueue(verbose=True)
+    queue.client.config.notification = False
     queue.create(label='qa', nodes=1, ppn=16, cpus=1, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
     queue.append('apqa {0}'.format(mjd5))
     queue.commit(hard=True,submit=True)
@@ -607,6 +622,14 @@ def run_daily(observatory,mjd5=None,apred=None):
     db.update('daily_status',daycat)
 
     import pdb;pdb.set_trace()
+
+    # Summary email
+    # send to apogee_reduction email list
+    # include basic information
+    # give link to QA page
+    # attach full run_daily() log (as attachment)
+    # don't see it if using --debug mode
+    #summary_email(chkexp,chkvisit,chkrv)
 
     rootLogger.info('Daily APOGEE reduction finished for MJD=%d and observatory=%s' % (mjd5,observatory))
 
