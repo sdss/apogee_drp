@@ -419,7 +419,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                 sntargetmag = 12.2
 
                 # Get typical S/N for this plate
-                snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2)
+                snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2))
                 nsn = len(snstars)
                 scale = 1
                 if nsn < 3:
