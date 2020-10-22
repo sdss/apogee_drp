@@ -297,7 +297,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     platetab['PLATE'] =     plate
     platetab['TELESCOPE'] = telescope
-    platetab['HA'] =        -99.0
+    platetab['HA'] =        0.0
     platetab['DESIGN_HA'] = -99.0
     platetab['PLUGID'] =    plugmap
     platetab['MJD'] =       mjd
@@ -432,30 +432,24 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             mjd0 = min([mjd0,mjdstart])
             mjd1 = max([mjd1,mjdend])
             nj = 0
-        ### NOTE:skipping gcam stuff until I get gcam_process to work
-#            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
-#                jcam = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
-#                nj = len(jcam[0])
-#            if nj > 1: 
-#                fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
-#                gdrms = np.median(gcam['GDRMS'][jcam])
-#            else:
-#                fwhm = -1.
-#                gdrms = -1.
-#                print("not halted: no matching mjd range in gcam...")
-#        else:
-#            fwhm = -1
-#            gdrms = -1
-
-        fwhm = -1
-        gdrms = -1
+            if isinstance(gcam, fits.FITS_rec):
+                jcam, = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
+                nj = len(jcam)
+            if nj > 1: 
+                fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
+                gdrms = np.median(gcam['GDRMS'][jcam])
+            else:
+                fwhm = -1.
+                gdrms = -1.
+                print("not halted: no matching mjd range in gcam...")
+        else:
+            fwhm = -1
+            gdrms = -1
 
         alt = dhdr['ALT']
         secz = 1. / np.cos((90.-alt) * (math.pi/180.))
         seeing = dhdr['SEEING']
-        ### NOTE:'HA' is not in the ap1D header... setting ha=0 for now
-#        ha = dhdr['HA']
-        ha=0
+        if dhdr.get('HA') is not None: ha = dhdr['HA']
         ### NOTE:'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
 #        design_ha = plug['ha']
         design_ha = [0,0,0]
@@ -473,13 +467,12 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         if ims[0] != 0:
             tellfile = load.filename('Tellstar', plate=int(plate), mjd=mjd)
             telstr = fits.getdata(tellfile)
-            ### NOTE:the below if statement will not work. Ignoring it and hoping for the best
-#            if type(telstr) == astropy.io.fits.fitsrec.FITS_rec:
-            jtell, = np.where(telstr['IM'] == ims[i])
-            ntell = len(jtell)
-            if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
-#            else:
-#                print('Error reading Tellstar file: '+tellfile)
+            if isinstance(telstr, fits.FITS_rec):
+                jtell, = np.where(telstr['IM'] == ims[i])
+                ntell = len(jtell)
+                if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
+            else:
+                print("Error reading Tellstar file: "+tellfile)
 
         platetab['IM'][i] =        ims[i]
         platetab['NREADS'][i] =    nreads
@@ -729,9 +722,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     print("--------------------------------------------------------------------")
     print("Done with MASTERQAPAGE for plate "+plate+", mjd "+mjd)
     print("--------------------------------------------------------------------\n")
-
-
-
 
 
 '''-----------------------------------------------------------------------------------------'''
