@@ -405,12 +405,11 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         altsn = np.zeros(nchips)
         nsn = 0
 
-        tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
-        zero = np.median(tmp)
+        tmp = fiber['hmag'][fiberstar] + 2.5 * np.log10(obs[fiberstar,1])
+        zero = np.nanmedian(tmp)
         zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
         faint, = np.where((tmp - zero) < -0.5)
         nfaint = len(faint)
-        import pdb; pdb.set_trace()
         zeronorm = zero - (2.5 * np.log10(nreads))
 
         if (flat is None) & (onem is None):
@@ -519,7 +518,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['ALTSN'][i] =     altsn
         platetab['NSN'][i] =       nsn
         platetab['SNC'][i] =       achievedsnc
-        if ntelluric > 0: platetab['SNRATIO'][i] = np.median(snt[telluric,1] / snc[telluric,1])
+        if ntelluric > 0: platetab['SNRATIO'][i] = np.nanmedian(snt[telluric,1] / snc[telluric,1])
 
         for j in range(len(fiber)):
             fiber['sn'][j][i,:] = sn[j,:]
