@@ -871,7 +871,8 @@ def dbingest(apstar,allvisit):
                'estrv_logg','estrv_feh','estrv_alpha','estrv_carb','created',
                'rv_alpha', 'rv_carb', 'synthfile']
     for c in delcols:
-        del allvisit[c]
+        if c in allvisit.dtype.names:
+            del allvisit[c]
     # Rename columns
     allvisit['pk'].name = 'visit_pk'
     allvisit['h'].name = 'hmag'
