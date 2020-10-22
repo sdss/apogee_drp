@@ -516,6 +516,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['ZERORMS'][i] =   zerorms
         platetab['ZERONORM'][i] =  zeronorm
         platetab['SKY'][i] =       medsky
+        import pdb; pdb.set_trace()
         platetab['SN'][i] =        achievedsn
         platetab['ALTSN'][i] =     altsn
         platetab['NSN'][i] =       nsn
