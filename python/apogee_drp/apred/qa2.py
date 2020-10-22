@@ -477,7 +477,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['NREADS'][i] =    nreads
         platetab['SECZ'][i] =      secz
         if dhdr.get('HA') is not None: platetab['HA'][i] = dhdr['HA']
-        platetab['HA'][i] =        ha
         platetab['DESIGN_HA'][i] = design_ha
         platetab['SEEING'][i] =    seeing
         platetab['FWHM'][i] =      fwhm
