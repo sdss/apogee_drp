@@ -435,7 +435,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             snstars, = np.where(fiber['hmag'] < 12.2)
             scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
             altsn = achievedsn * 0.
-            import pdb; pdb.set_trace()
             for ichip in range(nchips): altsn[ichip] = np.median(sn[snstars,ichip] * scale)
             achievedsnc = np.median(snc[snstars,:] * scale, axis=0)
         else:
