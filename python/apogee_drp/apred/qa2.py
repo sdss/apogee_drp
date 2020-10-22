@@ -1065,9 +1065,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         htmlsum.write('<TD>'+txt+'\n')
         htmlsum.write('<TD>\n')
         for j in range(nunplugged): htmlsum.write(str(300-unplugged[j])+'\n')
-        htmlsum.write('<TD>\n')
-        if faint[0] > 0:
-            for j in range(nfaint): htmlsum.write(str(plSum2['FIBERID'][faint][j])+'\n')
+#        htmlsum.write('<TD>\n')
+#        if faint[0] > 0:
+#            for j in range(nfaint): htmlsum.write(str(plSum2['FIBERID'][faint][j])+'\n')
 
     html.write('</TABLE>\n')
 
