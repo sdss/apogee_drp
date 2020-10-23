@@ -1008,8 +1008,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         vfluxall = vdata[1].data
                         vwaveall = vdata[4].data
 
-                        vflux = np.contatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
-                        vwave = np.contatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
+                        vflux = np.concatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
+                        vwave = np.concatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
 
                         ymxsec, = np.where((vwave > 15900) & (vwave < 15950))
                         ymx = np.max(vflux[ymxsec])
