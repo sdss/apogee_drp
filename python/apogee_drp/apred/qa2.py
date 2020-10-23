@@ -931,7 +931,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
                     objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
 
-            objhtml.write('<TABLE BORDER=2 CLASS=sortable>\n')
+            objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
             objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>S/N<TD>Target flags<TD>Plot\n')
 #            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
@@ -958,9 +958,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 decstring = str("%8.5f" % round(plSum2['DEC'][j],5))
 
                 if (plSum2['OBJTYPE'][j]!='SKY') & (plSum2['FIBERID'][j]>=0):
-                    txt1 = '<BR><A HREF="http://simbad.harvard.edu/simbad/sim-basic?'
-                    txt2 = 'Ident='+rastring+'+%09'+decstring+'++&submit=SIMBAD+search"> (SIMBAD) </A>'
+                    txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+rastring+'+'+decstring+'&CooFrame=FK5&CooEpoch=2000'
+                    txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=> (SIMBAD) </A>'
                     objhtml.write(txt1+txt2+'\n')
+
 
                 objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.3f" % round(plSum2['HMAG'][j],3))+'\n')
 #                objhtml.write('<TD>'+str("%8.2f" % round(plSum2['HMAG'][j]+2.5*np.log10(obs[j,1])-zero,2))+'\n')
@@ -985,72 +986,73 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 # PLOT 1: spectrum 
                 # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257//plots/apPlate-5583-56257-299.jpg
 
-                if (j > -1) & (plSum2['OBJTYPE'][j] != 'SKY'):
-#                if (j > -1) & (j < 30) & (plSum2['OBJTYPE'][j] != 'SKY'):
-                    if noplot is False:
-                        pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
-                        pfilefull = plotsdir+pfile
-                        print("Making "+pfile)
-
-                        plt.ioff()
-                        fontsize=24
-                        fsz=fontsize*0.75
-                        fig=plt.figure(figsize=(28,6))
-                        matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
-
-                        lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                        xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
-
-                        vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
-                        # NOTE: telescope not in the filenames yet, so removing it for now
-                        vfile = vfile.replace('-apo25m','')
-                        vdata = fits.open(vfile)
-                        vfluxall = vdata[1].data
-                        vwaveall = vdata[4].data
-
-                        vflux = np.concatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
-                        vwave = np.concatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
-
-                        # Establish Ymax
-                        ymxsec1, = np.where((vwave > 15900) & (vwave < 15950))
-                        ymxsec2, = np.where((vwave > 15150) & (vwave < 15180))
-                        ymx1 = np.max(vflux[ymxsec1])
-                        ymx2 = np.max(vflux[ymxsec2])
-                        ymx = np.max([ymx1,ymx2])
-                        ymin = 0
-                        yspn = ymx-ymin
-                        ymax = ymx + (yspn * 0.15)
-                        # Establish Ymin
-                        ymn = np.min(vflux)
-                        if ymn > 0: 
-                            yspn = ymx - ymn
-                            ymin = ymn - (yspn * 0.15)
-                            ymax = ymx + (yspn * 0.15)
-
-                        ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
-
-                        ax1.tick_params(reset=True)
-                        ax1.set_xlim(xmin,xmax)
-                        ax1.set_ylim(ymin,ymax)
-                        ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
-                        ax1.minorticks_on()
-                        ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
-                        ax1.set_ylabel(r'Flux')
-
-                        ax1.plot(vwave, vflux, color='k', linewidth=1)
-
-                        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
-                        plt.savefig(pfilefull)
-                        plt.close('all')
-                        plt.ion()
-
-                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
-                    else:
-                        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/html/ap1D-06950025.html
-                        objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
-                else:
+                if j > -1:
                     if plSum2['OBJTYPE'][j] == 'SKY':
                         objhtml.write('<TD BGCOLOR='+color+'>Sky\n')
+                    else:
+                        if noplot is False:
+                            pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
+                            pfilefull = plotsdir+pfile
+                            print("Making "+pfile)
+
+                            plt.ioff()
+                            fontsize=24
+                            fsz=fontsize*0.75
+                            fig=plt.figure(figsize=(28,6))
+                            matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+
+                            lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                            xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
+
+                            vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
+                            # NOTE: telescope not in the filenames yet, so removing it for now
+                            vfile = vfile.replace('-apo25m','')
+                            vdata = fits.open(vfile)
+                            vfluxall = vdata[1].data
+                            vwaveall = vdata[4].data
+
+                            vflux = np.concatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
+                            vwave = np.concatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
+
+                            # Establish Ymax
+                            ymxsec1, = np.where((vwave > 15900) & (vwave < 15950))
+                            ymxsec2, = np.where((vwave > 15150) & (vwave < 15180))
+                            ymx1 = np.max(vflux[ymxsec1])
+                            ymx2 = np.max(vflux[ymxsec2])
+                            ymx = np.max([ymx1,ymx2])
+                            ymin = 0
+                            yspn = ymx-ymin
+                            ymax = ymx + (yspn * 0.15)
+                            # Establish Ymin
+                            ymn = np.min(vflux)
+                            if ymn > 0: 
+                                yspn = ymx - ymn
+                                ymin = ymn - (yspn * 0.15)
+                                ymax = ymx + (yspn * 0.15)
+
+                            ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
+
+                            ax1.tick_params(reset=True)
+                            ax1.set_xlim(xmin,xmax)
+                            ax1.set_ylim(ymin,ymax)
+                            ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
+                            ax1.minorticks_on()
+                            ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
+                            ax1.set_ylabel(r'Flux')
+
+                            ax1.plot(vwave, vflux, color='k', linewidth=1)
+
+                            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                            plt.savefig(pfilefull)
+                            plt.close('all')
+                            plt.ion()
+
+                            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
+                        else:
+                            if ims[0]==0:
+                                objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
+                            else:
+                                objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
             objhtml.close()
             cfile.close()
 
