@@ -977,7 +977,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         # Establish Ymax
                         ymxsec1, = np.where((vwave > 15150) & (vwave < 15180))
                         ymxsec2, = np.where((vwave > 15900) & (vwave < 15950))
-                        ymxsec2, = np.where((vwave > 16905) & (vwave < 16940))
+                        ymxsec3, = np.where((vwave > 16905) & (vwave < 16940))
                         ymx1 = np.max(vflux[ymxsec1])
                         ymx2 = np.max(vflux[ymxsec2])
                         ymx3 = np.max(vflux[ymxsec3])
