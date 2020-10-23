@@ -970,7 +970,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
                 targflagtxt = targflagtxt.replace('APOGEE2_','').replace('_',' ').replace(',',', ').capitalize()
                 targflagtxt = targflagtxt.replace('Sfd','SFD').replace('Eb','EB').replace(' gt ','>')
-                objhtml.write('<TD BGCOLOR='+color+' align="center">'+targflagtxt+'\n')
+                objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
 
                 if (ims[0] == 0) & (plSum2['FIBERID'][j] >= 0):
                     vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
