@@ -986,7 +986,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257//plots/apPlate-5583-56257-299.jpg
 
 #                if j > -1:
-                if (j > -1) & (j < 10) & (plSum2['OBJTYPE'][j] != 'SKY'):
+                if (j > -1) & (j < 30) & (plSum2['OBJTYPE'][j] != 'SKY'):
                     if noplot is False:
                         pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
                         pfilefull = plotsdir+pfile
@@ -1042,7 +1042,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     else:
                         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/html/ap1D-06950025.html
                         objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
-
+                else:
+                    if plSum2['OBJTYPE'][j] == 'SKY':
+                        objhtml.write('<TD>Sky\n')
             objhtml.close()
             cfile.close()
 
