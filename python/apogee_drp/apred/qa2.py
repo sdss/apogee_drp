@@ -1002,6 +1002,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
                         vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
+                        # NOTE: telescope not in the filenames yet, so removing it for now
+                        vfile = vfile.replace('-apo25m','')
                         vdata = fits.open(vfile)
                         vflux = vdata[1].data
                         vwave = vdata[4].data
