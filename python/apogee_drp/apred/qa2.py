@@ -995,7 +995,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         plt.ioff()
                         fontsize=24
                         fsz=fontsize*0.75
-                        fig=plt.figure(figsize=(24,6))
+                        fig=plt.figure(figsize=(28,6))
                         matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
@@ -1042,7 +1042,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         plt.close('all')
                         plt.ion()
 
-                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=700></A>\n')
+                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
                     else:
                         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/html/ap1D-06950025.html
                         objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
