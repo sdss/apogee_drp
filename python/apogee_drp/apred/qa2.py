@@ -988,7 +988,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #                if j > -1:
                 if (j > -1) & (j < 10) & (plSum2['OBJTYPE'][j] != 'SKY'):
                     if noplot is False:
-                        pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.jpg'
+                        pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
                         pfilefull = plotsdir+pfile
                         print("Making "+pfile)
 
