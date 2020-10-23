@@ -1011,7 +1011,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         vflux = np.concatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
                         vwave = np.concatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
 
-                        ymin = 0
+                        # Establish Ymax
                         ymxsec1, = np.where((vwave > 15900) & (vwave < 15950))
                         ymxsec2, = np.where((vwave > 15150) & (vwave < 15180))
                         ymx1 = np.max(vflux[ymxsec1])
@@ -1019,15 +1019,17 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ymx = np.max([ymx1,ymx2])
                         yspn = ymx-ymin
                         ymax = ymx + (yspn * 0.15)
+                        # Establish Ymin
+                        ymin = 0
+                        ymn = np.min(vflux)
+                        if ymn > 0: 
+                            yspn = ymx - ymn
+                            ymin = ymn - (yspn * 0.15)
+                            ymax = ymx + (yspn * 0.15)
 
                         ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
 
-                        #for side in ax1.spines.keys():  # 'top', 'bottom', 'left', 'right'
-                        #    ax1.spines[side].set_linewidth(axthick)
-                        #ax1.tick_params(length=axmajlen,width=axthick)
-                        #ax1.tick_params(which='minor', length=axminlen, width=axthick)
-                        #ax1.tick_params(which='major', length=axmajlen, width=axthick)
-                        ax1.tick_params(which='both',direction='in')
+                        ax1.tick_params(direction='in')
                         ax1.set_xlim(xmin,xmax)
                         ax1.set_ylim(ymin,ymax)
                         ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
@@ -1037,7 +1039,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                         ax1.plot(vwave, vflux, color='k', linewidth=1)
 
-                        fig.subplots_adjust(left=0.05,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
                         plt.savefig(pfilefull)
                         plt.close('all')
                         plt.ion()
