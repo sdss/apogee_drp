@@ -18,6 +18,11 @@ from apogee_drp.apred import wave
 from dlnpyutils import utils as dln
 from sdss_access.path import path
 import pdb
+import matplotlib.pyplot as plt
+import matplotlib
+from astropy.convolution import convolve, Box1DKernel
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter, MaxNLocator
+import matplotlib.ticker as ticker
 
 sdss_path = path.Path()
 
@@ -783,8 +788,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-    outdir = platedir+'/plots/'
-    if len(glob.glob(outdir)) == 0: subprocess.call(['mkdir',outdir])
+    plotsdir = platedir+'/plots/'
+    if len(glob.glob(plotsdir)) == 0: subprocess.call(['mkdir',plotsdir])
 
     htmldir = platedir+'/html/'
     if len(glob.glob(htmldir)) == 0: subprocess.call(['mkdir',htmldir])
@@ -887,7 +892,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         if ims[0] != 0: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
         pfile = pfile.replace('.fits', '')
 
-        if (clobber is True) | (os.path.exists(outdir+pfile+'.tab') != 0):
+        if (clobber is True) | (os.path.exists(plotsdir+pfile+'.tab') != 0):
             if ims[0] == 0: d = load.apPlate(int(plate), mjd) 
             if ims[0] != 0: d = load.ap1D(ims[i])
 
@@ -980,11 +985,56 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 # PLOT 1: spectrum 
                 # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257//plots/apPlate-5583-56257-299.jpg
 
-                ### NOTE:Not sure if this mod statement does the trick!
-                if (j%300) > -1:
-                    if noplot is None:
-                        print("PLOTS 1: Spectrum plots will be made here.")
+                if j > -1:
+                    if noplot is False:
+                        pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).vfill(3)+'.jpg'
+                        pfilefull = plotsdir+pfile
+
+                        jfile='../plots/'+file+'-'+string(format='(i3.3)',rows[j])+'.jpg'
+                        plt.ioff()
+                        fontsize=24
+                        fsz=fontsize*0.75
+                        fig=plt.figure(figsize=(18,8))
+                        matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+
+                        lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                        xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
+
+                        vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
+                        vdata = fits.open(vfile)
+                        vflux = vdata[1].data
+                        vwave = vdata[4].data
+                        ymxsec, = np.where((vwave > 15900) & (vwave < 15950))
+                        ymx = np.max(vflux[ymxsec])
+                        ymn = np.min(vflux[ymxsec])
+                        yspn = ymx-ymn
+                        ymax = ymx + (yspn * 0.15)
+                        ymin = ymn - (yspn * 0.15)
+
+                        ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
+
+                        for side in ax1.spines.keys():  # 'top', 'bottom', 'left', 'right'
+                            ax1.spines[side].set_linewidth(axthick)
+                        #ax1.tick_params(length=axmajlen,width=axthick)
+                        ax1.tick_params(which='minor', length=axminlen, width=axthick)
+                        ax1.tick_params(which='major', length=axmajlen, width=axthick)
+                        ax1.set_xlim(xmin,xmax)
+                        ax1.set_ylim(ymin,ymax)
+                        ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
+                        ax1.minorticks_on()
+                        ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
+                        ax1.set_ylabel(r'Flux')
+
+                        ax1.plot(vwave, vflux, color='k', linewidth=lwidth)
+
+                        fig.subplots_adjust(left=0.045,right=0.99,bottom=0.07,top=0.97,hspace=0.2,wspace=0.0)
+                        plt.savefig(pfile)
+                        plt.close('all')
+                        plt.ion()
+
+                        objhtml.write('<TD><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=1000></A>\n')
                     else:
+                        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/html/ap1D-06950025.html
                         objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
 
             objhtml.close()
