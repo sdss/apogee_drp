@@ -995,7 +995,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         plt.ioff()
                         fontsize=24
                         fsz=fontsize*0.75
-                        fig=plt.figure(figsize=(18,8))
+                        fig=plt.figure(figsize=(24,8))
                         matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
@@ -1011,12 +1011,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         vflux = np.concatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
                         vwave = np.concatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
 
+                        ymin = 0
                         ymxsec, = np.where((vwave > 15900) & (vwave < 15950))
                         ymx = np.max(vflux[ymxsec])
-                        ymn = np.min(vflux[ymxsec])
                         yspn = ymx-ymn
                         ymax = ymx + (yspn * 0.15)
-                        ymin = ymn - (yspn * 0.15)
 
                         ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
 
@@ -1034,7 +1033,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                         ax1.plot(vwave, vflux, color='k', linewidth=lwidth)
 
-                        fig.subplots_adjust(left=0.045,right=0.99,bottom=0.07,top=0.97,hspace=0.2,wspace=0.0)
+                        fig.subplots_adjust(left=0.04,right=0.99,bottom=0.1,top=0.97,hspace=0.2,wspace=0.0)
                         plt.savefig(pfilefull)
                         plt.close('all')
                         plt.ion()
