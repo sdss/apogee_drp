@@ -932,7 +932,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
 
             objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>S/N<TD>Target flags<TD>Plot\n')
+            objhtml.write('<TR><TH>Fiber<TH>Star<TH>H mag<TH>Diff<TH>S/N<TH>Target flags<TH>Plot\n')
 #            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
             cfile = open(plotsdir+pfile+'.csh','w')
@@ -964,11 +964,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
 
                 objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.3f" % round(plSum2['HMAG'][j],3))+'\n')
-#                objhtml.write('<TD>'+str("%8.2f" % round(plSum2['HMAG'][j]+2.5*np.log10(obs[j,1])-zero,2))+'\n')
-
-                if plSum2['FIBERID'][j]==21: import pdb; pdb.set_trace()
-
-                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.2f" % round(plSum2['SN'][j][0][1],2))+'\n')
+                objhtml.write('<TD>'+str("%8.2f" % round(plSum2['HMAG'][j]+(2.5*np.log10(plSum2['obsmag'][j][0][1]))-plSum1['ZERO'][i],2))+'\n')
+                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.2f" % round(plSum2['SN'][j][0][2],2))+'\n')
 #                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
                 targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
                 targflagtxt = targflagtxt.replace('APOGEE2_','').replace('_',' ').replace(',',', ').capitalize()
