@@ -1033,7 +1033,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                         ax1.plot(vwave, vflux, color='k', linewidth=1)
 
-                        fig.subplots_adjust(left=0.05,right=0.99,bottom=0.13,top=0.97,hspace=0.2,wspace=0.0)
+                        fig.subplots_adjust(left=0.04,right=0.99,bottom=0.14,top=0.97,hspace=0.2,wspace=0.0)
                         plt.savefig(pfilefull)
                         plt.close('all')
                         plt.ion()
