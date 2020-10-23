@@ -787,6 +787,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     plSum2 = tmp[2].data
     fibord = np.argsort(plSum2['FIBERID'])
     plSum2 = plSum2[fibord]
+    nfiber = len(plSum2['HMAG'])
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -840,319 +841,247 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     txt2 = '<TD>Nreads<TD>Dither<TD>Zero<TD>Zerorms<TD>Zeronorm<TD>sky continuum<TD>S/N<TD>S/N(c)<TD>unplugged<TD>faint'
     htmlsum.write(txt1+txt2+'\n')
 
-
-    # Get the fiber association for this plate. Also get some other values
-    if ims[0] == 0: tot = load.apPlate(int(plate), mjd)
-    if ims[0] != 0: tot = load.ap1D(ims[0])
-    platehdr = tot['a'][0].header
-
-    if type(tot) != dict:
-        html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
-        htmlsum.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
-        html.close()
-        htmlsum.close()
-        print("Error in makePlotsHtml!!!")
-
-    plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap) 
-
-    gd, = np.where(plug['fiberdata']['fiberid'] > 0)
-    fiber = plug['fiberdata'][gd]
-    nfiber = len(fiber)
-    rows = 300-fiber['fiberid']
-    guide = plug['guidedata']
-
-    dtype = np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
-    snColumn = np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
-    obsmagColumn = np.zeros(nfiber, dtype=[('obsmag', 'float32', (n_exposures, nchips))])
-    fiber = merge_arrays([fiber, snColumn, obsmagColumn], flatten=True)
-
-    unplugged, = np.where(fiber['fiberid'] < 0)
-    nunplugged = len(unplugged)
-    if flat is not None:
-        fiber['hmag'] = 12
-        fiber['object'] = 'FLAT'
-
-
-    # Find telluric, object, sky, and non-sky fibers.
-    fibtype = fiber['objtype']
-    fibertelluric, = np.where((fibtype == 'SPECTROPHOTO_STD') | (fibtype == 'HOT_STD'))
-    ntelluric = len(fibertelluric)
-    telluric = rows[fibertelluric]
-
-    fiberobj, = np.where((fibtype == 'STAR_BHB') | (fibtype == 'STAR') | (fibtype == 'EXTOBJ'))
-    nobj = len(fiberobj)
-    obj = rows[fiberobj]
-
-    fibersky, = np.where(fibtype == 'SKY')
-    nsky = len(fibersky)
-    sky = rows[fibersky]
-
-    fiberstar = np.concatenate([fiberobj,fibertelluric])
-    nstar = len(fiberstar)
-    star = rows[fiberstar]
+#    unplugged, = np.where(fiber['fiberid'] < 0)
+#    nunplugged = len(unplugged)
+#    if flat is not None:
+#        fiber['hmag'] = 12
+#        fiber['object'] = 'FLAT'
 
     # Loop over the exposures.
     for i in range(n_exposures):
-        if ims[0] == 0: pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-        if ims[0] != 0: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
-        pfile = pfile.replace('.fits', '')
+        # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
+        objhtml = open(htmldir+pfile+'.html','w')
+        objhtml.write('<HTML>\n')
+        objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
+        objhtml.write('<BODY>\n')
 
-        if (clobber is True) | (os.path.exists(plotsdir+pfile+'.tab') != 0):
-            if ims[0] == 0: d = load.apPlate(int(plate), mjd) 
-            if ims[0] != 0: d = load.ap1D(ims[i])
+        if ims[0] != 0:
+            objhtml.write('<H2>'+pfile+'</H2>\n')
+            tmp = load.apPlate(int(plate), mjd)
+            for chip in chips: 
+                objhtml.write('<A HREF=../'+tmp[chip].filename()+'>'+tmp[chip].filename()+'</A>\n')
+        else:
+            objhtml.write('<H2>apPlate-'+platefile+'</H2>\n')
+            if noplot is not None:
+                objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
+                objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
 
-            dhdr = d['a'][0].header
-
-            if type(d)!=dict:
-                if ims[0] == 0: print("Problem with apPlate!!!")
-                if ims[0] != 0: print("Problem with ap1D!!!")
-
-            cframe = None
-            if ims[0] == 0: cframe = load.apPlate(int(plate), mjd)
-            if ims[0] != 0:
-                cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
-                cframefile = cframefile.replace('apCframe-','apCframe-c-')
-
-                if len(glob.glob(cframefile)) != 0:
-                    cframe = load.apCframe(field, int(plate), mjd, ims[i])
-
-            cframehdr = cframe['a'][0].header
-
-
-            # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
-            objhtml = open(htmldir+pfile+'.html','w')
-            objhtml.write('<HTML>\n')
-            objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
-            objhtml.write('<BODY>\n')
-
-            if ims[0] != 0:
-                objhtml.write('<H2>'+pfile+'</H2>\n')
-                tmp = load.apPlate(int(plate), mjd)
-                for chip in chips: 
-                    objhtml.write('<A HREF=../'+tmp[chip].filename()+'>'+tmp[chip].filename()+'</A>\n')
-            else:
-                objhtml.write('<H2>apPlate-'+platefile+'</H2>\n')
-                if noplot is not None:
-                    objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
-                    objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
-
-            objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-            objhtml.write('<TR><TH>Fib<TH>APOGEE ID<TH>H<TH>H<BR>-<BR>obs<TH>S/N<TH>Targ<BR>Type<TH>Target & data flags<TH>Spectrum Plot\n')
+        objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
+        objhtml.write('<TR><TH>Fib<TH>APOGEE ID<TH>H<TH>H<BR>-<BR>obs<TH>S/N<TH>Targ<BR>Type<TH>Target & data flags<TH>Spectrum Plot\n')
 #            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
-            cfile = open(plotsdir+pfile+'.csh','w')
-            for j in range(nfiber):
-                objhtml.write('<TR>\n')
+        cfile = open(plotsdir+pfile+'.csh','w')
+        for j in range(nfiber):
+            objhtml.write('<TR>\n')
 
-                color = 'white'
-                if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'): color = 'plum'
-                if plSum2['OBJTYPE'][j] == 'SKY': color = 'silver'
+            color = 'white'
+            if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'): color = 'plum'
+            if plSum2['OBJTYPE'][j] == 'SKY': color = 'silver'
 
-                visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]))
+            visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]))
 
-                cfib = str(plSum2['FIBERID'][j]).zfill(3)
-                if ims[0] == 0: objhtml.write('<TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
-                if ims[0] != 0: objhtml.write('<TD BGCOLOR='+color+'>'+cfib+'\n')
+            cfib = str(plSum2['FIBERID'][j]).zfill(3)
+            if ims[0] == 0: objhtml.write('<TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
+            if ims[0] != 0: objhtml.write('<TD BGCOLOR='+color+'>'+cfib+'\n')
 
-                if ims[0] == 0:
-                    vplotfile = visitfile.replace('.fits','.jpg')
-                    objhtml.write('<TD BGCOLOR='+color+'><a href=../plots/'+vplotfile+'>'+plSum2['OBJECT'][j]+'</A>\n')
-                if ims[0] != 0: objhtml.write('<TD BGCOLOR='+color+'>'+cfib+'\n')
+            if ims[0] == 0:
+                vplotfile = visitfile.replace('.fits','.jpg')
+                objhtml.write('<TD BGCOLOR='+color+'><a href=../plots/'+vplotfile+'>'+plSum2['OBJECT'][j]+'</A>\n')
+            if ims[0] != 0: objhtml.write('<TD BGCOLOR='+color+'>'+cfib+'\n')
 
-                rastring = str("%8.5f" % round(plSum2['RA'][j],5))
-                decstring = str("%8.5f" % round(plSum2['DEC'][j],5))
+            rastring = str("%8.5f" % round(plSum2['RA'][j],5))
+            decstring = str("%8.5f" % round(plSum2['DEC'][j],5))
 
-                if (plSum2['OBJTYPE'][j]!='SKY') & (plSum2['FIBERID'][j]>=0):
-                    txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+rastring+'+'+decstring+'&CooFrame=FK5&CooEpoch=2000'
-                    txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> (SIMBAD) </A>'
-                    objhtml.write(txt1+txt2+'\n')
+            if (plSum2['OBJTYPE'][j]!='SKY') & (plSum2['FIBERID'][j]>=0):
+                txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+rastring+'+'+decstring+'&CooFrame=FK5&CooEpoch=2000'
+                txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> (SIMBAD) </A>'
+                objhtml.write(txt1+txt2+'\n')
 
-                if plSum2['OBJTYPE'][j] != 'SKY':
-                    hmag = str("%.3f" % round(plSum2['HMAG'][j],3))
-                    objhtml.write('<TD BGCOLOR='+color+' align ="right">'+hmag+'\n')
-                    diff = str("%.2f" % round(plSum2['obsmag'][j][0][1] - plSum2['HMAG'][j],2))
+            if plSum2['OBJTYPE'][j] != 'SKY':
+                hmag = str("%.3f" % round(plSum2['HMAG'][j],3))
+                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+hmag+'\n')
+                diff = str("%.2f" % round(plSum2['obsmag'][j][0][1] - plSum2['HMAG'][j],2))
 #                    diff = plSum2['HMAG'][j] + (2.5 * np.log10(plSum2['obsmag'][j][0][1])) - plSum1['ZERO'][i]
-                    objhtml.write('<TD BGCOLOR='+color+' align ="right">'+diff+'\n')
-                    snratio = str("%.2f" % round(plSum2['SN'][j][0][2],2))
-                    objhtml.write('<TD BGCOLOR='+color+' align ="right">'+snratio+'\n')
-                else:
-                    objhtml.write('<TD BGCOLOR='+color+'>---\n')
-                    objhtml.write('<TD BGCOLOR='+color+'>---\n')
-                    objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+diff+'\n')
+                snratio = str("%.2f" % round(plSum2['SN'][j][0][2],2))
+                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+snratio+'\n')
+            else:
+                objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                objhtml.write('<TD BGCOLOR='+color+'>---\n')
 
-                if plSum2['OBJTYPE'][j] == 'SKY': 
-                    objhtml.write('<TD BGCOLOR='+color+'>SKY\n')
+            if plSum2['OBJTYPE'][j] == 'SKY': 
+                objhtml.write('<TD BGCOLOR='+color+'>SKY\n')
+            else:
+                if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'):
+                    objhtml.write('<TD BGCOLOR='+color+'>TEL\n')
                 else:
-                    if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'):
-                        objhtml.write('<TD BGCOLOR='+color+'>TEL\n')
-                    else:
-                        objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
+                    objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
 
 #                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
-                targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
-                if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
-                targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
-                #targflagtxt = targflagtxt.replace('APOGEE2_','').replace('_',' ').replace(',','<BR>')
-                #targflagtxt = targflagtxt.replace('Sfd','SFD').replace('Eb','EB').replace(' gt ','>')
-                objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
+            targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
+            if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
+            targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
+            #targflagtxt = targflagtxt.replace('APOGEE2_','').replace('_',' ').replace(',','<BR>')
+            #targflagtxt = targflagtxt.replace('Sfd','SFD').replace('Eb','EB').replace(' gt ','>')
+            objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
 
-                if (ims[0] == 0) & (plSum2['FIBERID'][j] >= 0):
-                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]).replace('-apo25m','')
-                    if os.path.exists(vfile):
-                        h = fits.getheader(vfile)
-                        starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).replace(',','<BR>')
-                        objhtml.write('<BR><BR>'+starflagtxt+'\n')
+            if (ims[0] == 0) & (plSum2['FIBERID'][j] >= 0):
+                vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]).replace('-apo25m','')
+                if os.path.exists(vfile):
+                    h = fits.getheader(vfile)
+                    starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).replace(',','<BR>')
+                    objhtml.write('<BR><BR>'+starflagtxt+'\n')
 
 
-                # PLOT 1: spectrum 
-                # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257//plots/apPlate-5583-56257-299.jpg
+            # PLOT 1: spectrum 
+            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257//plots/apPlate-5583-56257-299.jpg
 
-                if j > -1:
-                    if plSum2['OBJTYPE'][j] == 'SKY':
-                        objhtml.write('<TD BGCOLOR='+color+'> \n')
-                    else:
-                        pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
-                        pfilefull = plotsdir+pfile
-                        if noplot is False:
-                            print("Making "+pfile)
+            if j > -1:
+                if plSum2['OBJTYPE'][j] == 'SKY':
+                    objhtml.write('<TD BGCOLOR='+color+'> \n')
+                else:
+                    pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
+                    pfilefull = plotsdir+pfile
+                    if noplot is False:
+                        print("Making "+pfile)
 
-                            plt.ioff()
-                            fontsize=24
-                            fsz=fontsize*0.75
-                            fig=plt.figure(figsize=(28,6))
-                            matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+                        plt.ioff()
+                        fontsize=24
+                        fsz=fontsize*0.75
+                        fig=plt.figure(figsize=(28,6))
+                        matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
-                            lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                            xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
+                        lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                        xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
-                            vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
-                            # NOTE: telescope not in the filenames yet, so removing it for now
-                            vfile = vfile.replace('-apo25m','')
-                            vdata = fits.open(vfile)
-                            vfluxall = vdata[1].data
-                            vwaveall = vdata[4].data
+                        vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
+                        # NOTE: telescope not in the filenames yet, so removing it for now
+                        vfile = vfile.replace('-apo25m','')
+                        vdata = fits.open(vfile)
+                        vfluxall = vdata[1].data
+                        vwaveall = vdata[4].data
 
-                            vflux = np.concatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
-                            vwave = np.concatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
+                        vflux = np.concatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
+                        vwave = np.concatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
 
-                            # Establish Ymax
-                            ymxsec1, = np.where((vwave > 15900) & (vwave < 15950))
-                            ymxsec2, = np.where((vwave > 15150) & (vwave < 15180))
-                            ymx1 = np.max(vflux[ymxsec1])
-                            ymx2 = np.max(vflux[ymxsec2])
-                            ymx = np.max([ymx1,ymx2])
-                            ymin = 0
-                            yspn = ymx-ymin
+                        # Establish Ymax
+                        ymxsec1, = np.where((vwave > 15900) & (vwave < 15950))
+                        ymxsec2, = np.where((vwave > 15150) & (vwave < 15180))
+                        ymx1 = np.max(vflux[ymxsec1])
+                        ymx2 = np.max(vflux[ymxsec2])
+                        ymx = np.max([ymx1,ymx2])
+                        ymin = 0
+                        yspn = ymx-ymin
+                        ymax = ymx + (yspn * 0.15)
+                        # Establish Ymin
+                        ymn = np.min(vflux)
+                        if ymn > 0: 
+                            yspn = ymx - ymn
+                            ymin = ymn - (yspn * 0.15)
                             ymax = ymx + (yspn * 0.15)
-                            # Establish Ymin
-                            ymn = np.min(vflux)
-                            if ymn > 0: 
-                                yspn = ymx - ymn
-                                ymin = ymn - (yspn * 0.15)
-                                ymax = ymx + (yspn * 0.15)
 
-                            ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
+                        ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
 
-                            ax1.tick_params(reset=True)
-                            ax1.set_xlim(xmin,xmax)
-                            ax1.set_ylim(ymin,ymax)
-                            ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
-                            ax1.minorticks_on()
-                            ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
-                            ax1.set_ylabel(r'Flux')
+                        ax1.tick_params(reset=True)
+                        ax1.set_xlim(xmin,xmax)
+                        ax1.set_ylim(ymin,ymax)
+                        ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
+                        ax1.minorticks_on()
+                        ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
+                        ax1.set_ylabel(r'Flux')
 
-                            ax1.plot(vwave, vflux, color='k', linewidth=1)
+                        ax1.plot(vwave, vflux, color='k', linewidth=1)
 
-                            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
-                            plt.savefig(pfilefull)
-                            plt.close('all')
-                            plt.ion()
+                        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                        plt.savefig(pfilefull)
+                        plt.close('all')
+                        plt.ion()
 
-                            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
+                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
+                    else:
+                        if ims[0]==0:
+                            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=1000></A>\n')
                         else:
-                            if ims[0]==0:
-                                objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=1000></A>\n')
-                            else:
-                                objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
-            objhtml.close()
-            cfile.close()
+                            objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
+        objhtml.close()
+        cfile.close()
 
 
-            # PLOT 2: 5 panels
-            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.gif
-            if (flat is None) & (onem is None):
-                print('PLOTS 2: 5-panel plot will be made here.')
+        # PLOT 2: 5 panels
+        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.gif
+        if (flat is None) & (onem is None):
+            print('PLOTS 2: 5-panel plot will be made here.')
 #            else:
 #                achievedsn = np.median(sn[obj,:], axis=0)
 
 
-            # PLOTS 3-5: spatial residuals, , , 
-            # 3: spatial residuals
-            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.jpg
-            # 4: spatial sky line emission
-            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
-            # 5: spatial continuum emission
-            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
-            if (starfiber is None) & (onem is None):
-                print("PLOTS 3: spatial plot of residuals will be made here.\n")
-                print("PLOTS 4: spatial plot of sky line emission will be made here.\n")
-                print("PLOTS 5: spatial plot of continuum emission will be made here.\n")
+        # PLOTS 3-5: spatial residuals, , , 
+        # 3: spatial residuals
+        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.jpg
+        # 4: spatial sky line emission
+        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
+        # 5: spatial continuum emission
+        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
+        if (starfiber is None) & (onem is None):
+            print("PLOTS 3: spatial plot of residuals will be made here.\n")
+            print("PLOTS 4: spatial plot of sky line emission will be made here.\n")
+            print("PLOTS 5: spatial plot of continuum emission will be made here.\n")
 
 
-        # Put all of the info and plots on the plate web page.
-        html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
-        html.write('<TD>'+str(plSum1['NREADS'][i])+'\n')
-        html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
-        html.write('<TR><TD>z<TD><TD>'+str("%.2f" % round(plSum1['ZERO'][i],2))+'\n')
-        html.write('<TR><TD>znorm<TD><TD>'+str("%.2f" % round(plSum1['ZERONORM'][i],2))+'\n')
-        txt = '<TD> '+str("%.1f" % round(plSum1['SKY'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SKY'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SKY'][i][2],1))
-        html.write('<TR><TD>sky'+txt+'\n')
-        txt = '<TD> '+str("%.1f" % round(plSum1['SN'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SN'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SN'][i][2],1))
-        html.write('<TR><TD>S/N'+txt+'\n')
-        txt = '<TD> '+str("%.1f" % round(plSum1['SNC'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SNC'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SNC'][i][2],1))
-        html.write('<TR><TD>S/N(c)'+txt+'\n')
+    # Put all of the info and plots on the plate web page.
+    html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
+    html.write('<TD>'+str(plSum1['NREADS'][i])+'\n')
+    html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
+    html.write('<TR><TD>z<TD><TD>'+str("%.2f" % round(plSum1['ZERO'][i],2))+'\n')
+    html.write('<TR><TD>znorm<TD><TD>'+str("%.2f" % round(plSum1['ZERONORM'][i],2))+'\n')
+    txt = '<TD> '+str("%.1f" % round(plSum1['SKY'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SKY'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SKY'][i][2],1))
+    html.write('<TR><TD>sky'+txt+'\n')
+    txt = '<TD> '+str("%.1f" % round(plSum1['SN'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SN'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SN'][i][2],1))
+    html.write('<TR><TD>S/N'+txt+'\n')
+    txt = '<TD> '+str("%.1f" % round(plSum1['SNC'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SNC'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SNC'][i][2],1))
+    html.write('<TR><TD>S/N(c)'+txt+'\n')
 
-        if ntelluric > 0:
+    if ntelluric > 0:
 #           html.write('<TR><TD>SN(E/C)<TD<TD>'+str("%.2f" % round(np.median(snt[telluric,1] / snc[telluric,1]),2))+'\n')
-            dog = 'bark'
-        else:
-            html.write('<TR><TD>SN(E/C)<TD<TD>\n')
+        dog = 'bark'
+    else:
+        html.write('<TR><TD>SN(E/C)<TD<TD>\n')
 
-        html.write('</TABLE>\n')
-        html.write('<TD><IMG SRC=../plots/'+pfile+'.gif>\n')
-        html.write('<TD> <IMG SRC=../plots/'+pfile+'.jpg>\n')
-        html.write('<TD> <IMG SRC=../plots/'+pfile+'sky.jpg>\n')
-        html.write('<TD> <IMG SRC=../plots/'+pfile+'skycont.jpg>\n')
-        html.write('<TD> <IMG SRC=../plots/'+pfile+'telluric.jpg>\n')
+    html.write('</TABLE>\n')
+    html.write('<TD><IMG SRC=../plots/'+pfile+'.gif>\n')
+    html.write('<TD> <IMG SRC=../plots/'+pfile+'.jpg>\n')
+    html.write('<TD> <IMG SRC=../plots/'+pfile+'sky.jpg>\n')
+    html.write('<TD> <IMG SRC=../plots/'+pfile+'skycont.jpg>\n')
+    html.write('<TD> <IMG SRC=../plots/'+pfile+'telluric.jpg>\n')
 
-
-        # Summary plate web page.
-        htmlsum.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
-        htmlsum.write('<TD><A HREF=../../../../plates/'+plate+'/'+mjd+'/html/'+plate+'-'+mjd+'.html>'+str(plSum1['PLATE'])+'</A>\n')
-        htmlsum.write('<TD>'+str(plSum1['CART'])+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['SECZ'][i],2))+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['HA'][i],2))+'\n')
-        txt = '[ '+str(int(round(plSum1['DESIGN_HA'][i][0])))+','+str(int(round(plSum1['DESIGN_HA'][i][1])))+','+str(int(round(plSum1['DESIGN_HA'][i][2])))+']'
-        htmlsum.write('<TD>'+txt+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['SEEING'][i],2))+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['FWHM'][i],2))+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['GDRMS'][i],2))+'\n')
-        htmlsum.write('<TD>'+str(plSum1['NREADS'][i])+'\n')
-        if len(cframe) > 1:
-            htmlsum.write('<TD>'+str("%f.4" % round(plSum1['DITHER'][i],4))+'\n')
-        else:
-            htmlsum.write('<TD>\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERO'][i],2))+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERORMS'][i],2))+'\n')
-        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERONORM'][i],2))+'\n')
-        txt = '['+str("%.2f" % round(plSum1['SKY'][i][0],2))+','+str("%.2f" % round(plSum1['SKY'][i][1],2))+','+str("%.2f" % round(plSum1['SKY'][i][2],2))+']'
-        htmlsum.write('<TD>'+txt+'\n')
-        txt = '['+str("%.1f" % round(plSum1['SN'][i][0],1))+','+str("%.1f" % round(plSum1['SN'][i][1],1))+','+str("%.1f" % round(plSum1['SN'][i][2],1))+']'
-        htmlsum.write('<TD>'+txt+'\n')
-        txt = '['+str("%.1f" % round(plSum1['SNC'][i][0],1))+','+str("%.1f" % round(plSum1['SNC'][i][1],1))+','+str("%.1f" % round(plSum1['SNC'][i][2],1))+']'
-        htmlsum.write('<TD>'+txt+'\n')
+    # Summary plate web page.
+    htmlsum.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
+    htmlsum.write('<TD><A HREF=../../../../plates/'+plate+'/'+mjd+'/html/'+plate+'-'+mjd+'.html>'+str(plSum1['PLATE'])+'</A>\n')
+    htmlsum.write('<TD>'+str(plSum1['CART'])+'\n')
+    htmlsum.write('<TD>'+str("%.2f" % round(plSum1['SECZ'][i],2))+'\n')
+    htmlsum.write('<TD>'+str("%.2f" % round(plSum1['HA'][i],2))+'\n')
+    txt = '[ '+str(int(round(plSum1['DESIGN_HA'][i][0])))+','+str(int(round(plSum1['DESIGN_HA'][i][1])))+','+str(int(round(plSum1['DESIGN_HA'][i][2])))+']'
+    htmlsum.write('<TD>'+txt+'\n')
+    htmlsum.write('<TD>'+str("%.2f" % round(plSum1['SEEING'][i],2))+'\n')
+    htmlsum.write('<TD>'+str("%.2f" % round(plSum1['FWHM'][i],2))+'\n')
+    htmlsum.write('<TD>'+str("%.2f" % round(plSum1['GDRMS'][i],2))+'\n')
+    htmlsum.write('<TD>'+str(plSum1['NREADS'][i])+'\n')
+    if len(cframe) > 1:
+        htmlsum.write('<TD>'+str("%f.4" % round(plSum1['DITHER'][i],4))+'\n')
+    else:
         htmlsum.write('<TD>\n')
-        for j in range(nunplugged): htmlsum.write(str(300-unplugged[j])+'\n')
+    htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERO'][i],2))+'\n')
+    htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERORMS'][i],2))+'\n')
+    htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERONORM'][i],2))+'\n')
+    txt = '['+str("%.2f" % round(plSum1['SKY'][i][0],2))+','+str("%.2f" % round(plSum1['SKY'][i][1],2))+','+str("%.2f" % round(plSum1['SKY'][i][2],2))+']'
+    htmlsum.write('<TD>'+txt+'\n')
+    txt = '['+str("%.1f" % round(plSum1['SN'][i][0],1))+','+str("%.1f" % round(plSum1['SN'][i][1],1))+','+str("%.1f" % round(plSum1['SN'][i][2],1))+']'
+    htmlsum.write('<TD>'+txt+'\n')
+    txt = '['+str("%.1f" % round(plSum1['SNC'][i][0],1))+','+str("%.1f" % round(plSum1['SNC'][i][1],1))+','+str("%.1f" % round(plSum1['SNC'][i][2],1))+']'
+    htmlsum.write('<TD>'+txt+'\n')
+    htmlsum.write('<TD>\n')
+    for j in range(nunplugged): htmlsum.write(str(300-unplugged[j])+'\n')
 #        htmlsum.write('<TD>\n')
 #        if faint[0] > 0:
 #            for j in range(nfaint): htmlsum.write(str(plSum2['FIBERID'][faint][j])+'\n')
