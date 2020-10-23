@@ -958,7 +958,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 decstring = str("%8.5f" % round(plSum2['DEC'][j],5))
 
                 if (plSum2['OBJTYPE'][j]!='SKY') & (plSum2['FIBERID'][j]>=0):
-                    txt1 = '<BR><A HREF="http://simbad.decstring.harvard.edu/simbad/sim-basic?'
+                    txt1 = '<BR><A HREF="http://simbad.harvard.edu/simbad/sim-basic?'
                     txt2 = 'Ident='+rastring+'+%09'+decstring+'++&submit=SIMBAD+search"> (SIMBAD) </A>'
                     objhtml.write(txt1+txt2+'\n')
 
