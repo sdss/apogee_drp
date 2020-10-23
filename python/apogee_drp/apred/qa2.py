@@ -44,7 +44,8 @@ sdss_path = path.Path()
 '''-----------------------------------------------------------------------------------------'''
 '''APQA: Wrapper for running QA subprocedures                                               '''
 '''-----------------------------------------------------------------------------------------'''
-def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14', noplot=False):
+def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14', noplot=False,
+         overwritePlateSum=False):
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
@@ -99,26 +100,27 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
     # Normal plates:.
     if platetype == 'normal': 
-        q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
-                         field=field, instrument=instrument, clobber=True, noplot=True, 
-                         plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
-                         onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-                         fixfiberid=fixfiberid, badfiberid=badfiberid)
+        if overwritePlateSum:
+            q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
+                             field=field, instrument=instrument, clobber=True, noplot=True, 
+                             plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
+                             onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
+                             fixfiberid=fixfiberid, badfiberid=badfiberid)
 
-#        q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
-#                          field=field, instrument=instrument, clobber=True, noplot=True, 
-#                          plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
-#                          onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-#                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
+        q = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
+        q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
+                          field=field, instrument=instrument, clobber=True, noplot=True, 
+                          plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
+                          onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
+                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
 
-#        q = makePlotsHtml(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
-#                          field=field, instrument=instrument, clobber=True, noplot=noplot,
-#                          plugmap=plugmap, survey=survey, mapper_data=mapper_data,apred=apred
-#                          onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-#                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
+        q = makePlotsHtml(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
+                          field=field, instrument=instrument, clobber=True, noplot=noplot,
+                          plugmap=plugmap, survey=survey, mapper_data=mapper_data,apred=apred,
+                          onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
+                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
 
-#        x = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
 
         ### NOTE:No translations for plotflux yet.
@@ -266,7 +268,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     # FITS table structure.
     dt = np.dtype([('TELESCOPE', np.str, 6),
-                   ('PLATE',     np.str, 6),
+                   ('PLATE',     np.int32),
                    ('NREADS',    np.int32),
                    ('DATEOBS',   np.str, 30),
                    ('SECZ',      np.float64),
@@ -295,9 +297,9 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     platetab = np.zeros(n_exposures,dtype=dt)
 
-    platetab['PLATE'] =     plate
+    platetab['PLATE'] =     int(plate)
     platetab['TELESCOPE'] = telescope
-    platetab['HA'] =        -99.0
+    platetab['HA'] =        0.0
     platetab['DESIGN_HA'] = -99.0
     platetab['PLUGID'] =    plugmap
     platetab['MJD'] =       mjd
@@ -330,10 +332,10 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
         cframehdr = cframe['a'][0].header
 
-        obs = np.zeros((nfiber,3), dtype=np.float64)
-        sn  = np.zeros((nfiber,3), dtype=np.float64)
-        snc = np.zeros((nfiber,3), dtype=np.float64)
-        snt = np.zeros((nfiber,3), dtype=np.float64)
+        obs = np.zeros((nfiber,nchips), dtype=np.float64)
+        sn  = np.zeros((nfiber,nchips), dtype=np.float64)
+        snc = np.zeros((nfiber,nchips), dtype=np.float64)
+        snt = np.zeros((nfiber,nchips), dtype=np.float64)
 
         # For each fiber, get an observed mag from a median value.
         for j in range(nfiber):
@@ -391,28 +393,55 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                         p2 = np.std(fluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
                         snt[fibertelluric[itell], ichip] = p1 / p2
 
-            # Calculate zeropoints from known H band mags.
-            # Use a static zeropoint to calculate sky brightness.
-            nreads = dhdr['NFRAMES']
-            exptime = dhdr['EXPTIME']
-            skyzero = 14.75 + (2.5 * np.log10(nreads))
-            zero = 0
-            zerorms = 0.
-            faint = -1
-            nfaint = 0
-            achievedsn = [0.,0.,0.]
-            achievedsnc = [0.,0.,0.]
-            altsn = [0.,0.,0.]
-            nsn = 0
+        # Calculate zeropoints from known H band mags.
+        # Use a static zeropoint to calculate sky brightness.
+        nreads = dhdr['NFRAMES']
+        exptime = dhdr['EXPTIME']
+        skyzero = 14.75 + (2.5 * np.log10(nreads))
+        zero = 0
+        zerorms = 0.
+        faint = -1
+        nfaint = 0
+        achievedsn = np.zeros(nchips)
+        achievedsnc = np.zeros(nchips)
+        altsn = np.zeros(nchips)
+        nsn = 0
 
-            tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
-            zero = np.median(tmp)
-            zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
-            faint = np.where((tmp - zero) < -0.5)
-            nfaint = len(faint[0])
+        tmp = fiber['hmag'][fiberstar] + 2.5 * np.log10(obs[fiberstar,1])
+        zero = np.nanmedian(tmp)
+        zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
+        faint, = np.where((tmp - zero) < -0.5)
+        nfaint = len(faint)
+        zeronorm = zero - (2.5 * np.log10(nreads))
 
-            zeronorm = zero - (2.5 * np.log10(nreads))
+        if (flat is None) & (onem is None):
+            # Target line that has S/N=100 for 3 hour exposure at H=12.2
+            sntarget = 100 * np.sqrt(exptime / (3.0 * 3600))
+            sntargetmag = 12.2
 
+            # Get typical S/N for this plate
+            snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2))
+            nsn = len(snstars)
+            scale = 1
+            if nsn < 3:
+                bright, = np.where(fiber['hmag'] < 12)
+                hmax = np.max(fiber['hmag'][bright])
+                snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
+                nsn = len(snstars)
+                scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
+
+            achievedsn = np.median(sn[snstars,:], axis=0) * scale
+
+            # Alternative S/N as computed from median of all stars with H<12.2, scaled
+            snstars, = np.where(fiber['hmag'] < 12.2)
+            scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
+            altsn = achievedsn * 0.
+            for ichip in range(nchips): 
+                altsn[ichip] = np.median(sn[snstars,ichip] * scale)
+                achievedsnc[ichip] = np.median(snc[snstars,ichip] * scale)
+        else:
+            if onem is not None:
+                achievedsn = np.median([sn[obj,:]], axis=0)
 
         medsky = np.zeros(3, dtype=np.float64)
         for ichip in range(nchips):
@@ -420,7 +449,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                 medsky[ichip] = -2.5 * np.log10(np.median(obs[fibersky,ichip])) + skyzero
             else: 
                 medsky[ichip] = 99.999
-
 
         # Get guider info.
         if onem is None:
@@ -432,38 +460,29 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             mjd0 = min([mjd0,mjdstart])
             mjd1 = max([mjd1,mjdend])
             nj = 0
-        ### NOTE:skipping gcam stuff until I get gcam_process to work
-#            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
-#                jcam = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
-#                nj = len(jcam[0])
-#            if nj > 1: 
-#                fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
-#                gdrms = np.median(gcam['GDRMS'][jcam])
-#            else:
-#                fwhm = -1.
-#                gdrms = -1.
-#                print("not halted: no matching mjd range in gcam...")
-#        else:
-#            fwhm = -1
-#            gdrms = -1
-
-        fwhm = -1
-        gdrms = -1
+            if isinstance(gcam, fits.FITS_rec):
+                jcam, = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
+                nj = len(jcam)
+            if nj > 1: 
+                fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
+                gdrms = np.median(gcam['GDRMS'][jcam])
+            else:
+                fwhm = -1.
+                gdrms = -1.
+                print("not halted: no matching mjd range in gcam...")
+        else:
+            fwhm = -1
+            gdrms = -1
 
         alt = dhdr['ALT']
         secz = 1. / np.cos((90.-alt) * (math.pi/180.))
         seeing = dhdr['SEEING']
-        ### NOTE:'HA' is not in the ap1D header... setting ha=0 for now
-#        ha = dhdr['HA']
-        ha=0
         ### NOTE:'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
 #        design_ha = plug['ha']
         design_ha = [0,0,0]
         dither = -99.
         if len(cframe) > 1: dither = cframehdr['DITHSH']
 
-        if faint[0] > 0:
-            for j in range(nfaint): htmlsum.write(str(fiber['fiberid'][faint][j])+'\n')
         allsky[i,:] = medsky
         allzero[i,:] = zero
         allzerorms[i,:] = zerorms
@@ -473,18 +492,17 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         if ims[0] != 0:
             tellfile = load.filename('Tellstar', plate=int(plate), mjd=mjd)
             telstr = fits.getdata(tellfile)
-            ### NOTE:the below if statement will not work. Ignoring it and hoping for the best
-#            if type(telstr) == astropy.io.fits.fitsrec.FITS_rec:
-            jtell, = np.where(telstr['IM'] == ims[i])
-            ntell = len(jtell)
-            if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
-#            else:
-#                print('Error reading Tellstar file: '+tellfile)
+            if isinstance(telstr, fits.FITS_rec):
+                jtell, = np.where(telstr['IM'] == ims[i])
+                ntell = len(jtell)
+                if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
+            else:
+                print("Error reading Tellstar file: "+tellfile)
 
         platetab['IM'][i] =        ims[i]
         platetab['NREADS'][i] =    nreads
         platetab['SECZ'][i] =      secz
-        platetab['HA'][i] =        ha
+        if dhdr.get('HA') is not None: platetab['HA'][i] = dhdr['HA']
         platetab['DESIGN_HA'][i] = design_ha
         platetab['SEEING'][i] =    seeing
         platetab['FWHM'][i] =      fwhm
@@ -500,7 +518,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['ALTSN'][i] =     altsn
         platetab['NSN'][i] =       nsn
         platetab['SNC'][i] =       achievedsnc
-        if ntelluric > 0: platetab['SNRATIO'][i] = np.median(snt[telluric,1] / snc[telluric,1])
+        if ntelluric > 0: platetab['SNRATIO'][i] = np.nanmedian(snt[telluric,1] / snc[telluric,1])
 
         for j in range(len(fiber)):
             fiber['sn'][j][i,:] = sn[j,:]
@@ -560,12 +578,18 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     platesumfile = os.path.basename(platesum)
     platedir = os.path.dirname(platesum)+'/'
 
-#    print("platedir: "+platedir+"\n")
-#    print(platedir+platesumfile)
     if os.path.exists(platesum) is False:
         err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
-        err2 = "You need to run MAKEPLOTSHTML first to make the file."
+        err2 = "You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
+
+    # Read the plateSum file
+    ### NOTE:apLoad.py does not have an option for loading apPlateSum, so using astropy instead
+    tmp = fits.open(platesum)
+    tab1 = tmp[1].data
+    tab2 = tmp[2].data
+#    tab3 = tmp[3].data
+#;    tab3 = mrdfits(platesum,3,status=status)
 
 
     # Make the html directory if it doesn't already exist
@@ -578,15 +602,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('<HTML><BODY>\n')
     html.write('<H2> PLATE: '+plate+' MJD: '+mjd+' FIELD: '+field+'</H2>\n')
 
-
-    # Read the plateSum file
-    ### NOTE:apLoad.py does not have an option for loading apPlateSum, so using astropy instead
-
-    tmp = fits.open(platesum)
-    tab1 = tmp[1].data
-    tab2 = tmp[2].data
-    tab3 = tmp[3].data
-#;    tab3 = mrdfits(platesum,3,status=status)
 
     ### NOTE:just setting status=1 and hoping for the best.
     status = 1
@@ -707,9 +722,12 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
         html.write('<TR><TD>z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
         html.write('<TR><TD>znorm<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][i],2))+'\n')
-        html.write('<TR><TD>sky'+str(np.round(tab1['SKY'][i],1)).replace('[',' ').replace(' ','<TD>')[:-1]+'\n')
-        html.write('<TR><TD>S/N'+str(np.round(tab1['SN'][i],1)).replace('[',' ').replace(' ','<TD>')[:-1]+'\n')
-        html.write('<TR><TD>S/N(c)'+str(np.round(tab1['SNC'][i],1)).replace('[',' ').replace(' ','<TD>')[:-1]+'\n')
+        txt='<TD>'+str("%.1f" % round(tab1['SKY'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SKY'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SKY'][i][2],1))
+        html.write('<TR><TD>sky'+txt+'\n')
+        txt='<TD>'+str("%.1f" % round(tab1['SN'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SN'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SN'][i][2],1))
+        html.write('<TR><TD>S/N'+txt+'\n')
+        txt='<TD>'+str("%.1f" % round(tab1['SNC'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][i][2],1))
+        html.write('<TR><TD>S/N(c)'+txt+'\n')
 #        if tag_exist(tab1[i],'snratio'):
         html.write('<TR><TD>SN(E/C)<TD<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
         html.write('</TABLE>\n')
@@ -731,9 +749,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     print("--------------------------------------------------------------------\n")
 
 
-
-
-
 '''-----------------------------------------------------------------------------------------'''
 ''' MAKEPLOTSHTML: Plotmag translation                                                      '''
 '''-----------------------------------------------------------------------------------------'''
@@ -751,6 +766,20 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
+    # Check for existence of plateSum file
+    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
+    if os.path.exists(platesum) is False:
+        err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
+        err2 = "You need to run MAKEPLATESUM first to make the file."
+        sys.exit(err1 + err2)
+
+    # Read the plateSum file
+    ### NOTE:apLoad.py does not have an option for loading apPlateSum, so using astropy instead
+    tmp = fits.open(platesum)
+    plSum1 = tmp[1].data
+    plSum2 = tmp[2].data
+    fibord = np.argsort(plSum2['FIBERID'])
+    plSum2 = plSum2[fibord]
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -852,14 +881,13 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     nstar = len(fiberstar)
     star = rows[fiberstar]
 
-
     # Loop over the exposures.
     for i in range(n_exposures):
         if ims[0] == 0: pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
         if ims[0] != 0: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
         pfile = pfile.replace('.fits', '')
 
-        if (clobber is True) | (len(glob.glob(outdir+pfile+'.tab')) != 0):
+        if (clobber is True) | (os.path.exists(outdir+pfile+'.tab') != 0):
             if ims[0] == 0: d = load.apPlate(int(plate), mjd) 
             if ims[0] != 0: d = load.ap1D(ims[i])
 
@@ -893,58 +921,60 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 for chip in chips: 
                     objhtml.write('<A HREF=../'+tmp[chip].filename()+'>'+tmp[chip].filename()+'</A>\n')
             else:
-                objhtml.write('<H2>'+str(ims[i])+'</H2>\n')
+                objhtml.write('<H2>apPlate-'+platefile+'</H2>\n')
                 if noplot is not None:
                     objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
                     objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
 
             objhtml.write('<TABLE BORDER=2 CLASS=sortable>\n')
-            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
+            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>S/N<TD>Target flags<TD>Plot\n')
+#            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
             cfile = open(outdir+pfile+'.csh','w')
-            jsort = np.sort(fiber['fiberid'])
             for j in range(nfiber):
-                #j = jsort[jj]
-                #print(str(j))
                 objhtml.write('<TR>\n')
 
                 color = 'white'
-                if (fiber['objtype'][j] == 'SPECTROPHOTO_STD') | (fiber['objtype'][j] == 'HOT_STD'): color = 'cyan'
-                if fiber['objtype'][j] == 'SKY': color = 'lightgreen'
+                if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'): color = 'plum'
+                if plSum2['OBJTYPE'][j] == 'SKY': color = 'silver'
 
-                visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber['fiberid'][j]))
+                visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]))
 
-                cfib = str(fiber['fiberid'][j]).zfill(3)
-                if ims[0] == 0: objhtml.write('<TD><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
-                if ims[0] != 0: objhtml.write('<TD>'+cfib+'\n')
+                cfib = str(plSum2['FIBERID'][j]).zfill(3)
+                if ims[0] == 0: objhtml.write('<TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
+                if ims[0] != 0: objhtml.write('<TD BGCOLOR='+color+'>'+cfib+'\n')
 
                 if ims[0] == 0:
                     vplotfile = visitfile.replace('.fits','.jpg')
-                    objhtml.write('<TD BGCOLOR='+color+'><a href=../plots/'+vplotfile+'>'+fiber['object'][j]+'</A>\n')
+                    objhtml.write('<TD BGCOLOR='+color+'><a href=../plots/'+vplotfile+'>'+plSum2['OBJECT'][j]+'</A>\n')
                 if ims[0] != 0: objhtml.write('<TD BGCOLOR='+color+'>'+cfib+'\n')
 
-                rastring = str("%8.5f" % round(fiber['ra'][j],5))
-                decstring = str("%8.5f" % round(fiber['dec'][j],5))
+                rastring = str("%8.5f" % round(plSum2['RA'][j],5))
+                decstring = str("%8.5f" % round(plSum2['DEC'][j],5))
 
-                if (fiber['objtype'][j]!='SKY') & (fiber['fiberid'][j]>=0):
+                if (plSum2['OBJTYPE'][j]!='SKY') & (plSum2['FIBERID'][j]>=0):
                     txt1 = '<BR><A HREF="http://simbad.decstring.harvard.edu/simbad/sim-basic?'
                     txt2 = 'Ident='+rastring+'+%09'+decstring+'++&submit=SIMBAD+search"> (SIMBAD) </A>'
                     objhtml.write(txt1+txt2+'\n')
 
-                objhtml.write('<TD>'+str("%8.3f" % round(fiber['hmag'][j],3))+'\n')
-                objhtml.write('<TD>'+str("%8.2f" % round(fiber['hmag'][j]+2.5*np.log10(obs[j,1])-zero,2))+'\n')
-                objhtml.write('<TD>'+str("%8.2f" % round(sn[j,1],2))+'\n')
-                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
-                targflagtxt = bitmask.targflags(fiber['target1'][j], fiber['target2'][j], fiber['target3'][j], fiber['target4'][j], survey=survey)
-                objhtml.write('<TD>'+targflagtxt+'\n')
+                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.3f" % round(plSum2['HMAG'][j],3))+'\n')
+#                objhtml.write('<TD>'+str("%8.2f" % round(plSum2['HMAG'][j]+2.5*np.log10(obs[j,1])-zero,2))+'\n')
+                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.2f" % round(plSum2['SN'][j][0][1],2))+'\n')
+#                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
+                targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
+                targflagtxt = targflagtxt.replace('APOGEE2_','').replace('_',' ').replace(',',', ').capitalize()
+                targflagtxt = targflagtxt.replace('Sfd','SFD').replace('Eb','EB').replace(' gt ','>')
+                objhtml.write('<TD BGCOLOR='+color+' align="center">'+targflagtxt+'\n')
 
-                if (ims[0] == 0) & (fiber['fiberid'][j] >= 0):
-                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber['fiberid'][j])
+                if (ims[0] == 0) & (plSum2['FIBERID'][j] >= 0):
+                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
                     if os.path.exists(vfile):
                         h = fits.getheader(vfile)
                         ### NOTE:the below if statement does not work. Ignoring and hoping for the best.
+#                        if isinstance(h, fits.header.Header):
 #                        if type(h) == astropy.io.fits.header.Header:
-                        objhtml.write('<BR>'+bitmask.StarBitMask().getname(h['STARFLAG'])+'\n')
+                        starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).capitalize()
+                        objhtml.write('<BR>'+starflagtxt+'\n')
 
 
                 # PLOT 1: spectrum 
@@ -955,7 +985,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if noplot is None:
                         print("PLOTS 1: Spectrum plots will be made here.")
                     else:
-                        objhtml.write('<TD>No plots for individual exposures, see plate plots\n')
+                        objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
 
             objhtml.close()
             cfile.close()
@@ -983,20 +1013,21 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
 
         # Put all of the info and plots on the plate web page.
-        html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(ims[i])+'</A>\n')
-        html.write('<TD>'+str(nreads)+'\n')
+        html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
+        html.write('<TD>'+str(plSum1['NREADS'][i])+'\n')
         html.write('<TD><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
-        html.write('<TR><TD>z<TD><TD>'+str("%5.2f" % round(zero,2))+'\n')
-        html.write('<TR><TD>znorm<TD><TD>'+str("%5.2f" % round(zeronorm,2))+'\n')
-        txt = '<TD> '+str("%5.1f" % round(medsky[0],1))+'<TD> '+str("%5.1f" % round(medsky[1],1))+'<TD> '+str("%5.1f" % round(medsky[2],1))
+        html.write('<TR><TD>z<TD><TD>'+str("%.2f" % round(plSum1['ZERO'][i],2))+'\n')
+        html.write('<TR><TD>znorm<TD><TD>'+str("%.2f" % round(plSum1['ZERONORM'][i],2))+'\n')
+        txt = '<TD> '+str("%.1f" % round(plSum1['SKY'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SKY'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SKY'][i][2],1))
         html.write('<TR><TD>sky'+txt+'\n')
-        txt = '<TD> '+str("%5.1f" % round(achievedsn[0],1))+'<TD> '+str("%5.1f" % round(achievedsn[1],1))+'<TD> '+str("%5.1f" % round(achievedsn[2],1))
+        txt = '<TD> '+str("%.1f" % round(plSum1['SN'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SN'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SN'][i][2],1))
         html.write('<TR><TD>S/N'+txt+'\n')
-        txt = '<TD> '+str("%5.1f" % round(achievedsnc[0],1))+'<TD> '+str("%5.1f" % round(achievedsnc[1],1))+'<TD> '+str("%5.1f" % round(achievedsnc[2],1))
+        txt = '<TD> '+str("%.1f" % round(plSum1['SNC'][i][0],1))+'<TD> '+str("%.1f" % round(plSum1['SNC'][i][1],1))+'<TD> '+str("%.1f" % round(plSum1['SNC'][i][2],1))
         html.write('<TR><TD>S/N(c)'+txt+'\n')
 
         if ntelluric > 0:
-           html.write('<TR><TD>SN(E/C)<TD<TD>'+str("%5.2f" % round(np.median(snt[telluric,1] / snc[telluric,1]),2))+'\n')
+#           html.write('<TR><TD>SN(E/C)<TD<TD>'+str("%.2f" % round(np.median(snt[telluric,1] / snc[telluric,1]),2))+'\n')
+            dog = 'bark'
         else:
             html.write('<TR><TD>SN(E/C)<TD<TD>\n')
 
@@ -1009,50 +1040,35 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
 
         # Summary plate web page.
-        htmlsum.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(ims[i])+'</A>\n')
-        htmlsum.write('<TD><A HREF=../../../../plates/'+plate+'/'+mjd+'/html/'+plate+'-'+mjd+'.html>'+str(dhdr['PLATEID'])+'</A>\n')
-        htmlsum.write('<TD>'+str(dhdr['CARTID'])+'\n')
-        alt = dhdr['ALT']
-        secz = 1. / np.cos((90.-alt) * (math.pi/180.))
-        seeing = dhdr['SEEING']
-        ### NOTE:'HA' is not in the ap1D header... setting ha=0 for now
-#        ha = dhdr['HA']
-        ha=0
-        ### NOTE:'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
-#        design_ha = plug['ha']
-        design_ha = [0,0,0]
-        dither = -99.
-        if len(cframe) > 1: dither = cframehdr['DITHSH']
-        htmlsum.write('<TD>'+str("%6.2f" % round(secz,2))+'\n')
-        htmlsum.write('<TD>'+str("%6.2f" % round(ha,2))+'\n')
-        txt = '[ '+str(int(round(design_ha[0])))+','+str(int(round(design_ha[1])))+','+str(int(round(design_ha[2])))+']'
+        htmlsum.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
+        htmlsum.write('<TD><A HREF=../../../../plates/'+plate+'/'+mjd+'/html/'+plate+'-'+mjd+'.html>'+str(plSum1['PLATE'])+'</A>\n')
+        htmlsum.write('<TD>'+str(plSum1['CART'])+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['SECZ'][i],2))+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['HA'][i],2))+'\n')
+        txt = '[ '+str(int(round(plSum1['DESIGN_HA'][i][0])))+','+str(int(round(plSum1['DESIGN_HA'][i][1])))+','+str(int(round(plSum1['DESIGN_HA'][i][2])))+']'
         htmlsum.write('<TD>'+txt+'\n')
-        htmlsum.write('<TD>'+str("%6.2f" % round(seeing,2))+'\n')
-        htmlsum.write('<TD>'+str("%6.2f" % round(fwhm,2))+'\n')
-        htmlsum.write('<TD>'+str("%6.2f" % round(gdrms,2))+'\n')
-        htmlsum.write('<TD>'+str(nreads)+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['SEEING'][i],2))+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['FWHM'][i],2))+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['GDRMS'][i],2))+'\n')
+        htmlsum.write('<TD>'+str(plSum1['NREADS'][i])+'\n')
         if len(cframe) > 1:
-            htmlsum.write('<TD>'+str("%f8.2" % round(dither,2))+'\n')
+            htmlsum.write('<TD>'+str("%f.4" % round(plSum1['DITHER'][i],4))+'\n')
         else:
             htmlsum.write('<TD>\n')
-        htmlsum.write('<TD>'+str("%5.2f" % round(zero,2))+'\n')
-        htmlsum.write('<TD>'+str("%5.2f" % round(zerorms,2))+'\n')
-        htmlsum.write('<TD>'+str("%5.2f" % round(zeronorm,2))+'\n')
-        txt = '['+str("%5.2f" % round(medsky[0],2))+','+str("%5.2f" % round(medsky[1],2))+','+str("%5.2f" % round(medsky[2],2))+']'
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERO'][i],2))+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERORMS'][i],2))+'\n')
+        htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERONORM'][i],2))+'\n')
+        txt = '['+str("%.2f" % round(plSum1['SKY'][i][0],2))+','+str("%.2f" % round(plSum1['SKY'][i][1],2))+','+str("%.2f" % round(plSum1['SKY'][i][2],2))+']'
         htmlsum.write('<TD>'+txt+'\n')
-        txt = '['+str("%5.1f" % round(achievedsn[0],1))+','+str("%5.1f" % round(achievedsn[1],1))+','+str("%5.1f" % round(achievedsn[2],1))+']'
+        txt = '['+str("%.1f" % round(plSum1['SN'][i][0],1))+','+str("%.1f" % round(plSum1['SN'][i][1],1))+','+str("%.1f" % round(plSum1['SN'][i][2],1))+']'
         htmlsum.write('<TD>'+txt+'\n')
-        txt = '['+str("%5.1f" % round(achievedsnc[0],1))+','+str("%5.1f" % round(achievedsnc[1],1))+','+str("%5.1f" % round(achievedsnc[2],1))+']'
+        txt = '['+str("%.1f" % round(plSum1['SNC'][i][0],1))+','+str("%.1f" % round(plSum1['SNC'][i][1],1))+','+str("%.1f" % round(plSum1['SNC'][i][2],1))+']'
         htmlsum.write('<TD>'+txt+'\n')
         htmlsum.write('<TD>\n')
         for j in range(nunplugged): htmlsum.write(str(300-unplugged[j])+'\n')
-        htmlsum.write('<TD>\n')
-        if faint[0] > 0:
-            for j in range(nfaint): htmlsum.write(str(fiber['fiberid'][faint][j])+'\n')
-        allsky[i,:] = medsky
-        allzero[i,:] = zero
-        allzerorms[i,:] = zerorms
-
+#        htmlsum.write('<TD>\n')
+#        if faint[0] > 0:
+#            for j in range(nfaint): htmlsum.write(str(plSum2['FIBERID'][faint][j])+'\n')
 
     html.write('</TABLE>\n')
 
