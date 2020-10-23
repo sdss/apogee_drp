@@ -962,9 +962,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> (SIMBAD) </A>'
                     objhtml.write(txt1+txt2+'\n')
 
-
+                hmag = str("%.3f" % round(plSum2['HMAG'][j],3))
+                if plSum2['OBJTYPE'][j] == 'SKY': hmag = '---'
                 objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.3f" % round(plSum2['HMAG'][j],3))+'\n')
                 diff = plSum2['obsmag'][j][0][1] - plSum2['HMAG'][j]
+                if plSum2['OBJTYPE'][j] == 'SKY': diff = '---'
 #                diff = plSum2['HMAG'][j] + (2.5 * np.log10(plSum2['obsmag'][j][0][1])) - plSum1['ZERO'][i]
                 objhtml.write('<TD>'+str("%.2f" % round(diff,2))+'\n')
                 objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.2f" % round(plSum2['SN'][j][0][2],2))+'\n')
@@ -990,7 +992,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                 if j > -1:
                     if plSum2['OBJTYPE'][j] == 'SKY':
-                        objhtml.write('<TD BGCOLOR='+color+'>Sky\n')
+                        objhtml.write('<TD BGCOLOR='+color+'> \n')
                     else:
                         pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
                         pfilefull = plotsdir+pfile
