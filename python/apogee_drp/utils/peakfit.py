@@ -19,6 +19,7 @@ import os
 from scipy.optimize import curve_fit
 from scipy.special import erf, erfc
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema
+from scipy.ndimage import median_filter
 from dlnpyutils import utils as dln
 
 def gauss(x,a,x0,sig) :
@@ -26,25 +27,15 @@ def gauss(x,a,x0,sig) :
     """
     return a/np.sqrt(2*np.pi)/sig*np.exp(-(x-x0)**2/2./sig**2)
 
-def myerf(t) :
-    """ Evaluate function that integrates Gaussian from -inf to t
-    """
-    neg = np.where(t<0.)[0]
-    pos = np.where(t>=0.)[0]
-    out = t*0.
-    out[neg] = erfc(abs(t[neg]))/2.
-    out[pos] = 0.5+erf(abs(t[pos]))/2.
-    return out
-
 def gaussbin(x,a,x0,sig,yoffset=0.0) :
     """ Evaluate integrated Gaussian function 
     """
     # bin width
     xbin = 1.
-    t1 = (x -x0-xbin/2.)/np.sqrt(2.)/sig
-    t2 = (x-x0+xbin/2.)/np.sqrt(2.)/sig
-    y = (myerf(t2)-myerf(t1))/xbin + yoffset
-    return a*y
+    t1 = (x-x0-xbin/2.)/(np.sqrt(2.)*sig)
+    t2 = (x-x0+xbin/2.)/(np.sqrt(2.)*sig)
+    y = a*np.sqrt(2)*sig * np.sqrt(np.pi)/2 * (erf(t2)-erf(t1)) + yoffset
+    return y
 
 def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     """ Return integrated-Gaussian centers near input pixel center
@@ -78,39 +69,56 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     if pix0 is None:
         pix0 = spec.argmax()
 
-    x = np.arange(len(spec))
-    cen = int(round(pix0))
-    sig = estsig
-    for iter in range(3) :
-        # window width to search
-        xwid = int(round(5*sig))
-        if xwid < 3 : xwid=3
-        y = spec[cen-xwid:cen+xwid+1]
-        yerr = sigma[cen-xwid:cen+xwid+1]
-        x0 = y.argmax()+(cen-xwid)
-        peak = y.max()
-        sig = np.sqrt(y.sum()**2/peak**2/(2*np.pi))
-        sig = np.maximum(0.51,sig)
-        yoffset = np.min(y)
-        lbounds = [0.0,cen-xwid-2,0.5,np.min(y)-(np.max(y)-np.min(y))]
-        ubounds = [1.5*(np.max(y)-np.min(y)),cen+xwid+2,len(y)/2.0,np.max(y)+(np.max(y)-np.min(y))]
-        bounds = (lbounds,ubounds)
-        initpar = [peak/sig/np.sqrt(2*np.pi),x0,sig,yoffset]
-        print(str(iter)+' '+str(initpar))
-        print(lbounds)
-        print(ubounds)
-        # Sometimes curve_fit htis the maximum number fo function evaluations and crashes
-        try:
-            pars,cov = curve_fit(func,x[cen-xwid:cen+xwid+1],y,p0=initpar,sigma=yerr,bounds=bounds,maxfev=1000)
-            perr = np.sqrt(np.diag(cov))
-        except:
-            return None,None
-        # iterate unless new array range is the same
-        if int(round(5*pars[2])) == xwid and int(round(pars[1])) == cen : break
-        cen = int(round(pars[1]))
-        sig = pars[2]
+    medspec = np.median(spec)
+    sigspec = dln.mad(spec-medspec)
 
+    dx = 1
+    x = np.arange(len(spec))
+    xwid = 5
+    xlo0 = pix0-xwid
+    xhi0 = pix0+xwid+1
+    xx0 = x[xlo0:xhi0]
+    
+    # Get quantitative estimates of height, center, sigma
+    flux = spec[xlo0:xhi0]-medspec
+    flux -= np.median(flux)            # put the median at zero
+    flux = np.maximum(0,flux)          # don't want negative pixels
+    ht0 = np.max(flux)
+    totflux = np.sum(flux)
+    #  Gaussian area is A = ht*wid*sqrt(2*pi)
+    sigma0 = np.maximum( (totflux*dx)/(ht0*np.sqrt(2*np.pi)) , 0.01)
+    cen0 = np.sum(flux*xx0)/totflux
+    cen0 = np.minimum(np.maximum((pix0-dx*0.5), cen0), (pix0+dx*0.5))   # constrain the center
+    # Use linear-least squares to calculate height and sigma
+    psf1 = np.exp(-0.5*(xx0-cen0)**2/sigma0**2)          # normalized Gaussian
+    wtht1 = np.sum(flux*psf1)/np.sum(psf1*psf1)          # linear least squares
+    # Second iteration
+    sigma1 = (totflux*dx)/(wtht1*np.sqrt(2*np.pi))
+    psf2 = np.exp(-0.5*(xx0-cen0)**2/sigma1**2)          # normalized Gaussian
+    wtht2 = np.sum(flux*psf2)/np.sum(psf2*psf2)
+
+    # Now get more pixels to fit if necessary
+    npixwide = int(np.maximum(np.ceil((2*sigma1)/dx), 5))
+    xlo = int(np.round(cen0))-npixwide
+    xhi = int(np.round(cen0))+npixwide+1
+    xx = x[xlo:xhi]
+    y = spec[xlo:xhi]
+    yerr = sigma[xlo:xhi]
+
+    # Bounds
+    initpar = [wtht2, cen0, sigma1, medspec]
+    lbounds = [0.5*ht0, initpar[1]-1, 0.2, initpar[3]-np.maximum(3*sigspec,0.3*np.abs(initpar[3]))]
+    ubounds = [3.0*ht0, initpar[1]+1, 5.0, initpar[3]+np.maximum(3*sigspec,0.3*np.abs(initpar[3]))]
+    bounds = (lbounds,ubounds)
+    # Sometimes curve_fit hits the maximum number fo function evaluations and crashes
+    try:
+        pars,cov = curve_fit(func,xx,y,p0=initpar,sigma=yerr,bounds=bounds,maxfev=1000)            
+        perr = np.sqrt(np.diag(cov))
+    except:
+        return None,None
+    
     return pars,perr
+
 
 def test() :
     """ test routine for peakfit """
@@ -158,14 +166,14 @@ def peakfit(spec,sigma=None,pix0=None):
     npix = len(spec)
     x = np.arange(npix)
 
+    smspec = median_filter(spec,101,mode='nearest')
+    sigspec = dln.mad(spec-smspec)
 
     # Find the peaks
     if pix0 is None:
-        maxind, = argrelextrema(spec, np.greater)  # maxima
+        maxind, = argrelextrema(spec-smspec, np.greater)  # maxima
         # sigma cut on the flux
-        sigspec = dln.mad(spec)
-        medspec = np.median(spec)
-        gd, = np.where(spec[maxind] > (3*sigspec+medspec))
+        gd, = np.where((spec-smspec)[maxind] > 4*sigspec)
         if len(gd)==0:
             print('No peaks found')
             return
@@ -174,7 +182,7 @@ def peakfit(spec,sigma=None,pix0=None):
     npeaks = len(pix0)
 
     # Initialize the output table
-    dtype = np.dtype([('num',int),('pix0',int),('pars',np.float64,4),('perr',np.float64,4)])
+    dtype = np.dtype([('num',int),('pix0',int),('pars',np.float64,4),('perr',np.float64,4),('success',bool)])
     out = np.zeros(npeaks,dtype=dtype)
     out['num'] = np.arange(npeaks)
     out['pix0'] = pix0
@@ -184,19 +192,19 @@ def peakfit(spec,sigma=None,pix0=None):
 
     # Loop over the peaks and fit them
     for i in range(npeaks):
-        print(i)
         # Run gausspeakfit() on the residual
         pars,perr = gausspeakfit(resid,pix0=pix0[i],sigma=sigma)
         if pars is not None:
             # Get model and subtract from residuals
-            xlo = np.minimum(0,int(pars[1]-3*pars[2]))
-            xhi = np.maximum(npix,int(pars[1]+3*pars[2]))
+            xlo = np.maximum(0,int(pars[1]-5*pars[2]))
+            xhi = np.minimum(npix,int(pars[1]+5*pars[2]))
             peakmodel = gaussbin(x[xlo:xhi],pars[0],pars[1],pars[2])  # leave yoffset in
             resid[xlo:xhi] -= peakmodel
 
             # Stuff results in output table
             out['pars'][i] = pars
             out['perr'][i] = perr
+            out['success'][i] = True
         else:
             out['pars'][i] = np.nan
             out['perr'][i] = np.nan
