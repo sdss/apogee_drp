@@ -989,7 +989,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if os.path.exists(vfile):
                         h = fits.getheader(vfile)
                         starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).replace(',','<BR>')
-                        objhtml.write('<BR> align="left"'+starflagtxt+'\n')
+                        objhtml.write('<BR align="left">'+starflagtxt+'\n')
 
 
                 # PLOT 1: spectrum 
