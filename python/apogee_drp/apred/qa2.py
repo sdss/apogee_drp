@@ -795,7 +795,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     htmldir = platedir+'/html/'
     if len(glob.glob(htmldir)) == 0: subprocess.call(['mkdir',htmldir])
-    if os.path.exists(htmldir+'sorttable.js') if False:
+    if os.path.exists(htmldir+'sorttable.js') is False:
         print("getting sorttable.js...")
         subprocess.call(['wget', sort_table_link])
         subprocess.call(['mv', 'sorttable.js', htmldir])
