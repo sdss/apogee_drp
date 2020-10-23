@@ -26,6 +26,8 @@ import matplotlib.ticker as ticker
 
 sdss_path = path.Path()
 
+sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js'
+
 # put import pdb; pdb.set_trace() wherever you want stop
 
 #sdss_path.full('ap2D',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
@@ -793,7 +795,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     htmldir = platedir+'/html/'
     if len(glob.glob(htmldir)) == 0: subprocess.call(['mkdir',htmldir])
-
+    if os.path.exists(htmldir+'sorttable.js') if False:
+        print("getting sorttable.js...")
+        subprocess.call(['wget', sort_table_link])
+        subprocess.call(['mv', 'sorttable.js', htmldir])
 
     # Open the output HTML file for this plate.
     gfile = plate+'-'+mjd
@@ -917,7 +922,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
             objhtml = open(htmldir+pfile+'.html','w')
             objhtml.write('<HTML>\n')
-            objhtml.write('<HEAD><script type=text/javascript src=../../../../html/sorttable.js></script></head>\n')
+            objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
             objhtml.write('<BODY>\n')
 
             if ims[0] != 0:
