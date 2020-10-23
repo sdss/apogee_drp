@@ -990,7 +990,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).vfill(3)+'.jpg'
                         pfilefull = plotsdir+pfile
 
-                        jfile='../plots/'+file+'-'+string(format='(i3.3)',rows[j])+'.jpg'
                         plt.ioff()
                         fontsize=24
                         fsz=fontsize*0.75
