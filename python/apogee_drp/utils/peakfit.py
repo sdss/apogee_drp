@@ -145,8 +145,6 @@ def peakfit(spec,sigma=None,pix0=None):
        Uncertainty array (default=None).
     pix0 : float or integer (scalar or array), optional
        Initial pixel guess.
-    estsig : float
-       Initial guess for window width=5*estsig (default=5).
 
     Returns
     -------
