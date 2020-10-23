@@ -990,9 +990,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if plSum2['OBJTYPE'][j] == 'SKY':
                         objhtml.write('<TD BGCOLOR='+color+'>Sky\n')
                     else:
+                        pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
+                        pfilefull = plotsdir+pfile
                         if noplot is False:
-                            pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
-                            pfilefull = plotsdir+pfile
                             print("Making "+pfile)
 
                             plt.ioff()
