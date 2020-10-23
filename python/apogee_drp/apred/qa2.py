@@ -937,7 +937,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
 
             objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-            objhtml.write('<TR><TH>Fiber<TH>Star<TH>H mag<TH>Diff<TH>S/N<TH>Target<BR>Type<TH>Target flags<TH>Plot\n')
+            objhtml.write('<TR><TH>Fib<TH>APOGEE ID<TH>H<BR>mag<TH>H<BR>-<BR>obs<TH>S/N<TH>Targ<BR>Type<TH>Target & data flags<TH>Spectrum Plot\n')
 #            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
             cfile = open(plotsdir+pfile+'.csh','w')
