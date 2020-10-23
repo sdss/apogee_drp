@@ -789,6 +789,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     plSum2 = plSum2[fibord]
     nfiber = len(plSum2['HMAG'])
 
+    telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
+    ntelluric = len(telluric)
+
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
     plotsdir = platedir+'/plots/'
