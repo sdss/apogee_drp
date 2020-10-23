@@ -937,7 +937,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
 
             objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-            objhtml.write('<TR><TH>Fib<TH>APOGEE ID<TH>H<BR>mag<TH>H<BR>-<BR>obs<TH>S/N<TH>Targ<BR>Type<TH>Target & data flags<TH>Spectrum Plot\n')
+            objhtml.write('<TR><TH>Fib<TH>APOGEE ID<TH>H<TH>H<BR>-<BR>obs<TH>S/N<TH>Targ<BR>Type<TH>Target & data flags<TH>Spectrum Plot\n')
 #            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
             cfile = open(plotsdir+pfile+'.csh','w')
@@ -1001,7 +1001,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if os.path.exists(vfile):
                         h = fits.getheader(vfile)
                         starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).replace(',','<BR>')
-                        objhtml.write('<BR align="left">'+starflagtxt+'\n')
+                        objhtml.write('<BR><BR>'+starflagtxt+'\n')
 
 
                 # PLOT 1: spectrum 
@@ -1071,7 +1071,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                             objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
                         else:
                             if ims[0]==0:
-                                objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
+                                objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=1000></A>\n')
                             else:
                                 objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
             objhtml.close()
