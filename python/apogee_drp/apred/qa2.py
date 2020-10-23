@@ -965,14 +965,17 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 if plSum2['OBJTYPE'][j] != 'SKY':
                     hmag = str("%.3f" % round(plSum2['HMAG'][j],3))
                     objhtml.write('<TD BGCOLOR='+color+' align ="right">'+hmag+'\n')
-                    diff = plSum2['obsmag'][j][0][1] - plSum2['HMAG'][j]
+                    diff = str("%.2f" % round(plSum2['obsmag'][j][0][1] - plSum2['HMAG'][j],2))
 #                    diff = plSum2['HMAG'][j] + (2.5 * np.log10(plSum2['obsmag'][j][0][1])) - plSum1['ZERO'][i]
-                    objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.2f" % round(diff,2))+'\n')
+                    objhtml.write('<TD BGCOLOR='+color+' align ="right">'+diff+'\n')
+                    snratio = str("%.2f" % round(plSum2['SN'][j][0][2],2))
+                    objhtml.write('<TD BGCOLOR='+color+' align ="right">'+snratio+'\n')
                 else:
                     objhtml.write('<TD BGCOLOR='+color+'>---\n')
                     objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                    objhtml.write('<TD BGCOLOR='+color+'>---\n')
 
-                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.2f" % round(plSum2['SN'][j][0][2],2))+'\n')
+
 #                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
                 targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
                 targflagtxt = targflagtxt.replace('APOGEE2_','').replace('_',' ').replace(',',', ').capitalize()
