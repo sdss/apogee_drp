@@ -53,6 +53,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 '''-----------------------------------------------------------------------------------------'''
 def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14', noplot=False,
          overwritePlateSum=False):
+
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
@@ -332,7 +333,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         cframe = None
         if ims[0] == 0: cframe = load.apPlate(int(plate), mjd)
         if ims[0] != 0:
-            import pdb; pdb.set_trace()
             cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
             #cframefile = cframefile.replace('apCframe-','apCframe-c-')
             if os.path.exists(cframefile): cframe = load.apCframe(field, int(plate), mjd, ims[i])
