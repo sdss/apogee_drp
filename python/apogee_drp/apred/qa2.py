@@ -1024,7 +1024,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         #ax1.tick_params(length=axmajlen,width=axthick)
                         #ax1.tick_params(which='minor', length=axminlen, width=axthick)
                         #ax1.tick_params(which='major', length=axmajlen, width=axthick)
-                        ax1.tick_params(which'both',direction='in')
+                        ax1.tick_params(which='both',direction='in')
                         ax1.set_xlim(xmin,xmax)
                         ax1.set_ylim(ymin,ymax)
                         ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
