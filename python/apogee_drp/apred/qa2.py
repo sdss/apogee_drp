@@ -1073,10 +1073,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     htmlsum.write('<TD>'+str("%.2f" % round(plSum1['FWHM'][i],2))+'\n')
     htmlsum.write('<TD>'+str("%.2f" % round(plSum1['GDRMS'][i],2))+'\n')
     htmlsum.write('<TD>'+str(plSum1['NREADS'][i])+'\n')
-    if len(cframe) > 1:
-        htmlsum.write('<TD>'+str("%f.4" % round(plSum1['DITHER'][i],4))+'\n')
-    else:
-        htmlsum.write('<TD>\n')
+    htmlsum.write('<TD>'+str("%f.4" % round(plSum1['DITHER'][i],4))+'\n')
     htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERO'][i],2))+'\n')
     htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERORMS'][i],2))+'\n')
     htmlsum.write('<TD>'+str("%.2f" % round(plSum1['ZERONORM'][i],2))+'\n')
