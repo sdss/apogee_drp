@@ -978,7 +978,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
 #                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
                 targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
-                targflagtxt = targflagtxt.replace('APOGEE2_','').replace('_',' ').replace(',','\\n').capitalize()
+                targflagtxt = targflagtxt.replace('APOGEE2_','').replace('_',' ').replace(',','"\n"').capitalize()
                 targflagtxt = targflagtxt.replace('Sfd','SFD').replace('Eb','EB').replace(' gt ','>')
                 objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
 
