@@ -797,7 +797,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     if len(glob.glob(htmldir)) == 0: subprocess.call(['mkdir',htmldir])
     if os.path.exists(htmldir+'sorttable.js') is False:
         print("getting sorttable.js...")
-        subprocess.call(['wget', sort_table_link])
+        subprocess.call(['wget', '-q', sort_table_link])
         subprocess.call(['mv', 'sorttable.js', htmldir])
 
     # Open the output HTML file for this plate.
@@ -937,7 +937,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(ims[i])+'.html> 2D frames </A>\n')
 
             objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-            objhtml.write('<TR><TH>Fiber<TH>Star<TH>H mag<TH>Diff<TH>S/N<TH>Target flags<TH>Plot\n')
+            objhtml.write('<TR><TH>Fiber<TH>Star<TH>H mag<TH>Diff<TH>S/N<TH>Target<BR>Type<TH>Target flags<TH>Plot\n')
 #            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
             cfile = open(plotsdir+pfile+'.csh','w')
@@ -980,6 +980,13 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     objhtml.write('<TD BGCOLOR='+color+'>---\n')
                     objhtml.write('<TD BGCOLOR='+color+'>---\n')
 
+                if plSum2['OBJTYPE'][j] == 'SKY': 
+                    objhtml.write('<TD BGCOLOR='+color+'>SKY\n')
+                else:
+                    if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'):
+                        objhtml.write('<TD BGCOLOR='+color+'>TEL\n')
+                    else:
+                        objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
 
 #                objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
                 targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
