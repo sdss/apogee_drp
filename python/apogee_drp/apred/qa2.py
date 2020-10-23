@@ -1029,7 +1029,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                         ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
 
-                        ax1.tick_params(direction='in')
+                        ax1.tick_params(reset=True)
                         ax1.set_xlim(xmin,xmax)
                         ax1.set_ylim(ymin,ymax)
                         ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
