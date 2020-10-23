@@ -985,14 +985,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
 
                 if (ims[0] == 0) & (plSum2['FIBERID'][j] >= 0):
-                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
+                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]).replace('-apo25m','')
                     if os.path.exists(vfile):
                         h = fits.getheader(vfile)
-                        ### NOTE:the below if statement does not work. Ignoring and hoping for the best.
-#                        if isinstance(h, fits.header.Header):
-#                        if type(h) == astropy.io.fits.header.Header:
-                        starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).capitalize()
-                        objhtml.write('<BR>'+starflagtxt+'\n')
+                        starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).replace(',','<BR>')
+                        objhtml.write('<BR> align="left"'+starflagtxt+'\n')
 
 
                 # PLOT 1: spectrum 
