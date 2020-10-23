@@ -332,9 +332,11 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         cframe = None
         if ims[0] == 0: cframe = load.apPlate(int(plate), mjd)
         if ims[0] != 0:
+            import pdb; pdb.set_trace()
             cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
             #cframefile = cframefile.replace('apCframe-','apCframe-c-')
             if os.path.exists(cframefile): cframe = load.apCframe(field, int(plate), mjd, ims[i])
+
         cframehdr = cframe['a'][0].header
 
         obs = np.zeros((nfiber,nchips), dtype=np.float64)
