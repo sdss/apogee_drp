@@ -1009,10 +1009,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         plt.close('all')
                         plt.ion()
 
-                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
+                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+' target="_blank"><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
                     else:
                         if ims[0]==0:
-                            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=1000></A>\n')
+                            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+' target="_blank"><IMG SRC=../plots/'+pfile+' WIDTH=1000></A>\n')
                         else:
                             objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
         objhtml.close()
