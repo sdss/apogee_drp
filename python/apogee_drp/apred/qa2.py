@@ -1037,18 +1037,18 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                         ax1.plot(vwave, vflux, color='k', linewidth=1)
 
-                        fig.subplots_adjust(left=0.05,right=0.99,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
                         plt.savefig(pfilefull)
                         plt.close('all')
                         plt.ion()
 
-                        objhtml.write('<TD><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=700></A>\n')
+                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=700></A>\n')
                     else:
                         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/html/ap1D-06950025.html
                         objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
                 else:
                     if plSum2['OBJTYPE'][j] == 'SKY':
-                        objhtml.write('<TD>Sky\n')
+                        objhtml.write('<TD BGCOLOR='+color+'>Sky\n')
             objhtml.close()
             cfile.close()
 
