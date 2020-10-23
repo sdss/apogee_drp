@@ -849,6 +849,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     # Loop over the exposures.
     for i in range(n_exposures):
+        if ims[0] == 0: pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
+        if ims[0] != 0: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
+        pfile = pfile.replace('.fits','')
+
         # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
         objhtml = open(htmldir+pfile+'.html','w')
         objhtml.write('<HTML>\n')
@@ -868,7 +872,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
         objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
         objhtml.write('<TR><TH>Fib<TH>APOGEE ID<TH>H<TH>H<BR>-<BR>obs<TH>S/N<TH>Targ<BR>Type<TH>Target & data flags<TH>Spectrum Plot\n')
-#            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
         cfile = open(plotsdir+pfile+'.csh','w')
         for j in range(nfiber):
