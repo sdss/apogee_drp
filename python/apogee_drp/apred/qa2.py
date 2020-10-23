@@ -1014,7 +1014,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ymin = 0
                         ymxsec, = np.where((vwave > 15900) & (vwave < 15950))
                         ymx = np.max(vflux[ymxsec])
-                        yspn = ymx-ymn
+                        yspn = ymx-ymin
                         ymax = ymx + (yspn * 0.15)
 
                         ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
