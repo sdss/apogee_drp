@@ -1005,8 +1005,12 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         # NOTE: telescope not in the filenames yet, so removing it for now
                         vfile = vfile.replace('-apo25m','')
                         vdata = fits.open(vfile)
-                        vflux = vdata[1].data
-                        vwave = vdata[4].data
+                        vfluxall = vdata[1].data
+                        vwaveall = vdata[4].data
+
+                        vflux = np.contatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
+                        vwave = np.contatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
+
                         ymxsec, = np.where((vwave > 15900) & (vwave < 15950))
                         ymx = np.max(vflux[ymxsec])
                         ymn = np.min(vflux[ymxsec])
