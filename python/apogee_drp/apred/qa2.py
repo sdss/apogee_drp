@@ -990,7 +990,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if noplot is False:
                         pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
                         pfilefull = plotsdir+pfile
-                        print("Making "+pfile)
+                        print("Making "+pfilefull)
 
                         plt.ioff()
                         fontsize=24
@@ -1035,11 +1035,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ax1.plot(vwave, vflux, color='k', linewidth=lwidth)
 
                         fig.subplots_adjust(left=0.045,right=0.99,bottom=0.07,top=0.97,hspace=0.2,wspace=0.0)
-                        plt.savefig(pfile)
+                        plt.savefig(pfilefull)
                         plt.close('all')
                         plt.ion()
 
-                        objhtml.write('<TD><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=1000></A>\n')
+                        objhtml.write('<TD><A HREF=../plots/'+pfile+'><IMG SRC=../plots/'+pfile+' WIDTH=500></A>\n')
                     else:
                         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/html/ap1D-06950025.html
                         objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
