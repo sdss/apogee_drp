@@ -990,7 +990,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if noplot is False:
                         pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
                         pfilefull = plotsdir+pfile
-                        print("Making "+pfilefull)
+                        print("Making "+pfile)
 
                         plt.ioff()
                         fontsize=24
