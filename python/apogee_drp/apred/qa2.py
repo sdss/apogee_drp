@@ -107,7 +107,8 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
     # Normal plates:.
     if platetype == 'normal': 
-        if overwritePlateSum:
+        platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
+        if (os.path.exists(platesum) is False) | (overwritePlateSum is True):
             q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
                              field=field, instrument=instrument, clobber=True, 
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
