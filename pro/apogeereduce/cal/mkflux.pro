@@ -46,7 +46,8 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
     return
   endif
   ;; Open .lock file
-  openw,lock,/get_lun,fluxdir+file+'.lock'
+  fluxlockfile = fluxdir+file+'.lock'
+  openw,lock,/get_lun,fluxlockfile
   free_lun,lock
 
   if not keyword_set(plate) then plate=0
@@ -125,8 +126,7 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
     endfor
   endif
 
-  file = apogee_filename('Flux',num=ims[0],chip='c',/base,/nochip)
-  file_delete,fluxdir+file+'.lock'
+  file_delete,fluxlockfile  ;; delete lock file
 
   response:
   ;; Extra block if we are calculating response function 
@@ -141,7 +141,8 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
       return
     endif
     ;; Open .lock file
-    openw,lock,/get_lun,fluxdir+file+'.lock'
+    responselockfile = fluxdir+file+'.lock'
+    openw,lock,/get_lun,responselockfile
     free_lun,lock
     chips = ['a','b','c']
     wave = mrdfits(apogee_filename('Wave',num=waveid,chip=chips[1]),2)
@@ -166,8 +167,7 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
       MWRFITS,bbflux/flux,fluxdir+file,head
     endfor
 
-    file = apogee_filename('Response',num=ims[0],chip='c',/base,/nochip)
-    file_delete,fluxdir+file+'.lock'
+    file_delete,responselockfile   ;; delete lock file
   endif
  
 end

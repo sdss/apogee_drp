@@ -12,6 +12,7 @@ from ..database import apogeedb
 from . import mkplan
 from sdss_access.path import path
 from astropy.io import fits
+from astropy.table import Table
 from collections import OrderedDict
 #from astropy.time import Time
 from datetime import datetime
@@ -272,7 +273,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 logger.info('nexp: %d' % nexp)
                 logger.info('Nobj: %d' % chkap['nobj'][0])
                 logger.info('3D/2D/Cframe:')
-                logger.info('Num    EXPID   NREAD  3D    2D   Cframe')
+                logger.info('Num    EXPID   NREAD  3D     2D  Cframe')
                 for k,num in enumerate(expstr['name']):
                     ind, = np.where(expinfo['num']==num)
                     ind3d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP3D'))
@@ -374,7 +375,7 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     if logger is None:
         logger = dln.basiclogger()
 
-    load = apload.ApLoad(apred,telescope)
+    load = apload.ApLoad(apred=apred,telescope=telescope)
 
     # Start db session
     db = apogeedb.DBSession()
@@ -391,7 +392,7 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     allstar = db.query(sql="select * from apogee_drp.star where (apogee_id, apred_vers, telescope, starver) in "+\
                        "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\
                        "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
-    allstarfile = load.filename('allStar')
+    allstarfile = load.filename('allStar').replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allStar file to '+allstarfile)
     if os.path.exists(os.path.dirname(allstarfile))==False:
         os.makedirs(os.path.dirname(allstarfile))
@@ -408,14 +409,14 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
              'wash_ddo51_giant_flag', 'wash_ddo51_star_flag', 'pmra', 'pmdec', 'pm_src', 'ak_targ',
              'ak_targ_method', 'ak_wise', 'sfd_ebv', 'apogee_target1', 'apogee_target2', 'apogee_target3',
              'apogee_target4', 'targflags', 'snr', 'starflag', 'starflags','dateobs','jd']
-    rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vhelio', 'chisq', 'rv_teff', 'rv_feh',
-              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vhelio', 'n_components', 'rv_components']
+    rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
+              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
     cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
     allvisit = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
                         "where (rv.apogee_id, rv.apred_vers, rv.telescope, rv.starver) in "+\
                         "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.rv_visit where "+\
                         "rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
-    allvisitfile = load.filename('allVisit')
+    allvisitfile = load.filename('allVisit').replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allVisit file to '+allvisitfile)
     if os.path.exists(os.path.dirname(allvisitfile))==False:
         os.makedirs(os.path.dirname(allvisitfile))
@@ -428,27 +429,43 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     allvisitmjd = allvisit[gdvisit]
 
     # maybe in summary/MJD/ or qa/MJD/ ?
-    allstarmjdfile = load.filename('allStarMJD')
+    #allstarmjdfile = load.filename('allStarMJD')
+    allstarmjdfile = allstarfile.replace('allStar','allStarMJD').replace('.fits','-'+str(mjd5)+'.fits')
     logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
     if os.path.exists(os.path.dirname(allstarmjdfile))==False:
         os.makedirs(os.path.dirname(allstarmjdfile))
     Table(allstarmjd).write(allstarmjdfile,overwrite=True)
-    allvisitmjdfile = load.filename('allVisitMJD')
+    #allvisitmjdfile = load.filename('allVisitMJD')
+    allvisitmjdfile = allvisitfile.replace('allVisit','allVisitMJD').replace('.fits','-'+str(mjd5)+'.fits')
     logger.info('Writing Nightly allVisitMJD file to '+allvisitmjdfile)
     if os.path.exists(os.path.dirname(allvisitmjdfile))==False:
         os.makedirs(os.path.dirname(allvisitmjdfile))
     Table(allvisitmjd).write(allvisitmjdfile,overwrite=True)
-
-    import pdb; pdb.set_trace()
 
     db.close()
 
 def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
     """ Send a summary email."""
 
-    address = 'apogee-pipeline@sdss.org'
+    # could start a new list like apogee-pipeline-log or something like that
+    #address = 'apogee-pipeline@sdss.org'
+    address = 'dnidever@montana.edu'
     subject = 'Daily APOGEE Reduction %s %s' % (observatory,mjd5)
-    message = 'QA link'
+    message = 'Daily APOGEE Reduction %s %s' % (observatory,mjd5)
+    # Exposure status
+    indexp, = np.where(chkexp['success']==True)
+    message.append('%d/%d exposures successfully processed' % (len(indexp),len(chkexp)))
+    # Visit status
+    indvisit, np.where(chkvisit['success']==True)
+    message.append('%d/%d visits successfully processed' % (len(indvisit),lend(chkvisit)))
+    #for i in range(len(chkvisit)):
+    #    message.append()
+
+    # RV status
+    indrv, = np.where(chkrv['success']==True)
+    message.append('%d/%d RV+visit combination successfully processed' % (len(indrv),lend(chkrv)))
+
+    # Send the message
     email.send(address,subject,message,logfiles)
 
 
@@ -467,6 +484,8 @@ def run_daily(observatory,mjd5=None,apred=None):
         if len(verout)==0:
             raise Exception('No curent version in database')
         apred = verout['name'][0]
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
 
     # Daily reduction directory
     dailydir = os.environ['APOGEE_REDUX']+'/'+apred+'/daily/'+observatory+'/'
@@ -550,8 +569,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     rootLogger.info('')
     queue = pbsqueue(verbose=True)
     queue.client.config.notification = False
-    cpus = np.minimum(len(planfiles),30)
-    queue.create(label='apred', nodes=2, ppn=16, cpus=cpus, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
+    queue.create(label='apred', nodes=2, alloc='sdss-kp', walltime='240:00:00')
     for pf in planfiles:
         queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
     queue.commit(hard=True,submit=True)
@@ -559,7 +577,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
     del queue
 
-    import pdb;pdb.set_trace()
+    #import pdb;pdb.set_trace()
 
 
     # Run "rv" on all stars
@@ -569,12 +587,11 @@ def run_daily(observatory,mjd5=None,apred=None):
     rootLogger.info('Running RV+Visit Combination')
     rootLogger.info('==============================')
     rootLogger.info('')
-    vcat = db.query('visit',cols='*',where='MJD=%d'%mjd5)
+    vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
     if len(vcat)>0:
         queue = pbsqueue(verbose=True)
         queue.client.config.notification = False
-        cpus = np.minimum(len(vcat),30)
-        queue.create(label='rv', nodes=2, ppn=16, cpus=cpus, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
+        queue.create(label='rv', nodes=2, alloc='sdss-kp', walltime='240:00:00')
         for obj in vcat['apogee_id']:
             apstarfile = load.filename('Star',obj=obj)
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
@@ -595,8 +612,8 @@ def run_daily(observatory,mjd5=None,apred=None):
     #--------------
     queue = pbsqueue(verbose=True)
     queue.client.config.notification = False
-    queue.create(label='qa', nodes=1, ppn=16, cpus=1, alloc='sdss-kp', qos=True, umask='002', walltime='240:00:00')
-    queue.append('apqa {0}'.format(mjd5))
+    queue.create(label='qa', nodes=1, alloc='sdss-kp', walltime='240:00:00')
+    queue.append('apqa {0}'.format(mjd5))  # outfile, errfile
     queue.commit(hard=True,submit=True)
     queue_wait(queue)  # wait for jobs to complete
     del queue
@@ -623,14 +640,14 @@ def run_daily(observatory,mjd5=None,apred=None):
 
     import pdb;pdb.set_trace()
 
+    rootLogger.info('Daily APOGEE reduction finished for MJD=%d and observatory=%s' % (mjd5,observatory))
+
+    db.close()    # close db session
+
     # Summary email
     # send to apogee_reduction email list
     # include basic information
     # give link to QA page
     # attach full run_daily() log (as attachment)
     # don't see it if using --debug mode
-    #summary_email(chkexp,chkvisit,chkrv)
-
-    rootLogger.info('Daily APOGEE reduction finished for MJD=%d and observatory=%s' % (mjd5,observatory))
-
-    db.close()    # close db session
+    summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfile)
