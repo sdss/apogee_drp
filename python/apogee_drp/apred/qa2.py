@@ -107,7 +107,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     if platetype == 'normal': 
         if overwritePlateSum:
             q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
-                             field=field, instrument=instrument, clobber=True, noplot=True, 
+                             field=field, instrument=instrument, clobber=True, 
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
                              onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
                              fixfiberid=fixfiberid, badfiberid=badfiberid)
@@ -156,7 +156,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 '''-----------------------------------------------------------------------------------------'''
 # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/visit/apo25m/200+45/8100/57680/apPlateSum-8100-57680.fits
 def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, field=None, 
-                 instrument=None, clobber=True, noplot=False, plugmap=None, survey=None,
+                 instrument=None, clobber=True, noplot=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
 
