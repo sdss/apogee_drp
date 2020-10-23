@@ -986,7 +986,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257//plots/apPlate-5583-56257-299.jpg
 
 #                if j > -1:
-                if (j > -1) & (j < 30) & (plSum2['OBJTYPE'][j] != 'SKY'):
+                if (j > -1) & (plSum2['OBJTYPE'][j] != 'SKY'):
                     if noplot is False:
                         pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
                         pfilefull = plotsdir+pfile
@@ -1037,7 +1037,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                         ax1.plot(vwave, vflux, color='k', linewidth=1)
 
-                        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                        fig.subplots_adjust(left=0.05,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
                         plt.savefig(pfilefull)
                         plt.close('all')
                         plt.ion()
