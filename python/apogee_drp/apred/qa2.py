@@ -967,7 +967,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 diff = plSum2['obsmag'][j][0][1] - plSum2['HMAG'][j]
 #                diff = plSum2['HMAG'][j] + (2.5 * np.log10(plSum2['obsmag'][j][0][1])) - plSum1['ZERO'][i]
 
-            fiber['obsmag'][j][i,:] = (-2.5 * np.log10(obs[j,:])) + zero
                 if plSum2['FIBERID'][j]==21: import pdb; pdb.set_trace()
                 objhtml.write('<TD>'+str("%.2f" % round(diff,2))+'\n')
                 objhtml.write('<TD BGCOLOR='+color+' align ="right">'+str("%.2f" % round(plSum2['SN'][j][0][2],2))+'\n')
