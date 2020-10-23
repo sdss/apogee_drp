@@ -963,7 +963,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                         vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
                         # NOTE: telescope not in the filenames yet, so removing it for now
-                        vfile = vfile.replace('-apo25m','')
+                        if os.path.exists(vfile) is False:
+                            vfile = vfile.replace('-apo25m','')
+                            if os.path.exists(vfile) is False:
+                                print("Uh oh... can't find apVisit files...")
                         vdata = fits.open(vfile)
                         vfluxall = vdata[1].data
                         vwaveall = vdata[4].data
