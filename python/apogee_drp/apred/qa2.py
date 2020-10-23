@@ -935,7 +935,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>S/N<TD>Target flags<TD>Plot\n')
 #            objhtml.write('<TR><TD>Fiber<TD>Star<TD>H mag<TD>Diff<TD>S/N<TD>S/N (cframe)<TD>Target flags\n')
 
-            cfile = open(outdir+pfile+'.csh','w')
+            cfile = open(plotsdir+pfile+'.csh','w')
             for j in range(nfiber):
                 objhtml.write('<TR>\n')
 
