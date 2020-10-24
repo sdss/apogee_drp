@@ -484,11 +484,12 @@ def run_daily(observatory,mjd5=None,apred=None):
 
     # No version input, get from database
     if apred is None:
-        db = apogeedb.DBSession()
-        verout = db.query('version',where="current=True")
-        if len(verout)==0:
-            raise Exception('No curent version in database')
-        apred = verout['name'][0]
+        #db = apogeedb.DBSession()
+        #verout = db.query('version',where="current=True")
+        #if len(verout)==0:
+        #    raise Exception('No curent version in database')
+        #apred = verout['name'][0]
+        apred = 'daily'
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
 
