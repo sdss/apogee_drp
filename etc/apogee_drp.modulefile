@@ -27,7 +27,7 @@ proc ModulesHelp { } {
 # change it.
 #
 set product apogee_drp
-set version master
+set version daily
 conflict $product
 #
 # The line below is another part of the Modules help system.  You can
