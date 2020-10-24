@@ -448,8 +448,8 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
     """ Send a summary email."""
 
     # could start a new list like apogee-pipeline-log or something like that
-    #address = 'apogee-pipeline@sdss.org'
-    address = 'dnidever@montana.edu'
+    address = 'apogee-pipeline-log@sdss.org'
+    #address = 'dnidever@montana.edu'
     subject = 'Daily APOGEE Reduction %s %s' % (observatory,mjd5)
     message = 'Daily APOGEE Reduction %s %s' % (observatory,mjd5)
     # Exposure status
@@ -476,6 +476,11 @@ def run_daily(observatory,mjd5=None,apred=None):
 
     telescope = observatory+'25m'
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
+
+    nodes = 1
+    #qos = 'sdss-fast'
+    qos = None
+    alloc = 'sdss-kp'
 
     # No version input, get from database
     if apred is None:
@@ -568,8 +573,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     rootLogger.info('==============')
     rootLogger.info('')
     queue = pbsqueue(verbose=True)
-    queue.client.config.notification = False
-    queue.create(label='apred', nodes=2, alloc='sdss-kp', walltime='240:00:00')
+    queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
     for pf in planfiles:
         queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
     queue.commit(hard=True,submit=True)
@@ -590,8 +594,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
     if len(vcat)>0:
         queue = pbsqueue(verbose=True)
-        queue.client.config.notification = False
-        queue.create(label='rv', nodes=2, alloc='sdss-kp', walltime='240:00:00')
+        queue.create(label='rv', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
         for obj in vcat['apogee_id']:
             apstarfile = load.filename('Star',obj=obj)
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
@@ -606,17 +609,14 @@ def run_daily(observatory,mjd5=None,apred=None):
     else:
         rootLogger.info('No visit files for MJD=%d' % mjd5)
 
-    import pdb;pdb.set_trace()
-
     # Run QA script
     #--------------
-    queue = pbsqueue(verbose=True)
-    queue.client.config.notification = False
-    queue.create(label='qa', nodes=1, alloc='sdss-kp', walltime='240:00:00')
-    queue.append('apqa {0}'.format(mjd5))  # outfile, errfile
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue)  # wait for jobs to complete
-    del queue
+    #queue = pbsqueue(verbose=True)
+    #queue.create(label='qa', nodes=1, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
+    #queue.append('apqa {0}'.format(mjd5))  # outfile, errfile
+    #queue.commit(hard=True,submit=True)
+    #queue_wait(queue)  # wait for jobs to complete
+    #del queue
 
     # Create daily and full allVisit/allStar files
     create_sumfiles(mjd5,apred,telescope)
@@ -638,7 +638,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     daycat['pk'] = dayout['pk'][0]
     db.update('daily_status',daycat)
 
-    import pdb;pdb.set_trace()
+    #import pdb;pdb.set_trace()
 
     rootLogger.info('Daily APOGEE reduction finished for MJD=%d and observatory=%s' % (mjd5,observatory))
 
