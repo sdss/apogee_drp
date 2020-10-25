@@ -1032,7 +1032,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 fig=plt.figure(figsize=(10,18))
                 matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
-                xmin = 7;  xmax = 16;  xspan=xmax-xmin
+                xmin = 6;  xmax = 15;  xspan=xmax-xmin
 
                 ax1 = plt.subplot2grid((5,1), (0,0))
                 ax2 = plt.subplot2grid((5,1), (1,0))
@@ -1067,7 +1067,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]
                     ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='b')
 
-                fig.subplots_adjust(left=0.14,right=0.995,bottom=0.06,top=0.99,hspace=0.1,wspace=0.0)
+                fig.subplots_adjust(left=0.14,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
                 plt.close('all')
                 plt.ion()
