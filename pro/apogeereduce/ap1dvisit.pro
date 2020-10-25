@@ -635,7 +635,6 @@ FOR i=0L,nplanfiles-1 do begin
                 location_id:0,ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
                 jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
                 pmra:0.0,pmdec:0.0,pm_src:'',$
-                plx:0.0,plx_err:0.0,
                 ak_targ:-99., ak_targ_method: 'NONE', ak_wise: -99., sfd_ebv: -99.,$
                 apogee_target1:0L,apogee_target2:0L,apogee_target3:0L,apogee_target4:0L,$
                 catalogid:0LL, gaiadr2_plx:0.0, gaiadr2_plx_error:0.0, gaiadr2_pmra:0.0, gaiadr2_pmra_error:0.0,$

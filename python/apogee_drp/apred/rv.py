@@ -675,19 +675,30 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     apstar.header['DEC'] = (allvisit['dec'].max(), 'declination, deg, J2000')
     apstar.header['GLON'] = (allvisit['glon'].max(), 'Galactic longitude')
     apstar.header['GLAT'] = (allvisit['glat'].max(), 'Galactic latitude')
-    apstar.header['J'] = (allvisit['j'].max(), '2MASS J magnitude')
-    apstar.header['J_ERR'] = (allvisit['j_err'].max(), '2MASS J magnitude uncertainty')
-    apstar.header['H'] = (allvisit['h'].max(), '2MASS H magnitude')
-    apstar.header['H_ERR'] = (allvisit['h_err'].max(), '2MASS H magnitude uncertainty')
-    apstar.header['K'] = (allvisit['k'].max(), '2MASS K magnitude')
-    apstar.header['K_ERR'] = (allvisit['k_err'].max(), '2MASS K magnitude uncertainty')
+    apstar.header['JMAG'] = (allvisit['jmag'].max(), '2MASS J magnitude')
+    apstar.header['JERR'] = (allvisit['jerr'].max(), '2MASS J magnitude uncertainty')
+    apstar.header['HMAG'] = (allvisit['hmag'].max(), '2MASS H magnitude')
+    apstar.header['HERR'] = (allvisit['herr'].max(), '2MASS H magnitude uncertainty')
+    apstar.header['KMAG'] = (allvisit['kmag'].max(), '2MASS K magnitude')
+    apstar.header['KERR'] = (allvisit['kerr'].max(), '2MASS K magnitude uncertainty')
     try: apstar.header['SRC_H'] = (allvisit['src_h'][0], 'source of H magnitude')
     except KeyError: pass
-    keys = ['wash_m','wash_t2','ddo51','irac_3_6',
-            'irac_4_5','irac_5_8','wise_4_5','targ_4_5'] 
-    for key in keys:
-        try: apstar.header[key] = allvisit[key].max()
-        except KeyError: pass
+
+    # SDSS-V info
+    apstar.header['CATID'] = (allvisit['catalogid'][0], 'SDSS-V catalog ID')
+    apstar.header['PLX'] = (allvisit['gaiadr2_plx'].max(), 'GaiaDR2 parallax')
+    apstar.header['EPLX'] = (allvisit['gaiadr2_plx_error'].max(), 'GaiaDR2 parallax uncertainty')
+    apstar.header['PMRA'] = (allvisit['gaiadr2_pmra'].max(), 'GaiaDR2 proper motion in RA')
+    apstar.header['EPMRA'] = (allvisit['gaiadr2_pmra_error'].max(), 'GaiaDR2 proper motion in RA uncertainty')
+    apstar.header['PMDEC'] = (allvisit['gaiadr2_pmdec'].max(), 'GaiaDR2 proper motion in DEC')
+    apstar.header['EPMDEC'] = (allvisit['gaiadr2_pmdec_error'].max(), 'GaiaDR2 proper motion in DEC uncertainty')
+    apstar.header['GMAG'] = (allvisit['gaiadr2_gmag'].max(), 'GaiaDR2 G magnitude')
+    apstar.header['GERR'] = (allvisit['gaiadr2_gerr'].max(), 'GaiaDR2 G magnitude uncertainty')
+    apstar.header['BPMAG'] = (allvisit['gaiadr2_bpmag'].max(), 'GaiaDR2 Bp magnitude')
+    apstar.header['BPERR'] = (allvisit['gaiadr2_bperr'].max(), 'GaiaDR2 Bp magnitude uncertainty')
+    apstar.header['RPMAG'] = (allvisit['gaiadr2_rpmag'].max(), 'GaiaDR2 Rp magnitude')
+    apstar.header['RPERR'] = (allvisit['gaiadr2_rperr'].max(), 'GaiaDR2 Rp magnitude uncertainty')
+    apstar.header['S5APTRG0'] = (allvisit['sdss5_apogee_target0'].max(),'SDSS-V APOGEE TARGET0 targeting flag')
 
     apstar.header['AKTARG'] = (allvisit['ak_targ'].max(), 'Extinction used for targeting')
     apstar.header['AKMETHOD'] = (allvisit['ak_targ_method'][0],'Extinction method using for targeting')
@@ -815,7 +826,7 @@ def dbingest(apstar,allvisit):
 
     # Create star table, columns to transfer from apstar header
     cols = ['OBJID','STARVER','APRED','HEALPIX','SNR','RA','DEC','GLON','GLAT','J','J_ERR',
-            'H','H_ERR','K','K_ERR','SRC_H','AKTARG','AKMETHOD','AKWISE','SFD_EBV',
+            'HMAG','HERR','KMAG','KERR','SRC_H','AKTARG','AKMETHOD','AKWISE','SFD_EBV',
             'APTARG1','APTARG2','APTARG3','AP2TARG1','AP2TARG2','AP2TARG3','AP2TARG4',
             'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHBARY','VSCATTER','VERR',
             'RV_TEFF','RV_LOGG','RV_FEH','MEANFIB','SIGFIB','NRES','MJDBEG','MJDEND']
@@ -827,12 +838,12 @@ def dbingest(apstar,allvisit):
     # Rename names
     startab['OBJID'].name = 'APOGEE_ID'
     startab['APRED'].name = 'APRED_VERS'
-    startab['J'].name = 'JMAG'
-    startab['J_ERR'].name = 'JMAG_ERR'
-    startab['H'].name = 'HMAG'
-    startab['H_ERR'].name = 'HMAG_ERR'
-    startab['K'].name = 'KMAG'
-    startab['K_ERR'].name = 'KMAG_ERR'    
+    startab['JMAG'].name = 'JMAG'
+    startab['JERR'].name = 'JERR'
+    startab['HMAG'].name = 'HMAG'
+    startab['HERR'].name = 'HERR'
+    startab['KMAG'].name = 'KMAG'
+    startab['KERR'].name = 'KERR'    
     startab['APTARG1'].name = 'APOGEE_TARGET1'
     startab['APTARG2'].name = 'APOGEE_TARGET2'
     startab['APTARG3'].name = 'APOGEE_TARGET3'
@@ -857,13 +868,8 @@ def dbingest(apstar,allvisit):
     allvisit['star_pk'] = starout['pk'][0]
     # Remove some unnecessary columns (duplicates what's in visit table)
     delcols = ['target_id','survey', 'field', 'programname', 'alt_id', 'location_id', 'glon','glat',
-               'j','j_err', 'h_err', 'k', 'k_err', 'src_h', 'wash_m',
-               'wash_m_err', 'wash_t2', 'wash_t2_err', 'ddo51',
-               'ddo51_err', 'irac_3_6', 'irac_3_6_err', 'irac_4_5',
-               'irac_4_5_err', 'irac_5_8', 'irac_5_8_err', 'irac_8_0',
-               'irac_8_0_err', 'wise_4_5', 'wise_4_5_err', 'targ_4_5',
-               'targ_4_5_err', 'wash_ddo51_giant_flag',
-               'wash_ddo51_star_flag', 'pmra', 'pmdec', 'pm_src', 'ak_targ',
+               'jmag','jerr', 'hmag', 'kmag', 'kerr', 'src_h', 'wash_m',
+               'pmra', 'pmdec', 'pm_src', 'ak_targ',
                'ak_targ_method', 'ak_wise', 'sfd_ebv', 'apogee_target1',
                'apogee_target2', 'apogee_target3', 'apogee_target4',
                'targflags', 'starflag', 'starflags', 'vlsr', 'vgsr',
