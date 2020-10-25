@@ -47,12 +47,12 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #    with some summary information about the calibration data
 #--------------------------------------------------------------------------------------------------
 
-
+print("APQA")
 '''-----------------------------------------------------------------------------------------'''
 '''APQA: Wrapper for running QA subprocedures                                               '''
 '''-----------------------------------------------------------------------------------------'''
 def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14', noplot=False,
-         overwritePlateSum=False, makeSpectrumPlots =True):
+         overwritePlateSum=False, makeSpectrumPlots=True):
 
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
