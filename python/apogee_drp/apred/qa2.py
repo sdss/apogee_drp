@@ -1024,7 +1024,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         objhtml.close()
         cfile.close()
 
-        # PLOT 2: 5 panels
+        # PLOT 2: 3 panels
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.gif
         if (flat is None) & (onem is None):
             plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
@@ -1034,17 +1034,17 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 plt.ioff()
                 fontsize=24
                 fsz=fontsize*0.75
-                fig=plt.figure(figsize=(11,18))
+                fig=plt.figure(figsize=(11,14))
                 matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
                 xmin = 6;  xmax = 15;  xspan=xmax-xmin
 
-                ax1 = plt.subplot2grid((5,1), (0,0))
-                ax2 = plt.subplot2grid((5,1), (1,0))
-                ax3 = plt.subplot2grid((5,1), (2,0))
-                ax4 = plt.subplot2grid((5,1), (3,0))
-                ax5 = plt.subplot2grid((5,1), (4,0))
-                axes = [ax1, ax2, ax3, ax4, ax5]
+                ax1 = plt.subplot2grid((3,1), (0,0))
+                ax2 = plt.subplot2grid((3,1), (1,0))
+                ax3 = plt.subplot2grid((3,1), (2,0))
+#                ax4 = plt.subplot2grid((5,1), (3,0))
+#                ax5 = plt.subplot2grid((5,1), (4,0))
+                axes = [ax1, ax2, ax3]#, ax4, ax5]
 
                 for ax in axes:
                     ax.tick_params(reset=True)
@@ -1054,14 +1054,15 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                 ax1.axes.xaxis.set_ticklabels([])
                 ax2.axes.xaxis.set_ticklabels([])
-                ax3.axes.xaxis.set_ticklabels([])
-                ax4.axes.xaxis.set_ticklabels([])
+#                ax3.axes.xaxis.set_ticklabels([])
+#                ax4.axes.xaxis.set_ticklabels([])
 
-                ax5.set_xlabel(r'$H$')
+                ax3.set_xlabel(r'$H$')
+#                ax5.set_xlabel(r'$H$')
                 ax1.text(-0.17,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
                 ax2.text(-0.17,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
                 ax3.text(-0.17,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
-                ax4.text(-0.17,0.50,r'S/N (Cframe)',transform=ax4.transAxes,rotation=90,ha='left',va='center')
+#                ax4.text(-0.17,0.50,r'S/N (Cframe)',transform=ax4.transAxes,rotation=90,ha='left',va='center')
 
                 alpha = 0.6
 
@@ -1085,12 +1086,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
                 ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 #                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
-
-                # PLOT 2d: S/N as calculated from apCframe
-                x = plSum2['HMAG'][science];    y = plSum2['SNC'][science,i,1]
-                ax4.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='r')
-                x = plSum2['HMAG'][telluric];   y = plSum2['SNC'][telluric,i,1]
-                ax4.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
 
                 fig.subplots_adjust(left=0.16,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
