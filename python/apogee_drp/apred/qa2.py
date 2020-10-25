@@ -738,7 +738,8 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 #        if tag_exist(tab1[i],'snratio'):
         html.write('<TR><TD>SN(E/C)<TD<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
         html.write('</TABLE>\n')
-        html.write('<TD><IMG SRC=../plots/'+oneDfile+'_magplots.png>\n')
+
+        html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=800></A>\n')
         html.write('<TD> <IMG SRC=../plots/'+oneDfile+'_spatialmag.png>\n')
         cim=str(im)
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg height=400></a>\n')
