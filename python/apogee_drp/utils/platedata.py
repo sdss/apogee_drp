@@ -277,7 +277,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     match, = np.where((np.abs(ph['target_ra']-fiber['ra'][i]) < 0.00002) &
                                       (np.abs(ph['target_dec']-fiber['dec'][i]) < 0.00002))
                     if len(match)>0:
-                        if ('apogee2_target1' in ph.dtype.names) and (plate > 7500):
+                        # APOGEE-2 plate
+                        if ('apogee2_target1' in ph.dtype.names) and (plate > 7500) and (plate < 15000):
                             fiber['target1'][i] = ph['apogee2_target1'][match]
                             fiber['target2'][i] = ph['apogee2_target2'][match]
                             fiber['target3'][i] = ph['apogee2_target3'][match]
@@ -291,20 +292,43 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                     fiber['target2'][i] = flag_changes['at2'][jj]
                                     fiber['target3'][i] = flag_changes['at3'][jj]
                                     fiber['target4'][i] = flag_changes['at4'][jj]
-                        else:
+                        # APOGEE-1 plate
+                        if ('apogee2_target1' not in ph.dtype.names) and (plate <= 7500):
                             fiber['target1'][i] = ph['apogee_target1'][match]
                             fiber['target2'][i] = ph['apogee_target2'][match]
                             apogee2 = 0
-
-                        if bmask.is_bit_set(fiber['target2'][i],9) == 1:
-                            fiber['objtype'][i] = 'HOT_STD'
-                        if bmask.is_bit_set(fiber['target2'][i],4) == 1:
+                        # SDSS-V plate
+                        if (plate <= 15000):
+                            fiber['catalogid'][i] = p['catalogid'][match]
+                            fiber['gaia_g'][i] = p['gaia_g'][match]
+                            fiber['gaia_bp'][i] = p['gaia_bp'][match]
+                            fiber['gaia_rp'][i] = p['gaia_rp'][match]
+                            fiber['sdssv_apogee_target0'][i] = p['sdssv_apogee_target0'][match]
+                            fiber['firstcarton'][i] = p['firstcarton'][match]
+                            fiber['pmra'][i] = p['pmra'][match]
+                            fiber['pmdec'][i] = p['pmdec'][match]
+                            # objtype: OBJECT, HOT_STD, or SKY                                                                                                           
+                            objtype = 'OBJECT'
+                            if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],0)==1: objtype='SKY'
+                            if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],1)==1: objtype='HOT_STD'
+                            sdss5 = 1                            
+                        # APOGEE-1/2 target types
+                        if (plate < 15000):
+                            objtype = 'OBJECT'
+                            if bmask.is_bit_set(fiber['target2'][i],9)==1: objtype='HOT_STD'
+                            if bmask.is_bit_set(fiber['target2'][i],4)==1: objtype='SKY'
+                        # SKY's
+                        if (objtype=='SKY'):
                             objname = 'SKY' 
                             hmag = 99.99
                             fiber['mag'][i] = [hmag,hmag,hmag,hmag,hmag]
                             fiber['objtype'][i] = 'SKY'
                         else:
-                            tmp = ph['targetids'][match][0].astype(str)
+                            fiber['objtype'][i] = objtype
+                            if (plate<15000):
+                                tmp = ph['targetids'][match][0].astype(str)
+                            else:
+                                tmp = ph['tmass_id'][match][0].astype(str)
                             objname = tmp[-16:]
                             if tmp.find('A')==0:
                                 objname = 'AP'+objname
