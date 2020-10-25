@@ -52,7 +52,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 '''APQA: Wrapper for running QA subprocedures                                               '''
 '''-----------------------------------------------------------------------------------------'''
 def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14', noplot=False,
-         overwritePlateSum=False):
+         overwritePlateSum=False, makeSpectrumPlots=True):
 
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -122,13 +122,13 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
                           field=field, instrument=instrument, clobber=True, noplot=True, 
                           plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
                           onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
+                          fixfiberid=fixfiberid, badfiberid=badfiberid, makeSpectrumPlots=False) 
 
         q = makePlotsHtml(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
                           field=field, instrument=instrument, clobber=True, noplot=noplot,
                           plugmap=plugmap, survey=survey, mapper_data=mapper_data,apred=apred,
                           onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
+                          fixfiberid=fixfiberid, badfiberid=badfiberid, makeSpectrumPlots=makeSpectrumPlots) 
 
 
 
@@ -762,7 +762,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, field=None, 
                   instrument=None, clobber=True, noplot=False, plugmap=None, survey=None,
                   mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
-                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
+                  starmag=None, flat=None, fixfiberid=None, badfiberid=None, makeSpectrumPlots=False): 
 
     print("--------------------------------------------------------------------")
     print("Running MAKEPLOTSHTML for plate "+plate+", mjd "+mjd)
@@ -949,8 +949,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 else:
                     plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
                     plotfilefull = plotsdir+plotfile
-                    if noplot is False:
-                        print("Making "+pfile)
+                    if makeSpectrumPlots is True:
+                        print("Making "+plotfile)
 
                         plt.ioff()
                         fontsize=24
@@ -1024,6 +1024,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             plotfile = pfile+'.png'
             plotfilefull = plotsdir+plotfile
             if noplot is False:
+                print("Making "+plotfile)
                 plt.ioff()
                 fontsize=24
                 fsz=fontsize*0.75
@@ -1054,7 +1055,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 alpha = 0.6
 
                 # PLOT 2a: observed mag vs H mag
-                x = plSum2['HMAG'];    y = plSum2['obsmag'][:][0][1]
+                x = plSum2['HMAG'];    y = plSum2['obsmag'][:][0][i]
                 ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
                 if ntelluric > 0: 
                     x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric][0][1]
@@ -1065,7 +1066,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 plt.close('all')
                 plt.ion()
 
-            print('PLOTS 2: 5-panel plot will be made here.')
 #            else:
 #                achievedsn = np.median(sn[obj,:], axis=0)
 
