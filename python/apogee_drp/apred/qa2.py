@@ -1079,6 +1079,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
                 # PLOT 2c: S/N as calculated from ap1D frame
+                ax3.set_ylim(0,1000)
                 sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
                 sntargetmag = 12.2
                 x = [sntargetmag-10,sntargetmag+2.5];   y = [sntarget*100,sntarget/np.sqrt(10)]
