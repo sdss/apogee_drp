@@ -609,7 +609,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     if os.path.exists(qafiledir) is False: subprocess.call(['mkdir',qafiledir])
 
     html = open(qafile, 'w')
-    html.write('<HTML><BODY>\n')
+    html.write('<HTML><HEAD><script src="sorttable.js"></script></head><BODY>\n')
     html.write('<H2> PLATE: '+plate+' MJD: '+mjd+' FIELD: '+field+'</H2>\n')
 
 
@@ -632,11 +632,10 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.close()
         return
 
-
     # Table of individual exposures.
-    html.write('<TABLE BORDER=2>\n')
+    html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=lightgreen>\n')
-    html.write('<TD>Frame<TD>Cart<TD>sec z<TD>HA<TD>DESIGN HA<TD>seeing<TD>FWHM<TD>GDRMS<TD>Nreads<TD>Dither<TD>Pixshift<TD>Zero<TD>Zero rms<TD>sky continuum<TD>S/N<TD>S/N(cframe)\n')
+    html.write('<TH>Frame<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither<TH>Pixshift<TH>Zero<TH>Zero rms<TH>sky continuum<TH>S/N<TH>S/N(cframe)\n')
     for i in range(len(tab1)):
         html.write('<TR>\n')
         html.write('<TD>'+str(int(round(tab1['IM'][i])))+'\n')
