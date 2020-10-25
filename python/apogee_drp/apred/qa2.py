@@ -1068,10 +1068,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                 # PLOT 2a: observed mag vs H mag
                 x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
-                ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
-                if ntelluric > 0: 
-                    x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
-                    ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+                ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r', label='Science')
+                x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
+                ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan', label='Telluric')
+                ax1.legend(loc='upper left')
 
                 # PLOT 2b: observed mag - fit mag vs H mag
                 x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
