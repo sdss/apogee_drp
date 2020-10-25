@@ -1077,6 +1077,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
                 # PLOT 2c: S/N as calculated from ap1D frame
+                ax3.set_yscale('log')
                 x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
                 ax3.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
                 if ntelluric > 0: 
