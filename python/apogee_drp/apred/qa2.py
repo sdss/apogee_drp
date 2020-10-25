@@ -1078,10 +1078,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                 # PLOT 2c: S/N as calculated from ap1D frame
                 x = plSum2['HMAG'][science];    y = np.log10(plSum2['SN'][science,i,1])
-                ax3.semilogy(x, y, fmt='o', ms=10, mec='k', alpha=alpha, mfc='r')
+                ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r')
                 if ntelluric > 0: 
                     x = plSum2['HMAG'][telluric];   y = np.log10(plSum2['SN'][telluric,i,1])
-                    ax3.semilogy(x, y, fmt='^', ms=10, mec='k', alpha=alpha, mfc='cyan')
+                    ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan')
                 ax3.set_yscale('log', base=10)
 
                 fig.subplots_adjust(left=0.14,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
