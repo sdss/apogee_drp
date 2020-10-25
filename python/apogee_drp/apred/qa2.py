@@ -1061,7 +1061,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax1.text(-0.17,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
                 ax2.text(-0.17,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
                 ax3.text(-0.17,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
-                ax4.text(-0.17,0.50,r'S/N',transform=ax4.transAxes,rotation=90,ha='left',va='center')
+                ax4.text(-0.17,0.50,r'S/N (Cframe)',transform=ax4.transAxes,rotation=90,ha='left',va='center')
 
                 alpha = 0.6
 
@@ -1085,6 +1085,12 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
                 ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 #                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
+
+                # PLOT 2d: S/N as calculated from apCframe
+                x = plSum2['HMAG'][science];    y = plSum2['SNC'][science,i,1]
+                ax4.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='r')
+                x = plSum2['HMAG'][telluric];   y = plSum2['SNC'][telluric,i,1]
+                ax4.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
 
                 fig.subplots_adjust(left=0.16,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
