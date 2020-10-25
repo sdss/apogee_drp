@@ -300,7 +300,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             fiber['target2'][i] = ph['apogee_target2'][match]
                             apogee2 = 0
                         # SDSS-V plate
-                        if (plate <= 15000):
+                        if (plate >= 15000):
                             fiber['catalogid'][i] = ph['catalogid'][match]
                             fiber['gaia_g'][i] = ph['gaia_g'][match]
                             fiber['gaia_bp'][i] = ph['gaia_bp'][match]

@@ -34,8 +34,7 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
   caldir = dirs.caldir
 
   psfdir = apogee_filename('PSF',num=psfid[0],chip='c',/dir)
-  file = apogee_filename('PSF',num=psfid[0],/base,/nochip)
-
+  file = apogee_filename('PSF',num=psfid[0],chip='c',/base)
   ;; If another process is alreadying make this file, wait!
   while file_test(psfdir+file+'.lock') do apwait,file,10
   ;; Does product already exist?
