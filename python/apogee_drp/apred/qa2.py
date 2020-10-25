@@ -1039,7 +1039,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax3 = plt.subplot2grid((5,1), (2,0))
                 ax4 = plt.subplot2grid((5,1), (3,0))
                 ax5 = plt.subplot2grid((5,1), (4,0))
-                axes = [ax1, ax2, ax3, ax4]
+                axes = [ax1, ax2, ax3, ax4, ax5]
 
                 for ax in axes:
                     ax.tick_params(reset=True)
@@ -1053,8 +1053,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax4.axes.xaxis.set_ticklabels([])
 
                 ax5.set_xlabel(r'$H$')
-                ax1.text(-0.15,0.50,r'mag = -2.5 * log$_{\rm 10}$(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
-                ax2.text(-0.15,0.50,r'$H$ - (mag+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
+                ax1.text(-0.15,0.50,r'm = -2.5 * log$_{\rm 10}$(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
+                ax2.text(-0.15,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
                 ax3.text(-0.15,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
                 ax4.text(-0.15,0.50,r'S/N',transform=ax4.transAxes,rotation=90,ha='left',va='center')
 
