@@ -2,6 +2,8 @@ function targflag,targ1,targ2,targ3,targ4,survey=survey
 
 flag=''
 if ~keyword_set(survey) then survey = 'apogee'
+
+;; APOGEE-2
 if strpos(survey,'apogee2') ge 0 then begin
  if is_bit_set(targ1,0) eq 1 then flag=flag+'APOGEE2_ONEBIN_GT_0_5,'
  if is_bit_set(targ1,1) eq 1 then flag=flag+'APOGEE2_TWOBIN_0_5_TO_0_8,'
@@ -100,8 +102,10 @@ if strpos(survey,'apogee2') ge 0 then begin
  if is_bit_set(targ3,28) eq 1 then flag=flag+'APOGEE2_K2_MDWARF,'
  if is_bit_set(targ3,29) eq 1 then flag=flag+'APOGEE2_RVVAR,'
  if is_bit_set(targ3,30) eq 1 then flag=flag+'APOGEE2_M31,'
+endif
 
-endif else begin
+;; APOGEE-1
+if (strpos(survey,'apogee') ge 0) and (strpos(survey,'apogee2') eq -1) then begin
  if is_bit_set(targ1,0) eq 1 then flag=flag+'APOGEE_FAINT,'
  if is_bit_set(targ1,1) eq 1 then flag=flag+'APOGEE_MEDIUM,'
  if is_bit_set(targ1,2) eq 1 then flag=flag+'APOGEE_BRIGHT,'
@@ -160,7 +164,21 @@ endif else begin
  if is_bit_set(targ2,22) eq 1 then flag=flag+'APOGEE_1MTARGET,'
  ;if is_bit_set(targ2,31) eq 1 then flag=flag+'APOGEE_CHECKED,'
  
-endelse
+endif
+
+;; MWM
+if strpos(survey,'mwm') ge 0 then begin
+  name = ['MWM_SKY','MWM_TELLURIC','','','','','','MWM_SNC_100PC',
+          'MWM_SNC_250PC','MWM_RV_LONG-BPLATES','MWM_RV_SHORT-BPLATES','MWM_RV_LONG-RM',
+          'MWM_RV_SHORT-RM','MWM_PLANET_TESS','MWM_YSO_CMZ','MWM_YSO_OB',
+          'MWM_YSO_S1','MWM_YSO_S2','MWC_YSO_S2-5','MWM_YSO_S3',
+          'MWM_YSO_CLUSTER','MWM_GG','MWM_DUST','MWM_TESSRGB',
+          'BHM_CSC_APOGEE','MWM_RV_LONG-FPS','MWM_RV_SHORT-FPS','',
+          '','','',''])
+  for i=0,n_elements(name)-1 do begin
+    if is_bit_set(targ1,i) eq 1 then flag+=name[i]+','
+  endfor
+endif
 
 lastcomma=strpos(flag,',',/reverse_search)
 strput,flag,' ',lastcomma

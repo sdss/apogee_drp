@@ -88,7 +88,9 @@ FOR i=0L,nplanfiles-1 do begin
        planstr.platetype ne 'cal' $
        then goto,BOMB
 
-  if tag_exist(planstr,'survey') then survey=planstr.survey else survey='apogee'
+  if tag_exist(planstr,'survey') then survey=planstr.survey else begin
+    if planstr.plate ge 15000 then survey='mwm' else survey='apogee'
+  endelse
 
   ; Load the Plug Plate Map file
   ;------------------------------
@@ -100,16 +102,15 @@ FOR i=0L,nplanfiles-1 do begin
   if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
     if (strtrim(badfiberid,2) eq 'null' or strtrim(strlowcase(badfiberid),2) eq 'none') then undefine,badfiberid  ;; null/none  
   if planstr.platetype eq 'single' then begin
-   plugfile=getenv('APOGEEREDUCE_DIR')+'/data/plPlugMapA-0001.par' 
-   plugmap=getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),obj1m=planstr.apexp[0].singlename,starfiber=planstr.apexp[0].single,fixfiberid=fixfiberid)
+    plugfile=getenv('APOGEEREDUCE_DIR')+'/data/plPlugMapA-0001.par' 
+    plugmap=getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),obj1m=planstr.apexp[0].singlename,starfiber=planstr.apexp[0].single,fixfiberid=fixfiberid)
   endif else if planstr.platetype eq 'twilight' then begin
-   plugmap=getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),/twilight)
+    plugmap=getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),/twilight)
   endif else if planstr.platetype eq 'cal' then begin
-   print,'no plugmap for cal frames'
+    print,'no plugmap for cal frames'
   endif else begin
     plugfile = planstr.plugmap
-    ;APLOADPLUGMAP,plugfile,plugmap,/verbose,error=plugerror,fixfiberid=fixfiberid
-    plugmap=getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),plugid=planstr.plugmap,fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data)
+    plugmap = getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),plugid=planstr.plugmap,fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data)
   endelse
   if keyword_set(stp) then stop
 
@@ -145,9 +146,9 @@ FOR i=0L,nplanfiles-1 do begin
   s=strsplit(plate_dir,'/',/extract)
   if dirs.telescope ne 'apo1m' and planstr.platetype ne 'cal' then begin
    if ~file_test(spectro_dir+'/plates/'+s[-2]) then file_link,'../'+s[-5]+'/'+s[-4]+'/'+s[-3]+'/'+s[-2],spectro_dir+'/plates/'+s[-2]
-   cloc=strtrim(string(format='(i)',plugmap.locationid),2)
-   file_mkdir,spectro_dir+'/location_id/'+dirs.telescope
-   if ~file_test(spectro_dir+'/location_id/'+dirs.telescope+'/'+cloc) then file_link,'../../'+s[-5]+'/'+s[-4]+'/'+s[-3],spectro_dir+'/location_id/'+dirs.telescope+'/'+cloc
+   ;cloc=strtrim(string(format='(i)',plugmap.locationid),2)
+   ;file_mkdir,spectro_dir+'/location_id/'+dirs.telescope
+   ;if ~file_test(spectro_dir+'/location_id/'+dirs.telescope+'/'+cloc) then file_link,'../../'+s[-5]+'/'+s[-4]+'/'+s[-3],spectro_dir+'/location_id/'+dirs.telescope+'/'+cloc
   endif
 
   ; Are there enough files
@@ -501,7 +502,7 @@ FOR i=0L,nplanfiles-1 do begin
   if keyword_set(dithonly) then return
 
 
-  ; write summary telluric file
+  ; Write summary telluric file
   if planstr.platetype eq 'single' then begin
 
     tellstarfile=$
@@ -616,6 +617,9 @@ FOR i=0L,nplanfiles-1 do begin
   platemjd5 = strtrim(plate,2)+'-'+strtrim(mjd,2)
   if keyword_set(stp) then stop
 
+  ;; SDSS-V, get catalogdb information
+  if planstr.plateid ge 15000 then catalogdb = get_catalogdb_info(plugmap.fiberdata[objind].catalogid)
+
   ;; Loop over the objects
   apgundef,allvisitstr
   for istar=0,n_elements(objind)-1 do begin
@@ -627,21 +631,20 @@ FOR i=0L,nplanfiles-1 do begin
     endif
 
     visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',mjd:0L,telescope:'',$
-           survey:'',field:'',programname:'',alt_id:'',$
-           location_id:0,ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
-           j:0.0,j_err:0.0,h:0.0,h_err:0.0,k:0.0,k_err:0.0,src_h:'',$
-           wash_m:0.0,wash_m_err:0.0,wash_t2:0.0,wash_t2_err:0.0,ddo51:0.0,ddo51_err:0.0,$
-           irac_3_6:0.0,irac_3_6_err:0.0,irac_4_5:0.0,irac_4_5_err:0.0,$
-           irac_5_8:0.0,irac_5_8_err:0.0,irac_8_0:0.0,irac_8_0_err:0.0,$
-           wise_4_5:0.0,wise_4_5_err:0.0,targ_4_5:0.0,targ_4_5_err:0.0,$
-           wash_ddo51_giant_flag:0,wash_ddo51_star_flag:0,$
-           pmra:0.0,pmdec:0.0,pm_src:'',$
-           ak_targ:-99., ak_targ_method: 'NONE', ak_wise: -99., sfd_ebv: -99.,$
-           apogee_target1:0L,apogee_target2:0L,apogee_target3:0L,apogee_target4:0L,$
-           targflags:'',snr: 0.0, starflag:0L,starflags: '',$
-           dateobs:'',jd:0.0d0,BC:0.0,vtype:0,$
-           VREL:999999.0,vrelerr:999999.0,VHELIOBARY:999999.0,Vlsr:999999.0,Vgsr:999999.0,$
-           chisq:0.0,rv_teff:0.0,rv_feh:99.9,rv_logg:99.9,rv_alpha: 99.9,rv_carb: 99.9, synthfile:''}
+                survey:'',field:'',programname:'',alt_id:'',$
+                location_id:0,ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
+                jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
+                pmra:0.0,pmdec:0.0,pm_src:'',$
+                plx:0.0,plx_err:0.0,
+                ak_targ:-99., ak_targ_method: 'NONE', ak_wise: -99., sfd_ebv: -99.,$
+                apogee_target1:0L,apogee_target2:0L,apogee_target3:0L,apogee_target4:0L,$
+                catalogid:0LL, gaiadr2_plx:0.0, gaiadr2_plx_error:0.0, gaiadr2_pmra:0.0, gaiadr2_pmra_error:0.0,$
+                gaiadr2_pmdec:00, gaiadr2_pmdec_error:0.0, gaiadr2_gmag:0.0, gaiadr2_gerr:0.0,$
+                gaiadr2_bpmag:0.0, gaiadr2_bperr:0.0, gaiadr2_rpmag:0.0, gaiadr2_rperr:0.0, sdssv_apogee_target0:0LL,$
+                firstcarton:'', targflags:'',snr: 0.0, starflag:0L,starflags: '',$
+                dateobs:'',jd:0.0d0,BC:0.0,vtype:0,$
+                VREL:999999.0,vrelerr:999999.0,VHELIOBARY:999999.0,Vlsr:999999.0,Vgsr:999999.0,$
+                chisq:0.0,rv_teff:0.0,rv_feh:99.9,rv_logg:99.9,rv_alpha: 99.9,rv_carb: 99.9, synthfile:''}
 
     visitstr.apogee_id = obj[istar]
     visitstr.target_id = targid[istar]
@@ -660,7 +663,41 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.apogee_target2 = targ2[istar]
     visitstr.apogee_target3 = targ3[istar]
     visitstr.apogee_target4 = targ4[istar]
-    visitstr.targflags = targflag(targ1[istar],targ2[istar],targ3[istar],targ4[istar],survey=survey)
+    ;; SDSS-V columns
+    visitstr.catalogid = plugmap.fiberdata[objind[istar]].catalogid
+    if planstr.platenum ge 15000 then begin
+      MATCH,catalogdb.catalogid,visitstr.catalogid,ind1,ind2,/sort,count=nmatch
+      if nmatch eq 0 then stop,'halt: no match in catalogdb info'
+      visitstr.jmag = catalogdb[ind1[0]].jmag
+      visitstr.jerr = catalogdb[ind1[0]].e_jmag
+      visitstr.hmag = catalogdb[ind1[0]].hmag
+      visitstr.herr = catalogdb[ind1[0]].e_hmag
+      visitstr.kmag = catalogdb[ind1[0]].kmag
+      visitstr.kerr = catalogdb[ind1[0]].e_kmag
+      visitstr.gaiadr2_plx = catalogdb[ind1[0]].plx
+      visitstr.gaiadr2_plx_error = catalogdb[ind1[0]].e_plx
+      visitstr.gaiadr2_pmra = catalogdb[ind1[0]].pmra
+      visitstr.gaiadr2_pmra_error = catalogdb[ind1[0]].e_pmra
+      visitstr.gaiadr2_pmdec = catalogdb[ind1[0]].pmdec
+      visitstr.gaiadr2_pmdec_error = catalogdb[ind1[0]].e_pmdec
+      visitstr.gaiadr2_gmag = catalogdb[ind1[0]].gaiamag
+      visitstr.gaiadr2_gerr = catalogdb[ind1[0]].e_gaiamag
+      visitstr.gaiadr2_bpmag = catalogdb[ind1[0]].gaiabp
+      visitstr.gaiadr2_bperr = catalogdb[ind1[0]].e_gaiabp
+      visitstr.gaiadr2_rpmag = catalogdb[ind1[0]].gaiarp
+      visitstr.gaiadr2_rperr = catalogdb[ind1[0]].e_gaiarp
+      visitstr.sdssv_apogee_target0 = plugmap.fiberdata[objind[istar]].sdssv_apogee_target0
+      visitstr.firstcarton = plugmap.fiberdata[objind[istar]].firstcarton
+      visitstr.targflags = targflag(visitstr.sdssv_apogee_target0,survey=survey)      
+    endif else begin
+      visitstr.jmag = objects.j
+      visitstr.jerr = objects.j_err
+      visitstr.hmag = objects.h
+      visitstr.herr = objects.h_err
+      visitstr.kmag = objects.k
+      visitstr.kerr = objects.k_err
+      visitstr.targflags = targflag(targ1[istar],targ2[istar],targ3[istar],targ4[istar],survey=survey)
+    endelse
     visitstr.survey = survey
     visitstr.field = plugmap.field
     visitstr.programname = plugmap.programname
@@ -673,34 +710,8 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.ra = objects.ra
     visitstr.dec = objects.dec
     visitstr.ak_targ_method = objects.ak_targ_method
-    visitstr.j = objects.j
-    visitstr.j_err = objects.j_err
-    visitstr.h = objects.h
-    visitstr.h_err = objects.h_err
-    visitstr.k = objects.k
-    visitstr.k_err = objects.k_err
     visitstr.alt_id = objects.alt_id
     visitstr.src_h = objects.src_h
-    visitstr.wash_m = objects.wash_m
-    visitstr.wash_m_err = objects.wash_m_err
-    visitstr.wash_t2 = objects.wash_t2
-    visitstr.wash_t2_err = objects.wash_t2_err
-    visitstr.ddo51 = objects.ddo51
-    visitstr.ddo51_err = objects.ddo51_err
-    visitstr.irac_3_6 = objects.irac_3_6
-    visitstr.irac_3_6_err = objects.irac_3_6_err
-    visitstr.irac_4_5 = objects.irac_4_5
-    visitstr.irac_4_5_err = objects.irac_4_5_err
-    visitstr.irac_5_8 = objects.irac_5_8
-    visitstr.irac_5_8_err = objects.irac_5_8_err
-    visitstr.irac_8_0 = objects.irac_8_0
-    visitstr.irac_8_0_err = objects.irac_8_0_err
-    visitstr.wise_4_5 = objects.wise_4_5
-    visitstr.wise_4_5_err = objects.wise_4_5_err
-    visitstr.targ_4_5 = objects.targ_4_5
-    visitstr.targ_4_5_err = objects.targ_4_5_err
-    visitstr.wash_ddo51_giant_flag = objects.wash_ddo51_giant_flag
-    visitstr.wash_ddo51_star_flag = objects.wash_ddo51_star_flag
     visitstr.pmra = objects.pmra
     visitstr.pmdec = objects.pmdec
     visitstr.pm_src = objects.pm_src

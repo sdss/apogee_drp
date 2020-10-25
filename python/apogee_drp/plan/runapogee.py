@@ -38,7 +38,7 @@ def nextmjd5(observatory,apred='t14'):
     """ Figure out the next MJD to process."""
 
     # Check MJD5.done in $APOGEE_REDUX/apred/daily/
-    dailydir = os.environ['APOGEE_REDUX']+'/'+apred+'/daily/'+observatory+'/'
+    dailydir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'
     if os.path.exists(dailydir)==True:
         donefiles = glob(dailydir+'?????.done')
         ndonefiles = len(donefiles)
@@ -54,7 +54,7 @@ def getNextMJD(observatory,apred='t14'):
         ''' Returns the next MJD to reduce.  Either a list or one. '''
 
         # Grab the MJD from the currentmjd file
-        nextfile = os.path.join(os.getenv('APOGEE_REDUX'), apred, 'daily', observatory, 'currentmjd')
+        nextfile = os.path.join(os.getenv('APOGEE_REDUX'), 'daily', 'log', observatory, 'currentmjd')
         f = open(nextfile, 'r')
         mjd = f.read()
         f.close()
@@ -482,26 +482,21 @@ def run_daily(observatory,mjd5=None,apred=None):
     qos = None
     alloc = 'sdss-kp'
 
-    # No version input, get from database
+    # No version input, use 'daily'
     if apred is None:
-        #db = apogeedb.DBSession()
-        #verout = db.query('version',where="current=True")
-        #if len(verout)==0:
-        #    raise Exception('No curent version in database')
-        #apred = verout['name'][0]
         apred = 'daily'
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
 
-    # Daily reduction directory
-    dailydir = os.environ['APOGEE_REDUX']+'/'+apred+'/daily/'+observatory+'/'
-    if os.path.exists(dailydir)==False:
-        os.makedirs(dailydir)
+    # Daily reduction logs directory
+    logdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'
+    if os.path.exists(logdir)==False:
+        os.makedirs(logdir)
 
     # What MJD5 are we doing?
     if mjd5 is None:
         # Could get information on which MJDs were processed from database
-        # or from $APOGEE_REDUX/apred/daily/MJD5.done
+        # or from $APOGEE_REDUX/daily/log/apo/MJD5.done
         mjd5 = nextmjd5()
 
     # Set up logging to screen and logfile
@@ -510,7 +505,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     while rootLogger.hasHandlers(): # some existing loggers, remove them   
         rootLogger.removeHandler(rootLogger.handlers[0]) 
     rootLogger = logging.getLogger()
-    logfile = dailydir+str(mjd5)+'.log'
+    logfile = logdir+str(mjd5)+'.log'
     if os.path.exists(logfile): os.remove(logfile)
     fileHandler = logging.FileHandler(logfile)
     fileHandler.setFormatter(logFormatter)
@@ -552,7 +547,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
     dbload_plans(planfiles)  # load plans into db
     # Write planfiles to MJD5.plans
-    dln.writelines(dailydir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
+    dln.writelines(logdir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
 
     # Start entry in daily_status table
     daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),

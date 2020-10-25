@@ -149,7 +149,9 @@ if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
 ;; Create the output fiber structure
 tmp = create_struct('fiberid',0, 'ra',0.d0, 'dec',0.d0, 'eta',0.d0, 'zeta',0.d0, 'hmag',0., 'objtype','none', $
                     'holetype','OBJECT', 'object','', 'tmass_style','', 'target1',0L, 'target2',0L,$
-                    'target3',0L, 'target4',0L, 'spectrographid',2, 'mag',fltarr(5), catalog_info_blank())
+                    'target3',0L, 'target4',0L, 'spectrographid',2, 'mag',fltarr(5), catalog_info_blank(),$
+                    'catalogid',0LL, 'gaia_g',0.0, 'gaia_bp',0.0, 'gaia_rp',0.0, 'sdssv_apogee_target0',0LL,$
+                    'firstcarton','')
 
 guide = replicate(tmp,16)
 loc = 0L
@@ -336,7 +338,8 @@ for i=0,299 do begin
         match = where(abs(p.target_ra-fiber[i].ra) lt 0.00002 and $
                       abs(p.target_dec-fiber[i].dec) lt 0.00002,nmatch)
         if nmatch gt 0 then begin
-          if tag_exist(p,'apogee2_target1') and platenum gt 7500 then begin
+          ;; APOGEE-2 plate
+          if tag_exist(p,'apogee2_target1') and platenum gt 7500 and platenum lt 15000 then begin
             fiber[i].target1 = p[match].apogee2_target1
             fiber[i].target2 = p[match].apogee2_target2
             fiber[i].target3 = p[match].apogee2_target3
@@ -351,19 +354,45 @@ for i=0,299 do begin
                 fiber[i].target4 = flag_changes[jj].at4
               endif
             endif
-          endif else begin
+          endif
+          ;; APOGEE-1 plate
+          if not tag_exist(p,'apogee2_target1') and platenum le 7500 then begin
             fiber[i].target1 = p[match].apogee_target1
             fiber[i].target2 = p[match].apogee_target2
             apogee2 = 0
-          endelse
-          if is_bit_set(fiber[i].target2,9) eq 1 then fiber[i].objtype='HOT_STD'
-          if is_bit_set(fiber[i].target2,4) eq 1 then begin
+          endif
+          ;; SDSS-V plate
+          if platenum ge 15000 then begin
+            fiber[i].catalogid = p[match].catalogid
+            fiber[i].gaia_g = p[match].gaia_g
+            fiber[i].gaia_bp = p[match].gaia_bp
+            fiber[i].gaia_rp = p[match].gaia_rp
+            fiber[i].sdssv_apogee_target0 = p[match].sdssv_apogee_target0
+            fiber[i].firstcarton = p[match].firstcarton
+            fiber[i].pmra = p[match].pmra
+            fiber[i].pmdec = p[match].pmdec
+            ;; objtype: OBJECT, HOT_STD, or SKY
+            objtype = 'OBJECT'
+            if is_bit_set(fiber[i].sdssv_apogee_target0,0) then objtype='SKY'
+            if is_bit_set(fiber[i].sdssv_apogee_target0,1) then objtype='HOT_STD'
+            sdss5 = 1
+          endif
+          ;; APOGEE-1/2 target types
+          if platenum lt 15000 then begin
+            objtype = 'OBJECT'
+            if is_bit_set(fiber[i].target2,9) eq 1 then objtype='HOT_STD'
+            if is_bit_set(fiber[i].target2,4) eq 1 then objtype='SKY'
+          endif
+          ;; SKY's
+          if objtype eq 'SKY' then begin
             object = 'SKY' 
             hmag = 99.99
             fiber[i].mag = [hmag,hmag,hmag,hmag,hmag]
-            fiber[i].objtype='SKY'
+            fiber[i].objtype = 'SKY'
           endif else begin
-            tmp = strtrim(p[match].targetids,2)
+            fiber[i].objtype = objtype
+            if platenum lt 15000 then tmp = strtrim(p[match].targetids,2) else $
+              tmp = strtrim(p[match].tmass_id,2)
             len = strlen(tmp)
             object = strmid(tmp,len-16)
             if strpos(tmp,'A') eq 0 then $
@@ -371,8 +400,8 @@ for i=0,299 do begin
             hmag = p[match].tmass_h
             fiber[i].mag = [p[match].tmass_j,p[match].tmass_h,p[match].tmass_k,0.,0.]
             ;; Adopt PM un-adjusted  coordinates
-            fiber[i].ra-=p[match].pmra/1000./3600./cos(fiber[i].dec*!pi/180.)*(p[match].epoch-2000.)
-            fiber[i].dec-=p[match].pmdec/1000./3600.*(p[match].epoch-2000.)
+            fiber[i].ra -= p[match].pmra/1000./3600./cos(fiber[i].dec*!pi/180.)*(p[match].epoch-2000.)
+            fiber[i].dec -= p[match].pmdec/1000./3600.*(p[match].epoch-2000.)
           endelse
           fiber[i].hmag = hmag
           fiber[i].object = object
