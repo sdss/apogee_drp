@@ -36,7 +36,9 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
   psfdir = apogee_filename('PSF',num=psfid[0],chip='c',/dir)
   file = apogee_filename('PSF',num=psfid[0],chip='c',/base)
   ;; If another process is alreadying make this file, wait!
-  while file_test(psfdir+file+'.lock') do apwait,file,10
+  ;;  don't use chip in name, apmkpsf.pro makes chip-specific lock files
+  lockfile = psfdir+repstr(file,'-c-','-')+'.lock'
+  while file_test(lockfile) do apwait,file,10
   ;; Does product already exist?
   if file_test(psfdir+file) and not keyword_set(clobber) then begin
     print,' PSF file: ', psfdir+file, ' already made'
@@ -47,7 +49,7 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
 
   print,'Making PSF: ', psfid[0]
   ;; Open .lock file
-  openw,lock,/get_lun,psfdir+file+'.lock'
+  openw,lock,/get_lun,lockfile
   free_lun,lock
 
   cmjd = getcmjd(psfid)
@@ -56,6 +58,6 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
   psffile = apogee_filename('2D',num=psfid[0],chip='c',/dir)+'/'+string(format='(i8.8)',psfid)
   APMKPSF,psffile,psfdir,sparseid=sparseid,fiberid=fiberid,average=average,clobber=clobber
 
-  file_delete,psfdir+file+'.lock'
+  file_delete,lockfile,/allow
 end
 
