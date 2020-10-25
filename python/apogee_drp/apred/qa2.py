@@ -947,8 +947,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 if plSum2['OBJTYPE'][j] == 'SKY':
                     objhtml.write('<TD BGCOLOR='+color+'> \n')
                 else:
-                    pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
-                    pfilefull = plotsdir+pfile
+                    plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
+                    plotfilefull = plotsdir+plotfile
                     if noplot is False:
                         print("Making "+pfile)
 
@@ -992,7 +992,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                             ymin = ymn - (yspn * 0.15)
                             ymax = ymx + (yspn * 0.15)
 
-                        ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
+                        ax1 = plt.subplot2grid((1,1), (0,0))
 
                         ax1.tick_params(reset=True)
                         ax1.set_xlim(xmin,xmax)
@@ -1005,23 +1005,66 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ax1.plot(vwave, vflux, color='k', linewidth=1)
 
                         fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
-                        plt.savefig(pfilefull)
+                        plt.savefig(plotfilefull)
                         plt.close('all')
                         plt.ion()
 
-                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+' target="_blank"><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
+                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=800></A>\n')
                     else:
                         if ims[0]==0:
-                            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+' target="_blank"><IMG SRC=../plots/'+pfile+' WIDTH=1000></A>\n')
+                            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
                         else:
                             objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
         objhtml.close()
         cfile.close()
 
-
         # PLOT 2: 5 panels
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.gif
         if (flat is None) & (onem is None):
+            plotfile = pfile+'.png'
+            plotfilefull = plotsdir+plotfile
+            if noplot is False:
+                plt.ioff()
+                fontsize=24
+                fsz=fontsize*0.75
+                fig=plt.figure(figsize=(10,20))
+                matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+
+                xmin = 7;  xmax = 16;  xspan=xmax-xmin
+
+                ax1 = plt.subplot2grid((5,1), (0,0))
+                ax2 = plt.subplot2grid((5,1), (1,0))
+                ax3 = plt.subplot2grid((5,1), (2,0))
+                ax4 = plt.subplot2grid((5,1), (3,0))
+                ax5 = plt.subplot2grid((5,1), (4,0))
+                axes = [ax1, ax2, ax3, ax4]
+
+                for ax in axes:
+                    ax.tick_params(reset=True)
+                    ax.set_xlim(xmin,xmax)
+                    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+                    ax.minorticks_on()
+
+                ax5.set_xlabel(r'$H$')
+                ax1.set_ylabel(r'mag = -2.5 * log$_{\rm 10}$(counts)')
+                ax2.set_ylabel(r'$H$ - (mag+zero)')
+                ax3.set_ylabel(r'S/N')
+                ax4.set_ylabel(r'S/N')
+
+                alpha = 0.6
+
+                # PLOT 2a: observed mag vs H mag
+                x = plSum2['HMAG'];    y = plSum2['obsmag'][:][0][1]
+                ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
+                if ntelluric > 0: 
+                    x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric][0][1]
+                    ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='b')
+
+                fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.2)
+                plt.savefig(plotfilefull)
+                plt.close('all')
+                plt.ion()
+
             print('PLOTS 2: 5-panel plot will be made here.')
 #            else:
 #                achievedsn = np.median(sn[obj,:], axis=0)
