@@ -47,12 +47,12 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #    with some summary information about the calibration data
 #--------------------------------------------------------------------------------------------------
 
-
+print("APQA")
 '''-----------------------------------------------------------------------------------------'''
 '''APQA: Wrapper for running QA subprocedures                                               '''
 '''-----------------------------------------------------------------------------------------'''
 def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14', noplot=False,
-         overwritePlateSum=False):
+         overwritePlateSum=False, makeSpectrumPlots=True):
 
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -119,16 +119,16 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
         q = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
         q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
-                          field=field, instrument=instrument, clobber=True, noplot=True, 
+                          field=field, instrument=instrument, clobber=True, noplot=False, 
                           plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
                           onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
+                          fixfiberid=fixfiberid, badfiberid=badfiberid, makeSpectrumPlots=False) 
 
         q = makePlotsHtml(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
                           field=field, instrument=instrument, clobber=True, noplot=noplot,
                           plugmap=plugmap, survey=survey, mapper_data=mapper_data,apred=apred,
                           onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-                          fixfiberid=fixfiberid, badfiberid=badfiberid) 
+                          fixfiberid=fixfiberid, badfiberid=badfiberid, makeSpectrumPlots=makeSpectrumPlots) 
 
 
 
@@ -280,6 +280,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                    ('PLATE',     np.int32),
                    ('NREADS',    np.int32),
                    ('DATEOBS',   np.str, 30),
+                   ('EXPTIME',   np.int32),
                    ('SECZ',      np.float64),
                    ('HA',        np.float64),
                    ('DESIGN_HA', np.float64, 3),
@@ -480,6 +481,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         else:
             fwhm = -1
             gdrms = -1
+            exptime=-9.999
 
         alt = dhdr['ALT']
         secz = 1. / np.cos((90.-alt) * (math.pi/180.))
@@ -516,6 +518,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['GDRMS'][i] =     gdrms
         platetab['CART'][i] =      dhdr['CARTID']
         platetab['DATEOBS'][i] =   dhdr['DATE-OBS']
+        platetab['EXPTIME'][i] =   exptime
         platetab['DITHER'][i] =    dither
         platetab['ZERO'][i] =      zero
         platetab['ZERORMS'][i] =   zerorms
@@ -738,8 +741,9 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 #        if tag_exist(tab1[i],'snratio'):
         html.write('<TR><TD>SN(E/C)<TD<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
         html.write('</TABLE>\n')
-        html.write('<TD><IMG SRC=../plots/'+oneDfile+'.gif>\n')
-        html.write('<TD> <IMG SRC=../plots/'+oneDfile+'.jpg>\n')
+
+        html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=300></A>\n')
+        html.write('<TD> <IMG SRC=../plots/'+oneDfile+'_spatialmag.png>\n')
         cim=str(im)
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg height=400></a>\n')
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg height=400></a>\n')
@@ -762,7 +766,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, field=None, 
                   instrument=None, clobber=True, noplot=False, plugmap=None, survey=None,
                   mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
-                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
+                  starmag=None, flat=None, fixfiberid=None, badfiberid=None, makeSpectrumPlots=False): 
 
     print("--------------------------------------------------------------------")
     print("Running MAKEPLOTSHTML for plate "+plate+", mjd "+mjd)
@@ -791,6 +795,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
     ntelluric = len(telluric)
+    science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
+    nscience = len(science)
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -947,10 +953,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 if plSum2['OBJTYPE'][j] == 'SKY':
                     objhtml.write('<TD BGCOLOR='+color+'> \n')
                 else:
-                    pfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
-                    pfilefull = plotsdir+pfile
-                    if noplot is False:
-                        print("Making "+pfile)
+                    plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
+                    plotfilefull = plotsdir+plotfile
+                    if makeSpectrumPlots is True:
+                        print("Making "+plotfile)
 
                         plt.ioff()
                         fontsize=24
@@ -992,7 +998,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                             ymin = ymn - (yspn * 0.15)
                             ymax = ymx + (yspn * 0.15)
 
-                        ax1 = plt.subplot2grid((1,1), (0,0), rowspan=2)
+                        ax1 = plt.subplot2grid((1,1), (0,0))
 
                         ax1.tick_params(reset=True)
                         ax1.set_xlim(xmin,xmax)
@@ -1005,24 +1011,84 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ax1.plot(vwave, vflux, color='k', linewidth=1)
 
                         fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
-                        plt.savefig(pfilefull)
+                        plt.savefig(plotfilefull)
                         plt.close('all')
                         plt.ion()
 
-                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+' target="_blank"><IMG SRC=../plots/'+pfile+' WIDTH=800></A>\n')
+                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=800></A>\n')
                     else:
                         if ims[0]==0:
-                            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+pfile+' target="_blank"><IMG SRC=../plots/'+pfile+' WIDTH=1000></A>\n')
+                            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
                         else:
                             objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
         objhtml.close()
         cfile.close()
 
-
         # PLOT 2: 5 panels
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.gif
         if (flat is None) & (onem is None):
-            print('PLOTS 2: 5-panel plot will be made here.')
+            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
+            plotfilefull = plotsdir+plotfile
+            if noplot is False:
+                print("Making "+plotfile)
+                plt.ioff()
+                fontsize=24
+                fsz=fontsize*0.75
+                fig=plt.figure(figsize=(10,18))
+                matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+
+                xmin = 6;  xmax = 15;  xspan=xmax-xmin
+
+                ax1 = plt.subplot2grid((5,1), (0,0))
+                ax2 = plt.subplot2grid((5,1), (1,0))
+                ax3 = plt.subplot2grid((5,1), (2,0))
+                ax4 = plt.subplot2grid((5,1), (3,0))
+                ax5 = plt.subplot2grid((5,1), (4,0))
+                axes = [ax1, ax2, ax3, ax4, ax5]
+
+                for ax in axes:
+                    ax.tick_params(reset=True)
+                    ax.set_xlim(xmin,xmax)
+                    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+                    ax.minorticks_on()
+
+                ax1.axes.xaxis.set_ticklabels([])
+                ax2.axes.xaxis.set_ticklabels([])
+                ax3.axes.xaxis.set_ticklabels([])
+                ax4.axes.xaxis.set_ticklabels([])
+
+                ax5.set_xlabel(r'$H$')
+                ax1.text(-0.15,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
+                ax2.text(-0.15,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
+                ax3.text(-0.15,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
+                ax4.text(-0.15,0.50,r'S/N',transform=ax4.transAxes,rotation=90,ha='left',va='center')
+
+                alpha = 0.6
+
+                # PLOT 2a: observed mag vs H mag
+                x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
+                ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
+                if ntelluric > 0: 
+                    x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
+                    ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+
+                # PLOT 2b: observed mag - fit mag vs H mag
+                x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
+                ax2.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
+                x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
+                ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+
+                # PLOT 2c: S/N as calculated from ap1D frame
+                x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
+                ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r', linestyle=' ')
+                x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
+                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
+
+                fig.subplots_adjust(left=0.14,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
+                plt.savefig(plotfilefull)
+                plt.close('all')
+                plt.ion()
+
 #            else:
 #                achievedsn = np.median(sn[obj,:], axis=0)
 
