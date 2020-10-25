@@ -738,8 +738,8 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 #        if tag_exist(tab1[i],'snratio'):
         html.write('<TR><TD>SN(E/C)<TD<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
         html.write('</TABLE>\n')
-        html.write('<TD><IMG SRC=../plots/'+oneDfile+'.gif>\n')
-        html.write('<TD> <IMG SRC=../plots/'+oneDfile+'.jpg>\n')
+        html.write('<TD><IMG SRC=../plots/'+oneDfile+'_magplots.png>\n')
+        html.write('<TD> <IMG SRC=../plots/'+oneDfile+'_spatialmag.png>\n')
         cim=str(im)
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg height=400></a>\n')
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg height=400></a>\n')
@@ -1021,7 +1021,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         # PLOT 2: 5 panels
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.gif
         if (flat is None) & (onem is None):
-            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'.png'
+            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
             plotfilefull = plotsdir+plotfile
             if noplot is False:
                 print("Making "+plotfile)
