@@ -675,8 +675,8 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 #    if (type(pairstr) == 'astropy.io.fits.fitsrec.FITS_rec') & (npairs > 0):
     if npairs > 0:
         # Pair table.
-        html.write('<BR><TABLE BORDER=2>\n')
-        html.write('<TR bgcolor=lightgreen><TD>IPAIR<TD>NAME<TD>SHIFT<TD>NEWSHIFT<TD>S/N\n')
+        html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
+        html.write('<TR bgcolor=lightgreen><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
         html.write('<TD>NAME<TD>SHIFT<TD>NEWSHIFT<TD>S/N\n')
         for ipair in range(npairs):
             html.write('<TR><TD>'+str(ipair)+'\n')
@@ -687,7 +687,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
                 html.write('<TD>'+str("%.2f" % round(pairstr['SN'][ipair][j],2))+'\n')
     else:
         # Table of combination parameters.
-        html.write('<BR><TABLE BORDER=2>\n')
+        html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
         for iframe in range(len(shiftstr)):
             html.write('<TR><TD>'+str(shiftstr['FRAMENUM'][iframe])+'\n')
             html.write('<TD>'+str("%.3f" % round(shiftstr['SHIFT'][iframe],3))+'\n')
