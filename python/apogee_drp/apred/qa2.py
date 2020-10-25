@@ -1088,7 +1088,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
 
 
-                fig.subplots_adjust(left=0.16,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
+                fig.subplots_adjust(left=0.155,right=0.98,bottom=0.06,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
                 plt.close('all')
                 plt.ion()
