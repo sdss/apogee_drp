@@ -1055,10 +1055,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 alpha = 0.6
 
                 # PLOT 2a: observed mag vs H mag
-                x = plSum2['HMAG'];    y = plSum2['obsmag'][:][0][i]
+                x = plSum2['HMAG'];    y = plSum2['obsmag'][:,i,1]
                 ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
                 if ntelluric > 0: 
-                    x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric][0][1]
+                    x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]
                     ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='b')
 
                 fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.2)
