@@ -609,7 +609,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     if os.path.exists(qafiledir) is False: subprocess.call(['mkdir',qafiledir])
 
     html = open(qafile, 'w')
-    html.write('<HTML><BODY>\n')
+    html.write('<HTML><HEAD><script src="sorttable.js"></script></head><BODY>\n')
     html.write('<H2> PLATE: '+plate+' MJD: '+mjd+' FIELD: '+field+'</H2>\n')
 
 
@@ -632,11 +632,10 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.close()
         return
 
-
     # Table of individual exposures.
-    html.write('<TABLE BORDER=2>\n')
+    html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=lightgreen>\n')
-    html.write('<TD>Frame<TD>Cart<TD>sec z<TD>HA<TD>DESIGN HA<TD>seeing<TD>FWHM<TD>GDRMS<TD>Nreads<TD>Dither<TD>Pixshift<TD>Zero<TD>Zero rms<TD>sky continuum<TD>S/N<TD>S/N(cframe)\n')
+    html.write('<TH>Frame<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither<TH>Pixshift<TH>Zero<TH>Zero rms<TH>sky continuum<TH>S/N<TH>S/N(cframe)\n')
     for i in range(len(tab1)):
         html.write('<TR>\n')
         html.write('<TD>'+str(int(round(tab1['IM'][i])))+'\n')
@@ -676,9 +675,9 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 #    if (type(pairstr) == 'astropy.io.fits.fitsrec.FITS_rec') & (npairs > 0):
     if npairs > 0:
         # Pair table.
-        html.write('<BR><TABLE BORDER=2>\n')
-        html.write('<TR bgcolor=lightgreen><TD>IPAIR<TD>NAME<TD>SHIFT<TD>NEWSHIFT<TD>S/N\n')
-        html.write('<TD>NAME<TD>SHIFT<TD>NEWSHIFT<TD>S/N\n')
+        html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
+        html.write('<TR bgcolor=lightgreen><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
+        html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
         for ipair in range(npairs):
             html.write('<TR><TD>'+str(ipair)+'\n')
             for j in range(2):
@@ -688,7 +687,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
                 html.write('<TD>'+str("%.2f" % round(pairstr['SN'][ipair][j],2))+'\n')
     else:
         # Table of combination parameters.
-        html.write('<BR><TABLE BORDER=2>\n')
+        html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
         for iframe in range(len(shiftstr)):
             html.write('<TR><TD>'+str(shiftstr['FRAMENUM'][iframe])+'\n')
             html.write('<TD>'+str("%.3f" % round(shiftstr['SHIFT'][iframe],3))+'\n')
@@ -717,13 +716,13 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     # Table of exposure plots.
     html.write('<TABLE BORDER=2>\n')
 
-    html.write('<TR><TD>Frame<TD>Zeropoints<TD>Mag plots\n')
-    html.write('<TD>Spatial mag deviation\n')
-    html.write('<TD>Spatial sky telluric CH4\n')
-    html.write('<TD>Spatial sky telluric CO2\n')
-    html.write('<TD>Spatial sky telluric H2O\n')
-    html.write('<TD>Spatial sky 16325A emission deviations (filled: sky, open: star)\n')
-    html.write('<TD>Spatial sky continuum emission\n')
+    html.write('<TR><TH>Frame<TH>Zeropoints<TH>Mag plots\n')
+    html.write('<TH>Spatial mag deviation\n')
+    html.write('<TH>Spatial sky telluric CH4\n')
+    html.write('<TH>Spatial sky telluric CO2\n')
+    html.write('<TH>Spatial sky telluric H2O\n')
+    html.write('<TH>Spatial sky 16325A emission deviations (filled: sky, open: star)\n')
+    html.write('<TH>Spatial sky continuum emission\n')
 
     for i in range(len(tab1)):
         im=tab1['IM'][i]
@@ -742,7 +741,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TR><TD>SN(E/C)<TD<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
         html.write('</TABLE>\n')
 
-        html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=300></A>\n')
+        html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=400></A>\n')
         html.write('<TD> <IMG SRC=../plots/'+oneDfile+'_spatialmag.png>\n')
         cim=str(im)
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg height=400></a>\n')
@@ -836,18 +835,18 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
         html.write('<TABLE BORDER=2>\n')
         html.write('<TR><TD>Frame<TD>Nreads<TD>Zeropoints<TD>Mag plots\n')
-        html.write('<TD>Spatial mag deviation\n')
-        html.write('<TD>Spatial sky 16325A emission deviations (filled: sky, open: star)\n')
-        html.write('<TD>Spatial sky continuum emission \n')
-        html.write('<TD>Spatial sky telluric CO2 absorption deviations (filled: H &lt 10) \n')
+        html.write('<TH>Spatial mag deviation\n')
+        html.write('<TH>Spatial sky 16325A emission deviations (filled: sky, open: star)\n')
+        html.write('<TH>Spatial sky continuum emission \n')
+        html.write('<TH>Spatial sky telluric CO2 absorption deviations (filled: H &lt 10) \n')
     else:
         html.write('<TABLE BORDER=2>\n')
-        html.write('<TR><TD>Frame<TD>Fiber<TD>Star\n')
+        html.write('<TR><TH>Frame<TH>Fiber<TH>Star\n')
 
     htmlsum.write('<TABLE BORDER=2>\n')
 
-    txt1 = '<TR bgcolor=lightgreen><TD>Frame<TD>Plate<TD>Cart<TD>sec z<TD>HA<TD>DESIGN HA<TD>seeing<TD>FWHM<TD>GDRMS'
-    txt2 = '<TD>Nreads<TD>Dither<TD>Zero<TD>Zerorms<TD>Zeronorm<TD>sky continuum<TD>S/N<TD>S/N(c)<TD>unplugged<TD>faint'
+    txt1 = '<TH bgcolor=lightgreen><TH>Frame<TH>Plate<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>seeing<TH>FWHM<TH>GDRMS'
+    txt2 = '<TH>Nreads<TH>Dither<TH>Zero<TH>Zerorms<TH>Zeronorm<TH>sky continuum<TH>S/N<TH>S/N(c)<TH>unplugged<TH>faint'
     htmlsum.write(txt1+txt2+'\n')
 
 #    unplugged, = np.where(fiber['fiberid'] < 0)
@@ -1024,7 +1023,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         objhtml.close()
         cfile.close()
 
-        # PLOT 2: 5 panels
+        # PLOT 2: 3 panels
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.gif
         if (flat is None) & (onem is None):
             plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
@@ -1034,17 +1033,17 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 plt.ioff()
                 fontsize=24
                 fsz=fontsize*0.75
-                fig=plt.figure(figsize=(10,18))
+                fig=plt.figure(figsize=(11,14))
                 matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
                 xmin = 6;  xmax = 15;  xspan=xmax-xmin
 
-                ax1 = plt.subplot2grid((5,1), (0,0))
-                ax2 = plt.subplot2grid((5,1), (1,0))
-                ax3 = plt.subplot2grid((5,1), (2,0))
-                ax4 = plt.subplot2grid((5,1), (3,0))
-                ax5 = plt.subplot2grid((5,1), (4,0))
-                axes = [ax1, ax2, ax3, ax4, ax5]
+                ax1 = plt.subplot2grid((3,1), (0,0))
+                ax2 = plt.subplot2grid((3,1), (1,0))
+                ax3 = plt.subplot2grid((3,1), (2,0))
+#                ax4 = plt.subplot2grid((5,1), (3,0))
+#                ax5 = plt.subplot2grid((5,1), (4,0))
+                axes = [ax1, ax2, ax3]#, ax4, ax5]
 
                 for ax in axes:
                     ax.tick_params(reset=True)
@@ -1054,23 +1053,24 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                 ax1.axes.xaxis.set_ticklabels([])
                 ax2.axes.xaxis.set_ticklabels([])
-                ax3.axes.xaxis.set_ticklabels([])
-                ax4.axes.xaxis.set_ticklabels([])
+#                ax3.axes.xaxis.set_ticklabels([])
+#                ax4.axes.xaxis.set_ticklabels([])
 
-                ax5.set_xlabel(r'$H$')
-                ax1.text(-0.15,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
-                ax2.text(-0.15,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
-                ax3.text(-0.15,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
-                ax4.text(-0.15,0.50,r'S/N',transform=ax4.transAxes,rotation=90,ha='left',va='center')
+                ax3.set_xlabel(r'$H$')
+#                ax5.set_xlabel(r'$H$')
+                ax1.text(-0.17,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
+                ax2.text(-0.17,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
+                ax3.text(-0.17,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
+#                ax4.text(-0.17,0.50,r'S/N (Cframe)',transform=ax4.transAxes,rotation=90,ha='left',va='center')
 
                 alpha = 0.6
 
                 # PLOT 2a: observed mag vs H mag
                 x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
-                ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
-                if ntelluric > 0: 
-                    x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
-                    ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+                ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r', label='Science')
+                x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
+                ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan', label='Telluric')
+                ax1.legend(loc='upper left')
 
                 # PLOT 2b: observed mag - fit mag vs H mag
                 x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
@@ -1080,11 +1080,14 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                 # PLOT 2c: S/N as calculated from ap1D frame
                 x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
-                ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r', linestyle=' ')
+                ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='r')
+#                ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r', linestyle=' ')
                 x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
-                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
+                ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+#                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
 
-                fig.subplots_adjust(left=0.14,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
+
+                fig.subplots_adjust(left=0.155,right=0.98,bottom=0.06,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
                 plt.close('all')
                 plt.ion()
