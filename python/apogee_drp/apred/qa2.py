@@ -1021,7 +1021,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         # PLOT 2: 5 panels
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.gif
         if (flat is None) & (onem is None):
-            plotfile = pfile+'.png'
+            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'.png'
             plotfilefull = plotsdir+plotfile
             if noplot is False:
                 print("Making "+plotfile)
