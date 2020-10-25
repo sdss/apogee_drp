@@ -1079,12 +1079,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
                 # PLOT 2c: S/N as calculated from ap1D frame
-                ax3.set_ylim(1,1000)
                 x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
-                ax3.scatter(x, np.log10(y), marker='^', s=60, edgecolors='k', alpha=alpha, c='r')
+                ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='r')
 #                ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r', linestyle=' ')
                 x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
-                ax3.scatter(x, np.log10(y), marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+                ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 #                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
 
 
