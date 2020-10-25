@@ -1084,6 +1084,14 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
                 ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
 
+                d = load.ap1D(plSum1['IM'][i])
+                dhdr = d['a'][0].header
+                exptime = dhdr['EXPTIME']
+                sntarget = 100 * np.sqrt(exptime / (3.0 * 3600))
+                sntargetmag = 12.2
+                x = [sntargetmag-10,sntargetmag+2.5];   y = [sntarget*100,sntarget/np.sqrt(10)]
+                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
+
                 fig.subplots_adjust(left=0.14,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
                 plt.close('all')
