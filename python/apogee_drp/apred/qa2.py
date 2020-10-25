@@ -1034,7 +1034,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 plt.ioff()
                 fontsize=24
                 fsz=fontsize*0.75
-                fig=plt.figure(figsize=(10,18))
+                fig=plt.figure(figsize=(11,18))
                 matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
                 xmin = 6;  xmax = 15;  xspan=xmax-xmin
@@ -1058,10 +1058,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax4.axes.xaxis.set_ticklabels([])
 
                 ax5.set_xlabel(r'$H$')
-                ax1.text(-0.16,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
-                ax2.text(-0.16,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
-                ax3.text(-0.16,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
-                ax4.text(-0.16,0.50,r'S/N',transform=ax4.transAxes,rotation=90,ha='left',va='center')
+                ax1.text(-0.17,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
+                ax2.text(-0.17,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
+                ax3.text(-0.17,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
+                ax4.text(-0.17,0.50,r'S/N',transform=ax4.transAxes,rotation=90,ha='left',va='center')
 
                 alpha = 0.6
 
@@ -1086,7 +1086,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 #                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
 
-                fig.subplots_adjust(left=0.15,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
+                fig.subplots_adjust(left=0.16,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
                 plt.close('all')
                 plt.ion()
