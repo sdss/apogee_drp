@@ -1083,7 +1083,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
                 sntargetmag = 12.2
                 x = [sntargetmag-10,sntargetmag+2.5];   y = [sntarget*100,sntarget/np.sqrt(10)]
-                ax3.plot(x, y, color='k', linewidth=1.5)
+                #ax3.plot(x, y, color='k', linewidth=1.5)
 
                 x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
                 ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r', linestyle=' ')
