@@ -1077,12 +1077,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
                 # PLOT 2c: S/N as calculated from ap1D frame
-                ax3.set_yscale('log')
                 x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
-                ax3.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
+                ax3.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r', logy=True)
                 if ntelluric > 0: 
                     x = plSum2['HMAG'][telluric];   y = y = plSum2['SN'][telluric,i,1]
-                    ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+                    ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan', logy=True)
 
                 fig.subplots_adjust(left=0.14,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
