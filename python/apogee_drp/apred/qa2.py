@@ -1060,8 +1060,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                 alpha = 0.6
 
-        fiber[j].obsmag[i,*]=-2.5*alog10(obs[j,*])+zero
-
                 # PLOT 2a: observed mag vs H mag
                 x = plSum2['HMAG'];    y = plSum2['obsmag'][:,i,1]-plSum1['ZERO'][i]
                 ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
