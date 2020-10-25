@@ -1053,10 +1053,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax4.axes.xaxis.set_ticklabels([])
 
                 ax5.set_xlabel(r'$H$')
-                ax1.set_ylabel(r'mag = -2.5 * log$_{\rm 10}$(counts)')
-                ax2.set_ylabel(r'$H$ - (mag+zero)')
-                ax3.set_ylabel(r'S/N')
-                ax4.set_ylabel(r'S/N')
+                ax1.text(-0.08,0.50,r'mag = -2.5 * log$_{\rm 10}$(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
+                ax2.text(-0.08,0.50,r'$H$ - (mag+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
+                ax3.text(-0.08,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
+                ax4.text(-0.08,0.50,r'S/N',transform=ax4.transAxes,rotation=90,ha='left',va='center')
 
                 alpha = 0.6
 
@@ -1067,7 +1067,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]
                     ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='b')
 
-                fig.subplots_adjust(left=0.13,right=0.995,bottom=0.08,top=0.99,hspace=0.2,wspace=0.2)
+                fig.subplots_adjust(left=0.14,right=0.995,bottom=0.06,top=0.99,hspace=0.2,wspace=0.2)
                 plt.savefig(plotfilefull)
                 plt.close('all')
                 plt.ion()
