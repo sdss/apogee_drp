@@ -280,6 +280,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                    ('PLATE',     np.int32),
                    ('NREADS',    np.int32),
                    ('DATEOBS',   np.str, 30),
+                   ('EXPTIME',   np.int32),
                    ('SECZ',      np.float64),
                    ('HA',        np.float64),
                    ('DESIGN_HA', np.float64, 3),
@@ -480,6 +481,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         else:
             fwhm = -1
             gdrms = -1
+            exptime=-9.999
 
         alt = dhdr['ALT']
         secz = 1. / np.cos((90.-alt) * (math.pi/180.))
@@ -516,6 +518,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['GDRMS'][i] =     gdrms
         platetab['CART'][i] =      dhdr['CARTID']
         platetab['DATEOBS'][i] =   dhdr['DATE-OBS']
+        platetab['EXPTIME'][i] =   exptime
         platetab['DITHER'][i] =    dither
         platetab['ZERO'][i] =      zero
         platetab['ZERORMS'][i] =   zerorms
@@ -1072,16 +1075,14 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 # PLOT 2b: observed mag - fit mag vs H mag
                 x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
                 ax2.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
-                if ntelluric > 0: 
-                    x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
-                    ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+                x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
+                ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
                 # PLOT 2c: S/N as calculated from ap1D frame
                 x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
                 ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r', linestyle=' ')
-                if ntelluric > 0: 
-                    x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
-                    ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
+                x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
+                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
 
                 fig.subplots_adjust(left=0.14,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
