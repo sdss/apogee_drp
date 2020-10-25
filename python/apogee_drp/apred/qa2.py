@@ -1087,7 +1087,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
                 sntargetmag = 12.2
                 x = [sntargetmag-10,sntargetmag+2.5];   y = [sntarget*100,sntarget/np.sqrt(10)]
-                ax3.plot(x, np.log10(y), color='k', linewidth=1.5)
+                ax3.plot(x, y, color='k', linewidth=1.5)
 
                 fig.subplots_adjust(left=0.14,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
