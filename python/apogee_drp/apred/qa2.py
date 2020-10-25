@@ -677,7 +677,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         # Pair table.
         html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
         html.write('<TR bgcolor=lightgreen><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
-        html.write('<TD>NAME<TD>SHIFT<TD>NEWSHIFT<TD>S/N\n')
+        html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
         for ipair in range(npairs):
             html.write('<TR><TD>'+str(ipair)+'\n')
             for j in range(2):
@@ -835,18 +835,18 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
         html.write('<TABLE BORDER=2>\n')
         html.write('<TR><TD>Frame<TD>Nreads<TD>Zeropoints<TD>Mag plots\n')
-        html.write('<TD>Spatial mag deviation\n')
-        html.write('<TD>Spatial sky 16325A emission deviations (filled: sky, open: star)\n')
-        html.write('<TD>Spatial sky continuum emission \n')
-        html.write('<TD>Spatial sky telluric CO2 absorption deviations (filled: H &lt 10) \n')
+        html.write('<TH>Spatial mag deviation\n')
+        html.write('<TH>Spatial sky 16325A emission deviations (filled: sky, open: star)\n')
+        html.write('<TH>Spatial sky continuum emission \n')
+        html.write('<TH>Spatial sky telluric CO2 absorption deviations (filled: H &lt 10) \n')
     else:
         html.write('<TABLE BORDER=2>\n')
-        html.write('<TR><TD>Frame<TD>Fiber<TD>Star\n')
+        html.write('<TR><TH>Frame<TH>Fiber<TH>Star\n')
 
     htmlsum.write('<TABLE BORDER=2>\n')
 
-    txt1 = '<TR bgcolor=lightgreen><TD>Frame<TD>Plate<TD>Cart<TD>sec z<TD>HA<TD>DESIGN HA<TD>seeing<TD>FWHM<TD>GDRMS'
-    txt2 = '<TD>Nreads<TD>Dither<TD>Zero<TD>Zerorms<TD>Zeronorm<TD>sky continuum<TD>S/N<TD>S/N(c)<TD>unplugged<TD>faint'
+    txt1 = '<TH bgcolor=lightgreen><TH>Frame<TH>Plate<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>seeing<TH>FWHM<TH>GDRMS'
+    txt2 = '<TH>Nreads<TH>Dither<TH>Zero<TH>Zerorms<TH>Zeronorm<TH>sky continuum<TH>S/N<TH>S/N(c)<TH>unplugged<TH>faint'
     htmlsum.write(txt1+txt2+'\n')
 
 #    unplugged, = np.where(fiber['fiberid'] < 0)
