@@ -1085,6 +1085,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
                 ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 #                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
+                ax3.set_yscale('log')
+                ax3.set_ylim(1,1000)
 
                 fig.subplots_adjust(left=0.16,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
