@@ -78,7 +78,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),('eta',np.float64),('zeta',np.float64),
                       ('hmag',float),('objtype',np.str,10),('holetype',np.str,10),('object',np.str,30),
                       ('tmass_style',np.str,30),('target1',int),('target2',int),('target3',int),('target4',int),
-                      ('spectrographid',int),('mag',float,5)])
+                      ('spectrographid',int),('mag',float,5),('pmra',float),('pmdec',float),('catalogid',int),
+                      ('gaia_g',float),('gaia_bp',float),('gaia_rp',float),('sdssv_apogee_target0',int),
+                      ('firstcarton',(np.str,100))])
     guide = np.zeros(16,dtype=dtype)
     loc = 0
 
@@ -299,14 +301,14 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             apogee2 = 0
                         # SDSS-V plate
                         if (plate <= 15000):
-                            fiber['catalogid'][i] = p['catalogid'][match]
-                            fiber['gaia_g'][i] = p['gaia_g'][match]
-                            fiber['gaia_bp'][i] = p['gaia_bp'][match]
-                            fiber['gaia_rp'][i] = p['gaia_rp'][match]
-                            fiber['sdssv_apogee_target0'][i] = p['sdssv_apogee_target0'][match]
-                            fiber['firstcarton'][i] = p['firstcarton'][match]
-                            fiber['pmra'][i] = p['pmra'][match]
-                            fiber['pmdec'][i] = p['pmdec'][match]
+                            fiber['catalogid'][i] = ph['catalogid'][match]
+                            fiber['gaia_g'][i] = ph['gaia_g'][match]
+                            fiber['gaia_bp'][i] = ph['gaia_bp'][match]
+                            fiber['gaia_rp'][i] = ph['gaia_rp'][match]
+                            fiber['sdssv_apogee_target0'][i] = ph['sdssv_apogee_target0'][match]
+                            fiber['firstcarton'][i] = ph['firstcarton'][match][0].astype(str)
+                            fiber['pmra'][i] = ph['pmra'][match]
+                            fiber['pmdec'][i] = ph['pmdec'][match]
                             # objtype: OBJECT, HOT_STD, or SKY                                                                                                           
                             objtype = 'OBJECT'
                             if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],0)==1: objtype='SKY'

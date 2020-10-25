@@ -344,6 +344,7 @@ for i=0,299 do begin
             fiber[i].target2 = p[match].apogee2_target2
             fiber[i].target3 = p[match].apogee2_target3
             apogee2 = 1
+            sdss5 = 0
             if have_flag_changes then begin
               jj = where(flag_changes.PlateID eq platenum and flag_changes.TARGETID eq p[match].targetids, njj)
               if njj gt 0 then begin
@@ -360,6 +361,7 @@ for i=0,299 do begin
             fiber[i].target1 = p[match].apogee_target1
             fiber[i].target2 = p[match].apogee_target2
             apogee2 = 0
+            sdss5 = 0
           endif
           ;; SDSS-V plate
           if platenum ge 15000 then begin
@@ -375,6 +377,7 @@ for i=0,299 do begin
             objtype = 'OBJECT'
             if is_bit_set(fiber[i].sdssv_apogee_target0,0) then objtype='SKY'
             if is_bit_set(fiber[i].sdssv_apogee_target0,1) then objtype='HOT_STD'
+            apogee2 = 0
             sdss5 = 1
           endif
           ;; APOGEE-1/2 target types
@@ -417,8 +420,9 @@ endfor
 
 ;; Load apogeeObject file to get proper name and coordinates
 ;; Get apogeeObject catalog info for this field
+;; No apogeeObject files for SDSS-V   
 if apogee2 then apogeeobject='apogee2Object' else apogeeobject='apogeeObject'
-if not keyword_set(noobject) then begin
+if not keyword_set(noobject) and not keyword_set(sdss5) then begin
   targetdir = getenv('APOGEE_TARGET')
 
   ;; Get apogeeObject catalog info for this field
