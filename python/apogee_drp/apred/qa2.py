@@ -716,7 +716,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     # Table of exposure plots.
     html.write('<TABLE BORDER=2>\n')
 
-    html.write('<TR><TD>Frame<TD>Zeropoints<TH>Mag plots\n')
+    html.write('<TR><TH>Frame<TH>Zeropoints<TH>Mag plots\n')
     html.write('<TH>Spatial mag deviation\n')
     html.write('<TH>Spatial sky telluric CH4\n')
     html.write('<TH>Spatial sky telluric CO2\n')
