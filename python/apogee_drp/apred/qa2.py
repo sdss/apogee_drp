@@ -792,6 +792,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
     ntelluric = len(telluric)
+    science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
+    nscience = len(science)
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -1061,11 +1063,18 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 alpha = 0.6
 
                 # PLOT 2a: observed mag vs H mag
-                x = plSum2['HMAG'];    y = plSum2['obsmag'][:,i,1]-plSum1['ZERO'][i]
+                x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
                 ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
                 if ntelluric > 0: 
                     x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
-                    ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='b')
+                    ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+
+                # PLOT 2b: observed mag - fit mag vs H mag
+                x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
+                ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
+                if ntelluric > 0: 
+                    x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
+                    ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
                 fig.subplots_adjust(left=0.14,right=0.98,bottom=0.05,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
