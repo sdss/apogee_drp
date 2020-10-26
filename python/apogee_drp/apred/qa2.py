@@ -614,12 +614,10 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         return
 
     # Link to combined spectra page.
-    html.write('<H3> For plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here </a><H3>\n')
-
-    html.write('<H3>Individual Exposure QA:</H3>\n')
-    html.write('<BR><BR>\n')
+    html.write('<H3> For plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here apPlate-8100-57680 </a><H3>\n')
 
     # Table of individual exposures.
+    html.write('<H3>Individual Exposure QA:</H3>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=lightgreen>\n')
     html.write('<TH>Frame<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither<TH>Pixshift<TH>Zero<TH>Zero rms<TH>sky continuum<TH>S/N<TH>S/N(cframe)\n')
