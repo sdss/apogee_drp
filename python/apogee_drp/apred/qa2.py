@@ -805,6 +805,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         ax1.minorticks_on()
         ax1.set_xlabel(r'Zeta')
         ax1.set_ylabel(r'Eta')
+        import pdb; pdb.set_trace()
 
         ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=70, color='b', edgecolors='k')
 
