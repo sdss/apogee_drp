@@ -1142,7 +1142,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
                 x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
                 ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='cyan', label='Telluric')
-                ax1.legend(loc='upper left')
+                ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
                 # PLOT 2b: observed mag - fit mag vs H mag
                 x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
@@ -1189,7 +1189,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
             x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
             c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
-            psci = ax1.scatter(x, y, marker='*', s=200, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Science')
+            psci = ax1.scatter(x, y, marker='*', s=240, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
             x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
             c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
