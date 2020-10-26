@@ -659,7 +659,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
         html.write('<TR bgcolor=lightgreen><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
         html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
-        html.write('<TR>\n')
         for ipair in range(npairs):
             html.write('<TR><TD>'+str(ipair)+'\n')
             for j in range(2):
@@ -682,9 +681,10 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     # Flat field plots.
     if fluxid is not None:
         html.write('<TABLE BORDER=2><TR>\n')
-        txt1 = '<TH> Blue chip relative<BR>flat field flux <TH> Greeen chip relative<BR>flat field flux <TH> Red chip relative<BR>flat field flux'
-        txt2 = '<TH> Fiber Blocks'
+        txt1 = '<TH> Blue chip relative<BR>flat field flux <TH> Greeen chip relative<BR>flat field flux'
+        txt2 = '<TH> Red chip relative<BR>flat field flux<TH> Fiber Blocks'
         html.write(txt1+txt2+'\n')
+        html.write('<TR>\n')
         for chip in chips:
             fluxfile = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chip+'-')
             fluxfile = os.path.basename(fluxfile).replace('.fits','')
