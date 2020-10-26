@@ -659,6 +659,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
         html.write('<TR bgcolor=lightgreen><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
         html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
+        html.write('<TR>\n')
         for ipair in range(npairs):
             html.write('<TR><TD>'+str(ipair)+'\n')
             for j in range(2):
