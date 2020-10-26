@@ -1176,7 +1176,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             plt.ioff()
             fontsize=24
             fsz=fontsize*0.75
-            fig=plt.figure(figsize=(14,14))
+            fig=plt.figure(figsize=(14,15))
             matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
             ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1206,8 +1206,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             cb = colorbar(psci, cax=cax1, orientation="horizontal")
             cax1.xaxis.set_ticks_position("top")
             cax1.minorticks_on()
+            ax1.text(0.5, 1.10, r'$H$ + 2.5*log(m - zero)',ha='center', transform=ax1.transAxes)
 
-            fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.94,hspace=0.2,wspace=0.0)
+            fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.92,hspace=0.2,wspace=0.0)
             plt.savefig(plotfilefull)
             plt.close('all')
             plt.ion()
