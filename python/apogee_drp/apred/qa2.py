@@ -696,6 +696,8 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=400></A>\n')
         html.write('</TABLE>\n')
 
+    html.write('<BR>')
+
     # Table of exposure plots.
     html.write('<TABLE BORDER=2>\n')
 
