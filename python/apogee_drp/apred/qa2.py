@@ -1199,7 +1199,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
             psky = ax1.scatter(x, y, marker='s', s=100, c='white', edgecolors='k', alpha=1, label='Sky')
 
-            ax1.legend(loc='upper left', fontsize=fsz, labelspacing=0.5, handletextpad=-0.1)
+            ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
             ax1_divider = make_axes_locatable(ax1)
             cax1 = ax1_divider.append_axes("top", size="6%", pad="1%")
