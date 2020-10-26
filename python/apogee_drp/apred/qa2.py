@@ -1353,7 +1353,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             gcamfile = expdir+mjd+'/gcam-'+mjd+'.fits'
             gcam = fits.getdata(gcamfile)
 
-            dateobs = plSum1['DATE-OBS'][0]
+            dateobs = plSum1['DATEOBS'][0]
             tt = Time(dateobs)
             mjdstart = tt.mjd
             exptime = np.sum(plSum1['EXPTIME'])
