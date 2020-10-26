@@ -613,6 +613,12 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.close()
         return
 
+    # Link to combined spectra page.
+    html.write('<H3> For plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here </a><H3>\n')
+
+    html.write('<H3>Individual Exposure QA:</H3>\n')
+    html.write('<BR><BR>\n')
+
     # Table of individual exposures.
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=lightgreen>\n')
@@ -649,7 +655,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD>'+'['+txt+']\n')
     html.write('</TABLE>\n')
 
-
     # Table of exposure pairs.
     npairs = len(pairstr)
     ### NOTE: the below if statement will not work. Ignoring it and hoping for the best.
@@ -675,10 +680,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
             html.write('<TD>'+str("%.3f" % round(shiftstr['SN'][iframe],3))+'\n')
     html.write('</TABLE>\n')
 
-    # Link to combined spectra page.
-    html.write('<H3> Plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here </a><H3>\n')
-
-    html.write('<H3>Individual Exposure QA Plots:</H3>\n')
     # Table of exposure plots.
     html.write('<TABLE BORDER=2>\n')
 
@@ -717,7 +718,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD> <IMG SRC=../plots/'+oneDfile+'skycont.jpg>\n')
     html.write('</table>\n')
 
-    html.write('<BR><BR>')
+    html.write('<BR><BR>\n')
 
     # Flat field plots.
     if fluxid is not None:
