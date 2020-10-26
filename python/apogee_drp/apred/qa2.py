@@ -1202,13 +1202,13 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
             ax1_divider = make_axes_locatable(ax1)
-            cax1 = ax1_divider.append_axes("top", size="6%", pad="1%")
+            cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
             cb = colorbar(psci, cax=cax1, orientation="horizontal")
             cax1.xaxis.set_ticks_position("top")
             cax1.minorticks_on()
-            ax1.text(0.5, 1.13, r'$H$ + 2.5*log(m - zero)',ha='center', transform=ax1.transAxes)
+            ax1.text(0.5, 1.12, r'$H$ + 2.5*log(m - zero)',ha='center', transform=ax1.transAxes)
 
-            fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.92,hspace=0.2,wspace=0.0)
+            fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
             plt.savefig(plotfilefull)
             plt.close('all')
             plt.ion()
