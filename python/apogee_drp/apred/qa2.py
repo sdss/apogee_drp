@@ -821,8 +821,8 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         plt.savefig(plotfilefull)
         plt.close('all')
 
-    longlink = np.array([5,6,7,8,2,4,11,10,12,13])
     import pdb; pdb.set_trace()
+    longlink = np.array([5,6,7,8,2,4,11,10,12,13])
     block = int((plSum2['FIBERID'] - 1) / 30) + 1
     blockfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
 
