@@ -680,18 +680,16 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 
     # Flat field plots.
     if fluxid is not None:
-        html.write('<P> Flat field relative fluxes\n')
         html.write('<TABLE BORDER=2><TR>\n')
+        txt1 = '<TH> Blue chip relative<BR>flat field flux <TH> Greeen chip relative<BR>flat field flux <TH> Red chip relative<BR>flat field flux'
+        txt2 = '<TH> Fiber Blocks'
+        html.write(txt1+txt2+'\n')
         for chip in chips:
             fluxfile = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chip+'-')
             fluxfile = os.path.basename(fluxfile).replace('.fits','')
             html.write('<TD> <A HREF='+'../plots/'+fluxfile+'.png><IMG SRC=../plots/'+fluxfile+'.png WIDTH=400></A>\n')
-        html.write('</TABLE>\n')
-
         tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
         blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
-        html.write('<P> Fiber Blocks\n')
-        html.write('<TABLE BORDER=2><TR>\n')
         html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=400></A>\n')
         html.write('</TABLE>\n')
 
