@@ -1346,6 +1346,12 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     html.write('</TABLE>\n')
 
+    # Get guider information.
+    if onem is None:
+        expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
+        gcamfile = expdir+mjd+'/gcam-'+mjd+'.fits'
+        gcam = fits.getdata(gcamfile)
+        import pdb; pdb.set_trace()
 
     # For individual frames, make plots of variation of sky and zeropoint.
     # For combined frames, make table of combination parameters.
