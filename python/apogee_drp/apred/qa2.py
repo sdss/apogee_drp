@@ -707,7 +707,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         txt='<TD>'+str("%.1f" % round(tab1['SNC'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][i][2],1))
         html.write('<TR><TD bgcolor=lightgreen>S/N(c)'+txt+'\n')
 #        if tag_exist(tab1[i],'snratio'):
-        html.write('<TR><TD>SN(E/C)<TD<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
+        html.write('<TR><TD bgcolor=lightgreen>SN(E/C)<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
         html.write('</TABLE>\n')
 
         html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=400></A>\n')
