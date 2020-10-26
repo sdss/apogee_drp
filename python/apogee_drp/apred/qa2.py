@@ -1079,12 +1079,15 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
                 # PLOT 2c: S/N as calculated from ap1D frame
-                x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
-                ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='r')
+#                x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
+#                ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='r')
 #                ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r', linestyle=' ')
-                import pdb; pdb.set_trace()
-                x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
-                ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+#                import pdb; pdb.set_trace()
+                x = plSum2['HMAG'][telluric]
+                c = ['r','g','b']
+                for ichip in range(nchips):
+                    y = plSum2['SN'][telluric,i,ichip]
+                    ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c=c[ichip])
 #                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
 
 
