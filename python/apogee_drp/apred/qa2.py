@@ -1230,7 +1230,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             if ims[0] != 0: d = load.ap1D(ims[i])
             rows = 300-plSum2['FIBERID']
 
-            fibersky, = np.where(plSum2['OBJTYPE' == 'SKY')
+            fibersky, = np.where(plSum2['OBJTYPE'] == 'SKY')
             nsky = len(fibersky)
             sky = rows[fibersky]
 
