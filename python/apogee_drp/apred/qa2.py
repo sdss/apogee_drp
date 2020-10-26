@@ -822,9 +822,10 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         plt.close('all')
 
     longlink = np.array([5,6,7,8,2,4,11,10,12,13])
+    import pdb; pdb.set_trace()
     block = int((plSum2['FIBERID'] - 1) / 30) + 1
     blockfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
-    import pdb; pdb.set_trace()
+
     print("Making "+blockfile)
     fontsize=26
     fsz=fontsize*0.75
