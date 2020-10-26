@@ -821,7 +821,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         plt.savefig(plotfilefull)
         plt.close('all')
 
-    block = np.around((plSum2['FIBERID'] - 1) / 30) - 1
+    block = np.around((plSum2['FIBERID'] - 1) / 30)
     blockfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     blockfilefull = plotsdir + blockfile
 
