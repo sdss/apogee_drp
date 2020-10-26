@@ -1176,7 +1176,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             plt.ioff()
             fontsize=24
             fsz=fontsize*0.75
-            fig=plt.figure(figsize=(11,14))
+            fig=plt.figure(figsize=(14,14))
             matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
             ax1 = plt.subplot2grid((1,1), (0,0))
