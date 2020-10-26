@@ -1139,24 +1139,24 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                 # PLOT 2a: observed mag vs H mag
                 x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
-                ax1.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r', label='Science')
+                ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
                 x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
-                ax1.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan', label='Telluric')
+                ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='cyan', label='Telluric')
                 ax1.legend(loc='upper left')
 
                 # PLOT 2b: observed mag - fit mag vs H mag
                 x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
-                ax2.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
+                ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
                 x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
-                ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
+                ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
                 # PLOT 2c: S/N as calculated from ap1D frame
                 c = ['r','g','b']
                 for ichip in range(nchips):
                     x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,ichip]
-                    ax3.semilogy(x, y, marker='o', ms=8, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
+                    ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
                     x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,ichip]
-                    ax3.semilogy(x, y, marker='^', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
+                    ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
 
 
                 fig.subplots_adjust(left=0.155,right=0.98,bottom=0.06,top=0.99,hspace=0.1,wspace=0.0)
@@ -1189,7 +1189,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
             x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
             c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
-            psci = ax1.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Science')
+            psci = ax1.scatter(x, y, marker='*', s=200, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
             x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
             c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
