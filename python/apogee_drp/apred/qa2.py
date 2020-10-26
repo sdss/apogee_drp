@@ -618,7 +618,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('<H3> For plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here apPlate-8100-57680 </a><H3>\n')
 
     # Table of individual exposures.
-    html.write('<H3>Individual Exposure QA:</H3>\n')
+    html.write('<H3>Individual Exposure Stats:</H3>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=lightgreen>\n')
     html.write('<TH>Frame<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither<TH>Pixshift<TH>Zero<TH>Zero rms<TH>sky continuum<TH>S/N<TH>S/N(cframe)\n')
@@ -660,6 +660,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 #    if (type(pairstr) == 'astropy.io.fits.fitsrec.FITS_rec') & (npairs > 0):
     if npairs > 0:
         # Pair table.
+        html.write('<H3>Dither Pair Stats:</H3>\n')
         html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
         html.write('<TR bgcolor=lightgreen><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
         html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
@@ -672,6 +673,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
                 html.write('<TD>'+str("%.2f" % round(pairstr['SN'][ipair][j],2))+'\n')
     else:
         # Table of combination parameters.
+        html.write('<H3>Combination Parameters (undithered):</H3>\n')
         html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
         for iframe in range(len(shiftstr)):
             html.write('<TR><TD>'+str(shiftstr['FRAMENUM'][iframe])+'\n')
@@ -682,7 +684,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     # Table of exposure plots.
     html.write('<TABLE BORDER=2>\n')
     html.write('<BR>\n')
-
+    html.write('<H3>Individual Exposure QA Plots:</H3>\n')
     html.write('<TR><TH>Frame<TH>Zeropoints<TH>Mag plots\n')
     html.write('<TH>Spatial mag deviation\n')
     html.write('<TH>Spatial sky telluric CH4\n')
