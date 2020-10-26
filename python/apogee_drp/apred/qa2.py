@@ -789,6 +789,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         plotfile = fluxfile.replace('Flux-', 'Flux-'+chip+'-').replace('.fits', '.png')
         plotfilefull = plotsdir + plotfile
         med = np.median(flux[chip][1].data, axis=1)
+        med = med[plSum2['FIBERID']-1]
 
         print("Making "+plotfile)
         plt.ioff()
@@ -805,9 +806,8 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         ax1.minorticks_on()
         ax1.set_xlabel(r'Zeta')
         ax1.set_ylabel(r'Eta')
-        import pdb; pdb.set_trace()
 
-        ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=70, color='b', edgecolors='k')
+        ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=70, color=med, edgecolors='k', cmap='hot_r', alpha=0.6)
 
         fig.subplots_adjust(left=0.08,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
         plt.savefig(plotfilefull)
