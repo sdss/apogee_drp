@@ -685,7 +685,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('<TABLE BORDER=2>\n')
     html.write('<BR>\n')
     html.write('<H3>Individual Exposure QA Plots:</H3>\n')
-    html.write('<TR><TH>Frame<TH>Zeropoints<TH>Mag plots\n')
+    html.write('<TR bgcolor=lightgreen><TH>Frame<TH>Zeropoints<TH>Mag plots\n')
     html.write('<TH>Spatial mag deviation\n')
     html.write('<TH>Spatial sky telluric CH4\n')
     html.write('<TH>Spatial sky telluric CO2\n')
@@ -728,7 +728,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         txt1 = '<TH> Blue chip relative<BR>flat field flux <TH> Greeen chip relative<BR>flat field flux'
         txt2 = '<TH> Red chip relative<BR>flat field flux<TH> Fiber Blocks <TH> Guider RMS'
         html.write(txt1+txt2+'\n')
-        html.write('<TR>\n')
+        html.write('<TR bgcolor=lightgreen>\n')
         for chip in chips:
             fluxfile = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chip+'-')
             fluxfile = os.path.basename(fluxfile).replace('.fits','')
