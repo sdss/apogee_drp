@@ -1201,7 +1201,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
             ax1_divider = make_axes_locatable(ax1)
             cax1 = ax1_divider.append_axes("top", size="6%", pad="1%")
-            cb = colorbar(sc, cax=cax1, orientation="horizontal")
+            cb = colorbar(psci, cax=cax1, orientation="horizontal")
             cax1.xaxis.set_ticks_position("top")
             cax1.minorticks_on()
 
