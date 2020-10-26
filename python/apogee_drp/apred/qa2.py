@@ -661,7 +661,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     if npairs > 0:
         # Pair table.
         html.write('<H3>Dither Pair Stats:</H3>\n')
-        html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
+        html.write('<TABLE BORDER=2 CLASS="sortable">\n')
         html.write('<TR bgcolor=lightgreen><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
         html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
         for ipair in range(npairs):
