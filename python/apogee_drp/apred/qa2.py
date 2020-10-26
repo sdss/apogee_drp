@@ -676,27 +676,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('</TABLE>\n')
 
     # Link to combined spectra page.
-    html.write('<P><A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> Visit (multiple exposure and dither combined) spectra </a><p>\n')
-
-    # Flat field plots.
-    if fluxid is not None:
-        html.write('<TABLE BORDER=2><TR>\n')
-        txt1 = '<TH> Blue chip relative<BR>flat field flux <TH> Greeen chip relative<BR>flat field flux'
-        txt2 = '<TH> Red chip relative<BR>flat field flux<TH> Fiber Blocks <TH> Guider RMS'
-        html.write(txt1+txt2+'\n')
-        html.write('<TR>\n')
-        for chip in chips:
-            fluxfile = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chip+'-')
-            fluxfile = os.path.basename(fluxfile).replace('.fits','')
-            html.write('<TD> <A HREF='+'../plots/'+fluxfile+'.png><IMG SRC=../plots/'+fluxfile+'.png WIDTH=400></A>\n')
-        tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
-        blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
-        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=400></A>\n')
-        gfile = 'guider-'+plate+'-'+mjd+'.png'
-        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=400></A>\n')
-        html.write('</TABLE>\n')
-
-    html.write('<BR><BR>')
+    html.write('<H3> Plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here </a><H3>\n')
 
     html.write('<H3>Individual Exposure QA Plots:</H3>\n')
     # Table of exposure plots.
@@ -736,6 +716,26 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD> <IMG SRC=../plots/'+oneDfile+'sky.jpg>\n')
         html.write('<TD> <IMG SRC=../plots/'+oneDfile+'skycont.jpg>\n')
     html.write('</table>\n')
+
+    html.write('<BR><BR>')
+
+    # Flat field plots.
+    if fluxid is not None:
+        html.write('<TABLE BORDER=2><TR>\n')
+        txt1 = '<TH> Blue chip relative<BR>flat field flux <TH> Greeen chip relative<BR>flat field flux'
+        txt2 = '<TH> Red chip relative<BR>flat field flux<TH> Fiber Blocks <TH> Guider RMS'
+        html.write(txt1+txt2+'\n')
+        html.write('<TR>\n')
+        for chip in chips:
+            fluxfile = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chip+'-')
+            fluxfile = os.path.basename(fluxfile).replace('.fits','')
+            html.write('<TD> <A HREF='+'../plots/'+fluxfile+'.png><IMG SRC=../plots/'+fluxfile+'.png WIDTH=400></A>\n')
+        tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
+        blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
+        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=400></A>\n')
+        gfile = 'guider-'+plate+'-'+mjd+'.png'
+        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=400></A>\n')
+        html.write('</TABLE>\n')
 
     html.write('</BODY></HTML>\n')
     html.close()
