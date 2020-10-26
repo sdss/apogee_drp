@@ -1254,7 +1254,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             skylines['C4']   = 16255.0, 0.0
             skylines['TYPE'] = 1, 0
 
-            for iline in range(nskylines)):
+            for iline in range(nskylines):
                 skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
 
             medsky = np.median(skylines['FLUX'][sky][0])
