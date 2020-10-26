@@ -21,6 +21,7 @@ import pdb
 import matplotlib.pyplot as plt
 import matplotlib
 from astropy.convolution import convolve, Box1DKernel
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable, inset_axes, InsetPosition, mark_inset
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, MaxNLocator
 import matplotlib.ticker as ticker
 
@@ -807,7 +808,13 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         ax1.set_xlabel(r'Zeta')
         ax1.set_ylabel(r'Eta')
 
-        ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=70, c=med, edgecolors='k', cmap='bwr', alpha=0.9)
+        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=70, c=med, edgecolors='k', cmap='bwr', alpha=0.9)
+
+        ax1_divider = make_axes_locatable(ax1)
+        cax2 = ax1_divider.append_axes("top", size="6%", pad="0%")
+        cb2 = plt.colorbar(sc, cax=cax2, orientation="horizontal")
+        cax2.xaxis.set_ticks_position("top")
+        cax2.minorticks_on()
 
         fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
         plt.savefig(plotfilefull)
