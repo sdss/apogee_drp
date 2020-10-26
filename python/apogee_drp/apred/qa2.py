@@ -1257,11 +1257,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             for iline in range(nskylines):
                 skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
 
-            medsky = np.median(skylines['FLUX'][sky][0])
+            #medsky = np.median(skylines['FLUX'][sky][0])
 
-            xx = plSum2['ZETA'][science]
-            yy = plSum2['ETA'][science]
-            cc = skylines['FLUX'][sky][0] / medsky
+            #xx = plSum2['ZETA'][science]
+            #yy = plSum2['ETA'][science]
+            #cc = skylines['FLUX'][sky][0] / medsky
 
 
 
