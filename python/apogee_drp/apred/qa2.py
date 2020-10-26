@@ -1187,7 +1187,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             ax1.minorticks_on()
             ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-            x = plSum2['ZETA (deg.)'][science];    y = plSum2['ETA (deg.)'][science]
+            x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
             c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
             psci = ax1.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
