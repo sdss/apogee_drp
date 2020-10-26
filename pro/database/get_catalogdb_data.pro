@@ -21,7 +21,7 @@
 ;
 ; By D.Nidever, Oct 2020
 ;-
-function get_catalogdb_data,id=catalogid,ra=ra,dec=dec
+function get_catalogdb_data,id=catalogid,ra=ra,dec=dec,dcr=dcr
 
 undefine,-1
 
@@ -55,8 +55,10 @@ if n_elements(catalogid) gt 0 then begin
   endelse
 ;; Use coordinates
 endif else begin
+  if n_elements(dcr) eq 0 then dcr=1.0  ; search radius in arcsec
+  radlim = strtrim(dcr/3600.0,2)
   nra = n_elements(ra)
-  cols = 'r.catalogid,r.q3c_dist,r.ra,r.dec,' + strjoin('t.'+colarr,',')
+  cols = 'cat.catalogid,cat.q3c_dist,cat.ra,cat.dec,' + strjoin('t.'+colarr,',')
   coords = strarr(nra)
   for k=0,n_elements(ra)-1 do coords[k] = '('+strtrim(ra[k],2)+','+strtrim(dec[k],2)+')'
   vals = strjoin(coords,',')
@@ -64,11 +66,18 @@ endif else begin
   ;; Subquery makes a temporary table from q3c coordinate query with catalogdb.catalog
   sqlsub = "with r as (select c.catalogid,c.ra,c.dec,(q3c_dist(c.ra,c.dec,v.column1,v.column2)*3600.0) as q3c_dist "+$
            " from "+ctable+",catalogdb.catalog as c "+$
-           "where q3c_join(v.column1,v.column2,c.ra,c.dec,0.0002) LIMIT 1000000)"
-  ;; Join results to catalogdb.tic_v8 thorugh catalogdb.catalog_to_tic_v8
-  sql = sqlsub+" select "+cols+" from r "+$
-        "inner join catalogdb.catalog_to_tic_v8 as x on r.catalogid=x.catalogid "+$
-        "inner join catalogdb.tic_v8 as t on x.target_id=t.id"
+           "where q3c_join(v.column1,v.column2,c.ra,c.dec,"+radlim+") LIMIT 1000000)"
+  ;; Use inline query for first join with catalogdb.catalog_to_tic_v8
+  sqlinline = "( "+sqlsub+" select r.catalogid,r.ra,r.dec,r.q3c_dist,x.target_id from r "+$
+              " inner join catalogdb.catalog_to_tic_v8 as x on x.catalogid=r.catalogid) as cat"
+  ;; Final join with catalogdb.tic_v8
+  sql = "select "+cols+" from "+sqlinline+" inner join catalogdb.tic_v8 as t on cat.target_id=t.id"
+
+  ;sql += sqlsub+" select "+cols+" from r "+$
+  ;       "inner join catalogdb.catalog_to_tic_v8 as x on r.catalogid=x.catalogid "+$
+  ;       "inner join catalogdb.tic_v8 as t on x.target_id=t.id"
+  ;; Turning this off improves q3c queries
+  sql = 'set enable_seqscan=off; '+sql
   ; For single star
   ; sql = "select "+cols+" from catalogdb.tic_v8 as t join catalogdb.catalog_to_tic_v8 as x on x.target_id=t.id "+$
   ;        "join catalogdb.catalog as c on x.catalogid=c.catalogid where q3c_radial_query(c.ra,c.dec,"+strtrim(ra,2)+","+strtrim(dec,2)+",0.0002)"
@@ -80,6 +89,7 @@ push,cmd,'db.close()'
 scriptfile = tbase+'.py'
 WRITELINE,scriptfile,cmd
 FILE_CHMOD,scriptfile,'755'o
+stop
 SPAWN,scriptfile,out,errout,/noshell
 
 if errout[0] ne '' or n_elements(errout) gt 1 then begin

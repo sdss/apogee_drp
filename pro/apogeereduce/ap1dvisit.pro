@@ -162,14 +162,7 @@ FOR i=0L,nplanfiles-1 do begin
   plots_dir = plate_dir+'/plots/'
   if file_test(plots_dir,/directory) eq 0 then FILE_MKDIR,plots_dir
 
-  ; do we need to iterate for telluric?
-  niter=1
-  if tag_exist(planstr,'telliter') then if planstr.telliter gt 0 then niter=2
-
   undefine,visitstr
-
-  for iter=1,niter  do begin
-
   undefine,alltellstar
   undefine,allframes
 
@@ -568,6 +561,8 @@ FOR i=0L,nplanfiles-1 do begin
     /silent,single=single,iter=iter,mjdfrac=mjdfrac,survey=survey
   writelog,logfile,' output '+file_basename(planfile)+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
 
+stop
+
   ;---------------
   ; Radial velocity measurements for this visit
   ;--------------
@@ -583,7 +578,7 @@ FOR i=0L,nplanfiles-1 do begin
     s=strsplit(visitstrfile,cmjd,/extract,/regex)
     visitstrfile=s[0]+string(format='(f8.2)',mjdfrac)+s[1]
   endif
-  if file_test(visitstrfile) and not keyword_set(clobber) and niter ne 2 then begin
+  if file_test(visitstrfile) and not keyword_set(clobber) then begin
     print,'File already exists: ', visitstrfile
     return
   endif
@@ -595,11 +590,6 @@ FOR i=0L,nplanfiles-1 do begin
                  plugmap.fiberdata.objtype ne 'SKY',nobjind)
   objdata = plugmap.fiberdata[objind]
   obj = plugmap.fiberdata[objind].tmass_style
-  targid = plugmap.fiberdata[objind].object
-  targ1 = plugmap.fiberdata[objind].target1
-  targ2 = plugmap.fiberdata[objind].target2
-  targ3 = plugmap.fiberdata[objind].target3
-  targ4 = plugmap.fiberdata[objind].target4
 
   if keyword_set(single) then begin
     if tag_exist(planstr,'mjdfrac') then if planstr.mjdfrac eq 1 then $
@@ -618,7 +608,38 @@ FOR i=0L,nplanfiles-1 do begin
   if keyword_set(stp) then stop
 
   ;; SDSS-V, get catalogdb information
-  if planstr.plateid ge 15000 then catalogdb = get_catalogdb_info(plugmap.fiberdata[objind].catalogid)
+  ;;----------------------------------
+  if planstr.plateid ge 15000 then begin
+    print,'Getting catalogdb information'
+    gdid = where(objdata.catalogid gt -1,ngdid,comp=bdid,ncomp=nbdid)
+    ;; Get catalogdb information using catalogID
+    undefine,catalogdb
+    if ngdid gt 0 then begin
+      print,'Querying catalogdb using catalogID for ',strtrim(ngdid,2),' stars'
+      catalogdb1 = get_catalogdb_data(id=objdata[gdid].catalogid)
+      ;; Got some results
+      if size(catalogdb1,/type) eq 8 then begin
+        print,'Got results for ',strtrim(n_elements(catalogdb1),2),' stars'
+        push,catalogdb,catalogdb1
+      endif else begin
+        print,'No results'
+      endelse
+    endif
+    ;; Get catalogdb information using coordinates (tellurics don't have IDs)    
+    if nbdid gt 0 then begin
+      print,'Querying catalogdb using coordinates for ',strtrim(nbdid,2),' stars'
+      catalogdb2 = get_catalogdb_data(ra=objdata[bdid].ra,dec=objdata[bdid].dec)
+      ;; this returns a q3c_dist columns that we don't want to keep
+      if size(catalogdb2,/type) eq 8 then begin
+        catalogdb2 = REMOVE_TAG(catalogdb2,'q3c_dist')
+        push,catalobdb,catalobdb2
+      endif else begin
+        print,'No results'
+      endelse
+    endif
+  endif  ; get catalogdb info
+
+  stop
 
   ;; Loop over the objects
   apgundef,allvisitstr
@@ -631,19 +652,16 @@ FOR i=0L,nplanfiles-1 do begin
     endif
 
     visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',mjd:0L,telescope:'',$
-                survey:'',field:'',programname:'',alt_id:'',$
-                location_id:0,ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
+                survey:'',field:'',programname:'',$
+                ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
                 jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
                 pmra:0.0,pmdec:0.0,pm_src:'',$
-                ak_targ:-99., ak_targ_method: 'NONE', ak_wise: -99., sfd_ebv: -99.,$
                 apogee_target1:0L,apogee_target2:0L,apogee_target3:0L,apogee_target4:0L,$
                 catalogid:0LL, gaiadr2_plx:0.0, gaiadr2_plx_error:0.0, gaiadr2_pmra:0.0, gaiadr2_pmra_error:0.0,$
                 gaiadr2_pmdec:00, gaiadr2_pmdec_error:0.0, gaiadr2_gmag:0.0, gaiadr2_gerr:0.0,$
                 gaiadr2_bpmag:0.0, gaiadr2_bperr:0.0, gaiadr2_rpmag:0.0, gaiadr2_rperr:0.0, sdssv_apogee_target0:0LL,$
                 firstcarton:'', targflags:'',snr: 0.0, starflag:0L,starflags: '',$
-                dateobs:'',jd:0.0d0,BC:0.0,vtype:0,$
-                VREL:999999.0,vrelerr:999999.0,VHELIOBARY:999999.0,Vlsr:999999.0,Vgsr:999999.0,$
-                chisq:0.0,rv_teff:0.0,rv_feh:99.9,rv_logg:99.9,rv_alpha: 99.9,rv_carb: 99.9, synthfile:''}
+                dateobs:'',jd:0.0d0}
 
     visitstr.apogee_id = obj[istar]
     visitstr.target_id = targid[istar]
@@ -656,15 +674,25 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.fiberid = objdata[istar].fiberid
     visitstr.plate = strtrim(planstr.plateid,2)
     visitstr.mjd = planstr.mjd
-    visitstr.location_id = locid
     visitstr.telescope = dirs.telescope
-    visitstr.apogee_target1 = targ1[istar]
-    visitstr.apogee_target2 = targ2[istar]
-    visitstr.apogee_target3 = targ3[istar]
-    visitstr.apogee_target4 = targ4[istar]
+
+    visitstr.ra = objdata[istar].ra
+    visitstr.dec = objdata[istar].dec
+    visitstr.src_h = objdata[istar].src_h
+    visitstr.pmra = objdata[istar].pmra
+    visitstr.pmdec = objdata[istar].pmdec
+    visitstr.pm_src = objdata[istar].pm_src
+    GLACTC,visitstr.ra,visitstr.dec,2000.0,glon,glat,1,/deg
+    visitstr.glon = glon
+    visitstr.glat = glat
+
+    visitstr.apogee_target1 = objdata[istar].targ1
+    visitstr.apogee_target2 = objdata[istar].targ2
+    visitstr.apogee_target3 = objdata[istar].targ3
+    visitstr.apogee_target4 = objdata[istar].targ4
     ;; SDSS-V columns
     visitstr.catalogid = plugmap.fiberdata[objind[istar]].catalogid
-    if planstr.platenum ge 15000 then begin
+    if planstr.plateid ge 15000 then begin
       MATCH,catalogdb.catalogid,visitstr.catalogid,ind1,ind2,/sort,count=nmatch
       if nmatch eq 0 then stop,'halt: no match in catalogdb info'
       visitstr.jmag = catalogdb[ind1[0]].jmag
@@ -689,31 +717,17 @@ FOR i=0L,nplanfiles-1 do begin
       visitstr.firstcarton = plugmap.fiberdata[objind[istar]].firstcarton
       visitstr.targflags = targflag(visitstr.sdssv_apogee_target0,survey=survey)      
     endif else begin
-      visitstr.jmag = objects.j
-      visitstr.jerr = objects.j_err
-      visitstr.hmag = objects.h
-      visitstr.herr = objects.h_err
-      visitstr.kmag = objects.k
-      visitstr.kerr = objects.k_err
+      visitstr.jmag = objdata[istar].j
+      visitstr.jerr = objdata[istar].j_err
+      visitstr.hmag = objdata[istar].h
+      visitstr.herr = objdata[istar].h_err
+      visitstr.kmag = objdata[istar].k
+      visitstr.kerr = objdata[istar].k_err
       visitstr.targflags = targflag(targ1[istar],targ2[istar],targ3[istar],targ4[istar],survey=survey)
     endelse
     visitstr.survey = survey
     visitstr.field = plugmap.field
     visitstr.programname = plugmap.programname
-    visitstr.ak_targ = plugmap.fiberdata[objind[istar]].ak_targ
-    visitstr.ak_targ_method = plugmap.fiberdata[objind[istar]].ak_targ_method
-    visitstr.ak_wise = plugmap.fiberdata[objind[istar]].ak_wise
-    visitstr.sfd_ebv = plugmap.fiberdata[objind[istar]].sfd_ebv
-
-    objects  =  plugmap.fiberdata[objind[istar]]
-    visitstr.ra = objects.ra
-    visitstr.dec = objects.dec
-    visitstr.ak_targ_method = objects.ak_targ_method
-    visitstr.alt_id = objects.alt_id
-    visitstr.src_h = objects.src_h
-    visitstr.pmra = objects.pmra
-    visitstr.pmdec = objects.pmdec
-    visitstr.pm_src = objects.pm_src
 
     ; get a few things from apVisit file (done in aprv also, but not
     ;   if that is skipped....)
@@ -726,8 +740,6 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.starflag = str.starflag
     visitstr.starflags = starflag(str.starflag)
 
-    if niter eq 2 then $
-      aprv,visitfile,visitstr,/save,dir_plots=plots_dir,/trimgrid
     MWRFITS,visitstr,visitfile,/silent
     PUSH,allvisitstr,visitstr
   endfor
@@ -762,7 +774,6 @@ FOR i=0L,nplanfiles-1 do begin
 
   ;; Insert the apVisitSum information into the apogee_drp database
   DBINGEST_VISIT,allvisitstr
- endfor
 
  BOMB:
 ENDFOR   ; plan files
