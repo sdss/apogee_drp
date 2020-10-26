@@ -118,6 +118,8 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
         q = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
+        q = plotFlux(ims=ims, fluxid=fluxid, plate=plate, mjd=mjd, field=field, telescope=telescope)
+
         q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
                           field=field, instrument=instrument, clobber=True, noplot=False, 
                           plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
@@ -130,11 +132,6 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
                           onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
                           fixfiberid=fixfiberid, badfiberid=badfiberid, makeSpectrumPlots=makeSpectrumPlots) 
 
-
-
-        ### NOTE:No translations for plotflux yet.
-
-#;        x = plotFlux(planfile)
 
 #        platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, chips=True)
 
@@ -710,13 +707,13 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         for chip in chips:
             fluxfile = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chip+'-')
             fluxfile = os.path.basename(fluxfile).replace('.fits','')
-            html.write('<TD> <A HREF='+'../plots/'+fluxfile+'.jpg><IMG SRC=../plots/'+fluxfile+'.jpg WIDTH=400></\n')
+            html.write('<TD> <A HREF='+'../plots/'+fluxfile+'.png><IMG SRC=../plots/'+fluxfile+'.png WIDTH=400></\n')
         tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
         blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
-        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.jpg><IMG SRC=../plots/'+blockfile+'.jpg WIDTH=400></A>\n')
+        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=400></A>\n')
         html.write('</TABLE>\n')
 
-    gfile = 'guider-'+plate+'-'+mjd+'.jpg'
+    gfile = 'guider-'+plate+'-'+mjd+'.png'
     html.write('<A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=400></A>\n')
 
     # Table of exposure plots.
@@ -764,6 +761,56 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     print("Done with MASTERQAPAGE for plate "+plate+", mjd "+mjd)
     print("--------------------------------------------------------------------\n")
 
+'''-----------------------------------------------------------------------------------------'''
+''' PLOTFLUX: plotflux translation                                                   '''
+'''-----------------------------------------------------------------------------------------'''
+def PlotFlux(ims=None, fluxid=None, plate=None, mjd=None, field=None, telescope=None):
+    chips = np.array(['a','b','c'])
+    nchips = len(chips)
+
+    # Make plot directory if it doesn't already exist.
+    platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
+    plotsdir = platedir+'/plots/'
+    if len(glob.glob(plotsdir)) == 0: subprocess.call(['mkdir',plotsdir])
+
+    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    flux = load.apFlux(fluxid)
+
+    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+    tmp = fits.open(platesum)
+    plSum1 = tmp[1].data
+    plSum2 = tmp[2].data
+    fibord = np.argsort(plSum2['FIBERID'])
+    plSum2 = plSum2[fibord]
+    nfiber = len(plSum2['HMAG'])
+    
+    for ichip in range(nchips):
+        plotfile = fluxfile.replace('Flux-','Flux-'+chips[ichip]+'-').replace('.fits','.png')
+        plotfilefull = plotsdir+plotfile
+        med = np.median(flux[ichip][1].data, axis=1)
+
+        print("Making "+plotfile)
+        plt.ioff()
+        fontsize=24
+        fsz=fontsize*0.75
+        fig=plt.figure(figsize=(14,14))
+        matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+
+        ax1 = plt.subplot2grid((1,1), (0,0))
+        ax1.tick_params(reset=True)
+        ax1.set_xlim(-1.6,1.6)
+        ax1.set_ylim(1.6,1.6)
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        ax1.minorticks_on()
+        ax1.set_xlabel(r'Zeta')
+        ax1.set_ylabel(r'Eta')
+
+        ax1.scatter(plSum2['Zeta'], pltSum2['Eta'], marker='o', s=70, color='b', edgecolors='k')
+
+        fig.subplots_adjust(left=0.08,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
+        plt.savefig(plotfilefull)
+        plt.close('all')
+        plt.ion()
 
 '''-----------------------------------------------------------------------------------------'''
 ''' MAKEPLOTSHTML: Plotmag translation                                                      '''
