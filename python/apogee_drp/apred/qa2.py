@@ -785,9 +785,10 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
     nfiber = len(plSum2['HMAG'])
     
     for ichip in range(nchips):
-        plotfile = fluxfile.replace('Flux-','Flux-'+chips[ichip]+'-').replace('.fits','.png')
-        plotfilefull = plotsdir+plotfile
-        med = np.median(flux[ichip][1].data, axis=1)
+        chip = chips[ichip]
+        plotfile = fluxfile.replace('Flux-', 'Flux-'+chip+'-').replace('.fits', '.png')
+        plotfilefull = plotsdir + plotfile
+        med = np.median(flux[chip][1].data, axis=1)
 
         print("Making "+plotfile)
         plt.ioff()
