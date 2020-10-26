@@ -230,26 +230,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     nstar = len(fiberstar)
     star = rows[fiberstar]
 
-    # Define skylines structure which we will use to get crude sky levels in lines.
-    dt = np.dtype([('W1',   np.float64),
-                   ('W2',   np.float64),
-                   ('C1',   np.float64),
-                   ('C2',   np.float64),
-                   ('C3',   np.float64),
-                   ('C4',   np.float64),
-                   ('FLUX', np.float64, (nfiber)),
-                   ('TYPE', np.int32)])
-
-    skylines = np.zeros(2,dtype=dt)
-
-    skylines['W1']   = 16230.0, 15990.0
-    skylines['W2']   = 16240.0, 16028.0
-    skylines['C1']   = 16215.0, 15980.0
-    skylines['C2']   = 16225.0, 15990.0
-    skylines['C3']   = 16245.0, 0.0
-    skylines['C4']   = 16255.0, 0.0
-    skylines['TYPE'] = 1, 0
-
     # Loop through all the images for this plate, and make the plots.
     # Load up and save information for this plate in a FITS table.
     allsky =     np.zeros((n_exposures,3), dtype=np.float64)
@@ -354,10 +334,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         for j in range(nfiber):
             for ichip in range(nchips): 
                 obs[j, ichip] = np.median(d[chips[ichip]][1].data[rows[j], :])
-
-        if flat is None:
-            for iline in range(len(skylines)):
-                skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
 
         # Get a "magnitude" for each fiber from a median on each chip.
         # Do a crude sky subtraction, calculate S/N.
@@ -890,6 +866,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     ntelluric = len(telluric)
     science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
     nscience = len(science)
+    sky, = np.where(plSum2['OBJTYPE'] == 'SKY')
+    nsky = len(sky)
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -1173,18 +1151,12 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
                 # PLOT 2c: S/N as calculated from ap1D frame
-#                x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
-#                ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='r')
-#                ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r', linestyle=' ')
-#                import pdb; pdb.set_trace()
                 c = ['r','g','b']
                 for ichip in range(nchips):
                     x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,ichip]
                     ax3.semilogy(x, y, marker='o', ms=8, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
-#                    ax3.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c=c[ichip])
                     x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,ichip]
                     ax3.semilogy(x, y, marker='^', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
-#                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
 
 
                 fig.subplots_adjust(left=0.155,right=0.98,bottom=0.06,top=0.99,hspace=0.1,wspace=0.0)
@@ -1195,13 +1167,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #            else:
 #                achievedsn = np.median(sn[obj,:], axis=0)
 
-        # PLOTS 3-5: spatial residuals
-
         # PLOT 3: spatial residuals
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.jpg
         plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
         plotfilefull = plotsdir+plotfile
-        if noplot is False:
+        if (noplot is False) & (flat is None):
             print("Making "+plotfile)
             plt.ioff()
             fontsize=24
@@ -1209,14 +1179,37 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             fig=plt.figure(figsize=(11,14))
             matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
-            xmin = 6;  xmax = 15;  xspan=xmax-xmin
-
             ax1 = plt.subplot2grid((1,1), (0,0))
+            ax1.tick_params(reset=True)
+            ax1.set_xlim(-1.6,1.6)
+            ax1.set_ylim(-1.6,1.6)
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            ax1.minorticks_on()
+            ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-            #medsky=median(skylines[0].flux[sky])
-            #xx=fiber[fibersky].zeta
-            #yy=fiber[fibersky].eta
-            #cc=skylines[0].flux[fibersky]/medsky
+            x = plSum2['ZETA (deg.)'][science];    y = plSum2['ETA (deg.)'][science]
+            c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
+            psci = ax1.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Science')
+
+            x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
+            c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
+            ptel = ax1.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
+
+            x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
+            c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
+            psky = ax1.scatter(x, y, marker='s', s=100, c='white', edgecolors='k', alpha=1, label='Sky')
+
+            ax1_divider = make_axes_locatable(ax1)
+            cax1 = ax1_divider.append_axes("top", size="6%", pad="1%")
+            cb = colorbar(sc, cax=cax1, orientation="horizontal")
+            cax1.xaxis.set_ticks_position("top")
+            cax1.minorticks_on()
+
+            fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.94,hspace=0.2,wspace=0.0)
+            plt.savefig(plotfilefull)
+            plt.close('all')
+            plt.ion()
+
             #plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=8,/xs,/ys
             #if nobj gt 0 then begin
             #    xx=fiber[fiberobj].zeta
@@ -1233,7 +1226,42 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             #device,/close
             #ps2jpg,outdir+file+'sky.eps',/eps,chmod='664'o,/delete
 
+            if ims[0] == 0: d = load.apPlate(int(plate), mjd) 
+            if ims[0] != 0: d = load.ap1D(ims[i])
+            rows = 300-plSum2['FIBERID']
 
+            fibersky, = np.where(plSum2['OBJTYPE' == 'SKY')
+            nsky = len(fibersky)
+            sky = rows[fibersky]
+
+            # Define skylines structure which we will use to get crude sky levels in lines.
+            dt = np.dtype([('W1',   np.float64),
+                           ('W2',   np.float64),
+                           ('C1',   np.float64),
+                           ('C2',   np.float64),
+                           ('C3',   np.float64),
+                           ('C4',   np.float64),
+                           ('FLUX', np.float64, (nfiber)),
+                           ('TYPE', np.int32)])
+
+            skylines = np.zeros(2,dtype=dt);  nskylines=len(skylines)
+
+            skylines['W1']   = 16230.0, 15990.0
+            skylines['W2']   = 16240.0, 16028.0
+            skylines['C1']   = 16215.0, 15980.0
+            skylines['C2']   = 16225.0, 15990.0
+            skylines['C3']   = 16245.0, 0.0
+            skylines['C4']   = 16255.0, 0.0
+            skylines['TYPE'] = 1, 0
+
+            for iline in range(nskylines)):
+                skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
+
+            medsky = np.median(skylines['FLUX'][sky][0])
+
+            xx = plSum2['ZETA'][science]
+            yy = plSum2['ETA'][science]
+            cc = skylines['FLUX'][sky][0] / medsky
 
 
 
