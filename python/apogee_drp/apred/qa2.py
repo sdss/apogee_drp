@@ -21,7 +21,8 @@ import pdb
 import matplotlib.pyplot as plt
 import matplotlib
 from astropy.convolution import convolve, Box1DKernel
-from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable, inset_axes, InsetPosition, mark_inset
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable, InsetPosition, mark_inset
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, MaxNLocator
 import matplotlib.ticker as ticker
 
