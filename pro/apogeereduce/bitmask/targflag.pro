@@ -168,13 +168,13 @@ endif
 
 ;; MWM
 if strpos(survey,'mwm') ge 0 then begin
-  name = ['MWM_SKY','MWM_TELLURIC','','','','','','MWM_SNC_100PC',
-          'MWM_SNC_250PC','MWM_RV_LONG-BPLATES','MWM_RV_SHORT-BPLATES','MWM_RV_LONG-RM',
-          'MWM_RV_SHORT-RM','MWM_PLANET_TESS','MWM_YSO_CMZ','MWM_YSO_OB',
-          'MWM_YSO_S1','MWM_YSO_S2','MWC_YSO_S2-5','MWM_YSO_S3',
-          'MWM_YSO_CLUSTER','MWM_GG','MWM_DUST','MWM_TESSRGB',
-          'BHM_CSC_APOGEE','MWM_RV_LONG-FPS','MWM_RV_SHORT-FPS','',
-          '','','',''])
+  name = ['MWM_SKY','MWM_TELLURIC','','','','','','MWM_SNC_100PC',$
+          'MWM_SNC_250PC','MWM_RV_LONG-BPLATES','MWM_RV_SHORT-BPLATES','MWM_RV_LONG-RM',$
+          'MWM_RV_SHORT-RM','MWM_PLANET_TESS','MWM_YSO_CMZ','MWM_YSO_OB',$
+          'MWM_YSO_S1','MWM_YSO_S2','MWC_YSO_S2-5','MWM_YSO_S3',$
+          'MWM_YSO_CLUSTER','MWM_GG','MWM_DUST','MWM_TESSRGB',$
+          'BHM_CSC_APOGEE','MWM_RV_LONG-FPS','MWM_RV_SHORT-FPS','',$
+          '','','','']
   for i=0,n_elements(name)-1 do begin
     if is_bit_set(targ1,i) eq 1 then flag+=name[i]+','
   endfor

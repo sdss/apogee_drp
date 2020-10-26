@@ -403,8 +403,8 @@ for i=0,299 do begin
             hmag = p[match].tmass_h
             fiber[i].mag = [p[match].tmass_j,p[match].tmass_h,p[match].tmass_k,0.,0.]
             ;; Adopt PM un-adjusted  coordinates
-            fiber[i].ra -= p[match].pmra/1000./3600./cos(fiber[i].dec*!pi/180.)*(p[match].epoch-2000.)
-            fiber[i].dec -= p[match].pmdec/1000./3600.*(p[match].epoch-2000.)
+            ;fiber[i].ra -= p[match].pmra/1000./3600./cos(fiber[i].dec*!pi/180.)*(p[match].epoch-2000.)
+            ;fiber[i].dec -= p[match].pmdec/1000./3600.*(p[match].epoch-2000.)
           endelse
           fiber[i].hmag = hmag
           fiber[i].object = object
