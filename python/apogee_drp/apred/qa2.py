@@ -800,7 +800,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         ax1 = plt.subplot2grid((1,1), (0,0))
         ax1.tick_params(reset=True)
         ax1.set_xlim(-1.6,1.6)
-        ax1.set_ylim(1.6,1.6)
+        ax1.set_ylim(-1.6,1.6)
         ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
         ax1.minorticks_on()
         ax1.set_xlabel(r'Zeta')
