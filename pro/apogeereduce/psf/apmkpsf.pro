@@ -89,7 +89,7 @@ FOR i=0,nflatframe-1 do begin
     ;; Does the output file already exist?
     outfile = apogee_filename('PSF',chip=chiptag[j],num=flatframeid)
     ;; if another process is creating file, wait
-    while file_test(outfile+'.lock') do wait,10
+    while file_test(outfile+'.lock') do apwait,outfile+'.lock',10
 
     if file_test(outfile) eq 1 and not keyword_set(clobber) then begin
       print,outfile,' already exists and CLOBBER=0'
@@ -314,7 +314,6 @@ FOR i=0,nflatframe-1 do begin
     sxaddpar,wset_head,'MEDWIDTH3',medwidth[2]
     sxaddpar,wset_head,'MEDWIDTH4',medwidth[3]
     MWRFITS,widthset.coeff,outfile,wset_head,/silent
-
 
     ; Create Jon's Empirical PSF
     ;---------------------------
