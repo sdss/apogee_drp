@@ -795,7 +795,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
 
         print("Making "+plotfile)
         plt.ioff()
-        fontsize=24
+        fontsize=26
         fsz=fontsize*0.75
         fig=plt.figure(figsize=(14,14))
         matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
