@@ -213,13 +213,19 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     ntelluric = len(fibertelluric)
     telluric = rows[fibertelluric]
 
+    if ntelluric < 1: print("PROBLEM!!! No tellurics found.")
+
     fiberobj, = np.where((fibtype == 'STAR_BHB') | (fibtype == 'STAR') | (fibtype == 'EXTOBJ') | (fibtype == 'OBJECT'))
     nobj = len(fiberobj)
     obj = rows[fiberobj]
 
+    if nobj < 1: print("PROBLEM!!! No science objects found.")
+
     fibersky, = np.where(fibtype == 'SKY')
     nsky = len(fibersky)
     sky = rows[fibersky]
+
+    if nsky < 1: print("PROBLEM!!! No skies found.")
 
     fiberstar = np.concatenate([fiberobj,fibertelluric])
     nstar = len(fiberstar)
@@ -371,7 +377,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
 
             if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
-            import pdb; pdb.set_trace()
+
             if nobj > 0:
                 sn[fiberobj, ichip] = np.median((fluxarr[obj, :] - medsky) / errarr[obj, :], axis=1)
                 if len(cframe) > 1:
@@ -1075,7 +1081,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 # PLOT 2b: observed mag - fit mag vs H mag
                 x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
                 ax2.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
-                import pdb; pdb.set_trace()
                 x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
                 ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
@@ -1084,10 +1089,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #                ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='r')
 #                ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r', linestyle=' ')
 #                import pdb; pdb.set_trace()
-                x = plSum2['HMAG'][telluric]
                 c = ['r','g','b']
                 for ichip in range(nchips):
-                    y = plSum2['SN'][telluric,i,ichip]
+                    x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,ichip]
+                    ax3.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c=c[ichip])
+                    x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,ichip]
                     ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c=c[ichip])
 #                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
 
