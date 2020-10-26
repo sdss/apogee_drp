@@ -592,6 +592,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html = open(qafile, 'w')
     html.write('<HTML><HEAD><script src="sorttable.js"></script></head><BODY>\n')
     html.write('<H2>Field: '+field+'   Plate: '+plate+'   MJD: '+mjd+'</H2>\n')
+    html.write('<HR>\n')
 
 
     ### NOTE:just setting status=1 and hoping for the best.
