@@ -685,7 +685,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         for chip in chips:
             fluxfile = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chip+'-')
             fluxfile = os.path.basename(fluxfile).replace('.fits','')
-            html.write('<TD> <A HREF='+'../plots/'+fluxfile+'.png><IMG SRC=../plots/'+fluxfile+'.png WIDTH=400></\n')
+            html.write('<TD> <A HREF='+'../plots/'+fluxfile+'.png><IMG SRC=../plots/'+fluxfile+'.png WIDTH=400></A>\n')
         tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
         blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
         html.write('</TABLE>\n')
