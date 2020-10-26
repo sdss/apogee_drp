@@ -742,7 +742,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('</TABLE>\n')
 
         html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=400></A>\n')
-        html.write('<TD> <IMG SRC=../plots/'+oneDfile+'_spatialmag.png>\n')
+        html.write('<TD><A HREF=../plots/'+oneDfile+'_spatialmag.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_spatialmag.png WIDTH=400></A>\n')
         cim=str(im)
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg height=400></a>\n')
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg height=400></a>\n')
@@ -1082,6 +1082,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 x = plSum2['HMAG'][science];    y = plSum2['SN'][science,i,1]
                 ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='r')
 #                ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc='r', linestyle=' ')
+                import pdb; pdb.set_trace()
                 x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
                 ax3.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 #                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
@@ -1095,13 +1096,51 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #            else:
 #                achievedsn = np.median(sn[obj,:], axis=0)
 
+        # PLOTS 3-5: spatial residuals
 
-        # PLOTS 3-5: spatial residuals, , , 
-        # 3: spatial residuals
+        # PLOT 3: spatial residuals
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.jpg
-        # 4: spatial sky line emission
+        plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
+        plotfilefull = plotsdir+plotfile
+        if noplot is False:
+            print("Making "+plotfile)
+            plt.ioff()
+            fontsize=24
+            fsz=fontsize*0.75
+            fig=plt.figure(figsize=(11,14))
+            matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+
+            xmin = 6;  xmax = 15;  xspan=xmax-xmin
+
+            ax1 = plt.subplot2grid((1,1), (0,0))
+
+            #medsky=median(skylines[0].flux[sky])
+            #xx=fiber[fibersky].zeta
+            #yy=fiber[fibersky].eta
+            #cc=skylines[0].flux[fibersky]/medsky
+            #plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=8,/xs,/ys
+            #if nobj gt 0 then begin
+            #    xx=fiber[fiberobj].zeta
+            #    yy=fiber[fiberobj].eta
+            #    cc=skylines[0].flux[fiberobj]/medsky
+            #    plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=6,overplot=1,/xs,/ys
+            #endif
+            #if ntelluric gt 0 then begin
+            #    xx=fiber[fibertelluric].zeta
+            #    yy=fiber[fibertelluric].eta
+            #    cc=skylines[0].flux[fibertelluric]/medsky
+            #    plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=4,overplot=1,/xs,/ys
+            #endif
+            #device,/close
+            #ps2jpg,outdir+file+'sky.eps',/eps,chmod='664'o,/delete
+
+
+
+
+
+        # PLOT 4: spatial sky line emission
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
-        # 5: spatial continuum emission
+        # PLOT 5: spatial continuum emission
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
         if (starfiber is None) & (onem is None):
             print("PLOTS 3: spatial plot of residuals will be made here.\n")
