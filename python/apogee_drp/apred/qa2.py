@@ -764,7 +764,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 '''-----------------------------------------------------------------------------------------'''
 ''' PLOTFLUX: plotflux translation                                                   '''
 '''-----------------------------------------------------------------------------------------'''
-def PlotFlux(ims=None, fluxid=None, plate=None, mjd=None, field=None, telescope=None):
+def plotFlux(ims=None, fluxid=None, plate=None, mjd=None, field=None, telescope=None):
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
