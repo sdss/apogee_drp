@@ -364,7 +364,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             cfluxarr = cframe[chip][1].data
             cerrarr = cframe[chip][2].data
 
-            if ims[0] == 0:     medsky = 0.
+            if ims[0] == 0: medsky = 0.
             if ims[0] != 0: medsky = np.median(obs[fibersky, ichip])
 
             ### NOTE: using axis=0 caused error, so trying axis=0
@@ -373,7 +373,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
 
             if nobj > 0:
-                sn[fiberobj, ichip] = np.median((fluxarr[obj, :]-medsky) / errarr[obj, :], axis=1)
+                sn[fiberobj, ichip] = np.median((fluxarr[obj, :] - medsky) / errarr[obj, :], axis=1)
                 if len(cframe) > 1:
                     snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=1)
 
@@ -1075,6 +1075,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 # PLOT 2b: observed mag - fit mag vs H mag
                 x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
                 ax2.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c='r')
+                import pdb; pdb.set_trace()
                 x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
                 ax2.scatter(x, y, marker='^', s=60, edgecolors='k', alpha=alpha, c='cyan')
 
