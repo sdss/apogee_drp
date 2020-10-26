@@ -682,7 +682,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     if fluxid is not None:
         html.write('<TABLE BORDER=2><TR>\n')
         txt1 = '<TH> Blue chip relative<BR>flat field flux <TH> Greeen chip relative<BR>flat field flux'
-        txt2 = '<TH> Red chip relative<BR>flat field flux<TH> Fiber Blocks'
+        txt2 = '<TH> Red chip relative<BR>flat field flux<TH> Fiber Blocks <TH> Guider RMS'
         html.write(txt1+txt2+'\n')
         html.write('<TR>\n')
         for chip in chips:
@@ -692,10 +692,9 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
         blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
         html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=400></A>\n')
+        gfile = 'guider-'+plate+'-'+mjd+'.png'
+        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=400></A>\n')
         html.write('</TABLE>\n')
-
-    gfile = 'guider-'+plate+'-'+mjd+'.png'
-    html.write('<A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=400></A>\n')
 
     # Table of exposure plots.
     html.write('<TABLE BORDER=2>\n')
