@@ -746,6 +746,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
     plt.ioff()
 
     chips = np.array(['a','b','c'])
+    chiplab = np.array(['blue','green','red'])
     nchips = len(chips)
 
     # Make plot directory if it doesn't already exist.
@@ -786,6 +787,8 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
 
         sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=med, edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
+
+        ax1.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax1.transAxes, ha='left', va='top')
 
         ax1_divider = make_axes_locatable(ax1)
         cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
