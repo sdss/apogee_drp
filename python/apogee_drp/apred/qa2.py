@@ -774,7 +774,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         print("Making "+plotfile)
         fontsize=26
         fsz=fontsize*0.75
-        fig=plt.figure(figsize=(14,14))
+        fig=plt.figure(figsize=(14,15))
         matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
         ax1 = plt.subplot2grid((1,1), (0,0))
@@ -788,12 +788,13 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=med, edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
 
         ax1_divider = make_axes_locatable(ax1)
-        cax1 = ax1_divider.append_axes("top", size="6%", pad="1%")
+        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
         cb = colorbar(sc, cax=cax1, orientation="horizontal")
         cax1.xaxis.set_ticks_position("top")
         cax1.minorticks_on()
+        ax1.text(0.5, 1.10, r'Median Flat Field Flux',ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.94,hspace=0.2,wspace=0.0)
+        fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
         plt.savefig(plotfilefull)
         plt.close('all')
 
@@ -804,7 +805,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
     print("Making "+blockfile)
     fontsize=26
     fsz=fontsize*0.75
-    fig=plt.figure(figsize=(14,14))
+    fig=plt.figure(figsize=(14,15))
     matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
     ax1 = plt.subplot2grid((1,1), (0,0))
@@ -822,8 +823,9 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
     cb = colorbar(sc, cax=cax1, orientation="horizontal")
     cax1.xaxis.set_ticks_position("top")
     cax1.minorticks_on()
+    ax1.text(0.5, 1.10, r'Fiber Blocks',ha='center', transform=ax1.transAxes)
 
-    fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.94,hspace=0.2,wspace=0.0)
+    fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
     plt.savefig(blockfilefull)
     plt.close('all')
 
