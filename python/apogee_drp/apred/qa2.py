@@ -696,7 +696,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     for i in range(len(tab1)):
         im=tab1['IM'][i]
         oneDfile = os.path.basename(load.filename('1D', plate=int(plate), num=im, mjd=mjd, chips=True)).replace('.fits','')
-        html.write('<TR><TD><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
+        html.write('<TR><TD bgcolor=lightgreen><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
         html.write('<TD bgcolor=lightgreen><TABLE BORDER=1><TD><TD>Red<TD>Green<TD>Blue\n')
         html.write('<TR><TD bgcolor=lightgreen>z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
         html.write('<TR><TD bgcolor=lightgreen>znorm<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][i],2))+'\n')
@@ -724,11 +724,11 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 
     # Flat field plots.
     if fluxid is not None:
-        html.write('<TABLE BORDER=2><TR>\n')
+        html.write('<TABLE BORDER=2><TR bgcolor=lightgreen>\n')
         txt1 = '<TH> Blue chip relative<BR>flat field flux <TH> Greeen chip relative<BR>flat field flux'
         txt2 = '<TH> Red chip relative<BR>flat field flux<TH> Fiber Blocks <TH> Guider RMS'
         html.write(txt1+txt2+'\n')
-        html.write('<TR bgcolor=lightgreen>\n')
+        html.write('<TR>\n')
         for chip in chips:
             fluxfile = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chip+'-')
             fluxfile = os.path.basename(fluxfile).replace('.fits','')
