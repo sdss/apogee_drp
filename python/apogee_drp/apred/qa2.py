@@ -807,7 +807,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         ax1.set_xlabel(r'Zeta')
         ax1.set_ylabel(r'Eta')
 
-        ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=70, color=med, edgecolors='k', cmap='hot_r', alpha=0.6)
+        ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=70, c=med, edgecolors='k', cmap='hot_r', alpha=0.6)
 
         fig.subplots_adjust(left=0.08,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
         plt.savefig(plotfilefull)
