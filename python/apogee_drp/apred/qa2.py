@@ -809,7 +809,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         ax1.set_xlabel(r'Zeta')
         ax1.set_ylabel(r'Eta')
 
-        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=70, c=med, edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
+        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=med, edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
 
         ax1_divider = make_axes_locatable(ax1)
         cax1 = ax1_divider.append_axes("top", size="6%", pad="1%")
@@ -817,7 +817,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         cax1.xaxis.set_ticks_position("top")
         cax1.minorticks_on()
 
-        fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
+        fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.94,hspace=0.2,wspace=0.0)
         plt.savefig(plotfilefull)
         plt.close('all')
         plt.ion()
