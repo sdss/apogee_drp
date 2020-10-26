@@ -213,7 +213,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     ntelluric = len(fibertelluric)
     telluric = rows[fibertelluric]
 
-    fiberobj, = np.where((fibtype == 'STAR_BHB') | (fibtype == 'STAR') | (fibtype == 'EXTOBJ'))
+    fiberobj, = np.where((fibtype == 'STAR_BHB') | (fibtype == 'STAR') | (fibtype == 'EXTOBJ') | (fibtype == 'OBJECT'))
     nobj = len(fiberobj)
     obj = rows[fiberobj]
 
