@@ -767,6 +767,8 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 ''' PLOTFLUX: plotflux translation                                                   '''
 '''-----------------------------------------------------------------------------------------'''
 def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None, telescope=None):
+    plt.ioff()
+
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
@@ -794,7 +796,6 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         med = med[plSum2['FIBERID']-1]
 
         print("Making "+plotfile)
-        plt.ioff()
         fontsize=26
         fsz=fontsize*0.75
         fig=plt.figure(figsize=(14,14))
@@ -806,8 +807,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         ax1.set_ylim(-1.6,1.6)
         ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
         ax1.minorticks_on()
-        ax1.set_xlabel(r'Zeta')
-        ax1.set_ylabel(r'Eta')
+        ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
 
         sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=med, edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
 
@@ -820,7 +820,28 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.94,hspace=0.2,wspace=0.0)
         plt.savefig(plotfilefull)
         plt.close('all')
-        plt.ion()
+
+    longlink = np.array([5,6,7,8,2,4,11,10,12,13])
+    block = int((plSum2['FIBERID'] - 1) / 30) + 1
+    blockfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
+    import pdb; pdb.set_trace()
+    print("Making "+blockfile)
+    fontsize=26
+    fsz=fontsize*0.75
+    fig=plt.figure(figsize=(14,14))
+    matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1.tick_params(reset=True)
+    ax1.set_xlim(-1.6,1.6)
+    ax1.set_ylim(-1.6,1.6)
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+    ax1.minorticks_on()
+    ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
+
+    sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=med, edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
+
+    plt.ion()
 
 '''-----------------------------------------------------------------------------------------'''
 ''' MAKEPLOTSHTML: Plotmag translation                                                      '''
