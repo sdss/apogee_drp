@@ -819,7 +819,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
     sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=block, edgecolors='k', cmap='jet', alpha=1, vmin=0, vmax=10)
 
     ax1_divider = make_axes_locatable(ax1)
-    cax1 = ax1_divider.append_axes("top", size="6%", pad="1%")
+    cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
     cb = colorbar(sc, cax=cax1, orientation="horizontal")
     cax1.xaxis.set_ticks_position("top")
     cax1.minorticks_on()
