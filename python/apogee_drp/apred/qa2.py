@@ -1092,10 +1092,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 c = ['r','g','b']
                 for ichip in range(nchips):
                     x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,ichip]
-                    ax3.semilogy(x, y, marker='o', ms=10, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
+                    ax3.semilogy(x, y, marker='o', ms=8, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
 #                    ax3.scatter(x, y, marker='o', s=50, edgecolors='k', alpha=alpha, c=c[ichip])
                     x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,ichip]
-                    ax3.semilogy(x, y, marker='^', ms=11, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
+                    ax3.semilogy(x, y, marker='^', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
 #                ax3.semilogy(x, y, marker='^', ms=10, mec='k', alpha=alpha, mfc='cyan', linestyle=' ')
 
 
