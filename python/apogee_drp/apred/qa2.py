@@ -118,7 +118,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
         q = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
-        q = plotFlux(ims=ims, fluxid=fluxid, plate=plate, mjd=mjd, field=field, telescope=telescope)
+        q = plotFlux(load=load, ims=ims, fluxid=fluxid, plate=plate, mjd=mjd, field=field, telescope=telescope)
 
         q = makePlotsHtml(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
                           field=field, instrument=instrument, clobber=True, noplot=False, 
@@ -764,7 +764,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 '''-----------------------------------------------------------------------------------------'''
 ''' PLOTFLUX: plotflux translation                                                   '''
 '''-----------------------------------------------------------------------------------------'''
-def plotFlux(ims=None, fluxid=None, plate=None, mjd=None, field=None, telescope=None):
+def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None, telescope=None):
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
