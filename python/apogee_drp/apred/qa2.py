@@ -1418,25 +1418,21 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         pfile = load.apPlate(int(plate), mjd)
         shiftstr = pfile['a'][13].data
         pairstr = pfile['a'][14].data
-        npairs = len(pairstr)
-
-
-        # Pair table.
-        ### NOTE:the below if statement will not work
-#        if (type(pairstr) == astropy.io.fits.fitsrec.FITS_rec) & (npairs > 0):
-        if npairs > 0:
-            html.write('<BR><TABLE BORDER=2>\n')
-            html.write('<TR><TD>IPAIR<TD>NAME<TD>SHIFT<TD>NEWSHIFT<TD>S/N\n')
-            html.write('<TD>NAME<TD>SHIFT<TD>NEWSHIFT<TD>S/N\n')
-            for ipair in range(npairs):
-                html.write('<TR><TD>'+str(ipair)+'\n')
-                for j in range(2):
-                    html.write('<TD>'+str(pairstr['FRAMENAME'][ipair][j])+'\n')
-                    html.write('<TD>'+str(pairstr['OLDSHIFT'][ipair][j])+'\n')
-                    html.write('<TD>'+str(pairstr['SHIFT'][ipair][j])+'\n')
-                    html.write('<TD>'+str(pairstr['SN'][ipair][j])+'\n')
+        if pairstr is not None:
+            npairs = len(pairstr)
+            if npairs > 0:
+                # Pair table.
+                html.write('<BR><TABLE BORDER=2>\n')
+                html.write('<TR><TD>IPAIR<TD>NAME<TD>SHIFT<TD>NEWSHIFT<TD>S/N\n')
+                html.write('<TD>NAME<TD>SHIFT<TD>NEWSHIFT<TD>S/N\n')
+                for ipair in range(npairs):
+                    html.write('<TR><TD>'+str(ipair)+'\n')
+                    for j in range(2):
+                        html.write('<TD>'+str(pairstr['FRAMENAME'][ipair][j])+'\n')
+                        html.write('<TD>'+str(pairstr['OLDSHIFT'][ipair][j])+'\n')
+                        html.write('<TD>'+str(pairstr['SHIFT'][ipair][j])+'\n')
+                        html.write('<TD>'+str(pairstr['SN'][ipair][j])+'\n')
         else:
-
             # Table of combination parameters.
             html.write('<BR><TABLE BORDER=2>\n')
             for iframe in range(len(shiftstr)):
