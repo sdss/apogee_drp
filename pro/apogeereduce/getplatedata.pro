@@ -128,7 +128,7 @@ if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
 tmp = create_struct('fiberid',0, 'ra',0.d0, 'dec',0.d0, 'eta',0.d0, 'zeta',0.d0, 'objtype','none', $
                     'holetype','OBJECT', 'object','', 'tmass_style','', 'target1',0L, 'target2',0L,$
                     'target3',0L, 'target4',0L, 'spectrographid',2, 'mag',fltarr(5), catalog_info_blank(),$
-                    'catalogid',0LL, 'gaia_g',-9999.99, 'gaia_bp',-9999.99, 'gaia_rp',-9999.99, 'sdssv_apogee_target0',0LL,$
+                    'catalogid',-1LL, 'gaia_g',-9999.99, 'gaia_bp',-9999.99, 'gaia_rp',-9999.99, 'sdssv_apogee_target0',0LL,$
                     'firstcarton','', 'gaiadr2_sourceid',0LL, 'gaiadr2_ra',-9999.99d0, 'gaiadr2_dec',-9999.99d0,$
                     'gaiadr2_plx',-9999.99, 'gaiadr2_plx_error',-9999.99, 'gaiadr2_pmra',-9999.99,$
                     'gaiadr2_pmra_error',-9999.99, 'gaiadr2_pmdec',-9999.99, 'gaiadr2_pmdec_error',-9999.99, 'gaiadr2_gmag',-9999.99,$
@@ -407,7 +407,7 @@ if platenum ge 15000 then begin
   print,'Getting catalogdb information'
   objind = where(fiber.objtype eq 'OBJECT' or fiber.objtype eq 'HOT_STD',nobjind)
   objdata = fiber[objind]
-  gdid = where(objdata.catalogid gt -1,ngdid,comp=bdid,ncomp=nbdid)
+  gdid = where(objdata.catalogid gt 0,ngdid,comp=bdid,ncomp=nbdid)
   ;; Get catalogdb information using catalogID
   undefine,catalogdb
   if ngdid gt 0 then begin
@@ -471,7 +471,10 @@ if platenum ge 15000 then begin
       fiber[istar].gaiadr2_bperr = catalogdb[ind1[0]].e_gaiabp
       fiber[istar].gaiadr2_rpmag = catalogdb[ind1[0]].gaiarp
       fiber[istar].gaiadr2_rperr = catalogdb[ind1[0]].e_gaiarp
-    endif else print,'no match catalogdb match for ',fiber[istar].object
+    endif else begin
+      print,'no catalogdb match for ',fiber[istar].object
+      stop
+    endelse
   endfor ; object loop
 
 endif  ; get catalogdb info

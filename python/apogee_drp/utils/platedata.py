@@ -365,7 +365,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         objind, = np.where((fiber['objtype']=='OBJECT') | (fiber['objtype']=='HOT_STD'))
         nobjind = len(objind)
         objdata = fiber[objind]
-        gdid,ngdid,bdid,nbdid = dln.where(objdata['catalogid'] > -1,comp=True)
+        gdid,ngdid,bdid,nbdid = dln.where(objdata['catalogid'] > 0,comp=True)
         # Get catalogdb information using catalogID
         catdb = None
         if ngdid>0:
