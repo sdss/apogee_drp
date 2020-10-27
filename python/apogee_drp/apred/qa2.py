@@ -602,12 +602,9 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 
     # Link to combined spectra page.
     html.write('<H3> For plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here apPlate-'+plate+'-'+mjd+' </a><H3>\n')
-    html.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    html.write('<TR bgcolor=lightgreen>\n')
-    html.write('<TH>apVisit Hmag versus S/N\n')
-    html.write('<TR>\n')
+    html.write('<H3>apVisit Hmag versus S/N</H3>\n')
     snrplot = 'apVisitSNR-'+plate+'-'+mjd+'.png'
-    html.write('<TD><A HREF=../plots/'+snrplot+' target="_blank"><IMG SRC=../plots/'+snrplot+' WIDTH=700></A>\n')
+    html.write('<A HREF=../plots/'+snrplot+' target="_blank"><IMG SRC=../plots/'+snrplot+' WIDTH=1000></A>\n')
 
     html.write('<HR>\n')
 
@@ -1285,7 +1282,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         ax1 = plt.subplot2grid((1,1), (0,0))
         ax1.tick_params(reset=True)
         ax1.minorticks_on()
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
 
         minH = np.nanmin(Vsum['H']);      maxH = np.nanmax(Vsum['H']);      spanH = maxH - minH
@@ -1302,15 +1299,14 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         science, = np.where((tmp['OBJTYPE'] != 'SPECTROPHOTO_STD') & (tmp['OBJTYPE'] != 'HOT_STD') & (tmp['OBJTYPE'] != 'SKY'))
         telluric = telluric[::-1];    science = science[::-1]
 
-        psci = ax1.scatter(Vsum['H'][science], Vsum['SNR'][science], marker='*', s=180, edgecolors='k', c='r', alpha=alpha, label='Science')
-        ptel = ax1.scatter(Vsum['H'][telluric], Vsum['SNR'][telluric], marker='o', s=60, edgecolors='k', c='cyan', alpha=alpha, label='Telluric')
+        psci = ax3.semilogy(Vsum['H'][science], Vsum['SNR'][science], marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
+        ptel = ax3.semilogy(Vsum['H'][telluric], Vsum['SNR'][telluric], marker='o', ms=9, mec='k', alpha=alpha, mfc='cyan', linestyle='')
 
         ax1.legend(loc='lower left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
         fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
-
 
     # Put all of the info and plots on the plate web page.
     html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
