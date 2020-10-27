@@ -777,8 +777,8 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         plotfile = fluxfile.replace('Flux-', 'Flux-'+chip+'-').replace('.fits', '.png')
         plotfilefull = plotsdir + plotfile
         med = np.median(flux[chip][1].data, axis=1)
-#        import pdb; pdb.set_trace()
         med = med[300-plSum2['FIBERID']-1]
+        import pdb; pdb.set_trace()
 
         print("Making "+plotfile)
         fontsize=26
@@ -1293,7 +1293,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         # PLOT 5: spatial continuum emission
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
         if (starfiber is None) & (onem is None):
-            print("PLOTS 3: spatial plot of residuals will be made here.\n")
             print("PLOTS 4: spatial plot of sky line emission will be made here.\n")
             print("PLOTS 5: spatial plot of continuum emission will be made here.\n")
 
