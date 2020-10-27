@@ -928,7 +928,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
             # PLOT 1: spectrum 
             if j > -1:
-                plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(platesum2['FIBERID'][j]).zfill(3)+'.png'
+                plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
                 plotfilefull = plotsdir+plotfile
                 if makeSpectrumPlots is True:
                     print("Making "+plotfile)
@@ -936,12 +936,12 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                     xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
-                    FluxB = apPlate['a'][1].data[j,:]
-                    FluxG = apPlate['b'][1].data[j,:]
-                    FluxR = apPlate['c'][1].data[j,:]
-                    WaveB = apPlate['a'][4].data[j,:]
-                    WaveG = apPlate['b'][4].data[j,:]
-                    WaveR = apPlate['c'][4].data[j,:]
+                    FluxB = apPlate['a'][1].data[300-j,:]
+                    FluxG = apPlate['b'][1].data[300-j,:]
+                    FluxR = apPlate['c'][1].data[300-j,:]
+                    WaveB = apPlate['a'][4].data[300-j,:]
+                    WaveG = apPlate['b'][4].data[300-j,:]
+                    WaveR = apPlate['c'][4].data[300-j,:]
 
                     Flux = np.concatenate([FluxB, FluxG, FluxR])
                     Wave = np.concatenate([WaveB, WaveG, WaveR])
@@ -951,7 +951,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
                     ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
                     if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
-                        print("Problem with fiber "+str(platesum2['FIBERID'][j]).zfill(3)+". Not Plotting.")
+                        print("Problem with fiber "+str(plSum2['FIBERID'][j]).zfill(3)+". Not Plotting.")
                     else:
                         ymx1 = np.max(Flux[ymxsec1])
                         ymx2 = np.max(Flux[ymxsec2])
@@ -978,7 +978,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ax1.set_ylabel(r'Flux')
 
                         color = 'k'
-                        if platesum2['OBJTYPE'][j] == 'SKY': color = 'firebrick'
+                        if plSum2['OBJTYPE'][j] == 'SKY': color = 'firebrick'
                         ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=color)
                         ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=color)
                         ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=color)
