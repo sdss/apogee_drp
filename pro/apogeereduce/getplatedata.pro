@@ -445,6 +445,8 @@ if platenum ge 15000 then begin
       if nmatch gt 1 then ind1 = first_el(minloc(dist))
     endif
     if nmatch gt 0 then begin
+      if fiber[istar].catalogid lt 0 then $
+        fiber[istar].catalogid=catalogdb[ind1[0]].catalogid
       fiber[istar].twomass_designation = catalogdb[ind1[0]].twomass
       fiber[istar].jmag = catalogdb[ind1[0]].jmag
       fiber[istar].jerr = catalogdb[ind1[0]].e_jmag
