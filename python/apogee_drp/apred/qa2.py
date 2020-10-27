@@ -1068,7 +1068,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ymxsec1, = np.where((vwave > 15150) & (vwave < 15180))
                         ymxsec2, = np.where((vwave > 15900) & (vwave < 15950))
                         ymxsec3, = np.where((vwave > 16905) & (vwave < 16940))
-                        if (len(ymxsec1 == 0) | (len(ymxsec2 == 0) | (len(ymxsec3 == 0): 
+                        if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
                             print("Problem with fiber "+str(plSum2['FIBERID'][j]).zfill(3)+". Not Plotting.")
                         else:
                             ymx1 = np.max(vflux[ymxsec1])
