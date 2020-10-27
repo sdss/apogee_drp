@@ -1278,7 +1278,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         Vsumfile = Vsum.filename()
         Vsum = Vsum[1].data
 
-        plotfile = os.path.basename(Vsumfile.replace('Sum','SNR').replace('.fits','.png')
+        plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
         print("Making "+plotfile)
 
         fig=plt.figure(figsize=(16,12))
