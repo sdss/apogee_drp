@@ -1286,9 +1286,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
 
         if 'HMAG' in Vsum.columns.names:
-            minH = np.nanmin(Vsum['HMAG']);  maxH = np.nanmax(Vsum['HMAG']);  spanH = maxH - minH
+            hmagarr = Vsum['HMAG']
+            minH = np.nanmin(hmagarr);  maxH = np.nanmax(hmagarr);  spanH = maxH - minH
         else:
-            minH = np.nanmin(Vsum['H']);     maxH = np.nanmax(Vsum['H']);     spanH = maxH - minH
+            hmagarr = Vsum['H']
+            minH = np.nanmin(hmagarr);  maxH = np.nanmax(hmagarr);  spanH = maxH - minH
         minSNR = np.nanmin(Vsum['SNR']);  maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
         xmin = minH - spanH * 0.05;       xmax = maxH + spanH * 0.05
         ymin = -5;                         ymax = maxSNR + ((maxSNR - ymin) * 0.05)
@@ -1302,8 +1304,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         science, = np.where((tmp['OBJTYPE'] != 'SPECTROPHOTO_STD') & (tmp['OBJTYPE'] != 'HOT_STD') & (tmp['OBJTYPE'] != 'SKY'))
         telluric = telluric[::-1];    science = science[::-1]
 
-        psci = ax1.scatter(Vsum['H'][science], Vsum['SNR'][science], marker='*', s=180, edgecolors='k', c='r', alpha=alpha, label='Science')
-        ptel = ax1.scatter(Vsum['H'][telluric], Vsum['SNR'][telluric], marker='o', s=60, edgecolors='k', c='cyan', alpha=alpha, label='Telluric')
+        psci = ax1.scatter(hmagarr[science], Vsum['SNR'][science], marker='*', s=180, edgecolors='k', c='r', alpha=alpha, label='Science')
+        ptel = ax1.scatter(hmagarr[telluric], Vsum['SNR'][telluric], marker='o', s=60, edgecolors='k', c='cyan', alpha=alpha, label='Telluric')
 
         ax1.legend(loc='lower left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
