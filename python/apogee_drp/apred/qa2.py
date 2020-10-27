@@ -771,14 +771,14 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
     fibord = np.argsort(plSum2['FIBERID'])
     plSum2 = plSum2[fibord]
     nfiber = len(plSum2['HMAG'])
+    ypos = plSum2['FIBERID']-1
     
     for ichip in range(nchips):
         chip = chips[ichip]
         plotfile = fluxfile.replace('Flux-', 'Flux-'+chip+'-').replace('.fits', '.png')
         plotfilefull = plotsdir + plotfile
         med = np.median(flux[chip][1].data, axis=1)
-        med = med[plSum2['FIBERID']-1]
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
 
         print("Making "+plotfile)
         fontsize=26
@@ -794,7 +794,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         ax1.minorticks_on()
         ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
 
-        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=med, edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
+        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
 
         ax1.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax1.transAxes, ha='left', va='top')
 
