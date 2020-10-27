@@ -61,7 +61,6 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
     planstr = plan.load(planfile, np=True)
 
-
     # Get values from plan file.
     fixfiberid = planstr['fixfiberid']
     badfiberid = planstr['badfiberid']
@@ -81,7 +80,6 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     caldir =     spectrodir+'cal/'
     expdir =     spectrodir+'exposures/'+instrument+'/'
 
-
     # Get array of object exposures and find out how many are objects.
     flavor = planstr['APEXP']['flavor']
     all_ims = planstr['APEXP']['name']
@@ -95,18 +93,14 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
         print("No object images. You are hosed. Give up hope.")
         ims = None
 
-
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
-
 
     # For calibration plates, measure lamp brightesses and/or line widths, etc. and write to FITS file.
 #    if platetype == 'cal': x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
 
-
     # For darks and flats, get mean and stdev of column-medianed quadrants.
 #    if platetype == 'dark': x = makeDarkFits(load=load, planfile=planfile, ims=all_ims, mjd=mjd)
-
 
     # Normal plates:.
     if platetype == 'normal': 
@@ -126,14 +120,11 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
         q = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
-        q = plotFlux(load=load, ims=ims, fluxid=fluxid, plate=plate, mjd=mjd, field=field,
-                     telescope=telescope, noplot=noplot)
-
         q = makePlotsHtml(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
                           field=field, instrument=instrument, clobber=True, noplot=noplot, 
                           plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
                           onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-                          fixfiberid=fixfiberid, badfiberid=badfiberid,
+                          fixfiberid=fixfiberid, badfiberid=badfiberid, fluxid=fluxid,
                           makeSpectrumPlots=makeSpectrumPlots) 
 
 #        platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, chips=True)
@@ -143,15 +134,12 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
     # ASDAF and NMSU 1m observations:
     if platetype == 'single':
-        
         single = [planstr['APEXP'][i]['single'].astype(int) for i in range(n_ims)]
         sname = [planstr['APEXP'][i]['singlename'] for i in range(n_ims)]
         smag = planstr['hmag']
-
         x = makePlotsHtml(load=load, telescope=telescope, onem=True, ims=ims, starnames=sname, starfiber=single,
                           starmag=smag, fixfiberid=fixfiberid, clobber=True, plugmap=plugmap,
                           noplot=noplot, badfiberid=badfiberid, survey=survey, apred=apred)
-
 
 
 '''-----------------------------------------------------------------------------------------'''
@@ -192,13 +180,14 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     gd, = np.where(plug['fiberdata']['fiberid'] > 0)
     fiber = plug['fiberdata'][gd]
     nfiber = len(fiber)
-    rows = 300-fiber['fiberid']
+    rows = 300 - fiber['fiberid']
     guide = plug['guidedata']
 
-    dtype = np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
-    snColumn = np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
+    # Add sn and obsmag columns to fiber structure
+    dtype =        np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
+    snColumn =     np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
     obsmagColumn = np.zeros(nfiber, dtype=[('obsmag', 'float32', (n_exposures, nchips))])
-    fiber = merge_arrays([fiber, snColumn, obsmagColumn], flatten=True)
+    fiber =        merge_arrays([fiber, snColumn, obsmagColumn], flatten=True)
 
     unplugged, = np.where(fiber['fiberid'] < 0)
     nunplugged = len(unplugged)
@@ -582,7 +571,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 #    tab3 = tmp[3].data
 #;    tab3 = mrdfits(platesum,3,status=status)
 
-
     # Make the html directory if it doesn't already exist
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
     qafiledir = os.path.dirname(qafile)
@@ -593,7 +581,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('<HTML><HEAD><script src="sorttable.js"></script></head><BODY>\n')
     html.write('<H1>Field: '+field+'   Plate: '+plate+'   MJD: '+mjd+'</H1>\n')
     html.write('<HR>\n')
-
 
     ### NOTE:just setting status=1 and hoping for the best.
     status = 1
@@ -747,95 +734,6 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     print("Done with MASTERQAPAGE for plate "+plate+", mjd "+mjd)
     print("--------------------------------------------------------------------\n")
 
-'''-----------------------------------------------------------------------------------------'''
-''' PLOTFLUX: plotflux translation                                                   '''
-'''-----------------------------------------------------------------------------------------'''
-def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None, telescope=None, noplot=None):
-    plt.ioff()
-
-    chips = np.array(['a','b','c'])
-    chiplab = np.array(['blue','green','red'])
-    nchips = len(chips)
-
-    # Make plot directory if it doesn't already exist.
-    platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-    plotsdir = platedir+'/plots/'
-    if len(glob.glob(plotsdir)) == 0: subprocess.call(['mkdir',plotsdir])
-
-    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
-    flux = load.apFlux(fluxid)
-
-    platesum = fits.open(load.filename('PlateSum', plate=int(plate), mjd=mjd))
-    plSum2 = platesum[2].data
-    ypos = 300 - plSum2['FIBERID']
-    
-    for ichip in range(nchips):
-        chip = chips[ichip]
-        plotfile = fluxfile.replace('Flux-', 'Flux-'+chip+'-').replace('.fits', '.png')
-        plotfilefull = plotsdir + plotfile
-        med = np.median(flux[chip][1].data, axis=1)
-
-        print("Making "+plotfile)
-        fontsize=26
-        fsz=fontsize*0.75
-        fig=plt.figure(figsize=(14,15))
-        matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
-
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.tick_params(reset=True)
-        ax1.set_xlim(-1.6,1.6)
-        ax1.set_ylim(-1.6,1.6)
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        ax1.minorticks_on()
-        ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
-
-        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
-
-        ax1.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax1.transAxes, ha='left', va='top')
-
-        ax1_divider = make_axes_locatable(ax1)
-        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-        cb = colorbar(sc, cax=cax1, orientation="horizontal")
-        cax1.xaxis.set_ticks_position("top")
-        cax1.minorticks_on()
-        ax1.text(0.5, 1.10, r'Median Flat Field Flux',ha='center', transform=ax1.transAxes)
-
-        fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
-        plt.savefig(plotfilefull)
-        plt.close('all')
-
-    block = np.around((plSum2['FIBERID'] - 1) / 30)
-    blockfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
-    blockfilefull = plotsdir + blockfile
-
-    print("Making "+blockfile)
-    fontsize=26
-    fsz=fontsize*0.75
-    fig=plt.figure(figsize=(14,15))
-    matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
-
-    ax1 = plt.subplot2grid((1,1), (0,0))
-    ax1.tick_params(reset=True)
-    ax1.set_xlim(-1.6,1.6)
-    ax1.set_ylim(-1.6,1.6)
-    ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-    ax1.minorticks_on()
-    ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
-
-    sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=block, edgecolors='k', cmap='jet', alpha=1, vmin=0, vmax=10)
-
-    ax1_divider = make_axes_locatable(ax1)
-    cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-    cb = colorbar(sc, cax=cax1, orientation="horizontal")
-    cax1.xaxis.set_ticks_position("top")
-    cax1.minorticks_on()
-    ax1.text(0.5, 1.10, r'Fiber Blocks',ha='center', transform=ax1.transAxes)
-
-    fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
-    plt.savefig(blockfilefull)
-    plt.close('all')
-
-    plt.ion()
 
 '''-----------------------------------------------------------------------------------------'''
 ''' MAKEPLOTSHTML: Plotmag translation                                                      '''
@@ -849,9 +747,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     print("Running MAKEPLOTSHTML for plate "+plate+", mjd "+mjd)
     print("--------------------------------------------------------------------\n")
 
-    n_exposures = len(ims)
+    plt.ioff()
 
+    n_exposures = len(ims)
     chips = np.array(['a','b','c'])
+    chiplab = np.array(['blue','green','red'])
     nchips = len(chips)
 
     # Check for existence of plateSum file
@@ -862,12 +762,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         sys.exit(err1 + err2)
 
     # Read the plateSum file
-    ### NOTE:apLoad.py does not have an option for loading apPlateSum, so using astropy instead
     tmp = fits.open(platesum)
     plSum1 = tmp[1].data
-    plSum2 = tmp[2].data
+    platesum2 = tmp[2].data
     fibord = np.argsort(plSum2['FIBERID'])
-    plSum2 = plSum2[fibord]
+    plSum2 = platesum2[fibord]
     nfiber = len(plSum2['HMAG'])
 
     telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
@@ -1013,8 +912,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
             if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
             targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
-            #targflagtxt = targflagtxt.replace('APOGEE2_','').replace('_',' ').replace(',','<BR>')
-            #targflagtxt = targflagtxt.replace('Sfd','SFD').replace('Eb','EB').replace(' gt ','>')
             objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
 
             if (ims[0] == 0) & (plSum2['FIBERID'][j] >= 0):
@@ -1024,10 +921,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).replace(',','<BR>')
                     objhtml.write('<BR><BR>'+starflagtxt+'\n')
 
-
             # PLOT 1: spectrum 
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257//plots/apPlate-5583-56257-299.jpg
-
             if j > -1:
                 if plSum2['OBJTYPE'][j] == 'SKY':
                     objhtml.write('<TD BGCOLOR='+color+'> \n')
@@ -1037,7 +932,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if makeSpectrumPlots is True:
                         print("Making "+plotfile)
 
-                        plt.ioff()
                         fontsize=24
                         fsz=fontsize*0.75
                         fig=plt.figure(figsize=(28,6))
@@ -1095,7 +989,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
                             plt.savefig(plotfilefull)
                         plt.close('all')
-                        plt.ion()
 
                         objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=800></A>\n')
                     else:
@@ -1113,7 +1006,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             plotfilefull = plotsdir+plotfile
             if noplot is False:
                 print("Making "+plotfile)
-                plt.ioff()
                 fontsize=24
                 fsz=fontsize*0.75
                 fig=plt.figure(figsize=(11,14))
@@ -1124,8 +1016,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax1 = plt.subplot2grid((3,1), (0,0))
                 ax2 = plt.subplot2grid((3,1), (1,0))
                 ax3 = plt.subplot2grid((3,1), (2,0))
-#                ax4 = plt.subplot2grid((5,1), (3,0))
-#                ax5 = plt.subplot2grid((5,1), (4,0))
                 axes = [ax1, ax2, ax3]#, ax4, ax5]
 
                 for ax in axes:
@@ -1136,15 +1026,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                 ax1.axes.xaxis.set_ticklabels([])
                 ax2.axes.xaxis.set_ticklabels([])
-#                ax3.axes.xaxis.set_ticklabels([])
-#                ax4.axes.xaxis.set_ticklabels([])
 
                 ax3.set_xlabel(r'$H$')
-#                ax5.set_xlabel(r'$H$')
                 ax1.text(-0.17,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
                 ax2.text(-0.17,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
                 ax3.text(-0.17,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
-#                ax4.text(-0.17,0.50,r'S/N (Cframe)',transform=ax4.transAxes,rotation=90,ha='left',va='center')
 
                 alpha = 0.6
 
@@ -1177,8 +1063,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 fig.subplots_adjust(left=0.155,right=0.98,bottom=0.06,top=0.99,hspace=0.1,wspace=0.0)
                 plt.savefig(plotfilefull)
                 plt.close('all')
-                plt.ion()
-
 #            else:
 #                achievedsn = np.median(sn[obj,:], axis=0)
 
@@ -1188,7 +1072,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         plotfilefull = plotsdir+plotfile
         if (noplot is False) & (flat is None):
             print("Making "+plotfile)
-            plt.ioff()
             fontsize=24
             fsz=fontsize*0.75
             fig=plt.figure(figsize=(14,15))
@@ -1226,7 +1109,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
             plt.savefig(plotfilefull)
             plt.close('all')
-            plt.ion()
 
             #plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=8,/xs,/ys
             #if nobj gt 0 then begin
@@ -1291,6 +1173,128 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             print("PLOTS 4: spatial plot of sky line emission will be made here.\n")
             print("PLOTS 5: spatial plot of continuum emission will be made here.\n")
 
+    # PLOT 6: guider rms plot
+    if onem is None:
+        if noplot is False:
+            expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
+            gcamfile = expdir+mjd+'/gcam-'+mjd+'.fits'
+            if os.path.exists(gcamfile):
+                gcam = fits.getdata(gcamfile)
+
+                dateobs = plSum1['DATEOBS'][0]
+                tt = Time(dateobs)
+                mjdstart = tt.mjd
+                exptime = np.sum(plSum1['EXPTIME'])
+                mjdend = mjdstart + (exptime/86400.)
+                jcam, = np.where((gcam['mjd'] > mjdstart) & (gcam['mjd'] < mjdend))
+
+                plotfile = 'guider-'+plate+'-'+mjd+'.png'
+                plotfilefull = plotsdir+plotfile
+
+                print("Making "+plotfile)
+                fontsize=24
+                fsz=fontsize*0.75
+                fig=plt.figure(figsize=(14,14))
+                matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+
+                ax1 = plt.subplot2grid((1,1), (0,0))
+                ax1.tick_params(reset=True)
+                ax1.minorticks_on()
+                ax1.set_xlabel(r'Guider MJD');  ax1.set_ylabel(r'Guider RMS')
+
+                ax1.plot(gcam['mjd'][jcam], gcam['gdrms'][jcam], color='k')
+
+                fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
+                plt.savefig(plotfilefull)
+                plt.close('all')
+
+    # For individual frames, make plots of variation of sky and zeropoint.
+   if ims[0] != 0:
+        # PLOT 7: make plot of sky levels for this plate
+        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257sky.gif
+        html.write('<TABLE BORDER=2><TR>\n')
+        skyfile = 'sky-'+gfile
+        print("PLOTS 7: Sky level plots will be made here.")
+        html.write('<TD><IMG SRC=../plots/'+skyfile+'.gif>\n')
+
+        # PLOT 8: make plot of zeropoints for this plate
+        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257zero.gif
+        zerofile = 'zero-'+gfile
+        print("PLOTS 8: Zeropoints plots will be made here.")
+        html.write('<TD><IMG SRC=../plots/'+zerofile+'.gif>\n')
+        html.write('</TABLE>\n')
+
+    # PLOTS 9-11: flat field flux and fiber blocks
+    if noplot is False:
+        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+        flux = load.apFlux(fluxid)
+        ypos = 300 - platesum2['FIBERID']
+    
+        for ichip in range(nchips):
+            chip = chips[ichip]
+            plotfile = fluxfile.replace('Flux-', 'Flux-'+chip+'-').replace('.fits', '.png')
+            plotfilefull = plotsdir + plotfile
+            print("Making "+plotfile)
+
+            fontsize=26
+            fsz=fontsize*0.75
+            fig=plt.figure(figsize=(14,15))
+            matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+
+            ax1 = plt.subplot2grid((1,1), (0,0))
+            ax1.tick_params(reset=True)
+            ax1.set_xlim(-1.6,1.6)
+            ax1.set_ylim(-1.6,1.6)
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            ax1.minorticks_on()
+            ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
+
+            med = np.median(flux[chip][1].data, axis=1)
+            sc = ax1.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
+
+            ax1.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax1.transAxes, ha='left', va='top')
+
+            ax1_divider = make_axes_locatable(ax1)
+            cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+            cb = colorbar(sc, cax=cax1, orientation="horizontal")
+            cax1.xaxis.set_ticks_position("top")
+            cax1.minorticks_on()
+            ax1.text(0.5, 1.10, r'Median Flat Field Flux',ha='center', transform=ax1.transAxes)
+
+            fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
+            plt.savefig(plotfilefull)
+            plt.close('all')
+
+        block = np.around((plSum2['FIBERID'] - 1) / 30)
+        blockfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
+        blockfilefull = plotsdir + blockfile
+
+        print("Making "+blockfile)
+        fontsize=26
+        fsz=fontsize*0.75
+        fig=plt.figure(figsize=(14,15))
+        matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+
+        ax1 = plt.subplot2grid((1,1), (0,0))
+        ax1.tick_params(reset=True)
+        ax1.set_xlim(-1.6,1.6)
+        ax1.set_ylim(-1.6,1.6)
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        ax1.minorticks_on()
+        ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
+
+        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=block, edgecolors='k', cmap='jet', alpha=1, vmin=0, vmax=10)
+
+        ax1_divider = make_axes_locatable(ax1)
+        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+        cb = colorbar(sc, cax=cax1, orientation="horizontal")
+        cax1.xaxis.set_ticks_position("top")
+        cax1.minorticks_on()
+        ax1.text(0.5, 1.10, r'Fiber Blocks',ha='center', transform=ax1.transAxes)
+
+        fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
+        plt.savefig(blockfilefull)
+        plt.close('all')
 
     # Put all of the info and plots on the plate web page.
     html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
@@ -1348,70 +1352,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     html.write('</TABLE>\n')
 
-    # Get guider information.
-    if onem is None:
-        if noplot is False:
-            expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
-            gcamfile = expdir+mjd+'/gcam-'+mjd+'.fits'
-            if os.path.exists(gcamfile):
-                gcam = fits.getdata(gcamfile)
-
-                dateobs = plSum1['DATEOBS'][0]
-                tt = Time(dateobs)
-                mjdstart = tt.mjd
-                exptime = np.sum(plSum1['EXPTIME'])
-                mjdend = mjdstart + (exptime/86400.)
-                jcam, = np.where((gcam['mjd'] > mjdstart) & (gcam['mjd'] < mjdend))
-
-                plotfile = 'guider-'+plate+'-'+mjd+'.png'
-                plotfilefull = plotsdir+plotfile
-
-                print("Making "+plotfile)
-                plt.ioff()
-                fontsize=24
-                fsz=fontsize*0.75
-                fig=plt.figure(figsize=(14,14))
-                matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
-
-                ax1 = plt.subplot2grid((1,1), (0,0))
-                ax1.tick_params(reset=True)
-                ax1.minorticks_on()
-                ax1.set_xlabel(r'Guider MJD');  ax1.set_ylabel(r'Guider RMS')
-
-                ax1.plot(gcam['mjd'][jcam], gcam['gdrms'][jcam], color='k')
-
-                fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
-                plt.savefig(plotfilefull)
-                plt.close('all')
-                plt.ion()
-
-    # For individual frames, make plots of variation of sky and zeropoint.
     # For combined frames, make table of combination parameters.
-    if ims[0] != 0:
-        ### NOTE:skipping gcam stuff until I get gcam_process to work
-#        if onem is None:
-            # PLOT 6: guider rms plot
-#            if type(gcam) == astropy.io.fits.fitsrec.FITS_rec:
-#                jcam = np.where((gcam['MJD'] > mjd0) & (gcam['MJD'] < mjd1))
-#                nj = len(jcam[0]) 
-#                print("PLOTS 6: Guider RMS plots will be made here.")
-
-
-        # PLOT 7: make plot of sky levels for this plate
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257sky.gif
-        html.write('<TABLE BORDER=2><TR>\n')
-        skyfile = 'sky-'+gfile
-        print("PLOTS 7: Sky level plots will be made here.")
-        html.write('<TD><IMG SRC=../plots/'+skyfile+'.gif>\n')
-
-
-        # PLOT 8: make plot of zeropoints for this plate
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257zero.gif
-        zerofile = 'zero-'+gfile
-        print("PLOTS 8: Zeropoints plots will be made here.")
-        html.write('<TD><IMG SRC=../plots/'+zerofile+'.gif>\n')
-        html.write('</TABLE>\n')
-    else:
+    if ims[0]==0:
         pfile = load.apPlate(int(plate), mjd)
         shiftstr = pfile['a'][13].data
         pairstr = pfile['a'][14].data
@@ -1429,6 +1371,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         html.write('<TD>'+str(pairstr['OLDSHIFT'][ipair][j])+'\n')
                         html.write('<TD>'+str(pairstr['SHIFT'][ipair][j])+'\n')
                         html.write('<TD>'+str(pairstr['SN'][ipair][j])+'\n')
+                html.write('</TABLE>\n')
         else:
             # Table of combination parameters.
             html.write('<BR><TABLE BORDER=2>\n')
@@ -1436,8 +1379,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 html.write('<TR><TD>'+str(shiftstr['FRAMENUM'][iframe])+'\n')
                 html.write('<TD>'+str(shiftstr['SHIFT'][iframe])+'\n')
                 html.write('<TD>'+str(shiftstr['SN'][iframe])+'\n')
-
-        html.write('</TABLE>\n')
+            html.write('</TABLE>\n')
 
     html.write('</BODY></HTML>')
     htmlsum.write('</TABLE>\n')
@@ -1450,6 +1392,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     html.close()
     htmlsum.close()
+
+    plt.ion()
 
     print("--------------------------------------------------------------------")
     print("Done with MAKEPLOTSHTML for plate "+plate+", mjd "+mjd)
