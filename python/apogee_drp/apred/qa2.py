@@ -1278,7 +1278,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
         print("Making "+plotfile)
 
-        fig=plt.figure(figsize=(16,12))
+        fig=plt.figure(figsize=(16,8))
         ax1 = plt.subplot2grid((1,1), (0,0))
         ax1.tick_params(reset=True)
         ax1.minorticks_on()
@@ -1304,7 +1304,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
         ax1.legend(loc='lower left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-        fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
+        fig.subplots_adjust(left=0.08,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
 
