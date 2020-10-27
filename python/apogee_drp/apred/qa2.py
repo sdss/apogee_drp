@@ -131,7 +131,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
                           field=field, instrument=instrument, clobber=True, noplot=noplot, 
                           plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
                           onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-                          fixfiberid=fixfiberid, badfiberid=badfiberid, makeSpectrumPlots=False) 
+                          fixfiberid=fixfiberid, badfiberid=badfiberid, makeSpectrumPlots=makeSpectrumPlots) 
 
 
 #        platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, chips=True)
