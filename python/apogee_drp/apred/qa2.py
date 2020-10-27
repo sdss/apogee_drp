@@ -929,7 +929,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
             # PLOT 1: spectrum 
             if j > -1:
-                plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
+                plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(platesum2['FIBERID'][j]).zfill(3)+'.png'
                 plotfilefull = plotsdir+plotfile
                 if makeSpectrumPlots is True:
                     print("Making "+plotfile)
@@ -952,7 +952,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
                     ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
                     if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
-                        print("Problem with fiber "+str(plSum2['FIBERID'][j]).zfill(3)+". Not Plotting.")
+                        print("Problem with fiber "+str(platesum2['FIBERID'][j]).zfill(3)+". Not Plotting.")
                     else:
                         ymx1 = np.max(Flux[ymxsec1])
                         ymx2 = np.max(Flux[ymxsec2])
