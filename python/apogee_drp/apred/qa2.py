@@ -766,7 +766,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     tmp = fits.open(platesum)
     plSum1 = tmp[1].data
     platesum2 = tmp[2].data
-    fibord = np.argsort(plSum2['FIBERID'])
+    fibord = np.argsort(platesum2['FIBERID'])
     plSum2 = platesum2[fibord]
     nfiber = len(plSum2['HMAG'])
 
