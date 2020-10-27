@@ -1002,6 +1002,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         objhtml.close()
         cfile.close()
 
+    for i in range(len(plSum1['IM']):
         # PLOT 2: 3 panels
         if (flat is None) & (onem is None):
             plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
@@ -1064,106 +1065,105 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #            else:
 #                achievedsn = np.median(sn[obj,:], axis=0)
 
-        if (noplot is False) & (flat is None):
-            # PLOT 3: spatial residuals
-            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
-            print("Making "+plotfile)
+                # PLOT 3: spatial residuals
+                plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
+                print("Making "+plotfile)
 
-            fig=plt.figure(figsize=(14,15))
-            ax1 = plt.subplot2grid((1,1), (0,0))
-            ax1.tick_params(reset=True)
-            ax1.set_xlim(-1.6,1.6)
-            ax1.set_ylim(-1.6,1.6)
-            ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-            ax1.minorticks_on()
-            ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
+                fig=plt.figure(figsize=(14,15))
+                ax1 = plt.subplot2grid((1,1), (0,0))
+                ax1.tick_params(reset=True)
+                ax1.set_xlim(-1.6,1.6)
+                ax1.set_ylim(-1.6,1.6)
+                ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+                ax1.minorticks_on()
+                ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-            x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
-            c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
-            psci = ax1.scatter(x, y, marker='*', s=240, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Science')
+                x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
+                c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
+                psci = ax1.scatter(x, y, marker='*', s=240, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
-            x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
-            c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
-            ptel = ax1.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
+                x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
+                c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
+                ptel = ax1.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
-            x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
-            c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
-            psky = ax1.scatter(x, y, marker='s', s=100, c='white', edgecolors='k', alpha=1, label='Sky')
+                x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
+                c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
+                psky = ax1.scatter(x, y, marker='s', s=100, c='white', edgecolors='k', alpha=1, label='Sky')
 
-            ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+                ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-            ax1_divider = make_axes_locatable(ax1)
-            cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-            cb = colorbar(psci, cax=cax1, orientation="horizontal")
-            cax1.xaxis.set_ticks_position("top")
-            cax1.minorticks_on()
-            ax1.text(0.5, 1.10, r'$H$ + 2.5*log(m - zero)',ha='center', transform=ax1.transAxes)
+                ax1_divider = make_axes_locatable(ax1)
+                cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+                cb = colorbar(psci, cax=cax1, orientation="horizontal")
+                cax1.xaxis.set_ticks_position("top")
+                cax1.minorticks_on()
+                ax1.text(0.5, 1.10, r'$H$ + 2.5*log(m - zero)',ha='center', transform=ax1.transAxes)
 
-            fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
-            plt.savefig(plotsdir+plotfile)
-            plt.close('all')
+                fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
+                plt.savefig(plotsdir+plotfile)
+                plt.close('all')
 
-            #plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=8,/xs,/ys
-            #if nobj gt 0 then begin
-            #    xx=fiber[fiberobj].zeta
-            #    yy=fiber[fiberobj].eta
-            #    cc=skylines[0].flux[fiberobj]/medsky
-            #    plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=6,overplot=1,/xs,/ys
-            #endif
-            #if ntelluric gt 0 then begin
-            #    xx=fiber[fibertelluric].zeta
-            #    yy=fiber[fibertelluric].eta
-            #    cc=skylines[0].flux[fibertelluric]/medsky
-            #    plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=4,overplot=1,/xs,/ys
-            #endif
-            #device,/close
-            #ps2jpg,outdir+file+'sky.eps',/eps,chmod='664'o,/delete
+                #plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=8,/xs,/ys
+                #if nobj gt 0 then begin
+                #    xx=fiber[fiberobj].zeta
+                #    yy=fiber[fiberobj].eta
+                #    cc=skylines[0].flux[fiberobj]/medsky
+                #    plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=6,overplot=1,/xs,/ys
+                #endif
+                #if ntelluric gt 0 then begin
+                #    xx=fiber[fibertelluric].zeta
+                #    yy=fiber[fibertelluric].eta
+                #    cc=skylines[0].flux[fibertelluric]/medsky
+                #    plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=4,overplot=1,/xs,/ys
+                #endif
+                #device,/close
+                #ps2jpg,outdir+file+'sky.eps',/eps,chmod='664'o,/delete
 
-            if ims[0] == 0: d = load.apPlate(int(plate), mjd) 
-            if ims[0] != 0: d = load.ap1D(ims[i])
-            rows = 300-plSum2['FIBERID']
+                if ims[0] == 0: d = load.apPlate(int(plate), mjd) 
+                if ims[0] != 0: d = load.ap1D(ims[i])
+                rows = 300-plSum2['FIBERID']
 
-            fibersky, = np.where(plSum2['OBJTYPE'] == 'SKY')
-            nsky = len(fibersky)
-            sky = rows[fibersky]
+                fibersky, = np.where(plSum2['OBJTYPE'] == 'SKY')
+                nsky = len(fibersky)
+                sky = rows[fibersky]
 
-            # Define skylines structure which we will use to get crude sky levels in lines.
-            dt = np.dtype([('W1',   np.float64),
-                           ('W2',   np.float64),
-                           ('C1',   np.float64),
-                           ('C2',   np.float64),
-                           ('C3',   np.float64),
-                           ('C4',   np.float64),
-                           ('FLUX', np.float64, (nfiber)),
-                           ('TYPE', np.int32)])
+                # Define skylines structure which we will use to get crude sky levels in lines.
+                dt = np.dtype([('W1',   np.float64),
+                               ('W2',   np.float64),
+                               ('C1',   np.float64),
+                               ('C2',   np.float64),
+                               ('C3',   np.float64),
+                               ('C4',   np.float64),
+                               ('FLUX', np.float64, (nfiber)),
+                               ('TYPE', np.int32)])
 
-            skylines = np.zeros(2,dtype=dt);  nskylines=len(skylines)
+                skylines = np.zeros(2,dtype=dt);  nskylines=len(skylines)
 
-            skylines['W1']   = 16230.0, 15990.0
-            skylines['W2']   = 16240.0, 16028.0
-            skylines['C1']   = 16215.0, 15980.0
-            skylines['C2']   = 16225.0, 15990.0
-            skylines['C3']   = 16245.0, 0.0
-            skylines['C4']   = 16255.0, 0.0
-            skylines['TYPE'] = 1, 0
+                skylines['W1']   = 16230.0, 15990.0
+                skylines['W2']   = 16240.0, 16028.0
+                skylines['C1']   = 16215.0, 15980.0
+                skylines['C2']   = 16225.0, 15990.0
+                skylines['C3']   = 16245.0, 0.0
+                skylines['C4']   = 16255.0, 0.0
+                skylines['TYPE'] = 1, 0
 
-            for iline in range(nskylines):
-                skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
+                for iline in range(nskylines):
+                    skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
 
-            #medsky = np.median(skylines['FLUX'][sky][0])
+                #medsky = np.median(skylines['FLUX'][sky][0])
 
-            #xx = plSum2['ZETA'][science]
-            #yy = plSum2['ETA'][science]
-            #cc = skylines['FLUX'][sky][0] / medsky
+                #xx = plSum2['ZETA'][science]
+                #yy = plSum2['ETA'][science]
+                #cc = skylines['FLUX'][sky][0] / medsky
 
 
-        # PLOT 4: spatial sky line emission
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
-        # PLOT 5: spatial continuum emission
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
-        if (starfiber is None) & (onem is None):
-            print("PLOTS 4: spatial plot of sky line emission will be made here.\n")
-            print("PLOTS 5: spatial plot of continuum emission will be made here.\n")
+                # PLOT 4: spatial sky line emission
+                # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
+                # PLOT 5: spatial continuum emission
+                # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
+                if (starfiber is None) & (onem is None):
+                    print("PLOTS 4: spatial plot of sky line emission will be made here.\n")
+                    print("PLOTS 5: spatial plot of continuum emission will be made here.\n")
 
     # PLOT 6: guider rms plot
     if onem is None:
