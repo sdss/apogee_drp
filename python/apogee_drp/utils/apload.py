@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from astropy.io import fits
+from astropy.table import Table
 import os
 try :
     from sdss_access.path import path

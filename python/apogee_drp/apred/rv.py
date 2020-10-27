@@ -636,7 +636,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             apogee2_target3 |= visit['apogee_target3']
             try: apogee2_target4 |= visit['apogee_target4']
             except: pass
-        elif visit['SURVEY'] == 'apo1m' :
+        elif visit['survey'] == 'apo1m' :
             apogee_target2 |= visit['APOGEE_TARGET2'] 
             apogee2_target2 |= visit['APOGEE_TARGET2'] 
         # MWM target flags?
@@ -910,7 +910,7 @@ def dbingest(apstar,allvisit):
                'gaiadr2_pmdec_error','gaiadr2_gmag',
                'gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr',
                'sdssv_apogee_target0','firstcarton',
-               'targflags', 'starflag', 'starflags','created']
+               'targflags', 'starflag', 'starflags','created','rvtab']
     for c in delcols:
         if c in allvisit.dtype.names:
             del allvisit[c]
