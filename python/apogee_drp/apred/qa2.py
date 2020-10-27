@@ -1295,11 +1295,12 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         
         ax1.set_xlim(xmin,xmax);  ax1.set_ylim(ymin,ymax)
 
-        telluric, = np.where((platesum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (platesum2['OBJTYPE'] == 'HOT_STD'))
-        science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
-        telluric = telluric[::-1];    science = science[::-1]
+        gd, = np.where(platesum2['HMAG']<50)
+        tmp = platesum2[gd]
 
-        import pdb; pdb.set_trace()
+        telluric, = np.where((tmp['OBJTYPE'] == 'SPECTROPHOTO_STD') | (tmp['OBJTYPE'] == 'HOT_STD'))
+        science, = np.where((tmp['OBJTYPE'] != 'SPECTROPHOTO_STD') & (tmp['OBJTYPE'] != 'HOT_STD') & (tmp['OBJTYPE'] != 'SKY'))
+        telluric = telluric[::-1];    science = science[::-1]
 
         psci = ax1.scatter(Vsum['H'][science], Vsum['SNR'][science], marker='*', s=180, edgecolors='k', c='r', alpha=alpha, label='Science')
         ptel = ax1.scatter(Vsum['H'][telluric], Vsum['SNR'][telluric], marker='o', s=60, edgecolors='k', c='cyan', alpha=alpha, label='Telluric')
