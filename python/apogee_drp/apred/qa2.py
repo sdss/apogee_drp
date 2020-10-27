@@ -778,6 +778,7 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
         plotfilefull = plotsdir + plotfile
         med = np.median(flux[chip][1].data, axis=1)
         med = med[plSum2['FIBERID']-1]
+        import pdb; pdb.set_trace()
 
         print("Making "+plotfile)
         fontsize=26
