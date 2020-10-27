@@ -962,7 +962,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         yspn = ymx-ymin
                         ymax = ymx + (yspn * 0.15)
                         # Establish Ymin
-                        ymn = np.min(vflux)
+                        ymn = np.min(Flux)
                         if ymn > 0: 
                             yspn = ymx - ymn
                             ymin = ymn - (yspn * 0.15)
