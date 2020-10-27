@@ -1068,36 +1068,37 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ymxsec1, = np.where((vwave > 15150) & (vwave < 15180))
                         ymxsec2, = np.where((vwave > 15900) & (vwave < 15950))
                         ymxsec3, = np.where((vwave > 16905) & (vwave < 16940))
-                        if str(plSum2['FIBERID'][j]).zfill(3)=='211':
-                            import pdb; pdb.set_trace()
-                        ymx1 = np.max(vflux[ymxsec1])
-                        ymx2 = np.max(vflux[ymxsec2])
-                        ymx3 = np.max(vflux[ymxsec3])
-                        ymx = np.max([ymx1,ymx2,ymx3])
-                        ymin = 0
-                        yspn = ymx-ymin
-                        ymax = ymx + (yspn * 0.15)
-                        # Establish Ymin
-                        ymn = np.min(vflux)
-                        if ymn > 0: 
-                            yspn = ymx - ymn
-                            ymin = ymn - (yspn * 0.15)
+                        if (len(ymxsec1 == 0) | (len(ymxsec2 == 0) | (len(ymxsec3 == 0): 
+                            print("Problem with fiber "+str(plSum2['FIBERID'][j]).zfill(3)+". Not Plotting.")
+                        else:
+                            ymx1 = np.max(vflux[ymxsec1])
+                            ymx2 = np.max(vflux[ymxsec2])
+                            ymx3 = np.max(vflux[ymxsec3])
+                            ymx = np.max([ymx1,ymx2,ymx3])
+                            ymin = 0
+                            yspn = ymx-ymin
                             ymax = ymx + (yspn * 0.15)
+                            # Establish Ymin
+                            ymn = np.min(vflux)
+                            if ymn > 0: 
+                                yspn = ymx - ymn
+                                ymin = ymn - (yspn * 0.15)
+                                ymax = ymx + (yspn * 0.15)
 
-                        ax1 = plt.subplot2grid((1,1), (0,0))
+                            ax1 = plt.subplot2grid((1,1), (0,0))
 
-                        ax1.tick_params(reset=True)
-                        ax1.set_xlim(xmin,xmax)
-                        ax1.set_ylim(ymin,ymax)
-                        ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
-                        ax1.minorticks_on()
-                        ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
-                        ax1.set_ylabel(r'Flux')
+                            ax1.tick_params(reset=True)
+                            ax1.set_xlim(xmin,xmax)
+                            ax1.set_ylim(ymin,ymax)
+                            ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
+                            ax1.minorticks_on()
+                            ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
+                            ax1.set_ylabel(r'Flux')
 
-                        ax1.plot(vwave, vflux, color='k', linewidth=1)
+                            ax1.plot(vwave, vflux, color='k', linewidth=1)
 
-                        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
-                        plt.savefig(plotfilefull)
+                            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                            plt.savefig(plotfilefull)
                         plt.close('all')
                         plt.ion()
 
