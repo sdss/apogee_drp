@@ -156,7 +156,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     print("--------------------------------------------------------------------\n")
 
     n_exposures = len(ims)
-
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
@@ -978,9 +977,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
                         ax1.set_ylabel(r'Flux')
 
-                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color='k', linewidth=1)
-                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color='k', linewidth=1)
-                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color='k', linewidth=1)
+                        color = 'k'
+                        if platesum2['OBJTYPE'][j] == 'SKY': color = 'firebrick'
+                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=color)
+                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=color)
+                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=color)
 
                         fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
                         plt.savefig(plotfilefull)
