@@ -936,12 +936,12 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                     xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
-                    FluxB = apPlate['a'][1].data[300-j,:]
-                    FluxG = apPlate['b'][1].data[300-j,:]
-                    FluxR = apPlate['c'][1].data[300-j,:]
-                    WaveB = apPlate['a'][4].data[300-j,:]
-                    WaveG = apPlate['b'][4].data[300-j,:]
-                    WaveR = apPlate['c'][4].data[300-j,:]
+                    FluxB = apPlate['a'][1].data[299-j,:]
+                    FluxG = apPlate['b'][1].data[299-j,:]
+                    FluxR = apPlate['c'][1].data[299-j,:]
+                    WaveB = apPlate['a'][4].data[299-j,:]
+                    WaveG = apPlate['b'][4].data[299-j,:]
+                    WaveR = apPlate['c'][4].data[299-j,:]
 
                     Flux = np.concatenate([FluxB, FluxG, FluxR])
                     Wave = np.concatenate([WaveB, WaveG, WaveR])
