@@ -457,7 +457,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             else:
                 fwhm = -1.
                 gdrms = -1.
-                print("not halted: no matching mjd range in gcam...")
+                if i == 0: print("not halted: no matching mjd range in gcam...")
         else:
             fwhm = -1
             gdrms = -1
