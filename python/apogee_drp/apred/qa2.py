@@ -1002,7 +1002,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         objhtml.close()
         cfile.close()
 
-    for i in range(len(plSum1['IM']):
+    for i in range(len(plSum1['IM'])):
         # PLOT 2: 3 panels
         if (flat is None) & (onem is None):
             plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
