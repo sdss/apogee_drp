@@ -1274,7 +1274,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         Vsum = load.apVisitSum(int(plate), mjd)
         Vsumfile = Vsum.filename()
         Vsum = Vsum[1].data
-        import pdb; pdb.set_trace()
 
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
         print("Making "+plotfile)
@@ -1286,7 +1285,10 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
 
-        minH = np.nanmin(Vsum['H']);      maxH = np.nanmax(Vsum['H']);      spanH = maxH - minH
+        if 'HMAG' in Vsum.columns.names:
+            minH = np.nanmin(Vsum['HMAG']);  maxH = np.nanmax(Vsum['HMAG']);  spanH = maxH - minH
+        else:
+            minH = np.nanmin(Vsum['H']);     maxH = np.nanmax(Vsum['H']);     spanH = maxH - minH
         minSNR = np.nanmin(Vsum['SNR']);  maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
         xmin = minH - spanH * 0.05;       xmax = maxH + spanH * 0.05
         ymin = -5;                         ymax = maxSNR + ((maxSNR - ymin) * 0.05)
