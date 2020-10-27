@@ -748,6 +748,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     print("Running MAKEPLOTSHTML for plate "+plate+", mjd "+mjd)
     print("--------------------------------------------------------------------\n")
 
+    # Load in the apPlate file
+    apPlate = load.apPlate(int(plate), mjd)
+
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
     chiplab = np.array(['blue','green','red'])
@@ -841,7 +844,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     # Loop over the exposures.
     for i in range(n_exposures):
         if ims[0] == 0: pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-        if ims[0] != 0: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
+        #if ims[0] != 0: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
         pfile = pfile.replace('.fits','')
 
         # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
@@ -852,9 +855,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
         if ims[0] != 0:
             objhtml.write('<H2>'+pfile+'</H2>\n')
-            tmp = load.apPlate(int(plate), mjd)
             for chip in chips: 
-                objhtml.write('<A HREF=../'+tmp[chip].filename()+'>'+tmp[chip].filename()+'</A>\n')
+                objhtml.write('<A HREF=../'+apPlate[chip].filename()+'>'+apPlate[chip].filename()+'</A>\n')
         else:
             objhtml.write('<H2>apPlate-'+platefile+'</H2>\n')
             if noplot is not None:
@@ -935,30 +937,26 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                     xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
-                    # Look for apVisit file
-                    # NOTE: telescope not in the filenames yet, so removing it for now
-                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
-                    if os.path.exists(vfile) is False:
-                        vfile = vfile.replace('-apo25m','')
-                        if os.path.exists(vfile) is False:
-                            print("Uh oh... can't find apVisit files...")
+                    FluxB = apPlate['a'][1].data[j,:]
+                    FluxG = apPlate['b'][1].data[j,:]
+                    FluxR = apPlate['c'][1].data[j,:]
+                    WaveB = apPlate['a'][4].data[j,:]
+                    WaveG = apPlate['b'][4].data[j,:]
+                    WaveR = apPlate['c'][4].data[j,:]
 
-                    vdata = fits.open(vfile)
-                    vfluxall = vdata[1].data
-                    vwaveall = vdata[4].data
-                    vflux = np.concatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
-                    vwave = np.concatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
+                    Flux = np.concatenate([FluxB, FluxG, FluxR])
+                    Wave = np.concatenate([WaveB, WaveG, WaveR])
 
                     # Establish Ymax
-                    ymxsec1, = np.where((vwave > 15150) & (vwave < 15180))
-                    ymxsec2, = np.where((vwave > 15900) & (vwave < 15950))
-                    ymxsec3, = np.where((vwave > 16905) & (vwave < 16940))
+                    ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
+                    ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
+                    ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
                     if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
                         print("Problem with fiber "+str(plSum2['FIBERID'][j]).zfill(3)+". Not Plotting.")
                     else:
-                        ymx1 = np.max(vflux[ymxsec1])
-                        ymx2 = np.max(vflux[ymxsec2])
-                        ymx3 = np.max(vflux[ymxsec3])
+                        ymx1 = np.max(Flux[ymxsec1])
+                        ymx2 = np.max(Flux[ymxsec2])
+                        ymx3 = np.max(Flux[ymxsec3])
                         ymx = np.max([ymx1,ymx2,ymx3])
                         ymin = 0
                         yspn = ymx-ymin
@@ -980,7 +978,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
                         ax1.set_ylabel(r'Flux')
 
-                        ax1.plot(vwave, vflux, color='k', linewidth=1)
+                        ax1.plot([WaveB,WaveG,WaveR], [FluxB,FluxG,FluxR], color='k', linewidth=1)
 
                         fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
                         plt.savefig(plotfilefull)
