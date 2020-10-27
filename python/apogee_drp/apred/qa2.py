@@ -70,7 +70,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     fluxid =     planstr['fluxid']
     instrument = planstr['instrument']
     survey =     planstr['survey']
-
+    print("Survey = "+survey)
 
     # Establish directories.
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
