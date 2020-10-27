@@ -1,4 +1,4 @@
-pro apvisit_output,frame,plugmap,shiftstr,pairstr,silent=silent,stp=stp,single=single,iter=iter,mjdfrac=mjdfrac,survey=survey
+pro apvisit_output,frame,plugmap,shiftstr,pairstr,silent=silent,stp=stp,single=single,mjdfrac=mjdfrac,survey=survey
 
 ;+
 ;
@@ -386,7 +386,6 @@ For i=0,nfibers-1 do begin
   ;if fibertype eq 0 or fibertype eq 2 then begin
   fiberholetype = plugmap.fiberdata[iplugind].holetype
   fiberobjtype = plugmap.fiberdata[iplugind].objtype
-  ;fiberobjid = plugmap.fiberdata[iplugind].objid
   fiber_ra = plugmap.fiberdata[iplugind].ra
   fiber_dec = plugmap.fiberdata[iplugind].dec
   fiber_mag = plugmap.fiberdata[iplugind].mag
@@ -394,10 +393,7 @@ For i=0,nfibers-1 do begin
   targ1 = plugmap.fiberdata[iplugind].target1
   targ2 = plugmap.fiberdata[iplugind].target2
   targ3 = plugmap.fiberdata[iplugind].target3
-  ak_targ = plugmap.fiberdata[iplugind].ak_targ
-  ak_targ_method = plugmap.fiberdata[iplugind].ak_targ_method
-  ak_wise = plugmap.fiberdata[iplugind].ak_wise
-  sfd_ebv = plugmap.fiberdata[iplugind].sfd_ebv
+  targ4 = plugmap.fiberdata[iplugind].target4
   ; neighboring fibers
   iplugind1 = where(plugmap.fiberdata.spectrographid eq 2 and $
                    plugmap.fiberdata.fiberid eq ifiberid+1,niplugind)
@@ -472,43 +468,26 @@ For i=0,nfibers-1 do begin
     ; Add star information
     sxaddpar,header,'OBJID',strtrim(tmass_name,2),' Object ID'
     sxaddpar,header,'OBJTYPE',fiberobjtype,' Object type'
-    ; get catalog information downloaded from database
-    ; with plateHoles info, don't bother with this
-    ;cat=getcat(strtrim(tmass_name,2),ra=fiber_ra)
-    ;if size(cat,/type) eq 8 then begin
-    ;  sxaddpar,header,'RA',cat.ra,' catalog right ascension, deg, J2000'
-    ;  sxaddpar,header,'DEC',cat.dec,' catalog declination, deg, J2000'
-    ;  sxaddpar,header,'RA_TARG',fiber_ra,' targeting right ascension, deg, J2000'
-    ;  sxaddpar,header,'DEC_TARG',fiber_dec,' targeting declination, deg, J2000'
-    ;  sxaddpar,header,'AKTARG',cat.ak,' Extinction used for targeting'
-    ;  sxaddpar,header,'AKMETHOD',cat.method,' Extinction method used for targeting'
-    ;  sxaddpar,header,'AKWISE',cat.ak_wise,' WISE all-sky extinction'
-    ;  sxaddpar,header,'SFD_EBV',cat.sfd_ebv,' SFD E(B-V)'
-    ;  sxaddpar,header,'J',cat.j>0.?cat.j:99.999,' 2MASS J magnitude'
-    ;  sxaddpar,header,'J_ERR',cat.j_err,' 2MASS J magnitude uncertainty'
-    ;  sxaddpar,header,'H',cat.h>0.?cat.h:99.999,' 2MASS H magnitude'
-    ;  sxaddpar,header,'H_ERR',cat.h_err,' 2MASS H magnitude uncertainty'
-    ;  sxaddpar,header,'K',cat.ks>0.?cat.ks:99.999,' 2MASS Ks magnitude'
-    ;  sxaddpar,header,'K_ERR',cat.ks_err,' 2MASS Ks magnitude uncertainty'
-    ;endif else begin
-    ;  print,'Object not found in catalog file. You can continue, but no extinction in header'
-      sxaddpar,header,'AKMETHOD','NONE',' Extinction method'
-      sxaddpar,header,'RA',fiber_ra,' targeting right ascension, deg, J2000'
-      sxaddpar,header,'DEC',fiber_dec,' targeting declination, deg, J2000'
-      sxaddpar,header,'J',fiber_mag[0]>0.?fiber_mag[0]:99.999,' 2MASS J magnitude'
-      sxaddpar,header,'H',fiber_mag[1]>0.?fiber_mag[1]:99.999,' 2MASS H magnitude'
-      sxaddpar,header,'K',fiber_mag[2]>0.?fiber_mag[2]:99.999,' 2MASS Ks magnitude'
-    ;endelse
+    sxaddpar,header,'RA',fiber_ra,' targeting right ascension, deg, J2000'
+    sxaddpar,header,'DEC',fiber_dec,' targeting declination, deg, J2000'
+    sxaddpar,header,'JMAG',plugmap.fiberdata[iplugind].jmag,' 2MASS J magnitude'
+    sxaddpar,header,'HMAG',plugmap.fiberdata[iplugind].hmag,' 2MASS H magnitude'
+    sxaddpar,header,'KMAG',plugmap.fiberdata[iplugind].kmag,' 2MASS Ks magnitude'
     snr=median(frame.(1).flux[*,ifiber]/frame.(1).err[*,ifiber])
     sxaddpar,header,'SNR',snr,' median S/N, middle chip'
     if keyword_set(survey) then sxaddpar,header,'SURVEY',survey,' Survey definition (for targeting flags)'
     sxaddpar,header,'TARG1',targ1,' First APOGEE targeting flag (bitwise, see docs)'
     sxaddpar,header,'TARG2',targ2,' Second APOGEE targeting flag (bitwise, see docs)'
     sxaddpar,header,'TARG3',targ3,' Third APOGEE targeting flag (bitwise, see docs)'
-    sxaddpar,header,'AKTARG',ak_targ,'Extinction used in targeting'
-    sxaddpar,header,'AKMETHOD',ak_targ_method,'Extinction method'
-    sxaddpar,header,'AKWISE',ak_wise,'WISE extinction'
-    sxaddpar,header,'SFD_EBV',sfd_ebv,'SFD E(B-V)'
+    sxaddpar,header,'TARG4',targ4,' Fourth APOGEE targeting flag (bitwise, see docs)'
+    sxaddpar,header,'SVAPTRG0',plugmap.fiberdata[iplugind].sdssv_apogee_target0,' SDSS-V APOGEE target0'
+    sxaddpar,header,'CATID',plugmap.fiberdata[iplugind].catalogid,' SDSS-V catalogdb ID'
+    sxaddpar,header,'G2PLX',plugmap.fiberdata[iplugind].gaiadr2_plx,' Gaia DR2 parallax'
+    sxaddpar,header,'G2PMRA',plugmap.fiberdata[iplugind].gaiadr2_pmra,' Gaia DR2 pmra'
+    sxaddpar,header,'G2PMDEC',plugmap.fiberdata[iplugind].gaiadr2_pmdec,' Gaia DR2 pmdec'
+    sxaddpar,header,'G2GMAG',plugmap.fiberdata[iplugind].gaiadr2_gmag,' Gaia DR2 G magnitude'
+    sxaddpar,header,'G2BPMAG',plugmap.fiberdata[iplugind].gaiadr2_bpmag,' Gaia DR2 Rp magnitude'
+    sxaddpar,header,'G2RPMAG',plugmap.fiberdata[iplugind].gaiadr2_rpmag,' Gaia DR2 Bp magnitude'
     sxaddpar,header,'HPLUS',hplus,' Delta H (neigh-obj) mag of neighboring (+1) fiber'
     sxaddpar,header,'HMINUS',hminus,' Delta H (neigh-obj) mag of neighboring (-1) fiber'
 
@@ -752,15 +731,6 @@ For i=0,nfibers-1 do begin
       sxaddpar,header11,'BUNIT','ADU to flux units conv factor (ergs/s/cm^2/A)'
       MWRFITS,fluxcorr,outfile,header11,/silent
     endif
-
-    ;stop
-    ;if keyword_set(single) then begin
-    ;  ; save the first iteration visit spectrum if iterating for telluric
-    ;  if iter eq 1 then begin
-    ;   outfile1 = outdir+'apVisit-'+apred_vers+'-'+strtrim(mjd,2)+'-'+strtrim(tmass_name,2)+'_1.fits' 
-    ;   spawn,'cp '+outfile+' '+outfile1
-    ;  endif
-    ;endif
 
   endif  ; object spectrum
 

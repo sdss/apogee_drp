@@ -29,7 +29,9 @@
 ; Modifications J. Holtzman 2011+
 ;-
 
-pro ap1dvisit,planfiles,clobber=clobber,verbose=verbose,stp=stp,newwave=newwave,test=test,mapper_data=mapper_data,halt=halt,dithonly=dithonly,ap1dwavecal=ap1dwavecal
+pro ap1dvisit,planfiles,clobber=clobber,verbose=verbose,stp=stp,newwave=newwave,$
+              test=test,mapper_data=mapper_data,halt=halt,dithonly=dithonly,$
+              ap1dwavecal=ap1dwavecal
 
 common telluric,convolved_telluric
 
@@ -225,7 +227,7 @@ FOR i=0L,nplanfiles-1 do begin
     ; Correcting and Calibrating the ap1D files
     ;------------------------------------------
     cfiles = apogee_filename('Cframe',chip=chiptag,num=framenum,plate=planstr.plateid,mjd=planstr.mjd)
-    if keyword_set(clobber) or iter eq 2 or $
+    if keyword_set(clobber) or $
          not file_test(cfiles[0]) or $
          not file_test(cfiles[1]) or $
          not file_test(cfiles[2]) then begin
@@ -558,10 +560,8 @@ FOR i=0L,nplanfiles-1 do begin
   if tag_exist(planstr,'mjdfrac') then if planstr.mjdfrac eq 1 then $
     mjdfrac=sxpar(finalframe.(0).header,'JD-MID')-2400000.5 
   APVISIT_OUTPUT,finalframe,plugmap,shiftstr,pairstr,$
-    /silent,single=single,iter=iter,mjdfrac=mjdfrac,survey=survey
+    /silent,single=single,mjdfrac=mjdfrac,survey=survey
   writelog,logfile,' output '+file_basename(planfile)+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
-
-stop
 
   ;---------------
   ; Radial velocity measurements for this visit
@@ -607,40 +607,6 @@ stop
   platemjd5 = strtrim(plate,2)+'-'+strtrim(mjd,2)
   if keyword_set(stp) then stop
 
-  ;; SDSS-V, get catalogdb information
-  ;;----------------------------------
-  if planstr.plateid ge 15000 then begin
-    print,'Getting catalogdb information'
-    gdid = where(objdata.catalogid gt -1,ngdid,comp=bdid,ncomp=nbdid)
-    ;; Get catalogdb information using catalogID
-    undefine,catalogdb
-    if ngdid gt 0 then begin
-      print,'Querying catalogdb using catalogID for ',strtrim(ngdid,2),' stars'
-      catalogdb1 = get_catalogdb_data(id=objdata[gdid].catalogid)
-      ;; Got some results
-      if size(catalogdb1,/type) eq 8 then begin
-        print,'Got results for ',strtrim(n_elements(catalogdb1),2),' stars'
-        push,catalogdb,catalogdb1
-      endif else begin
-        print,'No results'
-      endelse
-    endif
-    ;; Get catalogdb information using coordinates (tellurics don't have IDs)    
-    if nbdid gt 0 then begin
-      print,'Querying catalogdb using coordinates for ',strtrim(nbdid,2),' stars'
-      catalogdb2 = get_catalogdb_data(ra=objdata[bdid].ra,dec=objdata[bdid].dec)
-      ;; this returns a q3c_dist columns that we don't want to keep
-      if size(catalogdb2,/type) eq 8 then begin
-        catalogdb2 = REMOVE_TAG(catalogdb2,'q3c_dist')
-        push,catalobdb,catalobdb2
-      endif else begin
-        print,'No results'
-      endelse
-    endif
-  endif  ; get catalogdb info
-
-  stop
-
   ;; Loop over the objects
   apgundef,allvisitstr
   for istar=0,n_elements(objind)-1 do begin
@@ -658,13 +624,13 @@ stop
                 pmra:0.0,pmdec:0.0,pm_src:'',$
                 apogee_target1:0L,apogee_target2:0L,apogee_target3:0L,apogee_target4:0L,$
                 catalogid:0LL, gaiadr2_plx:0.0, gaiadr2_plx_error:0.0, gaiadr2_pmra:0.0, gaiadr2_pmra_error:0.0,$
-                gaiadr2_pmdec:00, gaiadr2_pmdec_error:0.0, gaiadr2_gmag:0.0, gaiadr2_gerr:0.0,$
+                gaiadr2_pmdec:0.0, gaiadr2_pmdec_error:0.0, gaiadr2_gmag:0.0, gaiadr2_gerr:0.0,$
                 gaiadr2_bpmag:0.0, gaiadr2_bperr:0.0, gaiadr2_rpmag:0.0, gaiadr2_rperr:0.0, sdssv_apogee_target0:0LL,$
                 firstcarton:'', targflags:'',snr: 0.0, starflag:0L,starflags: '',$
                 dateobs:'',jd:0.0d0}
 
     visitstr.apogee_id = obj[istar]
-    visitstr.target_id = targid[istar]
+    visitstr.target_id = objdata[istar].object
     visitstr.file = file_basename(visitfile)
     ;; URI is what you need to get the file, either on the web or at Utah
     mwm_root = getenv('MWM_ROOT')
@@ -675,54 +641,22 @@ stop
     visitstr.plate = strtrim(planstr.plateid,2)
     visitstr.mjd = planstr.mjd
     visitstr.telescope = dirs.telescope
-
-    visitstr.ra = objdata[istar].ra
-    visitstr.dec = objdata[istar].dec
-    visitstr.src_h = objdata[istar].src_h
-    visitstr.pmra = objdata[istar].pmra
-    visitstr.pmdec = objdata[istar].pmdec
-    visitstr.pm_src = objdata[istar].pm_src
+    ;; Copy over all relevant columns from plugmap/plateHoles/catalogdb
+    STRUCT_ASSIGN,objdata[istar],visitstr,/nozero
     GLACTC,visitstr.ra,visitstr.dec,2000.0,glon,glat,1,/deg
     visitstr.glon = glon
     visitstr.glat = glat
 
-    visitstr.apogee_target1 = objdata[istar].targ1
-    visitstr.apogee_target2 = objdata[istar].targ2
-    visitstr.apogee_target3 = objdata[istar].targ3
-    visitstr.apogee_target4 = objdata[istar].targ4
-    ;; SDSS-V columns
-    visitstr.catalogid = plugmap.fiberdata[objind[istar]].catalogid
+    visitstr.apogee_target1 = objdata[istar].target1
+    visitstr.apogee_target2 = objdata[istar].target2
+    visitstr.apogee_target3 = objdata[istar].target3
+    visitstr.apogee_target4 = objdata[istar].target4
+
+    ;; SDSS-V flags
     if planstr.plateid ge 15000 then begin
-      MATCH,catalogdb.catalogid,visitstr.catalogid,ind1,ind2,/sort,count=nmatch
-      if nmatch eq 0 then stop,'halt: no match in catalogdb info'
-      visitstr.jmag = catalogdb[ind1[0]].jmag
-      visitstr.jerr = catalogdb[ind1[0]].e_jmag
-      visitstr.hmag = catalogdb[ind1[0]].hmag
-      visitstr.herr = catalogdb[ind1[0]].e_hmag
-      visitstr.kmag = catalogdb[ind1[0]].kmag
-      visitstr.kerr = catalogdb[ind1[0]].e_kmag
-      visitstr.gaiadr2_plx = catalogdb[ind1[0]].plx
-      visitstr.gaiadr2_plx_error = catalogdb[ind1[0]].e_plx
-      visitstr.gaiadr2_pmra = catalogdb[ind1[0]].pmra
-      visitstr.gaiadr2_pmra_error = catalogdb[ind1[0]].e_pmra
-      visitstr.gaiadr2_pmdec = catalogdb[ind1[0]].pmdec
-      visitstr.gaiadr2_pmdec_error = catalogdb[ind1[0]].e_pmdec
-      visitstr.gaiadr2_gmag = catalogdb[ind1[0]].gaiamag
-      visitstr.gaiadr2_gerr = catalogdb[ind1[0]].e_gaiamag
-      visitstr.gaiadr2_bpmag = catalogdb[ind1[0]].gaiabp
-      visitstr.gaiadr2_bperr = catalogdb[ind1[0]].e_gaiabp
-      visitstr.gaiadr2_rpmag = catalogdb[ind1[0]].gaiarp
-      visitstr.gaiadr2_rperr = catalogdb[ind1[0]].e_gaiarp
-      visitstr.sdssv_apogee_target0 = plugmap.fiberdata[objind[istar]].sdssv_apogee_target0
-      visitstr.firstcarton = plugmap.fiberdata[objind[istar]].firstcarton
       visitstr.targflags = targflag(visitstr.sdssv_apogee_target0,survey=survey)      
+    ;; APOGEE-1/2 flags
     endif else begin
-      visitstr.jmag = objdata[istar].j
-      visitstr.jerr = objdata[istar].j_err
-      visitstr.hmag = objdata[istar].h
-      visitstr.herr = objdata[istar].h_err
-      visitstr.kmag = objdata[istar].k
-      visitstr.kerr = objdata[istar].k_err
       visitstr.targflags = targflag(targ1[istar],targ2[istar],targ3[istar],targ4[istar],survey=survey)
     endelse
     visitstr.survey = survey

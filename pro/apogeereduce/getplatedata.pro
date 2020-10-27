@@ -41,40 +41,18 @@
 function catalog_info_blank
   ;; Info from apogeeObject
   cat0 = create_struct('alt_id',' ',$
-                       'j', -9999.99, $
-                       'j_err', -9999.99, $
-                       'h', -9999.99, $
-                       'h_err', -9999.99, $
-                       'k', -9999.99, $
-                       'k_err', -9999.99, $
+                       'twomass_designation','',$
+                       'jmag', -9999.99, $
+                       'jerr', -9999.99, $
+                       'hmag', -9999.99, $
+                       'herr', -9999.99, $
+                       'kmag', -9999.99, $
+                       'kerr', -9999.99, $
+                       'phflag','',$
                        'src_h', ' ', $
-                       'wash_m', 0.,$
-                       'wash_m_err', 0.,$
-                       'wash_t2', 0., $
-                       'wash_t2_err', 0., $
-                       'ddo51', 0., $
-                       'ddo51_err', 0., $
-                       'irac_3_6', 0., $
-                       'irac_3_6_err', 0., $
-                       'irac_4_5', 0., $
-                       'irac_4_5_err', 0., $
-                       'irac_5_8', 0., $
-                       'irac_5_8_err', 0., $
-                       'irac_8_0', 0., $
-                       'irac_8_0_err', 0., $
-                       'wise_4_5', 0., $
-                       'wise_4_5_err', 0., $
-                       'targ_4_5', 0., $
-                       'targ_4_5_err', 0., $
-                       'ak_targ', -9999.99, $
-                       'ak_targ_method', '', $
-                       'ak_wise', -9999.99, $
-                      'sfd_ebv', -9999.99, $
-                       'wash_ddo51_giant_flag', 0, $
-                       'wash_ddo51_star_flag', 0, $
                        'pmra', 0., $
                        'pmdec', 0., $
-                      'pm_src', ' ')
+                       'pm_src', ' ')
   return, cat0
 end
 
@@ -84,38 +62,38 @@ function catalog_info_common
   cat0 = create_struct('apogee_id',' ',$
                        'ra', 0.d0,$
                        'dec', 0.d0,$
-                       'j', 0.,$
-                       'j_err', 0.,$
-                       'h', 0.,$
-                       'h_err', 0.,$
-                       'k', 0.,$
-                       'k_err', 0.,$
+                       'jmag', 0.,$
+                       'jerr', 0.,$
+                       'hmag', 0.,$
+                       'herr', 0.,$
+                       'kmag', 0.,$
+                       'kerr', 0.,$
                        'alt_id',' ',$
                        'src_h', ' ', $
-                       'wash_m', 0.,$
-                       'wash_m_err', 0.,$
-                       'wash_t2', 0., $
-                       'wash_t2_err', 0., $
-                       'ddo51', 0., $
-                       'ddo51_err', 0., $
-                       'irac_3_6', 0., $
-                       'irac_3_6_err', 0., $
-                       'irac_4_5', 0., $
-                       'irac_4_5_err', 0., $
-                       'irac_5_8', 0., $
-                       'irac_5_8_err', 0., $
-                       'irac_8_0', 0., $
-                       'irac_8_0_err', 0., $
-                       'wise_4_5', 0., $
-                       'wise_4_5_err', 0., $
-                       'targ_4_5', 0., $
-                       'targ_4_5_err', 0., $
-                       'ak_targ', -9999.99, $
-                       'ak_targ_method', '', $
-                       'ak_wise', -9999.99, $
-                       'sfd_ebv', -9999.99, $
-                       'wash_ddo51_giant_flag', 0, $
-                       'wash_ddo51_star_flag', 0, $
+                       ;'wash_m', 0.,$
+                       ;'wash_m_err', 0.,$
+                       ;'wash_t2', 0., $
+                       ;'wash_t2_err', 0., $
+                       ;'ddo51', 0., $
+                       ;'ddo51_err', 0., $
+                       ;'irac_3_6', 0., $
+                       ;'irac_3_6_err', 0., $
+                       ;'irac_4_5', 0., $
+                       ;'irac_4_5_err', 0., $
+                       ;'irac_5_8', 0., $
+                       ;'irac_5_8_err', 0., $
+                       ;'irac_8_0', 0., $
+                       ;'irac_8_0_err', 0., $
+                       ;'wise_4_5', 0., $
+                       ;'wise_4_5_err', 0., $
+                       ;'targ_4_5', 0., $
+                       ;'targ_4_5_err', 0., $
+                       ;'ak_targ', -9999.99, $
+                       ;'ak_targ_method', '', $
+                       ;'ak_wise', -9999.99, $
+                       ;'sfd_ebv', -9999.99, $
+                       ;'wash_ddo51_giant_flag', 0, $
+                       ;'wash_ddo51_star_flag', 0, $
                        'pmra', 0., $
                        'pmdec', 0., $
                        'pm_src', ' ')
@@ -147,11 +125,15 @@ if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
   if (strtrim(badfiberid,2) eq 'null' or strtrim(strlowcase(badfiberid),2) eq 'none') then undefine,badfiberid  ;; null/none  
 
 ;; Create the output fiber structure
-tmp = create_struct('fiberid',0, 'ra',0.d0, 'dec',0.d0, 'eta',0.d0, 'zeta',0.d0, 'hmag',0., 'objtype','none', $
+tmp = create_struct('fiberid',0, 'ra',0.d0, 'dec',0.d0, 'eta',0.d0, 'zeta',0.d0, 'objtype','none', $
                     'holetype','OBJECT', 'object','', 'tmass_style','', 'target1',0L, 'target2',0L,$
                     'target3',0L, 'target4',0L, 'spectrographid',2, 'mag',fltarr(5), catalog_info_blank(),$
-                    'catalogid',0LL, 'gaia_g',0.0, 'gaia_bp',0.0, 'gaia_rp',0.0, 'sdssv_apogee_target0',0LL,$
-                    'firstcarton','')
+                    'catalogid',0LL, 'gaia_g',-9999.99, 'gaia_bp',-9999.99, 'gaia_rp',-9999.99, 'sdssv_apogee_target0',0LL,$
+                    'firstcarton','', 'gaiadr2_sourceid',0LL, 'gaiadr2_ra',-9999.99d0, 'gaiadr2_dec',-9999.99d0,$
+                    'gaiadr2_plx',-9999.99, 'gaiadr2_plx_error',-9999.99, 'gaiadr2_pmra',-9999.99,$
+                    'gaiadr2_pmra_error',-9999.99, 'gaiadr2_pmdec',-9999.99, 'gaiadr2_pmdec_error',-9999.99, 'gaiadr2_gmag',-9999.99,$
+                    'gaiadr2_gerr',-9999.99, 'gaiadr2_bpmag',-9999.99, 'gaiadr2_bperr',-9999.99, 'gaiadr2_rpmag',-9999.99,$
+                    'gaiadr2_rperr',-9999.99)
 
 guide = replicate(tmp,16)
 loc = 0L
@@ -418,6 +400,79 @@ for i=0,299 do begin
   endelse
 endfor
 
+
+;; SDSS-V, get catalogdb information
+;;----------------------------------
+if platenum ge 15000 then begin
+  print,'Getting catalogdb information'
+  objind = where(fiber.objtype eq 'OBJECT' or fiber.objtype eq 'HOT_STD',nobjind)
+  objdata = fiber[objind]
+  gdid = where(objdata.catalogid gt -1,ngdid,comp=bdid,ncomp=nbdid)
+  ;; Get catalogdb information using catalogID
+  undefine,catalogdb
+  if ngdid gt 0 then begin
+    print,'Querying catalogdb using catalogID for ',strtrim(ngdid,2),' stars'
+    catalogdb1 = get_catalogdb_data(id=objdata[gdid].catalogid)
+    ;; Got some results
+    if size(catalogdb1,/type) eq 8 then begin
+      print,'Got results for ',strtrim(n_elements(catalogdb1),2),' stars'
+      push,catalogdb,catalogdb1
+    endif else begin
+      print,'No results'
+    endelse
+  endif
+  ;; Get catalogdb information using coordinates (tellurics don't have IDs)    
+  if nbdid gt 0 then begin
+    print,'Querying catalogdb using coordinates for ',strtrim(nbdid,2),' stars'
+    catalogdb2 = get_catalogdb_data(ra=objdata[bdid].ra,dec=objdata[bdid].dec)
+    ;; this returns a q3c_dist columns that we don't want to keep
+    if size(catalogdb2,/type) eq 8 then begin
+      catalogdb2 = REMOVE_TAG(catalogdb2,'q3c_dist')
+      push,catalogdb,catalogdb2
+    endif else begin
+      print,'No results'
+    endelse
+  endif
+
+  ;; Add catalogdb information
+  for i=0,nobjind-1 do begin
+    istar = objind[i]
+    MATCH,catalogdb.catalogid,fiber[istar].catalogid,ind1,ind2,/sort,count=nmatch
+    ;; some stars are missing ids, use coordinate matching indeas   
+    if nmatch eq 0 then begin
+      dist = sphdist(catalogdb.ra,catalogdb.dec,fiber[istar].ra,fiber[istar].dec,/deg)*3600.0
+      ind1 = where(dist lt 0.5,nmatch)
+      if nmatch gt 1 then ind1 = first_el(minloc(dist))
+    endif
+    if nmatch gt 0 then begin
+      fiber[istar].twomass_designation = catalogdb[ind1[0]].twomass
+      fiber[istar].jmag = catalogdb[ind1[0]].jmag
+      fiber[istar].jerr = catalogdb[ind1[0]].e_jmag
+      fiber[istar].hmag = catalogdb[ind1[0]].hmag
+      fiber[istar].herr = catalogdb[ind1[0]].e_hmag
+      fiber[istar].kmag = catalogdb[ind1[0]].kmag
+      fiber[istar].kerr = catalogdb[ind1[0]].e_kmag
+      fiber[istar].phflag = catalogdb[ind1[0]].twomflag
+      fiber[istar].gaiadr2_sourceid = catalogdb[ind1[0]].gaia
+      fiber[istar].gaiadr2_ra = catalogdb[ind1[0]].ra
+      fiber[istar].gaiadr2_dec = catalogdb[ind1[0]].dec
+      fiber[istar].gaiadr2_pmra = catalogdb[ind1[0]].pmra
+      fiber[istar].gaiadr2_pmra_error = catalogdb[ind1[0]].e_pmra
+      fiber[istar].gaiadr2_pmdec = catalogdb[ind1[0]].pmdec
+      fiber[istar].gaiadr2_pmdec_error = catalogdb[ind1[0]].e_pmdec
+      fiber[istar].gaiadr2_plx = catalogdb[ind1[0]].plx
+      fiber[istar].gaiadr2_plx_error = catalogdb[ind1[0]].e_plx
+      fiber[istar].gaiadr2_gmag = catalogdb[ind1[0]].gaiamag
+      fiber[istar].gaiadr2_gerr = catalogdb[ind1[0]].e_gaiamag
+      fiber[istar].gaiadr2_bpmag = catalogdb[ind1[0]].gaiabp
+      fiber[istar].gaiadr2_bperr = catalogdb[ind1[0]].e_gaiabp
+      fiber[istar].gaiadr2_rpmag = catalogdb[ind1[0]].gaiarp
+      fiber[istar].gaiadr2_rperr = catalogdb[ind1[0]].e_gaiarp
+    endif else print,'no match catalogdb match for ',fiber[istar].object
+  endfor ; object loop
+
+endif  ; get catalogdb info
+
 ;; Load apogeeObject file to get proper name and coordinates
 ;; Get apogeeObject catalog info for this field
 ;; No apogeeObject files for SDSS-V   
@@ -462,38 +517,38 @@ if not keyword_set(noobject) and not keyword_set(sdss5) then begin
           fiber[i].tmass_style = objects[match1[j]].apogee_id
           fiber[i].ra = objects[match1[j]].ra
           fiber[i].dec = objects[match1[j]].dec
-          if finite(objects[match1[j]].ak_targ) then fiber[i].ak_targ=objects[match1[j]].ak_targ
-          fiber[i].ak_targ_method = objects[match1[j]].ak_targ_method
-          if finite(objects[match1[j]].ak_wise) then fiber[i].ak_wise=objects[match1[j]].ak_wise
-          if finite(objects[match1[j]].sfd_ebv) then fiber[i].sfd_ebv=objects[match1[j]].sfd_ebv
-          fiber[i].j = objects[match1[j]].j
-          fiber[i].j_err = objects[match1[j]].j_err
-          fiber[i].h = objects[match1[j]].h
-          fiber[i].h_err = objects[match1[j]].h_err
-          fiber[i].k = objects[match1[j]].k
-          fiber[i].k_err = objects[match1[j]].k_err
+          ;if finite(objects[match1[j]].ak_targ) then fiber[i].ak_targ=objects[match1[j]].ak_targ
+          ;fiber[i].ak_targ_method = objects[match1[j]].ak_targ_method
+          ;if finite(objects[match1[j]].ak_wise) then fiber[i].ak_wise=objects[match1[j]].ak_wise
+          ;if finite(objects[match1[j]].sfd_ebv) then fiber[i].sfd_ebv=objects[match1[j]].sfd_ebv
+          fiber[i].jmag = objects[match1[j]].j
+          fiber[i].jerr = objects[match1[j]].j_err
+          fiber[i].hmag = objects[match1[j]].h
+          fiber[i].herr = objects[match1[j]].h_err
+          fiber[i].kmag = objects[match1[j]].k
+          fiber[i].kerr = objects[match1[j]].k_err
           fiber[i].alt_id = objects[match1[j]].alt_id
           fiber[i].src_h = objects[match1[j]].src_h
-          fiber[i].wash_m = objects[match1[j]].wash_m
-          fiber[i].wash_m_err = objects[match1[j]].wash_m_err
-          fiber[i].wash_t2 = objects[match1[j]].wash_t2
-          fiber[i].wash_t2_err = objects[match1[j]].wash_t2_err
-          fiber[i].ddo51 = objects[match1[j]].ddo51
-          fiber[i].ddo51_err = objects[match1[j]].ddo51_err
-          fiber[i].irac_3_6 = objects[match1[j]].irac_3_6
-          fiber[i].irac_3_6_err = objects[match1[j]].irac_3_6_err
-          fiber[i].irac_4_5 = objects[match1[j]].irac_4_5
-          fiber[i].irac_4_5_err = objects[match1[j]].irac_4_5_err
-          fiber[i].irac_5_8 = objects[match1[j]].irac_5_8
-          fiber[i].irac_5_8_err = objects[match1[j]].irac_5_8_err
-          fiber[i].irac_8_0 = objects[match1[j]].irac_8_0
-          fiber[i].irac_8_0_err = objects[match1[j]].irac_8_0_err
-          fiber[i].wise_4_5 = objects[match1[j]].wise_4_5
-          fiber[i].wise_4_5_err = objects[match1[j]].wise_4_5_err
-          fiber[i].targ_4_5 = objects[match1[j]].targ_4_5
-          fiber[i].targ_4_5_err = objects[match1[j]].targ_4_5_err
-          fiber[i].wash_ddo51_giant_flag = objects[match1[j]].wash_ddo51_giant_flag
-          fiber[i].wash_ddo51_star_flag = objects[match1[j]].wash_ddo51_star_flag
+          ;fiber[i].wash_m = objects[match1[j]].wash_m
+          ;fiber[i].wash_m_err = objects[match1[j]].wash_m_err
+          ;fiber[i].wash_t2 = objects[match1[j]].wash_t2
+          ;fiber[i].wash_t2_err = objects[match1[j]].wash_t2_err
+          ;fiber[i].ddo51 = objects[match1[j]].ddo51
+          ;fiber[i].ddo51_err = objects[match1[j]].ddo51_err
+          ;fiber[i].irac_3_6 = objects[match1[j]].irac_3_6
+          ;fiber[i].irac_3_6_err = objects[match1[j]].irac_3_6_err
+          ;fiber[i].irac_4_5 = objects[match1[j]].irac_4_5
+          ;fiber[i].irac_4_5_err = objects[match1[j]].irac_4_5_err
+          ;fiber[i].irac_5_8 = objects[match1[j]].irac_5_8
+          ;fiber[i].irac_5_8_err = objects[match1[j]].irac_5_8_err
+          ;fiber[i].irac_8_0 = objects[match1[j]].irac_8_0
+          ;fiber[i].irac_8_0_err = objects[match1[j]].irac_8_0_err
+          ;fiber[i].wise_4_5 = objects[match1[j]].wise_4_5
+          ;fiber[i].wise_4_5_err = objects[match1[j]].wise_4_5_err
+          ;fiber[i].targ_4_5 = objects[match1[j]].targ_4_5
+          ;fiber[i].targ_4_5_err = objects[match1[j]].targ_4_5_err
+          ;fiber[i].wash_ddo51_giant_flag = objects[match1[j]].wash_ddo51_giant_flag
+          ;fiber[i].wash_ddo51_star_flag = objects[match1[j]].wash_ddo51_star_flag
           fiber[i].pmra = objects[match1[j]].pmra
           fiber[i].pmdec = objects[match1[j]].pmdec
           fiber[i].pm_src = objects[match1[j]].pm_src

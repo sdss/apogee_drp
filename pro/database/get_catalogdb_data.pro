@@ -9,6 +9,7 @@
 ;  =id    Array of catalogids.
 ;  =ra    Array of RA values (need DEC as well).
 ;  =dec   Array of DEC values.
+;  =dcr   Search radius in arcsec.  Default is 1".
 ;
 ; OUTPUTS:
 ;  Returns a structure of catalogdb information.
@@ -89,7 +90,6 @@ push,cmd,'db.close()'
 scriptfile = tbase+'.py'
 WRITELINE,scriptfile,cmd
 FILE_CHMOD,scriptfile,'755'o
-stop
 SPAWN,scriptfile,out,errout,/noshell
 
 if errout[0] ne '' or n_elements(errout) gt 1 then begin
