@@ -605,6 +605,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     platefile = load.apPlate(int(plate), mjd)
     shiftstr = platefile['a'][13].data
     pairstr = platefile['a'][14].data
+    import pdb; pdb.set_trace()
 #;    shiftstr = mrdfits(platefile,13)
 #;    pairstr = mrdfits(platefile,14,status=status)
 
