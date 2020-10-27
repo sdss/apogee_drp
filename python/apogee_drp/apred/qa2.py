@@ -1278,7 +1278,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
         print("Making "+plotfile)
 
-        fig=plt.figure(figsize=(18,10))
+        fig=plt.figure(figsize=(18,8))
         ax1 = plt.subplot2grid((1,1), (0,0))
         ax1.tick_params(reset=True)
         ax1.minorticks_on()
@@ -1290,7 +1290,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         xmin = minH - spanH * 0.05;       xmax = maxH + spanH * 0.05
         ymin = 0;                         ymax = maxSNR + ((maxSNR - ymin) * 0.05)
         
-        ax1.set_xlim(xmin,xmax)#;  ax1.set_ylim(ymin,ymax)
+        ax1.set_xlim(xmin,xmax);  ax1.set_ylim(ymin,ymax)
 
         gd, = np.where(platesum2['HMAG']<50)
         tmp = platesum2[gd]
@@ -1299,14 +1299,15 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         science, = np.where((tmp['OBJTYPE'] != 'SPECTROPHOTO_STD') & (tmp['OBJTYPE'] != 'HOT_STD') & (tmp['OBJTYPE'] != 'SKY'))
         telluric = telluric[::-1];    science = science[::-1]
 
-        psci = ax3.semilogy(Vsum['H'][science], Vsum['SNR'][science], marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='', label='Science')
-        ptel = ax3.semilogy(Vsum['H'][telluric], Vsum['SNR'][telluric], marker='o', ms=9, mec='k', alpha=alpha, mfc='cyan', linestyle='', label='Telluric')
+        psci = ax1.scatter(Vsum['H'][science], Vsum['SNR'][science], marker='*', s=180, edgecolors='k', c='r', alpha=alpha, label='Science')
+        ptel = ax1.scatter(Vsum['H'][telluric], Vsum['SNR'][telluric], marker='o', s=60, edgecolors='k', c='cyan', alpha=alpha, label='Telluric')
 
         ax1.legend(loc='lower left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-        fig.subplots_adjust(left=0.08,right=0.98,bottom=0.1,top=0.98,hspace=0.2,wspace=0.0)
+        fig.subplots_adjust(left=0.08,right=0.98,bottom=0.1,top=0.93,hspace=0.2,wspace=0.0)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
+
 
     # Put all of the info and plots on the plate web page.
     html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
