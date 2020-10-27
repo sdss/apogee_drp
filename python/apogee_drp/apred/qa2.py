@@ -927,9 +927,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
             # PLOT 1: spectrum 
             if j > -1:
+                plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
+                plotfilefull = plotsdir+plotfile
                 if makeSpectrumPlots is True:
-                    plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
-                    plotfilefull = plotsdir+plotfile
                     print("Making "+plotfile)
 
                     lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
