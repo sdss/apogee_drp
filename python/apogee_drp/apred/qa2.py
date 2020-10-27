@@ -929,7 +929,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             # PLOT 1: spectrum 
             if j > -1:
                 plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
-                plotfilefull = plotsdir+plotfile
                 if makeSpectrumPlots is True:
                     print("Making "+plotfile)
 
@@ -984,7 +983,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                         ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=color)
 
                         fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
-                        plt.savefig(plotfilefull)
+                        plt.savefig(plotsdir+plotfile)
                     plt.close('all')
 
                     objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=800></A>\n')
@@ -999,7 +998,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         # PLOT 2: 3 panels
         if (flat is None) & (onem is None):
             plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
-            plotfilefull = plotsdir+plotfile
             if noplot is False:
                 print("Making "+plotfile)
 
@@ -1054,7 +1052,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax3.plot(x, y, color='k',linewidth=1.5)
 
                 fig.subplots_adjust(left=0.155,right=0.98,bottom=0.06,top=0.99,hspace=0.1,wspace=0.0)
-                plt.savefig(plotfilefull)
+                plt.savefig(plotsdir+plotfile)
                 plt.close('all')
 #            else:
 #                achievedsn = np.median(sn[obj,:], axis=0)
@@ -1062,7 +1060,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         if (noplot is False) & (flat is None):
             # PLOT 3: spatial residuals
             plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
-            plotfilefull = plotsdir+plotfile
             print("Making "+plotfile)
 
             fig=plt.figure(figsize=(14,15))
@@ -1096,7 +1093,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             ax1.text(0.5, 1.10, r'$H$ + 2.5*log(m - zero)',ha='center', transform=ax1.transAxes)
 
             fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
-            plt.savefig(plotfilefull)
+            plt.savefig(plotsdir+plotfile)
             plt.close('all')
 
             #plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=8,/xs,/ys
@@ -1177,7 +1174,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 jcam, = np.where((gcam['mjd'] > mjdstart) & (gcam['mjd'] < mjdend))
 
                 plotfile = 'guider-'+plate+'-'+mjd+'.png'
-                plotfilefull = plotsdir+plotfile
                 print("Making "+plotfile)
 
                 fig=plt.figure(figsize=(14,14))
@@ -1189,7 +1185,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax1.plot(gcam['mjd'][jcam], gcam['gdrms'][jcam], color='k')
 
                 fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
-                plt.savefig(plotfilefull)
+                plt.savefig(plotsdir+plotfile)
                 plt.close('all')
 
     # For individual frames, make plots of variation of sky and zeropoint.
@@ -1217,7 +1213,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         for ichip in range(nchips):
             chip = chips[ichip]
             plotfile = fluxfile.replace('Flux-', 'Flux-'+chip+'-').replace('.fits', '.png')
-            plotfilefull = plotsdir + plotfile
             print("Making "+plotfile)
 
             fig=plt.figure(figsize=(14,15))
@@ -1242,12 +1237,11 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             ax1.text(0.5, 1.10, r'Median Flat Field Flux',ha='center', transform=ax1.transAxes)
 
             fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
-            plt.savefig(plotfilefull)
+            plt.savefig(plotsdir+plotfile)
             plt.close('all')
 
         block = np.around((plSum2['FIBERID'] - 1) / 30)
-        blockfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
-        blockfilefull = plotsdir + blockfile
+        plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
         print("Making "+blockfile)
 
         fig=plt.figure(figsize=(14,15))
@@ -1269,8 +1263,42 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         ax1.text(0.5, 1.10, r'Fiber Blocks',ha='center', transform=ax1.transAxes)
 
         fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
-        plt.savefig(blockfilefull)
+        plt.savefig(plotsdir+plotfile)
         plt.close('all')
+
+        # PLOT 12: HMAG versus S/N for the exposure-combined apVisit
+        Vsum = load.apVisitSum(int(plate), mjd)
+        Vsum = Vsum[1].data
+
+        plotfile = os.path.basename(Vsum.filename()).replace('Sum','SNR').replace('.fits','.png')
+        print("Making "+plotfile)
+
+        fig=plt.figure(figsize=(16,12))
+        ax1 = plt.subplot2grid((1,1), (0,0))
+        ax1.tick_params(reset=True)
+        ax1.minorticks_on()
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
+
+        minH = np.nanmin(Vsum['H']);      maxH = np.nanmax(Vsum['H']);      spanH = maxH - minH
+        minSNR = np.nanmin(Vsum['SNR']);  maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
+        xmin = minH - spanH * 0.05;       xmax = maxH + spanH * 0.05
+        ymin = 0;                         ymax = maxSNR + ((maxSNR - ymin) * 0.05)
+        
+        ax1.set_xlim(xmin,xmax);  ax1.set_ylim(ymin,ymax)
+
+        telluric, = np.where((platesum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (platesum2['OBJTYPE'] == 'HOT_STD'))
+        science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
+
+        psci = ax1.scatter(Vsum['H'][science], Vsum['SNR'][science], marker='*', s=180, edgecolors='k', c='r', alpha=alpha, label='Science')
+        ptel = ax1.scatter(Vsum['H'][telluric], Vsum['SNR'][telluric], marker='o', s=60, edgecolors='k', c='cyan', alpha=alpha, label='Telluric')
+
+        ax1.legend(loc='lower left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+
+        fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
+        plt.savefig(plotsdir+plotfile)
+        plt.close('all')
+
 
     # Put all of the info and plots on the plate web page.
     html.write('<TR><TD><A HREF=../html/'+pfile+'.html>'+str(plSum1['IM'][i])+'</A>\n')
