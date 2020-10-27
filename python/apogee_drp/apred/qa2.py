@@ -748,12 +748,15 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
     print("Running MAKEPLOTSHTML for plate "+plate+", mjd "+mjd)
     print("--------------------------------------------------------------------\n")
 
-    plt.ioff()
-
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
     chiplab = np.array(['blue','green','red'])
     nchips = len(chips)
+
+    # Set up some basic plotting parameters, starting by turning off interactive plotting.
+    plt.ioff()
+    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    fontsize = 24;   fsz = fontsize * 0.75
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
@@ -923,97 +926,85 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     objhtml.write('<BR><BR>'+starflagtxt+'\n')
 
             # PLOT 1: spectrum 
-            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257//plots/apPlate-5583-56257-299.jpg
             if j > -1:
-                if plSum2['OBJTYPE'][j] == 'SKY':
-                    objhtml.write('<TD BGCOLOR='+color+'> \n')
-                else:
+                if makeSpectrumPlots is True:
                     plotfile = 'apPlate-'+plate+'-'+mjd+'-'+str(plSum2['FIBERID'][j]).zfill(3)+'.png'
                     plotfilefull = plotsdir+plotfile
-                    if makeSpectrumPlots is True:
-                        print("Making "+plotfile)
+                    print("Making "+plotfile)
 
-                        fontsize=24
-                        fsz=fontsize*0.75
-                        fig=plt.figure(figsize=(28,6))
-                        matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+                    lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                    xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
-                        lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                        xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
-
-                        vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
-                        # NOTE: telescope not in the filenames yet, so removing it for now
+                    # Look for apVisit file
+                    # NOTE: telescope not in the filenames yet, so removing it for now
+                    vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j])
+                    if os.path.exists(vfile) is False:
+                        vfile = vfile.replace('-apo25m','')
                         if os.path.exists(vfile) is False:
-                            vfile = vfile.replace('-apo25m','')
-                            if os.path.exists(vfile) is False:
-                                print("Uh oh... can't find apVisit files...")
-                        vdata = fits.open(vfile)
-                        vfluxall = vdata[1].data
-                        vwaveall = vdata[4].data
+                            print("Uh oh... can't find apVisit files...")
 
-                        vflux = np.concatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
-                        vwave = np.concatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
+                    vdata = fits.open(vfile)
+                    vfluxall = vdata[1].data
+                    vwaveall = vdata[4].data
+                    vflux = np.concatenate([vfluxall[0],vfluxall[1],vfluxall[2]])
+                    vwave = np.concatenate([vwaveall[0],vwaveall[1],vwaveall[2]])
 
-                        # Establish Ymax
-                        ymxsec1, = np.where((vwave > 15150) & (vwave < 15180))
-                        ymxsec2, = np.where((vwave > 15900) & (vwave < 15950))
-                        ymxsec3, = np.where((vwave > 16905) & (vwave < 16940))
-                        if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
-                            print("Problem with fiber "+str(plSum2['FIBERID'][j]).zfill(3)+". Not Plotting.")
-                        else:
-                            ymx1 = np.max(vflux[ymxsec1])
-                            ymx2 = np.max(vflux[ymxsec2])
-                            ymx3 = np.max(vflux[ymxsec3])
-                            ymx = np.max([ymx1,ymx2,ymx3])
-                            ymin = 0
-                            yspn = ymx-ymin
-                            ymax = ymx + (yspn * 0.15)
-                            # Establish Ymin
-                            ymn = np.min(vflux)
-                            if ymn > 0: 
-                                yspn = ymx - ymn
-                                ymin = ymn - (yspn * 0.15)
-                                ymax = ymx + (yspn * 0.15)
-
-                            ax1 = plt.subplot2grid((1,1), (0,0))
-
-                            ax1.tick_params(reset=True)
-                            ax1.set_xlim(xmin,xmax)
-                            ax1.set_ylim(ymin,ymax)
-                            ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
-                            ax1.minorticks_on()
-                            ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
-                            ax1.set_ylabel(r'Flux')
-
-                            ax1.plot(vwave, vflux, color='k', linewidth=1)
-
-                            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
-                            plt.savefig(plotfilefull)
-                        plt.close('all')
-
-                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=800></A>\n')
+                    # Establish Ymax
+                    ymxsec1, = np.where((vwave > 15150) & (vwave < 15180))
+                    ymxsec2, = np.where((vwave > 15900) & (vwave < 15950))
+                    ymxsec3, = np.where((vwave > 16905) & (vwave < 16940))
+                    if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
+                        print("Problem with fiber "+str(plSum2['FIBERID'][j]).zfill(3)+". Not Plotting.")
                     else:
-                        if ims[0]==0:
-                            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
-                        else:
-                            objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
+                        ymx1 = np.max(vflux[ymxsec1])
+                        ymx2 = np.max(vflux[ymxsec2])
+                        ymx3 = np.max(vflux[ymxsec3])
+                        ymx = np.max([ymx1,ymx2,ymx3])
+                        ymin = 0
+                        yspn = ymx-ymin
+                        ymax = ymx + (yspn * 0.15)
+                        # Establish Ymin
+                        ymn = np.min(vflux)
+                        if ymn > 0: 
+                            yspn = ymx - ymn
+                            ymin = ymn - (yspn * 0.15)
+                            ymax = ymx + (yspn * 0.15)
+
+                        fig=plt.figure(figsize=(28,6))
+                        ax1 = plt.subplot2grid((1,1), (0,0))
+                        ax1.tick_params(reset=True)
+                        ax1.set_xlim(xmin,xmax)
+                        ax1.set_ylim(ymin,ymax)
+                        ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
+                        ax1.minorticks_on()
+                        ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
+                        ax1.set_ylabel(r'Flux')
+
+                        ax1.plot(vwave, vflux, color='k', linewidth=1)
+
+                        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                        plt.savefig(plotfilefull)
+                    plt.close('all')
+
+                    objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=800></A>\n')
+                else:
+                    if ims[0]==0:
+                        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
+                    else:
+                        objhtml.write('<TD BGCOLOR='+color+'>No plots for individual exposures, see plate plots\n')
         objhtml.close()
         cfile.close()
 
         # PLOT 2: 3 panels
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.gif
         if (flat is None) & (onem is None):
             plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
             plotfilefull = plotsdir+plotfile
             if noplot is False:
                 print("Making "+plotfile)
-                fontsize=24
-                fsz=fontsize*0.75
-                fig=plt.figure(figsize=(11,14))
-                matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
                 xmin = 6;  xmax = 15;  xspan=xmax-xmin
 
+                fig=plt.figure(figsize=(11,14))
                 ax1 = plt.subplot2grid((3,1), (0,0))
                 ax2 = plt.subplot2grid((3,1), (1,0))
                 ax3 = plt.subplot2grid((3,1), (2,0))
@@ -1034,7 +1025,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 ax3.text(-0.17,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
 
                 alpha = 0.6
-
                 # PLOT 2a: observed mag vs H mag
                 x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
                 ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
@@ -1056,6 +1046,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,ichip]
                     ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
 
+                # overplot the target S/N line
                 sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
                 sntargetmag = 12.2
                 x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
@@ -1067,17 +1058,13 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 #            else:
 #                achievedsn = np.median(sn[obj,:], axis=0)
 
-        # PLOT 3: spatial residuals
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025.jpg
-        plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
-        plotfilefull = plotsdir+plotfile
         if (noplot is False) & (flat is None):
+            # PLOT 3: spatial residuals
+            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
+            plotfilefull = plotsdir+plotfile
             print("Making "+plotfile)
-            fontsize=24
-            fsz=fontsize*0.75
-            fig=plt.figure(figsize=(14,15))
-            matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
+            fig=plt.figure(figsize=(14,15))
             ax1 = plt.subplot2grid((1,1), (0,0))
             ax1.tick_params(reset=True)
             ax1.set_xlim(-1.6,1.6)
@@ -1165,7 +1152,6 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             #cc = skylines['FLUX'][sky][0] / medsky
 
 
-
         # PLOT 4: spatial sky line emission
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
         # PLOT 5: spatial continuum emission
@@ -1191,13 +1177,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
                 plotfile = 'guider-'+plate+'-'+mjd+'.png'
                 plotfilefull = plotsdir+plotfile
-
                 print("Making "+plotfile)
-                fontsize=24
-                fsz=fontsize*0.75
-                fig=plt.figure(figsize=(14,14))
-                matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
+                fig=plt.figure(figsize=(14,14))
                 ax1 = plt.subplot2grid((1,1), (0,0))
                 ax1.tick_params(reset=True)
                 ax1.minorticks_on()
@@ -1225,7 +1207,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         html.write('<TD><IMG SRC=../plots/'+zerofile+'.gif>\n')
         html.write('</TABLE>\n')
 
-    # PLOTS 9-11: flat field flux and fiber blocks
+    # PLOTS 9-11: flat field flux and fiber blocks... previously done by plotflux.pro
     if noplot is False:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
         flux = load.apFlux(fluxid)
@@ -1237,11 +1219,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
             plotfilefull = plotsdir + plotfile
             print("Making "+plotfile)
 
-            fontsize=26
-            fsz=fontsize*0.75
             fig=plt.figure(figsize=(14,15))
-            matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
-
             ax1 = plt.subplot2grid((1,1), (0,0))
             ax1.tick_params(reset=True)
             ax1.set_xlim(-1.6,1.6)
@@ -1269,13 +1247,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         block = np.around((plSum2['FIBERID'] - 1) / 30)
         blockfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
         blockfilefull = plotsdir + blockfile
-
         print("Making "+blockfile)
-        fontsize=26
-        fsz=fontsize*0.75
-        fig=plt.figure(figsize=(14,15))
-        matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
+        fig=plt.figure(figsize=(14,15))
         ax1 = plt.subplot2grid((1,1), (0,0))
         ax1.tick_params(reset=True)
         ax1.set_xlim(-1.6,1.6)
