@@ -657,22 +657,21 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('</TABLE>\n')
 
     # Table of exposure pairs.
-    npairs = len(pairstr)
-    ### NOTE: the below if statement will not work. Ignoring it and hoping for the best.
-#    if (type(pairstr) == 'astropy.io.fits.fitsrec.FITS_rec') & (npairs > 0):
-    if npairs > 0:
-        # Pair table.
-        html.write('<H3>Dither Pair Stats:</H3>\n')
-        html.write('<TABLE BORDER=2 CLASS="sortable">\n')
-        html.write('<TR bgcolor=lightgreen><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
-        html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
-        for ipair in range(npairs):
-            html.write('<TR><TD>'+str(ipair)+'\n')
-            for j in range(2):
-                html.write('<TD>'+str(pairstr['FRAMENAME'][ipair][j])+'\n')
-                html.write('<TD>'+str("%.3f" % round(pairstr['OLDSHIFT'][ipair][j],3))+'\n')
-                html.write('<TD>'+str("%.3f" % round(pairstr['SHIFT'][ipair][j],3))+'\n')
-                html.write('<TD>'+str("%.2f" % round(pairstr['SN'][ipair][j],2))+'\n')
+    if pairstr is not None:
+        npairs = len(pairstr)
+        if npairs > 0:
+            # Pair table.
+            html.write('<H3>Dither Pair Stats:</H3>\n')
+            html.write('<TABLE BORDER=2 CLASS="sortable">\n')
+            html.write('<TR bgcolor=lightgreen><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
+            html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
+            for ipair in range(npairs):
+                html.write('<TR><TD>'+str(ipair)+'\n')
+                for j in range(2):
+                    html.write('<TD>'+str(pairstr['FRAMENAME'][ipair][j])+'\n')
+                    html.write('<TD>'+str("%.3f" % round(pairstr['OLDSHIFT'][ipair][j],3))+'\n')
+                    html.write('<TD>'+str("%.3f" % round(pairstr['SHIFT'][ipair][j],3))+'\n')
+                    html.write('<TD>'+str("%.2f" % round(pairstr['SN'][ipair][j],2))+'\n')
     else:
         # Table of combination parameters.
         html.write('<H3>Combination Parameters (undithered):</H3>\n')
