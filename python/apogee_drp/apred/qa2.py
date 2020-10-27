@@ -117,6 +117,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
                              onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
                              fixfiberid=fixfiberid, badfiberid=badfiberid)
+
 #            q = makePlateSum(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
 #                             field=field, instrument=instrument, clobber=True, 
 #                             plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
@@ -125,20 +126,20 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
         q = masterQApage(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
 
-        q = plotFlux(load=load, ims=ims, fluxid=fluxid, plate=plate, mjd=mjd, field=field, telescope=telescope)
+        q = plotFlux(load=load, ims=ims, fluxid=fluxid, plate=plate, mjd=mjd, field=field,
+                     telescope=telescope, noplot=noplot)
 
         q = makePlotsHtml(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
                           field=field, instrument=instrument, clobber=True, noplot=noplot, 
                           plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
                           onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
-                          fixfiberid=fixfiberid, badfiberid=badfiberid, makeSpectrumPlots=makeSpectrumPlots) 
-
+                          fixfiberid=fixfiberid, badfiberid=badfiberid,
+                          makeSpectrumPlots=makeSpectrumPlots) 
 
 #        platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, chips=True)
 
         ### NOTE:No python translation for sntab.
 #;        sntab,tabs=platefile,outfile=platefile+'.dat'
-
 
     # ASDAF and NMSU 1m observations:
     if platetype == 'single':
@@ -749,7 +750,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 '''-----------------------------------------------------------------------------------------'''
 ''' PLOTFLUX: plotflux translation                                                   '''
 '''-----------------------------------------------------------------------------------------'''
-def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None, telescope=None):
+def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None, telescope=None, noplot=None):
     plt.ioff()
 
     chips = np.array(['a','b','c'])
@@ -764,21 +765,15 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
     fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
     flux = load.apFlux(fluxid)
 
-    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-    tmp = fits.open(platesum)
-    plSum1 = tmp[1].data
-    plSum2 = tmp[2].data
-    #fibord = np.argsort(plSum2['FIBERID'])
-    #plSum2 = plSum2[fibord]
-    nfiber = len(plSum2['HMAG'])
-    ypos = plSum2['FIBERID']-1
+    platesum = fits.open(load.filename('PlateSum', plate=int(plate), mjd=mjd))
+    plSum2 = platesum[2].data
+    ypos = 300 - plSum2['FIBERID']
     
     for ichip in range(nchips):
         chip = chips[ichip]
         plotfile = fluxfile.replace('Flux-', 'Flux-'+chip+'-').replace('.fits', '.png')
         plotfilefull = plotsdir + plotfile
         med = np.median(flux[chip][1].data, axis=1)
-        import pdb; pdb.set_trace()
 
         print("Making "+plotfile)
         fontsize=26
