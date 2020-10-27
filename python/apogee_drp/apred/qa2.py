@@ -1310,7 +1310,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         psci = ax1.scatter(hmagarr[science], Vsum['SNR'][science], marker='*', s=180, edgecolors='k', c='r', alpha=alpha, label='Science')
         ptel = ax1.scatter(hmagarr[telluric], Vsum['SNR'][telluric], marker='o', s=60, edgecolors='k', c='cyan', alpha=alpha, label='Telluric')
 
-        ax1.legend(loc='lower left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+        ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
         fig.subplots_adjust(left=0.075,right=0.98,bottom=0.11,top=0.98,hspace=0.2,wspace=0.0)
         plt.savefig(plotsdir+plotfile)
