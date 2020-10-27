@@ -1290,7 +1290,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         xmin = minH - spanH * 0.05;       xmax = maxH + spanH * 0.05
         ymin = 0;                         ymax = maxSNR + ((maxSNR - ymin) * 0.05)
         
-        ax1.set_xlim(xmin,xmax);  ax1.set_ylim(ymin,ymax)
+        ax1.set_xlim(xmin,xmax)#;  ax1.set_ylim(ymin,ymax)
 
         gd, = np.where(platesum2['HMAG']<50)
         tmp = platesum2[gd]
@@ -1299,8 +1299,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         science, = np.where((tmp['OBJTYPE'] != 'SPECTROPHOTO_STD') & (tmp['OBJTYPE'] != 'HOT_STD') & (tmp['OBJTYPE'] != 'SKY'))
         telluric = telluric[::-1];    science = science[::-1]
 
-        psci = ax3.semilogy(Vsum['H'][science], Vsum['SNR'][science], marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
-        ptel = ax3.semilogy(Vsum['H'][telluric], Vsum['SNR'][telluric], marker='o', ms=9, mec='k', alpha=alpha, mfc='cyan', linestyle='')
+        psci = ax3.semilogy(Vsum['H'][science], Vsum['SNR'][science], marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='', label='Science')
+        ptel = ax3.semilogy(Vsum['H'][telluric], Vsum['SNR'][telluric], marker='o', ms=9, mec='k', alpha=alpha, mfc='cyan', linestyle='', label='Telluric')
 
         ax1.legend(loc='lower left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
