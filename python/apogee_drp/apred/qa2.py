@@ -602,6 +602,13 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 
     # Link to combined spectra page.
     html.write('<H3> For plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here apPlate-'+plate+'-'+mjd+' </a><H3>\n')
+    html.write('<TABLE BORDER=2 CLASS="sortable">\n')
+    html.write('<TR bgcolor=lightgreen>\n')
+    html.write('<TH>apVisit Hmag versus S/N\n')
+    html.write('<TR>\n')
+    snrplot = 'apVisitSNR-'+plate+'-'+mjd+'.png'
+    html.write('<TD><A HREF=../plots/'+snrplot+' target="_blank"><IMG SRC=../plots/'+snrplot+' WIDTH=700></A>\n')
+
     html.write('<HR>\n')
 
     # Table of individual exposures.
@@ -1242,7 +1249,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
         block = np.around((plSum2['FIBERID'] - 1) / 30)
         plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
-        print("Making "+blockfile)
+        print("Making "+plotfile)
 
         fig=plt.figure(figsize=(14,15))
         ax1 = plt.subplot2grid((1,1), (0,0))
