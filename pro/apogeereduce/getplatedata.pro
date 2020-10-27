@@ -427,6 +427,7 @@ if platenum ge 15000 then begin
     catalogdb2 = get_catalogdb_data(ra=objdata[bdid].ra,dec=objdata[bdid].dec)
     ;; this returns a q3c_dist columns that we don't want to keep
     if size(catalogdb2,/type) eq 8 then begin
+      print,'Got results for ',strtrim(n_elements(catalogdb2),2),' stars'
       catalogdb2 = REMOVE_TAG(catalogdb2,'q3c_dist')
       push,catalogdb,catalogdb2
     endif else begin

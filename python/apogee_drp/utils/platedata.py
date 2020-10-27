@@ -10,13 +10,15 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-from dlnpyutils import utils as dln
+from dlnpyutils import utils as dln, coords
 from apogee_drp.utils import spectra,yanny,apload
 from apogee_drp.utils import plugmap as plmap,bitmask as bmask
 from apogee_drp.plan import mkslurm
 from apogee_drp.apred import mkcal
+from apogee_drp.database import catalogdb
 from sdss_access.path import path
 from astropy.io import fits
+from astropy.table import Table,vstack
 
 # filter the warnings
 
@@ -64,7 +66,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
     """
 
-    load = apload.ApLoad(telescope=telescope)
+    load = apload.ApLoad(apred=apred,telescope=telescope)
     if mapper_data is None:
         if load.instrument=='apogee-n':
             mapper_data = os.environ['MAPPER_DATA_N']
@@ -76,11 +78,16 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
     # Create the output fiber structure
     dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),('eta',np.float64),('zeta',np.float64),
-                      ('hmag',float),('objtype',np.str,10),('holetype',np.str,10),('object',np.str,30),
+                      ('objtype',np.str,10),('holetype',np.str,10),('object',np.str,30),
                       ('tmass_style',np.str,30),('target1',int),('target2',int),('target3',int),('target4',int),
-                      ('spectrographid',int),('mag',float,5),('pmra',float),('pmdec',float),('catalogid',int),
-                      ('gaia_g',float),('gaia_bp',float),('gaia_rp',float),('sdssv_apogee_target0',int),
-                      ('firstcarton',(np.str,100))])
+                      ('spectrographid',int),('mag',float,5),('alt_id',np.str,30),('twomass_designation',np.str,30),
+                      ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
+                      ('phflag',np.str,50),('src_h',np.str,50),('pmra',float),('pmdec',float),('pm_src',np.str,50),
+                      ('catalogid',int),('gaia_g',float),('gaia_bp',float),('gaia_rp',float),('sdssv_apogee_target0',int),
+                      ('firstcarton',np.str,100),('gaiadr2_sourceid',int),('gaiadr2_ra',float),('gaiadr2_dec',float),
+                      ('gaiadr2_plx',float),('gaiadr2_plx_error',float),('gaiadr2_pmra',float),('gaiadr2_pmra_error',float),
+                      ('gaiadr2_pmdec',float),('gaiadr2_pmdec_error',float),('gaiadr2_gmag',float),('gaiadr2_gerr',float),
+                      ('gaiadr2_bpmag',float),('gaiadr2_bperr',float),('gaiadr2_rpmag',float),('gaiadr2_rperr',float)])
     guide = np.zeros(16,dtype=dtype)
     loc = 0
 
@@ -339,8 +346,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             hmag = ph['tmass_h'][match]
                             fiber['mag'][i] = [ph['tmass_j'][match],ph['tmass_h'][match],ph['tmass_k'][match],0.,0.]
                             # Adopt PM un-adjusted  coordinates
-                            fiber['ra'][i] -= ph['pmra'][match]/1000./3600./np.cos(fiber['dec'][i]*np.pi/180.)*(ph['epoch'][match]-2000.)
-                            fiber['dec'][i] -= ph['pmdec'][match]/1000./3600.*(ph['epoch'][match]-2000.)
+                            #fiber['ra'][i] -= ph['pmra'][match]/1000./3600./np.cos(fiber['dec'][i]*np.pi/180.)*(ph['epoch'][match]-2000.)
+                            #fiber['dec'][i] -= ph['pmdec'][match]/1000./3600.*(ph['epoch'][match]-2000.)
                         fiber['hmag'][i] = hmag
                         fiber['object'][i] = objname
                         fiber['tmass_style'][i] = objname
@@ -349,6 +356,84 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         else:
             fiber['fiberid'][i] = -1
             print('no match for fiber index',i)
+
+
+    # SDSS-V, get catalogdb information
+    #----------------------------------
+    if plate >= 15000:
+        print('Getting catalogdb information')
+        objind, = np.where((fiber['objtype']=='OBJECT') | (fiber['objtype']=='HOT_STD'))
+        nobjind = len(objind)
+        objdata = fiber[objind]
+        gdid,ngdid,bdid,nbdid = dln.where(objdata['catalogid'] > -1,comp=True)
+        # Get catalogdb information using catalogID
+        catdb = None
+        if ngdid>0:
+            print('Querying catalogdb using catalogID for '+str(ngdid)+' stars')
+            catdb1 = catalogdb.getdata(catid=objdata['catalogid'][gdid])
+            # Got some results
+            if len(catdb1)>0:
+                print('Got results for '+str(len(catdb1))+' stars')
+                catdb = catdb1.copy()
+            else:
+                print('No results')
+        # Get catalogdb information using coordinates (tellurics don't have IDs)    
+        if nbdid>0:
+            print('Querying catalogdb using coordinates for ',str(nbdid)+' stars')
+            catdb2 = catalogdb.getdata(ra=objdata['ra'][bdid],dec=objdata['dec'][bdid])
+            # this returns a q3c_dist columns that we don't want to keep
+            if len(catdb2)>0:
+                print('Got results for '+str(len(catdb2))+' stars')
+                del catdb2['q3c_dist']
+                if catdb is None:
+                    catdb = catdb2.copy()
+                else:
+                    catdb = vstack((catdb,catdb2))
+            else:
+                print('No results')
+        # Add catalogdb information
+        for i in range(nobjind):
+            istar = objind[i]
+            ind1,ind2 = dln.match(catdb['catalogid'],fiber['catalogid'][istar])
+            nmatch = len(ind1)
+            # some stars are missing ids, use coordinate matching indeas   
+            if nmatch==0:
+                dist = coords.sphdist(catdb['ra'],catdb['dec'],fiber['ra'][istar],fiber['dec'][istar])*3600
+                ind1, = np.where(dist < 0.5)
+                nmatch = len(ind1)
+                if nmatch > 1:
+                    ind1 = np.argmin(dist)
+            if nmatch>0:
+                ind1 = np.atleast_1d(ind1)
+                if fiber['catalogid'][istar]<0:
+                    fiber['catalogid'][istar]=catdb['catalogid'][ind1[0]]
+                fiber['twomass_designation'][istar] = catdb['twomass'][ind1[0]]
+                fiber['jmag'][istar] = catdb['jmag'][ind1[0]]
+                fiber['jerr'][istar] = catdb['e_jmag'][ind1[0]]
+                fiber['hmag'][istar] = catdb['hmag'][ind1[0]]
+                fiber['herr'][istar] = catdb['e_hmag'][ind1[0]]
+                fiber['kmag'][istar] = catdb['kmag'][ind1[0]]
+                fiber['kerr'][istar] = catdb['e_kmag'][ind1[0]]
+                fiber['phflag'][istar] = catdb['twomflag'][ind1[0]]
+                fiber['gaiadr2_sourceid'][istar] = catdb['gaia'][ind1[0]]
+                fiber['gaiadr2_ra'][istar] = catdb['ra'][ind1[0]]
+                fiber['gaiadr2_dec'][istar] = catdb['dec'][ind1[0]]
+                fiber['gaiadr2_pmra'][istar] = catdb['pmra'][ind1[0]]
+                fiber['gaiadr2_pmra_error'][istar] = catdb['e_pmra'][ind1[0]]
+                fiber['gaiadr2_pmdec'][istar] = catdb['pmdec'][ind1[0]]
+                fiber['gaiadr2_pmdec_error'][istar] = catdb['e_pmdec'][ind1[0]]
+                fiber['gaiadr2_plx'][istar] = catdb['plx'][ind1[0]]
+                fiber['gaiadr2_plx_error'][istar] = catdb['e_plx'][ind1[0]]
+                fiber['gaiadr2_gmag'][istar] = catdb['gaiamag'][ind1[0]]
+                fiber['gaiadr2_gerr'][istar] = catdb['e_gaiamag'][ind1[0]]
+                fiber['gaiadr2_bpmag'][istar] = catdb['gaiabp'][ind1[0]]
+                fiber['gaiadr2_bperr'][istar] = catdb['e_gaiabp'][ind1[0]]
+                fiber['gaiadr2_rpmag'][istar] = catdb['gaiarp'][ind1[0]]
+                fiber['gaiadr2_rperr'][istar] = catdb['e_gaiarp'][ind1[0]]
+            else:
+                print('no match catalogdb match for ',fiber['object'][istar])
+
+
 
 
 
