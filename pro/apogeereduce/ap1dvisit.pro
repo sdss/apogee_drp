@@ -707,6 +707,7 @@ FOR i=0L,nplanfiles-1 do begin
   MWRFITS,allvisitstr,visitstrfile,/silent
 
   ;; Insert the apVisitSum information into the apogee_drp database
+  print,'Loading visit data into the database'
   DBINGEST_VISIT,allvisitstr
 
  BOMB:

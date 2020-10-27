@@ -123,8 +123,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         starvisits['vhelio'].name = 'vheliobary'
 
     # First rename old visit RV tags and initialize new ones
-    for col in ['vtype','vrel','vrelerr','vheliobary','bc','rv_teff','rv_logg','rv_feh','rv_carb','rv_alpha']:
-        starvisits.rename_column(col,'est'+col)
+    for col in ['vtype','vrel','vrelerr','vheliobary','bc','rv_teff','rv_logg','rv_feh']:
         if col == 'vtype':
             starvisits[col] = 0
         else:
@@ -275,7 +274,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
         except :
             logger.info('  BC jointfit failed')
             rvrange = [-500,500]
-    elif allvisit['h'].max() > 13.5 : 
+    elif allvisit['hmag'].max() > 13.5 : 
         # If it's faint, restrict to +/- 500 km/s
         rvrange = [-500,500]
     else:
@@ -698,12 +697,9 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     apstar.header['BPERR'] = (allvisit['gaiadr2_bperr'].max(), 'GaiaDR2 Bp magnitude uncertainty')
     apstar.header['RPMAG'] = (allvisit['gaiadr2_rpmag'].max(), 'GaiaDR2 Rp magnitude')
     apstar.header['RPERR'] = (allvisit['gaiadr2_rperr'].max(), 'GaiaDR2 Rp magnitude uncertainty')
-    apstar.header['S5APTRG0'] = (allvisit['sdss5_apogee_target0'].max(),'SDSS-V APOGEE TARGET0 targeting flag')
+    apstar.header['SVAPTRG0'] = (allvisit['sdssv_apogee_target0'].max(),'SDSS-V APOGEE TARGET0 targeting flag')
+    apstar.header['FRSTCRTN'] = (allvisit['sdssv_apogee_target0'][0],'SDSS-V MWM priorrity carton')
 
-    apstar.header['AKTARG'] = (allvisit['ak_targ'].max(), 'Extinction used for targeting')
-    apstar.header['AKMETHOD'] = (allvisit['ak_targ_method'][0],'Extinction method using for targeting')
-    apstar.header['AKWISE'] = (allvisit['ak_wise'].max(),'WISE all-sky extinction')
-    apstar.header['SFD_EBV'] = (allvisit['sfd_ebv'].max(),'SFD E(B-V)')
     apstar.header['APTARG1'] = (apogee_target1, 'APOGEE_TARGET1 targeting flag')
     apstar.header['APTARG2'] = (apogee_target2, 'APOGEE_TARGET2 targeting flag')
     apstar.header['APTARG3'] = (apogee_target3, 'APOGEE_TARGET3 targeting flag')
@@ -825,9 +821,10 @@ def dbingest(apstar,allvisit):
     db = apogeedb.DBSession()
 
     # Create star table, columns to transfer from apstar header
-    cols = ['OBJID','STARVER','APRED','HEALPIX','SNR','RA','DEC','GLON','GLAT','J','J_ERR',
-            'HMAG','HERR','KMAG','KERR','SRC_H','AKTARG','AKMETHOD','AKWISE','SFD_EBV',
-            'APTARG1','APTARG2','APTARG3','AP2TARG1','AP2TARG2','AP2TARG3','AP2TARG4',
+    cols = ['OBJID','STARVER','APRED','HEALPIX','SNR','RA','DEC','GLON','GLAT','JMAG','JERR',
+            'HMAG','HERR','KMAG','KERR','SRC_H','APTARG1','APTARG2','APTARG3',
+            'AP2TARG1','AP2TARG2','AP2TARG3','AP2TARG4','SVAPTRG0','FRSTCRTN','CATID','PLX','EPLX',
+            'PMRA','EPMRA','PMDEC','EPMDEC','GMAG','GERR','BPMAG','BPERR','RPMAG','RPERR',
             'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHBARY','VSCATTER','VERR',
             'RV_TEFF','RV_LOGG','RV_FEH','MEANFIB','SIGFIB','NRES','MJDBEG','MJDEND']
     # Star table
@@ -851,6 +848,21 @@ def dbingest(apstar,allvisit):
     startab['AP2TARG2'].name = 'APOGEE2_TARGET2'
     startab['AP2TARG3'].name = 'APOGEE2_TARGET3'
     startab['AP2TARG4'].name = 'APOGEE2_TARGET4'
+    startab['SVAPTRG0'].name = 'SDSSV_APOGEE_TARGET0'
+    startab['FRSTCRTN'].name = 'FIRSTCARTON'
+    startab['CATID'].name = 'CATALOGID'
+    startab['PLX'].name = 'GAIADR2_PLX'
+    startab['EPLX'].name = 'GAIADR2_PLX_ERROR'
+    startab['PMRA'].name = 'GAIADR2_PMRA'
+    startab['EPMRA'].name = 'GAIADR2_PMRA_ERROR'
+    startab['PMDEC'].name = 'GAIADR2_PMDEC'
+    startab['EPMDEC'].name = 'GAIADR2_PMDEC_ERROR'
+    startab['GMAG'].name = 'GAIADR2_GMAG'
+    startab['GERR'].name = 'GAIADR2_GERR'
+    startab['BPMAG'].name = 'GAIADR2_BPMAG'
+    startab['BPERR'].name = 'GAIADR2_BPERR'
+    startab['RPMAG'].name = 'GAIADR2_RPMAG'
+    startab['RPERR'].name = 'GAIADR2_RPERR'
     startab['N_COMP'].name = 'N_COMPONENTS'
     startab['VHBARY'].name = 'VHELIOBARY'
     # Add other columns
@@ -868,20 +880,18 @@ def dbingest(apstar,allvisit):
     allvisit['star_pk'] = starout['pk'][0]
     # Remove some unnecessary columns (duplicates what's in visit table)
     delcols = ['target_id','survey', 'field', 'programname', 'alt_id', 'location_id', 'glon','glat',
-               'jmag','jerr', 'hmag', 'kmag', 'kerr', 'src_h', 'wash_m',
-               'pmra', 'pmdec', 'pm_src', 'ak_targ',
-               'ak_targ_method', 'ak_wise', 'sfd_ebv', 'apogee_target1',
+               'jmag','jerr', 'herr', 'kmag', 'kerr', 'src_h','pmra', 'pmdec', 'pm_src','apogee_target1',
                'apogee_target2', 'apogee_target3', 'apogee_target4',
-               'targflags', 'starflag', 'starflags', 'vlsr', 'vgsr',
-               'estbc','estvtype','estvrel','estvrelerr','estvheliobary','estrv_teff',
-               'estrv_logg','estrv_feh','estrv_alpha','estrv_carb','created',
-               'rv_alpha', 'rv_carb', 'synthfile']
+               'gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error','gaiadr2_pmdec',
+               'gaiadr2_pmdec_error','gaiadr2_gmag',
+               'gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr',
+               'sdssv_apogee_target0','firstcarton',
+               'targflags', 'starflag', 'starflags','created']
     for c in delcols:
         if c in allvisit.dtype.names:
             del allvisit[c]
     # Rename columns
     allvisit['pk'].name = 'visit_pk'
-    allvisit['h'].name = 'hmag'
     allvisit['starver'] = starout['starver'][0]
 
     db.ingest('rv_visit',np.array(allvisit))   # Load the visit information into the table  
