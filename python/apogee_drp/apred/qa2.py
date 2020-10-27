@@ -449,7 +449,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             mjd0 = min([mjd0,mjdstart])
             mjd1 = max([mjd1,mjdend])
             nj = 0
-            if isinstance(gcam, fits.FITS_rec):
+            if os.path.exists(gcamfile):
                 jcam, = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
                 nj = len(jcam)
             if nj > 1: 
