@@ -1209,7 +1209,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                 plt.close('all')
 
     # For individual frames, make plots of variation of sky and zeropoint.
-   if ims[0] != 0:
+    if ims[0] != 0:
         # PLOT 7: make plot of sky levels for this plate
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257sky.gif
         html.write('<TABLE BORDER=2><TR>\n')
