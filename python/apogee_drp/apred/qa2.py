@@ -755,8 +755,8 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     plt.ioff()
-    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     fontsize = 24;   fsz = fontsize * 0.75
+    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
