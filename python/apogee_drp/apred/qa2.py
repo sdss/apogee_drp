@@ -768,8 +768,8 @@ def plotFlux(load=None, ims=None, fluxid=None, plate=None, mjd=None, field=None,
     tmp = fits.open(platesum)
     plSum1 = tmp[1].data
     plSum2 = tmp[2].data
-    fibord = np.argsort(plSum2['FIBERID'])
-    plSum2 = plSum2[fibord]
+    #fibord = np.argsort(plSum2['FIBERID'])
+    #plSum2 = plSum2[fibord]
     nfiber = len(plSum2['HMAG'])
     ypos = plSum2['FIBERID']-1
     
