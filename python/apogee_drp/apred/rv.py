@@ -135,6 +135,8 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     starvisits['n_components'] = -1
     rv_components = Column(name='rv_components',dtype=float,shape=(3),length=len(starvisits))
     starvisits.add_column(rv_components)
+    rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
+    starvisits.add_column(rvtab)
 
     # Now load the new ones with the dorv() output
     visits = []
@@ -178,6 +180,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
             rv_comp = np.array(g['best_fit_parameters'])[2*n+gd]
             n_rv_comp = np.min([3,len(rv_comp)])
             starvisits[vind]['rv_components'][0:n_rv_comp] = rv_comp[0:n_rv_comp]
+        starvisits[vind]['rvtab'] = v
         # flag visits with suspect RVs
         if starvisits[vind]['rv_teff'] < 6000:
             bd_diff = 10
@@ -187,6 +190,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
             starvisits[vind]['starflag'] |= starmask.getval('RV_REJECT')
         elif (np.abs(starvisits[vind]['vheliobary']-starvisits[vind]['xcorr_vheliobary']) > 0) :
             starvisits[vind]['starflag'] |= starmask.getval('RV_SUSPECT')
+        starvisits[vind]['starflags'] = starmask.getname(starvisits[vind]['starflag'])
 
     # Get the good visits
     if len(visits)>0:
@@ -632,15 +636,26 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             apogee2_target3 |= visit['apogee_target3']
             try: apogee2_target4 |= visit['apogee_target4']
             except: pass
+        elif visit['SURVEY'] == 'apo1m' :
+            apogee_target2 |= visit['APOGEE_TARGET2'] 
+            apogee2_target2 |= visit['APOGEE_TARGET2'] 
         # MWM target flags?
             
 
     # Create final spectrum
-    zeros = np.zeros([nvisit+2,nwave])
-    izeros = np.zeros([nvisit+2,nwave],dtype=int)
+    if nvisit>1:
+        zeros = np.zeros([nvisit+2,nwave])
+        izeros = np.zeros([nvisit+2,nwave],dtype=int)
+    else:
+        zeros = np.zeros([1,nwave])
+        izeros = np.zeros([1,nwave],dtype=int)
+    if len(allvisit)==1:
+        rvtab = Table(np.vstack(allvisit['rvtab']))
+    else:
+        rvtab = Table(np.squeeze(np.vstack(allvisit['rvtab'])))
     apstar = apload.ApSpec(zeros,err=zeros.copy(),bitmask=izeros,wave=norm.apStarWave(),
-                           sky=zeros.copy(),skyerr=zeros.copy(),telluric=zeros.copy(),
-                           telerr=zeros.copy(),cont=zeros.copy(),template=zeros.copy())
+                           sky=zeros.copy(),skyerr=zeros.copy(),telluric=zeros.copy(),telerr=zeros.copy(),
+                           cont=zeros.copy(),template=zeros.copy(),rvtab=rvtab)
     apstar.header['CRVAL1'] = norm.logw0
     apstar.header['CDELT1'] = norm.dlogw
     apstar.header['CRPIX1'] = 1
@@ -654,21 +669,30 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     apstar.bitmask[0,:] = np.bitwise_and.reduce(stack.bitmask,0)
     apstar.cont[0,:] = cont
 
-    # Individual visits
-    apstar.flux[2:,:] = stack.flux * stack.cont
-    apstar.err[2:,:] = stack.err * stack.cont
-    apstar.bitmask[2:,:] = stack.bitmask
-    apstar.sky[2:,:] = stack.sky
-    apstar.skyerr[2:,:] = stack.skyerr
-    apstar.telluric[2:,:] = stack.telluric
-    apstar.telerr[2:,:] = stack.telerr
+    # global weighting and individual visits
+    if nvisit > 1 :
+        # "global" weighted average
+        newerr = median_filter(stack.err,[1,100],mode='reflect')
+        bd = np.where((stack.bitmask&pixelmask.getval('SIG_SKYLINE')) > 0)[0]
+        if len(bd) > 0 : newerr[bd[0],bd[1]] *= np.sqrt(100)
+        apstar.flux[1,:] = np.sum(stack.flux/newerr**2,axis=0)/np.sum(1./newerr**2,axis=0) * cont
+        apstar.err[1,:] =  np.sqrt(1./np.sum(1./newerr**2,axis=0)) * cont
+
+        # Individual visits
+        apstar.flux[2:,:] = stack.flux * stack.cont
+        apstar.err[2:,:] = stack.err * stack.cont
+        apstar.bitmask[2:,:] = stack.bitmask
+        apstar.sky[2:,:] = stack.sky
+        apstar.skyerr[2:,:] = stack.skyerr
+        apstar.telluric[2:,:] = stack.telluric
+        apstar.telerr[2:,:] = stack.telerr
 
     # Populate header
     apstar.header['OBJID'] = (allvisit['apogee_id'][0], 'APOGEE object name')
     apstar.header['APRED'] = (apred, 'APOGEE reduction version')
     apstar.header['STARVER'] = (starver, 'apStar version')
     apstar.header['HEALPIX'] = ( apload.obj2healpix(allvisit['apogee_id'][0]), 'HEALPix location')
-    try :apstar.header['SNR'] = (np.nanmedian(apstar.flux/apstar.err), 'Median S/N per apStar pixel')
+    try :apstar.header['SNR'] = (np.nanmedian(apstar.flux[0,:]/apstar.err[0,:]), 'Median S/N per apStar pixel')
     except :apstar.header['SNR'] = (0., 'Median S/N per apStar pixel')
     apstar.header['RA'] = (allvisit['ra'].max(), 'right ascension, deg, J2000')
     apstar.header['DEC'] = (allvisit['dec'].max(), 'declination, deg, J2000')
