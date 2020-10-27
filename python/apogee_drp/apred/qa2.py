@@ -1288,7 +1288,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         minH = np.nanmin(Vsum['H']);      maxH = np.nanmax(Vsum['H']);      spanH = maxH - minH
         minSNR = np.nanmin(Vsum['SNR']);  maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
         xmin = minH - spanH * 0.05;       xmax = maxH + spanH * 0.05
-        ymin = 0;                         ymax = maxSNR + ((maxSNR - ymin) * 0.05)
+        ymin = -5;                         ymax = maxSNR + ((maxSNR - ymin) * 0.05)
         
         ax1.set_xlim(xmin,xmax);  ax1.set_ylim(ymin,ymax)
 
