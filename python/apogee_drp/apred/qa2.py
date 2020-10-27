@@ -1304,7 +1304,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
         ax1.legend(loc='lower left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-        fig.subplots_adjust(left=0.08,right=0.98,bottom=0.1,top=0.93,hspace=0.2,wspace=0.0)
+        fig.subplots_adjust(left=0.075,right=0.98,bottom=0.11,top=0.98,hspace=0.2,wspace=0.0)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
 
