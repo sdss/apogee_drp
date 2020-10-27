@@ -602,9 +602,9 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 
     # Link to combined spectra page.
     html.write('<H3> For plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here apPlate-'+plate+'-'+mjd+' </a><H3>\n')
-    html.write('<H3>apVisit Hmag versus S/N</H3>\n')
+    html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
     snrplot = 'apVisitSNR-'+plate+'-'+mjd+'.png'
-    html.write('<A HREF=../plots/'+snrplot+' target="_blank"><IMG SRC=../plots/'+snrplot+' WIDTH=1000></A>\n')
+    html.write('<A HREF=../plots/'+snrplot+' target="_blank"><IMG SRC=../plots/'+snrplot+' WIDTH=900></A>\n')
 
     html.write('<HR>\n')
 
