@@ -615,7 +615,7 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         return
 
     # Link to combined spectra page.
-    html.write('<H3> For plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here apPlate-8100-57680 </a><H3>\n')
+    html.write('<H3> For plots of apVisit spectra: <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html> click here apPlate-'+plate+'-'+mjd+' </a><H3>\n')
     html.write('<HR>\n')
 
     # Table of individual exposures.
@@ -1357,36 +1357,37 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         if noplot is False:
             expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
             gcamfile = expdir+mjd+'/gcam-'+mjd+'.fits'
-            gcam = fits.getdata(gcamfile)
+            if os.path.exists(gcamfile):
+                gcam = fits.getdata(gcamfile)
 
-            dateobs = plSum1['DATEOBS'][0]
-            tt = Time(dateobs)
-            mjdstart = tt.mjd
-            exptime = np.sum(plSum1['EXPTIME'])
-            mjdend = mjdstart + (exptime/86400.)
-            jcam, = np.where((gcam['mjd'] > mjdstart) & (gcam['mjd'] < mjdend))
+                dateobs = plSum1['DATEOBS'][0]
+                tt = Time(dateobs)
+                mjdstart = tt.mjd
+                exptime = np.sum(plSum1['EXPTIME'])
+                mjdend = mjdstart + (exptime/86400.)
+                jcam, = np.where((gcam['mjd'] > mjdstart) & (gcam['mjd'] < mjdend))
 
-            plotfile = 'guider-'+plate+'-'+mjd+'.png'
-            plotfilefull = plotsdir+plotfile
+                plotfile = 'guider-'+plate+'-'+mjd+'.png'
+                plotfilefull = plotsdir+plotfile
 
-            print("Making "+plotfile)
-            plt.ioff()
-            fontsize=24
-            fsz=fontsize*0.75
-            fig=plt.figure(figsize=(14,14))
-            matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
+                print("Making "+plotfile)
+                plt.ioff()
+                fontsize=24
+                fsz=fontsize*0.75
+                fig=plt.figure(figsize=(14,14))
+                matplotlib.rcParams.update({'font.size':fontsize,'font.family':'serif'})
 
-            ax1 = plt.subplot2grid((1,1), (0,0))
-            ax1.tick_params(reset=True)
-            ax1.minorticks_on()
-            ax1.set_xlabel(r'Guider MJD');  ax1.set_ylabel(r'Guider RMS')
+                ax1 = plt.subplot2grid((1,1), (0,0))
+                ax1.tick_params(reset=True)
+                ax1.minorticks_on()
+                ax1.set_xlabel(r'Guider MJD');  ax1.set_ylabel(r'Guider RMS')
 
-            ax1.plot(gcam['mjd'][jcam], gcam['gdrms'][jcam], color='k')
+                ax1.plot(gcam['mjd'][jcam], gcam['gdrms'][jcam], color='k')
 
-            fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
-            plt.savefig(plotfilefull)
-            plt.close('all')
-            plt.ion()
+                fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
+                plt.savefig(plotfilefull)
+                plt.close('all')
+                plt.ion()
 
     # For individual frames, make plots of variation of sky and zeropoint.
     # For combined frames, make table of combination parameters.
