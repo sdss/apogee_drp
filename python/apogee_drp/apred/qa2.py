@@ -609,7 +609,10 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('<HR>\n')
 
     # Table of individual exposures.
-    html.write('<H3>Individual Exposure Stats:</H3>\n')
+    if pairstr is not None:
+        html.write('<H3>Individual Exposure Stats:</H3>\n')
+    else:
+        html.write('<H3>Individual Exposure Stats (undithered):</H3>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=lightgreen>\n')
     html.write('<TH>Frame<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither<TH>Pixshift<TH>Zero<TH>Zero rms<TH>sky continuum<TH>S/N<TH>S/N(cframe)\n')
@@ -661,15 +664,15 @@ def masterQApage(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
                     html.write('<TD>'+str("%.3f" % round(pairstr['OLDSHIFT'][ipair][j],3))+'\n')
                     html.write('<TD>'+str("%.3f" % round(pairstr['SHIFT'][ipair][j],3))+'\n')
                     html.write('<TD>'+str("%.2f" % round(pairstr['SN'][ipair][j],2))+'\n')
-    else:
-        # Table of combination parameters.
-        html.write('<H3>Combination Parameters (undithered):</H3>\n')
-        html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
-        for iframe in range(len(shiftstr)):
-            html.write('<TR><TD>'+str(shiftstr['FRAMENUM'][iframe])+'\n')
-            html.write('<TD>'+str("%.3f" % round(shiftstr['SHIFT'][iframe],3))+'\n')
-            html.write('<TD>'+str("%.3f" % round(shiftstr['SN'][iframe],3))+'\n')
-    html.write('</TABLE>\n')
+#    else:
+#        # Table of combination parameters.
+#        html.write('<H3>Combination Parameters (undithered):</H3>\n')
+#        html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
+#        for iframe in range(len(shiftstr)):
+#            html.write('<TR><TD>'+str(shiftstr['FRAMENUM'][iframe])+'\n')
+#            html.write('<TD>'+str("%.3f" % round(shiftstr['SHIFT'][iframe],3))+'\n')
+#            html.write('<TD>'+str("%.3f" % round(shiftstr['SN'][iframe],3))+'\n')
+#    html.write('</TABLE>\n')
 
     # Table of exposure plots.
     html.write('<TABLE BORDER=2>\n')
