@@ -1274,6 +1274,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         Vsum = load.apVisitSum(int(plate), mjd)
         Vsumfile = Vsum.filename()
         Vsum = Vsum[1].data
+        import pdb; pdb.set_trace()
 
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
         print("Making "+plotfile)
