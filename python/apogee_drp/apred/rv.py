@@ -124,7 +124,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         starvisits['vhelio'].name = 'vheliobary'
 
     # First rename old visit RV tags and initialize new ones
-    for col in ['vtype','vrel','vrelerr','vheliobary','bc','rv_teff','rv_logg','rv_feh']:
+    for col in ['vtype','vrel','vrelerr','vheliobary','bc','chisq','rv_teff','rv_logg','rv_feh']:
         if col == 'vtype':
             starvisits[col] = 0
         else:
@@ -165,6 +165,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         starvisits[vind]['xcorr_vrelerr'] = v['xcorr_vrelerr']
         starvisits[vind]['xcorr_vheliobary'] = v['xcorr_vhelio']
         starvisits[vind]['bc'] = v['bc']
+        starvisits[vind]['chisq'] = v['chisq']
         starvisits[vind]['rv_teff'] = v['teff']
         starvisits[vind]['rv_logg'] = v['logg']
         starvisits[vind]['rv_feh'] = v['feh']
@@ -762,6 +763,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         #apstar.header['HJD{:d}'.format(i)] = 
         apstar.header['FIBER{:d}'.format(i)] = (visit['fiberid'],' Fiber, visit {:d}'.format(i))
         apstar.header['BC{:d}'.format(i)] = (visit['bc'],' Barycentric correction (km/s), visit {:d}'.format(i))
+        apstar.header['CHISQ{:d}'.format(i)] = (visit['chisq'],' Chi-squared fit of Cannon model, visit {:d}'.format(i))
         apstar.header['VRAD{:d}'.format(i)] = (visit['vrel'],' Doppler shift (km/s) of visit {:d}'.format(i))
         #apstar.header['VERR%d'.format(i)] = 
         apstar.header['VHBARY{:d}'.format(i)] = (visit['vheliobary'],' Barycentric velocity (km/s), visit {:d}'.format(i))
