@@ -983,8 +983,8 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
         ymintel = np.nanmin(y);  ymaxtel = np.nanmax(y)
         ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='cyan')
-        ymin = np.min([yminsci,ymintell])
-        ymax = np.max([ymaxsci,ymaxtell])
+        ymin = np.min([yminsci,ymintel])
+        ymax = np.max([ymaxsci,ymaxtel])
         yspan = ymax - ymin
         ax2.set_ylim(ymin-yspan*0.05,ymax+yspan*0.05)
 
