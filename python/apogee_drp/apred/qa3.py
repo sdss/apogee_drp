@@ -1276,6 +1276,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                     objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
 
 #            objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
+            import pdb; pdb.set_trace()
             targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], 
                                             plSum2['TARGET2'][j], 
                                             plSum2['TARGET3'][j], 
