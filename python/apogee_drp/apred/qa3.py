@@ -945,7 +945,10 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
         print("Making "+plotfile)
 
-        xmin = 6;  xmax = 15;  xspan=xmax-xmin
+        notsky, = np.where(plSum2['HMAG'] < 30)
+        hmagarr = plSum2['HMAG'][notsky]
+        minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
+        xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
 
         fig=plt.figure(figsize=(11,14))
         ax1 = plt.subplot2grid((3,1), (0,0))
@@ -975,9 +978,15 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
 
         # PLOTS 7b: observed mag - fit mag vs H mag
         x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
+        yminsci = np.nanmin(y);  ymaxsci = np.nanmax(y)
         ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
         x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
+        ymintel = np.nanmin(y);  ymaxtel = np.nanmax(y)
         ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='cyan')
+        ymin = np.min([yminsci,ymintell])
+        ymax = np.max([ymaxsci,ymaxtell])
+        yspan = ymax - ymin
+        ax2.set_ylim(ymin-yspan*0.05,ymax+yspan*0.05)
 
         # PLOTS 7c: S/N as calculated from ap1D frame
         c = ['r','g','b']
@@ -1275,7 +1284,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                     starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).replace(',','<BR>')
                     objhtml.write('<BR><BR>'+starflagtxt+'\n')
 
-            # PLOT 1: spectrum 
+            # Spectrum Plots
             if j > -1:
                 plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfib+'.png'
                 if makeSpectrumPlots is True:
