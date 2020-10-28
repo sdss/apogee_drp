@@ -426,16 +426,16 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
             altsn = achievedsn * 0.
             for ichip in range(nchips): 
-                altsn[ichip] = np.median(sn[snstars,ichip] * scale)
-                achievedsnc[ichip] = np.median(snc[snstars,ichip] * scale)
+                altsn[ichip] = np.nanmedian(sn[snstars,ichip] * scale)
+                achievedsnc[ichip] = np.nanmedian(snc[snstars,ichip] * scale)
         else:
             if onem is not None:
-                achievedsn = np.median([sn[obj,:]], axis=0)
+                achievedsn = np.nanmedian([sn[obj,:]], axis=0)
 
         medsky = np.zeros(3, dtype=np.float64)
         for ichip in range(nchips):
             if np.median(obs[fibersky,ichip]) > 0:
-                medsky[ichip] = -2.5 * np.log10(np.median(obs[fibersky,ichip])) + skyzero
+                medsky[ichip] = -2.5 * np.log10(np.nanmedian(obs[fibersky,ichip])) + skyzero
             else: 
                 medsky[ichip] = 99.999
 
@@ -485,7 +485,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                 try:
                     telstr = fits.getdata(tellfile)
                 except:
-                    print("PROBLEM!!! Error reading apTellstar file: "+os.path.basename(tellfile))
+                    if i == 0: print("PROBLEM!!! Error reading apTellstar file: "+os.path.basename(tellfile))
                 else:
                     telstr = fits.getdata(tellfile)
                     jtell, = np.where(telstr['IM'] == ims[i])
