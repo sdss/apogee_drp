@@ -128,7 +128,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
         # Make plots for the master QA page
         if makeplots is True:
             q = masterQAplots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
-                              apred=apred, flat=flat, fluxid=fluxid)
+                              apred=apred, flat=None, fluxid=fluxid)
 
         # Make the spectrum plots and associated page
         q= makeObjHtml(load=load, plate=plate, mjd=mjd, survey=survey, makeSpectrumPlots=makeSpectrumPlots)
