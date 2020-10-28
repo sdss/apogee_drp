@@ -402,7 +402,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             scale = 1
             if nsn < 3:
                 bright, = np.where(fiber['hmag'] < 12)
-                hmax = np.max(fiber['hmag'][bright])
+                hmax = np.nanmax(fiber['hmag'][bright])
                 snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
                 nsn = len(snstars)
                 scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
@@ -959,15 +959,15 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
                     if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
                         print("Problem with fiber "+str(plSum2['FIBERID'][j]).zfill(3)+". Not Plotting.")
                     else:
-                        ymx1 = np.max(Flux[ymxsec1])
-                        ymx2 = np.max(Flux[ymxsec2])
-                        ymx3 = np.max(Flux[ymxsec3])
-                        ymx = np.max([ymx1,ymx2,ymx3])
+                        ymx1 = np.nanmax(Flux[ymxsec1])
+                        ymx2 = np.nanmax(Flux[ymxsec2])
+                        ymx3 = np.nanmax(Flux[ymxsec3])
+                        ymx = np.nanmax([ymx1,ymx2,ymx3])
                         ymin = 0
                         yspn = ymx-ymin
                         ymax = ymx + (yspn * 0.15)
                         # Establish Ymin
-                        ymn = np.min(Flux)
+                        ymn = np.nanmin(Flux)
                         if ymn > 0: 
                             yspn = ymx - ymn
                             ymin = ymn - (yspn * 0.15)
@@ -1298,7 +1298,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         xmin = minH - spanH * 0.05;       xmax = maxH + spanH * 0.05
         ymin = -5;                         ymax = maxSNR + ((maxSNR - ymin) * 0.05)
         
-        ax1.set_xlim(xmin,xmax);  ax1.set_ylim(ymin,ymax)
+        ax1.set_xlim(xmin,xmax)#;  ax1.set_ylim(ymin,ymax)
 
         gd, = np.where(platesum2['HMAG']<50)
         tmp = platesum2[gd]
@@ -1307,8 +1307,13 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         science, = np.where((tmp['OBJTYPE'] != 'SPECTROPHOTO_STD') & (tmp['OBJTYPE'] != 'HOT_STD') & (tmp['OBJTYPE'] != 'SKY'))
         telluric = telluric[::-1];    science = science[::-1]
 
-        psci = ax1.scatter(hmagarr[science], Vsum['SNR'][science], marker='*', s=180, edgecolors='k', c='r', alpha=alpha, label='Science')
-        ptel = ax1.scatter(hmagarr[telluric], Vsum['SNR'][telluric], marker='o', s=60, edgecolors='k', c='cyan', alpha=alpha, label='Telluric')
+        x = hmagarr[science];  y = Vsum['SNR'][science]
+        psci = ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='',label='science')
+        x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
+        ptel = ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='cyan', linestyle='', label='Telluric')
+
+        #psci = ax1.scatter(hmagarr[science], Vsum['SNR'][science], marker='*', s=180, edgecolors='k', c='r', alpha=alpha, label='Science')
+        #ptel = ax1.scatter(hmagarr[telluric], Vsum['SNR'][telluric], marker='o', s=60, edgecolors='k', c='cyan', alpha=alpha, label='Telluric')
 
         ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
@@ -1509,7 +1514,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                             j = np.where(linestr['FIBER'] == fiber)
                             nj = len(j)
                             if nj>0:
-                                junk = np.min(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
+                                junk = np.nanmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
                                 jline = np.argmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
                                 struct['GAUSS'][:,ifiber,ichip,iline][i] = linestr['GPAR'][j][jline]
                                 sz = a['WCOEF'][ichip].shape
