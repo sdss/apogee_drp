@@ -13,7 +13,7 @@ import astropy.time as time
 import re
 import argparse
 import pdb
-from astropy.io imports fits
+from astropy.io import fits
 
 def gproc(mjd=None, instrument=None, outfile=None):
     """Process an MJD of processed guide camera files into a single file
