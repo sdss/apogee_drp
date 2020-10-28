@@ -81,26 +81,15 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         logger.info('No visit files found')
         return
     logger.info('%d visit file(s) found' % nallvisits)
+    allvisits = Table(allvisits)
+    # Change datatype of STARFLAG to 64-bit
+    allvisits['starflag'] = allvisits['starflag'].astype(np.uint64)
 
     # Get the star version number
     #  this is the largest MJD5 in the FULL list of visits
     starver = str(np.max(allvisits['mjd'].astype(int)))
     logger.info('Version='+starver)
-    
-    # Select good visit spectra
-    starmask = bitmask.StarBitMask()
-    gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
-                   (allvisits['snr'] > snmin) )
-    if len(gd)==0:
-        logger.info('No visits passed QA cuts')
-        return
-    logger.info('%d visit(s) passed QA cuts' % len(gd))
-    starvisits = Table(allvisits[gd])
-    nvisits = len(gd)
-    # Change datatype of STARFLAG to 64-bit
-    starvisits['starflag'] = starvisits['starflag'].astype(np.uint64)
-    # Add STARVER                                                                                                                                             
-    starvisits['starver'] = starver
+
 
     # Output directory
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -109,22 +98,100 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     try : os.makedirs(os.path.dirname(stardir))
     except FileExistsError: pass
 
-
-    # Run Doppler with dorv()
-    try:
-        dopsumstr,dopvisitstr,gaussout = dorv(starvisits,starver,clobber=clobber,verbose=verbose,tweak=tweak,
-                                              plot=plot,windows=windows,apstar_vers=apstar_vers,logger=logger)
-        logger.info('Doppler completed successfully for {:s}'.format(star))
-    except:
-        logger.info('Doppler failed for {:s}'.format(star))
-        raise
-
-    # KLUDGE, rename vhelio->vheliobary
-    if 'vhelio' in starvisits.colnames:
-        starvisits['vhelio'].name = 'vheliobary'
-
-    # First rename old visit RV tags and initialize new ones
-    for col in ['vtype','vrel','vrelerr','vheliobary','bc','chisq','rv_teff','rv_logg','rv_feh']:
+    # Initalize star-level summary table
+    startype = np.dtype([('apogee_id','U30'),('file','U100'),('uri','U300'),('starver','U50'),('mjdbeg',int),('mjdend',int),
+                         ('telescope','U6'),('apred_vers','U50'),('healpix',int),('snr',float),
+                         ('ra',float),('dec',float),('glon',float),('glat',float),
+                         ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
+                         ('src_h','U16'),('targ_pmra',float),('targ_pmdec',float),('targ_pm_src','U16'),
+                         ('apogee_target1',int),('apogee_target2',int),
+                         ('apogee2_target1',int),('apogee2_target2',int),('apogee2_target3',int),('apogee2_target4',int),
+                         ('catalogid',int),('gaiadr2_sourceid',int),('gaiadr2_plx',float),('gaiadr2_plx_error',float),
+                         ('gaiadr2_pmra',float),('gaiadr2_pmra_error',float),('gaiadr2_pmdec',float),('gaiadr2_pmdec_error',float),
+                         ('gaiadr2_gmag',float),('gaiadr2_gerr',float),('gaiadr2_bpmag',float),('gaiadr2_bperr',float),
+                         ('gaiadr2_rpmag',float),('gaiadr2_rperr',float),('sdssv_apogee_target0',int),('firstcarton','U50'),
+                         ('targflags','U132'),('nvisits',int),('ngoodvisits',int),('ngoodrvs',int),
+                         ('starflag',np.uint64),('starflags','U132'),('andflag',np.uint64),('andflags','U132'),
+                         ('vheliobary',float),('vscatter',float),('verr',float),('vmederr',float),('chisq',float),
+                         ('rv_teff',float),('rv_tefferr',float),('rv_logg',float),('rv_loggerr',float),('rv_feh',float),
+                         ('rv_feherr',float),('rv_ccpfwhm',float),('rv_autofwhm',float),
+                         ('n_components',int),('meanfib',float),('sigfib',float)
+                     ])
+    startab = np.zeros(1,dtype=startype)
+    startab['apogee_id'] = star
+    startab['telescope'] = telescope
+    startab['starver'] = starver
+    startab['apred_vers'] = apred
+    startab['mjdbeg'] = np.min(allvisits['mjd'].astype(int))
+    startab['mjdend'] = np.max(allvisits['mjd'].astype(int))    
+    startab['healpix'] = apload.obj2healpix(star)
+    startab['nvisits'] = nallvisits
+    # Copy data from visit
+    tocopy = ['ra','dec','glon','glat','jmag','jerr','hmag','herr','kmag','kerr','src_h','catalogid',
+              'gaiadr2_sourceid','gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error',
+              'gaiadr2_pmdec','gaiadr2_pmdec_error','gaiadr2_gmag','gaiadr2_gerr','gaiadr2_bpmag',
+              'gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr','sdssv_apogee_target0','firstcarton',
+              'targflags']
+    for c in tocopy:
+        startab[c] = allvisits[c][0]
+    startab['targ_pmra'] = allvisits['pmra'][0]
+    startab['targ_pmdec'] = allvisits['pmdec'][0]
+    startab['targ_pm_src'] = allvisits['pm_src'][0]
+    # Initialize some parameters in case RV fails
+    startab['ngoodvisits'] = 0
+    startab['ngoodrvs'] = 0
+    startab['vheliobary'] = np.nan
+    startab['vscatter'] = np.nan
+    startab['verr'] = np.nan
+    startab['vmederr'] = np.nan
+    startab['rv_teff'] = np.nan
+    startab['rv_logg'] = np.nan
+    startab['rv_feh'] = np.nan
+    startab['rv_ccpfwhm'] = np.nan
+    startab['rv_autofwhm'] = np.nan
+    startab['n_components'] = -1
+    if len(allvisits) > 0: meanfib=(allvisits['fiberid']*allvisits['snr']).sum()/allvisits['snr'].sum()
+    else: meanfib = 999999.
+    if len(allvisits) > 1: sigfib=allvisits['fiberid'].std(ddof=1)
+    else: sigfib = 0.
+    startab['meanfib'] = meanfib
+    startab['sigfib'] = sigfib
+    starmask = bitmask.StarBitMask()
+    startab['starflag'] |= starmask.getval('RV_FAIL')  # bad until proven good
+    startab['andflag'] |= starmask.getval('RV_FAIL')
+    
+    # Select good visit spectra
+    gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
+                   (allvisits['snr'] > snmin) )
+    # No good visits, but still write to star table
+    if len(gd)==0:
+        logger.info('No visits passed QA cuts')
+        # Add starflag and andflag
+        starflag,andflag = np.uint64(0),np.uint64(0)
+        for v in len(allvisits):
+            starflag |= v['starflag'] # bitwise OR
+            andflag &= v['starflag']  # bitwise AND
+        starflag |= starmask.getval('RV_FAIL')
+        andflag |= starmask.getval('RV_FAIL')
+        startab['starflag'] = starflag
+        startab['andflag'] = andflag
+        # Load star summary information into database
+        dbingest(startab,None)
+        return
+    logger.info('%d visit(s) passed QA cuts' % len(gd))
+    
+    # Initialize STARVISITS which will hold all visit-level information
+    #   for visits that passed the QA cuts
+    starvisits = allvisits[gd].copy()
+    nvisits = len(gd)
+    del starvisits['created']
+    startab['ngoodvisits'] = nvisits   # visits that pass QA cuts
+    # Add STARVER                                                                                                                                             
+    starvisits['starver'] = starver
+    # Flag all visits as RV_FAIL to start with, will remove if they worked okay
+    starvisits['starflag'] |= starmask.getval('RV_FAIL')
+    # Initialize visit RV tags
+    for col in ['vtype','vrel','vrelerr','vheliobary','bc','chisq','rv_teff','rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr']:
         if col == 'vtype':
             starvisits[col] = 0
         else:
@@ -139,7 +206,18 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
     starvisits.add_column(rvtab)
 
-    # Now load the new ones with the dorv() output
+
+    # Run Doppler with dorv() on the good visits
+    try:
+        dopsumstr,dopvisitstr,gaussout = dorv(starvisits,starver,clobber=clobber,verbose=verbose,tweak=tweak,
+                                              plot=plot,windows=windows,apstar_vers=apstar_vers,logger=logger)
+        logger.info('Doppler completed successfully for {:s}'.format(star))
+    except:
+        logger.info('Doppler failed for {:s}'.format(star))
+        raise
+
+
+    # Now load the the Doppler the results
     visits = []
     ncomponents = 0
     for i,(v,g) in enumerate(zip(dopvisitstr,gaussout)) :
@@ -158,57 +236,137 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         else:
             continue
         visits.append(vind)
-        starvisits[vind]['vrel'] = v['vrel']
-        starvisits[vind]['vrelerr'] = v['vrelerr']
-        starvisits[vind]['vheliobary'] = v['vhelio']
-        starvisits[vind]['xcorr_vrel'] = v['xcorr_vrel']
-        starvisits[vind]['xcorr_vrelerr'] = v['xcorr_vrelerr']
-        starvisits[vind]['xcorr_vheliobary'] = v['xcorr_vhelio']
-        starvisits[vind]['bc'] = v['bc']
-        starvisits[vind]['chisq'] = v['chisq']
-        starvisits[vind]['rv_teff'] = v['teff']
-        starvisits[vind]['rv_logg'] = v['logg']
-        starvisits[vind]['rv_feh'] = v['feh']
+        # Remove RV_FAIL that we added above
+        starvisits['starflag'][vind] &= ~starmask.getval('RV_FAIL')
+        # Add Doppler outputs
+        starvisits['vrel'][vind] = v['vrel']
+        starvisits['vrelerr'][vind] = v['vrelerr']
+        starvisits['vheliobary'][vind] = v['vhelio']
+        starvisits['xcorr_vrel'][vind] = v['xcorr_vrel']
+        starvisits['xcorr_vrelerr'][vind] = v['xcorr_vrelerr']
+        starvisits['xcorr_vheliobary'][vind] = v['xcorr_vhelio']
+        starvisits['bc'][vind] = v['bc']
+        starvisits['chisq'][vind] = v['chisq']
+        starvisits['rv_teff'][vind] = v['teff']
+        starvisits['rv_tefferr'][vind] = v['tefferr']
+        starvisits['rv_logg'][vind] = v['logg']
+        starvisits['rv_loggerr'][vind] = v['loggerr']
+        starvisits['rv_feh'][vind] = v['feh']
+        starvisits['rv_feherr'][vind] = v['feherr']
         if g is None:
-            starvisits[vind]['n_components'] = 0
+            starvisits['n_components'][vind] = 0
         else:
-            starvisits[vind]['n_components'] = g['N_components']
-        if starvisits[vind]['n_components'] > 1 :
-            starvisits[vind]['starflag'] |= starmask.getval('MULTIPLE_SUSPECT')
+            starvisits['n_components'][vind] = g['N_components']
+        if starvisits['n_components'][vind] > 1 :
+            starvisits['starflag'][vind] |= starmask.getval('MULTIPLE_SUSPECT')
             n = len(g['best_fit_parameters'])//3
             gd, = np.where(np.array(g['best_fit_parameters'])[0:n] > 0)
             rv_comp = np.array(g['best_fit_parameters'])[2*n+gd]
             n_rv_comp = np.min([3,len(rv_comp)])
             starvisits[vind]['rv_components'][0:n_rv_comp] = rv_comp[0:n_rv_comp]
-        starvisits[vind]['rvtab'] = v
-        # flag visits with suspect RVs
-        if starvisits[vind]['rv_teff'] < 6000:
+        starvisits['rvtab'][vind] = v
+        # Flag visits with suspect RVs
+        if starvisits['rv_teff'][vind] < 6000:
             bd_diff = 10
         else:
             bd_diff = 50.
-        if (np.abs(starvisits[vind]['vheliobary']-starvisits[vind]['xcorr_vheliobary']) > bd_diff) :
-            starvisits[vind]['starflag'] |= starmask.getval('RV_REJECT')
-        elif (np.abs(starvisits[vind]['vheliobary']-starvisits[vind]['xcorr_vheliobary']) > 0) :
-            starvisits[vind]['starflag'] |= starmask.getval('RV_SUSPECT')
-        starvisits[vind]['starflags'] = starmask.getname(starvisits[vind]['starflag'])
+        if (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > bd_diff) :
+            starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
+        elif (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > 0) :
+            starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
 
-    # Get the good visits
+    # Set STARFLAGS for the visits (successful and failed ones)
+    for i in range(len(starvisits)):
+        starvisits['starflags'][i] = starmask.getname(starvisits['starflag'][i])
+
+
+    # Compute final star-level values
+    #--------------------------------
+
+    # Targeting flags
+    #  don't have apogee-1/2 targeting flags implemented yet
+    #startab['targflags'] = (bitmask.targflags(apogee_target1,apogee_target2,0,0,survey='apogee')+
+    #                        bitmask.targflags(apogee2_target1,apogee2_target2,apogee2_target3,apogee2_target4,survey='apogee2')+
+    #                        bitmask.targflags(sdssv_apogee_target0,survey='sdss5'))
+    startab['targflags'] = bitmask.targflags(starvisits['sdssv_apogee_target0'][0],0,0,0,survey='sdss5')
+
+    # Make final STARFLAG and ANDFLAG
+    starflag = startab['starflag']
+    andflag = startab['andflag']
+    for v in starvisits:
+        starflag |= v['starflag']
+        andflag &= v['starflag']
+    startab['starflags'] = starmask.getname(startab['starflag'])
+    startab['andflags'] = starmask.getname(startab['andflag'])
+
+    # Initialize meanfib/sigfib using all good visits
+    if len(starvisits) > 1:
+        meanfib = (starvisits['fiberid']*starvisits['snr']).sum()/starvisits['snr'].sum()
+        sigfib = starvisits['fiberid'].std(ddof=1)
+    else:
+        meanfib = starvisits['fiberid'][0]
+        sigfib = 0.0
+    startab['meanfib'] = meanfib
+    startab['sigfib'] = sigfib
+
+    # Average Doppler values for this star
     if len(visits)>0:
         visits = np.array(visits)
-        gdrv, = np.where((starvisits[visits]['starflag'] & starmask.getval('RV_REJECT')) == 0)
+        gdrv, = np.where((starvisits['starflag'][visits] & starmask.getval('RV_REJECT')) == 0)
+        ngdrv = len(gdrv)
+        if ngdrv>0:
+            startab['ngoodrvs'] = ngdrv
+            try: startab['n_components'] = starvisits['n_components'][gdrv].max()
+            except: pass
+            startab['vheliobary'] = (starvisits['vheliobary'][gdrv]*starvisits['snr'][gdrv]).sum() / starvisits['snr'][gdrv].sum()
+            if ngdrv>1:
+                startab['vscatter'] = starvisits['vheliobary'][gdrv].std(ddof=1)
+                startab['verr'] = startab['vscatter'][0]/np.sqrt(ngdrv)
+                startab['vmederr'] = np.median(starvisits['vrelerr'])
+            else:
+                startab['vscatter'] = 0.0
+                startab['verr'] = starvisits['verr'][gdrv][0]
+                startab['vmederr'] = starvisits['vrelerr'][0]
+            startab['chisq'] = dopsumstr['chisq']
+            startab['rv_teff'] = dopsumstr['teff']
+            startab['rv_tefferr'] = dopsumstr['tefferr']
+            startab['rv_logg'] = dopsumstr['logg']
+            startab['rv_loggerr'] = dopsumstr['loggerr']
+            startab['rv_feh'] = dopsumstr['feh']
+            startab['rv_feherr'] = dopsumstr['feherr']
+            # Update meanfib/sigfig only using visits with good RVs
+            if ngdrv > 1:
+                meanfib = (starvisits['fiberid'][gdrv]*starvisits['snr'][gdrv]).sum()/starvisits['snr'][gdrv].sum()
+                sigfib = starvisits['fiberid'][gdrv].std(ddof=1)
+            else:
+                meanfib = starvisits['fiberid'][gdrv][0]
+                sigfib = 0.0
+            startab['meanfib'] = meanfib
+            startab['sigfib'] = sigfib
+            # Get filename and URI
+            outfilenover = load.filename('Star',obj=star)
+            outbase = os.path.splitext(os.path.basename(outfilenover))[0]
+            outbase += '-'+starver   # add star version
+            outdir = os.path.dirname(outfilenover)
+            outfile = outdir+'/'+outbase+'.fits'
+            if apstar_vers != 'stars' :
+                outfile = outfile.replace('/stars/','/'+apstar_vers+'/')
+            startab['file'] = os.path.basename(outfile)
+            mwm_root = os.environ['MWM_ROOT']
+            startab['uri'] = outfile[len(mwm_root)+1:]
 
-    # Do the visit combination
-    if len(gdrv)>0:
-        apstar = visitcomb(starvisits[visits[gdrv]],starver,load=load,apstar_vers=apstar_vers,
-                           apred=apred,nres=nres,logger=logger)
     else:
-        logger.info('No good visits for '+star)
-        raise
+        gdrv = []
 
     # Load information into the database
-    apstar.header['MJDBEG'] = (np.max(allvisits['mjd'].astype(int)), 'Beginning MJD')
-    apstar.header['MJDEND'] = (np.max(allvisits['mjd'].astype(int)), 'Ending MJD')
-    dbingest(apstar,starvisits[visits[gdrv]])
+    dbingest(startab,starvisits)
+
+    # Do the visit combination and write out apStar file
+    if len(gdrv)>0:
+        apstar = visitcomb(starvisits[visits[gdrv]],starver,load=load,
+                           apstar_vers=apstar_vers,apred=apred,nres=nres,logger=logger)
+    else:
+        logger.info('No good visits for '+star)
 
     return
 
@@ -847,87 +1005,39 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
     return apstar
 
-def dbingest(apstar,allvisit):
+def dbingest(startab,starvisits):
     """ Insert the star and visit information into the database."""
 
     # Open db session
     db = apogeedb.DBSession()
-
-    # Create star table, columns to transfer from apstar header
-    cols = ['OBJID','STARVER','APRED','HEALPIX','SNR','RA','DEC','GLON','GLAT','JMAG','JERR',
-            'HMAG','HERR','KMAG','KERR','SRC_H','APTARG1','APTARG2','APTARG3',
-            'AP2TARG1','AP2TARG2','AP2TARG3','AP2TARG4','SVAPTRG0','FRSTCRTN','CATID','PLX','EPLX',
-            'PMRA','EPMRA','PMDEC','EPMDEC','GMAG','GERR','BPMAG','BPERR','RPMAG','RPERR',
-            'NVISITS','STARFLAG','ANDFLAG','N_COMP','VHBARY','VSCATTER','VERR',
-            'RV_TEFF','RV_LOGG','RV_FEH','MEANFIB','SIGFIB','NRES','MJDBEG','MJDEND']
-    # Star table
-    startab = Table()
-    startab['STARVER'] = [apstar.header['STARVER']]   # first column must be an array to give it the size/rows
-    for c in cols:
-        startab[c] = apstar.header[c]
-    # Rename names
-    startab['OBJID'].name = 'APOGEE_ID'
-    startab['APRED'].name = 'APRED_VERS'
-    startab['JMAG'].name = 'JMAG'
-    startab['JERR'].name = 'JERR'
-    startab['HMAG'].name = 'HMAG'
-    startab['HERR'].name = 'HERR'
-    startab['KMAG'].name = 'KMAG'
-    startab['KERR'].name = 'KERR'    
-    startab['APTARG1'].name = 'APOGEE_TARGET1'
-    startab['APTARG2'].name = 'APOGEE_TARGET2'
-    startab['APTARG3'].name = 'APOGEE_TARGET3'
-    startab['AP2TARG1'].name = 'APOGEE2_TARGET1'
-    startab['AP2TARG2'].name = 'APOGEE2_TARGET2'
-    startab['AP2TARG3'].name = 'APOGEE2_TARGET3'
-    startab['AP2TARG4'].name = 'APOGEE2_TARGET4'
-    startab['SVAPTRG0'].name = 'SDSSV_APOGEE_TARGET0'
-    startab['FRSTCRTN'].name = 'FIRSTCARTON'
-    startab['CATID'].name = 'CATALOGID'
-    startab['PLX'].name = 'GAIADR2_PLX'
-    startab['EPLX'].name = 'GAIADR2_PLX_ERROR'
-    startab['PMRA'].name = 'GAIADR2_PMRA'
-    startab['EPMRA'].name = 'GAIADR2_PMRA_ERROR'
-    startab['PMDEC'].name = 'GAIADR2_PMDEC'
-    startab['EPMDEC'].name = 'GAIADR2_PMDEC_ERROR'
-    startab['GMAG'].name = 'GAIADR2_GMAG'
-    startab['GERR'].name = 'GAIADR2_GERR'
-    startab['BPMAG'].name = 'GAIADR2_BPMAG'
-    startab['BPERR'].name = 'GAIADR2_BPERR'
-    startab['RPMAG'].name = 'GAIADR2_RPMAG'
-    startab['RPERR'].name = 'GAIADR2_RPERR'
-    startab['N_COMP'].name = 'N_COMPONENTS'
-    startab['VHBARY'].name = 'VHELIOBARY'
-    # Add other columns
-    startab['TELESCOPE'] = allvisit['telescope'][0]
-    startab['FILE'] = os.path.basename(apstar.filename)
-    startab['URI'] = apstar.uri
     
+    # Load star table
     db.ingest('star',startab)   # load summary information into "star" table
     
 
     # Load visit RV information into "rv_visit" table
     #  get star_pk from "star" table
-    starout = db.query('star',where="apogee_id='"+startab['APOGEE_ID'][0]+"' and apred_vers='"+startab['APRED_VERS'][0]+"' "+\
-                       "and telescope='"+startab['TELESCOPE'][0]+"' and starver='"+startab['STARVER'][0]+"'")
-    allvisit['star_pk'] = starout['pk'][0]
-    # Remove some unnecessary columns (duplicates what's in visit table)
-    delcols = ['target_id','survey', 'field', 'programname', 'alt_id', 'location_id', 'glon','glat',
-               'jmag','jerr', 'herr', 'kmag', 'kerr', 'src_h','pmra', 'pmdec', 'pm_src','apogee_target1',
-               'apogee_target2', 'apogee_target3', 'apogee_target4',
-               'gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error','gaiadr2_pmdec',
-               'gaiadr2_pmdec_error','gaiadr2_gmag',
-               'gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr',
-               'sdssv_apogee_target0','firstcarton',
-               'targflags', 'starflag', 'starflags','created','rvtab']
-    for c in delcols:
-        if c in allvisit.dtype.names:
-            del allvisit[c]
-    # Rename columns
-    allvisit['pk'].name = 'visit_pk'
-    allvisit['starver'] = starout['starver'][0]
+    if starvisits is not None:
+        starout = db.query('star',where="apogee_id='"+startab['apogee_id'][0]+"' and apred_vers='"+startab['apred_vers'][0]+"' "+\
+                           "and telescope='"+startab['telescope'][0]+"' and starver='"+startab['starver'][0]+"'")
+        starvisits['star_pk'] = starout['pk'][0]
+        # Remove some unnecessary columns (duplicates what's in visit table)
+        delcols = ['target_id','objtype','survey', 'field', 'programname', 'alt_id', 'location_id', 'glon','glat',
+                   'jmag','jerr', 'herr', 'kmag', 'kerr', 'src_h','pmra', 'pmdec', 'pm_src','apogee_target1',
+                   'apogee_target2', 'apogee_target3', 'apogee_target4','gaiadr2_sourceid',
+                   'gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error','gaiadr2_pmdec',
+                   'gaiadr2_pmdec_error','gaiadr2_gmag',
+                   'gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr',
+                   'sdssv_apogee_target0','firstcarton',
+                   'targflags', 'starflag', 'starflags','created','rvtab']
+        for c in delcols:
+            if c in starvisits.dtype.names:
+                del starvisits[c]
+        # Rename columns
+        starvisits['pk'].name = 'visit_pk'
+        starvisits['starver'] = starout['starver'][0]
 
-    db.ingest('rv_visit',np.array(allvisit))   # Load the visit information into the table  
+        db.ingest('rv_visit',np.array(starvisits))   # Load the visit information into the table  
 
     # Close db session
     db.close()
