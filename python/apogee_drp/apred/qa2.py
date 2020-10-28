@@ -1293,9 +1293,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         else:
             hmagarr = Vsum['H']
         minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
+        xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
 
         minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
-        xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
         ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
         
         ax1.set_xlim(xmin,xmax)#;  ax1.set_ylim(ymin,ymax)
@@ -1310,9 +1310,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
         import pdb; pdb.set_trace()
         x = hmagarr[science];  y = Vsum['SNR'][science]
-        psci = ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='',label='science')
+        psci = ax1.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='', label='science')
         x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
-        ptel = ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='cyan', linestyle='', label='Telluric')
+        ptel = ax1.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='cyan', linestyle='', label='Telluric')
 
         #psci = ax1.scatter(hmagarr[science], Vsum['SNR'][science], marker='*', s=180, edgecolors='k', c='r', alpha=alpha, label='Science')
         #ptel = ax1.scatter(hmagarr[telluric], Vsum['SNR'][telluric], marker='o', s=60, edgecolors='k', c='cyan', alpha=alpha, label='Telluric')
