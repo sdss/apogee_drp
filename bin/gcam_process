@@ -78,6 +78,7 @@ def gproc(mjd=None, instrument=None, outfile=None):
     for file in sorted(files):
         if(file.startswith('proc-')):
             indx_search = re.search("proc-gimg-([0-9]{4}).fits", file)
+            import pdb; pdb.set_trace()
             indx = np.int32(indx_search.group(1))
             header = fitsio.read_header(os.path.join(gdir, file), ext=0)
             if('object' in header['IMAGETYP']):
@@ -141,3 +142,4 @@ if __name__ == "__main__":
                         required=False, help="output file name")
     args = parser.parse_args()
     gproc(mjd=args.mjd, instrument=args.instrument, outfile=args.output) 
+
