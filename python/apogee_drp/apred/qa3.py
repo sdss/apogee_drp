@@ -824,7 +824,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     
     ax1.set_xlim(xmin,xmax)#;  ax1.set_ylim(ymin,ymax)
 
-    if 'apogee' in survey.lowercase():
+    if 'apogee' in survey.lower():
         telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
         science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
                             (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
