@@ -815,7 +815,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     ax1.minorticks_on()
     ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
     ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
-    ax1.tick_params(axis='both',which='both',direction='in')
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
 
     if 'HMAG' in Vsum.columns.names:
         hmagarr = Vsum['HMAG']
