@@ -1307,6 +1307,7 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         science, = np.where((tmp['OBJTYPE'] != 'SPECTROPHOTO_STD') & (tmp['OBJTYPE'] != 'HOT_STD') & (tmp['OBJTYPE'] != 'SKY'))
         telluric = telluric[::-1];    science = science[::-1]
 
+        import pdb; pdb.set_trace()
         x = hmagarr[science];  y = Vsum['SNR'][science]
         psci = ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='',label='science')
         x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
