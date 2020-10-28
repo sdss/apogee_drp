@@ -1277,12 +1277,15 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 
 #            objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
             import pdb; pdb.set_trace()
-            targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], 
-                                            plSum2['TARGET2'][j], 
-                                            plSum2['TARGET3'][j], 
-                                            plSum2['TARGET4'][j], 
-                                            plSum2['SDSSV_APOGEE_TARGET0'][j], 
-                                            survey=survey)
+            if 'apogee' in survey:
+                targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], 
+                                                plSum2['TARGET2'][j], 
+                                                plSum2['TARGET3'][j], 
+                                                plSum2['TARGET4'][j], 
+                                                survey=survey)
+            else:
+                targflagtxt = bitmask.targflags(plSum2['SDSSV_APOGEE_TARGET0'][j], survey=survey)
+
             if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
             targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
             objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
