@@ -1221,7 +1221,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
-    cfile = open(plotsdir+pfile+'.csh','w')
+    cfile = open(plotsdir+platefile+'.csh','w')
     for j in range(nfiber):
         objhtml.write('<TR>\n')
 
