@@ -1336,8 +1336,8 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                     plt.close('all')
 
                 objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
-        objhtml.close()
-        cfile.close()
+    objhtml.close()
+    cfile.close()
 
     plt.ion()
 
