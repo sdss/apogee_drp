@@ -1359,15 +1359,16 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
             if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
                 print("Problem with fiber "+cfib+". Not Plotting.")
             else:
-                ymx1 = np.nanmax(Flux[ymxsec1])
-                ymx2 = np.nanmax(Flux[ymxsec2])
-                ymx3 = np.nanmax(Flux[ymxsec3])
+                tmpF = convolve(f,Box1DKernel(11)
+                ymx1 = np.nanmax(tmpF[ymxsec1])
+                ymx2 = np.nanmax(tmpF[ymxsec2])
+                ymx3 = np.nanmax(tmpF[ymxsec3])
                 ymx = np.nanmax([ymx1,ymx2,ymx3])
                 ymin = 0
                 yspn = ymx-ymin
                 ymax = ymx + (yspn * 0.15)
                 # Establish Ymin
-                ymn = np.nanmin(Flux)
+                ymn = np.nanmin(tmpF)
                 if ymn > 0: 
                     yspn = ymx - ymn
                     ymin = ymn - (yspn * 0.15)
