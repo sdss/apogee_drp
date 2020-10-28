@@ -671,6 +671,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
                     html.write('<TD>'+str("%.3f" % round(pairstr['OLDSHIFT'][ipair][j],3))+'\n')
                     html.write('<TD>'+str("%.3f" % round(pairstr['SHIFT'][ipair][j],3))+'\n')
                     html.write('<TD>'+str("%.2f" % round(pairstr['SN'][ipair][j],2))+'\n')
+            html.write('</TABLE><BR>\n')
 #    else:
 #        # Table of combination parameters.
 #        html.write('<H3>Combination Parameters (undithered):</H3>\n')
