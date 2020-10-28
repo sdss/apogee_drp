@@ -83,7 +83,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
 
     # Get the star version number
     #  this is the largest MJD5 in the FULL list of visits
-    starver = str(np.max(int(allvisits['mjd'])))
+    starver = str(np.max(allvisits['mjd'].astype(int)))
     logger.info('Version='+starver)
     
     # Select good visit spectra
