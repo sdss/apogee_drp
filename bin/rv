@@ -45,6 +45,7 @@ if __name__ == '__main__' :
     parser.add_argument('-c','--clobber', action='store_true', help='Overwrite files?')
     parser.add_argument('-v','--verbose', action='store_true', help='Verbose output')
     parser.add_argument('-p','--plot', action='store_true', help='Make a plot')
+    parser.add_argument('-l','--list', action='store_true', help='Input is list of star names')
     args = parser.parse_args()
 
     logger = dln.basiclogger()
@@ -60,10 +61,34 @@ if __name__ == '__main__' :
     apred = args.apred[0]
     telescope = args.telescope[0]
 
-    # Run doppler_rv_star() for this star
-    rv.doppler_rv(star,apred,telescope,clobber=args.clobber,tweak=args.tweak,
-                  nres=args.nres,windows=args.windows,verbose=args.verbose,
-                  plot=args.plot,logger=logger)
+    # Input list of 
+    islist = args.list
+    if islist==True:
+        logger.info('Input list of star names')
+        inlist = star
+        stars = dln.readlines(inlist)
+        nstars = len(stars)
+        logger.info(str(nstars)+' names')
+        # Loop over stars
+        for i,star in enumerate(stars):
+            star = star.strip()
+            logger.info(' ')
+            logger.info(str(i+1)+' '+star)
+            logger.info('--------------------')
+            # Run doppler_rv_star() for this star
+            try:
+                rv.doppler_rv(star,apred,telescope,clobber=args.clobber,tweak=args.tweak,
+                              nres=args.nres,windows=args.windows,verbose=args.verbose,
+                              plot=args.plot,logger=logger)
+            except:
+                logger.exception('Error running Doppler on '+star)
+    
+    # Single star
+    else:
+        # Run doppler_rv_star() for this star
+        rv.doppler_rv(star,apred,telescope,clobber=args.clobber,tweak=args.tweak,
+                      nres=args.nres,windows=args.windows,verbose=args.verbose,
+                      plot=args.plot,logger=logger)
 
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))

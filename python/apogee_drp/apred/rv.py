@@ -12,6 +12,7 @@ import pickle
 import yaml
 from astropy.io import fits
 from ..utils import apload, applot, bitmask, spectra, norm, yanny
+from ..utils.apspec import ApSpec
 from ..database import apogeedb
 from holtztools import plots, html, match, struct
 from dlnpyutils import utils as dln
@@ -83,7 +84,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
 
     # Get the star version number
     #  this is the largest MJD5 in the FULL list of visits
-    starver = str(np.max(int(allvisits['mjd'])))
+    starver = str(np.max(allvisits['mjd'].astype(int)))
     logger.info('Version='+starver)
     
     # Select good visit spectra
@@ -123,7 +124,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         starvisits['vhelio'].name = 'vheliobary'
 
     # First rename old visit RV tags and initialize new ones
-    for col in ['vtype','vrel','vrelerr','vheliobary','bc','rv_teff','rv_logg','rv_feh']:
+    for col in ['vtype','vrel','vrelerr','vheliobary','bc','chisq','rv_teff','rv_logg','rv_feh']:
         if col == 'vtype':
             starvisits[col] = 0
         else:
@@ -143,7 +144,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     ncomponents = 0
     for i,(v,g) in enumerate(zip(dopvisitstr,gaussout)) :
         # Match by filename components in case there was an error reading in doppler
-        name = os.path.basename(v['filename']).replace('.fits','').split('-')
+        name = os.path.basename(v['filename'])
         if telescope == 'apo1m':
             vind, = np.where( np.char.strip(starvisits['file']).astype(str) == os.path.basename(v['filename'].strip()) )
             if len(vind) == 0:
@@ -151,9 +152,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
                 vind, = np.where( np.char.strip(starvisits['file']).astype(str) == 
                                    os.path.basename(v['filename'].strip()).replace('-r13-','-r12-') )
         else:
-            vind, = np.where( (np.char.strip(starvisits['plate']).astype(str) == name[-3]) &
-                               (starvisits['mjd'] == int(name[-2])) &
-                               (starvisits['fiberid'] == int(name[-1])) )
+            vind, = np.where( starvisits['file']==name )
         if len(vind) > 0:
             vind = vind[0]
         else:
@@ -166,6 +165,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         starvisits[vind]['xcorr_vrelerr'] = v['xcorr_vrelerr']
         starvisits[vind]['xcorr_vheliobary'] = v['xcorr_vhelio']
         starvisits[vind]['bc'] = v['bc']
+        starvisits[vind]['chisq'] = v['chisq']
         starvisits[vind]['rv_teff'] = v['teff']
         starvisits[vind]['rv_logg'] = v['logg']
         starvisits[vind]['rv_feh'] = v['feh']
@@ -206,8 +206,8 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         raise
 
     # Load information into the database
-    apstar.header['MJDBEG'] = (np.max(int(allvisits['mjd'])), 'Beginning MJD')
-    apstar.header['MJDEND'] = (np.max(int(allvisits['mjd'])), 'Ending MJD')
+    apstar.header['MJDBEG'] = (np.max(allvisits['mjd'].astype(int)), 'Beginning MJD')
+    apstar.header['MJDEND'] = (np.max(allvisits['mjd'].astype(int)), 'Ending MJD')
     dbingest(apstar,starvisits[visits[gdrv]])
 
     return
@@ -763,12 +763,21 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         #apstar.header['HJD{:d}'.format(i)] = 
         apstar.header['FIBER{:d}'.format(i)] = (visit['fiberid'],' Fiber, visit {:d}'.format(i))
         apstar.header['BC{:d}'.format(i)] = (visit['bc'],' Barycentric correction (km/s), visit {:d}'.format(i))
+        apstar.header['CHISQ{:d}'.format(i)] = (visit['chisq'],' Chi-squared fit of Cannon model, visit {:d}'.format(i))
         apstar.header['VRAD{:d}'.format(i)] = (visit['vrel'],' Doppler shift (km/s) of visit {:d}'.format(i))
         #apstar.header['VERR%d'.format(i)] = 
         apstar.header['VHBARY{:d}'.format(i)] = (visit['vheliobary'],' Barycentric velocity (km/s), visit {:d}'.format(i))
         apstar.header['SNRVIS{:d}'.format(i)] = (visit['snr'],' Signal/Noise ratio, visit {:d}'.format(i))
         apstar.header['FLAG{:d}'.format(i)] = (visit['starflag'],' STARFLAG for visit {:d}'.format(i))
         apstar.header.insert('SFILE{:d}'.format(i),('COMMENT','VISIT {:d} INFORMATION'.format(i)))
+
+    # Fix any NaNs in the header, astropy doesn't allow them
+    for k in apstar.header.keys():
+        if (k!='HISTORY') and (k!='COMMENT') and (k!='SIMPLE'):
+            val = apstar.header.get(k)
+            if np.issubdtype(type(val),np.number):
+                if np.isnan(val)==True:
+                    apstar.header[k] = 'NaN'   # change to string
 
     # Do a RV fit just to get a template and normalized spectrum, for plotting
     if dorvfit:

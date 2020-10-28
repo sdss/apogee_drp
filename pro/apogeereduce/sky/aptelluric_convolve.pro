@@ -246,7 +246,6 @@ if keyword_set(clobber) or (not file_test(outfile[2])) then begin
   file_delete,lockfile
 endif
 
-
 ; now get the convolved telluric at the desired wavelengths for this frame
 ; these will be returned in a chip-concatenated array
 

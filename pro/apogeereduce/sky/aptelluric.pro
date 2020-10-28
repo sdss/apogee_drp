@@ -789,7 +789,6 @@ for i=0,nfibers-1 do begin
   ; sig_final^2 = f^2 * ( (sig_orig/orig)^2 + (sig_telluric/telluric)^2 )
   ferrspec = (spec2>1) * sqrt( (errspec/(spec>1))^2 + (telnorm_error/telnorm)^2 )
 
-
   ; Put in OUTFRAME
   ;---------------------
   ;  The planes are: [spec, wave, error, flag, sky, errsky, telluric, error_telluric]

@@ -415,6 +415,7 @@ FOR i=0L,nplanfiles-1 do begin
       endif
       apgundef,frame_skysub  ; free up memory
       writelog,logfile,'  telluric '+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
+
       ;-----------------------
       ; Output apCframe files
       ;-----------------------
@@ -490,7 +491,6 @@ FOR i=0L,nplanfiles-1 do begin
     apgundef,frame_telluric  ; free up memory
 
     BOMB1:
-
 
   ENDFOR  ; frame loop
 

@@ -32,6 +32,38 @@ def loadcaltype(lines,caltype,dt):
             cat[n][i] = dum[j+1]
    return cat
 
+def getnums(numlist):
+   """
+   parses a string with file names into array of file numbers
+       aaa-bbb      parses to list of numbers bewteen aaa and bbb (e.g., for consecutive frames)
+       aaa,bbb,ccc  parses to list of aaa bbb ccc (e.g. for non-consecutive frames)
+       aaa          parses to aaa (e.g., for single frames)
+   """
+
+   if numlist is None:
+      return numlist
+
+   if type(numlist) is not str:
+      if np.array(numlist).ndim==1:
+         numlist = numlist[0]
+
+   nums = []
+   if numlist.find(',')>-1:
+      names = numlist.split(',')
+   else:
+      names = numlist
+   # Loop over comma-separated list
+   for i in range(len(names)):
+      if names[i].find('-')>-1:
+         els = names[i].split('-')
+         ims = np.arange(int(els[0]),int(els[1])+1).tolist()
+      else:
+         ims = [int(names[i])]
+      nums += ims
+
+   return nums
+
+
 def readcal(calfile):
     """
     This reads all of the information from a master calibration index and returns
@@ -79,7 +111,7 @@ def readcal(calfile):
     #  mjd1, mjd2, frames
     #  badfiber   55600 57008   0
     #  badfiber   57009 57177   195
-    dtdict['badfiber'] = np.dtype([('mjd1',int),('mjd2',int),('frames',np.str,100)])
+    dtdict['badfiber'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,100)])
     # -- Fixfiber --
     #  mjd1, mjd2, name
     #  fixfiber   56764 56773   1
@@ -178,6 +210,8 @@ def getcal(calfile,mjd):
     caldict = OrderedDict()
     for caltype in allcaldict.keys():
        val = parsecaldict(allcaldict[caltype],mjd)
+       if (caltype=='fixfiber') or (caltype=='badfiber'):
+          val = getnums(val)  # expand list
        if type(val) is np.ndarray:
           if len(val)==1: val=val[0]
        caldict[caltype] = val

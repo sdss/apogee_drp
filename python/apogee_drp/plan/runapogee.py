@@ -402,13 +402,12 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
     #   Get more info by joining with the visit table.
     vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
-             'field', 'programname', 'alt_id', 'location_id', 'ra', 'dec', 'glon', 'glat', 'j', 'j_err', 'h',
-             'h_err', 'k', 'k_err', 'src_h', 'wash_m', 'wash_m_err', 'wash_t2', 'wash_t2_err', 'ddo51',
-             'ddo51_err', 'irac_3_6', 'irac_3_6_err', 'irac_4_5', 'irac_4_5_err', 'irac_5_8', 'irac_5_8_err',
-             'irac_8_0', 'irac_8_0_err', 'wise_4_5', 'wise_4_5_err', 'targ_4_5', 'targ_4_5_err',
-             'wash_ddo51_giant_flag', 'wash_ddo51_star_flag', 'pmra', 'pmdec', 'pm_src', 'ak_targ',
-             'ak_targ_method', 'ak_wise', 'sfd_ebv', 'apogee_target1', 'apogee_target2', 'apogee_target3',
-             'apogee_target4', 'targflags', 'snr', 'starflag', 'starflags','dateobs','jd']
+             'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
+             'apogee_target4', 'catalogid', 'gaiadr2_plx', 'gaiadr2_plx_error', 'gaiadr2_pmra', 'gaiadr2_pmra_error',
+             'gaiadr2_pmdec', 'gaiadr2_pmdec_error', 'gaiadr2_gmag', 'gaiadr2_gerr', 'gaiadr2_bpmag', 'gaiadr2_bperr',
+             'gaiadr2_rpmag', 'gaiadr2_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
+             'starflags','dateobs','jd']
     rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
     cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
@@ -420,6 +419,7 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     logger.info('Writing allVisit file to '+allvisitfile)
     if os.path.exists(os.path.dirname(allvisitfile))==False:
         os.makedirs(os.path.dirname(allvisitfile))
+    import pdb; pdb.set_trace()
     Table(allvisit).write(allvisitfile,overwrite=True)
 
     # Nightly allVisit and allStar, allVisitMJD/allStarMJD
@@ -454,16 +454,16 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
     message = 'Daily APOGEE Reduction %s %s\n' % (observatory,mjd5)
     # Exposure status
     indexp, = np.where(chkexp['success']==True)
-    message += '%d/%d exposures successfully processed\n' % (len(indexp),len(chkexp)))
+    message += '%d/%d exposures successfully processed\n' % (len(indexp),len(chkexp))
     # Visit status
     indvisit, np.where(chkvisit['success']==True)
-    message += '%d/%d visits successfully processed\n' % (len(indvisit),lend(chkvisit)))
+    message += '%d/%d visits successfully processed\n' % (len(indvisit),lend(chkvisit))
     #for i in range(len(chkvisit)):
     #    message.append()
 
     # RV status
     indrv, = np.where(chkrv['success']==True)
-    message += '%d/%d RV+visit combination successfully processed' % (len(indrv),lend(chkrv)))
+    message += '%d/%d RV+visit combination successfully processed' % (len(indrv),lend(chkrv))
 
     # Send the message
     email.send(address,subject,message,logfiles)
@@ -561,22 +561,23 @@ def run_daily(observatory,mjd5=None,apred=None):
     db.ingest('daily_status',daycat)
 
 
-    # Run APRED on all planfiles using "pbs" package
-    #------------------------------------------------
-    rootLogger.info('')
-    rootLogger.info('--------------')
-    rootLogger.info('Running APRED')
-    rootLogger.info('==============')
-    rootLogger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
-    for pf in planfiles:
-        queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
-    queue.commit(hard=True,submit=True)
-    rootLogger.info('PBS key is '+queue.key)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-    chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
-    del queue
+    ## Run APRED on all planfiles using "pbs" package
+    ##------------------------------------------------
+    #rootLogger.info('')
+    #rootLogger.info('--------------')
+    #rootLogger.info('Running APRED')
+    #rootLogger.info('==============')
+    #rootLogger.info('')
+    #queue = pbsqueue(verbose=True)
+    #queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
+    #for pf in planfiles:
+    #    queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
+    #queue.commit(hard=True,submit=True)
+    #rootLogger.info('PBS key is '+queue.key)
+    #queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
+    #chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
+    chkexp,chkvisit = check_apred(expinfo,planfiles,'None',verbose=True,logger=rootLogger)
+    #del queue
 
     #import pdb;pdb.set_trace()
 
@@ -597,7 +598,8 @@ def run_daily(observatory,mjd5=None,apred=None):
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
             if os.path.exists(outdir)==False:
                 os.makedirs(outdir)
-            queue.append('rv %s %s %s' % (obj,apred,telescope),outfile=apstarfile.replace('.fits','_pbs.log'),
+            # Run with --verbose and --clobber set
+            queue.append('rv %s %s %s -c -v' % (obj,apred,telescope),outfile=apstarfile.replace('.fits','_pbs.log'),
                          errfile=apstarfile.replace('.fits','_pbs.err'))
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)        
@@ -615,6 +617,8 @@ def run_daily(observatory,mjd5=None,apred=None):
     #queue.commit(hard=True,submit=True)
     #queue_wait(queue)  # wait for jobs to complete
     #del queue
+
+    import pdb; pdb.set_trace()
 
     # Create daily and full allVisit/allStar files
     create_sumfiles(mjd5,apred,telescope)
@@ -636,7 +640,7 @@ def run_daily(observatory,mjd5=None,apred=None):
     daycat['pk'] = dayout['pk'][0]
     db.update('daily_status',daycat)
 
-    #import pdb;pdb.set_trace()
+    import pdb;pdb.set_trace()
 
     rootLogger.info('Daily APOGEE reduction finished for MJD=%d and observatory=%s' % (mjd5,observatory))
 
