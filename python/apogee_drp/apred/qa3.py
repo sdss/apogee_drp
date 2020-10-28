@@ -1283,7 +1283,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                                             plSum2['TARGET4'][j], 
                                             survey=survey)
         else:
-            print("PROBLEM!!! Need to update bitmask.py to handle SDSSV_APOGEE_TARGET0.")
+            if j == 0: print("PROBLEM!!! Need to update bitmask.py to handle SDSSV_APOGEE_TARGET0.")
             targflagtxt = 'to be added ASAP'
             #targflagtxt = bitmask.targflags(plSum2['SDSSV_APOGEE_TARGET0'][j], survey=survey)
 
