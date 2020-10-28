@@ -688,7 +688,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('<TABLE BORDER=2>\n')
     html.write('<BR>\n')
     html.write('<H3>Individual Exposure QA Plots:</H3>\n')
-    html.write('<p> Note: in the Mag plots, color gives deviation of observed mag from expected 2MASS mag using the median zeropoint.</p>\n')
+    html.write('<p> Note: in the Spatial mag deviation plots, color gives deviation of observed mag from expected 2MASS mag using the median zeropoint.</p>\n')
     html.write('<TR bgcolor=lightgreen><TH>Frame<TH>Zeropoints<TH>Mag plots\n')
     html.write('<TH>Spatial mag deviation\n')
     html.write('<TH>Spatial sky telluric CH4\n')
