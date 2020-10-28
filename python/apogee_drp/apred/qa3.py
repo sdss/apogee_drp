@@ -1278,7 +1278,12 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                     objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
 
 #            objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
-            targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], plSum2['TARGET2'][j], plSum2['TARGET3'][j], plSum2['TARGET4'][j], survey=survey)
+            targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], 
+                                            plSum2['TARGET2'][j], 
+                                            plSum2['TARGET3'][j], 
+                                            plSum2['TARGET4'][j], 
+                                            plSum2['SDSSV_APOGEE_TARGET0'][j], 
+                                            survey=survey)
             if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
             targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
             objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
@@ -1291,66 +1296,66 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                     objhtml.write('<BR><BR>'+starflagtxt+'\n')
 
             # Spectrum Plots
-            if j > -1:
-                plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfib+'.png'
-                if makeSpectrumPlots is True:
-                    print("Making "+plotfile)
+#            if j > -1:
+            plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfib+'.png'
+            if makeSpectrumPlots is True:
+                print("Making "+plotfile)
 
-                    lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                    xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
+                lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
-                    FluxB = apPlate['a'][1].data[299-j,:]
-                    FluxG = apPlate['b'][1].data[299-j,:]
-                    FluxR = apPlate['c'][1].data[299-j,:]
-                    WaveB = apPlate['a'][4].data[299-j,:]
-                    WaveG = apPlate['b'][4].data[299-j,:]
-                    WaveR = apPlate['c'][4].data[299-j,:]
+                FluxB = apPlate['a'][1].data[299-j,:]
+                FluxG = apPlate['b'][1].data[299-j,:]
+                FluxR = apPlate['c'][1].data[299-j,:]
+                WaveB = apPlate['a'][4].data[299-j,:]
+                WaveG = apPlate['b'][4].data[299-j,:]
+                WaveR = apPlate['c'][4].data[299-j,:]
 
-                    Flux = np.concatenate([FluxB, FluxG, FluxR])
-                    Wave = np.concatenate([WaveB, WaveG, WaveR])
+                Flux = np.concatenate([FluxB, FluxG, FluxR])
+                Wave = np.concatenate([WaveB, WaveG, WaveR])
 
-                    # Establish Ymax
-                    ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
-                    ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
-                    ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
-                    if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
-                        print("Problem with fiber "+cfib+". Not Plotting.")
-                    else:
-                        ymx1 = np.nanmax(Flux[ymxsec1])
-                        ymx2 = np.nanmax(Flux[ymxsec2])
-                        ymx3 = np.nanmax(Flux[ymxsec3])
-                        ymx = np.nanmax([ymx1,ymx2,ymx3])
-                        ymin = 0
-                        yspn = ymx-ymin
+                # Establish Ymax
+                ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
+                ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
+                ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
+                if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
+                    print("Problem with fiber "+cfib+". Not Plotting.")
+                else:
+                    ymx1 = np.nanmax(Flux[ymxsec1])
+                    ymx2 = np.nanmax(Flux[ymxsec2])
+                    ymx3 = np.nanmax(Flux[ymxsec3])
+                    ymx = np.nanmax([ymx1,ymx2,ymx3])
+                    ymin = 0
+                    yspn = ymx-ymin
+                    ymax = ymx + (yspn * 0.15)
+                    # Establish Ymin
+                    ymn = np.nanmin(Flux)
+                    if ymn > 0: 
+                        yspn = ymx - ymn
+                        ymin = ymn - (yspn * 0.15)
                         ymax = ymx + (yspn * 0.15)
-                        # Establish Ymin
-                        ymn = np.nanmin(Flux)
-                        if ymn > 0: 
-                            yspn = ymx - ymn
-                            ymin = ymn - (yspn * 0.15)
-                            ymax = ymx + (yspn * 0.15)
 
-                        fig=plt.figure(figsize=(28,6))
-                        ax1 = plt.subplot2grid((1,1), (0,0))
-                        ax1.tick_params(reset=True)
-                        ax1.set_xlim(xmin,xmax)
-                        ax1.set_ylim(ymin,ymax)
-                        ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
-                        ax1.minorticks_on()
-                        ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
-                        ax1.set_ylabel(r'Flux')
+                    fig=plt.figure(figsize=(28,6))
+                    ax1 = plt.subplot2grid((1,1), (0,0))
+                    ax1.tick_params(reset=True)
+                    ax1.set_xlim(xmin,xmax)
+                    ax1.set_ylim(ymin,ymax)
+                    ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
+                    ax1.minorticks_on()
+                    ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
+                    ax1.set_ylabel(r'Flux')
 
-                        color = 'k'
-                        if plSum2['OBJTYPE'][j] == 'SKY': color = 'firebrick'
-                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=color)
-                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=color)
-                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=color)
+                    color = 'k'
+                    if plSum2['OBJTYPE'][j] == 'SKY': color = 'firebrick'
+                    ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=color)
+                    ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=color)
+                    ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=color)
 
-                        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
-                        plt.savefig(plotsdir+plotfile)
-                    plt.close('all')
+                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                    plt.savefig(plotsdir+plotfile)
+                plt.close('all')
 
-                objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
+            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
     objhtml.close()
     cfile.close()
 
