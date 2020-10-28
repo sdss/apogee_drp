@@ -1214,15 +1214,9 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
     objhtml.write('<BODY>\n')
 
-    if ims[0] != 0:
-        objhtml.write('<H2>'+pfile+'</H2>\n')
-        for chip in chips: 
-            objhtml.write('<A HREF=../'+apPlate[chip].filename()+'>'+apPlate[chip].filename()+'</A>\n')
-    else:
-        objhtml.write('<H2>apPlate-'+platefile+'</H2>\n')
-        if makeplots is not None:
-            objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
-            objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
+    objhtml.write('<H2>apPlate-'+platefile+'</H2>\n')
+    #objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
+    #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
 
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     objhtml.write('<TR><TH>Fib<TH>APOGEE ID<TH>H<TH>H<BR>-<BR>obs<TH>S/N<TH>Targ<BR>Type<TH>Target & data flags<TH>Spectrum Plot\n')
