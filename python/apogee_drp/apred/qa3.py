@@ -156,9 +156,10 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
 
-    print("--------------------------------------------------------------------")
-    print("Running MAKEPLATESUM for plate "+plate+", mjd "+mjd)
-    print("--------------------------------------------------------------------\n")
+    platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+    platesumbase = os.path.basename(platesumfile)
+
+    print("Making "+platesumbase+" ...")
 
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
@@ -240,13 +241,18 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     moondist = sep.deg
     moonphase = moon_illumination(tt)
 
-    # Get guider information.
+    # Get guider information. (skipping for now because errors)
     if onem is None:
-        expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
-        gcamfile = expdir+mjd+'/gcam-'+mjd+'.fits'
-        print(gcamfile)
+        gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
+        if os.path.exists(gcamdir) is False: subprocess.call(['mkdir',gcamdir])
+        gcamfile = gcamdir+'gcam-'+mjd+'.fits'
         if os.path.exists(gcamfile) is False:
+            print("  Attempting to make "+os.path.basename(gcamfile)+" ...")
             subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--output', gcamfile], shell=False)
+            if os.path.exists(gcamfile):
+                print("  Successfully made "+os.path.basename(gcamfile))
+            else:
+                print("  ... failed to make "+os.path.basename(gcamfile)+"  :(")
         else:
             gcam = fits.getdata(gcamfile)
 
@@ -474,13 +480,18 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         # Summary information in apPlateSum FITS file.
         if ims[0] != 0:
             tellfile = load.filename('Tellstar', plate=int(plate), mjd=mjd)
-            telstr = fits.getdata(tellfile)
-            if isinstance(telstr, fits.FITS_rec):
-                jtell, = np.where(telstr['IM'] == ims[i])
-                ntell = len(jtell)
-                if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
+            if os.path.exists(tellfile):
+                try:
+                    telstr = fits.getdata(tellfile)
+                except:
+                    print("PROBLEM!!! Error reading apTellstar file: "+os.path.basename(tellfile))
+                else:
+                    telstr = fits.getdata(tellfile)
+                    jtell, = np.where(telstr['IM'] == ims[i])
+                    ntell = len(jtell)
+                    if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
             else:
-                print("Error reading Tellstar file: "+tellfile)
+                print("PROBLEM!!! "+os.path.basename(tellfile)+" does not exist.")
 
         platetab['IM'][i] =        ims[i]
         platetab['NREADS'][i] =    nreads
@@ -511,12 +522,9 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     # write out the FITS table.
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-    if (clobber is True) & (os.path.exists(platesum) is True):
-        subprocess.call(['rm', platesum])
     if ims[0] != 0:
         ### NOTE:the only different between below if statement is that if ims is none, /create is not set in mwrfits
         # ... not sure if we care.
-
         Table(platetab).write(platesum, overwrite=True)
         hdulist = fits.open(platesum)
         hdu = fits.table_to_hdu(Table(fiber))
