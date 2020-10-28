@@ -144,7 +144,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     ncomponents = 0
     for i,(v,g) in enumerate(zip(dopvisitstr,gaussout)) :
         # Match by filename components in case there was an error reading in doppler
-        name = os.path.basename(v['filename']).replace('.fits','').split('-')
+        name = os.path.basename(v['filename'])
         if telescope == 'apo1m':
             vind, = np.where( np.char.strip(starvisits['file']).astype(str) == os.path.basename(v['filename'].strip()) )
             if len(vind) == 0:
@@ -152,9 +152,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
                 vind, = np.where( np.char.strip(starvisits['file']).astype(str) == 
                                    os.path.basename(v['filename'].strip()).replace('-r13-','-r12-') )
         else:
-            vind, = np.where( (np.char.strip(starvisits['plate']).astype(str) == name[-3]) &
-                               (starvisits['mjd'] == int(name[-2])) &
-                               (starvisits['fiberid'] == int(name[-1])) )
+            vind, = np.where( starvisits['file']==name )
         if len(vind) > 0:
             vind = vind[0]
         else:
