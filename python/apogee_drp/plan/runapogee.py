@@ -454,16 +454,16 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
     message = 'Daily APOGEE Reduction %s %s\n' % (observatory,mjd5)
     # Exposure status
     indexp, = np.where(chkexp['success']==True)
-    message += '%d/%d exposures successfully processed\n' % (len(indexp),len(chkexp)))
+    message += '%d/%d exposures successfully processed\n' % (len(indexp),len(chkexp))
     # Visit status
     indvisit, np.where(chkvisit['success']==True)
-    message += '%d/%d visits successfully processed\n' % (len(indvisit),lend(chkvisit)))
+    message += '%d/%d visits successfully processed\n' % (len(indvisit),lend(chkvisit))
     #for i in range(len(chkvisit)):
     #    message.append()
 
     # RV status
     indrv, = np.where(chkrv['success']==True)
-    message += '%d/%d RV+visit combination successfully processed' % (len(indrv),lend(chkrv)))
+    message += '%d/%d RV+visit combination successfully processed' % (len(indrv),lend(chkrv))
 
     # Send the message
     email.send(address,subject,message,logfiles)
@@ -561,22 +561,23 @@ def run_daily(observatory,mjd5=None,apred=None):
     db.ingest('daily_status',daycat)
 
 
-    # Run APRED on all planfiles using "pbs" package
-    #------------------------------------------------
-    rootLogger.info('')
-    rootLogger.info('--------------')
-    rootLogger.info('Running APRED')
-    rootLogger.info('==============')
-    rootLogger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
-    for pf in planfiles:
-        queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
-    queue.commit(hard=True,submit=True)
-    rootLogger.info('PBS key is '+queue.key)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-    chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
-    del queue
+    ## Run APRED on all planfiles using "pbs" package
+    ##------------------------------------------------
+    #rootLogger.info('')
+    #rootLogger.info('--------------')
+    #rootLogger.info('Running APRED')
+    #rootLogger.info('==============')
+    #rootLogger.info('')
+    #queue = pbsqueue(verbose=True)
+    #queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
+    #for pf in planfiles:
+    #    queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
+    #queue.commit(hard=True,submit=True)
+    #rootLogger.info('PBS key is '+queue.key)
+    #queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
+    #chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
+    chkexp,chkvisit = check_apred(expinfo,planfiles,'None',verbose=True,logger=rootLogger)
+    #del queue
 
     #import pdb;pdb.set_trace()
 
@@ -615,6 +616,8 @@ def run_daily(observatory,mjd5=None,apred=None):
     #queue.commit(hard=True,submit=True)
     #queue_wait(queue)  # wait for jobs to complete
     #del queue
+
+    import pdb; pdb.set_trace()
 
     # Create daily and full allVisit/allStar files
     create_sumfiles(mjd5,apred,telescope)
