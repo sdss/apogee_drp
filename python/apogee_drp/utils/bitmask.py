@@ -440,7 +440,7 @@ def targflags(targ1,targ2,targ3,targ4,survey='apogee2') :
 
     survey=survey.lower()
 
-    if ('mwm' in survey) | ('sdssv' in survey) | ('sdss-v' in survey):
+    if ('mwm' in survey) | ('sdssv' in survey) | ('sdss-v' in survey) | ('sdss5' in survey):
         mask1=SdssvApogeeTarget0()
         return ','.join([mask1.getname(targ1)]).strip(',')
     else:
