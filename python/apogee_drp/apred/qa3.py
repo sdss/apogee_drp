@@ -944,12 +944,6 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
 
-    telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
-    ntelluric = len(telluric)
-    science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
-    nscience = len(science)
-    sky, = np.where(plSum2['OBJTYPE'] == 'SKY')
-    nsky = len(sky)
     # Loop over the exposures to make other plots.
     for i in range(n_exposures):
         #------------------------------------------------------------------------------------------
@@ -1041,9 +1035,12 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
         ptel = ax1.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
-        x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
-        c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
-        psky = ax1.scatter(x, y, marker='s', s=100, c='white', edgecolors='k', alpha=1, label='Sky')
+        try:
+            x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
+            c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
+            psky = ax1.scatter(x, y, marker='s', s=100, c='white', edgecolors='k', alpha=1, label='Sky')
+        except:
+            print("PROBLEM!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
 
         ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
