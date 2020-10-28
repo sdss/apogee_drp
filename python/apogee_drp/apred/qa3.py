@@ -303,26 +303,24 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     # Loop over the exposures.
     for i in range(n_exposures):
-        if ims[0] == 0: pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-        if ims[0] != 0: pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
-        pfile = pfile.replace('.fits','')
-
-        if ims[0] == 0: d = load.apPlate(int(plate), mjd) 
-        if ims[0] != 0: d = load.ap1D(ims[i])
-
-        dhdr = d['a'][0].header
-
-        if type(d)!=dict:
-            if ims[0] == 0:  print("Problem with apPlate!!!")
-            if ims[0] != 0: print("Problem with ap1D!!!")
-
         cframe = None
-        if ims[0] == 0: cframe = load.apPlate(int(plate), mjd)
+
+        if ims[0] == 0: 
+            pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
+            d = load.apPlate(int(plate), mjd) 
+            if type(d)!=dict: print("Problem with apPlate!!!")
+            cframe = load.apPlate(int(plate), mjd)
+
         if ims[0] != 0:
+            pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
+            d = load.ap1D(ims[i])
+            if type(d)!=dict: print("Problem with ap1D!!!")
             cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
             cframefile = cframefile.replace('apCframe-','apCframe-c-')
             if os.path.exists(cframefile): cframe = load.apCframe(field, int(plate), mjd, ims[i])
 
+        pfile = pfile.replace('.fits','')
+        dhdr = d['a'][0].header
         cframehdr = cframe['a'][0].header
 
         obs = np.zeros((nfiber,nchips), dtype=np.float64)
@@ -538,9 +536,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     if ims[0] == 0:
         hdulist = fits.open(platesum)
         hdu1 = fits.table_to_hdu(Table(platetab))
-        hdu2 = fits.table_to_hdu(Table(fiber))
         hdulist.append(hdu1)
-        hdulist.append(hdu2)
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 #;        mwrfits,platetab,platesum
@@ -1205,8 +1201,8 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 #        fiber['hmag'] = 12
 #        fiber['object'] = 'FLAT'
 
-    pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-    pfile = pfile.replace('.fits','')
+    platefile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
+    pfile = platefile.replace('.fits','')
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     objhtml = open(htmldir+pfile+'.html','w')
@@ -1221,7 +1217,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
-    cfile = open(plotsdir+platefile+'.csh','w')
+    cfile = open(plotsdir+pfile+'.csh','w')
     for j in range(nfiber):
         objhtml.write('<TR>\n')
 
