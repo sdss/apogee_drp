@@ -1179,6 +1179,9 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     plt.ioff()
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    axwidth=1.5
+    axmajlen=7
+    axminlen=3.5
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
