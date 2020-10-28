@@ -714,7 +714,6 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
         # Loop over the chips
         for chip in range(3) :
-
             # Get the pixel values to interpolate to
             pix = wave.wave2pix(w,apvisit.wave[chip,:])
             gd, = np.where(np.isfinite(pix))
@@ -1030,14 +1029,15 @@ def dbingest(startab,starvisits):
                    'gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr',
                    'sdssv_apogee_target0','firstcarton',
                    'targflags', 'starflag', 'starflags','created','rvtab']
+        visits = starvisits.copy()  # make a local copy
         for c in delcols:
-            if c in starvisits.dtype.names:
-                del starvisits[c]
+            if c in visits.dtype.names:
+                del visits[c]
         # Rename columns
-        starvisits['pk'].name = 'visit_pk'
-        starvisits['starver'] = starout['starver'][0]
+        visits['pk'].name = 'visit_pk'
+        visits['starver'] = starout['starver'][0]
 
-        db.ingest('rv_visit',np.array(starvisits))   # Load the visit information into the table  
+        db.ingest('rv_visit',np.array(visits))   # Load the visit information into the table  
 
     # Close db session
     db.close()
