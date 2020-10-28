@@ -618,7 +618,7 @@ FOR i=0L,nplanfiles-1 do begin
     endif
 
     visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',mjd:0L,telescope:'',$
-                survey:'',field:'',programname:'',$
+                survey:'',field:'',programname:'',objtype:'',$
                 ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
                 jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
                 pmra:0.0,pmdec:0.0,pm_src:'',$
