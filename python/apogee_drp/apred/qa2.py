@@ -1290,24 +1290,24 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
 
         if 'HMAG' in Vsum.columns.names:
             hmagarr = Vsum['HMAG']
-            minH = np.nanmin(hmagarr);  maxH = np.nanmax(hmagarr);  spanH = maxH - minH
         else:
             hmagarr = Vsum['H']
-            minH = np.nanmin(hmagarr);  maxH = np.nanmax(hmagarr);  spanH = maxH - minH
-        minSNR = np.nanmin(Vsum['SNR']);  maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
-        xmin = minH - spanH * 0.05;       xmax = maxH + spanH * 0.05
-        ymin = -5;                         ymax = maxSNR + ((maxSNR - ymin) * 0.05)
+        minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
+
+        minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
+        xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
+        ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
         
         ax1.set_xlim(xmin,xmax)#;  ax1.set_ylim(ymin,ymax)
 
-        gd, = np.where(platesum2['HMAG']<50)
-        tmp = platesum2[gd]
+        telluric, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1)) | 
+                             (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9)))
 
-        telluric, = np.where((tmp['OBJTYPE'] == 'SPECTROPHOTO_STD') | (tmp['OBJTYPE'] == 'HOT_STD'))
-        science, = np.where((tmp['OBJTYPE'] != 'SPECTROPHOTO_STD') & (tmp['OBJTYPE'] != 'HOT_STD') & (tmp['OBJTYPE'] != 'SKY'))
-        telluric = telluric[::-1];    science = science[::-1]
+        science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) | 
+                            (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0) | 
+                            (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) | 
+                            (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
 
-        import pdb; pdb.set_trace()
         x = hmagarr[science];  y = Vsum['SNR'][science]
         psci = ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='',label='science')
         x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
