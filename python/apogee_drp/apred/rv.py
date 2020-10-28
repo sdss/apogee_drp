@@ -12,6 +12,7 @@ import pickle
 import yaml
 from astropy.io import fits
 from ..utils import apload, applot, bitmask, spectra, norm, yanny
+from ..utils.apspec import ApSpec
 from ..database import apogeedb
 from holtztools import plots, html, match, struct
 from dlnpyutils import utils as dln
@@ -206,8 +207,8 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
         raise
 
     # Load information into the database
-    apstar.header['MJDBEG'] = (np.max(int(allvisits['mjd'])), 'Beginning MJD')
-    apstar.header['MJDEND'] = (np.max(int(allvisits['mjd'])), 'Ending MJD')
+    apstar.header['MJDBEG'] = (np.max(allvisits['mjd'].astype(int)), 'Beginning MJD')
+    apstar.header['MJDEND'] = (np.max(allvisits['mjd'].astype(int)), 'Ending MJD')
     dbingest(apstar,starvisits[visits[gdrv]])
 
     return
@@ -769,6 +770,14 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         apstar.header['SNRVIS{:d}'.format(i)] = (visit['snr'],' Signal/Noise ratio, visit {:d}'.format(i))
         apstar.header['FLAG{:d}'.format(i)] = (visit['starflag'],' STARFLAG for visit {:d}'.format(i))
         apstar.header.insert('SFILE{:d}'.format(i),('COMMENT','VISIT {:d} INFORMATION'.format(i)))
+
+    # Fix any NaNs in the header, astropy doesn't allow them
+    for k in apstar.header.keys():
+        if (k!='HISTORY') and (k!='COMMENT') and (k!='SIMPLE'):
+            val = apstar.header.get(k)
+            if np.issubdtype(type(val),np.number):
+                if np.isnan(val)==True:
+                    apstar.header[k] = 'NaN'   # change to string
 
     # Do a RV fit just to get a template and normalized spectrum, for plotting
     if dorvfit:
