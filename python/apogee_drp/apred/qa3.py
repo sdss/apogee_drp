@@ -776,6 +776,9 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     alpha = 0.6
+    axwidth=1.5
+    axmajlen=6
+    axminlen=3.5
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
@@ -816,6 +819,9 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
     ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
     ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
 
     if 'HMAG' in Vsum.columns.names:
         hmagarr = Vsum['HMAG']
