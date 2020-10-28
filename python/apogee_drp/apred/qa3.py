@@ -73,6 +73,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     fluxid =     planstr['fluxid']
     instrument = planstr['instrument']
     survey =     planstr['survey']
+    print("Survey = "+survey)
 
     # Establish directories.
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
@@ -128,7 +129,7 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
         # Make plots for the master QA page
         if makeplots is True:
             q = masterQAplots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
-                              apred=apred, flat=None, fluxid=fluxid)
+                              survey=survey, apred=apred, flat=None, fluxid=fluxid)
 
         # Make the spectrum plots and associated page
         q= makeObjHtml(load=load, plate=plate, mjd=mjd, survey=survey, makeSpectrumPlots=makeSpectrumPlots)
@@ -749,7 +750,8 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 
 
 ''' $$$   MASTERQAPLOTS: plots for the master QA page   $$$ '''
-def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, apred=None, flat=None, fluxid=None): 
+def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, apred=None,
+                  flat=None, fluxid=None, survey=None): 
 
     print("--------------------------------------------------------------------")
     print("Making MASTERQAPLOTS for plate "+plate+", mjd "+mjd)
@@ -822,13 +824,14 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     
     ax1.set_xlim(xmin,xmax)#;  ax1.set_ylim(ymin,ymax)
 
-    telluric, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1)) | 
-                         (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9)))
-
-    science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
-                        (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0) & 
-                        (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
-                        (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
+    if 'apogee' in survey.lowercase():
+        telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
+        science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
+                            (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
+    else:
+        telluric, = np.where(bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1))
+        science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
+                            (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
 
     x = hmagarr[science];  y = Vsum['SNR'][science]
     psci = ax1.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='', label='science')
