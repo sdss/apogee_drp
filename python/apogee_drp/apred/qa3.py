@@ -777,7 +777,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     alpha = 0.6
     axwidth=1.5
-    axmajlen=6
+    axmajlen=7
     axminlen=3.5
 
     # Check for existence of plateSum file
@@ -869,11 +869,14 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
 
         fig=plt.figure(figsize=(14,15))
         ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.tick_params(reset=True)
         ax1.set_xlim(-1.6,1.6)
         ax1.set_ylim(-1.6,1.6)
         ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
         ax1.minorticks_on()
+        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax1.tick_params(axis='both',which='major',length=axmajlen)
+        ax1.tick_params(axis='both',which='minor',length=axminlen)
+        ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
 
         med = np.median(flux[chip][1].data, axis=1)
@@ -901,11 +904,14 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
 
     fig=plt.figure(figsize=(14,15))
     ax1 = plt.subplot2grid((1,1), (0,0))
-    ax1.tick_params(reset=True)
     ax1.set_xlim(-1.6,1.6)
     ax1.set_ylim(-1.6,1.6)
     ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
     ax1.minorticks_on()
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
     ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
 
     sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=block, edgecolors='k', cmap='jet', alpha=1, vmin=0, vmax=10)
@@ -943,6 +949,10 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ax1 = plt.subplot2grid((1,1), (0,0))
         ax1.tick_params(reset=True)
         ax1.minorticks_on()
+        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax1.tick_params(axis='both',which='major',length=axmajlen)
+        ax1.tick_params(axis='both',which='minor',length=axminlen)
+        ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Guider MJD');  ax1.set_ylabel(r'Guider RMS')
 
         ax1.plot(gcam['mjd'][jcam], gcam['gdrms'][jcam], color='k')
@@ -975,6 +985,10 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
             ax.set_xlim(xmin,xmax)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
             ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
 
         ax1.axes.xaxis.set_ticklabels([])
         ax2.axes.xaxis.set_ticklabels([])
@@ -1033,6 +1047,10 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ax1.set_ylim(-1.6,1.6)
         ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
         ax1.minorticks_on()
+        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax1.tick_params(axis='both',which='major',length=axmajlen)
+        ax1.tick_params(axis='both',which='minor',length=axminlen)
+        ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
         x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
@@ -1359,6 +1377,10 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 ax1.set_ylim(ymin,ymax)
                 ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
                 ax1.minorticks_on()
+                ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax1.tick_params(axis='both',which='major',length=axmajlen)
+                ax1.tick_params(axis='both',which='minor',length=axminlen)
+                ax1.tick_params(axis='both',which='both',width=axwidth)
                 ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
                 ax1.set_ylabel(r'Flux')
 
