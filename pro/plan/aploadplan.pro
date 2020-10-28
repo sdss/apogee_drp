@@ -168,7 +168,7 @@ nkeywords = n_elements(keywords)
 for j=0,nkeywords-1 do begin
 
   ; NOTE, the keywords are CASE SENSITIVE
-  value = YANNY_PAR(planstr.hdr,keywords[j],count=count)
+  value = YANNY_PAR(planstr.hdr,keywords[j],count=count,indx=indx)
 
   ; NO match, check without case sensitivity
   if count eq 0 then begin
@@ -187,6 +187,16 @@ for j=0,nkeywords-1 do begin
     error = 'KEYWORD '+keywords[j]+' NOT FOUND IN '+planfile
     if not keyword_set(silent) then print,error
     return
+  endif
+
+  ;; Handle lists in yaml files properly
+  if strpos(planfile,'.yaml') gt -1 and strmid(strtrim(value[0],2),0,1) eq '[' then begin
+    line = planstr.hdr[indx[0]]
+    klen = strlen(keywords[j])
+    value = strtrim(strmid(line,klen),2)
+    value = repstr(repstr(value,'[',''),']','')  ; trim off [ and ]
+    value = strtrim(strsplit(value,',',/extract),2)
+    if min(valid_num(value[0],/integer)) eq 1 then value=long(value)
   endif
 
   ; Get type
