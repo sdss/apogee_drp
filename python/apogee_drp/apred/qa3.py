@@ -37,6 +37,8 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 
 # Plugmap for plate 8100 mjd 57680
 # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/apo/57679/plPlugMapM-8100-57679-01.par
+# apPlateSum
+# /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/visit/apo25m/200+45/8100/57680/apPlateSum-8100-57680.fits
 
 # Planfile for plate 8100 mjd 57680
 # https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/t14/visit/apo25m/200+45/8100/57680/apPlan-8100-57680.par
@@ -56,7 +58,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14', makeplots=True,
          overwritePlateSum=True, makeSpectrumPlots=True):
 
-    print("Starting APQA\n")
+    print("---------------------------------------\nStarting APQA\n")
 
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -71,7 +73,6 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
     fluxid =     planstr['fluxid']
     instrument = planstr['instrument']
     survey =     planstr['survey']
-    print("Survey = "+survey)
 
     # Establish directories.
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
@@ -106,19 +107,19 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
     # Normal plates:.
     if platetype == 'normal': 
-        # Make the apPlateSum file if it doesn't already exist.
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
         if (os.path.exists(platesum) is False) | (overwritePlateSum is True):
-            q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd, 
-                             field=field, instrument=instrument, clobber=True, 
-                             plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
-                             onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
+            # Make the apPlateSum file if it doesn't already exist.
+            q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd,
+                             field=field, instrument=instrument, clobber=True, plugmap=plugmap,
+                             survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
+                             starfiber=None, starnames=None, starmag=None,flat=None,
                              fixfiberid=fixfiberid, badfiberid=badfiberid)
 
-#            q = makePlateSum(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd, 
-#                             field=field, instrument=instrument, clobber=True, 
-#                             plugmap=plugmap, survey=survey, mapper_data=mapper_data, apred=apred,
-#                             onem=None, starfiber=None, starnames=None, starmag=None,flat=None,
+#            q = makePlateSum(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd,
+#                             field=field, instrument=instrument, clobber=True, plugmap=plugmap,
+#                             survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
+#                             starfiber=None, starnames=None, starmag=None,flat=None,
 #                             fixfiberid=fixfiberid, badfiberid=badfiberid)
 
         # Make the master QA page
@@ -126,7 +127,8 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 
         # Make plots for the master QA page
         if makeplots is True:
-            q = masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, apred=None, flat=None, fluxid=None)
+            q = masterQAplots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
+                              apred=apred, flat=flat, fluxid=fluxid)
 
         # Make the spectrum plots and associated page
         q= makeObjHtml(load=load, plate=plate, mjd=mjd, survey=survey, makeSpectrumPlots=makeSpectrumPlots)
@@ -137,20 +139,19 @@ def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t
 #;        sntab,tabs=platefile,outfile=platefile+'.dat'
 
     # ASDAF and NMSU 1m observations:
-    if platetype == 'single':
-        single = [planstr['APEXP'][i]['single'].astype(int) for i in range(n_ims)]
-        sname = [planstr['APEXP'][i]['singlename'] for i in range(n_ims)]
-        smag = planstr['hmag']
-        x = makePlotsHtml(load=load, telescope=telescope, onem=True, ims=ims, starnames=sname, starfiber=single,
-                          starmag=smag, fixfiberid=fixfiberid, clobber=True, plugmap=plugmap,
-                          makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
+#    if platetype == 'single':
+#        single = [planstr['APEXP'][i]['single'].astype(int) for i in range(n_ims)]
+#        sname = [planstr['APEXP'][i]['singlename'] for i in range(n_ims)]
+#        smag = planstr['hmag']
+#        x = makePlotsHtml(load=load, telescope=telescope, onem=True, ims=ims, starnames=sname, 
+#                          starfiber=single, starmag=smag, fixfiberid=fixfiberid, clobber=True, 
+#                          plugmap=plugmap, makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
 
     print("\nDone with APQA")
 
 '''-----------------------------------------------------------------------------------------'''
 ''' MAKEPLATESUM: Plotmag translation                                                       '''
 '''-----------------------------------------------------------------------------------------'''
-# /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/visit/apo25m/200+45/8100/57680/apPlateSum-8100-57680.fits
 def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, field=None, 
                  instrument=None, clobber=True, makeplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
@@ -159,7 +160,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
 
-    print("Making "+platesumbase+" ...")
+    print("Making "+platesumbase+" ...\n")
 
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
@@ -545,9 +546,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 #;        mwrfits,platetab,platesum
 #;        mwrfits,fiber,platesum
 
-    print("--------------------------------------------------------------------")
-    print("Done with MAKEPLATESUM for plate "+plate+", mjd "+mjd)
-    print("--------------------------------------------------------------------\n")
+    print("\nDone making apPlateSum for plate "+plate+", mjd "+mjd)
 
 
 
@@ -584,7 +583,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     # Make the html directory if it doesn't already exist
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
     qafiledir = os.path.dirname(qafile)
-    print("Opening "+platedir+"/html/apQA")
+    print("Creating "+os.path.basename(qafile)+"\n")
     if os.path.exists(qafiledir) is False: subprocess.call(['mkdir',qafiledir])
 
     html = open(qafile, 'w')
