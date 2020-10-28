@@ -1254,6 +1254,8 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
             txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> (SIMBAD) </A>'
             objhtml.write(txt1+txt2+'\n')
 
+        import pdb; pdb.set_trace()
+
         if plSum2['OBJTYPE'][j] != 'SKY':
             hmag = str("%.3f" % round(plSum2['HMAG'][j],3))
             objhtml.write('<TD BGCOLOR='+color+' align ="right">'+hmag+'\n')
