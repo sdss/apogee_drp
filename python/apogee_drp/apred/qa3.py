@@ -1214,12 +1214,12 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
     objhtml.write('<BODY>\n')
 
-    objhtml.write('<H2>apPlate-'+platefile+'</H2>\n')
+    objhtml.write('<H1>'+pfile+'</H1>\n')
     #objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
     #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
 
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    objhtml.write('<TR><TH>Fib<TH>APOGEE ID<TH>H<TH>H<BR>-<BR>obs<TH>S/N<TH>Targ<BR>Type<TH>Target & data flags<TH>Spectrum Plot\n')
+    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
     cfile = open(plotsdir+pfile+'.csh','w')
     for j in range(nfiber):
