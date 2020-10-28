@@ -13,6 +13,7 @@ import astropy.time as time
 import re
 import argparse
 import pdb
+from astropy.io imports fits
 
 def gproc(mjd=None, instrument=None, outfile=None):
     """Process an MJD of processed guide camera files into a single file
@@ -78,9 +79,8 @@ def gproc(mjd=None, instrument=None, outfile=None):
     for file in sorted(files):
         if(file.startswith('proc-')):
             indx_search = re.search("proc-gimg-([0-9]{4}).fits", file)
-            import pdb; pdb.set_trace()
             indx = np.int32(indx_search.group(1))
-            header = fitsio.read_header(os.path.join(gdir, file), ext=0)
+            header = fits.getheader(os.path.join(gdir, file))
             if('object' in header['IMAGETYP']):
                 try:
                     rescale = (3600. / np.float32(header['PLATSCAL']))
