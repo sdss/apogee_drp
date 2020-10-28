@@ -620,6 +620,8 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<H3>Individual Exposure Stats:</H3>\n')
     else:
         html.write('<H3>Individual Exposure Stats (undithered):</H3>\n')
+    html.write('<p> Note: design HA values are currently missing. </p>\n')
+    html.write('<p> Note: Dither and Pixshift values will be zero if exposures not dithered. </p>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=lightgreen>\n')
     html.write('<TH>Frame<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither<TH>Pixshift<TH>Zero<TH>Zero rms<TH>sky continuum<TH>S/N<TH>S/N(cframe)\n')
@@ -686,6 +688,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('<TABLE BORDER=2>\n')
     html.write('<BR>\n')
     html.write('<H3>Individual Exposure QA Plots:</H3>\n')
+    html.write('<p> Note: in the Mag plots, color gives deviation of observed mag from expected 2MASS mag using the median zeropoint.</p>\n')
     html.write('<TR bgcolor=lightgreen><TH>Frame<TH>Zeropoints<TH>Mag plots\n')
     html.write('<TH>Spatial mag deviation\n')
     html.write('<TH>Spatial sky telluric CH4\n')
@@ -941,6 +944,12 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
 
+    telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
+    ntelluric = len(telluric)
+    science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
+    nscience = len(science)
+    sky, = np.where(plSum2['OBJTYPE'] == 'SKY')
+    nsky = len(sky)
     # Loop over the exposures to make other plots.
     for i in range(n_exposures):
         #------------------------------------------------------------------------------------------
