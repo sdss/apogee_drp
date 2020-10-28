@@ -962,6 +962,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ax2 = plt.subplot2grid((3,1), (1,0))
         ax3 = plt.subplot2grid((3,1), (2,0))
         axes = [ax1, ax2, ax3]#, ax4, ax5]
+        ax2.set_ylim(-10,1)
 
         for ax in axes:
             ax.set_xlim(xmin,xmax)
@@ -993,7 +994,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ymin = np.min([yminsci,ymintel])
         ymax = np.max([ymaxsci,ymaxtel])
         yspan = ymax - ymin
-        ax2.set_ylim(ymin-yspan*0.05,1)
+        #ax2.set_ylim(-10,1)
 
         # PLOTS 7c: S/N as calculated from ap1D frame
         c = ['r','g','b']
