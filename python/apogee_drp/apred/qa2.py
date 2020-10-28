@@ -1303,9 +1303,9 @@ def makePlotsHtml(load=None, telescope=None, ims=None, plate=None, mjd=None, fie
         telluric, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1)) | 
                              (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9)))
 
-        science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) | 
-                            (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0) | 
-                            (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) | 
+        science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
+                            (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0) & 
+                            (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
                             (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
 
         x = hmagarr[science];  y = Vsum['SNR'][science]
