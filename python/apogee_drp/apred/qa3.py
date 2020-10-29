@@ -1178,10 +1178,10 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
     plotsdir = platedir+'/plots/'
-    if len(glob.glob(plotsdir)) == 0: subprocess.call(['mkdir',plotsdir])
+    if os.path.exists(plotsdir) is False: subprocess.call(['mkdir',plotsdir])
 
     htmldir = platedir+'/html/'
-    if len(glob.glob(htmldir)) == 0: subprocess.call(['mkdir',htmldir])
+    if os.path.exists(htmldir) is False: subprocess.call(['mkdir',htmldir])
     if os.path.exists(htmldir+'sorttable.js') is False:
         print("getting sorttable.js...")
         subprocess.call(['wget', '-q', sort_table_link])
