@@ -391,7 +391,8 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
         # Calculate zeropoints from known H band mags.
         # Use a static zeropoint to calculate sky brightness.
-        nreads = dhdr['NFRAMES']
+        nreads = 0
+        if "NFRAMES" in dhdr: nreads = dhdr['NFRAMES']
         exptime = dhdr['EXPTIME']
         skyzero = 14.75 + (2.5 * np.log10(nreads))
         zero = 0
