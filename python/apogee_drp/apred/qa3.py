@@ -170,12 +170,19 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     nchips = len(chips)
 
     # Get the fiber association for this plate. Also get some other values
-    if ims[0] == 0: tot = load.apPlate(int(plate), mjd)
-    if ims[0] != 0: tot = load.ap1D(ims[0])
-    platehdr = tot['a'][0].header
-    ra = platehdr['RADEG']
-    dec = platehdr['DECDEG']
-    DateObs = platehdr['DATE-OBS']
+    if ims[0] == 0: 
+        applatefile = load.filename('Plate', plate=int(plate), mjd=mjd)
+        tot = load.apPlate(int(plate), mjd)
+        tothdr = fits.getheader(applatefile)
+        
+    if ims[0] != 0: 
+        onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
+        tot = load.ap1D(ims[0])
+        tothdr = fits.getheader(onedfile)
+
+    ra = tothdr['RADEG']
+    dec = tothdr['DECDEG']
+    DateObs = tothdr['DATE-OBS']
 
     if type(tot) != dict:
         html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
