@@ -1367,6 +1367,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 
                 Flux = np.concatenate([FluxB, FluxG, FluxR])
                 Wave = np.concatenate([WaveB, WaveG, WaveR])
+                import pdb; pdb.set_trace()
 
                 # Establish Ymax
                 ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
