@@ -595,6 +595,9 @@ def run_daily(observatory,mjd5=None,apred=None):
     if len(vcat)>0:
         queue = pbsqueue(verbose=True)
         queue.create(label='rv', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
+        # Get unique stars
+        objects,ui = np.unique(vcat['apogee_id'],return_index=True)
+        vcat = vcat[ui]
         for obj in vcat['apogee_id']:
             apstarfile = load.filename('Star',obj=obj)
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
