@@ -119,8 +119,8 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
                              starfiber=None, starnames=None, starmag=None,flat=None,
                              fixfiberid=fixfiberid, badfiberid=badfiberid)
 
-            ims = np.array([0,ims[0]])
-            q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd,
+            tmpims = np.array([0,ims[0]])
+            q = makePlateSum(load=load, telescope=telescope, ims=tmpims, plate=plate, mjd=mjd,
                              field=field, instrument=instrument, clobber=True, plugmap=plugmap,
                              survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
                              starfiber=None, starnames=None, starmag=None,flat=None,
