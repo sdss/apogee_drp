@@ -1039,7 +1039,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ymin = np.min([yminsci,ymintel])
         ymax = np.max([ymaxsci,ymaxtel])
         yspan = ymax - ymin
-        #ax2.set_ylim(-10,1)
+        ax2.set_ylim(ymin,1)
 
         # PLOTS 7c: S/N as calculated from ap1D frame
         #c = ['r','g','b']
