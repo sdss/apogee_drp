@@ -1031,15 +1031,13 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
 
         # PLOTS 7b: observed mag - fit mag vs H mag
         x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
-        yminsci = np.nanmin(y);  ymaxsci = np.nanmax(y)
+        ymaxsci = np.nanmax(y)
         ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
         x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
-        ymintel = np.nanmin(y);  ymaxtel = np.nanmax(y)
+        ymaxtel = np.nanmax(y)
         ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue')
-        ymin = np.min([yminsci,ymintel])
         ymax = np.max([ymaxsci,ymaxtel])
-        yspan = ymax - ymin
-        ax2.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
+        ax2.set_ylim(0,ymax*1.05))
 
         # PLOTS 7c: S/N as calculated from ap1D frame
         #c = ['r','g','b']
@@ -1049,15 +1047,13 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         #    x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,ichip]
         #    ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
         x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,1]
-        yminsci = np.nanmin(y);  ymaxsci = np.nanmax(y)
+        ymaxsci = np.nanmax(y)
         ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
         x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
-        ymintel = np.nanmin(y);  ymaxtel = np.nanmax(y)
+        ymaxtel = np.nanmax(y)
         ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
-        ymin = np.min([yminsci,ymintel])
         ymax = np.max([ymaxsci,ymaxtel])
-        yspan = ymax - ymin
-        ax3.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
+        ax2.set_ylim(0,ymax*1.05))
 
         # overplot the target S/N line
         sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
