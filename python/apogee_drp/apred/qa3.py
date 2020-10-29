@@ -185,7 +185,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap) 
 
     gd, = np.where(plug['fiberdata']['fiberid'] > 0)
-    import pdb; pdb.set_trace()
     fiber = plug['fiberdata'][gd]
     nfiber = len(fiber)
     rows = 300 - fiber['fiberid']
@@ -1201,6 +1200,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     fibord = np.argsort(platesum2['FIBERID'])
     plSum2 = platesum2[fibord]
     nfiber = len(plSum2['HMAG'])
+    import pdb; pdb.set_trace()
 
     telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
     ntelluric = len(telluric)
