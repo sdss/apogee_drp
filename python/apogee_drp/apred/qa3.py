@@ -1199,7 +1199,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
-    data = apPlate['a'][11].data
+    data = apPlate['a'][11].data[::-1]
     objtype = data['OBJTYPE']
     nfiber = len(data)
 
@@ -1324,12 +1324,12 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                     lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                     xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
-                    FluxB = apPlate['a'][1].data[fiber-1,:]
-                    FluxG = apPlate['b'][1].data[fiber-1,:]
-                    FluxR = apPlate['c'][1].data[fiber-1,:]
-                    WaveB = apPlate['a'][4].data[fiber-1,:]
-                    WaveG = apPlate['b'][4].data[fiber-1,:]
-                    WaveR = apPlate['c'][4].data[fiber-1,:]
+                    FluxB = apPlate['a'][1].data[300-fiber,:]
+                    FluxG = apPlate['b'][1].data[300-fiber,:]
+                    FluxR = apPlate['c'][1].data[300-fiber,:]
+                    WaveB = apPlate['a'][4].data[300-fiber,:]
+                    WaveG = apPlate['b'][4].data[300-fiber,:]
+                    WaveR = apPlate['c'][4].data[300-fiber,:]
 
                     Flux = np.concatenate([FluxB, FluxG, FluxR])
                     Wave = np.concatenate([WaveB, WaveG, WaveR])
