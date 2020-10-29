@@ -1371,7 +1371,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 # Establish Ymax
                 ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
                 ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
-                ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
+                ymxsec3, = np.where((Wave > 16925) & (Wave < 16950))
                 if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
                     print("Problem with fiber "+cfib+". Not Plotting.")
                 else:
