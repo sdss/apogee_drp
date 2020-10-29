@@ -639,10 +639,13 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('<p> Note: Dither and Pixshift values will be zero if exposures not dithered. </p>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=lightgreen>\n')
-    html.write('<TH>Frame<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither<TH>Pixshift<TH>Zero<TH>Zero rms<TH>sky continuum<TH>S/N<TH>S/N(cframe)\n')
+    txt1 = '<TH>Frame<TH>Exptime(s)<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither'
+    txt2 = '<TH>Pixshift<TH>Zero<TH>Zero rms<TH>sky continuum<TH>S/N<TH>S/N(cframe)<TH>Moon Phase<TH>Moon Dist.'
+    html.write(txt1 + txt2 +'\n')
     for i in range(len(tab1)):
         html.write('<TR>\n')
         html.write('<TD>'+str(int(round(tab1['IM'][i])))+'\n')
+        html.write('<TD>'+str(int(round(tab1['EXPTIME'][i])))+'\n'
         html.write('<TD>'+str(int(round(tab1['CART'][i])))+'\n')
         html.write('<TD>'+str("%.2f" % round(tab1['SECZ'][i],2))+'\n')
         html.write('<TD>'+str("%.2f" % round(tab1['HA'][i],2))+'\n')
@@ -670,6 +673,8 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         q = tab1['SNC'][i]
         txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
         html.write('<TD>'+'['+txt+']\n')
+        html.write('<TD>'+str("%.3f" % round(tab1['MOONPHASE'][i],3))
+        html.write('<TD>'+str("%.3f" % round(tab1['MOONDIST'][i],3))
     html.write('</TABLE>\n')
 
     # Table of exposure pairs.
