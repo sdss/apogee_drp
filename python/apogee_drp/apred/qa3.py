@@ -296,8 +296,8 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     platetab['DESIGN_HA'] = -99.0
     platetab['PLUGID'] =    plugmap
     platetab['MJD'] =       mjd
-    platetab['MOONDIST'] =  moondist
-    platetab['MOONPHASE'] = moonphase
+    #platetab['MOONDIST'] =  moondist
+    #platetab['MOONPHASE'] = moonphase
 
     # Loop over the exposures.
     for i in range(n_exposures):
