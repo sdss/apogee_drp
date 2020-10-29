@@ -1349,7 +1349,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 visit = load.apVisit(int(plate), mjd, fiber)
 
                 FluxB = visit[1].data[2]; FluxG = visit[1].data[1]; FluxR = visit[1].data[0]
-                WaveB = visit[4].data[2]; WaveG = visit[4].data[1]; WaveR = visit[4].data[2]
+                WaveB = visit[4].data[2]; WaveG = visit[4].data[1]; WaveR = visit[4].data[0]
 
                 Flux = np.concatenate([FluxB, FluxG, FluxR])
                 Wave = np.concatenate([WaveB, WaveG, WaveR])
