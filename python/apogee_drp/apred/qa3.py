@@ -1190,8 +1190,6 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     apPlateTab = apPlateTab[gd]
     nfiber = len(apPlateTab)
 
-    import pdb; pdb.set_trace()
-
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
     if os.path.exists(platesum) is False:
@@ -1203,6 +1201,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     tmp = fits.open(platesum)
     plSum1 = tmp[1].data
     plSum2 = tmp[2].data
+    import pdb; pdb.set_trace()
 
     telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
     ntelluric = len(telluric)
