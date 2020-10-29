@@ -864,7 +864,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     x = hmagarr[science];  y = Vsum['SNR'][science]
     psci = ax1.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='', label='science')
     x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
-    ptel = ax1.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='cyan', linestyle='', label='Telluric')
+    ptel = ax1.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='', label='Telluric')
 
     ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
@@ -1026,7 +1026,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
         ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
         x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
-        ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='cyan', label='Telluric')
+        ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue', label='Telluric')
         ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
         # PLOTS 7b: observed mag - fit mag vs H mag
@@ -1035,7 +1035,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
         x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
         ymintel = np.nanmin(y);  ymaxtel = np.nanmax(y)
-        ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='cyan')
+        ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue')
         ymin = np.min([yminsci,ymintel])
         ymax = np.max([ymaxsci,ymaxtel])
         yspan = ymax - ymin
@@ -1051,7 +1051,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,1]
         ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
         x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
-        ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='cyan', linestyle='')
+        ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
 
         # overplot the target S/N line
         sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
