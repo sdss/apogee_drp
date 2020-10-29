@@ -673,8 +673,8 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         q = tab1['SNC'][i]
         txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
         html.write('<TD>'+'['+txt+']\n')
-        html.write('<TD>'+str("%.3f" % round(tab1['MOONPHASE'][i],3))
-        html.write('<TD>'+str("%.3f" % round(tab1['MOONDIST'][i],3))
+        html.write('<TD>'+str("%.3f" % round(tab1['MOONPHASE'][i],3))+'\n')
+        html.write('<TD>'+str("%.3f" % round(tab1['MOONDIST'][i],3))+'\n')
     html.write('</TABLE>\n')
 
     # Table of exposure pairs.
