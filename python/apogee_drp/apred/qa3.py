@@ -171,7 +171,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     # Get the fiber association for this plate. Also get some other values
     if ims[0] == 0: 
-        applatefile = load.filename('Plate', plate=int(plate), mjd=mjd)
+        applatefile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)
         tot = load.apPlate(int(plate), mjd)
         tothdr = fits.getheader(onedfile.replace('apPlate-','apPlate-a-'))
         
