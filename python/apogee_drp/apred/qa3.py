@@ -312,9 +312,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     # Loop over the exposures.
     for i in range(n_exposures):
-        cframe = None
-
-        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
         if ims[0] == 0: 
             pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
             dfile = load.filename('Plate',  plate=int(plate), mjd=mjd, chips=True)
@@ -331,7 +328,8 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             if type(d)!=dict: print("Problem with ap1D!!!")
             dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
 
-        cframehdr = fits.getheader(cramefile.replace('Cframe-','Cframe-a-'))
+        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
+        cframehdr = fits.getheader(cframefile.replace('Cframe-','Cframe-a-'))
         pfile = pfile.replace('.fits','')
 
         obs = np.zeros((nfiber,nchips), dtype=np.float64)
