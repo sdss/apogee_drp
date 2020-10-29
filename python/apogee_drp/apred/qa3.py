@@ -1285,7 +1285,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
         txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+str(plSum2['RA'][j])+'+'+str(plSum2['DEC'][j])+'&CooFrame=FK5&CooEpoch=2000'
         txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> (SIMBAD) </A>'
         objhtml.write(txt1+txt2+'\n')
-        objhtml.write('<BR><TD BGCOLOR='+color+'><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
+        objhtml.write('<BR><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
         objhtml.write('<BR>apStar file\n')
 
         if plSum2['OBJTYPE'][j] != 'SKY':
