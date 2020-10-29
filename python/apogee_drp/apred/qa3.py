@@ -1323,7 +1323,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                     print("PROBLEM WITH "+visitfilebase+"... SNR = NaN.")
 
             # column 1
-            objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfiber+'</A>\n')
+            objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+' target="_blank">'+cfiber+'</A>\n')
 
             # column 2
             objhtml.write('<TD BGCOLOR='+color+'>'+objid+'\n')
