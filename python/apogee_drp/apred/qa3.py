@@ -1259,8 +1259,8 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 
             # Establish html table row background color
             color = 'white'
-            if (objtype[j] == 'SPECTROPHOTO_STD') | (objtype[j] == 'HOT_STD'): color = 'plum'
-            if objtype[j] == 'SKY': color = 'silver'
+            if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = 'plum'
+            if objtype == 'SKY': color = 'silver'
 
             # Get target flag strings
             if 'apogee' in survey:
