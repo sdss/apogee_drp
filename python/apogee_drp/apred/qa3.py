@@ -57,7 +57,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 '''-----------------------------------------------------------------------------------------'''
 #def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14',
 
-def apqa(field='RM_XMM-LSS', plate='15002', mjd='59146', telescope='apo25m', apred='daily', 
+def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apred='daily', 
          makeplots=True, overwritePlateSum=True, makeSpectrumPlots=True):
 
     print("---------------------------------------\nStarting APQA\n")
@@ -1313,105 +1313,102 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
             visitfilebase = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber))
             vplotfile = visitfile.replace('.fits','.jpg')
 
-            if os.path.exists(visitfile) is False:
-                print("PROBLEM!!! "+visitfilebase+" not found!")
+            visithdr = fits.getheader(visitfile)
+            starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
+            snratio = str("%.2f" % round(visithdr['SNR'],2))
+
+            # column 1
+            objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfiber+'</A>\n')
+
+            # column 2
+            objhtml.write('<TD BGCOLOR='+color+'>'+objid+'\n')
+            objhtml.write(simbadlink+'\n')
+            objhtml.write('<BR><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
+            objhtml.write('<BR>apStar file\n')
+
+            if objtype != 'SKY':
+                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+chmag+'\n')
+                #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
+                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+snratio+'\n')
             else:
-                visithdr = fits.getheader(visitfile)
-                starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
-                snratio = str("%.2f" % round(visithdr['SNR'],2))
+                objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                #objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                objhtml.write('<TD BGCOLOR='+color+'>---\n')
 
-                # column 1
-                objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfiber+'</A>\n')
-
-                # column 2
-                objhtml.write('<TD BGCOLOR='+color+'>'+objid+'\n')
-                objhtml.write(simbadlink+'\n')
-                objhtml.write('<BR><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
-                objhtml.write('<BR>apStar file\n')
-
-                if objtype != 'SKY':
-                    objhtml.write('<TD BGCOLOR='+color+' align ="right">'+chmag+'\n')
-                    #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
-                    objhtml.write('<TD BGCOLOR='+color+' align ="right">'+snratio+'\n')
+            if objtype == 'SKY': 
+                objhtml.write('<TD BGCOLOR='+color+'>SKY\n')
+            else:
+                if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
+                    objhtml.write('<TD BGCOLOR='+color+'>TEL\n')
                 else:
-                    objhtml.write('<TD BGCOLOR='+color+'>---\n')
-                    #objhtml.write('<TD BGCOLOR='+color+'>---\n')
-                    objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                    objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
 
-                if objtype == 'SKY': 
-                    objhtml.write('<TD BGCOLOR='+color+'>SKY\n')
-                else:
-                    if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
-                        objhtml.write('<TD BGCOLOR='+color+'>TEL\n')
-                    else:
-                        objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
+            objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
+            objhtml.write('<BR><BR>'+starflagtxt+'\n')
 
-                objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
-                objhtml.write('<BR><BR>'+starflagtxt+'\n')
-
-                # Spectrum Plots
-                plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
-                objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
-                if makeSpectrumPlots is True:
+            # Spectrum Plots
+            plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
+            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
+            if makeSpectrumPlots is True:
 #                if (makeSpectrumPlots is True) & (j<60):
-                    print("Making "+plotfile)
+                print("Making "+plotfile)
 
-                    lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                    xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
+                lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
-                    FluxB = apPlate['a'][1].data[300-fiber,:]
-                    FluxG = apPlate['b'][1].data[300-fiber,:]
-                    FluxR = apPlate['c'][1].data[300-fiber,:]
-                    WaveB = apPlate['a'][4].data[300-fiber,:]
-                    WaveG = apPlate['b'][4].data[300-fiber,:]
-                    WaveR = apPlate['c'][4].data[300-fiber,:]
+                FluxB = apPlate['a'][1].data[300-fiber,:]
+                FluxG = apPlate['b'][1].data[300-fiber,:]
+                FluxR = apPlate['c'][1].data[300-fiber,:]
+                WaveB = apPlate['a'][4].data[300-fiber,:]
+                WaveG = apPlate['b'][4].data[300-fiber,:]
+                WaveR = apPlate['c'][4].data[300-fiber,:]
 
-                    Flux = np.concatenate([FluxB, FluxG, FluxR])
-                    Wave = np.concatenate([WaveB, WaveG, WaveR])
+                Flux = np.concatenate([FluxB, FluxG, FluxR])
+                Wave = np.concatenate([WaveB, WaveG, WaveR])
 
-                    # Establish Ymax
-                    ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
-                    ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
-                    ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
-                    if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
-                        print("Problem with fiber "+cfib+". Not Plotting.")
-                    else:
-                        tmpF = convolve(Flux,Box1DKernel(11))
-                        ymx1 = np.nanmax(tmpF[ymxsec1])
-                        ymx2 = np.nanmax(tmpF[ymxsec2])
-                        ymx3 = np.nanmax(tmpF[ymxsec3])
-                        ymx = np.nanmax([ymx1,ymx2,ymx3])
-                        ymin = 0
-                        yspn = ymx-ymin
+                # Establish Ymax
+                ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
+                ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
+                ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
+                if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
+                    print("Problem with fiber "+cfib+". Not Plotting.")
+                else:
+                    tmpF = convolve(Flux,Box1DKernel(11))
+                    ymx1 = np.nanmax(tmpF[ymxsec1])
+                    ymx2 = np.nanmax(tmpF[ymxsec2])
+                    ymx3 = np.nanmax(tmpF[ymxsec3])
+                    ymx = np.nanmax([ymx1,ymx2,ymx3])
+                    ymin = 0
+                    yspn = ymx-ymin
+                    ymax = ymx + (yspn * 0.15)
+                    # Establish Ymin
+                    ymn = np.nanmin(tmpF)
+                    if ymn > 0: 
+                        yspn = ymx - ymn
+                        ymin = ymn - (yspn * 0.15)
                         ymax = ymx + (yspn * 0.15)
-                        # Establish Ymin
-                        ymn = np.nanmin(tmpF)
-                        if ymn > 0: 
-                            yspn = ymx - ymn
-                            ymin = ymn - (yspn * 0.15)
-                            ymax = ymx + (yspn * 0.15)
 
-                        fig=plt.figure(figsize=(28,6))
-                        ax1 = plt.subplot2grid((1,1), (0,0))
-                        ax1.tick_params(reset=True)
-                        ax1.set_xlim(xmin,xmax)
-                        ax1.set_ylim(ymin,ymax)
-                        ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
-                        ax1.minorticks_on()
-                        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                        ax1.tick_params(axis='both',which='major',length=axmajlen)
-                        ax1.tick_params(axis='both',which='minor',length=axminlen)
-                        ax1.tick_params(axis='both',which='both',width=axwidth)
-                        ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
-                        ax1.set_ylabel(r'Flux')
+                    fig=plt.figure(figsize=(28,6))
+                    ax1 = plt.subplot2grid((1,1), (0,0))
+                    ax1.tick_params(reset=True)
+                    ax1.set_xlim(xmin,xmax)
+                    ax1.set_ylim(ymin,ymax)
+                    ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
+                    ax1.minorticks_on()
+                    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                    ax1.tick_params(axis='both',which='major',length=axmajlen)
+                    ax1.tick_params(axis='both',which='minor',length=axminlen)
+                    ax1.tick_params(axis='both',which='both',width=axwidth)
+                    ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
+                    ax1.set_ylabel(r'Flux')
 
-                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
-                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
-                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
+                    ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
+                    ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
+                    ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
 
-                        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
-                        plt.savefig(plotsdir+plotfile)
-                    plt.close('all')
+                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                    plt.savefig(plotsdir+plotfile)
+                plt.close('all')
 
     objhtml.close()
     cfile.close()
