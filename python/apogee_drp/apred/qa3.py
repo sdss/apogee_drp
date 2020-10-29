@@ -57,7 +57,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 '''-----------------------------------------------------------------------------------------'''
 #def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14',
 
-def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apred='daily', 
+def apqa(field='RM_XMM-LSS', plate='15002', mjd='59146', telescope='apo25m', apred='daily', 
          makeplots=True, overwritePlateSum=True, makeSpectrumPlots=True):
 
     print("---------------------------------------\nStarting APQA\n")
