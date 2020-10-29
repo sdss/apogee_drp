@@ -119,7 +119,8 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
                              starfiber=None, starnames=None, starmag=None,flat=None,
                              fixfiberid=fixfiberid, badfiberid=badfiberid)
 
-            q = makePlateSum(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd,
+            ims = np.array([0,ims[0]])
+            q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd,
                              field=field, instrument=instrument, clobber=True, plugmap=plugmap,
                              survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
                              starfiber=None, starnames=None, starmag=None,flat=None,
@@ -165,20 +166,22 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     print("Making "+platesumbase+" ...\n")
 
-    n_exposures = len(ims)
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
     # Get the fiber association for this plate. Also get some other values
-    onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
+    onedfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
     tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
     ra = tothdr['RADEG']
     dec = tothdr['DECDEG']
     DateObs = tothdr['DATE-OBS']
 
-    if ims[0] == 0: tot = load.apPlate(int(plate), mjd)
-    if ims[0] != 0: tot = load.ap1D(ims[0])
-
+    if ims[0] == 0: 
+        tot = load.apPlate(int(plate), mjd)
+        ims = [0]
+    else: 
+        tot = load.ap1D(ims[0])
+    n_exposures = len(ims)
 
     if type(tot) != dict:
         html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
@@ -542,7 +545,9 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     if ims[0] == 0:
         hdulist = fits.open(platesum)
         hdu1 = fits.table_to_hdu(Table(platetab))
+        hdu2 = fits.table_to_hdu(Table(fiber))
         hdulist.append(hdu1)
+        hdulist.append(hdu2)
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 #;        mwrfits,platetab,platesum
