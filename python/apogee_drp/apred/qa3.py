@@ -173,7 +173,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     if ims[0] == 0: 
         applatefile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)
         tot = load.apPlate(int(plate), mjd)
-        tothdr = fits.getheader(onedfile.replace('apPlate-','apPlate-a-'))
+        tothdr = fits.getheader(applatefile.replace('apPlate-','apPlate-a-'))
         
     if ims[0] != 0: 
         onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
