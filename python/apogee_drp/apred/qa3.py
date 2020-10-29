@@ -119,11 +119,11 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
                              starfiber=None, starnames=None, starmag=None,flat=None,
                              fixfiberid=fixfiberid, badfiberid=badfiberid)
 
-#            q = makePlateSum(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd,
-#                             field=field, instrument=instrument, clobber=True, plugmap=plugmap,
-#                             survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
-#                             starfiber=None, starnames=None, starmag=None,flat=None,
-#                             fixfiberid=fixfiberid, badfiberid=badfiberid)
+            q = makePlateSum(load=load, telescope=telescope, ims=[0], plate=plate, mjd=mjd,
+                             field=field, instrument=instrument, clobber=True, plugmap=plugmap,
+                             survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
+                             starfiber=None, starnames=None, starmag=None,flat=None,
+                             fixfiberid=fixfiberid, badfiberid=badfiberid)
 
         # Make the master QA page
         q = masterQAhtml(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
