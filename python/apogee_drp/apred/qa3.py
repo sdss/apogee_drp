@@ -240,18 +240,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     allzero =    np.zeros((n_exposures,3), dtype=np.float64)
     allzerorms = np.zeros((n_exposures,3), dtype=np.float64)
 
-    # Get moon distance and phase.
-    dateobs = dhdr['DATE-OBS']
-    tt = Time(dateobs, format='fits')
-    moonpos = get_moon(tt)
-    moonra = moonpos.ra.deg
-    moondec = moonpos.dec.deg
-    c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
-    c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
-    sep = c1.separation(c2)
-    moondist = sep.deg
-    moonphase = moon_illumination(tt)
-
     # Get guider information.
     if onem is None:
         gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
@@ -332,6 +320,18 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[1], chips='c')
         cframehdr = fits.getheader(cframefile.replace('Cframe-','Cframe-a-'))
         pfile = pfile.replace('.fits','')
+
+        # Get moon distance and phase.
+        dateobs = dhdr['DATE-OBS']
+        tt = Time(dateobs, format='fits')
+        moonpos = get_moon(tt)
+        moonra = moonpos.ra.deg
+        moondec = moonpos.dec.deg
+        c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
+        c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
+        sep = c1.separation(c2)
+        moondist = sep.deg
+        moonphase = moon_illumination(tt)
 
         obs = np.zeros((nfiber,nchips), dtype=np.float64)
         sn  = np.zeros((nfiber,nchips), dtype=np.float64)
