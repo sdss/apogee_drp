@@ -1313,9 +1313,11 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
             visitfilebase = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber))
             vplotfile = visitfile.replace('.fits','.jpg')
 
-            visithdr = fits.getheader(visitfile)
-            starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
-            snratio = str("%.2f" % round(visithdr['SNR'],2))
+            starflagtxt = ''
+            if os.path.exists(visitfile):
+                visithdr = fits.getheader(visitfile)
+                starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
+                snratio = str("%.2f" % round(visithdr['SNR'],2))
 
             # column 1
             objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfiber+'</A>\n')
