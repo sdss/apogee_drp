@@ -325,7 +325,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
                 startab['vmederr'] = np.median(starvisits['vrelerr'])
             else:
                 startab['vscatter'] = 0.0
-                startab['verr'] = starvisits['verr'][gdrv][0]
+                startab['verr'] = starvisits['vrelerr'][gdrv][0]
                 startab['vmederr'] = starvisits['vrelerr'][0]
             startab['chisq'] = dopsumstr['chisq']
             startab['rv_teff'] = dopsumstr['teff']
