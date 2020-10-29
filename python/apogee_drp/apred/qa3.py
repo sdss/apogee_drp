@@ -1037,7 +1037,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ymaxtel = np.nanmax(y)
         ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue')
         ymax = np.max([ymaxsci,ymaxtel])
-        ax2.set_ylim(0,ymax*1.05))
+        ax2.set_ylim(0.01,ymax*1.05))
 
         # PLOTS 7c: S/N as calculated from ap1D frame
         #c = ['r','g','b']
@@ -1053,7 +1053,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ymaxtel = np.nanmax(y)
         ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
         ymax = np.max([ymaxsci,ymaxtel])
-        ax2.set_ylim(0,ymax*1.05))
+        ax2.set_ylim(0.01,ymax*1.05))
 
         # overplot the target S/N line
         sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
