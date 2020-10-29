@@ -1319,8 +1319,8 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 # Spectrum Plots
                 plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
                 objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
-#                if makeSpectrumPlots is True:
-                if (makeSpectrumPlots is True) & (j<60):
+                if makeSpectrumPlots is True:
+#                if (makeSpectrumPlots is True) & (j<60):
                     print("Making "+plotfile)
 
                     lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
