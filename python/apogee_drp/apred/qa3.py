@@ -1185,6 +1185,12 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
+    apPlateTab = apPlate['a'][11].data
+    gd, = np.where(apPlateTab['FIBERID'] > 0)
+    apPlateTab = apPlateTab[gd]
+    nfiber = len(apPlateTab)
+
+    import pdb; pdb.set_trace()
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
@@ -1197,8 +1203,6 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     tmp = fits.open(platesum)
     plSum1 = tmp[1].data
     plSum2 = tmp[2].data
-    nfiber = len(plSum2['HMAG'])
-    fiberindex = plSum2['FIBERID'][::-1]-1
 
     telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
     ntelluric = len(telluric)
@@ -1267,58 +1271,59 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     cfile = open(plotsdir+pfile+'.csh','w')
     for j in range(nfiber):
         gd, = np.where(300-plSum2['FIBERID'] == fiberindex[j])
-        gdplSum2 = plSum2[gd]
-        objhtml.write('<TR>\n')
-        import pdb; pdb.set_trace()
+        gdplSum2 = plSum2[gd][0]
 
+        apogeeID = gdplSum2['OBJECT']
+        objtype = gdplSum2['OBJTYPE']
+        hmag = gdplSum2['HMAG']
+        chmag = str("%.3f" % round(hmag,3))
+        obsmag = gdplSum2['obsmag'][0][1]
+        magdiff = str("%.2f" % round(obsmag - hmag,2))
+        rastring = str("%.5f" % round(gdplSum2['RA'],5))
+        decstring = str("%.5f" % round(gdplSum2['DEC'],5))
+        fiber = gdplSum2['FIBERID']
+        cfiber = str(gdplSum2['FIBERID']).zfill(3)
+        snratio = str("%.2f" % round(plSum2['SN'][j][0][2],2))
+
+        visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber)
+        visitfilebase = os.path.basename(visitfile)
+        vplotfile = visitfilebase.replace('.fits','.jpg')
         color = 'white'
-        if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'): color = 'plum'
-        if plSum2['OBJTYPE'][j] == 'SKY': color = 'silver'
-
-        visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]))
-        vplotfile = visitfile.replace('.fits','.jpg')
-        cfib = str(plSum2['FIBERID'][j]).zfill(3)
-        rastring = str("%.5f" % round(plSum2['RA'][j],5))
-        decstring = str("%.5f" % round(plSum2['DEC'][j],5))
+        if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = 'plum'
+        if objtype == 'SKY': color = 'silver'
 
         # column 1
-        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
+        objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfilebase+'>'+cfib+'</A>\n')
 
         # column 2
-        objhtml.write('<TD BGCOLOR='+color+'>'+plSum2['OBJECT'][j]+'\n')
+        objhtml.write('<TD BGCOLOR='+color+'>'+apogeeID+'\n')
         txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+rastring+'+'+decstring+'&CooFrame=FK5&CooEpoch=2000'
         txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> (SIMBAD) </A>'
         objhtml.write(txt1+txt2+'\n')
         objhtml.write('<BR><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
         objhtml.write('<BR>apStar file\n')
 
-        if plSum2['OBJTYPE'][j] != 'SKY':
-            hmag = str("%.3f" % round(plSum2['HMAG'][j],3))
-            objhtml.write('<TD BGCOLOR='+color+' align ="right">'+hmag+'\n')
-            diff = str("%.2f" % round(plSum2['obsmag'][j][0][1] - plSum2['HMAG'][j],2))
-#            diff = plSum2['HMAG'][j] + (2.5 * np.log10(plSum2['obsmag'][j][0][1])) - plSum1['ZERO'][i]
-            objhtml.write('<TD BGCOLOR='+color+' align ="right">'+diff+'\n')
-            snratio = str("%.2f" % round(plSum2['SN'][j][0][2],2))
+        if objtype != 'SKY':
+            objhtml.write('<TD BGCOLOR='+color+' align ="right">'+chmag+'\n')
+            objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
             objhtml.write('<TD BGCOLOR='+color+' align ="right">'+snratio+'\n')
         else:
             objhtml.write('<TD BGCOLOR='+color+'>---\n')
             objhtml.write('<TD BGCOLOR='+color+'>---\n')
             objhtml.write('<TD BGCOLOR='+color+'>---\n')
 
-        if plSum2['OBJTYPE'][j] == 'SKY': 
+        if objtype == 'SKY': 
             objhtml.write('<TD BGCOLOR='+color+'>SKY\n')
         else:
-            if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'):
+            if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
                 objhtml.write('<TD BGCOLOR='+color+'>TEL\n')
             else:
                 objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
 
 #        objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
         if 'apogee' in survey:
-            targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], 
-                                            plSum2['TARGET2'][j], 
-                                            plSum2['TARGET3'][j], 
-                                            plSum2['TARGET4'][j], 
+            targflagtxt = bitmask.targflags(gdplSum2['TARGET1'], gdplSum2['TARGET2'], 
+                                            gdplSum2['TARGET3'], gdplSum2['TARGET4'], 
                                             survey=survey)
         else:
             if j == 0: print("PROBLEM!!! Need to update bitmask.py to handle SDSSV_APOGEE_TARGET0.")
@@ -1329,19 +1334,19 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
         targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
         objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
 
-        if plSum2['FIBERID'][j] >= 0:
-            vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]).replace('-apo25m','')
-            if os.path.exists(vfile):
-                h = fits.getheader(vfile)
+        if fiber >= 0:
+            if os.path.exists(visitfile):
+                h = fits.getheader(visitfile)
                 starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).replace(',','<BR>')
                 objhtml.write('<BR><BR>'+starflagtxt+'\n')
+            else:
+                print("PROBLEM!!! "+visitfilebase+" not found.")
 
         # Spectrum Plots
 #        if j > -1:
-        plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfib+'.png'
+        plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
         objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
         if makeSpectrumPlots is True:
-            import pdb; pdb.set_trace()
             print("Making "+plotfile)
 
             lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
