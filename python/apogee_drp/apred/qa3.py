@@ -1313,15 +1313,14 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
             visitfilebase = os.path.basename(visitfile)
             vplotfile = visitfile.replace('.fits','.jpg')
 
-            starflagtxt = ''
             snratio = ''
             if os.path.exists(visitfile):
                 visithdr = fits.getheader(visitfile)
-                if 'HMAG' in visithdr:
-                    starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
+                starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
+                if type(visithdr['SNR']) != str:
                     snratio = str("%.2f" % round(visithdr['SNR'],2))
                 else:
-                    print("PROBLEM WITH "+visitfilebase+"... nothing in the header.")
+                    print("PROBLEM WITH "+visitfilebase+"... SNR = NaN.")
 
             # column 1
             objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfiber+'</A>\n')
