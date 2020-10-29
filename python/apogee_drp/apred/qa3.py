@@ -1175,42 +1175,6 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     print("Running MAKEOBJHTML for plate "+plate+", mjd "+mjd)
     print("--------------------------------------------------------------------\n")
 
-    # Set up some basic plotting parameters, starting by turning off interactive plotting.
-    plt.ioff()
-    fontsize = 24;   fsz = fontsize * 0.75
-    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-    axwidth=1.5
-    axmajlen=7
-    axminlen=3.5
-
-    # Load in the apPlate file
-    apPlate = load.apPlate(int(plate), mjd)
-    data = apPlate[11].data
-    gd, = np.where(data['FIBERID'] > 0)
-    import pdb; pdb.set_trace()
-
-    # Check for existence of plateSum file
-    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
-    if os.path.exists(platesum) is False:
-        err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
-        err2 = "You need to run MAKEPLATESUM first to make the file."
-        sys.exit(err1 + err2)
-
-    # Read the plateSum file
-    tmp = fits.open(platesum)
-    plSum1 = tmp[1].data
-    platesum2 = tmp[2].data
-    fibord = np.argsort(platesum2['FIBERID'])
-    plSum2 = platesum2[fibord]
-    nfiber = len(plSum2['HMAG'])
-
-    telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
-    ntelluric = len(telluric)
-    science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
-    nscience = len(science)
-    sky, = np.where(plSum2['OBJTYPE'] == 'SKY')
-    nsky = len(sky)
-
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
     plotsdir = platedir+'/plots/'
@@ -1222,6 +1186,206 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
         print("getting sorttable.js...")
         subprocess.call(['wget', '-q', sort_table_link])
         subprocess.call(['mv', 'sorttable.js', htmldir])
+
+    # Set up some basic plotting parameters, starting by turning off interactive plotting.
+    plt.ioff()
+    fontsize = 24;   fsz = fontsize * 0.75
+    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    axwidth=1.5
+    axmajlen=7
+    axminlen=3.5
+
+    # Load in the apPlate file
+    apPlate = load.apPlate(int(plate), mjd)
+    data = apPlate['a'][11].data
+    objtype = data['OBJTYPE']
+    nfiber = len(data)
+
+    # Check for existence of plateSum file
+    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
+    if os.path.exists(platesum) is False:
+        err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
+        err2 = "You need to run MAKEPLATESUM first to make the file."
+        sys.exit(err1 + err2)
+
+    # Read the plateSum file
+    tmp = fits.open(platesum)
+    plSum1 = tmp[1].data
+    plSum2 = tmp[2].data
+
+    # Read the plateSum file
+    telluric, = np.where((objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'))
+    ntelluric = len(telluric)
+    science, = np.where((objtype != 'SPECTROPHOTO_STD') & (objtype != 'HOT_STD') & (objtype != 'SKY'))
+    nscience = len(science)
+    sky, = np.where(objtype == 'SKY')
+    nsky = len(sky)
+
+    # Get the HTML file name = pfile
+    platefile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('.fits','')
+
+    # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
+    objhtml = open(htmldir+htmlfile+'.html','w')
+    objhtml.write('<HTML>\n')
+    objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
+    objhtml.write('<BODY>\n')
+
+    objhtml.write('<H1>'+htmlfile+'</H1>\n')
+    #objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
+    #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
+
+    objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
+    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
+
+    cfile = open(plotsdir+htmlfile+'.csh','w')
+    for j in range(nfiber):
+        jdata = data[j]
+        fiber = jdata['FIBERID']
+        if fiber > 0:
+            cfiber = str(fiber).zfill(3)
+
+            objid = jdata['OBJECT']
+            objtype = jdata['OBJTYPE']
+            hmag = jdata['HMAG']
+            chmag = str("%.3f" % round(jdata['HMAG'],2))
+    #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
+            cra = str("%.5f" % round(jdata['RA'],5))
+            cdec = str("%.5f" % round(jdata['DEC'],5))
+            txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000'
+            txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> (SIMBAD) </A>'
+            simbadlink = txt1 + txt2
+
+            # Establish html table row background color
+            color = 'white'
+            if (objtype[j] == 'SPECTROPHOTO_STD') | (objtype[j] == 'HOT_STD'): color = 'plum'
+            if objtype[j] == 'SKY': color = 'silver'
+
+            # Get target flag strings
+            if 'apogee' in survey:
+                targflagtxt = bitmask.targflags(jdata['TARGET1'],jdata['TARGET2'],jdata['TARGET3'],
+                                                jdata['TARGET4'],survey=survey)
+            else:
+                if j == 0: print("PROBLEM!!! Need to update bitmask.py to handle SDSSV_APOGEE_TARGET0.")
+                targflagtxt = 'to be added ASAP'
+                #targflagtxt = bitmask.targflags(jdata['SDSSV_APOGEE_TARGET0'], survey=survey)
+            if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
+            targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
+
+            # Find apVisit file
+            visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber)
+            visitfilebase = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber))
+            vplotfile = visitfile.replace('.fits','.jpg')
+
+            if os.path.exists(visitfile) is False:
+                print("PROBLEM!!! "+visitfilebase+" not found!")
+            else:
+                visithdr = fits.getheader(visitfile)
+                starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
+                snratio = str("%.2f" % round(visithdr['SNR'],2))
+
+                # column 1
+                objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfiber+'</A>\n')
+
+                # column 2
+                objhtml.write('<TD BGCOLOR='+color+'>'+objid+'\n')
+                objhtml.write(simbadlink+'\n')
+                objhtml.write('<BR><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
+                objhtml.write('<BR>apStar file\n')
+
+                if objtype != 'SKY':
+                    objhtml.write('<TD BGCOLOR='+color+' align ="right">'+chmag+'\n')
+                    #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
+                    objhtml.write('<TD BGCOLOR='+color+' align ="right">'+snratio+'\n')
+                else:
+                    objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                    #objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                    objhtml.write('<TD BGCOLOR='+color+'>---\n')
+
+                if objtype == 'SKY': 
+                    objhtml.write('<TD BGCOLOR='+color+'>SKY\n')
+                else:
+                    if objtype == 'SPECTROPHOTO_STD') | objtype == 'HOT_STD'):
+                        objhtml.write('<TD BGCOLOR='+color+'>TEL\n')
+                    else:
+                        objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
+
+                objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
+                objhtml.write('<BR><BR>'+starflagtxt+'\n')
+
+                # Spectrum Plots
+                plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfib+'.png'
+                objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
+                if makeSpectrumPlots is True:
+                if (makeSpectrumPlots is True) & (j<60):
+                    print("Making "+plotfile)
+
+                    lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                    xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
+
+                    FluxB = apPlate['a'][1].data[fiber-1,:]
+                    FluxG = apPlate['b'][1].data[fiber-1,:]
+                    FluxR = apPlate['c'][1].data[fiber-1,:]
+                    WaveB = apPlate['a'][4].data[fiber-1,:]
+                    WaveG = apPlate['b'][4].data[fiber-1,:]
+                    WaveR = apPlate['c'][4].data[fiber-1,:]
+
+                    Flux = np.concatenate([FluxB, FluxG, FluxR])
+                    Wave = np.concatenate([WaveB, WaveG, WaveR])
+
+                    # Establish Ymax
+                    ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
+                    ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
+                    ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
+                    if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
+                        print("Problem with fiber "+cfib+". Not Plotting.")
+                    else:
+                        tmpF = convolve(Flux,Box1DKernel(11))
+                        ymx1 = np.nanmax(tmpF[ymxsec1])
+                        ymx2 = np.nanmax(tmpF[ymxsec2])
+                        ymx3 = np.nanmax(tmpF[ymxsec3])
+                        ymx = np.nanmax([ymx1,ymx2,ymx3])
+                        ymin = 0
+                        yspn = ymx-ymin
+                        ymax = ymx + (yspn * 0.15)
+                        # Establish Ymin
+                        ymn = np.nanmin(tmpF)
+                        if ymn > 0: 
+                            yspn = ymx - ymn
+                            ymin = ymn - (yspn * 0.15)
+                            ymax = ymx + (yspn * 0.15)
+
+                        fig=plt.figure(figsize=(28,6))
+                        ax1 = plt.subplot2grid((1,1), (0,0))
+                        ax1.tick_params(reset=True)
+                        ax1.set_xlim(xmin,xmax)
+                        ax1.set_ylim(ymin,ymax)
+                        ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
+                        ax1.minorticks_on()
+                        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                        ax1.tick_params(axis='both',which='major',length=axmajlen)
+                        ax1.tick_params(axis='both',which='minor',length=axminlen)
+                        ax1.tick_params(axis='both',which='both',width=axwidth)
+                        ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
+                        ax1.set_ylabel(r'Flux')
+
+                        color = 'k'
+                        if plSum2['OBJTYPE'][j] == 'SKY': color = 'firebrick'
+                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=color)
+                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=color)
+                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=color)
+
+                        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                        plt.savefig(plotsdir+plotfile)
+                    plt.close('all')
+
+    objhtml.close()
+    cfile.close()
+
+    plt.ion()
+
+    print("--------------------------------------------------------------------")
+    print("Done with MAKEOBJHTML for plate "+plate+", mjd "+mjd)
+    print("--------------------------------------------------------------------\n")
 
 #    if starfiber is None:
 #        txt1 = 'Left plots: red are targets, blue are telluric. Observed mags are calculated '
@@ -1251,166 +1415,6 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 #    if flat is not None:
 #        fiber['hmag'] = 12
 #        fiber['object'] = 'FLAT'
-
-    platefile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-    pfile = platefile.replace('.fits','')
-
-    # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
-    objhtml = open(htmldir+pfile+'.html','w')
-    objhtml.write('<HTML>\n')
-    objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
-    objhtml.write('<BODY>\n')
-
-    objhtml.write('<H1>'+pfile+'</H1>\n')
-    #objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
-    #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
-
-    objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
-
-    cfile = open(plotsdir+pfile+'.csh','w')
-    for j in range(nfiber):
-        objhtml.write('<TR>\n')
-
-        color = 'white'
-        if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'): color = 'plum'
-        if plSum2['OBJTYPE'][j] == 'SKY': color = 'silver'
-
-        visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]))
-        vplotfile = visitfile.replace('.fits','.jpg')
-        cfib = str(plSum2['FIBERID'][j]).zfill(3)
-        rastring = str("%.5f" % round(plSum2['RA'][j],5))
-        decstring = str("%.5f" % round(plSum2['DEC'][j],5))
-
-        # column 1
-        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
-
-        # column 2
-        objhtml.write('<TD BGCOLOR='+color+'>'+plSum2['OBJECT'][j]+'\n')
-        txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+rastring+'+'+decstring+'&CooFrame=FK5&CooEpoch=2000'
-        txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> (SIMBAD) </A>'
-        objhtml.write(txt1+txt2+'\n')
-        objhtml.write('<BR><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
-        objhtml.write('<BR>apStar file\n')
-
-        if plSum2['OBJTYPE'][j] != 'SKY':
-            hmag = str("%.3f" % round(plSum2['HMAG'][j],3))
-            objhtml.write('<TD BGCOLOR='+color+' align ="right">'+hmag+'\n')
-            diff = str("%.2f" % round(plSum2['obsmag'][j][0][1] - plSum2['HMAG'][j],2))
-#            diff = plSum2['HMAG'][j] + (2.5 * np.log10(plSum2['obsmag'][j][0][1])) - plSum1['ZERO'][i]
-            objhtml.write('<TD BGCOLOR='+color+' align ="right">'+diff+'\n')
-            snratio = str("%.2f" % round(plSum2['SN'][j][0][2],2))
-            objhtml.write('<TD BGCOLOR='+color+' align ="right">'+snratio+'\n')
-        else:
-            objhtml.write('<TD BGCOLOR='+color+'>---\n')
-            objhtml.write('<TD BGCOLOR='+color+'>---\n')
-            objhtml.write('<TD BGCOLOR='+color+'>---\n')
-
-        if plSum2['OBJTYPE'][j] == 'SKY': 
-            objhtml.write('<TD BGCOLOR='+color+'>SKY\n')
-        else:
-            if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'):
-                objhtml.write('<TD BGCOLOR='+color+'>TEL\n')
-            else:
-                objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
-
-#        objhtml.write('<TD>'+str("%8.2f" % round(snc[j,1],2))+'\n')
-        if 'apogee' in survey:
-            targflagtxt = bitmask.targflags(plSum2['TARGET1'][j], 
-                                            plSum2['TARGET2'][j], 
-                                            plSum2['TARGET3'][j], 
-                                            plSum2['TARGET4'][j], 
-                                            survey=survey)
-        else:
-            if j == 0: print("PROBLEM!!! Need to update bitmask.py to handle SDSSV_APOGEE_TARGET0.")
-            targflagtxt = 'to be added ASAP'
-            #targflagtxt = bitmask.targflags(plSum2['SDSSV_APOGEE_TARGET0'][j], survey=survey)
-
-        if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
-        targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
-        objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
-
-        if plSum2['FIBERID'][j] >= 0:
-            vfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]).replace('-apo25m','')
-            if os.path.exists(vfile):
-                h = fits.getheader(vfile)
-                starflagtxt = bitmask.StarBitMask().getname(h['STARFLAG']).replace(',','<BR>')
-                objhtml.write('<BR><BR>'+starflagtxt+'\n')
-
-        # Spectrum Plots
-#        if j > -1:
-        plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfib+'.png'
-        if makeSpectrumPlots is True:
-            print("Making "+plotfile)
-
-            lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-            xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
-
-            FluxB = apPlate['a'][1].data[299-j,:]
-            FluxG = apPlate['b'][1].data[299-j,:]
-            FluxR = apPlate['c'][1].data[299-j,:]
-            WaveB = apPlate['a'][4].data[299-j,:]
-            WaveG = apPlate['b'][4].data[299-j,:]
-            WaveR = apPlate['c'][4].data[299-j,:]
-
-            Flux = np.concatenate([FluxB, FluxG, FluxR])
-            Wave = np.concatenate([WaveB, WaveG, WaveR])
-
-            # Establish Ymax
-            ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
-            ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
-            ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
-            if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
-                print("Problem with fiber "+cfib+". Not Plotting.")
-            else:
-                tmpF = convolve(Flux,Box1DKernel(11))
-                ymx1 = np.nanmax(tmpF[ymxsec1])
-                ymx2 = np.nanmax(tmpF[ymxsec2])
-                ymx3 = np.nanmax(tmpF[ymxsec3])
-                ymx = np.nanmax([ymx1,ymx2,ymx3])
-                ymin = 0
-                yspn = ymx-ymin
-                ymax = ymx + (yspn * 0.15)
-                # Establish Ymin
-                ymn = np.nanmin(tmpF)
-                if ymn > 0: 
-                    yspn = ymx - ymn
-                    ymin = ymn - (yspn * 0.15)
-                    ymax = ymx + (yspn * 0.15)
-
-                fig=plt.figure(figsize=(28,6))
-                ax1 = plt.subplot2grid((1,1), (0,0))
-                ax1.tick_params(reset=True)
-                ax1.set_xlim(xmin,xmax)
-                ax1.set_ylim(ymin,ymax)
-                ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
-                ax1.minorticks_on()
-                ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax1.tick_params(axis='both',which='major',length=axmajlen)
-                ax1.tick_params(axis='both',which='minor',length=axminlen)
-                ax1.tick_params(axis='both',which='both',width=axwidth)
-                ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
-                ax1.set_ylabel(r'Flux')
-
-                color = 'k'
-                if plSum2['OBJTYPE'][j] == 'SKY': color = 'firebrick'
-                ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=color)
-                ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=color)
-                ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=color)
-
-                fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
-                plt.savefig(plotsdir+plotfile)
-            plt.close('all')
-
-        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
-    objhtml.close()
-    cfile.close()
-
-    plt.ion()
-
-    print("--------------------------------------------------------------------")
-    print("Done with MAKEOBJHTML for plate "+plate+", mjd "+mjd)
-    print("--------------------------------------------------------------------\n")
 
 
 '''-----------------------------------------------------------------------------------------'''
