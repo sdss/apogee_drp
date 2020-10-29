@@ -1358,6 +1358,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
                 ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
                 ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
+                import pdb; pdb.set_trace()
                 if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
                     print("Problem with fiber "+cfiber+". Not Plotting.")
                 else:
