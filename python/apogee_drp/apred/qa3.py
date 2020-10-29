@@ -314,23 +314,25 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     for i in range(n_exposures):
         cframe = None
 
+        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
         if ims[0] == 0: 
             pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
+            dfile = load.filename('Plate',  plate=int(plate), mjd=mjd, chips=True)
             d = load.apPlate(int(plate), mjd) 
-            if type(d)!=dict: print("Problem with apPlate!!!")
             cframe = load.apPlate(int(plate), mjd)
+            if type(d)!=dict: print("Problem with apPlate!!!")
+            dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
 
         if ims[0] != 0:
             pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
+            dfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
             d = load.ap1D(ims[i])
+            cframe = load.apCframe(field, int(plate), mjd, ims[i])
             if type(d)!=dict: print("Problem with ap1D!!!")
-            cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips='c')
-            cframefile = cframefile.replace('apCframe-','apCframe-c-')
-            if os.path.exists(cframefile): cframe = load.apCframe(field, int(plate), mjd, ims[i])
+            dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
 
+        cframehdr = fits.getheader(cramefile.replace('Cframe-','Cframe-a-'))
         pfile = pfile.replace('.fits','')
-        dhdr = d['a'][0].header
-        cframehdr = cframe['a'][0].header
 
         obs = np.zeros((nfiber,nchips), dtype=np.float64)
         sn  = np.zeros((nfiber,nchips), dtype=np.float64)
