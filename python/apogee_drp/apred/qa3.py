@@ -1185,6 +1185,9 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
+    data = apPlate[11].data
+    gd, = np.where(data['FIBERID'] > 0)
+    import pdb; pdb.set_trace()
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
