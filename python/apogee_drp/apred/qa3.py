@@ -1359,7 +1359,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
                 ymxsec3, = np.where((Wave > 16905) & (Wave < 16940))
                 if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
-                    print("Problem with fiber "+cfib+". Not Plotting.")
+                    print("Problem with fiber "+cfiber+". Not Plotting.")
                 else:
                     tmpF = convolve(Flux,Box1DKernel(11))
                     ymx1 = np.nanmax(tmpF[ymxsec1])
