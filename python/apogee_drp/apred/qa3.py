@@ -1389,6 +1389,8 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                         yspn = ymx - ymn
                         ymin = ymn - (yspn * 0.15)
                         ymax = ymx + (yspn * 0.15)
+                    if objtype == 'SKY':
+                        ymin = 0; ymax = 100
 
                     fig=plt.figure(figsize=(28,6))
                     ax1 = plt.subplot2grid((1,1), (0,0))
