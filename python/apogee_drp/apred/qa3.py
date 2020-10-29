@@ -1358,15 +1358,14 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                 xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
-                import pdb; pdb.set_trace()
-                FluxB = apPlate['a'][1].data[fiber+298,:]
-                FluxG = apPlate['b'][1].data[fiber+298,:]
-                FluxR = apPlate['c'][1].data[fiber+298,:]
-                WaveB = apPlate['a'][4].data[fiber+298,:]
-                WaveG = apPlate['b'][4].data[fiber+298,:]
-                WaveR = apPlate['c'][4].data[fiber+298,:]
+                FluxB = apPlate['a'][1].data[300-fiber,:]
+                FluxG = apPlate['b'][1].data[300-fiber,:]
+                FluxR = apPlate['c'][1].data[300-fiber,:]
+                WaveB = apPlate['a'][4].data[300-fiber,:]
+                WaveG = apPlate['b'][4].data[300-fiber,:]
+                WaveR = apPlate['c'][4].data[300-fiber,:]
 
-                Flux = np.concatenate([FluxB, FluxG, FluxR])
+                Flux = np.concatenate([FluxB, FluxG, FluxR])fiber
                 Wave = np.concatenate([WaveB, WaveG, WaveR])
 
                 # Establish Ymax
