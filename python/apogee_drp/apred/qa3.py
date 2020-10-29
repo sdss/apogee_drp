@@ -1276,14 +1276,16 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
         visitfile = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=plSum2['FIBERID'][j]))
         vplotfile = visitfile.replace('.fits','.jpg')
         cfib = str(plSum2['FIBERID'][j]).zfill(3)
+        rastring = str("%.5f" % round(plSum2['RA'][j],5))
+        decstring = str("%.5f" % round(plSum2['DEC'][j],5))
 
         # column 1
         objhtml.write('<TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfib+'</A>\n')
 
         # column 2
         objhtml.write('<TD BGCOLOR='+color+'>'+plSum2['OBJECT'][j]+'\n')
-        txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+str(plSum2['RA'][j])+'+'+str(plSum2['DEC'][j])+'&CooFrame=FK5&CooEpoch=2000'
-        txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> SIMBAD </A>'
+        txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+rastring+'+'+decstring+'&CooFrame=FK5&CooEpoch=2000'
+        txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> (SIMBAD) </A>'
         objhtml.write(txt1+txt2+'\n')
         objhtml.write('<BR><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
         objhtml.write('<BR>apStar file\n')
