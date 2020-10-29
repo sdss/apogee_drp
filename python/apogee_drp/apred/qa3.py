@@ -528,6 +528,8 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['NSN'][i] =       nsn
         platetab['SNC'][i] =       achievedsnc
         if ntelluric > 0: platetab['SNRATIO'][i] = np.nanmedian(snt[telluric,1] / snc[telluric,1])
+        platetab['MOONDIST'][i] =  moondist
+        platetab['MOONPHASE'][i] = moonphase
 
         for j in range(len(fiber)):
             fiber['sn'][j][i,:] = sn[j,:]
