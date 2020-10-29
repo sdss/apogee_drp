@@ -1196,11 +1196,9 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     # Read the plateSum file
     tmp = fits.open(platesum)
     plSum1 = tmp[1].data
-    platesum2 = tmp[2].data
-    fibord = np.argsort(platesum2['FIBERID'])
-    plSum2 = platesum2[fibord]
+    plSum2 = tmp[2].data
     nfiber = len(plSum2['HMAG'])
-    import pdb; pdb.set_trace()
+    fiberindex = plSum2['FIBERID'][::-1]-1
 
     telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
     ntelluric = len(telluric)
@@ -1268,7 +1266,10 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 
     cfile = open(plotsdir+pfile+'.csh','w')
     for j in range(nfiber):
+        gd, = np.where(300-plSum2['FIBERID'] == fiberindex)
+        gdplSum2 = plSum2[gd]
         objhtml.write('<TR>\n')
+        import pdb; pdb.set_trace()
 
         color = 'white'
         if (plSum2['OBJTYPE'][j] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'][j] == 'HOT_STD'): color = 'plum'
