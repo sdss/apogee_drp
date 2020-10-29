@@ -157,8 +157,6 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
     startab['meanfib'] = meanfib
     startab['sigfib'] = sigfib
     starmask = bitmask.StarBitMask()
-    startab['starflag'] |= starmask.getval('RV_FAIL')  # bad until proven good
-    startab['andflag'] |= starmask.getval('RV_FAIL')
     
     # Select good visit spectra
     gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
