@@ -1049,13 +1049,15 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         #    x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,ichip]
         #    ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
         x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,1]
-        ymaxsci = np.nanmax(y)
+        yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
         ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
         x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
-        ymaxtel = np.nanmax(y)
+        ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
         ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
+        ymin = np.min([yminsci,ymintel])
         ymax = np.max([ymaxsci,ymaxtel])
-        ax3.set_ylim(0.1,ymax*1.05)
+        yspan=ymax-ymin
+        ax3.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
 
         # overplot the target S/N line
         sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
