@@ -1358,12 +1358,12 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                 xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
-                FluxB = apPlate['a'][1].data[fiber,:]
-                FluxG = apPlate['b'][1].data[fiber,:]
-                FluxR = apPlate['c'][1].data[fiber,:]
-                WaveB = apPlate['a'][4].data[fiber,:]
-                WaveG = apPlate['b'][4].data[fiber,:]
-                WaveR = apPlate['c'][4].data[fiber,:]
+                FluxB = apPlate['a'][1].data[fiber+298,:]
+                FluxG = apPlate['b'][1].data[fiber+298,:]
+                FluxR = apPlate['c'][1].data[fiber+298,:]
+                WaveB = apPlate['a'][4].data[fiber+298,:]
+                WaveG = apPlate['b'][4].data[fiber+298,:]
+                WaveR = apPlate['c'][4].data[fiber+298,:]
 
                 Flux = np.concatenate([FluxB, FluxG, FluxR])
                 Wave = np.concatenate([WaveB, WaveG, WaveR])
