@@ -1310,15 +1310,18 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 
             # Find apVisit file
             visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber)
-            visitfilebase = os.path.basename(load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber))
+            visitfilebase = os.path.basename(visitfile)
             vplotfile = visitfile.replace('.fits','.jpg')
 
             starflagtxt = ''
+            snratio = ''
             if os.path.exists(visitfile):
                 visithdr = fits.getheader(visitfile)
-                starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
-                if fiber == 34: import pdb; pdb.set_trace()
-                snratio = str("%.2f" % round(visithdr['SNR'],2))
+                if 'HMAG' in visithdr:
+                    starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
+                    snratio = str("%.2f" % round(visithdr['SNR'],2))
+                else:
+                    print("PROBLEM WITH "+visitfilebase"... nothing in the header.")
 
             # column 1
             objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+'>'+cfiber+'</A>\n')
