@@ -472,9 +472,11 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             gdrms = -1
             exptime=-9.999
 
-        alt = dhdr['ALT']
+        alt = 0
+        if "ALT" in dhdr: alt = dhdr['ALT']
         secz = 1. / np.cos((90.-alt) * (math.pi/180.))
-        seeing = dhdr['SEEING']
+        seeing = 0
+        if "SEEING" in dhdr: seeing = dhdr['SEEING']
         ### NOTE:'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
 #        design_ha = plug['ha']
         design_ha = [0,0,0]
