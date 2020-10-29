@@ -1347,15 +1347,9 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
                 visit = load.apVisit(int(plate), mjd, fiber)
-                import pdb; pdb.set_trace()
-#                flux = visit[
 
-                FluxB = apPlate['a'][1].data[299-j,:]
-                FluxG = apPlate['b'][1].data[299-j,:]
-                FluxR = apPlate['c'][1].data[299-j,:]
-                WaveB = apPlate['a'][4].data[299-j,:]
-                WaveG = apPlate['b'][4].data[299-j,:]
-                WaveR = apPlate['c'][4].data[299-j,:]
+                FluxB = visit[1].data[2]; FluxG = visit[1].data[1]; FluxR = visit[1].data[0]
+                WaveB = visit[4].data[2]; WaveG = visit[4].data[1]; WaveR = visit[4].data[2]
 
                 Flux = np.concatenate([FluxB, FluxG, FluxR])
                 Wave = np.concatenate([WaveB, WaveG, WaveR])
@@ -1407,11 +1401,6 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 plt.close('all')
         else:
             print("PROBLEM!!! "+visitfilebase+" not found.")
-
-
-
-
-
 
     objhtml.close()
     cfile.close()
