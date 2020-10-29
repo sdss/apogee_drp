@@ -1223,8 +1223,8 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     sky, = np.where(objtype == 'SKY')
     nsky = len(sky)
 
-    # Get the HTML file name = pfile
-    platefile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('.fits','')
+    # Get the HTML file name... apPlate-plate-mjd
+    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('.fits','')
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     objhtml = open(htmldir+htmlfile+'.html','w')
