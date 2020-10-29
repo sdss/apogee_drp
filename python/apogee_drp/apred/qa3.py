@@ -512,8 +512,10 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['SEEING'][i] =    seeing
         platetab['FWHM'][i] =      fwhm
         platetab['GDRMS'][i] =     gdrms
-        platetab['CART'][i] =      dhdr['CARTID']
-        platetab['DATEOBS'][i] =   dhdr['DATE-OBS']
+        cart=0
+        if 'CARTID' in dhdr: cart = dhdr['CARTID']
+        platetab['CART'][i] =      cart
+        platetab['DATEOBS'][i] =   dateobs
         platetab['EXPTIME'][i] =   exptime
         platetab['DITHER'][i] =    dither
         platetab['ZERO'][i] =      zero
