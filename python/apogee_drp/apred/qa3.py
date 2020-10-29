@@ -1365,7 +1365,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 WaveG = apPlate['b'][4].data[300-fiber,:]
                 WaveR = apPlate['c'][4].data[300-fiber,:]
 
-                Flux = np.concatenate([FluxB, FluxG, FluxR])fiber
+                Flux = np.concatenate([FluxB, FluxG, FluxR])
                 Wave = np.concatenate([WaveB, WaveG, WaveR])
 
                 # Establish Ymax
