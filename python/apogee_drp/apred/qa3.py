@@ -1325,8 +1325,9 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
             # column 2
             objhtml.write('<TD BGCOLOR='+color+'>'+objid+'\n')
             objhtml.write(simbadlink+'\n')
-            objhtml.write('<BR><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
-            objhtml.write('<BR>apStar file\n')
+            if objtype != 'SKY':
+                objhtml.write('<BR><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
+                objhtml.write('<BR>apStar file\n')
 
             if objtype != 'SKY':
                 objhtml.write('<TD BGCOLOR='+color+' align ="right">'+chmag+'\n')
