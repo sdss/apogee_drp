@@ -1304,7 +1304,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 if objtype == 'SKY': 
                     objhtml.write('<TD BGCOLOR='+color+'>SKY\n')
                 else:
-                    if objtype == 'SPECTROPHOTO_STD') | objtype == 'HOT_STD'):
+                    if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
                         objhtml.write('<TD BGCOLOR='+color+'>TEL\n')
                     else:
                         objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
