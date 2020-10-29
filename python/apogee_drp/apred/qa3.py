@@ -1282,7 +1282,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
             hmag = jdata['HMAG']
-            chmag = str("%.3f" % round(jdata['HMAG'],2))
+            chmag = str("%.3f" % round(jdata['HMAG'],3))
     #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
             cra = str("%.5f" % round(jdata['RA'],5))
             cdec = str("%.5f" % round(jdata['DEC'],5))
