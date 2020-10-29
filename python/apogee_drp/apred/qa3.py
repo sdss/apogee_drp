@@ -1031,13 +1031,15 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
 
         # PLOTS 7b: observed mag - fit mag vs H mag
         x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
-        ymaxsci = np.nanmax(y)
+        yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
         ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
         x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
-        ymaxtel = np.nanmax(y)
+        ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
         ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue')
+        ymin = np.min([yminsci,ymintel])
         ymax = np.max([ymaxsci,ymaxtel])
-        ax2.set_ylim(0.01,ymax*1.05)
+        yspan=ymax-ymin
+        ax2.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
 
         # PLOTS 7c: S/N as calculated from ap1D frame
         #c = ['r','g','b']
