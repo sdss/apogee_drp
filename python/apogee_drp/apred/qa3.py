@@ -166,6 +166,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     print("Making "+platesumbase+" ...\n")
 
+    n_exposures = len(ims)
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
@@ -178,10 +179,9 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     if ims[0] == 0: 
         tot = load.apPlate(int(plate), mjd)
-        ims = [0]
+        n_exposures = 1
     else: 
         tot = load.ap1D(ims[0])
-    n_exposures = len(ims)
 
     if type(tot) != dict:
         html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
