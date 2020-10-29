@@ -1317,6 +1317,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
             if os.path.exists(visitfile):
                 visithdr = fits.getheader(visitfile)
                 starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
+                if fiber == 34: import pdb; pdb.set_trace()
                 snratio = str("%.2f" % round(visithdr['SNR'],2))
 
             # column 1
