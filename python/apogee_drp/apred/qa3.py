@@ -1337,7 +1337,9 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
         # Spectrum Plots
 #        if j > -1:
         plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfib+'.png'
+        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
         if makeSpectrumPlots is True:
+            import pdb; pdb.set_trace()
             print("Making "+plotfile)
 
             lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
@@ -1399,7 +1401,6 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
                 plt.savefig(plotsdir+plotfile)
             plt.close('all')
 
-        objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
     objhtml.close()
     cfile.close()
 
