@@ -985,6 +985,13 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
         print("Making "+plotfile)
 
+        telluric, = np.where((plSum2['OBTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBTYPE'] == 'HOT_STD'))
+        ntelluric = len(telluric)
+        science, = np.where((plSum2['OBTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBTYPE'] != 'HOT_STD') & (plSum2['OBTYPE'] != 'SKY'))
+        nscience = len(science)
+        sky, = np.where(plSum2['OBTYPE'] == 'SKY')
+        nsky = len(sky)
+
         notsky, = np.where(plSum2['HMAG'] < 30)
         hmagarr = plSum2['HMAG'][notsky]
         minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
@@ -1229,7 +1236,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     plSum1 = tmp[1].data
     plSum2 = tmp[2].data
 
-    # Read the plateSum file
+    # Establish fiber types
     telluric, = np.where((objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'))
     ntelluric = len(telluric)
     science, = np.where((objtype != 'SPECTROPHOTO_STD') & (objtype != 'HOT_STD') & (objtype != 'SKY'))
