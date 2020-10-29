@@ -985,11 +985,11 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
         print("Making "+plotfile)
 
-        telluric, = np.where((plSum2['OBTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBTYPE'] == 'HOT_STD'))
+        telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
         ntelluric = len(telluric)
-        science, = np.where((plSum2['OBTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBTYPE'] != 'HOT_STD') & (plSum2['OBTYPE'] != 'SKY'))
+        science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
         nscience = len(science)
-        sky, = np.where(plSum2['OBTYPE'] == 'SKY')
+        sky, = np.where(plSum2['OBJTYPE'] == 'SKY')
         nsky = len(sky)
 
         notsky, = np.where(plSum2['HMAG'] < 30)
