@@ -1281,6 +1281,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
             vplotfile = visitfile.replace('.fits','.jpg')
 
             if (objtype != 'SKY') & (os.path.exists(visitfile) is False):
+                import pdb; pdb.set_trace()
                 print("PROBLEM!!! "+visitfilebase+" not found!")
             else:
                 visithdr = fits.getheader(visitfile)
