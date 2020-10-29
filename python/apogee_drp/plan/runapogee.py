@@ -396,7 +396,9 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     logger.info('Writing allStar file to '+allstarfile)
     if os.path.exists(os.path.dirname(allstarfile))==False:
         os.makedirs(os.path.dirname(allstarfile))
-    Table(allstar).write(allstarfile,overwrite=True)
+    allstar = Table(allstar)
+    del allstar['nres']    # temporary kludge, nres is causing write problems
+    allstar.write(allstarfile,overwrite=True)
 
     # allVisit
     # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
@@ -419,7 +421,6 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     logger.info('Writing allVisit file to '+allvisitfile)
     if os.path.exists(os.path.dirname(allvisitfile))==False:
         os.makedirs(os.path.dirname(allvisitfile))
-    import pdb; pdb.set_trace()
     Table(allvisit).write(allvisitfile,overwrite=True)
 
     # Nightly allVisit and allStar, allVisitMJD/allStarMJD
@@ -431,15 +432,16 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     # maybe in summary/MJD/ or qa/MJD/ ?
     #allstarmjdfile = load.filename('allStarMJD')
     allstarmjdfile = allstarfile.replace('allStar','allStarMJD').replace('.fits','-'+str(mjd5)+'.fits')
+    mjdsumdir = os.path.dirname(allstarmjdfile)+'/'+str(mjd5)
+    allstarmjdfile = mjdsumdir+'/'+os.path.basename(allstarmjdfile)
+    if os.path.exists(mjdsumdir)==False:
+        os.makedirs(mjdsumdir)
     logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
-    if os.path.exists(os.path.dirname(allstarmjdfile))==False:
-        os.makedirs(os.path.dirname(allstarmjdfile))
+
     Table(allstarmjd).write(allstarmjdfile,overwrite=True)
-    #allvisitmjdfile = load.filename('allVisitMJD')
     allvisitmjdfile = allvisitfile.replace('allVisit','allVisitMJD').replace('.fits','-'+str(mjd5)+'.fits')
+    allvisitmjdfile = mjdsumdir+'/'+os.path.basename(allvisitmjdfile)
     logger.info('Writing Nightly allVisitMJD file to '+allvisitmjdfile)
-    if os.path.exists(os.path.dirname(allvisitmjdfile))==False:
-        os.makedirs(os.path.dirname(allvisitmjdfile))
     Table(allvisitmjd).write(allvisitmjdfile,overwrite=True)
 
     db.close()
