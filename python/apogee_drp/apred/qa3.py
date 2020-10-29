@@ -645,7 +645,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     for i in range(len(tab1)):
         html.write('<TR>\n')
         html.write('<TD>'+str(int(round(tab1['IM'][i])))+'\n')
-        html.write('<TD>'+str(int(round(tab1['EXPTIME'][i])))+'\n'
+        html.write('<TD>'+str(int(round(tab1['EXPTIME'][i])))+'\n')
         html.write('<TD>'+str(int(round(tab1['CART'][i])))+'\n')
         html.write('<TD>'+str("%.2f" % round(tab1['SECZ'][i],2))+'\n')
         html.write('<TD>'+str("%.2f" % round(tab1['HA'][i],2))+'\n')
