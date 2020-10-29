@@ -1266,7 +1266,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
 
     cfile = open(plotsdir+pfile+'.csh','w')
     for j in range(nfiber):
-        gd, = np.where(300-plSum2['FIBERID'] == fiberindex)
+        gd, = np.where(300-plSum2['FIBERID'] == fiberindex[j])
         gdplSum2 = plSum2[gd]
         objhtml.write('<TR>\n')
         import pdb; pdb.set_trace()
