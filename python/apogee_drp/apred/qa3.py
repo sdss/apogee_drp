@@ -797,13 +797,6 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     plSum2 = platesum2[fibord]
     nfiber = len(plSum2['HMAG'])
 
-    telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
-    ntelluric = len(telluric)
-    science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
-    nscience = len(science)
-    sky, = np.where(plSum2['OBJTYPE'] == 'SKY')
-    nsky = len(sky)
-
     #----------------------------------------------------------------------------------------------
     # PLOT 1: HMAG versus S/N for the exposure-combined apVisit
     #----------------------------------------------------------------------------------------------
@@ -1237,7 +1230,8 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
     #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
 
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
+    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
+#    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
     cfile = open(plotsdir+htmlfile+'.csh','w')
     for j in range(nfiber):
@@ -1254,7 +1248,7 @@ def makeObjHtml(load=None, plate=None, mjd=None, survey=None, makeSpectrumPlots=
             cra = str("%.5f" % round(jdata['RA'],5))
             cdec = str("%.5f" % round(jdata['DEC'],5))
             txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000'
-            txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList="> (SIMBAD) </A>'
+            txt2 = '&CooEqui=2000&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=">SIMBAD link</A>'
             simbadlink = txt1 + txt2
 
             # Establish html table row background color and spectrum plot color
