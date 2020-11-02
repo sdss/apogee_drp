@@ -77,8 +77,8 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     starSumPathN = 'summary/allStar-daily-apo25m.fits'
     visSumPathS = 'summary/allVisit-daily-lco25m.fits'
     starSumPathS = 'summary/allStar-daily-lco25m.fits'
-    html.write('<p>APO 2.5m Summary Files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a>\n')
-    html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
+    html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
+    #html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
     html.write( 'White: APO 2.5m, Green: LCO 2.5m\n')
     #html.write('<br>Click on column headings to sort\n')
 
