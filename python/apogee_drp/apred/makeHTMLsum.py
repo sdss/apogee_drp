@@ -67,7 +67,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     # Open the mjd file html
     if mjdfilebase is None: mjdfilebase = 'mjd'
     mjdfile = qadir+mjdfilebase+'.html'
-    print("Creating "+mjdfile)
+    print("----> makeHTMLsum: creating "+mjdfile)
     html = open(mjdfile,'w')
     html.write('<HTML><BODY>\n')
     html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script></head>\n')
@@ -152,7 +152,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     html.write('</body></html>\n')
     html.close()
 
-    print("Done with makeHTMLsum")
+    print("----> makeHTMLsum: Done.")
 
 
 
