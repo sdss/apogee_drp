@@ -73,7 +73,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script></head>\n')
     html.write('<p><A HREF=fields.html> FIELDS view </a><p>\n')
     html.write( 'Blue: APO 2.5m, Green: LCO 2.5m, Red: APO 1m\n')
-    html.write('<br>Click on column headings to sort\n')
+    #html.write('<br>Click on column headings to sort\n')
 
     # Create web page with entry for each MJD
     html.write('<TABLE BORDER=2 CLASS=sortable>\n')
