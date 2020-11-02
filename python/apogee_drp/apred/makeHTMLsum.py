@@ -32,7 +32,6 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 '''-----------------------------------------------------------------------------------------'''
 def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew'):
     # Establish data directories.
-    print("----> makeHTMLsum: finding log files. Please wait.")
     datadirN = os.environ['APOGEE_DATA_N']
     datadirS = os.environ['APOGEE_DATA_S']
     apodir =   os.environ.get('APOGEE_REDUX')+'/'
@@ -96,7 +95,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         # Column 1: Logs(data)
         logFileDir = '../../' + os.path.basename(datadir) + '/'
         logFilePath = logFileDir + cmjd + '/' + cmjd + '.log.html'
-        html.write('<TR bgcolor='+color+'><TD><A HREF='+logfilepath+'>'+cmjd+'</A>\n')
+        html.write('<TR bgcolor='+color+'><TD><A HREF='+logFilePath+'>'+cmjd+'</A>\n')
         html.write('<A HREF='+logFileDir+'>(raw)</A>\n')
 
         # Column 2: Exposures
