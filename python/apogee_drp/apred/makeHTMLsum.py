@@ -73,7 +73,9 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>MJD Summary</title></head>\n')
     html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
     html.write('<p> Fields View (link coming soon) <p>\n')
-    html.write('<p><a href="summary/allVisit-daily-apo25m.fits">allVisit download</a>   <a href="summary/allStar-daily-apo25m.fits">allStar</a></p>\n')
+    visSumPath = 'summary/allVisit-daily-'+telescope+'.fits'
+    starSumPath = 'summary/allStar-daily-'+telescope+'.fits'
+    html.write('<p><a href="'+visSumPath+'">allVisit download</a><BR><a href="'+starSumPath+'">allStar download</a></p>\n')
     html.write( 'White: APO 2.5m, Green: LCO 2.5m\n')
     #html.write('<br>Click on column headings to sort\n')
 
