@@ -32,16 +32,19 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 '''-----------------------------------------------------------------------------------------'''
 def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew'):
     # Establish data directories.
+    print("----> makeHTMLsum: finding log files. Please wait.")
     datadirN = os.environ['APOGEE_DATA_N']
     datadirS = os.environ['APOGEE_DATA_S']
     apodir =   os.environ.get('APOGEE_REDUX')+'/'
     qadir = apodir+apred+'/qa/'
 
     # Find all .log.html files, get all MJDs with data
+    print("----> makeHTMLsum: finding log files. Please wait.")
     logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
     logsS = np.array(glob.glob(datadirS+'/*/*.log.html'))
     logs = np.concatenate([logsN,logsS]) 
     nlogs = len(logs)
+    print("----> makeHTMLsum: found "+str(nlogs)+" log files.")
 
     # Get array of MJDs and run mkhtml if MJD[i] within mjdmin-mjdmax range
     mjd = np.empty(nlogs)
@@ -66,7 +69,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     if mjdfilebase is None: mjdfilebase = 'mjd'
     mjdfile = qadir+mjdfilebase+'.html'
     print("Creating "+mjdfile)
-    html = open(mjdmjdfile,'w')
+    html = open(mjdfile,'w')
     html.write('<HTML><BODY>\n')
     html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script></head>\n')
     html.write('<p><A HREF=fields.html> FIELDS view </a><p>\n')
