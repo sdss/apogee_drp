@@ -84,18 +84,23 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         telescope = 'apo25m'
         instrument = 'apogee-n'
         datadir = datadirN
+        datadir1 = 'data2n'
         color = 'b3b3ff'
         if 'lco' in logs[i]: 
             telescope = 'lco25m'
             instrument = 'apogee-s'
             datadir = datadirS
+            datadir1 = 'data2s'
             color = 'b3ffb3'
         load = apload.ApLoad(apred=apred, telescope=telescope)
 
         # Column 1: Logs(data)
         logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
         logFilePath = logFileDir + cmjd + '.log.html'
-        html.write('<TR bgcolor='+color+'><TD><A HREF='+logFilePath+'>'+cmjd+'</A>\n')
+
+        logFile = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/' + cmjd + '.log.html'
+        logFileDir = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/'
+        html.write('<TR bgcolor='+color+'><TD><A HREF='+logFile+'>'+cmjd+'</A>\n')
         html.write('<A HREF='+logFileDir+'>(raw)</A>\n')
 
         # Column 2: Exposures
