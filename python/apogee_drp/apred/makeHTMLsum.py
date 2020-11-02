@@ -101,7 +101,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         logFile = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/' + cmjd + '.log.html'
         logFileDir = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/'
         html.write('<TR bgcolor='+color+'><TD><A HREF='+logFile+'>'+cmjd+'</A>\n')
-        html.write('<A HREF='+logFileDir+'>(raw)</A>\n')
+        html.write('<A HREF='+logFileDir+'><BR>(raw)</A>\n')
 
         # Column 2: Exposures
         exposureLogPath = '../exposures/' + instrument + '/' + cmjd + '/html/' + cmjd + 'exp.html'
