@@ -130,9 +130,9 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
                 field = tmp[2]
                 plate = tmp[3]
                 if j < nplates:
-                    html.write(str(j+1)+': <A HREF=../'+plateQApathPartial+'>'+field+' (plate '+plate+')<BR></A>\n')
+                    html.write('('+str(j+1)+') <A HREF=../'+plateQApathPartial+'>'+field+' (plate '+plate+')<BR></A>\n')
                 else:
-                    html.write(str(j+1)+': <A HREF=../'+plateQApathPartial+'>'+field+' (plate '+plate+')</A>\n')
+                    html.write('('+str(j+1)+') <A HREF=../'+plateQApathPartial+'>'+field+' (plate '+plate+')</A>\n')
 
         # Column 5: Combined files for this night
         #html.write('<TD>\n')
