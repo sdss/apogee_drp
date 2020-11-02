@@ -602,7 +602,8 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     if os.path.exists(qafiledir) is False: subprocess.call(['mkdir',qafiledir])
 
     html = open(qafile, 'w')
-    html.write('<HTML><HEAD><script src="sorttable.js"></script></head><BODY>\n')
+    tmp = os.path.basename(qafile).replace('.html','')
+    html.write('<HTML><HEAD><script src="sorttable.js"></script><title>'+tmp+'</title></head><BODY>\n')
     html.write('<H1>Field: '+field+'   Plate: '+plate+'   MJD: '+mjd+'</H1>\n')
     html.write('<HR>\n')
 
