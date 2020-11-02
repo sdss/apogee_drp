@@ -65,7 +65,8 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     # Open the mjd file html
     if mjdfilebase is None: mjdfilebase = 'mjd'
     mjdfile = qadir+mjdfilebase+'.html'
-    html = open(mjd
+    print("Creating "+mjdfile)
+    html = open(mjdmjdfile,'w')
     html.write('<HTML><BODY>\n')
     html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script></head>\n')
     html.write('<p><A HREF=fields.html> FIELDS view </a><p>\n')
