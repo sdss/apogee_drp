@@ -71,13 +71,16 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     html = open(mjdfile,'w')
     html.write('<HTML><BODY>\n')
     html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>MJD Summary</title></head>\n')
-    html.write('<p><A HREF=fields.html> FIELDS view </a><p>\n')
+    html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
+    html.write('<p> Fields View (link coming soon) <p>\n')
+    html.write('<p><a href="summary/allVisit-daily-apo25m.fits">allVisit</a></p>\n')
+    html.write('<p><a href="summary/allStar-daily-apo25m.fits">allStar</a></p>\n')
     html.write( 'White: APO 2.5m, Green: LCO 2.5m\n')
     #html.write('<br>Click on column headings to sort\n')
 
     # Create web page with entry for each MJD
     html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-    html.write('<TR bgcolor=eaeded><TH>Logs (data)<TH>Exposures<TH>Night QA<TH>Observed Plate QA<TH>Dome flats\n')
+    html.write('<TR bgcolor=eaeded><TH>Logs (data)<TH>Night QA<TH>Observed Plate QA<TH>Summary File\n')
     for i in range(nmjd):
         cmjd = str(int(round(mjd[i])))
         # Establish telescope and instrument and setup apLoad depending on telescope.
@@ -103,12 +106,12 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         html.write('<TR bgcolor='+color+'><TD align="center"><A HREF='+logFile+'>'+cmjd+'</A>\n')
         html.write('<A HREF='+logFileDir+'><BR>(raw)</A>\n')
 
-        # Column 2: Exposures
-        exposureLogPath = '../exposures/' + instrument + '/' + cmjd + '/html/' + cmjd + 'exp.html'
-        exposureLog = 'https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'exp.html'
-        html.write('<TD><center><A HREF='+exposureLog+'>'+cmjd+'</A></center>\n')
+        # Column 2: Exposures (removed)
+#        exposureLogPath = '../exposures/' + instrument + '/' + cmjd + '/html/' + cmjd + 'exp.html'
+#        exposureLog = 'https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'exp.html'
+#        html.write('<TD><center><A HREF='+exposureLog+'>'+cmjd+'</A></center>\n')
 
-        # Column 3: Night QA
+        # Column 2: Night QA
         # NOTE: This directory does not exist yet.
         qaPage = apodir + apred + '/exposures/' + instrument + '/' + cmjd + '/html/' + cmjd + '.html'
         if os.path.exists(qaPage):
@@ -117,7 +120,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         else:
             html.write('<TD><center><FONT COLOR=red> '+cmjd+' QA </font></center>\n')
 
-        # Column 4: Plates reduced for this night
+        # Column 3: Plates reduced for this night
         plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
         plateQAfiles = np.array(glob.glob(plateQApaths))
         nplates = len(plateQAfiles)
@@ -140,7 +143,12 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         #html.write('<TD>\n')
 
         # Column 7: Dome flats observed for this night
-        html.write('<TD>\n')
+        #html.write('<TD>\n')
+
+        # Column 4: Summary files
+        visSumPath = 'summary/'+cmjd'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
+        starSumPath = 'summary/'+cmjd'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
+        html.write('<TD><a href="'+visSumPath+'">allVisitMJD</a><BR><a href="'+starSumPath+'">allStarMJD</a>
 
     html.write('</table>\n')
 
