@@ -70,7 +70,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     print("----> makeHTMLsum: creating "+mjdfile)
     html = open(mjdfile,'w')
     html.write('<HTML><BODY>\n')
-    html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>MJD Summary</title></head>\n')
+    html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE MJD Summary</title></head>\n')
     html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
     html.write('<p> Fields View (link coming soon) <p>\n')
     visSumPathN = 'summary/allVisit-daily-apo25m.fits'
