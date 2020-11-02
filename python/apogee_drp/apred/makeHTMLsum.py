@@ -84,7 +84,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
 
     # Create web page with entry for each MJD
     html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-    html.write('<TR bgcolor=eaeded><TH>Logs (data)<TH>Night QA<TH>Observed Plate QA<TH>Summary File\n')
+    html.write('<TR bgcolor=eaeded><TH>Logs (data)<TH>Night QA<TH>Observed Plate QA<TH>Summary Files\n')
     for i in range(nmjd):
         cmjd = str(int(round(mjd[i])))
         # Establish telescope and instrument and setup apLoad depending on telescope.
@@ -128,7 +128,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
         plateQAfiles = np.array(glob.glob(plateQApaths))
         nplates = len(plateQAfiles)
-        html.write('<TD align="center">\n')
+        html.write('<TD align="left">\n')
         for j in range(nplates):
             if plateQAfiles[j] != '':
                 plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
@@ -152,7 +152,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         # Column 4: Summary files
         visSumPath = 'summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
         starSumPath = 'summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
-        html.write('<TD><a href="'+visSumPath+'">allVisitMJD</a><BR><a href="'+starSumPath+'">allStarMJD</a>\n')
+        html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a><BR><a href="'+starSumPath+'">allStarMJD</a>\n')
 
     html.write('</table>\n')
 
