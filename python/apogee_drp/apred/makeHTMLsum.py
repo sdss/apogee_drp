@@ -127,6 +127,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         # Column 3: Plates reduced for this night
         plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
         plateQAfiles = np.array(glob.glob(plateQApaths))
+        print(plateQAfiles)
         nplates = len(plateQAfiles)
         html.write('<TD align="left">\n')
         for j in range(nplates):
