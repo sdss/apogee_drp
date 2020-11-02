@@ -92,7 +92,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         instrument = 'apogee-n'
         datadir = datadirN
         datadir1 = 'data'
-        color = 'F9E79F'
+        color = 'FCF793'
         if 'lco' in logs[i]: 
             telescope = 'lco25m'
             instrument = 'apogee-s'
