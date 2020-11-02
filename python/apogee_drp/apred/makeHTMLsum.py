@@ -72,7 +72,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     html.write('<HTML><BODY>\n')
     html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>MJD Summary</title></head>\n')
     html.write('<p><A HREF=fields.html> FIELDS view </a><p>\n')
-    html.write( 'Blue: APO 2.5m, Green: LCO 2.5m, Red: APO 1m\n')
+    html.write( 'White: APO 2.5m, Green: LCO 2.5m\n')
     #html.write('<br>Click on column headings to sort\n')
 
     # Create web page with entry for each MJD
@@ -85,7 +85,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         instrument = 'apogee-n'
         datadir = datadirN
         datadir1 = 'data'
-        color = 'b3b3ff'
+        color = 'FFFFFF'
         if 'lco' in logs[i]: 
             telescope = 'lco25m'
             instrument = 'apogee-s'
