@@ -121,8 +121,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
         plateQAfiles = np.array(glob.glob(plateQApaths))
         nplates = len(plateQAfiles)
-        html.write('<TD>\n')
-        txt = ''
+        html.write('<TD align="center">\n')
         for j in range(nplates):
             if plateQAfiles[j] != '':
                 plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
