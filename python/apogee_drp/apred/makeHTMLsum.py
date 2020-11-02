@@ -73,9 +73,12 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>MJD Summary</title></head>\n')
     html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
     html.write('<p> Fields View (link coming soon) <p>\n')
-    visSumPath = 'summary/allVisit-daily-'+telescope+'.fits'
-    starSumPath = 'summary/allStar-daily-'+telescope+'.fits'
-    html.write('<p><a href="'+visSumPath+'">allVisit download</a><BR><a href="'+starSumPath+'">allStar download</a></p>\n')
+    visSumPathN = 'summary/allVisit-daily-apo25m.fits'
+    starSumPathN = 'summary/allStar-daily-apo25m.fits'
+    visSumPathS = 'summary/allVisit-daily-lco25m.fits'
+    starSumPathS = 'summary/allStar-daily-lco25m.fits'
+    html.write('<p>APO 2.5m Summary Files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a>\n')
+    html.write('<BR>APO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
     html.write( 'White: APO 2.5m, Green: LCO 2.5m\n')
     #html.write('<br>Click on column headings to sort\n')
 
