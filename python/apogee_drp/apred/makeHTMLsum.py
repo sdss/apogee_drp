@@ -117,8 +117,8 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         nplates = len(plateQAfiles)
         html.write('<TD>\n')
         txt = ''
-        for j in range(plates):
-            if plates[j] != '':
+        for j in range(nplates):
+            if plateQAfiles[j] != '':
                 plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
                 tmp = plateQApathPartial.split('/')
                 field = tmp[2]
