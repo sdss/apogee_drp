@@ -146,8 +146,8 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         #html.write('<TD>\n')
 
         # Column 4: Summary files
-        visSumPath = 'summary/'+cmjd'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
-        starSumPath = 'summary/'+cmjd'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
+        visSumPath = 'summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
+        starSumPath = 'summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
         html.write('<TD><a href="'+visSumPath+'">allVisitMJD</a><BR><a href="'+starSumPath+'">allStarMJD</a>
 
     html.write('</table>\n')
