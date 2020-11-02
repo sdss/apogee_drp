@@ -123,7 +123,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
                 tmp = plateQApathPartial.split('/')
                 field = tmp[2]
                 plate = tmp[3]
-                html.write('<A HREF=../'+plateQApathParts[1]+'>'+field+' ('+plate+')  </A>\n')
+                html.write('<A HREF=../'+plateQApathPartial+'>'+field+' ('+plate+')  </A>\n')
 
         # Column 4: Combined files for this night
         #html.write('<TD>\n')
