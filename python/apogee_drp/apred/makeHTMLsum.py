@@ -77,7 +77,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
 
     # Create web page with entry for each MJD
     html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-    html.write('<TR><TH>Logs (data)<TH>Exposures<TH>Night QA<TH>Observed Plate QA<TH><TH>Dome flats\n')
+    html.write('<TR><TH>Logs (data)<TH>Exposures<TH>Night QA<TH>Observed Plate QA<TH>Dome flats\n')
     for i in range(nmjd):
         cmjd = str(int(round(mjd[i])))
         # Establish telescope and instrument and setup apLoad depending on telescope.
@@ -134,13 +134,13 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
                 else:
                     html.write('<A HREF=../'+plateQApathPartial+'>'+field+' (plate '+plate+')</A>\n')
 
-        # Column 4: Combined files for this night
-        html.write('<TD>\n')
+        # Column 5: Combined files for this night
+        #html.write('<TD>\n')
 
-        # Column 5: Single stars observed for this night
-        html.write('<TD>\n')
+        # Column 6: Single stars observed for this night
+        #html.write('<TD>\n')
 
-        # Column 6: Dome flats observed for this night
+        # Column 7: Dome flats observed for this night
         html.write('<TD>\n')
 
     html.write('</table>\n')
