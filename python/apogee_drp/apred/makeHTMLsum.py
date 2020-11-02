@@ -129,7 +129,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
                 tmp = plateQApathPartial.split('/')
                 field = tmp[2]
                 plate = tmp[3]
-                if j < nplates-2:
+                if j < nplates-1:
                     html.write(str(j+1)+': <A HREF=../'+plateQApathPartial+'>'+field+' (plate '+plate+')<BR></A>\n')
                 else:
                     html.write(str(j+1)+': <A HREF=../'+plateQApathPartial+'>'+field+' (plate '+plate+')</A>\n')
