@@ -129,13 +129,13 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
                     html.write('<A HREF=../'+plateQApathPartial+'>'+field+' (plate '+plate+')</A>\n')
 
         # Column 4: Combined files for this night
-        #html.write('<TD>\n')
+        html.write('<TD>\n')
 
         # Column 5: Single stars observed for this night
-        #html.write('<TD>\n')
+        html.write('<TD>\n')
 
         # Column 6: Dome flats observed for this night
-        #html.write('<TD>\n')
+        html.write('<TD>\n')
 
     html.write('</table>\n')
 
