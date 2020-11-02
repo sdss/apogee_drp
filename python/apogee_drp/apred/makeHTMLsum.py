@@ -93,8 +93,8 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
         load = apload.ApLoad(apred=apred, telescope=telescope)
 
         # Column 1: Logs(data)
-        logFileDir = '../../' + os.path.basename(datadir) + '/'
-        logFilePath = logFileDir + cmjd + '/' + cmjd + '.log.html'
+        logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
+        logFilePath = logFileDir + cmjd + '.log.html'
         html.write('<TR bgcolor='+color+'><TD><A HREF='+logFilePath+'>'+cmjd+'</A>\n')
         html.write('<A HREF='+logFileDir+'>(raw)</A>\n')
 
