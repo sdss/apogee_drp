@@ -712,7 +712,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TH>Flat field relative flux <TH>Fiber Blocks <TH>Guider RMS\n')
         html.write('<TR>\n')
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'"><IMG SRC=../plots/'+fluxfile+' WIDTH=950></A>\n')
+        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'"><IMG SRC=../plots/'+fluxfile+' WIDTH=1100></A>\n')
         tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
         blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
         html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=400></A>\n')
