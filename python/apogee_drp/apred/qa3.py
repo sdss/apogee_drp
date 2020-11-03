@@ -688,6 +688,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONDIST'][i],3))+'\n')
     Msecz = str("%.3f" % round(np.mean(tab1['SECZ']),3))
     Mseeing = str("%.3f" % round(np.mean(tab1['SEEING']),3))
+    import pdb; pdb.set_trace()
     Mfwhm = str("%.3f" % round(tab3['FWHM'],3))
     Mgdrms = str("%.3f" % round(tab3['GDRMS'],3))
     Mzero = str("%.3f" % round(tab3['ZERO'],3))
