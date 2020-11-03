@@ -591,6 +591,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     tmp = fits.open(platesum)
     tab1 = tmp[1].data
     tab2 = tmp[2].data
+    tab3 = tmp[3].data
 #    tab3 = tmp[3].data
 #;    tab3 = mrdfits(platesum,3,status=status)
 
@@ -649,16 +650,21 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     txt1 = '<TH>#<TH>Frame<TH>Exptime<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>Seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither'
     txt2 = '<TH>Pixshift<TH>Zero<TH>Zero RMS<TH>Sky Continuum<TH>S/N<TH>S/N(cframe)<TH>Moon Phase<TH>Moon Dist.'
     html.write(txt1 + txt2 +'\n')
+
+    secz = np.empty(len(tab1))
+    seeing = np.empty(len(tab1))
     for i in range(len(tab1)):
         html.write('<TR>\n')
         html.write('<TD align="right">'+str(i+1)+'\n')
         html.write('<TD align="right">'+str(int(round(tab1['IM'][i])))+'\n')
         html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][i])))+'\n')
         html.write('<TD align="right">'+str(int(round(tab1['CART'][i])))+'\n')
-        html.write('<TD align="right">'+str("%.3f" % round(tab1['SECZ'][i],3))+'\n')
+        secz[i] = tab1['SECZ'][i]
+        html.write('<TD align="right">'+str("%.3f" % round(secz[i],3))+'\n')
         html.write('<TD align="right">'+str("%.2f" % round(tab1['HA'][i],2))+'\n')
         html.write('<TD align="right">'+str(np.round(tab1['DESIGN_HA'][i],0)).replace('[',' ')[:-1]+'\n')
-        html.write('<TD align="right">'+str("%.3f" % round(tab1['SEEING'][i],3))+'\n')
+        seeing[i] = tab1['SEEING'][i]
+        html.write('<TD align="right">'+str("%.3f" % round(seeing[i],3))+'\n')
         html.write('<TD align="right">'+str("%.3f" % round(tab1['FWHM'][i],3))+'\n')
         html.write('<TD align="right">'+str("%.3f" % round(tab1['GDRMS'][i],3))+'\n')
         html.write('<TD align="right">'+str(tab1['NREADS'][i])+'\n')
@@ -684,6 +690,24 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD align="center">'+'['+txt+']\n')
         html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONPHASE'][i],3))+'\n')
         html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONDIST'][i],3))+'\n')
+    Msecz = str("%.3f" % round(secz,3))
+    Mfwhm = str("%.3f" % round(tab3['FWHM'],3))
+    Mgdrms = str("%.3f" % round(tab3['GDRMS'],3))
+    Mzero = str("%.3f" % round(tab3['ZERO'],3))
+    Mzerorms = str("%.3f" % round(tab3['ZERORMS'],3))
+    Mmoonphase = str("%.3f" % round(tab3['MOONPHASE'],3))
+    Mmoondist = str("%.3f" % round(tab3['MOONDIST'],3))
+    html.write('<TR><TD><B>MEAN<TD><TD><TD align="right">'+Msecz+'<TD align="right">'+Mfwhm+'<TD align="right">'+Mgdrms+'<TD><TD><TD align="right">'+Mzero)
+    q = tab3['SKY']
+    txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
+    html.write('<TD align="center">'+'['+txt+']')
+    q = tab3['SN']
+    txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
+    html.write('<TD align="center">'+'['+txt+']')
+    q = tab3['SNC']
+    txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
+    html.write('<TD align="center">'+'['+txt+']')
+    html.write('<TD align="right">'+Mmoonphase+'<TD align="right">'+Mmoondist+'</b>\n')
     html.write('</TABLE>\n')
 
     html.write('<HR>\n')
