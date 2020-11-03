@@ -668,8 +668,8 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
             html.write('<TD align="right">'+str("%.4f" % round(shiftstr['SHIFT'][j][0],4)).rjust(7)+'\n')
             html.write('<TD align="right">'+str("%.2f" % round(shiftstr['PIXSHIFT'][j][0],2))+'\n')
         else:
-            html.write('<TD align="center">---<TD>\n')
-            html.write('<TD align="center">---<TD>\n')
+            html.write('<TD align="center">---\n')
+            html.write('<TD align="center">---\n')
         html.write('<TD align="right">'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
         html.write('<TD align="right">'+str("%.2f" % round(tab1['ZERORMS'][i],2))+'\n')
         q = tab1['SKY'][i]
