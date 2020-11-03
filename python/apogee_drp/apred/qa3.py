@@ -906,7 +906,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         if ichip == 0: ax.set_ylabel(r'Eta')
         if ichip != 0: ax.axes.yaxis.set_ticklabels([])
 
-        med = np.median(flux[chip][1].data, axis=1)
+        med = np.nanmedian(flux[chip][1].data, axis=1)
         sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='jet', alpha=1, vmin=0.0, vmax=2.0)
 
         ax.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top')
