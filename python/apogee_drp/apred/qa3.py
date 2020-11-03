@@ -930,7 +930,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     print("Making "+plotfile)
 
-    fig=plt.figure(figsize=(9.5,10))
+    fig=plt.figure(figsize=(10,10))
     ax1 = plt.subplot2grid((1,1), (0,0))
     ax1.set_xlim(-1.6,1.6)
     ax1.set_ylim(-1.6,1.6)
@@ -951,7 +951,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     cax1.minorticks_on()
     ax1.text(0.5, 1.12, r'Fiber Blocks',ha='center', transform=ax1.transAxes)
 
-    fig.subplots_adjust(left=0.13,right=0.978,bottom=0.08,top=0.91,hspace=0.2,wspace=0.0)
+    fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.91,hspace=0.2,wspace=0.0)
     plt.savefig(plotsdir+plotfile)
     plt.close('all')
 
