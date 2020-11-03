@@ -250,14 +250,14 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         iprogram = iprogram[order]
         ira = ira[order]
         idec = idec[order]
-        import pdb; pdb.set_trace()
+
         for i in range(nplates):
             color='#ffb3b3'
             if iprogram[i] == 'RM': color = '#FCF793' 
             if iprogram[i] == 'AQMES-Wide': color='#B9FC93'
 
             html.write('<TR bgcolor='+color+'><TD>'+iname[i]+'\n') 
-            html.write('<TD>'+iprogram[i]+'\n') 
+            html.write('<TD>'+str(iprogram[i])+'\n') 
             html.write('<TD> --- \n')
             qalink = '../visit/'+itel[i]+'/'+iname[i]+'/'+iplate[i]+'/'+imjd[i]+'/html/apQA-'+iplate[i]+'-'+imjd[i]+'.html'
             html.write('<TD><A href="'+qalink+'">'+iplate[i]+'</a>\n')
