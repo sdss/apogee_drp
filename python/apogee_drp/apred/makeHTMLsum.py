@@ -212,15 +212,6 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
 
     # should really get this next stuff direct from database!
     plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par', np=True)
-    plate_id    = plans['PLATEPLANS']['plateid']
-    location_id = plans['PLATEPLANS']['locationid']
-    center_ra   = plans['PLATEPLANS']['racen']
-    center_dec  = plans['PLATEPLANS']['deccen']
-    nplans = len(plate_id)
-
-    name = []
-    for i in range(nplans): name.append(apload.apfield(plate_id[i], loc=location_id[i]))
-    name = np.array(name)
 
     # Get arrays of observed data values (plate ID, mjd, telescope, field name, program, location ID, ra, dec)
     iplate = [];  imjd = [];  itel = [];   iname = [];  iprogram = [];   iloc = [];   ira=[];   idec=[]
