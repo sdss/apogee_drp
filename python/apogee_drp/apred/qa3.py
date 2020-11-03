@@ -929,7 +929,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     print("Making "+plotfile)
 
-    fig=plt.figure(figsize=(14,15))
+    fig=plt.figure(figsize=(9.5,10))
     ax1 = plt.subplot2grid((1,1), (0,0))
     ax1.set_xlim(-1.6,1.6)
     ax1.set_ylim(-1.6,1.6)
