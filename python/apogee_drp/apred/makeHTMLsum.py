@@ -238,7 +238,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
             idec.append(str("%.6f" % round(plans['PLATEPLANS']['decCen'][gd][0],6)))
         iplate = np.array(iplate)
         imjd = np.array(imjd)
-        itel = np.array(imjd)
+        itel = np.array(itel)
         iname = np.array(iname)
         iprogram = np.array(iprogram).astype(str)
         iloc = np.array(iloc)
