@@ -686,24 +686,24 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD align="center">'+'['+txt+']\n')
         html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONPHASE'][i],3))+'\n')
         html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONDIST'][i],3))+'\n')
-    Msecz = str("%.3f" % round(np.mean(tab1['SECZ']),3))
-    Mseeing = str("%.3f" % round(np.mean(tab1['SEEING']),3))
-    import pdb; pdb.set_trace()
+    Msecz = str("%.3f" % round(np.nanmean(tab1['SECZ']),3))
+    Mseeing = str("%.3f" % round(np.nanmean(tab1['SEEING']),3))
     Mfwhm = str("%.3f" % round(tab3['FWHM'][0],3))
     Mgdrms = str("%.3f" % round(tab3['GDRMS'][0],3))
     Mzero = str("%.3f" % round(tab3['ZERO'][0],3))
     Mzerorms = str("%.3f" % round(tab3['ZERORMS'][0],3))
     Mmoonphase = str("%.3f" % round(tab3['MOONPHASE'][0],3))
     Mmoondist = str("%.3f" % round(tab3['MOONDIST'][0],3))
-    q = tab3['SKY']
-    sky = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
+    #q = tab3['SKY']
+    #sky = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
     q = tab3['SN']
     sn = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
     q = tab3['SNC']
     snc = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
     html.write('<TR><TD><B>MEAN<TD><TD><TD align="right">'+Mseeing+'<TD align="right">'+Msecz+'<TD align="right">'+Mfwhm+'<TD align="right">'+Mgdrms+'<TD><TD><TD align="right">'+Mzero)
 
-    html.write('<TD align="center">['+sky+']')
+#    html.write('<TD align="center">['+sky+']')
+    html.write('<TD align="center">')
     html.write('<TD align="center">['+sn+']')
     html.write('<TD align="center">['+snc+']')
     html.write('<TD align="right">'+Mmoonphase+'<TD align="right">'+Mmoondist+'</b>\n')
