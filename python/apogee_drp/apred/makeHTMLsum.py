@@ -265,7 +265,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
             html.write('<TD>'+str(iprogram[i])+'\n') 
             html.write('<TD> --- \n')
             qalink = '../visit/'+itel[i]+'/'+iname[i]+'/'+iplate[i]+'/'+imjd[i]+'/html/apQA-'+iplate[i]+'-'+imjd[i]+'.html'
-            html.write('<TD align="center"><A href="'+qalink+'">'+iplate[i]+'</a>\n')
+            html.write('<TD align="center"><A href="'+qalink+'" target="_blank">'+iplate[i]+'</a>\n')
             html.write('<TD align="center">'+imjd[i]+'</center>\n') 
     #        html.write('<TD><center><A HREF=exposures/'+dirs.instrument+'/'+cmjd+'/html/'+cmjd+'.html> '+cmjd+' </a></center>\n')
             html.write('<TD align="center">'+iloc[i]+'\n')
