@@ -231,6 +231,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
             iname.append(name)
             gd = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
             iprogram.append(plans['PLATEPLANS']['programname'][gd][0])
+            iloc.append(str(int(round(plans['PLATEPLANS']['locationid'][gd][0]))))
             ira.append(str("%.6f" % round(plans['PLATEPLANS']['raCen'][gd][0],6)))
             idec.append(str("%.6f" % round(plans['PLATEPLANS']['decCen'][gd][0],6)))
         iplate = np.array(iplate)
@@ -238,6 +239,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         itel = np.array(imjd)
         iname = np.array(iname)
         iprogram = np.array(iprogram)
+        iloc = np.array(iloc)
         ira = np.array(ira)
         idec = np.array(idec)
 
@@ -248,6 +250,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         itel = imjd[order]
         iname = iname[order]
         iprogram = iprogram[order]
+        iloc = iloc[order]
         ira = ira[order]
         idec = idec[order]
 
