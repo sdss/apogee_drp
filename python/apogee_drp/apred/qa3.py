@@ -665,7 +665,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         nj = len(j[0])
         nodither, = np.where(shiftstr['SHIFT'][j][0] == 0)
         if nj > 0:
-            if len(nodither) != n_exposures:
+            if len(nodither) != len(tab1['IM']):
                 html.write('<TD align="right">'+str("%.4f" % round(shiftstr['SHIFT'][j][0],4)).rjust(7)+'\n')
                 html.write('<TD align="right">'+str("%.2f" % round(shiftstr['PIXSHIFT'][j][0],2))+'\n')
             else:
