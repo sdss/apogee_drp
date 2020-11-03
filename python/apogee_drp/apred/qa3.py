@@ -700,7 +700,8 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     sn = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
     q = tab3['SNC'][0]
     snc = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
-    html.write('<TR><TD><B>MEAN<TD><TD><TD><TD align="right">'+Msecz+'<TD align="right">'+Mseeing+'<TD align="right">'+Mfwhm+'<TD align="right">'+Mgdrms+'<TD><TD><TD align="right">'+Mzero)
+    html.write('<TR><TD><B>MEAN<TD><TD><TD><TD align="right"><B>'+Msecz+'<TD><TD><TD align="right"><B>'+Mseeing)
+    html.write('<TD align="right"><B>'+Mfwhm+'<TD align="right"><B>'+Mgdrms+'<TD><TD><TD><TD align="right"><B>'+Mzero)
 
 #    html.write('<TD align="center">['+sky+']')
     html.write('<TD align="center">')
