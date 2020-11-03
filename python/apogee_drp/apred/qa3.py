@@ -973,7 +973,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         plotfile = 'guider-'+plate+'-'+mjd+'.png'
         print("Making "+plotfile)
 
-        fig=plt.figure(figsize=(14,14))
+        fig=plt.figure(figsize=(10,10))
         ax1 = plt.subplot2grid((1,1), (0,0))
         ax1.tick_params(reset=True)
         ax1.minorticks_on()
@@ -1076,7 +1076,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
         ax3.plot(x, y, color='k',linewidth=1.5)
 
-        fig.subplots_adjust(left=0.155,right=0.98,bottom=0.06,top=0.99,hspace=0.1,wspace=0.0)
+        fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.99,hspace=0.2,wspace=0.0)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
 
