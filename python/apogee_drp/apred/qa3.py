@@ -605,6 +605,8 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     tmp = os.path.basename(qafile).replace('.html','')
     html.write('<HTML><HEAD><script src="sorttable.js"></script><title>'+tmp+'</title></head><BODY>\n')
     html.write('<H1>Field: '+field+'   Plate: '+plate+'   MJD: '+mjd+'</H1>\n')
+    html.write('<p><a href="../../../../../../qa/mjd.html">back to MJD page</a><BR>\n')
+    html.write('<a href="../../../../../../qa/fields.html">back to Fields page</a></p>\n')
     html.write('<HR>\n')
 
     ### NOTE:just setting status=1 and hoping for the best.
