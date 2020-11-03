@@ -238,7 +238,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         imjd = np.array(imjd)
         itel = np.array(imjd)
         iname = np.array(iname)
-        iprogram = np.array(iprogram)
+        iprogram = np.array(iprogram).astype(str)
         iloc = np.array(iloc)
         ira = np.array(ira)
         idec = np.array(idec)
