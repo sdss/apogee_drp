@@ -704,10 +704,10 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('<TD align="right"><B>'+Mfwhm+'<TD align="right"><B>'+Mgdrms+'<TD><TD><TD><TD align="right"><B>'+Mzero)
 
 #    html.write('<TD align="center">['+sky+']')
-    html.write('<TD align="center">')
-    html.write('<TD align="center">['+sn+']')
-    html.write('<TD align="center">['+snc+']')
-    html.write('<TD align="right">'+Mmoonphase+'<TD align="right">'+Mmoondist+'</b>\n')
+    html.write('<TD align="center"><B>'+Mzerorms+'<TD>')
+    html.write('<TD align="center"><B>['+sn+']')
+    html.write('<TD align="center"><B>['+snc+']')
+    html.write('<TD align="right"><B>'+Mmoonphase+'<TD align="right"><B>'+Mmoondist+'</b>\n')
     html.write('</TABLE>\n')
 
     html.write('<HR>\n')
