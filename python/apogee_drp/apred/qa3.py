@@ -918,7 +918,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         cax.minorticks_on()
         ax.text(0.5, 1.12, r'Median Flat Field Flux',ha='center', transform=ax.transAxes)
 
-    fig.subplots_adjust(left=0.052,right=0.99,bottom=0.08,top=0.90,hspace=0.075,wspace=0.075)
+    fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.09)
     plt.savefig(plotsdir+plotfile)
     plt.close('all')
 
