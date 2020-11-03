@@ -981,7 +981,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ax1.tick_params(axis='both',which='major',length=axmajlen)
         ax1.tick_params(axis='both',which='minor',length=axminlen)
         ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Minutes since exposure start');  ax1.set_ylabel(r'Guider RMS')
+        ax1.set_xlabel(r'Minutes since visit start');  ax1.set_ylabel(r'Guider RMS')
 
         x = (gcam['mjd'][jcam] - np.min(gcam['mjd'][jcam]))*60.0
         ax1.plot(x, gcam['gdrms'][jcam], color='k')
