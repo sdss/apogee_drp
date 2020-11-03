@@ -715,9 +715,9 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'"><IMG SRC=../plots/'+fluxfile+' WIDTH=1100></A>\n')
         tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
         blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
-        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=380></A>\n')
+        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=390></A>\n')
         gfile = 'guider-'+plate+'-'+mjd+'.png'
-        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=400></A>\n')
+        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390></A>\n')
         html.write('</TABLE>\n')
         html.write('<HR>\n')
 #    else:
