@@ -712,7 +712,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TH>Flat field relative flux <TH>Fiber Blocks <TH>Guider RMS\n')
         html.write('<TR>\n')
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'"><IMG SRC=../plots/'+fluxfile+' WIDTH=800></A>\n')
+        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'"><IMG SRC=../plots/'+fluxfile+' WIDTH=950></A>\n')
         tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
         blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
         html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=400></A>\n')
@@ -886,7 +886,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     ypos = 300 - platesum2['FIBERID']
 
     plotfile = fluxfile.replace('.fits', '.png')
-    fig=plt.figure(figsize=(24,14))
+    fig=plt.figure(figsize=(24,10))
     plotrad = 1.6
 
     for ichip in range(nchips):
@@ -904,7 +904,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ax.tick_params(axis='both',which='both',width=axwidth)
         ax.set_xlabel(r'Zeta')
         if ichip == 0: ax.set_ylabel(r'Eta')
-        if ichip != 0: ax.axes.xaxis.set_ticklabels([])
+        if ichip != 0: ax.axes.yaxis.set_ticklabels([])
 
         med = np.median(flux[chip][1].data, axis=1)
         sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
