@@ -553,9 +553,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     if ims[0] == 0:
         hdulist = fits.open(platesum)
         hdu1 = fits.table_to_hdu(Table(platetab))
-        hdu2 = fits.table_to_hdu(Table(fiber))
         hdulist.append(hdu1)
-        hdulist.append(hdu2)
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 #;        mwrfits,platetab,platesum
