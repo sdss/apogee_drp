@@ -250,7 +250,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         iprogram = iprogram[order]
         ira = ira[order]
         idec = idec[order]
-
+        import pdb; pdb.set_trace()
         for i in range(nplates):
             color='#ffb3b3'
             if iprogram[i] == 'RM': color = '#FCF793' 
