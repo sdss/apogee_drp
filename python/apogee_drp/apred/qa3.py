@@ -886,7 +886,7 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     ypos = 300 - platesum2['FIBERID']
 
     plotfile = fluxfile.replace('.fits', '.png')
-    fig=plt.figure(figsize=(24,10))
+    fig=plt.figure(figsize=(28,10))
     plotrad = 1.6
 
     for ichip in range(nchips):
@@ -916,9 +916,9 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         cb = colorbar(sc, cax=cax, orientation="horizontal")
         cax.xaxis.set_ticks_position("top")
         cax.minorticks_on()
-        ax.text(0.5, 1.10, r'Median Flat Field Flux',ha='center', transform=ax.transAxes)
+        ax.text(0.5, 1.12, r'Median Flat Field Flux',ha='center', transform=ax.transAxes)
 
-    fig.subplots_adjust(left=0.06,right=0.99,bottom=0.12,top=0.91,hspace=0.15,wspace=0.15)
+    fig.subplots_adjust(left=0.055,right=0.99,bottom=0.10,top=0.91,hspace=0.05,wspace=0.05)
     plt.savefig(plotsdir+plotfile)
     plt.close('all')
 
