@@ -1058,9 +1058,9 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
         ax2.axes.xaxis.set_ticklabels([])
 
         ax3.set_xlabel(r'$H$')
-        ax1.text(-0.17,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
-        ax2.text(-0.17,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
-        ax3.text(-0.17,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
+        ax1.text(-0.15,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
+        ax2.text(-0.15,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
+        ax3.text(-0.15,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
 
         # PLOTS 7a: observed mag vs H mag
         x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
