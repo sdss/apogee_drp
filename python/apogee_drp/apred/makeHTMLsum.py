@@ -276,7 +276,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         html.write('<TD><center>---</center>\n') 
         html.write('<TD><center>---</center>\n') 
 
-    html.write('</TABLE>'
+    html.write('</TABLE>\n')
     html.write('</BODY></HTML>\n')
     html.close()
 
