@@ -38,6 +38,11 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
     apodir =   os.environ.get('APOGEE_REDUX')+'/'
     qadir = apodir+apred+'/qa/'
 
+    visSumPathN = 'summary/allVisit-daily-apo25m.fits'
+    starSumPathN = 'summary/allStar-daily-apo25m.fits'
+    visSumPathS = 'summary/allVisit-daily-lco25m.fits'
+    starSumPathS = 'summary/allStar-daily-lco25m.fits'
+
     if domjd is True:
         # Find all .log.html files, get all MJDs with data
         print("----> makeHTMLsum: finding log files. Please wait.")
@@ -75,10 +80,6 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE MJD Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
-        visSumPathN = 'summary/allVisit-daily-apo25m.fits'
-        starSumPathN = 'summary/allStar-daily-apo25m.fits'
-        visSumPathS = 'summary/allVisit-daily-lco25m.fits'
-        starSumPathS = 'summary/allStar-daily-lco25m.fits'
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
         #html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
         html.write( 'Yellow: APO 2.5m, Green: LCO 2.5m\n')
@@ -191,6 +192,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE Field Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by Field</H1>\n')
         html.write('<p><A HREF=mjd.html>MJD view</A></p>\n')
+        html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
 
         html.write('<p>APOGEE sky coverage: red=APOGEE1 (yellow: commissioning), green=APOGEE2, magenta=APOGEE2S, cyan=MaNGA-APOGEE2<p>\n')
         html.write('<img src=sky.gif width=45%>\n')
