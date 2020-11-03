@@ -30,7 +30,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 '''-----------------------------------------------------------------------------------------'''
 '''makeHTMLsum: makes mjd.html and fields.html                                              '''
 '''-----------------------------------------------------------------------------------------'''
-def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew'):
+def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',fieldfilebase='fields'):
     # Establish data directories.
     datadirN = os.environ['APOGEE_DATA_N']
     datadirS = os.environ['APOGEE_DATA_S']
@@ -72,7 +72,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
     html.write('<HTML><BODY>\n')
     html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE MJD Summary</title></head>\n')
     html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
-    html.write('<p> Fields View (link coming soon) <p>\n')
+    html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
     visSumPathN = 'summary/allVisit-daily-apo25m.fits'
     starSumPathN = 'summary/allStar-daily-apo25m.fits'
     visSumPathS = 'summary/allVisit-daily-lco25m.fits'
@@ -178,8 +178,107 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjdNew
 
     print("----> makeHTMLsum: Done.")
 
+    #---------------------------------------------------------------------------------------
+    # Fields view
+    if fieldfilebase is None: fieldfilebase = 'fields'
+    fieldfile = qadir+fieldfilebase+'.html'
+    print("----> makeHTMLsum: creating "+fieldfile)
+    html = open(fieldfile,'w')
+    html.write('<HTML><BODY>\n')
+    html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE Field Summary</title></head>\n')
+    html.write('<H1>APOGEE Observation Summary by Field</H1>\n')
+    html.write('<p><A HREF=mjd.html>MJD view</A></p>\n')
 
+    html.write('<p>APOGEE sky coverage: red=APOGEE1 (yellow: commissioning), green=APOGEE2, magenta=APOGEE2S, cyan=MaNGA-APOGEE2<p>\n')
+    html.write('<img src=sky.gif width=45%>\n')
+    html.write('<img src=galactic.gif width=45%>\n')
+    html.write('<p>Summary files:\n')
 
+#    if ~keyword_set(suffix) then suffix='-'+apred_vers+'-'+aspcap_vers+'.fits'
+#    html.write('<a href=../../aspcap/'+apred_vers+'/'+aspcap_vers+'/allStar'+suffix+'> allStar'+suffix+' file </a>\n')
+#    html.write(' and <a href=../../aspcap/'+apred_vers+'/'+aspcap_vers+'/allVisit'+suffix+'> allVisit'+suffix+' file </a>\n')
+
+    html.write('<br>Links on field name are to combined spectra plots and info\n')
+    html.write('<br>Links on plate name are to visit spectra plots and info\n')
+    html.write('<br>Links on MJD are to QA and summary plots for the visit\n')
+    html.write('<br>Click on column headings to sort\n')
+
+    html.write('<TABLE BORDER=2 CLASS=sortable>\n')
+    html.write('<TR><TH>FIELD<TH>Program<TH>ASPCAP<TH>PLATE<TH>MJD<TH>LOCATION<TH>RA<TH>DEC<TH>S/N(red)<TH>S/N(green)<TH>S/N(blue)\n')
+#    html.write('<TR><TD>FIELD<TD>Program<TD>ASPCAP<br>'+apred_vers+'/'+aspcap_vers+'<TD>PLATE<TD>MJD<TD>LOCATION<TD>RA<TD>DEC<TD>S/N(red)<TD>S/N(green)<TD>S/N(blue)\n')
+
+    plates = np.array(glob.glob(apodir+apred+'/visit/*/*/*/*/'+'*PlateSum*.fits'))
+    nplates = len(plates)
+
+    # should really get this next stuff direct from database!
+    plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par', np=True)
+    plate_id    = plans['PLATEPLANS']['plateid']
+    location_id = plans['PLATEPLANS']['locationid']
+    center_ra   = plans['PLATEPLANS']['racen']
+    center_dec  = plans['PLATEPLANS']['deccen']
+    nplans = len(plate_id)
+
+    name = []
+    for i in range(nplans): name.append(apload.apfield(plate_id[i], loc=location_id[i]))
+    name = np.array(name)
+
+    # Get arrays of observed data values (plate ID, mjd, telescope, field name, program, location ID, ra, dec)
+    iplate = [];  imjd = [];  itel = [];   iname = [];  iprogram = [];   iloc = [];   ira=[];   idec=[]
+    for i in range(nplates): 
+        plate = os.path.basename(plates[i]).split('-')[1]
+        iplate.append(plate)
+        mjd = os.path.basename(plates[i]).split('-')[2][:-5]
+        imjd.append(mjd)
+        tmp = plates[i].split('visit/')
+        tel = tmp[1].split('/')[0]
+        itel.append(tel)
+        tmp = plates[i].split(tel+'/')
+        name = tmp[1].split('/')[0]
+        iname.append(name)
+        gd = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
+        iprogram.append(plans['PLATEPLANS']['programname'][gd][0])
+        ira.append(str("%.6f" % round(plans['PLATEPLANS']['raCen'][gd][0],6)))
+        idec.append(str("%.6f" % round(plans['PLATEPLANS']['decCen'][gd][0],6)))
+    iplate = np.array(iplate)
+    imjd = np.array(imjd)
+    itel = np.array(imjd)
+    iname = np.array(iname)
+    iprogram = np.array(iprogram)
+    ira = np.array(ira)
+    idec = np.array(idec)
+
+    # Sort by MJD
+    order = np.argsort(imjd)
+    iplate = iplate[order]
+    imjd = imjd[order]
+    itel = imjd[order]
+    iname = iname[order]
+    iprogram = iprogram[order]
+    ira = ira[order]
+    idec = idec[order]
+
+    for i in range(nplates):
+        color='#ffb3b3'
+        if iprogram[i] == 'RM': color = '#FCF793' 
+        if iprogram[i] == 'AQMES-Wide': color='#B9FC93'
+
+        html.write('<TR bgcolor='+color+'><TD>'+iname[i]+'\n') 
+        html.write('<TD>'+iprogram[i]+'\n') 
+        html.write('<TD> --- \n')
+        qalink = '../visit/'+itel[i]+'/'+iname[i]+'/'+iplate[i]+'/'+imjd[i]+'/html/apQA-'+iplate[i]+'-'+imjd[i]+'.html'
+        html.write('<TD><A href="'+qalink+'">'+iplate[i]+'</a>\n')
+        html.write('<TD><center>'+imjd[i]+'</center>\n') 
+#        html.write('<TD><center><A HREF=exposures/'+dirs.instrument+'/'+cmjd+'/html/'+cmjd+'.html> '+cmjd+' </a></center>\n')
+        html.write('<TD><center>'+iloc[i]+'</center>\n')
+        html.write('<TD><center>'+ira[i]+'</center>\n') 
+        html.write('<TD><center>'+idec[i]+'</center>\n') 
+        html.write('<TD><center>---</center>\n') 
+        html.write('<TD><center>---</center>\n') 
+        html.write('<TD><center>---</center>\n') 
+
+    html.write('</TABLE>'
+    html.write('</BODY></HTML>\n')
+    html.close()
 
 
 
