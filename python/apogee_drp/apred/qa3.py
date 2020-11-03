@@ -167,6 +167,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     print("Making "+platesumbase+" ...\n")
 
     n_exposures = len(ims)
+    if ims[0] == 0: n_exposures = 1
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
@@ -311,7 +312,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
         if ims[0] != 0:
             pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[i], mjd=mjd, chips=True))
-            dfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
+            dfile = load.filename('1D',  plate=int(plate), num=ims[i], mjd=mjd, chips=True)
             d = load.ap1D(ims[i])
             cframe = load.apCframe(field, int(plate), mjd, ims[i])
             if type(d)!=dict: print("Problem with ap1D!!!")
