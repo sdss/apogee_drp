@@ -310,7 +310,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
 
         if ims[0] != 0:
-            pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[0], mjd=mjd, chips=True))
+            pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[i], mjd=mjd, chips=True))
             dfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
             d = load.ap1D(ims[i])
             cframe = load.apCframe(field, int(plate), mjd, ims[i])
@@ -478,7 +478,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         if ims[0] != 0: 
             secz = 1. / np.cos((90. - dhdr['ALT']) * (math.pi/180.))
             seeing = dhdr['SEEING']
-            print(secz)
         ### NOTE:'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
 #        design_ha = plug['ha']
         design_ha = [0,0,0]
