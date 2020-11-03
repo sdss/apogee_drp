@@ -683,6 +683,8 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<TD>'+str("%.3f" % round(tab1['MOONDIST'][i],3))+'\n')
     html.write('</TABLE>\n')
 
+    html.write('<HR>\n')
+
     # Table of exposure pairs.
     if pairstr is not None:
         npairs = len(pairstr)
@@ -700,6 +702,24 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
                     html.write('<TD>'+str("%.3f" % round(pairstr['SHIFT'][ipair][j],3))+'\n')
                     html.write('<TD>'+str("%.2f" % round(pairstr['SN'][ipair][j],2))+'\n')
             html.write('</TABLE>\n')
+
+        html.write('<HR>\n')
+
+    # Flat field plots.
+    if fluxid is not None:
+        html.write('<H3>Flat field, fiber block, and guider plots:</H3>\n')
+        html.write('<TABLE BORDER=2><TR bgcolor=lightgreen>\n')
+        html.write('<TH>Flat field relative flux <TH>Fiber Blocks <TH>Guider RMS\n')
+        html.write('<TR>\n')
+        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
+        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'"><IMG SRC=../plots/'+fluxfile+' WIDTH=800></A>\n')
+        tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
+        blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
+        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=400></A>\n')
+        gfile = 'guider-'+plate+'-'+mjd+'.png'
+        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=400></A>\n')
+        html.write('</TABLE>\n')
+        html.write('<HR>\n')
 #    else:
 #        # Table of combination parameters.
 #        html.write('<H3>Combination Parameters (undithered):</H3>\n')
@@ -709,6 +729,7 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
 #            html.write('<TD>'+str("%.3f" % round(shiftstr['SHIFT'][iframe],3))+'\n')
 #            html.write('<TD>'+str("%.3f" % round(shiftstr['SN'][iframe],3))+'\n')
 #    html.write('</TABLE>\n')
+
 
     # Table of exposure plots.
     html.write('<TABLE BORDER=2>\n')
@@ -752,24 +773,6 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('</table>\n')
 
     html.write('<BR><BR>\n')
-
-    # Flat field plots.
-    if fluxid is not None:
-        html.write('<TABLE BORDER=2><TR bgcolor=lightgreen>\n')
-        txt1 = '<TH> Blue chip relative<BR>flat field flux <TH> Greeen chip relative<BR>flat field flux'
-        txt2 = '<TH> Red chip relative<BR>flat field flux<TH> Fiber Blocks <TH> Guider RMS'
-        html.write(txt1+txt2+'\n')
-        html.write('<TR>\n')
-        for chip in chips:
-            fluxfile = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chip+'-')
-            fluxfile = os.path.basename(fluxfile).replace('.fits','')
-            html.write('<TD> <A HREF='+'../plots/'+fluxfile+'.png><IMG SRC=../plots/'+fluxfile+'.png WIDTH=400></A>\n')
-        tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
-        blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
-        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=400></A>\n')
-        gfile = 'guider-'+plate+'-'+mjd+'.png'
-        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=400></A>\n')
-        html.write('</TABLE>\n')
 
     html.write('</BODY></HTML>\n')
     html.close()
@@ -882,38 +885,42 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     flux = load.apFlux(fluxid)
     ypos = 300 - platesum2['FIBERID']
 
+    plotfile = fluxfile.replace('.fits', '.png')
+    fig=plt.figure(figsize=(24,14))
+    plotrad = 1.6
+
     for ichip in range(nchips):
         chip = chips[ichip]
-        plotfile = fluxfile.replace('Flux-', 'Flux-'+chip+'-').replace('.fits', '.png')
         print("Making "+plotfile)
 
-        fig=plt.figure(figsize=(14,15))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.set_xlim(-1.6,1.6)
-        ax1.set_ylim(-1.6,1.6)
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
+        ax = plt.subplot2grid((1,nchips), (0,ichip))
+        ax.set_xlim(-plotrad, plotrad)
+        ax.set_ylim(-plotrad, plotrad)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        ax.set_xlabel(r'Zeta')
+        if ichip == 0: ax.set_ylabel(r'Eta')
+        if ichip != 0: ax.axes.xaxis.set_ticklabels([])
 
         med = np.median(flux[chip][1].data, axis=1)
-        sc = ax1.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
+        sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='jet', alpha=1, vmin=0.5, vmax=1.5)
 
-        ax1.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax1.transAxes, ha='left', va='top')
+        ax.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top')
 
-        ax1_divider = make_axes_locatable(ax1)
-        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-        cb = colorbar(sc, cax=cax1, orientation="horizontal")
-        cax1.xaxis.set_ticks_position("top")
-        cax1.minorticks_on()
-        ax1.text(0.5, 1.10, r'Median Flat Field Flux',ha='center', transform=ax1.transAxes)
+        ax_divider = make_axes_locatable(ax)
+        cax = ax_divider.append_axes("top", size="4%", pad="1%")
+        cb = colorbar(sc, cax=cax, orientation="horizontal")
+        cax.xaxis.set_ticks_position("top")
+        cax.minorticks_on()
+        ax.text(0.5, 1.10, r'Median Flat Field Flux',ha='center', transform=ax.transAxes)
 
-        fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir+plotfile)
-        plt.close('all')
+    fig.subplots_adjust(left=0.06,right=0.99,bottom=0.12,top=0.91,hspace=0.15,wspace=0.15)
+    plt.savefig(plotsdir+plotfile)
+    plt.close('all')
 
     #----------------------------------------------------------------------------------------------
     # PLOT 5: fiber blocks... previously done by plotflux.pro
