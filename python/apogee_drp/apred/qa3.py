@@ -641,8 +641,9 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         html.write('<H3>Individual Exposure Stats:</H3>\n')
     else:
         html.write('<H3>Individual Exposure Stats (undithered):</H3>\n')
-    html.write('<p> Note: design HA values are currently missing. </p>\n')
-    html.write('<p> Note: Dither and Pixshift values will be zero if exposures not dithered. </p>\n')
+    html.write('<p><b>Note:</b> design HA values are currently missing.<BR> \n')
+    html.write('<b>Note:</b> Dither and Pixshift values will be "---" if exposures not dithered.<BR>\n')
+    html.write('<b>Note:</b> S/N columns give S/N for blue, green, and red chips separately. </p>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=lightgreen>\n')
     txt1 = '<TH>#<TH>Frame<TH>Exptime<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>Seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither'
