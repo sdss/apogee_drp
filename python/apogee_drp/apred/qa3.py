@@ -645,31 +645,37 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
     html.write('<p> Note: Dither and Pixshift values will be zero if exposures not dithered. </p>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=lightgreen>\n')
-    txt1 = '<TH>Frame<TH>Exptime<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>Seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither'
+    txt1 = '<TH>#<TH>Frame<TH>Exptime<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>Seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither'
     txt2 = '<TH>Pixshift<TH>Zero<TH>Zero RMS<TH>Sky Continuum<TH>S/N<TH>S/N(cframe)<TH>Moon Phase<TH>Moon Dist.'
     html.write(txt1 + txt2 +'\n')
     for i in range(len(tab1)):
         html.write('<TR>\n')
-        html.write('<TD>'+str(int(round(tab1['IM'][i])))+'\n')
-        html.write('<TD>'+str(int(round(tab1['EXPTIME'][i])))+'\n')
-        html.write('<TD>'+str(int(round(tab1['CART'][i])))+'\n')
-        html.write('<TD>'+str("%.2f" % round(tab1['SECZ'][i],2))+'\n')
-        html.write('<TD>'+str("%.2f" % round(tab1['HA'][i],2))+'\n')
-        html.write('<TD>'+str(np.round(tab1['DESIGN_HA'][i],0)).replace('[',' ')[:-1]+'\n')
-        html.write('<TD>'+str("%.2f" % round(tab1['SEEING'][i],2))+'\n')
-        html.write('<TD>'+str("%.2f" % round(tab1['FWHM'][i],2))+'\n')
-        html.write('<TD>'+str("%.2f" % round(tab1['GDRMS'][i],2))+'\n')
-        html.write('<TD>'+str(tab1['NREADS'][i])+'\n')
+        html.write('<TD align="right">'+str(i+1)+'\n')
+        html.write('<TD align="right">'+str(int(round(tab1['IM'][i])))+'\n')
+        html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][i])))+'\n')
+        html.write('<TD align="right">'+str(int(round(tab1['CART'][i])))+'\n')
+        html.write('<TD align="right">'+str("%.2f" % round(tab1['SECZ'][i],2))+'\n')
+        html.write('<TD align="right">'+str("%.2f" % round(tab1['HA'][i],2))+'\n')
+        html.write('<TD align="right">'+str(np.round(tab1['DESIGN_HA'][i],0)).replace('[',' ')[:-1]+'\n')
+        html.write('<TD align="right">'+str("%.2f" % round(tab1['SEEING'][i],2))+'\n')
+        html.write('<TD align="right">'+str("%.2f" % round(tab1['FWHM'][i],2))+'\n')
+        html.write('<TD align="right">'+str("%.2f" % round(tab1['GDRMS'][i],2))+'\n')
+        html.write('<TD align="right">'+str(tab1['NREADS'][i])+'\n')
         j = np.where(shiftstr['FRAMENUM'] == str(tab1['IM'][i]))
         nj = len(j[0])
+        nodither, = np.where(shiftstr['SHIFT'][j][0] == 0)
         if nj > 0:
-            html.write('<TD>'+str("%.4f" % round(shiftstr['SHIFT'][j][0],4)).rjust(7)+'\n')
-            html.write('<TD>'+str("%.2f" % round(shiftstr['PIXSHIFT'][j][0],2))+'\n')
+            if len(nodither) != n_exposures:
+                html.write('<TD align="right">'+str("%.4f" % round(shiftstr['SHIFT'][j][0],4)).rjust(7)+'\n')
+                html.write('<TD align="right">'+str("%.2f" % round(shiftstr['PIXSHIFT'][j][0],2))+'\n')
+            else:
+                html.write('<TD align="center">---<TD>\n')
+                html.write('<TD align="center">---<TD>\n')
         else:
-            html.write('<TD><TD>\n')
-            html.write('<TD><TD>\n')
-        html.write('<TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
-        html.write('<TD>'+str("%.2f" % round(tab1['ZERORMS'][i],2))+'\n')
+            html.write('<TD align="center">---<TD>\n')
+            html.write('<TD align="center">---<TD>\n')
+        html.write('<TD align="right">'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
+        html.write('<TD align="right">'+str("%.2f" % round(tab1['ZERORMS'][i],2))+'\n')
         q = tab1['SKY'][i]
         txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
         html.write('<TD>'+'['+txt+']\n')
@@ -679,8 +685,8 @@ def masterQAhtml(load=None, plate=None, mjd=None, field=None, fluxid=None, teles
         q = tab1['SNC'][i]
         txt = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
         html.write('<TD>'+'['+txt+']\n')
-        html.write('<TD>'+str("%.3f" % round(tab1['MOONPHASE'][i],3))+'\n')
-        html.write('<TD>'+str("%.3f" % round(tab1['MOONDIST'][i],3))+'\n')
+        html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONPHASE'][i],3))+'\n')
+        html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONDIST'][i],3))+'\n')
     html.write('</TABLE>\n')
 
     html.write('<HR>\n')
