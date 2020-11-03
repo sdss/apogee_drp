@@ -886,12 +886,13 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     ypos = 300 - platesum2['FIBERID']
 
     plotfile = fluxfile.replace('.fits', '.png')
+    print("Making "+plotfile)
+
     fig=plt.figure(figsize=(28,10))
     plotrad = 1.6
 
     for ichip in range(nchips):
         chip = chips[ichip]
-        print("Making "+plotfile)
 
         ax = plt.subplot2grid((1,nchips), (0,ichip))
         ax.set_xlim(-plotrad, plotrad)
