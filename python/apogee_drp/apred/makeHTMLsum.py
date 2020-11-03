@@ -247,7 +247,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         order = np.argsort(imjd)
         iplate = iplate[order]
         imjd = imjd[order]
-        itel = imjd[order]
+        itel = itel[order]
         iname = iname[order]
         iprogram = iprogram[order]
         iloc = iloc[order]
