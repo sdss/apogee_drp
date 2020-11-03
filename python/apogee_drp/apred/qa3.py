@@ -948,9 +948,9 @@ def masterQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, ap
     cb = colorbar(sc, cax=cax1, orientation="horizontal")
     cax1.xaxis.set_ticks_position("top")
     cax1.minorticks_on()
-    ax1.text(0.5, 1.10, r'Fiber Blocks',ha='center', transform=ax1.transAxes)
+    ax1.text(0.5, 1.12, r'Fiber Blocks',ha='center', transform=ax1.transAxes)
 
-    fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
+    fig.subplots_adjust(left=0.13,right=0.978,bottom=0.08,top=0.91,hspace=0.2,wspace=0.0)
     plt.savefig(plotsdir+plotfile)
     plt.close('all')
 
