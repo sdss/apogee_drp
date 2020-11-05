@@ -26,6 +26,8 @@ import matplotlib.ticker as ticker
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 
 '''-----------------------------------------------------------------------------------------'''
 '''makeHTMLsum: makes mjd.html and fields.html                                              '''
@@ -72,9 +74,9 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         nmjd = len(mjd)
 
         # Open the mjd file html
-        if mjdfilebase is None: mjdfilebase = 'mjd'
-        mjdfile = qadir+mjdfilebase+'.html'
-        print("----> makeHTMLsum: creating "+mjdfile)
+        if mjdfilebase is None: mjdfilebase = 'mjd.html'
+        mjdfile = qadir+mjdfilebase
+        print("----> makeHTMLsum: creating "+mjdfilebase)
         html = open(mjdfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE MJD Summary</title></head>\n')
@@ -184,9 +186,9 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
     #---------------------------------------------------------------------------------------
     # Fields view
     if dofields is True:
-        if fieldfilebase is None: fieldfilebase = 'fields'
-        fieldfile = qadir+fieldfilebase+'.html'
-        print("----> makeHTMLsum: creating "+fieldfile)
+        if fieldfilebase is None: fieldfilebase = 'fields.html'
+        fieldfile = qadir+fieldfilebase
+        print("----> makeHTMLsum: creating "+fieldfilebase)
         html = open(fieldfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE Field Summary</title></head>\n')
@@ -300,7 +302,11 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         #ax2 = fig.add_subplot(122, projection = 'aitoff')
         #axes = [ax1, ax2]
     
+        c = SkyCoord(ra=ira*u.degree, dec=idec*u.degree, frame='icrs')
+        gl = c.galactic.l.degree
+        gb = c.galactic.b.degree
 
+        ax1.scatter(gl, gb, marker='o', s=80, edgecolors='k', alpha=0.75, color='b')
 
     #for ax in axes:
         #ax.set_xlim(-plotrad, plotrad)
