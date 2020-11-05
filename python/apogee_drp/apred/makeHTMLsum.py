@@ -294,10 +294,10 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         plotfile = 'aitoff.png'
         print("Making "+plotfile)
 
-        fig=plt.figure(figsize=(16,20))
-        ax1 = fig.add_subplot(121, projection = 'aitoff')
-        ax2 = fig.add_subplot(122, projection = 'aitoff')
-        axes = [ax1, ax2]
+        fig=plt.figure(figsize=(16,8))
+        ax1 = fig.add_subplot(111, projection = 'aitoff')
+        #ax2 = fig.add_subplot(122, projection = 'aitoff')
+        #axes = [ax1, ax2]
 
     
 
