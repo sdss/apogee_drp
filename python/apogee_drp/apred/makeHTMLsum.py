@@ -31,7 +31,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 '''makeHTMLsum: makes mjd.html and fields.html                                              '''
 '''-----------------------------------------------------------------------------------------'''
 def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',fieldfilebase='fields',
-                domjd = True, dofields = True):
+                domjd=True, dofields=True, aitoff=True):
     # Establish data directories.
     datadirN = os.environ['APOGEE_DATA_N']
     datadirS = os.environ['APOGEE_DATA_S']
