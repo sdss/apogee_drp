@@ -3,6 +3,7 @@ import glob
 import os
 import subprocess
 import math
+import time
 import numpy as np
 from pathlib import Path
 from astropy.io import fits, ascii
@@ -61,6 +62,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 
 def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apred='daily', 
          makeplots=True, makeplatesum=True, makespecplots=True, makemasterqa=True):
+    start_time = time.time()
 
     print("---------------------------------------\nStarting APQA\n")
 
@@ -157,6 +159,7 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
 #                          starfiber=single, starmag=smag, fixfiberid=fixfiberid, clobber=True, 
 #                          plugmap=plugmap, makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
 
+    print("--- %s seconds ---" % (time.time() - start_time))
     print("\nDone with APQA")
 
 '''-----------------------------------------------------------------------------------------'''
