@@ -307,8 +307,8 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         gl = c.galactic.l.degree
         gb = c.galactic.b.degree
 
-        import pdb; pdb.set_trace()
-        ax1.scatter(gl, gb, marker='o', s=80, edgecolors='k', alpha=0.75, color='b')
+        for i in range(len(ra)):
+            ax1.scatter(gl[i], gb[i], marker='o', s=50, edgecolors='k', alpha=0.75, color='b')
 
         #for ax in axes:
             #ax.set_xlim(-plotrad, plotrad)
