@@ -204,10 +204,10 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.ht
     #    html.write('<a href=../../aspcap/'+apred_vers+'/'+aspcap_vers+'/allStar'+suffix+'> allStar'+suffix+' file </a>\n')
     #    html.write(' and <a href=../../aspcap/'+apred_vers+'/'+aspcap_vers+'/allVisit'+suffix+'> allVisit'+suffix+' file </a>\n')
 
-        html.write('<br>Links on field name are to combined spectra plots and info\n')
+        html.write('<br><br>Links on field name are to combined spectra plots and info\n')
         html.write('<br>Links on plate name are to visit spectra plots and info\n')
         html.write('<br>Links on MJD are to QA and summary plots for the visit\n')
-        html.write('<br>Click on column headings to sort\n')
+        html.write('<br>Click on column headings to sort<br>\n')
 
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#DCDCDC"><TH>FIELD<TH>PROGRAM<TH>ASPCAP<TH>PLATE<TH>MJD<TH>LOCATION<TH>RA<TH>DEC<TH>S/N(red)<TH>S/N(green)<TH>S/N(blue)\n')
