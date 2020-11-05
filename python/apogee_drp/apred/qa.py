@@ -1346,8 +1346,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
                 targflagtxt = bitmask.targflags(jdata['TARGET1'],jdata['TARGET2'],jdata['TARGET3'],
                                                 jdata['TARGET4'],survey=survey)
             else:
-                if j == 0: print("PROBLEM!!! Need to update bitmask.py to handle SDSSV_APOGEE_TARGET0.")
-                #targflagtxt = 'to be added ASAP'
                 targflagtxt = bitmask.targflags(jdata['SDSSV_APOGEE_TARGET0'], 0, 0, 0, survey=survey)
             if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
             targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
