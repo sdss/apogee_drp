@@ -300,8 +300,10 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         ax1.grid(True)
         #ax2 = fig.add_subplot(122, projection = 'aitoff')
         #axes = [ax1, ax2]
-        import pdb; pdb.set_trace()
-        c = SkyCoord(ra=ira*u.degree, dec=idec*u.degree, frame='icrs')
+
+        ra = ira.astype(float)
+        dec = idec.astype(float)
+        c = SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
         gl = c.galactic.l.degree
         gb = c.galactic.b.degree
 
