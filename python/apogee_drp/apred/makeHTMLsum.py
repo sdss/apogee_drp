@@ -198,7 +198,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
 
         html.write('<p>APOGEE sky coverage: red=APOGEE1 (yellow: commissioning), green=APOGEE2, magenta=APOGEE2S, cyan=MaNGA-APOGEE2<p>\n')
         html.write('<A HREF="aitoff_galactic.png"><IMG SRC=aitoff_galactic.png WIDTH=700></A>\n')
-        html.write('<A HREF="aitoff_equatorial.png"><IMG SRC=aitoff_equatorial.png WIDTH=700></A>\n')
+        html.write('<BR><A HREF="aitoff_equatorial.png"><IMG SRC=aitoff_equatorial.png WIDTH=700></A>\n')
 #        html.write('<img src=aitoff.png width=45%>\n')
 #        html.write('<img src=galactic.gif width=45%>\n')
         html.write('<p>Summary files:\n')
