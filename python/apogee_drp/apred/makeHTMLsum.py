@@ -307,7 +307,13 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         gl = gal.l.wrap_at('180d').radian
         gb = gal.b.wrap_at('180d').radian
 
-        ax1.scatter(gl, gb, marker='o', s=50, edgecolors='k', alpha=0.6, color='b')
+        color='#ffb3b3'
+        p, = np.where(iprogram == 'RM')
+        if len(p) > 0: ax1.scatter(gl[p], gb[p], marker='o', s=50, edgecolors='k', alpha=alpha, c='#FCF793')
+        p, = np.where(iprogram == 'AQMES-Wide')
+        if len(p) > 0: ax1.scatter(gl[p], gb[p], marker='^', s=60, edgecolors='k', alpha=alpha, c='#B9FC93')
+
+
 
         #for ax in axes:
             #ax.set_xlim(-plotrad, plotrad)
