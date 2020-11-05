@@ -624,8 +624,6 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
     html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
     snrplot = 'apVisitSNR-'+plate+'-'+mjd+'.png'
     html.write('<A HREF=../plots/'+snrplot+' target="_blank"><IMG SRC=../plots/'+snrplot+' WIDTH=900></A>\n')
-    snrplot = 'apVisitSNRpm-'+plate+'-'+mjd+'.png'
-    html.write('<A HREF=../plots/'+snrplot+' target="_blank"><IMG SRC=../plots/'+snrplot+' WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     # Table of individual exposures.
@@ -836,82 +834,56 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
 
     #----------------------------------------------------------------------------------------------
     # PLOT 1: HMAG versus S/N for the exposure-combined apVisit
-    # 2 version, one color-coded by science/telluric, one by proper motions added in quadrature
     #----------------------------------------------------------------------------------------------
     Vsum = load.apVisitSum(int(plate), mjd)
     Vsumfile = Vsum.filename()
     Vsum = Vsum[1].data
 
-    for i in range(2):
-        if i == 0:
-            plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
-        if i == 1: 
-            plotfile = os.path.basename(Vsumfile).replace('Sum','SNRpm').replace('.fits','.png')
-        print("----> makeObsQAplots: Making "+plotfile)
+    plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
+    print("----> makeObsQAplots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(18,9))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.tick_params(reset=True)
-        ax1.minorticks_on()
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
-        ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
+    fig=plt.figure(figsize=(18,8))
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1.tick_params(reset=True)
+    ax1.minorticks_on()
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
 
-        if 'HMAG' in Vsum.columns.names:
-            hmagarr = Vsum['HMAG']
-        else:
-            hmagarr = Vsum['H']
-        minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
-        xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
+    if 'HMAG' in Vsum.columns.names:
+        hmagarr = Vsum['HMAG']
+    else:
+        hmagarr = Vsum['H']
+    minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
+    xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
 
-        minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
-        ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
-        
-        ax1.set_xlim(xmin,xmax)#;  ax1.set_ylim(ymin,ymax)
+    minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
+    ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
+    
+    ax1.set_xlim(xmin,xmax)#;  ax1.set_ylim(ymin,ymax)
 
-        if 'apogee' in survey.lower():
-            telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
-            science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
-                                (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
-        else:
-            telluric, = np.where(bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1))
-            science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
-                                (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
+    if 'apogee' in survey.lower():
+        telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
+        science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
+                            (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
+    else:
+        telluric, = np.where(bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1))
+        science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
+                            (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
 
-        x1 = hmagarr[science];  y1 = Vsum['SNR'][science]
-        x2 = hmagarr[telluric];  y2 = Vsum['SNR'][telluric]
+    x = hmagarr[science];  y = Vsum['SNR'][science]
+    psci = ax1.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='', label='science')
+    x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
+    ptel = ax1.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='', label='Telluric')
 
-        if i == 0:
-            psci = ax1.semilogy(x1, y1, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='', label='science')
-            ptel = ax1.semilogy(x2, y2, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='', label='Telluric')
-        if i == 1: 
-            rpm1 = np.sqrt(Vsum['pmra'][science]**2 + Vsum['pmdec'][science]**2)
-            rpm2 = np.sqrt(Vsum['pmra'][telluric]**2 + Vsum['pmdec'][telluric]**2)
-            min1 = np.min(rpm1); max1 = np.max(rpm1)
-            min2 = np.min(rpm2); max2 = np.max(rpm2)
-            rpm_min = np.min([min1,min2])
-            rpm_max = np.max([max1,max2])
+    ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-            psci = ax1.semilogy(x1, y1, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='',
-                                label='science', cmap='hot', vmin=rpm_min, vmax=rpm_max)
-            ptel = ax1.semilogy(x2, y2, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='',
-                                label='Telluric', cmap='hot', vmin=rpm_min, vmax=rpm_max)
-
-            ax_divider = make_axes_locatable(ax1)
-            cax = ax_divider.append_axes("top", size="4%", pad="1%")
-            cb = colorbar(psci, cax=cax, orientation="horizontal")
-            cax.xaxis.set_ticks_position("top")
-            cax.minorticks_on()
-            ax1.text(0.5, 1.12, r'PMs added in quadrature',ha='center', transform=ax1.transAxes)
-
-        ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
-
-        fig.subplots_adjust(left=0.075,right=0.98,bottom=0.11,top=0.90,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir+plotfile)
-        plt.close('all')
+    fig.subplots_adjust(left=0.075,right=0.98,bottom=0.11,top=0.98,hspace=0.2,wspace=0.0)
+    plt.savefig(plotsdir+plotfile)
+    plt.close('all')
 
     #----------------------------------------------------------------------------------------------
     # PLOTS 2-4: flat field flux and fiber blocks... previously done by plotflux.pro
