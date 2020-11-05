@@ -312,15 +312,16 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         glrad = gl * (math.pi/180)
         gbrad = gb * (math.pi/180)
 
-        color='#ffb3b3'
-        p, = np.where(iprogram == 'RM')
-        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793')
         p, = np.where(iprogram == 'AQMES-Wide')
-        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93')
+        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93', label='AQMES-Wide')
+        p, = np.where(iprogram == 'RM')
+        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793', label='RM')
 
-        ax1.text(0.5,1.0,'Galactic',transform=ax1.transAxes,ha='center')
+        ax1.text(0.5,1.03,'Galactic',transform=ax1.transAxes,ha='center')
 
-        fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.09)
+        ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey',fontsize=fsz)
+
+        fig.subplots_adjust(left=0.050,right=0.99,bottom=0.04,top=0.90,hspace=0.09,wspace=0.09)
         plt.savefig(qadir+plotfile)
         plt.close('all')
 
