@@ -155,7 +155,7 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
 #                          plugmap=plugmap, makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
 
     rt = str("%.2f" % (time.time() - start_time))
-    print("\nDone with APQA in "+rt+" seconds.")
+    print("Done with APQA in "+rt+" seconds.")
 
 
 ''' MAKEPLATESUM: Plotmag translation '''
