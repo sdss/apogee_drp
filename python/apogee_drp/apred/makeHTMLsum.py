@@ -287,7 +287,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         plt.ioff()
         fontsize = 24;   fsz = fontsize * 0.75
         matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-        alpha = 0.6
+        alpha = 0.75
         axwidth=1.5
         axmajlen=7
         axminlen=3.5
