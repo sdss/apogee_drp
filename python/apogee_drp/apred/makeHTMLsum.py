@@ -299,6 +299,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         fig=plt.figure(figsize=(16,8))
         ax1 = fig.add_subplot(111, projection = 'aitoff')
         ax1.grid(True)
+        ax1.set_xlim(0,360)
         #ax2 = fig.add_subplot(122, projection = 'aitoff')
         #axes = [ax1, ax2]
 
