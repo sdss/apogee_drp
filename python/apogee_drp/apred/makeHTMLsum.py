@@ -285,7 +285,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         # Aitoff maps
         # Set up some basic plotting parameters, starting by turning off interactive plotting.
         plt.ioff()
-        fontsize = 24;   fsz = fontsize * 0.75
+        fontsize = 24;   fsz = fontsize * 0.60
         matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
         alpha = 0.80
         axwidth=1.5
@@ -313,9 +313,9 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         gbrad = gb * (math.pi/180)
 
         p, = np.where(iprogram == 'AQMES-Wide')
-        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93', label='AQMES-Wide')
+        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93', label='AQMES-Wide ('+str(len(p)+')')
         p, = np.where(iprogram == 'RM')
-        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793', label='RM')
+        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793', label='RM ('+str(len(p)+')')
 
         ax1.text(0.5,1.03,'Galactic',transform=ax1.transAxes,ha='center')
 
