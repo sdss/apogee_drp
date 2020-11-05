@@ -305,16 +305,22 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         ra = ira.astype(float)
         dec = idec.astype(float)
         c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
-        gal = SkyCoord(ra, dec, frame='galactic', unit=u.deg)
-        import pdb; pdb.set_trace()
-        gl = gal.l.wrap_at(180*u.deg).radian
-        gb = gal.b.wrap_at(180*u.deg).radian
+        gl = c.galactic.l.degree
+        gb = c.galactic.b.degree
+        uhoh, = np.where(gl > 180)
+        if len(uhoh) > 0: gl[uhoh] -= 360
+        glrad = gl * (math.pi/180)
+        gbrad = gb * (math.pi/180)
+
+        #import pdb; pdb.set_trace()
+        #gl = gal.l.wrap_at(180*u.deg).radian
+        #gb = gal.b.wrap_at(180*u.deg).radian
 
         color='#ffb3b3'
         p, = np.where(iprogram == 'RM')
-        if len(p) > 0: ax1.scatter(gl[p], gb[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793')
+        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793')
         p, = np.where(iprogram == 'AQMES-Wide')
-        if len(p) > 0: ax1.scatter(gl[p], gb[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93')
+        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93')
 
 
         #for ax in axes:
