@@ -289,7 +289,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.ht
         axwidth=1.5
         axmajlen=7
         axminlen=3.5
-        markersz = 80
+        markersz = 100
 
         for i in range(2):
             if i == 0: ptype = 'galatic'
