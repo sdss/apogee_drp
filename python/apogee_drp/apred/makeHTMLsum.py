@@ -229,16 +229,16 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         idec = np.zeros(nplates).astype(str)
         for i in range(nplates): 
             plate = os.path.basename(plates[i]).split('-')[1]
+            iplate[i] = plate
             mjd = os.path.basename(plates[i]).split('-')[2][:-5]
+            imjd[i] = mjd
             tmp = plates[i].split('visit/')
             tel = tmp[1].split('/')[0]
+            itel[i] = tel
             tmp = plates[i].split(tel+'/')
             name = tmp[1].split('/')[0]
-            gd = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
-            itel[i] = tel
-            imjd[i] = mjd
-            iplate[i] = plate
             iname[i] = name
+            gd = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
             iprogram[i] = plans['PLATEPLANS']['programname'][gd][0].astype(str)
             iloc[i] = str(int(round(plans['PLATEPLANS']['locationid'][gd][0])))
             ira[i] = str("%.6f" % round(plans['PLATEPLANS']['raCen'][gd][0],6))
