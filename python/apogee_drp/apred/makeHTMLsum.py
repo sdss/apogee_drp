@@ -195,8 +195,8 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.ht
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
 
         html.write('<p>APOGEE sky coverage: red=APOGEE1 (yellow: commissioning), green=APOGEE2, magenta=APOGEE2S, cyan=MaNGA-APOGEE2<p>\n')
-        html.write('<A HREF="aitoff_galactic.png"><IMG SRC=aitoff_galactic.png WIDTH=700></A>\n')
-        html.write('<BR><A HREF="aitoff_equatorial.png"><IMG SRC=aitoff_equatorial.png WIDTH=700></A>\n')
+        html.write('<A HREF="aitoff_galactic.png"><IMG SRC=aitoff_galactic.png WIDTH=900></A>\n')
+        html.write('<A HREF="aitoff_equatorial.png"><IMG SRC=aitoff_equatorial.png WIDTH=900></A>\n')
 #        html.write('<img src=aitoff.png width=45%>\n')
 #        html.write('<img src=galactic.gif width=45%>\n')
         html.write('<p>Summary files:\n')
@@ -279,7 +279,6 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.ht
         html.write('</BODY></HTML>\n')
         html.close()
 
-
         #---------------------------------------------------------------------------------------
         # Aitoff maps
         # Set up some basic plotting parameters, starting by turning off interactive plotting.
@@ -292,68 +291,48 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.ht
         axminlen=3.5
         markersz = 80
 
-        plotfile = 'aitoff_galactic.png'
-        print("Making "+plotfile)
+        for i in range(2):
+            if i == 0: ptype = 'galatic'
+            if i == 1: ptype = 'equatorial'
+            plotfile = 'aitoff_'+ptype+'.png'
+            print("Making "+plotfile)
 
-        fig=plt.figure(figsize=(16,8))
-        ax1 = fig.add_subplot(111, projection = 'aitoff')
-        ax1.grid(True)
-        #ax2 = fig.add_subplot(122, projection = 'aitoff')
-        #axes = [ax1, ax2]
+            fig=plt.figure(figsize=(16,8))
+            ax1 = fig.add_subplot(111, projection = 'aitoff')
+            ax1.grid(True)
+            #ax2 = fig.add_subplot(122, projection = 'aitoff')
+            #axes = [ax1, ax2]
 
-        ra = ira.astype(float)
-        dec = idec.astype(float)
-        c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
-        gl = c.galactic.l.degree
-        gb = c.galactic.b.degree
-        uhoh, = np.where(gl > 180)
-        if len(uhoh) > 0: gl[uhoh] -= 360
-        glrad = gl * (math.pi/180)
-        gbrad = gb * (math.pi/180)
+            ra = ira.astype(float)
+            dec = idec.astype(float)
+            c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
+            if i == 0:
+                gl = c.galactic.l.degree
+                gb = c.galactic.b.degree
+                uhoh, = np.where(gl > 180)
+                if len(uhoh) > 0: gl[uhoh] -= 360
+                x = gl * (math.pi/180)
+                y = gb * (math.pi/180)
+            else:
+                ra = c.ra.degree
+                dec = c.dec.degree
+                uhoh, = np.where(ra > 180)
+                if len(uhoh) > 0: ra[uhoh] -= 360
+                x = ra * (math.pi/180)
+                y = dec * (math.pi/180)
 
-        p, = np.where(iprogram == 'AQMES-Wide')
-        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93', label='AQMES-Wide ('+str(len(p))+')')
-        p, = np.where(iprogram == 'RM')
-        if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793', label='RM ('+str(len(p))+')')
+            p, = np.where(iprogram == 'AQMES-Wide')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93', label='AQMES-Wide ('+str(len(p))+')')
+            p, = np.where(iprogram == 'RM')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793', label='RM ('+str(len(p))+')')
 
-        ax1.text(0.5,1.04,'Galactic',transform=ax1.transAxes,ha='center')
+            ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
 
-        ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
+            ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
 
-        fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
-        plt.savefig(qadir+plotfile)
-        plt.close('all')
-
-        #---------------------------------------------------------------------------------------
-        plotfile = 'aitoff_equatorial.png'
-        print("Making "+plotfile)
-
-        fig=plt.figure(figsize=(16,8))
-        ax1 = fig.add_subplot(111, projection = 'aitoff')
-        ax1.grid(True)
-        #ax2 = fig.add_subplot(122, projection = 'aitoff')
-        #axes = [ax1, ax2]
-
-        ra = ira.astype(float)
-        dec = idec.astype(float)
-        c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
-        ra = c.ra.degree
-        dec = c.dec.degree
-        uhoh, = np.where(ra > 180)
-        if len(uhoh) > 0: ra[uhoh] -= 360
-        rarad = ra * (math.pi/180)
-        decrad = dec * (math.pi/180)
-
-        p, = np.where(iprogram == 'AQMES-Wide')
-        if len(p) > 0: ax1.scatter(rarad[p], decrad[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93', label='AQMES-Wide ('+str(len(p))+')')
-        p, = np.where(iprogram == 'RM')
-        if len(p) > 0: ax1.scatter(rarad[p], decrad[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793', label='RM ('+str(len(p))+')')
-
-        ax1.text(0.5,1.04,'Equatorial',transform=ax1.transAxes,ha='center')
-
-        fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
-        plt.savefig(qadir+plotfile)
-        plt.close('all')
+            fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
+            plt.savefig(qadir+plotfile)
+            plt.close('all')
 
         plt.ion()
 
