@@ -304,9 +304,9 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
 
         ra = ira.astype(float)
         dec = idec.astype(float)
-        gal = SkyCoord(ra, dec, frame='galactic', unit=u.deg)
-        gl = gal.l.wrap_at('180d').radian
-        gb = gal.b.wrap_at('180d').radian
+        c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
+        gl = c.galactic.l.radian
+        gb = c.galactic.b.radian
 
         color='#ffb3b3'
         p, = np.where(iprogram == 'RM')
@@ -314,7 +314,6 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         p, = np.where(iprogram == 'AQMES-Wide')
         if len(p) > 0: ax1.scatter(gl[p], gb[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93')
 
-        import pdb; pdb.set_trace()
 
         #for ax in axes:
             #ax.set_xlim(-plotrad, plotrad)
@@ -330,6 +329,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.09)
         plt.savefig(qadir+plotfile)
         plt.close('all')
+        import pdb; pdb.set_trace()
 
         plt.ion()
 
