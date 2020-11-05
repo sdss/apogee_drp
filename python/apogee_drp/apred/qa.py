@@ -1726,7 +1726,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                 if i == 0: ptype = 'galatic'
                 if i == 1: ptype = 'equatorial'
                 plotfile = 'aitoff_'+ptype+'.png'
-                print("Making "+plotfile)
+                print("----> makeMasterQApages: Making "+plotfile)
 
                 fig=plt.figure(figsize=(16,8))
                 ax1 = fig.add_subplot(111, projection = 'aitoff')
