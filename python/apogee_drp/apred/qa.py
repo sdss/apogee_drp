@@ -142,7 +142,7 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
         q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, makespecplots=makespecplots)
 
         # Make mjd.html and fields.html
-        if masterqa is True: 
+        if makemasterqa is True: 
             q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                   mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                   domjd=True, dofields=True, makeplots=makeplots)
@@ -159,7 +159,7 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
 #                          starfiber=single, starmag=smag, fixfiberid=fixfiberid, clobber=True, 
 #                          plugmap=plugmap, makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
 
-    print("--- %s seconds ---" % (time.time() - start_time))
+    print("--- %.2f seconds ---" % (time.time() - start_time))
     print("\nDone with APQA")
 
 '''-----------------------------------------------------------------------------------------'''
