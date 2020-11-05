@@ -319,7 +319,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
 
         ax1.text(0.5,1.03,'Galactic',transform=ax1.transAxes,ha='center')
 
-        ax1.legend(loc=[-0.2,0.00], labelspacing=0.5, handletextpad=-0.1, facecolor='white',fontsize=fsz)
+        ax1.legend(loc=[-0.26,-0.05], labelspacing=0.5, handletextpad=-0.1, facecolor='white',fontsize=fsz)
 
         fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
         plt.savefig(qadir+plotfile)
