@@ -194,7 +194,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.ht
         html.write('<p><A HREF=mjd.html>MJD view</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
 
-        html.write('<p>APOGEE sky coverage: red=APOGEE1 (yellow: commissioning), green=APOGEE2, magenta=APOGEE2S, cyan=MaNGA-APOGEE2<p>\n')
+        html.write('<p>APOGEE sky coverage plots: <p>\n')
         html.write('<A HREF="aitoff_galactic.png"><IMG SRC=aitoff_galactic.png WIDTH=900></A>\n')
         html.write('<A HREF="aitoff_equatorial.png"><IMG SRC=aitoff_equatorial.png WIDTH=900></A>\n')
 #        html.write('<img src=aitoff.png width=45%>\n')
@@ -248,6 +248,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.ht
 
         # Sort by MJD
         order = np.argsort(imjd)
+        plates = plates[order]
         iplate = iplate[order]
         imjd = imjd[order]
         itel = itel[order]
@@ -271,10 +272,12 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.ht
     #        html.write('<TD><center><A HREF=exposures/'+dirs.instrument+'/'+cmjd+'/html/'+cmjd+'.html> '+cmjd+' </a></center>\n')
             html.write('<TD align="center">'+iloc[i]+'\n')
             html.write('<TD align="right">'+ira[i]+'\n') 
-            html.write('<TD align="right">'+idec[i]+'\n') 
-            html.write('<TD><center>---</center>\n') 
-            html.write('<TD><center>---</center>\n') 
-            html.write('<TD><center>---</center>\n') 
+            html.write('<TD align="right">'+idec[i]+'\n')
+            tmp = fits.open(plates[i])
+            platetab = tmp[3].data
+            html.write('<TD><center>'+str("%.1f" % round(platetab['SN'][0],1))+'</center>\n') 
+            html.write('<TD><center>'+str("%.1f" % round(platetab['SN'][0],1))+'</center>\n') 
+            html.write('<TD><center>'+str("%.1f" % round(platetab['SN'][0],1))+'</center>\n') 
 
         html.write('</BODY></HTML>\n')
         html.close()
