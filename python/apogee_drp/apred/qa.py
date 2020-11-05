@@ -55,11 +55,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #--------------------------------------------------------------------------------------------------
 
 
-'''-----------------------------------------------------------------------------------------'''
-'''APQA: Wrapper for running QA subprocedures                                               '''
-'''-----------------------------------------------------------------------------------------'''
-#def apqa(field='200+45', plate='8100', mjd='57680', telescope='apo25m', apred='t14',
-
+'''APQA: Wrapper for running QA subprocedures '''
 def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apred='daily', 
          makeplots=True, makeplatesum=True, makespecplots=True, makemasterqa=True):
     start_time = time.time()
@@ -162,18 +158,18 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
     print("--- %.2f seconds ---" % (time.time() - start_time))
     print("\nDone with APQA")
 
-'''-----------------------------------------------------------------------------------------'''
-''' MAKEPLATESUM: Plotmag translation                                                       '''
-'''-----------------------------------------------------------------------------------------'''
+
+''' MAKEPLATESUM: Plotmag translation '''
 def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, field=None, 
                  instrument=None, clobber=True, makeplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
+    print("----> makePlateSum: Running plate "+plate+", mjd "+mjd+"\n")
 
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
 
-    print("Making "+platesumbase+" ...\n")
+    print("----> makePlateSum: Making "+platesumbase)
 
     n_exposures = len(ims)
     if ims[0] == 0: n_exposures = 1
@@ -198,7 +194,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         htmlsum.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
         html.close()
         htmlsum.close()
-        print("Error in makePlotsHtml!!!")
+        print("----> makePlateSum: Error!")
 
     plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
 
@@ -225,20 +221,17 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
     fibertelluric, = np.where((fibtype == 'SPECTROPHOTO_STD') | (fibtype == 'HOT_STD'))
     ntelluric = len(fibertelluric)
     telluric = rows[fibertelluric]
-
-    if ntelluric < 1: print("PROBLEM!!! No tellurics found.")
+    if ntelluric < 1: print("----> makePlateSum: PROBLEM!!! No tellurics found.")
 
     fiberobj, = np.where((fibtype == 'STAR_BHB') | (fibtype == 'STAR') | (fibtype == 'EXTOBJ') | (fibtype == 'OBJECT'))
     nobj = len(fiberobj)
     obj = rows[fiberobj]
-
-    if nobj < 1: print("PROBLEM!!! No science objects found.")
+    if nobj < 1: print("----> makePlateSum: PROBLEM!!! No science objects found.")
 
     fibersky, = np.where(fibtype == 'SKY')
     nsky = len(fibersky)
     sky = rows[fibersky]
-
-    if nsky < 1: print("PROBLEM!!! No skies found.")
+    if nsky < 1: print("----> makePlateSum: PROBLEM!!! No skies found.")
 
     fiberstar = np.concatenate([fiberobj,fibertelluric])
     nstar = len(fiberstar)
@@ -256,12 +249,12 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         if os.path.exists(gcamdir) is False: subprocess.call(['mkdir',gcamdir])
         gcamfile = gcamdir+'gcam-'+mjd+'.fits'
         if os.path.exists(gcamfile) is False:
-            print("  Attempting to make "+os.path.basename(gcamfile)+" ...")
+            print("----> makePlateSum: Attempting to make "+os.path.basename(gcamfile)+".")
             subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--output', gcamfile], shell=False)
             if os.path.exists(gcamfile):
-                print("  Successfully made "+os.path.basename(gcamfile))
+                print("----> makePlateSum: Successfully made "+os.path.basename(gcamfile))
             else:
-                print("  ... failed to make "+os.path.basename(gcamfile)+"  :(")
+                print("----> makePlateSum: Failed to make "+os.path.basename(gcamfile))
         else:
             gcam = fits.getdata(gcamfile)
 
@@ -316,7 +309,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             dfile = load.filename('Plate',  plate=int(plate), mjd=mjd, chips=True)
             d = load.apPlate(int(plate), mjd) 
             cframe = load.apPlate(int(plate), mjd)
-            if type(d)!=dict: print("Problem with apPlate!!!")
+            if type(d)!=dict: print("----> makePlateSum: Problem with apPlate!")
             dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
 
         if ims[0] != 0:
@@ -324,7 +317,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             dfile = load.filename('1D',  plate=int(plate), num=ims[i], mjd=mjd, chips=True)
             d = load.ap1D(ims[i])
             cframe = load.apCframe(field, int(plate), mjd, ims[i])
-            if type(d)!=dict: print("Problem with ap1D!!!")
+            if type(d)!=dict: print("----> makePlateSum: Problem with ap1D!")
             dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
 
         cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[1], chips='c')
@@ -477,7 +470,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             else:
                 fwhm = -1.
                 gdrms = -1.
-                if i == 0: print("not halted: no matching mjd range in gcam...")
+                if i == 0: print("----> makePlateSum: Problem! No matching mjd range in gcam.")
         else:
             fwhm = -1
             gdrms = -1
@@ -506,14 +499,14 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                 try:
                     telstr = fits.getdata(tellfile)
                 except:
-                    if i == 0: print("PROBLEM!!! Error reading apTellstar file: "+os.path.basename(tellfile))
+                    if i == 0: print("----> makePlateSum: PROBLEM!!! Error reading apTellstar file: "+os.path.basename(tellfile))
                 else:
                     telstr = fits.getdata(tellfile)
                     jtell, = np.where(telstr['IM'] == ims[i])
                     ntell = len(jtell)
                     if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
             else:
-                print("PROBLEM!!! "+os.path.basename(tellfile)+" does not exist.")
+                print("----> makePlateSum: PROBLEM!!! "+os.path.basename(tellfile)+" does not exist.")
 
         platetab['IM'][i] =        ims[i]
         platetab['NREADS'][i] =    nreads
@@ -545,39 +538,28 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
             fiber['sn'][j][i,:] = sn[j,:]
             fiber['obsmag'][j][i,:] = (-2.5 * np.log10(obs[j,:])) + zero
 
-
-    # write out the FITS table.
+    # Write out the FITS table.
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     if ims[0] != 0:
-        ### NOTE:the only different between below if statement is that if ims is none, /create is not set in mwrfits
-        # ... not sure if we care.
         Table(platetab).write(platesum, overwrite=True)
         hdulist = fits.open(platesum)
         hdu = fits.table_to_hdu(Table(fiber))
         hdulist.append(hdu)
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
-#;        mwrfits,platetab,platesum,/create
-#;        mwrfits,fiber,platesum
-
     if ims[0] == 0:
         hdulist = fits.open(platesum)
         hdu1 = fits.table_to_hdu(Table(platetab))
         hdulist.append(hdu1)
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
-#;        mwrfits,platetab,platesum
-#;        mwrfits,fiber,platesum
 
-    print("\nDone making apPlateSum for plate "+plate+", mjd "+mjd)
+    print("----> makePlateSum: Done with plate "+plate+", mjd "+mjd+"\n")
 
 
-
-''' MAKEOBSQAPAGES: mkhtmlplate translation                                                   '''
+''' MAKEOBSQAPAGES: mkhtmlplate translation '''
 def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, telescope=None):
-
-    print("--------------------------------------------------------------------")
-    print("Making obs QA page for plate "+plate+", mjd "+mjd)
+    print("----> makeObsQApages: Running plate "+plate+", mjd "+mjd+"\n")
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -606,7 +588,7 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
     # Make the html directory if it doesn't already exist
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
     qafiledir = os.path.dirname(qafile)
-    print("Creating "+os.path.basename(qafile)+"\n")
+    print("----> makeObsQApages:Creating "+os.path.basename(qafile))
     if os.path.exists(qafiledir) is False: subprocess.call(['mkdir',qafiledir])
 
     html = open(qafile, 'w')
@@ -642,7 +624,6 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
     html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
     snrplot = 'apVisitSNR-'+plate+'-'+mjd+'.png'
     html.write('<A HREF=../plots/'+snrplot+' target="_blank"><IMG SRC=../plots/'+snrplot+' WIDTH=900></A>\n')
-
     html.write('<HR>\n')
 
     # Table of individual exposures.
@@ -717,7 +698,6 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
     html.write('<TD align="center"><B>['+snc+']')
     html.write('<TD align="right"><B>'+Mmoonphase+'<TD align="right"><B>'+Mmoondist+'</b>\n')
     html.write('</TABLE>\n')
-
     html.write('<HR>\n')
 
     # Table of exposure pairs.
@@ -737,7 +717,6 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
                     html.write('<TD>'+str("%.3f" % round(pairstr['SHIFT'][ipair][j],3))+'\n')
                     html.write('<TD>'+str("%.2f" % round(pairstr['SN'][ipair][j],2))+'\n')
             html.write('</TABLE>\n')
-
         html.write('<HR>\n')
 
     # Flat field plots.
@@ -764,7 +743,6 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
 #            html.write('<TD>'+str("%.3f" % round(shiftstr['SHIFT'][iframe],3))+'\n')
 #            html.write('<TD>'+str("%.3f" % round(shiftstr['SN'][iframe],3))+'\n')
 #    html.write('</TABLE>\n')
-
 
     # Table of exposure plots.
     html.write('<TABLE BORDER=2>\n')
@@ -812,17 +790,13 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
     html.write('</BODY></HTML>\n')
     html.close()
 
-    print("Done with obs QA page for plate "+plate+", mjd "+mjd)
-    print("--------------------------------------------------------------------\n")
+    print("----> makeObsQApages: Done with plate "+plate+", mjd "+mjd+"\n")
 
 
-
-''' $$$   MAKEOBSQAPLOTS: plots for the master QA page   $$$ '''
+''' MAKEOBSQAPLOTS: plots for the master QA page '''
 def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, apred=None,
                   flat=None, fluxid=None, survey=None): 
-
-    print("--------------------------------------------------------------------")
-    print("Making obs QA plots for plate "+plate+", mjd "+mjd)
+    print("----> makeObsQAplots: Running plate "+plate+", mjd "+mjd+"\n")
 
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
@@ -866,7 +840,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
     Vsum = Vsum[1].data
 
     plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
-    print("Making "+plotfile)
+    print("----> makeObsQAplots: Making "+plotfile)
 
     fig=plt.figure(figsize=(18,8))
     ax1 = plt.subplot2grid((1,1), (0,0))
@@ -919,7 +893,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
     ypos = 300 - platesum2['FIBERID']
 
     plotfile = fluxfile.replace('.fits', '.png')
-    print("Making "+plotfile)
+    print("----> makeObsQAplots: Making "+plotfile)
 
     fig=plt.figure(figsize=(28,10))
     plotrad = 1.6
@@ -961,7 +935,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
     #----------------------------------------------------------------------------------------------
     block = np.around((plSum2['FIBERID'] - 1) / 30)
     plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
-    print("Making "+plotfile)
+    print("----> makeObsQAplots: Making "+plotfile)
 
     fig=plt.figure(figsize=(10,10))
     ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1004,7 +978,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         jcam, = np.where((gcam['mjd'] > mjdstart) & (gcam['mjd'] < mjdend))
 
         plotfile = 'guider-'+plate+'-'+mjd+'.png'
-        print("Making "+plotfile)
+        print("----> makeObsQAplots: Making "+plotfile)
 
         fig=plt.figure(figsize=(10,10))
         ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1030,7 +1004,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         # PLOTS 7: 3 panel mag/SNR plots for each exposure
         #----------------------------------------------------------------------------------------------
         plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
-        print("Making "+plotfile)
+        print("----> makeObsQAplots: Making "+plotfile)
 
         telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
         ntelluric = len(telluric)
@@ -1119,7 +1093,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         # PLOT 3: spatial residuals for each exposure
         #----------------------------------------------------------------------------------------------
         plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
-        print("Making "+plotfile)
+        print("----> makeObsQAplots: Making "+plotfile)
 
         fig=plt.figure(figsize=(14,15))
         ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1146,7 +1120,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
             c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
             psky = ax1.scatter(x, y, marker='s', s=100, c='white', edgecolors='k', alpha=1, label='Sky')
         except:
-            print("PROBLEM!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
+            print("----> makeObsQAplots: Problem!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
 
         ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
@@ -1241,17 +1215,12 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         #print("PLOTS 8: Zeropoints plots will be made here.")
 
     plt.ion()
-
-    print("Done with obs QA plots for plate "+plate+", mjd "+mjd)
-    print("--------------------------------------------------------------------\n")
+    print("----> makeObsQAplots: Done with plate "+plate+", mjd "+mjd+"\n")
 
 
-
-''' $$$   MAKEOBJQA: make the pages with spectrum plots   $$$ '''
+''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
 def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None): 
-
-    print("--------------------------------------------------------------------")
-    print("Making obj QA for plate "+plate+", mjd "+mjd)
+    print("----> makeObjQA: Running plate "+plate+", mjd "+mjd)
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -1362,7 +1331,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
                 if type(visithdr['SNR']) != str:
                     snratio = str("%.2f" % round(visithdr['SNR'],2))
                 else:
-                    print("PROBLEM WITH "+visitfilebase+"... SNR = NaN.")
+                    print("----> makeObjQA: Problem with "+visitfilebase+"... SNR = NaN.")
 
             # column 1
             objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+' target="_blank">'+cfiber+'</A>\n')
@@ -1398,7 +1367,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
             objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
             if makespecplots is True:
-                print("Making "+plotfile)
+                print("----> makeObjQA: Making "+plotfile)
 
                 lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                 xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
@@ -1418,7 +1387,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
                 ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
                 ymxsec3, = np.where((Wave > 16925) & (Wave < 16950))
                 if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
-                    print("Problem with fiber "+cfib+". Not Plotting.")
+                    print("----> makeObjQA: Problem with fiber "+cfib+". Not Plotting.")
                 else:
                     tmpF = convolve(Flux,Box1DKernel(11))
                     ymx1 = np.nanmax(tmpF[ymxsec1])
@@ -1461,11 +1430,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
 
     objhtml.close()
     cfile.close()
-
     plt.ion()
-
-    print("Done with obj QA for plate "+plate+", mjd "+mjd)
-    print("--------------------------------------------------------------------\n")
+    print("----> makeObjQA: Done with plate "+plate+", mjd "+mjd+".\n")
 
 #    if starfiber is None:
 #        txt1 = 'Left plots: red are targets, blue are telluric. Observed mags are calculated '
@@ -1497,7 +1463,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
 #        fiber['object'] = 'FLAT'
 
 
-'''  MAKEMASTERQAPAGES: makes mjd.html and fields.html                                              '''
+'''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
 def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fieldfilebase=None,
                       domjd=True, dofields=True, makeplots=True):
 
@@ -1514,12 +1480,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
     if domjd is True:
         # Find all .log.html files, get all MJDs with data
-        print("----> makeHTMLsum: finding log files. Please wait.")
+        print("----> makeMasterQApages: finding log files. Please wait.")
         logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
         logsS = np.array(glob.glob(datadirS+'/*/*.log.html'))
         logs = np.concatenate([logsN,logsS]) 
         nlogs = len(logs)
-        print("----> makeHTMLsum: found "+str(nlogs)+" log files.")
+        print("----> makeMasterQApages: found "+str(nlogs)+" log files.")
 
         # Get array of MJDs and run mkhtml if MJD[i] within mjdmin-mjdmax range
         mjd = np.empty(nlogs)
@@ -1539,7 +1505,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
         # Open the mjd file html
         mjdfile = qadir+mjdfilebase
-        print("----> makeHTMLsum: creating "+mjdfilebase)
+        print("----> makeMasterQApages: creating "+mjdfilebase)
         html = open(mjdfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE MJD Summary</title></head>\n')
@@ -1644,13 +1610,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
         html.write('</body></html>\n')
         html.close()
 
-        print("----> makeHTMLsum: Done.")
-
     #---------------------------------------------------------------------------------------
     # Fields view
     if dofields is True:
         fieldfile = qadir+fieldfilebase
-        print("----> makeHTMLsum: creating "+fieldfilebase)
+        print("----> makeMasterQApages: creating "+fieldfilebase)
         html = open(fieldfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE Field Summary</title></head>\n')
@@ -1799,11 +1763,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                 fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
                 plt.savefig(qadir+plotfile)
                 plt.close('all')
-
             plt.ion()
+    print("----> makeMasterQApages: Done.\n")
 
 
-''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.)               '''
+''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.) '''
 def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
 
     print("--------------------------------------------------------------------")
@@ -1911,7 +1875,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     print("--------------------------------------------------------------------\n")
 
 
-''' MAKEDARKFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants)   '''
+''' MAKEDARKFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants) '''
 def makeDarkFits(load=None, planfile=None, ims=None, mjd=None):
 
     print("--------------------------------------------------------------------")
@@ -1976,7 +1940,7 @@ def makeDarkFits(load=None, planfile=None, ims=None, mjd=None):
     print("--------------------------------------------------------------------\n")
 
 
-''' GETFLUX: Translation of getflux.pro                                                     '''
+''' GETFLUX: Translation of getflux.pro '''
 def getflux(d=None, skyline=None, rows=None):
 
     chips = np.array(['a','b','c'])
