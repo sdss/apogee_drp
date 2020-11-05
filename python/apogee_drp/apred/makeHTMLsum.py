@@ -219,7 +219,14 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par', np=True)
 
         # Get arrays of observed data values (plate ID, mjd, telescope, field name, program, location ID, ra, dec)
-        iplate = [];  imjd = [];  itel = [];   iname = [];  iprogram = [];   iloc = [];   ira=[];   idec=[]
+        iplate = np.zeros(nplates).astype(str)
+        imjd = np.zeros(nplates).astype(str)
+        itel = np.zeros(nplates).astype(str)
+        iname = np.zeros(nplates).astype(str)
+        iprogram = np.zeros(nplates).astype(str)
+        iloc = np.zeros(nplates).astype(str)
+        ira = np.zeros(nplates).astype(str)
+        idec = np.zeros(nplates).astype(str)
         for i in range(nplates): 
             plate = os.path.basename(plates[i]).split('-')[1]
             iplate.append(plate)
@@ -232,18 +239,10 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
             name = tmp[1].split('/')[0]
             iname.append(name)
             gd = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
-            iprogram.append(plans['PLATEPLANS']['programname'][gd][0])
+            iprogram.append(plans['PLATEPLANS']['programname'][gd][0].astype(str))
             iloc.append(str(int(round(plans['PLATEPLANS']['locationid'][gd][0]))))
             ira.append(str("%.6f" % round(plans['PLATEPLANS']['raCen'][gd][0],6)))
             idec.append(str("%.6f" % round(plans['PLATEPLANS']['decCen'][gd][0],6)))
-        iplate = np.array(iplate)
-        imjd = np.array(imjd)
-        itel = np.array(itel)
-        iname = np.array(iname)
-        iprogram = np.array(iprogram).astype(str)
-        iloc = np.array(iloc)
-        ira = np.array(ira)
-        idec = np.array(idec)
 
         # Sort by MJD
         order = np.argsort(imjd)
@@ -275,12 +274,49 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
             html.write('<TD><center>---</center>\n') 
             html.write('<TD><center>---</center>\n') 
 
-        html.write('</TABLE>\n')
         html.write('</BODY></HTML>\n')
         html.close()
 
 
+    #---------------------------------------------------------------------------------------
+    # Aitoff maps
+    if aitoff is True:
+        # Set up some basic plotting parameters, starting by turning off interactive plotting.
+        plt.ioff()
+        fontsize = 24;   fsz = fontsize * 0.75
+        matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+        alpha = 0.6
+        axwidth=1.5
+        axmajlen=7
+        axminlen=3.5
 
+        plotfile = 'aitoff.png'
+        print("Making "+plotfile)
+
+        fig=plt.figure(figsize=(16,20))
+        ax1 = fig.add_subplot(121, projection = 'aitoff')
+        ax2 = fig.add_subplot(122, projection = 'aitoff')
+        axes = [ax1, ax2]
+
+    
+
+
+    #for ax in axes:
+        #ax.set_xlim(-plotrad, plotrad)
+        #ax.set_ylim(-plotrad, plotrad)
+        #ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        #ax.minorticks_on()
+        #ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        #ax.tick_params(axis='both',which='major',length=axmajlen)
+        #ax.tick_params(axis='both',which='minor',length=axminlen)
+        #ax.tick_params(axis='both',which='both',width=axwidth)
+        #ax.set_xlabel(r'Zeta')
+
+        fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.09)
+        plt.savefig(qadir+plotfile)
+        plt.close('all')
+
+    plt.ion()
 
 
 
