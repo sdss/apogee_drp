@@ -351,7 +351,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         p, = np.where(iprogram == 'RM')
         if len(p) > 0: ax1.scatter(rarad[p], decrad[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793', label='RM ('+str(len(p))+')')
 
-        ax1.text(0.5,1.04,'Galactic',transform=ax1.transAxes,ha='center')
+        ax1.text(0.5,1.04,'Equatorial',transform=ax1.transAxes,ha='center')
 
         fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
         plt.savefig(qadir+plotfile)
