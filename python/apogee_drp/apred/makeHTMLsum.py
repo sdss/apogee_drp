@@ -303,13 +303,11 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
 
         ra = ira.astype(float)
         dec = idec.astype(float)
-        c = SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
-        gl = c.galactic.l.degree
-        gb = c.galactic.b.degree
+        gal = SkyCoord(ra, dec, frame='galactic', unit=u.deg)
+        gl = gal.l.wrap_at('180d').radian
+        gb = gal.b.wrap_at('180d').radian
 
-        for i in range(len(ra)):
-            print(gl[i],gb[i])
-            ax1.scatter(gl[i], gb[i], marker='o', s=50, edgecolors='k', alpha=0.5, color='b')
+        ax1.scatter(gl, gb, marker='o', s=50, edgecolors='k', alpha=0.6, color='b')
 
         #for ax in axes:
             #ax.set_xlim(-plotrad, plotrad)
