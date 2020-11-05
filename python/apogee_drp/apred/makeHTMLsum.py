@@ -291,6 +291,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         axwidth=1.5
         axmajlen=7
         axminlen=3.5
+        markersz = 70
 
         plotfile = 'aitoff.png'
         print("Making "+plotfile)
@@ -309,9 +310,9 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
 
         color='#ffb3b3'
         p, = np.where(iprogram == 'RM')
-        if len(p) > 0: ax1.scatter(gl[p], gb[p], marker='o', s=50, edgecolors='k', alpha=alpha, c='#FCF793')
+        if len(p) > 0: ax1.scatter(gl[p], gb[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793')
         p, = np.where(iprogram == 'AQMES-Wide')
-        if len(p) > 0: ax1.scatter(gl[p], gb[p], marker='^', s=60, edgecolors='k', alpha=alpha, c='#B9FC93')
+        if len(p) > 0: ax1.scatter(gl[p], gb[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93')
 
 
 
