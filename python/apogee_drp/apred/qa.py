@@ -163,7 +163,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                  instrument=None, clobber=True, makeplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
-    print("----> makePlateSum: Running plate "+plate+", mjd "+mjd+"\n")
+    print("----> makePlateSum: Running plate "+plate+", mjd "+mjd)
 
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
@@ -725,12 +725,12 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
         html.write('<TH>Flat field relative flux <TH>Fiber Blocks <TH>Guider RMS\n')
         html.write('<TR>\n')
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'"><IMG SRC=../plots/'+fluxfile+' WIDTH=1100></A>\n')
+        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'"><IMG SRC=../plots/'+fluxfile+' WIDTH=1100 target="_blank"></A>\n')
         tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
         blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
-        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=390></A>\n')
+        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=390 target="_blank"></A>\n')
         gfile = 'guider-'+plate+'-'+mjd+'.png'
-        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390></A>\n')
+        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390 target="_blank"></A>\n')
         html.write('</TABLE>\n')
         html.write('<HR>\n')
 #    else:
@@ -777,9 +777,9 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
         html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=400></A>\n')
         html.write('<TD><A HREF=../plots/'+oneDfile+'_spatialresid.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_spatialresid.png WIDTH=500></A>\n')
         cim=str(im)
-        html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg height=400></a>\n')
-        html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg height=400></a>\n')
-        html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg height=400></a>\n')
+        html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg height=400></a>\n')
+        html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg height=400></a>\n')
+        html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg height=400></a>\n')
         html.write('<TD> <IMG SRC=../plots/'+oneDfile+'sky.jpg>\n')
         html.write('<TD> <IMG SRC=../plots/'+oneDfile+'skycont.jpg>\n')
     html.write('</table>\n')
@@ -795,7 +795,7 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
 ''' MAKEOBSQAPLOTS: plots for the master QA page '''
 def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, apred=None,
                   flat=None, fluxid=None, survey=None): 
-    print("----> makeObsQAplots: Running plate "+plate+", mjd "+mjd+"\n")
+    print("----> makeObsQAplots: Running plate "+plate+", mjd "+mjd)
 
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
