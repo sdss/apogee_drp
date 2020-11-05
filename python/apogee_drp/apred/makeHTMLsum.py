@@ -305,8 +305,8 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         ra = ira.astype(float)
         dec = idec.astype(float)
         c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
-        gl = c.galactic.l.wrap_at('180d').radian
-        gb = c.galactic.b.wrap_at('180d').radian
+        gl = c.galactic.l.wrap_at(180*u.deg).radian
+        gb = c.galactic.b.wrap_at(180*u.deg).radian
 
         color='#ffb3b3'
         p, = np.where(iprogram == 'RM')
@@ -329,7 +329,6 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.09)
         plt.savefig(qadir+plotfile)
         plt.close('all')
-        import pdb; pdb.set_trace()
 
         plt.ion()
 
