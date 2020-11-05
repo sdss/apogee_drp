@@ -306,6 +306,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         dec = idec.astype(float)
         c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
         gal = SkyCoord(ra, dec, frame='galactic', unit=u.deg)
+        import pdb; pdb.set_trace()
         gl = gal.l.wrap_at(180*u.deg).radian
         gb = gal.b.wrap_at(180*u.deg).radian
 
