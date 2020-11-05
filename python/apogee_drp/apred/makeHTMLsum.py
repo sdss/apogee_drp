@@ -199,7 +199,6 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.ht
         html.write('<A HREF="aitoff_equatorial.png"><IMG SRC=aitoff_equatorial.png WIDTH=900></A>\n')
 #        html.write('<img src=aitoff.png width=45%>\n')
 #        html.write('<img src=galactic.gif width=45%>\n')
-        html.write('<p>Summary files:\n')
 
     #    if ~keyword_set(suffix) then suffix='-'+apred_vers+'-'+aspcap_vers+'.fits'
     #    html.write('<a href=../../aspcap/'+apred_vers+'/'+aspcap_vers+'/allStar'+suffix+'> allStar'+suffix+' file </a>\n')
