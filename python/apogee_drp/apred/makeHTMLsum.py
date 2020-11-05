@@ -312,27 +312,13 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         glrad = gl * (math.pi/180)
         gbrad = gb * (math.pi/180)
 
-        #import pdb; pdb.set_trace()
-        #gl = gal.l.wrap_at(180*u.deg).radian
-        #gb = gal.b.wrap_at(180*u.deg).radian
-
         color='#ffb3b3'
         p, = np.where(iprogram == 'RM')
         if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='o', s=markersz, edgecolors='k', alpha=alpha, c='#FCF793')
         p, = np.where(iprogram == 'AQMES-Wide')
         if len(p) > 0: ax1.scatter(glrad[p], gbrad[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93')
 
-
-        #for ax in axes:
-            #ax.set_xlim(-plotrad, plotrad)
-            #ax.set_ylim(-plotrad, plotrad)
-            #ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-            #ax.minorticks_on()
-            #ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            #ax.tick_params(axis='both',which='major',length=axmajlen)
-            #ax.tick_params(axis='both',which='minor',length=axminlen)
-            #ax.tick_params(axis='both',which='both',width=axwidth)
-            #ax.set_xlabel(r'Zeta')
+        ax1.text(0.5,1.0,'Galactic',transform=ax1.transAxes,ha='center')
 
         fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.09)
         plt.savefig(qadir+plotfile)
