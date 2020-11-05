@@ -60,7 +60,7 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
          makeplots=True, makeplatesum=True, makespecplots=True, makemasterqa=True):
     start_time = time.time()
 
-    print("---------------------------------------\nStarting APQA\n")
+    print("Starting APQA\n")
 
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -154,8 +154,8 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
 #                          starfiber=single, starmag=smag, fixfiberid=fixfiberid, clobber=True, 
 #                          plugmap=plugmap, makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
 
-    print("--- %.2f seconds ---" % (time.time() - start_time))
-    print("\nDone with APQA")
+    rt = str("%.2f" % (time.time() - start_time))
+    print("\nDone with APQA in "+rt+" seconds.")
 
 
 ''' MAKEPLATESUM: Plotmag translation '''
