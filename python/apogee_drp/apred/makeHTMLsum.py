@@ -314,7 +314,7 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         p, = np.where(iprogram == 'AQMES-Wide')
         if len(p) > 0: ax1.scatter(gl[p], gb[p], marker='^', s=markersz, edgecolors='k', alpha=alpha, c='#B9FC93')
 
-
+        import pdb; pdb.set_trace()
 
         #for ax in axes:
             #ax.set_xlim(-plotrad, plotrad)
