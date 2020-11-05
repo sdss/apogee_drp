@@ -305,8 +305,8 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         ra = ira.astype(float)
         dec = idec.astype(float)
         c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
-        gl = c.galactic.l.radian
-        gb = c.galactic.b.radian
+        gl = c.galactic.l.wrap_at('180d').radian
+        gb = c.galactic.b.wrap_at('180d').radian
 
         color='#ffb3b3'
         p, = np.where(iprogram == 'RM')
