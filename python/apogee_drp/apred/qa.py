@@ -1397,7 +1397,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
             objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
             if makespecplots is True:
-#            if (makespecplots is True) & (j<100):
                 print("Making "+plotfile)
 
                 lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
