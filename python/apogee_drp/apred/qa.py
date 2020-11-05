@@ -581,8 +581,6 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
     tab1 = tmp[1].data
     tab2 = tmp[2].data
     tab3 = tmp[3].data
-#    tab3 = tmp[3].data
-#;    tab3 = mrdfits(platesum,3,status=status)
 
     # Make the html directory if it doesn't already exist
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
