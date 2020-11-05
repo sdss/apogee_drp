@@ -275,9 +275,9 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.ht
             html.write('<TD align="right">'+idec[i]+'\n')
             tmp = fits.open(plates[i])
             platetab = tmp[3].data
-            html.write('<TD><center>'+str("%.1f" % round(platetab['SN'][0][0],1))+'</center>\n') 
-            html.write('<TD><center>'+str("%.1f" % round(platetab['SN'][0][1],1))+'</center>\n') 
-            html.write('<TD><center>'+str("%.1f" % round(platetab['SN'][0][2],1))+'</center>\n') 
+            html.write('<TD align="right">'+str("%.1f" % round(platetab['SN'][0][0],1))+'\n') 
+            html.write('<TD align="right">'+str("%.1f" % round(platetab['SN'][0][1],1))+'\n') 
+            html.write('<TD align="right">'+str("%.1f" % round(platetab['SN'][0][2],1))+'\n') 
 
         html.write('</BODY></HTML>\n')
         html.close()
