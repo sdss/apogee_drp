@@ -32,7 +32,7 @@ from astropy.coordinates import SkyCoord
 '''-----------------------------------------------------------------------------------------'''
 '''makeHTMLsum: makes mjd.html and fields.html                                              '''
 '''-----------------------------------------------------------------------------------------'''
-def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',fieldfilebase='fields',
+def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd.html',fieldfilebase='fields.html',
                 domjd=True, dofields=True):
     # Establish data directories.
     datadirN = os.environ['APOGEE_DATA_N']
@@ -74,7 +74,6 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         nmjd = len(mjd)
 
         # Open the mjd file html
-        if mjdfilebase is None: mjdfilebase = 'mjd.html'
         mjdfile = qadir+mjdfilebase
         print("----> makeHTMLsum: creating "+mjdfilebase)
         html = open(mjdfile,'w')
@@ -186,7 +185,6 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
     #---------------------------------------------------------------------------------------
     # Fields view
     if dofields is True:
-        if fieldfilebase is None: fieldfilebase = 'fields.html'
         fieldfile = qadir+fieldfilebase
         print("----> makeHTMLsum: creating "+fieldfilebase)
         html = open(fieldfile,'w')
