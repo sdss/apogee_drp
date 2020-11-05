@@ -75,7 +75,6 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
     fluxid =     planstr['fluxid']
     instrument = planstr['instrument']
     survey =     planstr['survey']
-    print("Survey = "+survey)
 
     # Establish directories.
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
