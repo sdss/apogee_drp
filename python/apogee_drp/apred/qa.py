@@ -558,7 +558,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
 ''' MAKEOBSQAPAGES: mkhtmlplate translation '''
 def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, telescope=None):
-    print("----> makeObsQApages: Running plate "+plate+", mjd "+mjd+"\n")
+    print("----> makeObsQApages: Running plate "+plate+", mjd "+mjd)
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
