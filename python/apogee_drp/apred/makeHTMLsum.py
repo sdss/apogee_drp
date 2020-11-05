@@ -33,7 +33,7 @@ from astropy.coordinates import SkyCoord
 '''makeHTMLsum: makes mjd.html and fields.html                                              '''
 '''-----------------------------------------------------------------------------------------'''
 def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',fieldfilebase='fields',
-                domjd=True, dofields=True, aitoff=True):
+                domjd=True, dofields=True):
     # Establish data directories.
     datadirN = os.environ['APOGEE_DATA_N']
     datadirS = os.environ['APOGEE_DATA_S']
@@ -281,9 +281,8 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         html.close()
 
 
-    #---------------------------------------------------------------------------------------
-    # Aitoff maps
-    if aitoff is True:
+        #---------------------------------------------------------------------------------------
+        # Aitoff maps
         # Set up some basic plotting parameters, starting by turning off interactive plotting.
         plt.ioff()
         fontsize = 24;   fsz = fontsize * 0.75
@@ -305,25 +304,26 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         c = SkyCoord(ra=ira*u.degree, dec=idec*u.degree, frame='icrs')
         gl = c.galactic.l.degree
         gb = c.galactic.b.degree
+        import pdb; pdb.set_trace()
 
         ax1.scatter(gl, gb, marker='o', s=80, edgecolors='k', alpha=0.75, color='b')
 
-    #for ax in axes:
-        #ax.set_xlim(-plotrad, plotrad)
-        #ax.set_ylim(-plotrad, plotrad)
-        #ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        #ax.minorticks_on()
-        #ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        #ax.tick_params(axis='both',which='major',length=axmajlen)
-        #ax.tick_params(axis='both',which='minor',length=axminlen)
-        #ax.tick_params(axis='both',which='both',width=axwidth)
-        #ax.set_xlabel(r'Zeta')
+        #for ax in axes:
+            #ax.set_xlim(-plotrad, plotrad)
+            #ax.set_ylim(-plotrad, plotrad)
+            #ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            #ax.minorticks_on()
+            #ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            #ax.tick_params(axis='both',which='major',length=axmajlen)
+            #ax.tick_params(axis='both',which='minor',length=axminlen)
+            #ax.tick_params(axis='both',which='both',width=axwidth)
+            #ax.set_xlabel(r'Zeta')
 
         fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.09)
         plt.savefig(qadir+plotfile)
         plt.close('all')
 
-    plt.ion()
+        plt.ion()
 
 
 
