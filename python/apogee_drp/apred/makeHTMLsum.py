@@ -195,8 +195,9 @@ def makeHTMLsum(mjdmin=59146, mjdmax=9999999, apred='daily', mjdfilebase='mjd',f
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
 
         html.write('<p>APOGEE sky coverage: red=APOGEE1 (yellow: commissioning), green=APOGEE2, magenta=APOGEE2S, cyan=MaNGA-APOGEE2<p>\n')
-        html.write('<img src=sky.gif width=45%>\n')
-        html.write('<img src=galactic.gif width=45%>\n')
+        html.write('<A HREF="aitoff.png"><IMG SRC=aitoff.png WIDTH=800></A>\n')
+#        html.write('<img src=aitoff.png width=45%>\n')
+#        html.write('<img src=galactic.gif width=45%>\n')
         html.write('<p>Summary files:\n')
 
     #    if ~keyword_set(suffix) then suffix='-'+apred_vers+'-'+aspcap_vers+'.fits'
