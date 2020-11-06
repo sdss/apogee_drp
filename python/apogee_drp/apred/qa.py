@@ -55,11 +55,11 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #--------------------------------------------------------------------------------------------------
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
-def apqaMJD(mjd='59146', apred='daily'):
+def apqaMJD(mjd='59146', observatory='apo', apred='daily'):
 
     # Find the list of plan files
     apodir = os.environ.get('APOGEE_REDUX')+'/'
-    planlist = apodir + apred + '/log/apo/' + mjd + '.plans'
+    planlist = apodir + apred + '/log/'+observatory+'/' + mjd + '.plans'
     plans = open(planlist, 'r')
     plans = plans.readlines()
     nplans = len(plans)
