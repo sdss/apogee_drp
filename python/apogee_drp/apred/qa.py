@@ -620,7 +620,7 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
         sys.exit(err1 + err2)
 
     # Get field name
-    tmp = platesumfile.split(telescope+'/')
+    tmp = platesum.split(telescope+'/')
     field = tmp[1].split('/')[0]
 
     # Read the plateSum file
