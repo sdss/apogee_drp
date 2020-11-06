@@ -1213,6 +1213,8 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         cc = skylines['FLUX'][0][fibertelluric] / medsky
         ax1.scatter(xx, yy, marker='o', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='telluric')
 
+        ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+
         ax1_divider = make_axes_locatable(ax1)
         cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
         cb = colorbar(sc, cax=cax1, orientation="horizontal")
