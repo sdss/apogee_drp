@@ -1156,7 +1156,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         ntelluric = len(fibertelluric)
         telluric = rows[fibertelluric]
 
-        fiberobj, = np.where((platesum2['OBJTYPE'] == 'STAR_BHB') | (platesum2['OBJTYPE'] == 'STAR') 
+        fiberobj, = np.where((platesum2['OBJTYPE'] == 'STAR_BHB') | (platesum2['OBJTYPE'] == 'STAR') |
                              (platesum2['OBJTYPE'] == 'EXTOBJ') | (platesum2['OBJTYPE'] == 'OBJECT'))
         nobj = len(fiberobj)
         obj = rows[fiberobj]
