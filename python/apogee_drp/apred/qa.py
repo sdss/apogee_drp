@@ -283,6 +283,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                    ('SKY',       np.float64, 3),
                    ('SN',        np.float64, 3),
                    ('SNC',       np.float64, 3),
+                   ('SNT',       np.float64, 3),
                    ('ALTSN',     np.float64, 3),
                    ('NSN',       np.int32),
                    ('SNRATIO',   np.float64),
@@ -529,6 +530,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['ALTSN'][i] =     altsn
         platetab['NSN'][i] =       nsn
         platetab['SNC'][i] =       achievedsnc
+        platetab['SNT'][i] =       snt
         if ntelluric > 0: platetab['SNRATIO'][i] = np.nanmedian(snt[telluric,1] / snc[telluric,1])
         platetab['MOONDIST'][i] =  moondist
         platetab['MOONPHASE'][i] = moonphase
