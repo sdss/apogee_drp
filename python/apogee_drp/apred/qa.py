@@ -1200,17 +1200,17 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
 
         xx = platesum2['ZETA'][fibersky]
         yy = platesum2['ETA'][fibersky]
-        cc = skylines['FLUX'][0][sky] / medsky
+        cc = skylines['FLUX'][0][fibersky] / medsky
         sc = ax1.scatter(xx, yy, marker='s', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='sky')
 
         xx = platesum2['ZETA'][fiberobj]
         yy = platesum2['ETA'][fiberobj]
-        cc = skylines['FLUX'][0][obj] / medsky
+        cc = skylines['FLUX'][0][fiberobj] / medsky
         ax1.scatter(xx, yy, marker='*', s=200, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='science')
 
         xx = platesum2['ZETA'][fibertelluric]
         yy = platesum2['ETA'][fibertelluric]
-        cc = skylines['FLUX'][0][telluric] / medsky
+        cc = skylines['FLUX'][0][fibertelluric] / medsky
         ax1.scatter(xx, yy, marker='o', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='telluric')
 
         ax1_divider = make_axes_locatable(ax1)
