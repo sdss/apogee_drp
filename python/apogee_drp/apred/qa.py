@@ -1184,7 +1184,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         for iline in range(nskylines):
             skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
         import pdb; pdb.set_trace()
-        medsky = np.median(skylines['FLUX'][sky][0])
+        medsky = np.median(skylines['FLUX'][0][sky])
 
         fig=plt.figure(figsize=(14,15))
         ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1200,17 +1200,17 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
 
         xx = platesum2['ZETA'][fibersky]
         yy = platesum2['ETA'][fibersky]
-        cc = skylines['FLUX'][sky][0] / medsky
+        cc = skylines['FLUX'][0][sky] / medsky
         sc = ax1.scatter(xx, yy, marker='s', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='sky')
 
-        xx = platesum2['ZETA'][fibersky]
-        yy = platesum2['ETA'][fibersky]
-        cc = skylines['FLUX'][sky][0] / medsky
+        xx = platesum2['ZETA'][fiberobj]
+        yy = platesum2['ETA'][fiberobj]
+        cc = skylines['FLUX'][0][obj] / medsky
         ax1.scatter(xx, yy, marker='*', s=200, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='science')
 
         xx = platesum2['ZETA'][fibertelluric]
         yy = platesum2['ETA'][fibertelluric]
-        cc = skylines['FLUX'][telluric][0] / medsky
+        cc = skylines['FLUX'][0][telluric] / medsky
         ax1.scatter(xx, yy, marker='o', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='telluric')
 
         ax1_divider = make_axes_locatable(ax1)
