@@ -1183,7 +1183,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
 
         for iline in range(nskylines):
             skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
-
+        import pdb; pdb.set_trace()
         medsky = np.median(skylines['FLUX'][sky][0])
 
         fig=plt.figure(figsize=(14,15))
