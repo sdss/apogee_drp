@@ -60,15 +60,15 @@ def apqaMJD(mjd='59146', apred='daily'):
     # Find the list of plan files
     apodir = os.environ.get('APOGEE_REDUX')+'/'
     planlist = apodir + apred + '/log/apo/' + mjd + '.plans'
-    plans = ascii.read(planlist)
+    plans = open(planlist, 'r')
+    plans = plans.readlines()
     nplans = len(plans)
 
     # Find the plan files pertaining to science data
     gdplans = []
     for i in range(nplans):
-        planfile = plans[i][0]
-        tmp = planfile.split('-')
-        if tmp[0] == 'apPlan': gdplans.append(planfile)
+        tmp = plans[i].split('-')
+        if tmp[0] == 'apPlan': gdplans.append(planfile.replace('\n','')
     gdplans = np.array(gdplans)
     nplans = len(gdplans)
     import pdb; pdb.set_trace()
