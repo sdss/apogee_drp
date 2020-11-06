@@ -81,9 +81,9 @@ def apqaMJD(mjd='59146', apred='daily'):
         mjd = tmp[2].split('.')[0]
         # Only run makemasterqa after the last plate on this mjd
         if i < nplans-1:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makemasterqa=False), makespecplots=False, makeplots=False, makeplatesum=False)
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makemasterqa=False, makespecplots=False, makeplots=False, makeplatesum=False)
         else:
-            x = apqa(plate=plate, mjd=mjd, apred=apred), makespecplots=False, makeplots=False, makeplatesum=False)
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makespecplots=False, makeplots=False, makeplatesum=False)
     print("Done with APQAMJD for "+str(nplans)+" observed on MJD "+mjd+"\n")
 
 
