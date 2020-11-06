@@ -75,9 +75,10 @@ def apqaMJD(mjd='59146', apred='daily'):
     # Run apqa on the science data plans
     print("Running APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
     for i in range(nplans):
+        # Get the plate number and mjd
         tmp = gdplans[i].split('-')
         plate = tmp[1]
-        mjd = tmp[2]
+        mjd = tmp[2].split('.')[0]
         # Only run makemasterqa after the last plate on this mjd
         if i < nplans:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makemasterqa=False, makespecplots=False)
@@ -97,7 +98,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily',
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
-    import pdb; pdb.set_trace()
     planstr = plan.load(planfile, np=True)
 
     # Get values from plan file.
