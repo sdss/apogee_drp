@@ -68,7 +68,7 @@ def apqaMJD(mjd='59146', apred='daily'):
     gdplans = []
     for i in range(nplans):
         tmp = plans[i].split('-')
-        if tmp[0] == 'apPlan': gdplans.append(planfile.replace('\n','')
+        if tmp[0] == 'apPlan': gdplans.append(planfile.replace('\n',''))
     gdplans = np.array(gdplans)
     nplans = len(gdplans)
     import pdb; pdb.set_trace()
