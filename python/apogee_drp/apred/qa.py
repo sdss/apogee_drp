@@ -728,10 +728,10 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
         html.write('<TH>Flat field relative flux <TH>Fiber Blocks <TH>Guider RMS\n')
         html.write('<TR>\n')
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'"><IMG SRC=../plots/'+fluxfile+' WIDTH=1100 target="_blank"></A>\n')
+        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1100></A>\n')
         tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
         blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
-        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png><IMG SRC=../plots/'+blockfile+'.png WIDTH=390 target="_blank"></A>\n')
+        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png target="_blank"><IMG SRC=../plots/'+blockfile+'.png WIDTH=390></A>\n')
         gfile = 'guider-'+plate+'-'+mjd+'.png'
         html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390 target="_blank"></A>\n')
         html.write('</TABLE>\n')
@@ -783,7 +783,7 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg height=400></a>\n')
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg height=400></a>\n')
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg height=400></a>\n')
-        html.write('<TD> <IMG SRC=../plots/'+oneDfile+'sky.jpg>\n')
+        html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skyemission.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skyemission.png>\n')
         html.write('<TD> <IMG SRC=../plots/'+oneDfile+'skycont.jpg>\n')
     html.write('</table>\n')
 
@@ -917,7 +917,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         if ichip != 0: ax.axes.yaxis.set_ticklabels([])
 
         med = np.nanmedian(flux[chip][1].data, axis=1)
-        sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='jet', alpha=1, vmin=0.0, vmax=2.0)
+        sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='RdBu', alpha=1, vmin=0.0, vmax=2.0)
 
         ax.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top')
 
@@ -1137,29 +1137,29 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
 
-        #plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=8,/xs,/ys
-        #if nobj gt 0 then begin
-        #    xx=fiber[fiberobj].zeta
-        #    yy=fiber[fiberobj].eta
-        #    cc=skylines[0].flux[fiberobj]/medsky
-        #    plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=6,overplot=1,/xs,/ys
-        #endif
-        #if ntelluric gt 0 then begin
-        #    xx=fiber[fibertelluric].zeta
-        #    yy=fiber[fibertelluric].eta
-        #    cc=skylines[0].flux[fibertelluric]/medsky
-        #    plotc,xx,yy,cc,min=0.9,max=1.1,xr=lim,yr=lim,ps=4,overplot=1,/xs,/ys
-        #endif
-        #device,/close
-        #ps2jpg,outdir+file+'sky.eps',/eps,chmod='664'o,/delete
+        #------------------------------------------------------------------------------------------
+        # PLOT 4: spatial sky line emission
+        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
+        #------------------------------------------------------------------------------------------
+        plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_skyemission.png'
+        print("----> makeObsQAplots: Making "+plotfile)
 
-        if ims[0] == 0: d = load.apPlate(int(plate), mjd) 
-        if ims[0] != 0: d = load.ap1D(ims[i])
+        #d = load.apPlate(int(plate), mjd) 
+        d = load.ap1D(ims[i])
         rows = 300-plSum2['FIBERID']
 
         fibersky, = np.where(plSum2['OBJTYPE'] == 'SKY')
         nsky = len(fibersky)
         sky = rows[fibersky]
+
+        fibertelluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
+        ntelluric = len(fibertelluric)
+        telluric = rows[fibertelluric]
+
+        fiberobj, = np.where((plSum2['OBJTYPE'] == 'STAR_BHB') | (plSum2['OBJTYPE'] == 'STAR') 
+                             (plSum2['OBJTYPE'] == 'EXTOBJ') | (plSum2['OBJTYPE'] == 'OBJECT'))
+        nobj = len(fiberobj)
+        obj = rows[fiberobj]
 
         # Define skylines structure which we will use to get crude sky levels in lines.
         dt = np.dtype([('W1',   np.float64),
@@ -1184,17 +1184,46 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         for iline in range(nskylines):
             skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
 
-        #medsky = np.median(skylines['FLUX'][sky][0])
+        medsky = np.median(skylines['FLUX'][sky][0])
 
-        #xx = plSum2['ZETA'][science]
-        #yy = plSum2['ETA'][science]
-        #cc = skylines['FLUX'][sky][0] / medsky
+        fig=plt.figure(figsize=(14,15))
+        ax1 = plt.subplot2grid((1,1), (0,0))
+        ax1.set_xlim(-1.6,1.6)
+        ax1.set_ylim(-1.6,1.6)
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        ax1.minorticks_on()
+        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax1.tick_params(axis='both',which='major',length=axmajlen)
+        ax1.tick_params(axis='both',which='minor',length=axminlen)
+        ax1.tick_params(axis='both',which='both',width=axwidth)
+        ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-        #------------------------------------------------------------------------------------------
-        # PLOT 4: spatial sky line emission
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
-        #------------------------------------------------------------------------------------------
-        #print("PLOTS 4: spatial plot of sky line emission will be made here.\n")
+        xx = plSum2['ZETA'][fibersky]
+        yy = plSum2['ETA'][fibersky]
+        cc = skylines['FLUX'][sky][0] / medsky
+        sc = ax1.scatter(xx, yy, marker='s', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='sky')
+
+        xx = plSum2['ZETA'][fibersky]
+        yy = plSum2['ETA'][fibersky]
+        cc = skylines['FLUX'][sky][0] / medsky
+        ax1.scatter(xx, yy, marker='*', s=200, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='science')
+
+        xx = plSum2['ZETA'][fibertelluric]
+        yy = plSum2['ETA'][fibertelluric]
+        cc = skylines['FLUX'][telluric][0] / medsky
+        ax1.scatter(xx, yy, marker='o', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='telluric')
+
+        ax1_divider = make_axes_locatable(ax1)
+        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+        cb = colorbar(sc, cax=cax1, orientation="horizontal")
+        cax1.xaxis.set_ticks_position("top")
+        cax1.minorticks_on()
+        ax1.text(0.5, 1.12, r'Sky deviation',ha='center', transform=ax1.transAxes)
+
+        fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.91,hspace=0.2,wspace=0.0)
+        plt.savefig(plotsdir+plotfile)
+        plt.close('all')
+
 
         #------------------------------------------------------------------------------------------
         # PLOT 5: spatial continuum emission
