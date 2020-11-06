@@ -80,17 +80,17 @@ def apqaMJD(mjd='59146', apred='daily'):
         plate = tmp[1]
         mjd = tmp[2].split('.')[0]
         # Only run makemasterqa after the last plate on this mjd
-        if i < nplans:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makemasterqa=False, makespecplots=False)
+        if i < nplans-1:
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makemasterqa=False), makespecplots=False, makeplots=False, makeplatesum=False)
         else:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makespecplots=False)
-
+            x = apqa(plate=plate, mjd=mjd, apred=apred), makespecplots=False, makeplots=False, makeplatesum=False)
     print("Done with APQAMJD for "+str(nplans)+" observed on MJD "+mjd+"\n")
 
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
-def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', 
-         makeplots=True, makeplatesum=True, makespecplots=True, makemasterqa=True):
+def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True,
+         makeplots=True, makespecplots=True, makemasterqa=True):
+
     start_time = time.time()
 
     print("Starting APQA for plate "+plate+", MJD "+mjd+"\n")
