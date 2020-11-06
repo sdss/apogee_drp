@@ -283,7 +283,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                    ('SKY',       np.float64, 3),
                    ('SN',        np.float64, 3),
                    ('SNC',       np.float64, 3),
-                   ('SNT',       np.float64, 3),
+                   #('SNT',       np.float64, 3),
                    ('ALTSN',     np.float64, 3),
                    ('NSN',       np.int32),
                    ('SNRATIO',   np.float64),
@@ -405,7 +405,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         nfaint = 0
         achievedsn = np.zeros(nchips)
         achievedsnc = np.zeros(nchips)
-        achievedsnt = np.zeros(nchips)
+        #achievedsnt = np.zeros(nchips)
         altsn = np.zeros(nchips)
         nsn = 0
 
@@ -434,7 +434,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
             achievedsn = np.nanmedian(sn[snstars,:], axis=0) * scale
             #gd, = np.where(snt > 0)
-            achievedsnt = np.nanmedian(snt[:], axis=0) * scale
+            #achievedsnt = np.nanmedian(snt[:], axis=0) * scale
 
             # Alternative S/N as computed from median of all stars with H<12.2, scaled
             snstars, = np.where(fiber['hmag'] < 12.2)
@@ -533,7 +533,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
         platetab['ALTSN'][i] =     altsn
         platetab['NSN'][i] =       nsn
         platetab['SNC'][i] =       achievedsnc
-        platetab['SNT'][i] =       achievedsnt
+        #platetab['SNT'][i] =       achievedsnt
         if ntelluric > 0: platetab['SNRATIO'][i] = np.nanmedian(snt[telluric,1] / snc[telluric,1])
         platetab['MOONDIST'][i] =  moondist
         platetab['MOONPHASE'][i] = moonphase
