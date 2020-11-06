@@ -480,9 +480,8 @@ def run_daily(observatory,mjd5=None,apred=None):
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
 
     nodes = 1
-    #qos = 'sdss-fast'
     qos = None
-    alloc = 'sdss-kp'
+    alloc = 'sdss-kp-fast'
 
     # No version input, use 'daily'
     if apred is None:
@@ -563,25 +562,22 @@ def run_daily(observatory,mjd5=None,apred=None):
     db.ingest('daily_status',daycat)
 
 
-    ## Run APRED on all planfiles using "pbs" package
-    ##------------------------------------------------
-    #rootLogger.info('')
-    #rootLogger.info('--------------')
-    #rootLogger.info('Running APRED')
-    #rootLogger.info('==============')
-    #rootLogger.info('')
-    #queue = pbsqueue(verbose=True)
-    #queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
-    #for pf in planfiles:
-    #    queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
-    #queue.commit(hard=True,submit=True)
-    #rootLogger.info('PBS key is '+queue.key)
-    #queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-    #chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
-    chkexp,chkvisit = check_apred(expinfo,planfiles,'None',verbose=True,logger=rootLogger)
-    #del queue
-
-    #import pdb;pdb.set_trace()
+    # Run APRED on all planfiles using "pbs" package
+    #------------------------------------------------
+    rootLogger.info('')
+    rootLogger.info('--------------')
+    rootLogger.info('Running APRED')
+    rootLogger.info('==============')
+    rootLogger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
+    for pf in planfiles:
+        queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
+    queue.commit(hard=True,submit=True)
+    rootLogger.info('PBS key is '+queue.key)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
+    chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
+    del queue
 
 
     # Run "rv" on all stars
@@ -616,14 +612,12 @@ def run_daily(observatory,mjd5=None,apred=None):
 
     # Run QA script
     #--------------
-    #queue = pbsqueue(verbose=True)
-    #queue.create(label='qa', nodes=1, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
-    #queue.append('apqa {0}'.format(mjd5))  # outfile, errfile
-    #queue.commit(hard=True,submit=True)
-    #queue_wait(queue)  # wait for jobs to complete
-    #del queue
-
-    import pdb; pdb.set_trace()
+    queue = pbsqueue(verbose=True)
+    queue.create(label='qa', nodes=1, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
+    queue.append('apqa {0}'.format(mjd5,observatory))  # outfile, errfile
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue)  # wait for jobs to complete
+    del queue
 
     # Create daily and full allVisit/allStar files
     create_sumfiles(mjd5,apred,telescope)
@@ -644,8 +638,6 @@ def run_daily(observatory,mjd5=None,apred=None):
     dayout = db.query('daily_status',where="mjd="+str(mjd5)+" and telescope='"+telescope+"' and begtime='"+begtime+"'")
     daycat['pk'] = dayout['pk'][0]
     db.update('daily_status',daycat)
-
-    import pdb;pdb.set_trace()
 
     rootLogger.info('Daily APOGEE reduction finished for MJD=%d and observatory=%s' % (mjd5,observatory))
 
