@@ -433,7 +433,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
                 scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
 
             achievedsn = np.nanmedian(sn[snstars,:], axis=0) * scale
-            gd, = np.where(snt > 0)
+            #gd, = np.where(snt > 0)
             achievedsnt = np.nanmedian(snt[:], axis=0) * scale
 
             # Alternative S/N as computed from median of all stars with H<12.2, scaled
