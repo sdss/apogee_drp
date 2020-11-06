@@ -1146,18 +1146,18 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
 
         #d = load.apPlate(int(plate), mjd) 
         d = load.ap1D(ims[i])
-        rows = 300-plSum2['FIBERID']
+        rows = 300-platesum2['FIBERID']
 
-        fibersky, = np.where(plSum2['OBJTYPE'] == 'SKY')
+        fibersky, = np.where(platesum2['OBJTYPE'] == 'SKY')
         nsky = len(fibersky)
         sky = rows[fibersky]
 
-        fibertelluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
+        fibertelluric, = np.where((platesum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (platesum2['OBJTYPE'] == 'HOT_STD'))
         ntelluric = len(fibertelluric)
         telluric = rows[fibertelluric]
 
-        fiberobj, = np.where((plSum2['OBJTYPE'] == 'STAR_BHB') | (plSum2['OBJTYPE'] == 'STAR') 
-                             (plSum2['OBJTYPE'] == 'EXTOBJ') | (plSum2['OBJTYPE'] == 'OBJECT'))
+        fiberobj, = np.where((platesum2['OBJTYPE'] == 'STAR_BHB') | (platesum2['OBJTYPE'] == 'STAR') 
+                             (platesum2['OBJTYPE'] == 'EXTOBJ') | (platesum2['OBJTYPE'] == 'OBJECT'))
         nobj = len(fiberobj)
         obj = rows[fiberobj]
 
@@ -1198,18 +1198,18 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-        xx = plSum2['ZETA'][fibersky]
-        yy = plSum2['ETA'][fibersky]
+        xx = platesum2['ZETA'][fibersky]
+        yy = platesum2['ETA'][fibersky]
         cc = skylines['FLUX'][sky][0] / medsky
         sc = ax1.scatter(xx, yy, marker='s', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='sky')
 
-        xx = plSum2['ZETA'][fibersky]
-        yy = plSum2['ETA'][fibersky]
+        xx = platesum2['ZETA'][fibersky]
+        yy = platesum2['ETA'][fibersky]
         cc = skylines['FLUX'][sky][0] / medsky
         ax1.scatter(xx, yy, marker='*', s=200, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='science')
 
-        xx = plSum2['ZETA'][fibertelluric]
-        yy = plSum2['ETA'][fibertelluric]
+        xx = platesum2['ZETA'][fibertelluric]
+        yy = platesum2['ETA'][fibertelluric]
         cc = skylines['FLUX'][telluric][0] / medsky
         ax1.scatter(xx, yy, marker='o', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='telluric')
 
