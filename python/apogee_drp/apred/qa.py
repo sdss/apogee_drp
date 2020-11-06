@@ -97,6 +97,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily',
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
+    import pdb; pdb.set_trace()
     planstr = plan.load(planfile, np=True)
 
     # Get values from plan file.
