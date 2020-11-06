@@ -54,13 +54,45 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #    with some summary information about the calibration data
 #--------------------------------------------------------------------------------------------------
 
+'''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
+def apqaMJD(mjd='59146', apred='daily'):
 
-'''APQA: Wrapper for running QA subprocedures '''
-def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apred='daily', 
+    # Find the list of plan files
+    apodir = os.environ.get('APOGEE_REDUX')+'/'
+    planlist = apodir + apred + '/log/apo/' + mjd + '.plans'
+    plans = ascii.read(planlist)
+    nplans = len(plans)
+
+    # Find the plan files pertaining to science data
+    gdplans = []
+    for i in range(nplans):
+        planfile = plans[i][0]
+        tmp = planfile.split('-')
+        if tmp[0] == 'apPlan': gdplans.append(planfile)
+    gdplans = np.array(gdplans)
+    nplans = len(gdplans)
+
+    # Run apqa on the science data plans
+    print("Running APQAMJD for "+str(nplans)+" observed on MJD "+mjd+"\n")
+    for i in range(nplans):
+        tmp = gdplans[i].split('-')
+        plate = tmp[1]
+        mjd = tmp[2]
+        # Only run makemasterqa after the last plate on this mjd
+        if i < nplans:
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makemasterqa=False)
+        else:
+            x = apqa(plate=plate, mjd=mjd, apred=apred)
+
+    print("Done with APQAMJD for "+str(nplans)+" observed on MJD "+mjd+"\n")
+
+
+'''APQA: Wrapper for running QA subprocedures on a plate mjd '''
+def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', 
          makeplots=True, makeplatesum=True, makespecplots=True, makemasterqa=True):
     start_time = time.time()
 
-    print("Starting APQA\n")
+    print("Starting APQA for plate "+plate+", MJD "+mjd+"\n")
 
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -109,24 +141,25 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
 
     # Normal plates:.
     if platetype == 'normal': 
+
+        # Make the apPlateSum file if it doesn't already exist.
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-            # Make the apPlateSum file if it doesn't already exist.
         if (os.path.exists(platesum) is False) | (makeplatesum is True):
             q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd,
-                             field=field, instrument=instrument, clobber=True, plugmap=plugmap,
+                             instrument=instrument, clobber=True, plugmap=plugmap,
                              survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
                              starfiber=None, starnames=None, starmag=None,flat=None,
                              fixfiberid=fixfiberid, badfiberid=badfiberid)
 
             tmpims = np.array([0,ims[0]])
             q = makePlateSum(load=load, telescope=telescope, ims=tmpims, plate=plate, mjd=mjd,
-                             field=field, instrument=instrument, clobber=True, plugmap=plugmap,
+                             instrument=instrument, clobber=True, plugmap=plugmap,
                              survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
                              starfiber=None, starnames=None, starmag=None,flat=None,
                              fixfiberid=fixfiberid, badfiberid=badfiberid)
 
         # Make the observation QA page
-        q = makeObsQApages(load=load, plate=plate, mjd=mjd, field=field, fluxid=fluxid, telescope=telescope)
+        q = makeObsQApages(load=load, plate=plate, mjd=mjd, fluxid=fluxid, telescope=telescope)
 
         # Make plots for the observation QA pages
         if makeplots is True:
@@ -155,11 +188,11 @@ def apqa(field='RM_XMM-LSS', plate='15000', mjd='59146', telescope='apo25m', apr
 #                          plugmap=plugmap, makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
 
     rt = str("%.2f" % (time.time() - start_time))
-    print("Done with APQA in "+rt+" seconds.")
+    print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+rt+" seconds.")
 
 
 ''' MAKEPLATESUM: Plotmag translation '''
-def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, field=None, 
+def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
                  instrument=None, clobber=True, makeplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
@@ -167,6 +200,10 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
+
+    # Get field name
+    tmp = platesumfile.split(telescope+'/')
+    field = tmp[1].split('/')[0]
 
     print("----> makePlateSum: Making "+platesumbase)
 
@@ -562,7 +599,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None, fiel
 
 
 ''' MAKEOBSQAPAGES: mkhtmlplate translation '''
-def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, telescope=None):
+def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None):
     print("----> makeObsQApages: Running plate "+plate+", mjd "+mjd)
 
     chips = np.array(['a','b','c'])
@@ -580,6 +617,10 @@ def makeObsQApages(load=None, plate=None, mjd=None, field=None, fluxid=None, tel
         err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
         err2 = "You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
+
+    # Get field name
+    tmp = platesumfile.split(telescope+'/')
+    field = tmp[1].split('/')[0]
 
     # Read the plateSum file
     tmp = fits.open(platesum)
@@ -1184,7 +1225,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         for iline in range(nskylines):
             skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
 
-        medsky = np.median(skylines['FLUX'][0][sky])
+        #medsky = np.median(skylines['FLUX'][0][sky])
 
         fig=plt.figure(figsize=(14,15))
         ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1198,28 +1239,28 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-        xx = platesum2['ZETA'][fibersky]
-        yy = platesum2['ETA'][fibersky]
-        cc = skylines['FLUX'][0][fibersky] / medsky
-        sc = ax1.scatter(xx, yy, marker='s', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='sky')
+        #xx = platesum2['ZETA'][fibersky]
+        #yy = platesum2['ETA'][fibersky]
+        #cc = skylines['FLUX'][0][fibersky] / medsky
+        #sc = ax1.scatter(xx, yy, marker='s', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='sky')
 
-        xx = platesum2['ZETA'][fiberobj]
-        yy = platesum2['ETA'][fiberobj]
-        cc = skylines['FLUX'][0][fiberobj] / medsky
-        ax1.scatter(xx, yy, marker='*', s=200, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='science')
+        #xx = platesum2['ZETA'][fiberobj]
+        #yy = platesum2['ETA'][fiberobj]
+        #cc = skylines['FLUX'][0][fiberobj] / medsky
+        #ax1.scatter(xx, yy, marker='*', s=200, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='science')
 
-        xx = platesum2['ZETA'][fibertelluric]
-        yy = platesum2['ETA'][fibertelluric]
-        cc = skylines['FLUX'][0][fibertelluric] / medsky
-        ax1.scatter(xx, yy, marker='o', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='telluric')
+        #xx = platesum2['ZETA'][fibertelluric]
+        #yy = platesum2['ETA'][fibertelluric]
+        #cc = skylines['FLUX'][0][fibertelluric] / medsky
+        #ax1.scatter(xx, yy, marker='o', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='telluric')
 
-        ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+        #ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-        ax1_divider = make_axes_locatable(ax1)
-        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-        cb = colorbar(sc, cax=cax1, orientation="horizontal")
-        cax1.xaxis.set_ticks_position("top")
-        cax1.minorticks_on()
+        #ax1_divider = make_axes_locatable(ax1)
+        #cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+        #cb = colorbar(sc, cax=cax1, orientation="horizontal")
+        #cax1.xaxis.set_ticks_position("top")
+        #cax1.minorticks_on()
         ax1.text(0.5, 1.12, r'Sky deviation',ha='center', transform=ax1.transAxes)
 
         fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.91,hspace=0.2,wspace=0.0)
