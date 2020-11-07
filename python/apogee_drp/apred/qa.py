@@ -573,6 +573,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
         platetab['NSN'][i] =       nsn
         platetab['SNC'][i] =       achievedsnc
         #platetab['SNT'][i] =       achievedsnt
+        import pdb; pdb.set_trace()
         if ntelluric > 0: platetab['SNRATIO'][i] = np.nanmedian(snt[telluric,1] / snc[telluric,1])
         platetab['MOONDIST'][i] =  moondist
         platetab['MOONPHASE'][i] = moonphase
