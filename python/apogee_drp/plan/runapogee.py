@@ -458,7 +458,7 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
     indexp, = np.where(chkexp['success']==True)
     message += '%d/%d exposures successfully processed\n' % (len(indexp),len(chkexp))
     # Visit status
-    indvisit, np.where(chkvisit['success']==True)
+    indvisit, = np.where(chkvisit['success']==True)
     message += '%d/%d visits successfully processed\n' % (len(indvisit),lend(chkvisit))
     #for i in range(len(chkvisit)):
     #    message.append()
