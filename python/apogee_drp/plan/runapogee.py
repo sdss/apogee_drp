@@ -615,7 +615,9 @@ def run_daily(observatory,mjd5=None,apred=None):
     #--------------
     queue = pbsqueue(verbose=True)
     queue.create(label='qa', nodes=1, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
-    queue.append('apqa {0}'.format(mjd5,observatory))  # outfile, errfile
+    qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'.log'
+    qaerrfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'.err'
+    queue.append('apqa {0}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
     queue.commit(hard=True,submit=True)
     queue_wait(queue)  # wait for jobs to complete
     del queue
