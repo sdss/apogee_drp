@@ -503,6 +503,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
             mjd1 = max([mjd1,mjdend])
             nj = 0
             if os.path.exists(gcamfile):
+                gcam = fits.getdata(gcamfile)
                 jcam, = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
                 nj = len(jcam)
             if nj > 1: 
@@ -572,7 +573,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
         platetab['NSN'][i] =       nsn
         platetab['SNC'][i] =       achievedsnc
         #platetab['SNT'][i] =       achievedsnt
-        if ntelluric > 0: platetab['SNRATIO'][i] = np.nanmedian(snt[telluric,1] / snc[telluric,1])
+        if ntelluric > 0: platetab['SNRATIO'][i] = np.nanmedian(snt[fibertelluric,1] / snc[fibertelluric,1])
         platetab['MOONDIST'][i] =  moondist
         platetab['MOONPHASE'][i] = moonphase
 
