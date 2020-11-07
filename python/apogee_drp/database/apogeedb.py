@@ -243,7 +243,7 @@ class DBSession(object):
                 nind = len(ind)
                 for j in np.arange(1,nind):
                     colnames[ind[j]] += str(j+1)
-            
+
             # Use the data returned to get the type
             dt = []
             for i,c in enumerate(colnames):
@@ -255,7 +255,16 @@ class DBSession(object):
                     dtype1 = type(data[0][i][0])
                     dt.append( (c, dtype1, nlist) )
                 else:
-                    dt.append( (c, type(data[0][i])) )
+                    dtype1 = type(data[0][i])
+                    # Check for None/null, need a "real" value to get the type
+                    if (data[0][i] is None):
+                        cnt = 0
+                        while (data[cnt][i] is None) and (cnt<100): cnt += 1
+                        if data[cnt][i] is not None:
+                            dtype1 = type(data[cnt][i])
+                        else:  # still None, use float
+                            dtype1 = float
+                    dt.append( (c, dtype1) )
             dtype = np.dtype(dt)
 
             # Convert to numpy structured array

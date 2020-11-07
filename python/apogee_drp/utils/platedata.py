@@ -84,7 +84,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                       ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
                       ('phflag',np.str,50),('src_h',np.str,50),('pmra',float),('pmdec',float),('pm_src',np.str,50),
                       ('catalogid',int),('gaia_g',float),('gaia_bp',float),('gaia_rp',float),('sdssv_apogee_target0',int),
-                      ('firstcarton',np.str,100),('gaiadr2_sourceid',int),('gaiadr2_ra',float),('gaiadr2_dec',float),
+                      ('firstcarton',np.str,100),('gaiadr2_sourceid',np.str,25),('gaiadr2_ra',float),('gaiadr2_dec',float),
                       ('gaiadr2_plx',float),('gaiadr2_plx_error',float),('gaiadr2_pmra',float),('gaiadr2_pmra_error',float),
                       ('gaiadr2_pmdec',float),('gaiadr2_pmdec_error',float),('gaiadr2_gmag',float),('gaiadr2_gerr',float),
                       ('gaiadr2_bpmag',float),('gaiadr2_bperr',float),('gaiadr2_rpmag',float),('gaiadr2_rperr',float)])

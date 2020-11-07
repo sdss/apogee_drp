@@ -80,7 +80,6 @@ def getdata(catid=None,ra=None,dec=None,dcr=1.0):
     # Do the query
     data = db.query(sql=sql,fmt="table")
 
-
     db.close()
 
     return data
