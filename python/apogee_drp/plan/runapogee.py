@@ -480,8 +480,9 @@ def run_daily(observatory,mjd5=None,apred=None):
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
 
     nodes = 1
-    qos = None
-    alloc = 'sdss-kp-fast'
+    #qos = None
+    qos = 'sdss-fast'
+    alloc = 'sdss-kp'
 
     # No version input, use 'daily'
     if apred is None:
