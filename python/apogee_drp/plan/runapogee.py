@@ -129,6 +129,9 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         logger.info('Checking APRED runs')
         logger.info('====================')
 
+    chkexp = None
+    chkap = None
+
     # Loop over the planfiles
     nplanfiles = len(planfiles)
     for ip,pfile in enumerate(planfiles):
@@ -143,164 +146,183 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         nexp = len(expstr)
         load = apload.ApLoad(apred=apred_vers,telescope=telescope)
 
-        # Science exposures
-        if platetype=='normal':
+        # normal: ap3d, ap2d, apCframe and ap1dvisit
+        # dark: ap3d  (apDarkPlan)
+        # cal: ap3d and ap2d (apCalPlan)
 
-            # Load the plugmap information
+        # Load the plugmap information
+        if platetype=='normal':
             plugmap = platedata.getdata(plate,mjd,apred_vers,telescope,plugid=planstr['plugmap'])
             fiberdata = plugmap['fiberdata']
+        else:
+            fiberdata = None
 
-            # Exposure-level processing: ap3d, ap2d, apcframe
-            dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('instrument',(np.str,20)),
-                                ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
-                                ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
-                                ('num',int),('success',bool)])
-            chkexp = np.zeros(nexp*3,dtype=dtype)
-            chkexp['planfile'] = pfile
-            chkexp['apred_vers'] = apred_vers
-            chkexp['instrument'] = instrument
-            chkexp['telescope'] = telescope
-            chkexp['platetype'] = platetype
-            chkexp['mjd'] = mjd
-            chkexp['plate'] = plate
-            chkexp['proctype'] = 'AP3D'
-            chkexp['pbskey'] = pbskey
-            chkexp['success'] = False
-            cnt = 0
-            for num in expstr['name']:
-                ind, = np.where(expinfo['num']==num)
-                exposure_pk = expinfo['pk'][ind[0]]
-                # AP3D
-                #-----
-                chkexp['exposure_pk'][cnt] = exposure_pk
-                chkexp['num'][cnt] = num
-                chkexp['proctype'][cnt] = 'AP3D'
-                base = load.filename('2D',num=num,mjd=mjd,chips=True)
-                chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
-                exists = [os.path.exists(chf) for chf in chfiles]
-                chkexp['checktime'][cnt] = str(datetime.now())
-                if np.sum(exists)==3:
-                    chkexp['success'][cnt] = True
-                cnt += 1
-                # AP2D
-                #-----
-                chkexp['exposure_pk'][cnt] = exposure_pk
-                chkexp['num'][cnt] = num
-                chkexp['proctype'][cnt] = 'AP2D'
+        # Exposure-level processing: ap3d, ap2d, apcframe
+        dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('instrument',(np.str,20)),
+                          ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
+                          ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
+                          ('num',int),('success',bool)])
+        chkexp1 = np.zeros(nexp*3,dtype=dtype)
+        chkexp1['planfile'] = pfile
+        chkexp1['apred_vers'] = apred_vers
+        chkexp1['instrument'] = instrument
+        chkexp1['telescope'] = telescope
+        chkexp1['platetype'] = platetype
+        chkexp1['mjd'] = mjd
+        chkexp1['plate'] = plate
+        chkexp1['proctype'] = 'AP3D'
+        chkexp1['pbskey'] = pbskey
+        chkexp1['success'] = False
+        cnt = 0
+        for num in expstr['name']:
+            ind, = np.where(expinfo['num']==num)
+            exposure_pk = expinfo['pk'][ind[0]]
+            # AP3D
+            #-----
+            chkexp1['exposure_pk'][cnt] = exposure_pk
+            chkexp1['num'][cnt] = num
+            chkexp1['proctype'][cnt] = 'AP3D'
+            base = load.filename('2D',num=num,mjd=mjd,chips=True)
+            chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
+            exists = [os.path.exists(chf) for chf in chfiles]
+            chkexp1['checktime'][cnt] = str(datetime.now())
+            if np.sum(exists)==3:
+                chkexp1['success'][cnt] = True
+            cnt += 1
+            # AP2D
+            #-----
+            if (platetype=='normal') | (platetype=='cal'):
+                chkexp1['exposure_pk'][cnt] = exposure_pk
+                chkexp1['num'][cnt] = num
+                chkexp1['proctype'][cnt] = 'AP2D'
                 base = load.filename('1D',num=num,mjd=mjd,chips=True)
                 chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
-                chkexp['checktime'][cnt] = str(datetime.now())
+                chkexp1['checktime'][cnt] = str(datetime.now())
                 if np.sum(exists)==3:
-                    chkexp['success'][cnt] = True
+                    chkexp1['success'][cnt] = True
                 cnt += 1
-                # APCframe
-                #---------
-                chkexp['exposure_pk'][cnt] = exposure_pk
-                chkexp['num'][cnt] = num
-                chkexp['proctype'][cnt] = 'APCFRAME'
+            # APCframe
+            #---------
+            if platetype=='normal':
+                chkexp1['exposure_pk'][cnt] = exposure_pk
+                chkexp1['num'][cnt] = num
+                chkexp1['proctype'][cnt] = 'APCFRAME'
                 base = load.filename('Cframe',num=num,mjd=mjd,plate=plate,chips=True)
                 chfiles = [base.replace('Cframe-','Cframe-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
-                chkexp['checktime'][cnt] = str(datetime.now())
+                chkexp1['checktime'][cnt] = str(datetime.now())
                 if np.sum(exists)==3:
-                    chkexp['success'][cnt] = True
+                    chkexp1['success'][cnt] = True
                 cnt += 1
 
 
-            # AP1DVISIT
-            # ---------
-            # -apPlate
-            # -apVisit files
-            # -apVisitSum file
-            dtypeap = np.dtype([('planfile',(np.str,300)),('logfile',(np.str,300)),('errfile',(np.str,300)),
-                                ('apred_vers',(np.str,20)),('instrument',(np.str,20)),
-                                ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
-                                ('nobj',int),('pbskey',(np.str,50)),('checktime',(np.str,100)),('ap3d_success',bool),
-                                ('ap3d_nexp_success',int),('ap2d_success',bool),('ap2d_nexp_success',int),
-                                ('apcframe_success',bool),('apcframe_nexp_success',int),('applate_success',bool),
-                                ('apvisit_success',bool),('apvisit_nobj_success',int),
-                                ('apvisitsum_success',bool),('success',bool)])
-            chkap = np.zeros(1,dtype=dtypeap)
-            chkap['planfile'] = pfile
-            chkap['logfile'] = pfile.replace('.yaml','_pbs.log')
-            chkap['errfile'] = pfile.replace('.yaml','_pbs.err')
-            chkap['apred_vers'] = apred_vers
-            chkap['instrument'] = instrument
-            chkap['telescope'] = telescope
-            chkap['platetype'] = platetype
-            chkap['mjd'] = mjd
-            chkap['plate'] = plate
-            chkap['nobj'] = np.sum(fiberdata['objtype']!='SKY')  # stars and tellurics
-            chkap['pbskey'] = pbskey
-            chkap['checktime'] = str(datetime.now())
-            # ap3D, ap2D, apCframe success
-            ind3d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP3D'))
-            chkap['ap3d_nexp_success'] = np.sum(chkexp['success'][ind3d])
-            chkap['ap3d_success'] = np.sum(chkexp['success'][ind3d])==nexp
-            ind2d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP2D'))
-            chkap['ap2d_nexp_success'] = np.sum(chkexp['success'][ind2d])
-            chkap['ap2d_success'] = np.sum(chkexp['success'][ind2d])==nexp
-            indcf, = np.where((chkexp['num']==num) & (chkexp['proctype']=='APCFRAME'))
-            chkap['apcframe_nexp_success'] = np.sum(chkexp['success'][indcf])
-            chkap['apcframe_success'] = np.sum(chkexp['success'][indcf])==nexp
+        # Plan summary and ap1dvisit
+        #---------------------------
+        dtypeap = np.dtype([('planfile',(np.str,300)),('logfile',(np.str,300)),('errfile',(np.str,300)),
+                            ('apred_vers',(np.str,20)),('instrument',(np.str,20)),
+                            ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
+                            ('nobj',int),('pbskey',(np.str,50)),('checktime',(np.str,100)),('ap3d_success',bool),
+                            ('ap3d_nexp_success',int),('ap2d_success',bool),('ap2d_nexp_success',int),
+                            ('apcframe_success',bool),('apcframe_nexp_success',int),('applate_success',bool),
+                            ('apvisit_success',bool),('apvisit_nobj_success',int),
+                            ('apvisitsum_success',bool),('success',bool)])
+        chkap1 = np.zeros(1,dtype=dtypeap)
+        chkap1['planfile'] = pfile
+        chkap1['logfile'] = pfile.replace('.yaml','_pbs.log')
+        chkap1['errfile'] = pfile.replace('.yaml','_pbs.err')
+        chkap1['apred_vers'] = apred_vers
+        chkap1['instrument'] = instrument
+        chkap1['telescope'] = telescope
+        chkap1['platetype'] = platetype
+        chkap1['mjd'] = mjd
+        chkap1['plate'] = plate
+        if platetype=='normal':
+            chkap1['nobj'] = np.sum(fiberdata['objtype']!='SKY')  # stars and tellurics
+        chkap1['pbskey'] = pbskey
+        chkap1['checktime'] = str(datetime.now())
+        # ap3D, ap2D, apCframe success
+        ind3d, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='AP3D'))
+        chkap1['ap3d_nexp_success'] = np.sum(chkexp1['success'][ind3d])
+        chkap1['ap3d_success'] = np.sum(chkexp1['success'][ind3d])==nexp
+        ind2d, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='AP2D'))
+        if len(ind2d)>0:
+            chkap1['ap2d_nexp_success'] = np.sum(chkexp1['success'][ind2d])
+            chkap1['ap2d_success'] = np.sum(chkexp1['success'][ind2d])==nexp
+        indcf, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='APCFRAME'))
+        if len(indcf)>0:
+            chkap1['apcframe_nexp_success'] = np.sum(chkexp1['success'][indcf])
+            chkap1['apcframe_success'] = np.sum(chkexp1['success'][indcf])==nexp
+        if platetype=='normal':
             # apPlate
-            chkap['applate_success'] = False
+            chkap1['applate_success'] = False
             base = load.filename('Plate',plate=plate,mjd=mjd,chips=True)
             chfiles = [base.replace('Plate-','Plate-'+ch+'-') for ch in ['a','b','c']]
             exists = [os.path.exists(chf) for chf in chfiles]
             if np.sum(exists)==3:
-                chkap['applate_success'] = True
+                chkap1['applate_success'] = True
             # apVisit
             base = load.filename('Visit',plate=plate,mjd=mjd,fiber=1) 
             visitfiles = glob(base.replace('-001.fits','-???.fits'))
             nvisitfiles = len(visitfiles)
-            chkap['apvisit_nobj_success']  = nvisitfiles
-            chkap['apvisit_success'] = nvisitfiles==chkap['nobj']
+            chkap1['apvisit_nobj_success']  = nvisitfiles
+            chkap1['apvisit_success'] = nvisitfiles==chkap1['nobj']
             apvisitsumfile = load.filename('VisitSum',plate=plate,mjd=mjd)
-            chkap['apvisitsum_success'] = os.path.exists(apvisitsumfile)
-            chkap['success'] = chkap['ap3d_success'][0] and chkap['ap2d_success'][0] and chkap['apcframe_success'][0] and \
-                               chkap['applate_success'][0] and chkap['apvisit_success'][0] and chkap['apvisitsum_success'][0]
-
-            if verbose:
-                logger.info('')
-                logger.info('%d/%d' % (ip+1,nplanfiles))
-                logger.info('planfile: '+pfile)
-                logger.info('log/errfile: '+os.path.basename(chkap['logfile'][0])+', '+os.path.basename(chkap['errfile'][0]))
-                logger.info('platetype: %s' % platetype)
-                logger.info('mjd: %d' % mjd)
-                logger.info('plate: %d' % plate)
-                logger.info('nexp: %d' % nexp)
-                logger.info('Nobj: %d' % chkap['nobj'][0])
-                logger.info('3D/2D/Cframe:')
-                logger.info('Num    EXPID   NREAD  3D     2D  Cframe')
-                for k,num in enumerate(expstr['name']):
-                    ind, = np.where(expinfo['num']==num)
-                    ind3d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP3D'))
-                    ind2d, = np.where((chkexp['num']==num) & (chkexp['proctype']=='AP2D'))
-                    indcf, = np.where((chkexp['num']==num) & (chkexp['proctype']=='APCFRAME'))
-                    logger.info('%2d %10d %4d %6s %6s %6s' % (k+1,chkexp['num'][ind3d],expinfo['nread'][ind],
-                                                              chkexp['success'][ind3d[0]],chkexp['success'][ind2d[0]],
-                                                              chkexp['success'][indcf[0]]))
-                logger.info('apPlate files: %s ' % chkap['applate_success'][0])
-                logger.info('N apVisit files: %d ' % chkap['apvisit_nobj_success'][0])
-                logger.info('apVisitSum file: %s ' % chkap['apvisitsum_success'][0])
-                logger.info('apVisit success: %s ' % chkap['success'][0])
-
-            # Load into the database
-            db = apogeedb.DBSession()
-            db.ingest('exposure_status',chkexp)
-            db.ingest('visit_status',chkap)
-            db.close()
-
-            #import pdb; pdb.set_trace()
-
-        # Calibration exposures
+            chkap1['apvisitsum_success'] = os.path.exists(apvisitsumfile)
+        # Success of plan file
+        if platetype=='normal':
+            chkap1['success'] = chkap1['ap3d_success'][0] and chkap1['ap2d_success'][0] and chkap1['apcframe_success'][0] and \
+                                chkap1['applate_success'][0] and chkap1['apvisit_success'][0] and chkap1['apvisitsum_success'][0]
+        elif platetype=='cal':
+            chkap1['success'] = chkap1['ap3d_success'][0] and chkap1['ap2d_success'][0]
+        elif platetype=='dark':
+            chkap1['success'] = chkap1['ap3d_success'][0]
         else:
-            logger.info('calibration exposures')
-            # STILL NEED TO DO THIS PART!!!
+            chkap1['success'] = chkap1['ap3d_success'][0]
 
-    #import pdb; pdb.set_trace()
+        if verbose:
+            logger.info('')
+            logger.info('%d/%d' % (ip+1,nplanfiles))
+            logger.info('planfile: '+pfile)
+            logger.info('log/errfile: '+os.path.basename(chkap1['logfile'][0])+', '+os.path.basename(chkap1['errfile'][0]))
+            logger.info('platetype: %s' % platetype)
+            logger.info('mjd: %d' % mjd)
+            if platetype=='normal': logger.info('plate: %d' % plate)
+            logger.info('nexp: %d' % nexp)
+            if platetype=='normal': logger.info('Nobj: %d' % chkap1['nobj'][0])
+            logger.info('3D/2D/Cframe:')
+            logger.info('Num    EXPID   NREAD  3D     2D  Cframe')
+            for k,num in enumerate(expstr['name']):
+                ind, = np.where(expinfo['num']==num)
+                ind3d, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='AP3D'))
+                ind2d, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='AP2D'))
+                indcf, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='APCFRAME'))
+                logger.info('%2d %10d %4d %6s %6s %6s' % (k+1,chkexp1['num'][ind3d],expinfo['nread'][ind],
+                                                          chkexp1['success'][ind3d[0]],chkexp1['success'][ind2d[0]],
+                                                          chkexp1['success'][indcf[0]]))
+            if platetype=='normal':
+                logger.info('apPlate files: %s ' % chkap1['applate_success'][0])
+                logger.info('N apVisit files: %d ' % chkap1['apvisit_nobj_success'][0])
+                logger.info('apVisitSum file: %s ' % chkap1['apvisitsum_success'][0])
+            logger.info('Plan success: %s ' % chkap1['success'][0])
+            
+
+        # Add to the global catalog
+        if chkexp is not None:
+            chkexp = np.hstack((chkexp,chkexp1))
+        else:
+            chkexp = chkexp1.copy()
+        if chkap is not None:
+            chkap = np.hstack((chkap,chkap1))
+        else:
+            chkap = chkap1.copy()
+
+
+    # Load everything into the database
+    db = apogeedb.DBSession()
+    db.ingest('exposure_status',chkexp)
+    db.ingest('visit_status',chkap)
+    db.close()
 
     return chkexp,chkap
 
@@ -449,26 +471,38 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
 def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
     """ Send a summary email."""
 
-    # could start a new list like apogee-pipeline-log or something like that
-    address = 'apogee-pipeline-log@sdss.org'
-    #address = 'dnidever@montana.edu'
+    #address = 'apogee-pipeline-log@sdss.org'
+    address = 'dnidever@montana.edu'
     subject = 'Daily APOGEE Reduction %s %s' % (observatory,mjd5)
     message = 'Daily APOGEE Reduction %s %s\n' % (observatory,mjd5)
+    message += '\n'
+    message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/daily/qa/mjd.html">MJD QA List</a> \n'
+
     # Exposure status
-    indexp, = np.where(chkexp['success']==True)
-    message += '%d/%d exposures successfully processed\n' % (len(indexp),len(chkexp))
+    if chkexp is not None:
+        indexp, = np.where(chkexp['success']==True)
+        message += '%d/%d exposures successfully processed\n' % (len(indexp),len(chkexp))
+    else:
+        message += 'No exposures\n'
     # Visit status
-    indvisit, = np.where(chkvisit['success']==True)
-    message += '%d/%d visits successfully processed\n' % (len(indvisit),lend(chkvisit))
-    #for i in range(len(chkvisit)):
-    #    message.append()
+    if chkvisit is not None:
+        indvisit, = np.where(chkvisit['success']==True)
+        message += '%d/%d visits successfully processed\n' % (len(indvisit),lend(chkvisit))
+        #for i in range(len(chkvisit)):
+        #    message.append()
+    else:
+        message += 'No visits\n'
 
     # RV status
-    indrv, = np.where(chkrv['success']==True)
-    message += '%d/%d RV+visit combination successfully processed' % (len(indrv),lend(chkrv))
+    if chkrv is not None:
+        indrv, = np.where(chkrv['success']==True)
+        message += '%d/%d RV+visit combination successfully processed' % (len(indrv),lend(chkrv))
+    else:
+        message += 'No RVs\n'
 
     # Send the message
-    email.send(address,subject,message,logfiles)
+    #email.send(address,subject,message,logfiles)
+    email.send(address,subject,message)
 
 
 def run_daily(observatory,mjd5=None,apred=None):
@@ -547,9 +581,13 @@ def run_daily(observatory,mjd5=None,apred=None):
     plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
     dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'auto.yaml'
     planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
-    dbload_plans(planfiles)  # load plans into db
-    # Write planfiles to MJD5.plans
-    dln.writelines(logdir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
+    nplanfiles = len(planfiles)
+    if nplanfiles>0:
+        dbload_plans(planfiles)  # load plans into db
+        # Write planfiles to MJD5.plans
+        dln.writelines(logdir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
+    else:
+        dln.writelines(logdir+str(mjd5)+'.plans','')   # write blank file
 
     # Start entry in daily_status table
     daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
@@ -565,21 +603,24 @@ def run_daily(observatory,mjd5=None,apred=None):
 
     # Run APRED on all planfiles using "pbs" package
     #------------------------------------------------
-    rootLogger.info('')
-    rootLogger.info('--------------')
-    rootLogger.info('Running APRED')
-    rootLogger.info('==============')
-    rootLogger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
-    for pf in planfiles:
-        queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
-    queue.commit(hard=True,submit=True)
-    rootLogger.info('PBS key is '+queue.key)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-    chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
-    del queue
-
+    if nplanfiles>0:
+        rootLogger.info('')
+        rootLogger.info('--------------')
+        rootLogger.info('Running APRED')
+        rootLogger.info('==============')
+        rootLogger.info('')
+        queue = pbsqueue(verbose=True)
+        queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
+        for pf in planfiles:
+            queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
+        queue.commit(hard=True,submit=True)
+        rootLogger.info('PBS key is '+queue.key)
+        queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
+        chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
+        del queue
+    else:
+        rootLogger.info('No plan files to run')
+        chkexp,chkvisit = None,None
 
     # Run "rv" on all stars
     #----------------------
@@ -610,13 +651,14 @@ def run_daily(observatory,mjd5=None,apred=None):
         del queue
     else:
         rootLogger.info('No visit files for MJD=%d' % mjd5)
+        chkrv = None
 
     # Run QA script
     #--------------
     queue = pbsqueue(verbose=True)
     queue.create(label='qa', nodes=1, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
     qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.log'
-    qaerrfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.err'
+    qaerrfile = qaoutfile.replace('-qa.log','-qa.err')
     queue.append('apqa {0}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
     queue.commit(hard=True,submit=True)
     queue_wait(queue)  # wait for jobs to complete
