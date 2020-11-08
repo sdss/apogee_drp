@@ -294,12 +294,15 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             logger.info('Num    EXPID   NREAD  3D     2D  Cframe')
             for k,num in enumerate(expstr['name']):
                 ind, = np.where(expinfo['num']==num)
+                success3d,success2d,successcf = False,False,False
                 ind3d, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='AP3D'))
+                if len(ind3d)>0: success3d=chkexp1['success'][ind3d[0]]
                 ind2d, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='AP2D'))
+                if len(ind2d)>0: success2d=chkexp1['success'][ind2d[0]]
                 indcf, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='APCFRAME'))
+                if len(indcf)>0: successcf=chkexp1['success'][indcf[0]]
                 logger.info('%2d %10d %4d %6s %6s %6s' % (k+1,chkexp1['num'][ind3d],expinfo['nread'][ind],
-                                                          chkexp1['success'][ind3d[0]],chkexp1['success'][ind2d[0]],
-                                                          chkexp1['success'][indcf[0]]))
+                                                          success3d,success2d,successcf)
             if platetype=='normal':
                 logger.info('apPlate files: %s ' % chkap1['applate_success'][0])
                 logger.info('N apVisit files: %d ' % chkap1['apvisit_nobj_success'][0])
