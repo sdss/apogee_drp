@@ -91,7 +91,8 @@ FOR i=0L,nplanfiles-1 do begin
        then goto,BOMB
 
   if tag_exist(planstr,'survey') then survey=planstr.survey else begin
-    if planstr.plate ge 15000 then survey='mwm' else survey='apogee'
+    if planstr.plateid ge 15000 then survey='mwm' else survey='apogee'
+    if planstr.plateid eq 0 then survey='mwm'  ; cals
   endelse
 
   ; Load the Plug Plate Map file
