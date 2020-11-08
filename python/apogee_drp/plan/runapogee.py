@@ -505,7 +505,7 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
     email.send(address,subject,message)
 
 
-def run_daily(observatory,mjd5=None,apred=None):
+def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     """ Perform daily APOGEE data reduction."""
 
     begtime = str(datetime.now())
@@ -515,7 +515,7 @@ def run_daily(observatory,mjd5=None,apred=None):
 
     nodes = 1
     #qos = None
-    qos = 'sdss-fast'
+    #qos = 'sdss-fast'
     alloc = 'sdss-kp'
 
     # No version input, use 'daily'
