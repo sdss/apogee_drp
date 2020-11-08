@@ -514,9 +514,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
 
     nodes = 1
-    #qos = None
-    #qos = 'sdss-fast'
     alloc = 'sdss-kp'
+    walltime = '23:00:00'
 
     # No version input, use 'daily'
     if apred is None:
@@ -610,7 +609,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         rootLogger.info('==============')
         rootLogger.info('')
         queue = pbsqueue(verbose=True)
-        queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
+        queue.create(label='apred', nodes=nodes, alloc=alloc, qos=qos, walltime=walltime, notification=False)
         for pf in planfiles:
             queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
         queue.commit(hard=True,submit=True)
@@ -632,7 +631,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
     if len(vcat)>0:
         queue = pbsqueue(verbose=True)
-        queue.create(label='rv', nodes=nodes, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
+        queue.create(label='rv', nodes=nodes, alloc=alloc, qos=qos, walltime=walltime, notification=False)
         # Get unique stars
         objects,ui = np.unique(vcat['apogee_id'],return_index=True)
         vcat = vcat[ui]
@@ -656,7 +655,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     # Run QA script
     #--------------
     queue = pbsqueue(verbose=True)
-    queue.create(label='qa', nodes=1, alloc=alloc, qos=qos, walltime='240:00:00', notification=False)
+    queue.create(label='qa', nodes=1, alloc=alloc, qos=qos, walltime=walltime, notification=False)
     qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.log'
     qaerrfile = qaoutfile.replace('-qa.log','-qa.err')
     queue.append('apqa {0}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
