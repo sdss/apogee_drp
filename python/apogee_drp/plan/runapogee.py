@@ -501,8 +501,7 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
         message += 'No RVs\n'
 
     # Send the message
-    #email.send(address,subject,message,logfiles)
-    email.send(address,subject,message)
+    email.send(address,subject,message,logfiles)
 
 
 def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
