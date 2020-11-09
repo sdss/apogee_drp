@@ -1243,8 +1243,8 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
         cmap = plt.get_cmap('jet') #;    minval = 0.05;    maxval = 0.92;    ncol = 100
-        #gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
-        #           a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
+        gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
+                   a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
 
         xx = platesum2['ZETA'][fibersky]
         yy = platesum2['ETA'][fibersky]
@@ -1259,7 +1259,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         xx = platesum2['ZETA'][fibertelluric]
         yy = platesum2['ETA'][fibertelluric]
         cc = skylines['FLUX'][0][fibertelluric] / medsky
-        ax1.scatter(xx, yy, marker='d', s=125, c=cc, edgecolors='k', cmap=gdcmap alpha=1, vmin=0.9, vmax=1.1, label='telluric')
+        ax1.scatter(xx, yy, marker='d', s=125, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=0.9, vmax=1.1, label='telluric')
 
         ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
