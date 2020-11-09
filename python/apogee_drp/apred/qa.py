@@ -828,7 +828,7 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg WIDTH=450></a>\n')
         html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg WIDTH=450></a>\n')
         html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skyemission.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skyemission.png WIDTH=450>\n')
-        html.write('<TD> <IMG SRC=../plots/'+oneDfile+'skycont.jpg>\n')
+        html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skycontinuum.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skycontinuum.png WIDTH=450>\n')
     html.write('</table>\n')
 
     html.write('<BR><BR>\n')
@@ -1268,18 +1268,51 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         cb = colorbar(sc, cax=cax1, orientation="horizontal")
         cax1.xaxis.set_ticks_position("top")
         cax1.minorticks_on()
-        ax1.text(0.5, 1.12, r'Sky deviation',ha='center', transform=ax1.transAxes)
+        ax1.text(0.5, 1.12, r'Sky emission deviation',ha='center', transform=ax1.transAxes)
 
         fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
 
-
         #------------------------------------------------------------------------------------------
         # PLOT 5: spatial continuum emission
         # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
         #------------------------------------------------------------------------------------------
-        #print("PLOTS 5: spatial plot of continuum emission will be made here.\n")
+        plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_skycontinuum.png'
+        print("----> makeObsQAplots: Making "+plotfile)
+
+        fig=plt.figure(figsize=(14,15))
+        ax1 = plt.subplot2grid((1,1), (0,0))
+        ax1.set_xlim(-1.6,1.6)
+        ax1.set_ylim(-1.6,1.6)
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        ax1.minorticks_on()
+        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax1.tick_params(axis='both',which='major',length=axmajlen)
+        ax1.tick_params(axis='both',which='minor',length=axminlen)
+        ax1.tick_params(axis='both',which='both',width=axwidth)
+        ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
+
+        skyzero=14.75 + 2.5 * np.log10(plSum1['NREADS'][i])
+        xx = platesum2['ZETA'][fibersky]
+        yy = platesum2['ETA'][fibersky]
+        cc = platesum2['OBSMAG'][fibersky, i, 1] + skyzero
+
+        x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
+        sc = ax1.scatter(xx, yy, marker='s', s=140, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=13, vmax=15)
+
+
+        ax1_divider = make_axes_locatable(ax1)
+        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+        cb = colorbar(sc, cax=cax1, orientation="horizontal")
+        cax1.xaxis.set_ticks_position("top")
+        cax1.minorticks_on()
+        ax1.text(0.5, 1.12, r'Sky continuum deviation',ha='center', transform=ax1.transAxes)
+
+        fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
+        plt.savefig(plotsdir+plotfile)
+        plt.close('all')
+
 
         #----------------------------------------------------------------------------------------------
         # PLOT 7: make plot of sky levels for this plate
