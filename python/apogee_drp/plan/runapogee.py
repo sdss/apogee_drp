@@ -172,6 +172,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         chkexp1['plate'] = plate
         chkexp1['proctype'] = 'AP3D'
         chkexp1['pbskey'] = pbskey
+        chkexp1['checktime'] = str(datetime.now())
         chkexp1['success'] = False
         cnt = 0
         for num in expstr['name']:
@@ -198,7 +199,6 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 base = load.filename('1D',num=num,mjd=mjd,chips=True)
                 chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
-                chkexp1['checktime'][cnt] = str(datetime.now())
                 if np.sum(exists)==3:
                     chkexp1['success'][cnt] = True
                 cnt += 1
@@ -211,11 +211,11 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 base = load.filename('Cframe',num=num,mjd=mjd,plate=plate,chips=True)
                 chfiles = [base.replace('Cframe-','Cframe-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
-                chkexp1['checktime'][cnt] = str(datetime.now())
                 if np.sum(exists)==3:
                     chkexp1['success'][cnt] = True
                 cnt += 1
-
+        # Trim extra elements
+        chkexp1 = chkexp1[0:cnt]
 
         # Plan summary and ap1dvisit
         #---------------------------
@@ -279,6 +279,8 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkap1['success'] = chkap1['ap3d_success'][0]
         else:
             chkap1['success'] = chkap1['ap3d_success'][0]
+
+        import pdb; pdb.set_trace()
 
         if verbose:
             logger.info('')
