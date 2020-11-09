@@ -1261,6 +1261,8 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         cc = skylines['FLUX'][0][fibertelluric] / medsky
         ax1.scatter(xx, yy, marker='d', s=125, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=0.9, vmax=1.1, label='telluric')
 
+        import pdb; pdb.set_trace()
+
         ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
         ax1_divider = make_axes_locatable(ax1)
