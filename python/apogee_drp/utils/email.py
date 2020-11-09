@@ -46,6 +46,7 @@ def send(send_to, subject='', message='', files=None):
     msg.attach(MIMEText(message))
 
     if files is not None:
+        if isinstance(files,list) is False: files=[files]  # make sure it's a list
         for f in files or []:
             with open(f, "rb") as fil:
                 part = MIMEApplication(
