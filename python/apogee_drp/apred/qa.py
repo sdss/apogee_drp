@@ -1297,6 +1297,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         xx = platesum2['ZETA'][fibersky]
         yy = platesum2['ETA'][fibersky]
         cc = platesum2['OBSMAG'][fibersky, i, 1] + skyzero
+        import pdb; pdb.set_trace()
 
         x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
         sc = ax1.scatter(xx, yy, marker='s', s=140, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=13, vmax=15)
