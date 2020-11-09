@@ -471,7 +471,7 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
 
     db.close()
 
-def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
+def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles=None):
     """ Send a summary email."""
 
     #address = 'apogee-pipeline-log@sdss.org'
