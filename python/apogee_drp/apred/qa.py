@@ -1241,28 +1241,28 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-        #xx = platesum2['ZETA'][fibersky]
-        #yy = platesum2['ETA'][fibersky]
-        #cc = skylines['FLUX'][0][fibersky] / medsky
-        #sc = ax1.scatter(xx, yy, marker='s', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='sky')
+        xx = platesum2['ZETA'][fibersky]
+        yy = platesum2['ETA'][fibersky]
+        cc = skylines['FLUX'][0][fibersky] / medsky
+        sc = ax1.scatter(xx, yy, marker='s', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='sky')
 
-        #xx = platesum2['ZETA'][fiberobj]
-        #yy = platesum2['ETA'][fiberobj]
-        #cc = skylines['FLUX'][0][fiberobj] / medsky
-        #ax1.scatter(xx, yy, marker='*', s=200, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='science')
+        xx = platesum2['ZETA'][fiberobj]
+        yy = platesum2['ETA'][fiberobj]
+        cc = skylines['FLUX'][0][fiberobj] / medsky
+        ax1.scatter(xx, yy, marker='*', s=200, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='science')
 
-        #xx = platesum2['ZETA'][fibertelluric]
-        #yy = platesum2['ETA'][fibertelluric]
-        #cc = skylines['FLUX'][0][fibertelluric] / medsky
-        #ax1.scatter(xx, yy, marker='o', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='telluric')
+        xx = platesum2['ZETA'][fibertelluric]
+        yy = platesum2['ETA'][fibertelluric]
+        cc = skylines['FLUX'][0][fibertelluric] / medsky
+        ax1.scatter(xx, yy, marker='o', s=100, c=cc, edgecolors='k', cmap='jet', alpha=1, vmin=0.9, vmax=1.1, label='telluric')
 
-        #ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+        ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-        #ax1_divider = make_axes_locatable(ax1)
-        #cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-        #cb = colorbar(sc, cax=cax1, orientation="horizontal")
-        #cax1.xaxis.set_ticks_position("top")
-        #cax1.minorticks_on()
+        ax1_divider = make_axes_locatable(ax1)
+        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+        cb = colorbar(sc, cax=cax1, orientation="horizontal")
+        cax1.xaxis.set_ticks_position("top")
+        cax1.minorticks_on()
         ax1.text(0.5, 1.12, r'Sky deviation',ha='center', transform=ax1.transAxes)
 
         fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.91,hspace=0.2,wspace=0.0)
