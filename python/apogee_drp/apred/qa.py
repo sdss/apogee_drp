@@ -1214,7 +1214,8 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
                        ('FLUX', np.float64, (nfiber)),
                        ('TYPE', np.int32)])
 
-        skylines = np.zeros(2,dtype=dt);  nskylines=len(skylines)
+        skylines = np.zeros(2,dtype=dt)
+        nskylines=len(skylines)
 
         skylines['W1']   = 16230.0, 15990.0
         skylines['W2']   = 16240.0, 16028.0
@@ -1227,8 +1228,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         for iline in range(nskylines):
             skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
 
-        import pdb; pdb.set_trace()
-        medsky = np.median(skylines['FLUX'][0][sky])
+        medsky = np.nanmedian(skylines['FLUX'][0][fibersky])
 
         fig=plt.figure(figsize=(14,15))
         ax1 = plt.subplot2grid((1,1), (0,0))
