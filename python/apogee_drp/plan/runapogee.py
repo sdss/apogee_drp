@@ -490,16 +490,16 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles):
     # Visit status
     if chkvisit is not None:
         indvisit, = np.where(chkvisit['success']==True)
-        message += '%d/%d visits successfully processed\n' % (len(indvisit),lend(chkvisit))
-        #for i in range(len(chkvisit)):
-        #    message.append()
+        message += '%d/%d visits successfully processed\n' % (len(indvisit),len(chkvisit))
+        for i in range(len(chkvisit)):
+            message += chkvisit['planfile'][i]+'\n'
     else:
         message += 'No visits\n'
 
     # RV status
     if chkrv is not None:
         indrv, = np.where(chkrv['success']==True)
-        message += '%d/%d RV+visit combination successfully processed' % (len(indrv),lend(chkrv))
+        message += '%d/%d RV+visit combination successfully processed' % (len(indrv),len(chkrv))
     else:
         message += 'No RVs\n'
 
