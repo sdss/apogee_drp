@@ -1296,9 +1296,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         skyzero=14.75 + 2.5 * np.log10(plSum1['NREADS'][i])
         xx = platesum2['ZETA'][fibersky]
         yy = platesum2['ETA'][fibersky]
-        cc = platesum2['obsmag'][fibersky, i, 1] + skyzero
-        import pdb; pdb.set_trace()
-
+        cc = platesum2['obsmag'][fibersky, i, 1] + skyzero - plsum1['ZERO'][i]
         sc = ax1.scatter(xx, yy, marker='s', s=140, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=13, vmax=15)
 
         ax1_divider = make_axes_locatable(ax1)
