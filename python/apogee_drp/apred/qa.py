@@ -1260,7 +1260,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         xx = platesum2['ZETA'][fibersky]
         yy = platesum2['ETA'][fibersky]
         cc = skylines['FLUX'][0][fibersky] / medsky
-        sc = ax1.scatter(xx, yy, marker='s', s=140, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
+        sc = ax1.scatter(xx, yy, marker='s', s=140, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
 
         ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
