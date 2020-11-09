@@ -1227,7 +1227,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         for iline in range(nskylines):
             skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
 
-        #medsky = np.median(skylines['FLUX'][0][sky])
+        medsky = np.median(skylines['FLUX'][0][sky])
 
         fig=plt.figure(figsize=(14,15))
         ax1 = plt.subplot2grid((1,1), (0,0))
