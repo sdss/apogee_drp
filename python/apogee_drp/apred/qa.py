@@ -1177,7 +1177,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         cax1.minorticks_on()
         ax1.text(0.5, 1.10, r'$H$ + 2.5*log(m - zero)',ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.93,hspace=0.2,wspace=0.0)
+        fig.subplots_adjust(left=0.11,right=0.97,bottom=0.07,top=0.93,hspace=0.2,wspace=0.0)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
 
