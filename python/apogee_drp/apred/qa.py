@@ -1873,6 +1873,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                 if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#B9FC93', label='AQMES-Wide ('+str(len(p))+')')
                 p, = np.where(iprogram == 'RM')
                 if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#FCF793', label='RM ('+str(len(p))+')')
+                p, = np.where(iprogram == 'AQMES-Medium')
+                if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#54A71E', label='AQMES-Medium ('+str(len(p))+')')
 
                 ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
                 ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
