@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
 
 
-def send(send_to, subject='', message='', files=None):
+def send(send_to, subject='', message='', msgtype='html', files=None):
     """
     Send an email message.
 
@@ -18,6 +18,8 @@ def send(send_to, subject='', message='', files=None):
          Subject line.
     message : str, optional
          The message text.
+    msgtype : str, optional
+         The message text type (html or plan). html by default.
     files : list of str, optional
          List of files to attach.
 
@@ -43,7 +45,7 @@ def send(send_to, subject='', message='', files=None):
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject
 
-    msg.attach(MIMEText(message))
+    msg.attach(MIMEText(message,msgtype))
 
     if files is not None:
         if isinstance(files,list) is False: files=[files]  # make sure it's a list
