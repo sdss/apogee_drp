@@ -242,14 +242,14 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         chkap1['pbskey'] = pbskey
         chkap1['checktime'] = str(datetime.now())
         # ap3D, ap2D, apCframe success
-        ind3d, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='AP3D'))
+        ind3d, = np.where(chkexp1['proctype']=='AP3D')
         chkap1['ap3d_nexp_success'] = np.sum(chkexp1['success'][ind3d])
         chkap1['ap3d_success'] = np.sum(chkexp1['success'][ind3d])==nexp
-        ind2d, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='AP2D'))
+        ind2d, = np.where(chkexp1['proctype']=='AP2D')
         if len(ind2d)>0:
             chkap1['ap2d_nexp_success'] = np.sum(chkexp1['success'][ind2d])
             chkap1['ap2d_success'] = np.sum(chkexp1['success'][ind2d])==nexp
-        indcf, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='APCFRAME'))
+        indcf, = np.where(chkexp1['proctype']=='APCFRAME')
         if len(indcf)>0:
             chkap1['apcframe_nexp_success'] = np.sum(chkexp1['success'][indcf])
             chkap1['apcframe_success'] = np.sum(chkexp1['success'][indcf])==nexp
@@ -279,8 +279,6 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkap1['success'] = chkap1['ap3d_success'][0]
         else:
             chkap1['success'] = chkap1['ap3d_success'][0]
-
-        import pdb; pdb.set_trace()
 
         if verbose:
             logger.info('')
@@ -658,6 +656,11 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
 
     # Run QA script
     #--------------
+    rootLogger.info('')
+    rootLogger.info('------------')
+    rootLogger.info('Running QA')
+    rootLogger.info('============')
+    rootLogger.info('')
     queue = pbsqueue(verbose=True)
     queue.create(label='qa', nodes=1, alloc=alloc, qos=qos, walltime=walltime, notification=False)
     qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.log'
@@ -679,10 +682,12 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     daycat['nexposures'] = len(expinfo)
     daycat['begtime'] = begtime
     daycat['endtime'] = str(datetime.now())
-    if (np.sum(chkvisit['success']==False)==0) & (np.sum(chkrv['success']==False)==0):
-        daycat['success'] = True
-    else:
-        daycat['success'] = False
+    daysuccess = True
+    if chkvisit is not None:
+        daysuccess &= (np.sum(chkvisit['success']==False)==0)
+    if chkrv is not None:
+        daysuccess &= (np.sum(chkrv['success']==False)==0)
+    daycat['success'] = daysuccess
     dayout = db.query('daily_status',where="mjd="+str(mjd5)+" and telescope='"+telescope+"' and begtime='"+begtime+"'")
     daycat['pk'] = dayout['pk'][0]
     db.update('daily_status',daycat)
