@@ -481,9 +481,9 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles=None):
               <html>
                 <body>
               """
-    message += '<b>Daily APOGEE Reduction %s %s<b><br>\n' % (observatory,mjd5)
-    message += '<br>\n'
-    message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/daily/qa/mjd.html">MJD QA List</a><b> \n'
+    message += '<b>Daily APOGEE Reduction %s %s</b><br>\n' % (observatory,mjd5)
+    message += '<p>\n'
+    message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/daily/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
 
     # Exposure status
     if chkexp is not None:
@@ -508,12 +508,13 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles=None):
         message += 'No RVs<br> \n'
 
     message += """\
+                 </p>
                  </body>
                </html>
                """
 
     # Send the message
-    email.send(address,subject,message,logfiles)
+    email.send(address,subject,message,files=logfiles)
 
 
 def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
