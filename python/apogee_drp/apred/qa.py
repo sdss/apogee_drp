@@ -1163,11 +1163,11 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
 
         x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
         c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
-        psci = ax1.scatter(x, y, marker='*', s=350, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
+        psci = ax1.scatter(x, y, marker='*', s=400, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
         x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
         c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
-        ptel = ax1.scatter(x, y, marker='o', s=185, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
+        ptel = ax1.scatter(x, y, marker='o', s=215, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
         #try:
         #    x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
@@ -1254,17 +1254,17 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         xx = platesum2['ZETA'][fiberobj]
         yy = platesum2['ETA'][fiberobj]
         cc = skylines['FLUX'][0][fiberobj] / medsky
-        ax1.scatter(xx, yy, marker='*', s=350, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
+        ax1.scatter(xx, yy, marker='*', s=400, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
 
         xx = platesum2['ZETA'][fibertelluric]
         yy = platesum2['ETA'][fibertelluric]
         cc = skylines['FLUX'][0][fibertelluric] / medsky
-        ax1.scatter(xx, yy, marker='o', s=185, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
+        ax1.scatter(xx, yy, marker='o', s=215, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
 
         xx = platesum2['ZETA'][fibersky]
         yy = platesum2['ETA'][fibersky]
         cc = skylines['FLUX'][0][fibersky] / medsky
-        sc = ax1.scatter(xx, yy, marker='s', s=200, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
+        sc = ax1.scatter(xx, yy, marker='s', s=230, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
 
         ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
@@ -1302,7 +1302,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         xx = platesum2['ZETA'][fibersky]
         yy = platesum2['ETA'][fibersky]
         cc = platesum2['obsmag'][fibersky, i, 1] + skyzero - plSum1['ZERO'][i]
-        sc = ax1.scatter(xx, yy, marker='s', s=250, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=13, vmax=15)
+        sc = ax1.scatter(xx, yy, marker='s', s=270, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=13, vmax=15)
 
         ax1_divider = make_axes_locatable(ax1)
         cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
