@@ -1152,19 +1152,22 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         ax1.tick_params(axis='both',which='minor',length=axminlen)
         ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
+        cmap = plt.get_cmap('jet');    minval = 0.05;    maxval = 0.92;    ncol = 100
+        gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
+                   a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
 
         x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
         c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
-        psci = ax1.scatter(x, y, marker='*', s=240, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Science')
+        psci = ax1.scatter(x, y, marker='*', s=270, c=c, edgecolors='k', cmap=gdcmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
         x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
         c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
-        ptel = ax1.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='jet', alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
+        ptel = ax1.scatter(x, y, marker='o', s=125, c=c, edgecolors='k', cmap=gdcmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
         try:
             x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
             c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
-            psky = ax1.scatter(x, y, marker='s', s=100, c='white', edgecolors='k', alpha=1, label='Sky')
+            psky = ax1.scatter(x, y, marker='s', s=140, c='white', edgecolors='k', alpha=1, label='Sky')
         except:
             print("----> makeObsQAplots: Problem!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
 
@@ -1242,9 +1245,6 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         ax1.tick_params(axis='both',which='minor',length=axminlen)
         ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
-        cmap = plt.get_cmap('jet');    minval = 0.05;    maxval = 0.92;    ncol = 100
-        gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
-                   a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
 
         xx = platesum2['ZETA'][fiberobj]
         yy = platesum2['ETA'][fiberobj]
