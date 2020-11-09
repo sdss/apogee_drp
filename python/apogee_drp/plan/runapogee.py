@@ -477,31 +477,40 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles=None):
     #address = 'apogee-pipeline-log@sdss.org'
     address = 'dnidever@montana.edu'
     subject = 'Daily APOGEE Reduction %s %s' % (observatory,mjd5)
-    message = 'Daily APOGEE Reduction %s %s\n' % (observatory,mjd5)
-    message += '\n'
-    message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/daily/qa/mjd.html">MJD QA List</a> \n'
+    message = """\
+              <html>
+                <body>
+              """
+    message += '<b>Daily APOGEE Reduction %s %s<b><br>\n' % (observatory,mjd5)
+    message += '<br>\n'
+    message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/daily/qa/mjd.html">MJD QA List</a><b> \n'
 
     # Exposure status
     if chkexp is not None:
         indexp, = np.where(chkexp['success']==True)
-        message += '%d/%d exposures successfully processed\n' % (len(indexp),len(chkexp))
+        message += '%d/%d exposures successfully processed<br> \n' % (len(indexp),len(chkexp))
     else:
-        message += 'No exposures\n'
+        message += 'No exposures<br> \n'
     # Visit status
     if chkvisit is not None:
         indvisit, = np.where(chkvisit['success']==True)
-        message += '%d/%d visits successfully processed\n' % (len(indvisit),len(chkvisit))
+        message += '%d/%d visits successfully processed<br> \n' % (len(indvisit),len(chkvisit))
         for i in range(len(chkvisit)):
-            message += chkvisit['planfile'][i]+'\n'
+            message += chkvisit['planfile'][i]+'<br> \n'
     else:
-        message += 'No visits\n'
+        message += 'No visits<br> \n'
 
     # RV status
     if chkrv is not None:
         indrv, = np.where(chkrv['success']==True)
-        message += '%d/%d RV+visit combination successfully processed' % (len(indrv),len(chkrv))
+        message += '%d/%d RV+visit combination successfully processed<br> \n' % (len(indrv),len(chkrv))
     else:
-        message += 'No RVs\n'
+        message += 'No RVs<br> \n'
+
+    message += """\
+                 </body>
+               </html>
+               """
 
     # Send the message
     email.send(address,subject,message,logfiles)
