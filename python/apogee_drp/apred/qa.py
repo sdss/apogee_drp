@@ -684,7 +684,7 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
     html.write('<b>Note:</b> Dither and Pixshift values will be "---" if exposures not dithered.<BR>\n')
     html.write('<b>Note:</b> S/N columns give S/N for blue, green, and red chips separately. </p>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    html.write('<TR bgcolor=lightgreen>\n')
+    html.write('<TR bgcolor="'+thcolor+'">\n')
     txt1 = '<TH>#<TH>Frame<TH>Exptime<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>Seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither'
     txt2 = '<TH>Pixshift<TH>Zero<TH>Zero RMS<TH>Sky Continuum<TH>S/N<TH>S/N(cframe)<TH>Moon Phase<TH>Moon Dist.'
     html.write(txt1 + txt2 +'\n')
