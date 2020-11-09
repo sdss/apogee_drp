@@ -1254,12 +1254,12 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         xx = platesum2['ZETA'][fiberobj]
         yy = platesum2['ETA'][fiberobj]
         cc = skylines['FLUX'][0][fiberobj] / medsky
-        ax1.scatter(xx, yy, marker='s', s=125, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=0.9, vmax=1.1, label='science')
+        ax1.scatter(xx, yy, marker='s', s=125, c='white', edgecolors=cc, cmap=gdcmap, linewidth=2, alpha=1, vmin=0.9, vmax=1.1, label='science')
 
         xx = platesum2['ZETA'][fibertelluric]
         yy = platesum2['ETA'][fibertelluric]
         cc = skylines['FLUX'][0][fibertelluric] / medsky
-        ax1.scatter(xx, yy, marker='d', s=125, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=0.9, vmax=1.1, label='telluric')
+        ax1.scatter(xx, yy, marker='d', s=125, c='white', edgecolors=cc, cmap=gdcmap, linewidth=2, alpha=1, vmin=0.9, vmax=1.1, label='telluric')
 
         ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
