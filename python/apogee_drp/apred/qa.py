@@ -605,6 +605,9 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
 def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None):
     print("----> makeObsQApages: Running plate "+plate+", mjd "+mjd)
 
+    # HTML header background color
+    thcolor = '#DCDCDC'
+
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
@@ -753,7 +756,7 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
             # Pair table.
             html.write('<H3>Dither Pair Stats:</H3>\n')
             html.write('<TABLE BORDER=2 CLASS="sortable">\n')
-            html.write('<TR bgcolor=lightgreen><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
+            html.write('<TR bgcolor="'+thcolor+'"><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
             html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
             for ipair in range(npairs):
                 html.write('<TR><TD>'+str(ipair)+'\n')
@@ -768,7 +771,7 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
     # Flat field plots.
     if fluxid is not None:
         html.write('<H3>Flat field, fiber block, and guider plots:</H3>\n')
-        html.write('<TABLE BORDER=2><TR bgcolor=lightgreen>\n')
+        html.write('<TABLE BORDER=2><TR bgcolor="'+thcolor+'">\n')
         html.write('<TH>Flat field relative flux <TH>Fiber Blocks <TH>Guider RMS\n')
         html.write('<TR>\n')
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
@@ -796,29 +799,29 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
     html.write('<H3>Individual Exposure QA Plots:</H3>\n')
     html.write('<p><b>Note:</b> in the Mag plots, the solid line is the target line for getting S/N=100 for an H=12.2 star in 3 hours of exposure time.<BR>\n')
     html.write('<b>Note:</b> in the Spatial mag deviation plots, color gives deviation of observed mag from expected 2MASS mag using the median zeropoint.</p>\n')
-    html.write('<TR bgcolor=lightgreen><TH>Frame<TH>Zeropoints<TH>Mag plots (green chip)\n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Frame<TH>Zeropoints<TH>Mag plots (green chip)\n')
     html.write('<TH>Spatial mag deviation\n')
+    html.write('<TH>Spatial sky 16325A emission deviations (filled: sky, open: star)\n')
+    html.write('<TH>Spatial sky continuum emission\n')
     html.write('<TH>Spatial sky telluric CH4\n')
     html.write('<TH>Spatial sky telluric CO2\n')
     html.write('<TH>Spatial sky telluric H2O\n')
-    html.write('<TH>Spatial sky 16325A emission deviations (filled: sky, open: star)\n')
-    html.write('<TH>Spatial sky continuum emission\n')
 
     for i in range(len(tab1)):
         im=tab1['IM'][i]
         oneDfile = os.path.basename(load.filename('1D', plate=int(plate), num=im, mjd=mjd, chips=True)).replace('.fits','')
-        html.write('<TR><TD bgcolor=lightgreen><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
-        html.write('<TD><TABLE BORDER=1><TD><TD bgcolor=lightgreen>Red<TD bgcolor=lightgreen>Green<TD bgcolor=lightgreen>Blue\n')
-        html.write('<TR><TD bgcolor=lightgreen>z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
-        html.write('<TR><TD bgcolor=lightgreen>znorm<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][i],2))+'\n')
+        html.write('<TR><TD bgcolor="'+thcolor+'"><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
+        html.write('<TD><TABLE BORDER=1><TD><TD bgcolor="'+thcolor+'">Red<TD bgcolor="'+thcolor+'">Green<TD bgcolor="'+thcolor+'">Blue\n')
+        html.write('<TR><TD bgcolor="'+thcolor+'">z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
+        html.write('<TR><TD bgcolor="'+thcolor+'">znorm<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][i],2))+'\n')
         txt='<TD>'+str("%.1f" % round(tab1['SKY'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SKY'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SKY'][i][2],1))
-        html.write('<TR><TD bgcolor=lightgreen>sky'+txt+'\n')
+        html.write('<TR><TD bgcolor="'+thcolor+'">sky'+txt+'\n')
         txt='<TD>'+str("%.1f" % round(tab1['SN'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SN'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SN'][i][2],1))
-        html.write('<TR><TD bgcolor=lightgreen>S/N'+txt+'\n')
+        html.write('<TR><TD bgcolor="'+thcolor+'">S/N'+txt+'\n')
         txt='<TD>'+str("%.1f" % round(tab1['SNC'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][i][2],1))
-        html.write('<TR><TD bgcolor=lightgreen>S/N(c)'+txt+'\n')
+        html.write('<TR><TD bgcolor="'+thcolor+'">S/N(c)'+txt+'\n')
 #        if tag_exist(tab1[i],'snratio'):
-        html.write('<TR><TD bgcolor=lightgreen>SN(E/C)<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
+        html.write('<TR><TD bgcolor="'+thcolor+'">SN(E/C)<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
         html.write('</TABLE>\n')
 
         html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=400></A>\n')
@@ -1165,12 +1168,12 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
         ptel = ax1.scatter(x, y, marker='o', s=125, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
-        try:
-            x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
-            c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
-            psky = ax1.scatter(x, y, marker='s', s=140, c='white', edgecolors='k', alpha=1, label='Sky')
-        except:
-            print("----> makeObsQAplots: Problem!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
+        #try:
+        #    x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
+        #    c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
+        #    psky = ax1.scatter(x, y, marker='s', s=140, c='white', edgecolors='k', alpha=1, label='Sky')
+        #except:
+        #    print("----> makeObsQAplots: Problem!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
 
         ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
