@@ -862,6 +862,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
     axwidth=1.5
     axmajlen=7
     axminlen=3.5
+    cmap = 'RdBu'
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
@@ -1152,17 +1153,17 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         ax1.tick_params(axis='both',which='minor',length=axminlen)
         ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
-        cmap = plt.get_cmap('jet');    minval = 0.05;    maxval = 0.92;    ncol = 100
-        gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
-                   a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
+        #cmap = plt.get_cmap('jet');    minval = 0.05;    maxval = 0.92;    ncol = 100
+        #gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
+        #           a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
 
         x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
         c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
-        psci = ax1.scatter(x, y, marker='*', s=270, c=c, edgecolors='k', cmap=gdcmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
+        psci = ax1.scatter(x, y, marker='*', s=270, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
         x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
         c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
-        ptel = ax1.scatter(x, y, marker='o', s=125, c=c, edgecolors='k', cmap=gdcmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
+        ptel = ax1.scatter(x, y, marker='o', s=125, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
         try:
             x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
@@ -1249,12 +1250,12 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         xx = platesum2['ZETA'][fiberobj]
         yy = platesum2['ETA'][fiberobj]
         cc = skylines['FLUX'][0][fiberobj] / medsky
-        ax1.scatter(xx, yy, marker='*', s=270, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
+        ax1.scatter(xx, yy, marker='*', s=270, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
 
         xx = platesum2['ZETA'][fibertelluric]
         yy = platesum2['ETA'][fibertelluric]
         cc = skylines['FLUX'][0][fibertelluric] / medsky
-        ax1.scatter(xx, yy, marker='o', s=125, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
+        ax1.scatter(xx, yy, marker='o', s=125, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
 
         xx = platesum2['ZETA'][fibersky]
         yy = platesum2['ETA'][fibersky]
@@ -1297,7 +1298,7 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         xx = platesum2['ZETA'][fibersky]
         yy = platesum2['ETA'][fibersky]
         cc = platesum2['obsmag'][fibersky, i, 1] + skyzero - plSum1['ZERO'][i]
-        sc = ax1.scatter(xx, yy, marker='s', s=140, c=cc, edgecolors='k', cmap=gdcmap, alpha=1, vmin=13, vmax=15)
+        sc = ax1.scatter(xx, yy, marker='s', s=140, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=13, vmax=15)
 
         ax1_divider = make_axes_locatable(ax1)
         cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
