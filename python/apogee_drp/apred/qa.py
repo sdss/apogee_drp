@@ -1402,6 +1402,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
             vplotfile = visitfile.replace('.fits','.jpg')
 
             snratio = ''
+            starflagtxt = ''
             if os.path.exists(visitfile):
                 visithdr = fits.getheader(visitfile)
                 starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
