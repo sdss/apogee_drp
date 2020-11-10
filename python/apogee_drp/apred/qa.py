@@ -1607,6 +1607,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     expdir =     spectrodir + 'exposures/' + instrument + '/'
     reddir =     expdir + mjd + '/'
     outdir =     expdir + mjd + '/html/'
+    htmlfile =   outdir + mjd + '.html'
+    print("----> makeNightQA: "+htmlfile)
 
     # Make the html folder if it doesn't already exist
     if os.path.exists(outdir) is False: subprocess.call(['mkdir',outdir])
@@ -1643,7 +1645,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     uExposures = np.unique(exposures)
     nuExposures = len(uExposures)
 
-    html = open(outdir + mjd + '.html', 'w')
+    html = open(htmlfile, 'w')
     html.write('<HTML><BODY><H1>Nightly QA for MJD '+mjd+'</H1>\n')
 
     # Find the observing log file
@@ -1749,12 +1751,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
     if domjd is True:
         # Find all .log.html files, get all MJDs with data
-        print("----> makeMasterQApages: finding log files. Please wait.")
+        print("----> makeMasterQApages: Finding log files. Please wait.")
         logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
         logsS = np.array(glob.glob(datadirS+'/*/*.log.html'))
         logs = np.concatenate([logsN,logsS]) 
         nlogs = len(logs)
-        print("----> makeMasterQApages: found "+str(nlogs)+" log files.")
+        print("----> makeMasterQApages: Found "+str(nlogs)+" log files.")
 
         # Get array of MJDs and run mkhtml if MJD[i] within mjdmin-mjdmax range
         mjd = np.empty(nlogs)
@@ -1774,7 +1776,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
         # Open the mjd file html
         mjdfile = qadir+mjdfilebase
-        print("----> makeMasterQApages: creating "+mjdfilebase)
+        print("----> makeMasterQApages: Creating "+mjdfilebase)
         html = open(mjdfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE MJD Summary</title></head>\n')
@@ -1810,8 +1812,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
             logFile = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/' + cmjd + '.log.html'
             logFileDir = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/'
-            html.write('<TR bgcolor='+color+'><TD align="center"><A HREF='+logFile+'>'+cmjd+'</A>\n')
-            html.write('<A HREF='+logFileDir+'><BR>(raw)</A>\n')
+            html.write('<TR bgcolor=' + color + '><TD align="center"><A HREF=' + logFile + '>' + cmjd + '</A>\n')
+            html.write('<A HREF=' + logFileDir + '><BR>(raw)</A>\n')
 
             # Column 2: Exposures (removed)
     #        exposureLogPath = '../exposures/' + instrument + '/' + cmjd + '/html/' + cmjd + 'exp.html'
@@ -1883,7 +1885,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
     # Fields view
     if dofields is True:
         fieldfile = qadir+fieldfilebase
-        print("----> makeMasterQApages: creating "+fieldfilebase)
+        print("----> makeMasterQApages: Creating "+fieldfilebase)
         html = open(fieldfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE Field Summary</title></head>\n')
