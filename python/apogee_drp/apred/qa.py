@@ -1965,7 +1965,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             qalink = '../visit/'+itel[i]+'/'+iname[i]+'/'+iplate[i]+'/'+imjd[i]+'/html/apQA-'+iplate[i]+'-'+imjd[i]+'.html'
             html.write('<TD align="center"><A href="'+qalink+'" target="_blank">'+iplate[i]+'</a>\n')
             html.write('<TD align="center">'+imjd[i]+'</center>\n') 
-    #        html.write('<TD><center><A HREF=exposures/'+dirs.instrument+'/'+cmjd+'/html/'+cmjd+'.html> '+cmjd+' </a></center>\n')
+            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+mjd+'/html/'+mjd+'.html>'+mjd+'</a></center>"\n')
             html.write('<TD align="center">'+iloc[i]+'\n')
             html.write('<TD align="right">'+ira[i]+'\n') 
             html.write('<TD align="right">'+idec[i]+'\n')
