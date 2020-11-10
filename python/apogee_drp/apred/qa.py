@@ -1645,9 +1645,6 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     uExposures = np.unique(exposures)
     nuExposures = len(uExposures)
 
-    html = open(htmlfile, 'w')
-    html.write('<HTML><BODY><H1>Nightly QA for MJD '+mjd+'</H1>\n')
-
     # Find the observing log file
     reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
     dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
@@ -1656,8 +1653,10 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     reports.sort()
     reportfile = reports[0]
     reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + reportfile
-
     #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+
+    html = open(htmlfile, 'w')
+    html.write('<HTML><BODY><H1>Nightly QA for MJD '+mjd+'</H1>\n')
 
     if telescope == 'apo25m': html.write(' <a href="'+reportLink+'"> <H3>APO 2.5m Observing report </H3></a>\n')
     if telescope == 'lco25m':  html.write(' <a href="'+reportLink+'"> <H3>LCO 2.5m Observing report </H3></a>\n')
@@ -1791,7 +1790,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor=eaeded><TH>Logs (data)<TH>Night QA<TH>Observed Plate QA<TH>Summary Files\n')
+        html.write("<TR bgcolor=eaeded><TH>Observers'<BR>Log <TH>Exposure<BR>Log <TH>Raw<BR>Data <TH>Night QA<TH>Observed Plate QA<TH>Summary Files\n")
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
             # Establish telescope and instrument and setup apLoad depending on telescope.
@@ -1808,30 +1807,35 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                 color = 'b3ffb3'
             load = apload.ApLoad(apred=apred, telescope=telescope)
 
-            # Column 1: Logs(data)
+            html.write('<TR bgcolor=' + color + '>\n')
+
+            # Column 1: Observing log
+            reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
+            dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
+            if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
+            if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
+            reports.sort()
+            reportfile = reports[0]
+            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + reportfile
+            html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
+            #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+
+
+            # Column 2-3: Exposure log and raw data link
             logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
             logFilePath = logFileDir + cmjd + '.log.html'
 
             logFile = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/' + cmjd + '.log.html'
             logFileDir = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/'
-            html.write('<TR bgcolor=' + color + '><TD align="center"><A HREF=' + logFile + '>' + cmjd + '</A>\n')
-            html.write('<A HREF=' + logFileDir + '><BR>(raw)</A>\n')
 
-            # Column 2: Exposures (removed)
-    #        exposureLogPath = '../exposures/' + instrument + '/' + cmjd + '/html/' + cmjd + 'exp.html'
-    #        exposureLog = 'https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'exp.html'
-    #        html.write('<TD><center><A HREF='+exposureLog+'>'+cmjd+'</A></center>\n')
+            html.write('<TD align="center"><A HREF=' + logFile + '>' + cmjd + ' exp</A>\n')
+            html.write('<TD align="center"><A HREF=' + logFileDir + '>' + cmjd + ' raw</A>\n')
 
-            # Column 2: Night QA
+            # Column 3: Night QA
             # NOTE: This directory does not exist yet.
-            qaPage = apodir + apred + '/exposures/' + instrument + '/' + cmjd + '/html/' + cmjd + '.html'
-            if os.path.exists(qaPage):
-                qaPagePath = '../exposures/' + instrument + '/' + cmjd + '/html/' + cmjd + '.html'
-                html.write('<TD><center><A HREF='+qaPagePath+'>'+cmjd+' QA </a></center>\n')
-            else:
-                html.write('<TD><center><FONT COLOR=red> '+cmjd+' QA </font></center>\n')
+            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+mjd+'/html/'+mjd+'.html>'+mjd+' QA</a></center>"\n')
 
-            # Column 3: Plates reduced for this night
+            # Column 4: Plates reduced for this night
             plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
             plateQAfiles = np.array(glob.glob(plateQApaths))
             nplates = len(plateQAfiles)
@@ -1856,7 +1860,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             # Column 7: Dome flats observed for this night
             #html.write('<TD>\n')
 
-            # Column 4: Summary files
+            # Column 5: Summary files
             visSumPath = 'summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
             starSumPath = 'summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
             if len(plateQAfiles) != 0: 
