@@ -90,7 +90,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily'):
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True,
-         makeplots=True, makespecplots=True, makemasterqa=True):
+         makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True):
 
     start_time = time.time()
 
@@ -171,6 +171,10 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         # Make the observation spectrum plots and associated pages
         q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, makespecplots=makespecplots)
 
+        # Make the nightly QA page
+        if makenightqa is True:
+            q= makeObjQA(load=load, mjd=mjd, telescope=telescope)
+
         # Make mjd.html and fields.html
         if makemasterqa is True: 
             q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
@@ -189,8 +193,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 #                          starfiber=single, starmag=smag, fixfiberid=fixfiberid, clobber=True, 
 #                          plugmap=plugmap, makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
 
-    rt = str("%.2f" % (time.time() - start_time))
-    print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+rt+" seconds.")
+    runtime = str("%.2f" % (time.time() - start_time))
+    print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.")
 
 
 ''' MAKEPLATESUM: Plotmag translation '''
@@ -1578,6 +1582,154 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
 #    if flat is not None:
 #        fiber['hmag'] = 12
 #        fiber['object'] = 'FLAT'
+
+
+'''  MAKENIGHTQA: makes nightly QA pages '''
+def makeNightQA(load=None, mjd=None, telescope=None, apodir=None, datadir=None): 
+
+    print("----> makeNightQA: Running MJD "+mjd)
+
+    # HTML header background color
+    thcolor = '#DCDCDC'
+
+    chips = np.array(['a','b','c'])
+    nchips = len(chips)
+
+    # Establish instrument and directories
+    instrument = 'apogee-n'
+    if telescope == 'lco25m': instrument = 'apogee-s'
+    datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
+               'lco25m':os.environ['APOGEE_DATA_S']}[telescope] + '/'
+
+    apodir =     os.environ.get('APOGEE_REDUX') + '/'
+    spectrodir = apodir + apred + '/'
+    caldir =     spectrodir + 'cal/'
+    expdir =     spectrodir + 'exposures/' + instrument + '/'
+    reddir =     expdir + mjd + '/'
+    outdir =     expdir + mjd + '/html/'
+
+    # Make the html folder if it doesn't already exist
+    if os.path.exists(outdir) is False: subprocess.call(['mkdir',outdir])
+
+    # Get all apR file numbers for the night
+    rawfiles = glob.glob(datadir + mjd + '/a*R-*.apz')
+    rawfiles.sort()
+    rawfiles = np.array(rawfiles)
+    nrawfiles = len(rawfiles)
+    if nrawfiles < 1: sys.exit("----> makeNightQA: PROBLEM! No raw data found.")
+
+#    checksums = np.zeros(nrawfiles)
+    exposures = np.zeros(nrawfiles)
+    for i in range(nrawfiles):
+        exposures[i] = int(rawfiles[i].split('-')[2].split('.')[0])
+#        tfile = os.path.basename(rawfiles[i])
+#        if not file_test(reddir+file+'.check'):
+#            checksum=apg_checksum(files[i],fitsdir=getlocaldir())
+#            openw,clun,/get_lun,reddir+file+'.check'
+#            printf,clun,checksum
+#            free_lun,clun
+#        readcol,reddir+file+'.check',format='(i)',check
+#        checksums[i]=check
+#        comp=strsplit(file,'-',/extract)
+#        name=strsplit(comp[2],'.',/extract)
+#        chip=comp[1]
+#        num=0L
+#        reads,name[0],num
+#        nums[i]=num
+
+    firstExposure = int(round(np.min(exposures)))
+    lastExposure = int(round(np.max(exposures)))
+    sortExposures = np.argsort(exposures)
+    uExposures = np.unique(exposures)
+    nuExposures = len(uExposures)
+
+    html = open(outdir + mjd + '.html', 'w')
+    html.write('<HTML><BODY><H1>Nightly QA for MJD '+mjd+'</H1>\n')
+
+    # Find the observing log file
+    reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
+    dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
+    if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
+    if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
+    reports.sort()
+    reportfile = reports[0]
+    reportLink = '../../../../../../../../data/staging/' + telescope[0:3] + '/reports/' + reportfile
+
+    if telescope == 'apo25m': html.write(' <a href="'+reportLink+'"> <H3>APO 2.5m Observing report </H3></a>\n')
+    if telescope == 'lco25m':  html.write(' <a href="'+reportLink+'"> <H3>LCO 2.5m Observing report </H3></a>\n')
+
+    # Look for missing raw frames (assuming contiguous sequence)
+    html.write('<H3>Raw frames:</H3> ' + str(firstExposure) + ' to ' + str(lastExposure))
+#    html.write(' (<a href=../../../../../../'+os.path.basename(dirs.datadir)+'/'+cmjd+'/'+cmjd+'.log.html> image log</a>)\n')
+    html.write(' (image log... nope)\n')
+    html.write('<BR>\n')
+
+    html.write('<H3>Missing raw data:</H3>\n')
+    nmiss = 0
+    for i in range(nchips):
+        html.write('<FONT color=red>\n')
+        for j in range(firstExposure, lastExposure):
+            checkfile = datadir + mjd + '/apR-' + chips[i] + '-' + str(int(round(j))) + '.apz'
+            if os.path.exists(checkfile) is False:
+                if (i != nchips) & (j != lastExposure):
+                    html.write('apR-' + chips[i] + '-' + str(int(round(j))) + '.apz, ')
+                else:
+                    html.write('apR-' + chips[i] + '-' + str(int(round(j))) + '.apz')
+                nmiss += 1
+        html.write('</font>\n')
+    if nmiss == 0: html.write('<font color=green> NONE</font>\n')
+    html.write('<BR>\n')
+
+#    if not keyword_set(nocheck):
+#        print,'looking for bad checksums...'
+#        bad=where(checksums ne 1, nbad)
+#        html.write('<h3> Bad CHECKSUMS:</h3>\n')
+#        if nbad gt 0:
+#            html.write('<font color=red>\n')
+#            for i=0,len(bad)-1 do html.write(file_basename(files[bad[i]])
+#            html.write('</font><BR>\n')
+#        else:
+#            html.write('<font color=green> NONE </font>\n')
+
+    # look for missing reduced frames
+#    print,'looking for missing reduced data...'
+    html.write('<h3>Missing reduced data:</h3><BR><TABLE BORDER=2>\n')
+    html.write('<TR bgcolor='+thcolor+'><TH>ID<TH>NFRAMES/NREAD<TH>TYPE<TH>PLATEID<TH>CARTID<TH>1D missing<TH>2D missing\n')
+    for i in range(nuExposures):
+        n = int(round(uExposures[i]))
+        file1d = os.path.basename(load.filename('1D', num=n, chip='c'))
+        if os.path.exists(reddir + file1d) is False:
+            file2d = os.path.basename(load.filename('2D', num=n, chip='c'))
+            if (os.path.exists(reddir + file2d) is False) & (os.path.exists(reddir + file2d + '.fz') is False):
+                miss2d = 1
+            else:
+                miss2d = 0
+            type = 'unknown'
+            head = [' ',' ']
+            rawfile = load.filename('R', num=n, chip='a')
+            if os.path.exists(rawfile):
+                #a=mrdfits(datadir+'apR-a-'+string(format='(i8.8)',n)+'.apz',1,head,/silent)
+                head = fits.getheader(rawfile)
+                type = head['IMAGETYP']
+
+            color = 'white'
+            if type == 'Object': color = 'red'
+            if type == 'unknown': color = 'magenta'
+            if (type == 'Dark') & (miss2d == 1): color = 'yellow'
+            if (type != 'Dark') | (miss2d == 1):
+                html.write('<TR bgcolor='+color+'><TD> '+str(int(round(n)))+'\n')
+                html.write('<TD><CENTER>'+str(head['NFRAMES'])+'/'+str(head['NREAD'])+'</CENTER>\n')
+                html.write('<TD><CENTER>'+head['IMAGETYP']+'</CENTER>\n')
+                html.write('<TD><CENTER>'+str(head['PLATEID'])+'</CENTER>\n')
+                html.write('<TD><CENTER>'+str(head['CARTID'])+'</CENTER>\n')
+                html.write('<TD> '+file1d+'\n')
+                if (os.path.exists(reddir+file2d) is False) & (os.path.exists(reddir+file2d+'.fz') is False):
+                    html.write('<TD> '+file2d+'\n')
+    html.write('</TABLE>\n')
+
+    html.close()
+
+    print("----> makeNightQA: Done with MJD "+mjd)
 
 
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
