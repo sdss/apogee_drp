@@ -1652,7 +1652,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
     reports.sort()
     reportfile = reports[0]
-    reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + reportfile
+    reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
     #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
 
     html = open(htmlfile, 'w')
