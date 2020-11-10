@@ -1706,7 +1706,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 miss2d = 0
             type = 'unknown'
             head = [' ',' ']
-            rawfile = load.filename('R', num=n, chip='a')
+            rawfile = load.filename('R', num=n, chips='a')
             if os.path.exists(rawfile):
                 #a=mrdfits(datadir+'apR-a-'+string(format='(i8.8)',n)+'.apz',1,head,/silent)
                 head = fits.getheader(rawfile)
