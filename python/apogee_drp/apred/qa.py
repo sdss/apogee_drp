@@ -1706,25 +1706,25 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 miss2d = 0
             type = 'unknown'
             head = [' ',' ']
-            rawfile = load.filename('R', num=n, chips='a')
+            rawfile = load.filename('R', num=n, mjd=mjd, chips='a')
             if os.path.exists(rawfile):
                 #a=mrdfits(datadir+'apR-a-'+string(format='(i8.8)',n)+'.apz',1,head,/silent)
                 head = fits.getheader(rawfile)
                 type = head['IMAGETYP']
 
-            color = 'white'
-            if type == 'Object': color = 'red'
-            if type == 'unknown': color = 'magenta'
-            if (type == 'Dark') & (miss2d == 1): color = 'yellow'
-            if (type != 'Dark') | (miss2d == 1):
-                html.write('<TR bgcolor='+color+'><TD> '+str(int(round(n)))+'\n')
-                html.write('<TD><CENTER>'+str(head['NFRAMES'])+'/'+str(head['NREAD'])+'</CENTER>\n')
-                html.write('<TD><CENTER>'+head['IMAGETYP']+'</CENTER>\n')
-                html.write('<TD><CENTER>'+str(head['PLATEID'])+'</CENTER>\n')
-                html.write('<TD><CENTER>'+str(head['CARTID'])+'</CENTER>\n')
-                html.write('<TD> '+file1d+'\n')
-                if (os.path.exists(reddir+file2d) is False) & (os.path.exists(reddir+file2d+'.fz') is False):
-                    html.write('<TD> '+file2d+'\n')
+                color = 'white'
+                if type == 'Object': color = 'red'
+                if type == 'unknown': color = 'magenta'
+                if (type == 'Dark') & (miss2d == 1): color = 'yellow'
+                if (type != 'Dark') | (miss2d == 1):
+                    html.write('<TR bgcolor='+color+'><TD> '+str(int(round(n)))+'\n')
+                    html.write('<TD><CENTER>'+str(head['NFRAMES'])+'/'+str(head['NREAD'])+'</CENTER>\n')
+                    html.write('<TD><CENTER>'+head['IMAGETYP']+'</CENTER>\n')
+                    html.write('<TD><CENTER>'+str(head['PLATEID'])+'</CENTER>\n')
+                    html.write('<TD><CENTER>'+str(head['CARTID'])+'</CENTER>\n')
+                    html.write('<TD> '+file1d+'\n')
+                    if (os.path.exists(reddir+file2d) is False) & (os.path.exists(reddir+file2d+'.fz') is False):
+                        html.write('<TD> '+file2d+'\n')
     html.write('</TABLE>\n')
 
     html.close()
