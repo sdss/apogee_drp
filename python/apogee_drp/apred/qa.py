@@ -1817,7 +1817,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
             reports.sort()
             reportfile = reports[0]
-            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + reportfile
+            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
             html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
             #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
 
@@ -1834,6 +1834,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
             # Column 3: Night QA
             # NOTE: This directory does not exist yet.
+            html.write('<TD>\n')
             html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html>'+cmjd+' QA</a></center>"\n')
 
             # Column 4: Plates reduced for this night
