@@ -1746,10 +1746,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
     apodir =   os.environ.get('APOGEE_REDUX')+'/'
     qadir = apodir+apred+'/qa/'
 
-    visSumPathN = 'summary/allVisit-daily-apo25m.fits'
-    starSumPathN = 'summary/allStar-daily-apo25m.fits'
-    visSumPathS = 'summary/allVisit-daily-lco25m.fits'
-    starSumPathS = 'summary/allStar-daily-lco25m.fits'
+    visSumPathN = '../summary/allVisit-daily-apo25m.fits'
+    starSumPathN = '../summary/allStar-daily-apo25m.fits'
+    visSumPathS = '../summary/allVisit-daily-lco25m.fits'
+    starSumPathS = '../summary/allStar-daily-lco25m.fits'
 
     if domjd is True:
         # Find all .log.html files, get all MJDs with data
@@ -1829,13 +1829,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             logFile = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/' + cmjd + '.log.html'
             logFileDir = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/'
 
-            html.write('<TD align="center"><A HREF=' + logFile + '>' + cmjd + ' exp</A>\n')
-            html.write('<TD align="center"><A HREF=' + logFileDir + '>' + cmjd + ' raw</A>\n')
+            html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
+            html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
             # Column 3: Night QA
             # NOTE: This directory does not exist yet.
-            html.write('<TD align="center">coming soon\n')
-            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html>'+cmjd+' QA</a>"\n')
+            #html.write('<TD align="center">coming soon\n')
+            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
 
             # Column 4: Plates reduced for this night
             plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
@@ -1863,8 +1863,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             #html.write('<TD>\n')
 
             # Column 5: Summary files
-            visSumPath = 'summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
-            starSumPath = 'summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
+            visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
+            starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
             if len(plateQAfiles) != 0: 
                 html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
                 html.write('<BR><a href="'+starSumPath+'">allStarMJD</a>\n')
