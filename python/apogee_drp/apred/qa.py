@@ -1812,7 +1812,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
             # Column 1: Observing log
             reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
-            dateobs = Time(mjd[i]-1, format='mjd').fits.split('T')[0]
+            dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
             reports.sort()
@@ -1834,7 +1834,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
             # Column 3: Night QA
             # NOTE: This directory does not exist yet.
-            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+mjd+'/html/'+mjd+'.html>'+mjd+' QA</a></center>"\n')
+            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html>'+cmjd+' QA</a></center>"\n')
 
             # Column 4: Plates reduced for this night
             plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
