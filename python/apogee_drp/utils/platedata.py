@@ -448,6 +448,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     addcat['catalogid'] = cat['catalogid']
                     addcat['ra'] = cat['ra']
                     addcat['dec'] = cat['dec']
+                    addcat['hmag'] = 99.99
                     catdb.add_row(addcat)
                     ind1 = len(catdb)-1   # the match for this star, last one in catdb
                     nmatch = 1
