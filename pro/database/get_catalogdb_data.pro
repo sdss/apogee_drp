@@ -24,7 +24,7 @@
 ;-
 function get_catalogdb_data,id=catalogid,ra=ra,dec=dec,dcr=dcr
 
-undefine,-1
+catalogstr = -1
 
 if (n_elements(catalogid) eq 0) and (n_elements(ra) eq 0 or n_elements(dec) eq 0) then begin
   print,'Syntax - catalogstr = get_catalogdb_data(id=id,ra=ra,dec=dec)'
