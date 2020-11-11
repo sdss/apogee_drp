@@ -202,7 +202,8 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
                  instrument=None, clobber=True, makeplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
-    print("----> makePlateSum: Running plate "+plate+", mjd "+mjd)
+
+    print("----> makePlateSum: Running plate "+plate+", MJD "+mjd)
 
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
@@ -602,12 +603,12 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 
-    print("----> makePlateSum: Done with plate "+plate+", mjd "+mjd+"\n")
+    print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
 ''' MAKEOBSQAPAGES: mkhtmlplate translation '''
 def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None):
-    print("----> makeObsQApages: Running plate "+plate+", mjd "+mjd)
+    print("----> makeObsQApages: Running plate "+plate+", MJD "+mjd)
 
     # HTML header background color
     thcolor = '#DCDCDC'
@@ -844,13 +845,13 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
     html.write('</BODY></HTML>\n')
     html.close()
 
-    print("----> makeObsQApages: Done with plate "+plate+", mjd "+mjd+"\n")
+    print("----> makeObsQApages: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
 ''' MAKEOBSQAPLOTS: plots for the master QA page '''
 def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, apred=None,
                   flat=None, fluxid=None, survey=None): 
-    print("----> makeObsQAplots: Running plate "+plate+", mjd "+mjd)
+    print("----> makeObsQAplots: Running plate "+plate+", MJD "+mjd)
 
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
@@ -1335,12 +1336,12 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         #print("PLOTS 8: Zeropoints plots will be made here.")
 
     plt.ion()
-    print("----> makeObsQAplots: Done with plate "+plate+", mjd "+mjd+"\n")
+    print("----> makeObsQAplots: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
 ''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
 def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None): 
-    print("----> makeObjQA: Running plate "+plate+", mjd "+mjd)
+    print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -1552,7 +1553,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
     objhtml.close()
     cfile.close()
     plt.ion()
-    print("----> makeObjQA: Done with plate "+plate+", mjd "+mjd+".\n")
+    print("----> makeObjQA: Done with plate "+plate+", MJD "+mjd+".\n")
 
 #    if starfiber is None:
 #        txt1 = 'Left plots: red are targets, blue are telluric. Observed mags are calculated '
@@ -1732,7 +1733,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     html.close()
 
-    print("----> makeNightQA: Done with MJD "+mjd)
+    print("----> makeNightQA: Done with MJD "+mjd+"\n")
 
 
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
@@ -1811,12 +1812,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
             # Column 1: Observing log
             reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
-            dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
+            dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
             reports.sort()
             reportfile = reports[0]
-            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + reportfile
+            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
             html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
             #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
 
@@ -1833,13 +1834,14 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
             # Column 3: Night QA
             # NOTE: This directory does not exist yet.
-            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+mjd+'/html/'+mjd+'.html>'+mjd+' QA</a></center>"\n')
+            html.write('<TD align="center">coming soon\n')
+            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html>'+cmjd+' QA</a>"\n')
 
             # Column 4: Plates reduced for this night
             plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
             plateQAfiles = np.array(glob.glob(plateQApaths))
             nplates = len(plateQAfiles)
-            html.write('<TD align="left">\n')
+            html.write('<TD align="left">')
             for j in range(nplates):
                 if plateQAfiles[j] != '':
                     plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
@@ -1847,9 +1849,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                     field = tmp[2]
                     plate = tmp[3]
                     if j < nplates:
-                        html.write('('+str(j+1)+') <A HREF=../'+plateQApathPartial+'>'+plate+': '+field+'<BR></A>\n')
+                        html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'>'+plate+': '+field+'"</A><BR>\n')
                     else:
-                        html.write('('+str(j+1)+') <A HREF=../'+plateQApathPartial+'>'+plate+': '+field+'</A>\n')
+                        html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'>'+plate+': '+field+'"</A>\n')
 
             # Column 5: Combined files for this night
             #html.write('<TD>\n')
@@ -1973,7 +1975,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             qalink = '../visit/'+itel[i]+'/'+iname[i]+'/'+iplate[i]+'/'+imjd[i]+'/html/apQA-'+iplate[i]+'-'+imjd[i]+'.html'
             html.write('<TD align="center"><A href="'+qalink+'" target="_blank">'+iplate[i]+'</a>\n')
             html.write('<TD align="center">'+imjd[i]+'</center>\n') 
-            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+mjd+'/html/'+mjd+'.html>'+mjd+'</a></center>"\n')
+            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+mjd+'/html/'+mjd+'.html>'+mjd+'</a>"\n')
             html.write('<TD align="center">'+iloc[i]+'\n')
             html.write('<TD align="right">'+ira[i]+'\n') 
             html.write('<TD align="right">'+idec[i]+'\n')
