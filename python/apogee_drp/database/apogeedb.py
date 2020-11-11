@@ -260,7 +260,7 @@ class DBSession(object):
                     # Check for None/null, need a "real" value to get the type
                     if (data[0][i] is None):
                         cnt = 0
-                        while (data[cnt][i] is None) and (cnt<ndata) and (cnt<100): cnt += 1
+                        while (data[cnt][i] is None) and (cnt<(ndata-1)) and (cnt<100): cnt += 1
                         if data[cnt][i] is not None:
                             dtype1 = type(data[cnt][i])
                         else:  # still None, use float
