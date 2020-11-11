@@ -1834,8 +1834,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
             # Column 3: Night QA
             # NOTE: This directory does not exist yet.
-            html.write('<TD>\n')
-            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html>'+cmjd+' QA</a></center>"\n')
+            html.write('<TD align="center">coming soon\n')
+            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html>'+cmjd+' QA</a>"\n')
 
             # Column 4: Plates reduced for this night
             plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
