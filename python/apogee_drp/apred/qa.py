@@ -1811,7 +1811,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
             # Column 1: Observing log
             reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
-            dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
+            dateobs = Time(mjd[i]-1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
             reports.sort()
