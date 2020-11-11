@@ -774,7 +774,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         # Load image number in variable according to exptype and nreads
         #   discard images with nread<3
         if info['nread'][i]<3:
-            logger.info(info['num'][i],' has less than the required 3 reads')
+            logger.info(str(info['num'][i])+' has less than the required 3 reads')
 
         # Dark
         if (info['exptype'][i]=='DARK') and info['nread'][i]>=3:
@@ -846,8 +846,10 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         dum = yaml.dump(out,file,default_flow_style=False, sort_keys=False)
     # Copy it to the non-"auto" version
     outfile2 = outfile.replace('auto','')
-    if os.path.exists(outfile2): os.remove(outfile2)
-    shutil.copyfile(outfile,outfile2)
+    if os.path.exists(outfile2)==False:
+        shutil.copyfile(outfile,outfile2)
+    else:
+        logger.info(outfile2+' already exists.  NOT overwriting.')
 
     return out, planfiles
 
