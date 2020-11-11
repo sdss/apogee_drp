@@ -19,8 +19,27 @@ from apogee_drp.database import catalogdb
 from sdss_access.path import path
 from astropy.io import fits
 from astropy.table import Table,vstack
+from astropy.coordinates import Angle
+from astropy import units as u
 
 # filter the warnings
+
+def coords2obj(ra,dec):
+    """ Construct 2MASS-style name (without prefix) from RA/DEC coordinates (in deg)."""
+
+    # apogeetarget/pro/make_2mass_style_id.pro makes these
+    # APG-Jhhmmss[.]ss±ddmmss[.]s
+    # http://www.ipac.caltech.edu/2mass/releases/allsky/doc/sec1_8a.html
+
+    # 2M00034301-7717269
+    # RA: 00034301 = 00h 03m 43.01s
+    # DEC: -7717269 = -71d 17m 26.9s
+    # 8 digits for RA and 7 digits for DEC
+    name = Angle(ra,unit=u.degree).to_string(unit=u.hour,sep='',pad=True,precision=2).replace('.','')[0:9]
+    name += Angle(dec,unit=u.degree).to_string(unit=u.degree,sep='',pad=True,alwayssign=True,precision=1).replace('.','')[0:8]
+
+    return name
+
 
 def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=None,
             fixfiberid=False,noobject=False,skip=False,twilight=False,
@@ -339,6 +358,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             else:
                                 tmp = ph['tmass_id'][match][0].astype(str)
                             objname = tmp[-16:]
+                            # sometimes objname can be "None", try to fix with catalogdb info below
                             if tmp.find('A')==0:
                                 objname = 'AP'+objname
                             else:
@@ -405,6 +425,15 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     ind1 = np.argmin(dist)
             if nmatch>0:
                 ind1 = np.atleast_1d(ind1)
+                # Sometimes the plateHoles tmass_style are "None", try to fix with catalogdb information
+                if fiber['tmass_style'][istar]=='2MNone':
+                    # Use catalogdb.tic_v8 twomass name
+                    if catdb['twomass'][ind1[0]] != 'None':
+                        fiber['tmass_style'][istar] = '2M'+catdb['twomass'][ind1[0]]
+                    # Construct 2MASS-style name from GaiaDR2 RA/DEC
+                    else:
+                        fiber['tmass_style'][istar] = '2M'+coords2obj(catdb['ra'][ind1[0]],catdb['dec'][ind1[0]])
+                    print('Fixing tmass_style ID for '+fiber['tmass_style'][istar])
                 if fiber['catalogid'][istar]<0:
                     fiber['catalogid'][istar]=catdb['catalogid'][ind1[0]]
                 fiber['twomass_designation'][istar] = catdb['twomass'][ind1[0]]
