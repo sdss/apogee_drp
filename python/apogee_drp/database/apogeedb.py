@@ -214,6 +214,7 @@ class DBSession(object):
                 print('CMD = '+sql)
             cur.execute(sql)
             data = cur.fetchall()
+            ndata = len(data)
 
             if len(data)==0:
                 cur.close()
@@ -259,7 +260,7 @@ class DBSession(object):
                     # Check for None/null, need a "real" value to get the type
                     if (data[0][i] is None):
                         cnt = 0
-                        while (data[cnt][i] is None) and (cnt<100): cnt += 1
+                        while (data[cnt][i] is None) and (cnt<ndata) and (cnt<100): cnt += 1
                         if data[cnt][i] is not None:
                             dtype1 = type(data[cnt][i])
                         else:  # still None, use float
