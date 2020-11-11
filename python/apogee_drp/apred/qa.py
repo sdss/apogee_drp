@@ -1732,7 +1732,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     html.close()
 
-    print("----> makeNightQA: Done with MJD "+mjd)
+    print("----> makeNightQA: Done with MJD "+mjd+"\n")
 
 
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
