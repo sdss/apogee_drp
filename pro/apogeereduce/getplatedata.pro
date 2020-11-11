@@ -129,7 +129,7 @@ tmp = create_struct('fiberid',0, 'ra',0.d0, 'dec',0.d0, 'eta',0.d0, 'zeta',0.d0,
                     'holetype','OBJECT', 'object','', 'tmass_style','', 'target1',0L, 'target2',0L,$
                     'target3',0L, 'target4',0L, 'spectrographid',2, 'mag',fltarr(5), catalog_info_blank(),$
                     'catalogid',-1LL, 'gaia_g',-9999.99, 'gaia_bp',-9999.99, 'gaia_rp',-9999.99, 'sdssv_apogee_target0',0LL,$
-                    'firstcarton','', 'gaiadr2_sourceid',0LL, 'gaiadr2_ra',-9999.99d0, 'gaiadr2_dec',-9999.99d0,$
+                    'firstcarton','', 'gaiadr2_sourceid','', 'gaiadr2_ra',-9999.99d0, 'gaiadr2_dec',-9999.99d0,$
                     'gaiadr2_plx',-9999.99, 'gaiadr2_plx_error',-9999.99, 'gaiadr2_pmra',-9999.99,$
                     'gaiadr2_pmra_error',-9999.99, 'gaiadr2_pmdec',-9999.99, 'gaiadr2_pmdec_error',-9999.99, 'gaiadr2_gmag',-9999.99,$
                     'gaiadr2_gerr',-9999.99, 'gaiadr2_bpmag',-9999.99, 'gaiadr2_bperr',-9999.99, 'gaiadr2_rpmag',-9999.99,$
@@ -460,35 +460,35 @@ if platenum ge 15000 then begin
          minind = first_el(minloc(dist))
          cat = cat[minind]
       endif
-      ;; Add to catdb
+      ;; Add to catalogdb
       if n_elements(cat) gt 0 then begin
-         addcat = catdb[0]
+         addcat = catalogdb[0]
          struct_assign,{dum:''},addcat
          for k=0,n_tags(addcat)-1 do begin
            if size(addcat.(k),/type) eq 4 or size(addcat.(k),/type) eq 5 then addcat.(k)=!values.f_nan
-           if size(addcat.(k),/type) eq 2 or size(addcat.(k),/tpe) eq 3 then addcat.(k)=-1
+           if size(addcat.(k),/type) eq 2 or size(addcat.(k),/type) eq 3 then addcat.(k)=-1
            if size(addcat.(k),/type) eq 7 then addcat.(k)='None'
          endfor
          addcat.catalogid = cat.catalogid
          addcat.ra = cat.ra
          addcat.dec = cat.dec
          addcat.hmag = 99.99
-         catdb = [catdb,addcat]
-         ind1 = n_elements(catdb)-1   ;; the match for this star, last one in catdb                                                                                                             
+         catalogdb = [catalogdb,addcat]
+         ind1 = n_elements(catalogdb)-1   ;; the match for this star, last one in catalogdb
          nmatch = 1
        endif
     endif
     if nmatch gt 0 then begin
       ;; Sometimes the plateHoles tmass_style are "None", try to fix with catalogdb information
       if fiber[istar].tmass_style eq '2MNone' then begin
-        ;; Use catalogdb.tic_v8 twomass name                                                                                                                                            
-        if catdb[ind1[0]].twomass ne 'None' then begin
-          fiber[istar].tmass_style = '2M'+catdb[ind1[0]].twomass
+        ;; Use catalogdb.tic_v8 twomass name
+        if catalogdb[ind1[0]].twomass ne 'None' then begin
+          fiber[istar].tmass_style = '2M'+catalogdb[ind1[0]].twomass
         ;; Construct 2MASS-style name from GaiaDR2 RA/DEC
         endif else begin
-          fiber[istar].tmass_style = '2M'+coords2tmass(catdb[ind1[0]].ra,catdb[ind1[0]].dec)
+          fiber[istar].tmass_style = '2M'+coords2tmass(catalogdb[ind1[0]].ra,catalogdb[ind1[0]].dec)
         endelse
-        print('Fixing tmass_style ID for '+fiber['tmass_style'][istar])
+        print,'Fixing tmass_style ID for ',fiber[istar].tmass_style
       endif
       if fiber[istar].catalogid lt 0 then $
         fiber[istar].catalogid=catalogdb[ind1[0]].catalogid

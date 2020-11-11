@@ -38,6 +38,6 @@ function coords2tmass,ra,dec
   decarr = sixty(abs(dec))
   name += string(decarr[0],decarr[1],round(decarr[2]*10),format='(i02,i02,i03)')
 
-  return name
+  return,name
 
 end
