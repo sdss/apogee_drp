@@ -15,7 +15,7 @@ from apogee_drp.utils import spectra,yanny,apload
 from apogee_drp.utils import plugmap as plmap,bitmask as bmask
 from apogee_drp.plan import mkslurm
 from apogee_drp.apred import mkcal
-from apogee_drp.database import catalogdb
+from apogee_drp.database import catalogdb,apogeedb
 from sdss_access.path import path
 from astropy.io import fits
 from astropy.table import Table,vstack
@@ -423,6 +423,35 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 nmatch = len(ind1)
                 if nmatch > 1:
                     ind1 = np.argmin(dist)
+            # Still no match, just get catalogdb.catalog information
+            if nmatch==0:
+                # We have catalogid
+                db = apogeedb.DBSession()
+                if fiber['catalogid'][istar]>0:
+                    cat = db.query(sql="select catalogid,ra,dec,version_id from catalogdb.catalog where catalogid="+str(fiber['catalogid'][istar]))
+                # Use coordinates instead
+                else:
+                    cat = db.query(sql="select catalogid,ra,dec,version_id from catalogdb.catalog where q3c_radial_query(ra,dec,%f,%f,0.0001)" % 
+                                   (fiber['ra'][istar],fiber['dec'][istar]))
+                db.close()
+                # If there are multiple results, pick the closest
+                if len(cat)>1:
+                    dist = coords.sphdist(fiber['ra'][istar],fiber['dec'][istar],cat['ra'],cat['dec'])*3600
+                    cat = cat[np.argmin(dist)]
+                # Add to catdb
+                if len(cat)>0:
+                    addcat = catdb[0]
+                    for n in addcat.colnames:  # initialize
+                        if isinstance(addcat[n],np.str_): addcat[n]='None'
+                        if isinstance(addcat[n],np.floating): addcat[n]=np.nan
+                        if isinstance(addcat[n],np.int): addcat[n]=-1
+                    addcat['catalogid'] = cat['catalogid']
+                    addcat['ra'] = cat['ra']
+                    addcat['dec'] = cat['dec']
+                    catdb.add_row(addcat)
+                    ind1 = len(catdb)-1   # the match for this star, last one in catdb
+                    nmatch = 1
+
             if nmatch>0:
                 ind1 = np.atleast_1d(ind1)
                 # Sometimes the plateHoles tmass_style are "None", try to fix with catalogdb information
