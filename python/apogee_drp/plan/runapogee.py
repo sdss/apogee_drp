@@ -674,7 +674,9 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     queue.create(label='qa', nodes=1, alloc=alloc, qos=qos, walltime=walltime, notification=False)
     qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.log'
     qaerrfile = qaoutfile.replace('-qa.log','-qa.err')
-    queue.append('apqa {0}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
+    if os.path.exists(os.path.dirname(qaoutfile))==False:
+        os.makedirs(os.path.dirname(qaoutfile))
+    queue.append('apqa {0} {1}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
     queue.commit(hard=True,submit=True)
     queue_wait(queue)  # wait for jobs to complete
     del queue
