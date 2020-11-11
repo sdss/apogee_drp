@@ -202,7 +202,8 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
                  instrument=None, clobber=True, makeplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
-    print("----> makePlateSum: Running plate "+plate+", mjd "+mjd)
+
+    print("----> makePlateSum: Running plate "+plate+", MJD "+mjd)
 
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
@@ -602,12 +603,12 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 
-    print("----> makePlateSum: Done with plate "+plate+", mjd "+mjd+"\n")
+    print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
 ''' MAKEOBSQAPAGES: mkhtmlplate translation '''
 def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None):
-    print("----> makeObsQApages: Running plate "+plate+", mjd "+mjd)
+    print("----> makeObsQApages: Running plate "+plate+", MJD "+mjd)
 
     # HTML header background color
     thcolor = '#DCDCDC'
@@ -844,13 +845,13 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
     html.write('</BODY></HTML>\n')
     html.close()
 
-    print("----> makeObsQApages: Done with plate "+plate+", mjd "+mjd+"\n")
+    print("----> makeObsQApages: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
 ''' MAKEOBSQAPLOTS: plots for the master QA page '''
 def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, apred=None,
                   flat=None, fluxid=None, survey=None): 
-    print("----> makeObsQAplots: Running plate "+plate+", mjd "+mjd)
+    print("----> makeObsQAplots: Running plate "+plate+", MJD "+mjd)
 
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
@@ -1335,12 +1336,12 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
         #print("PLOTS 8: Zeropoints plots will be made here.")
 
     plt.ion()
-    print("----> makeObsQAplots: Done with plate "+plate+", mjd "+mjd+"\n")
+    print("----> makeObsQAplots: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
 ''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
 def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None): 
-    print("----> makeObjQA: Running plate "+plate+", mjd "+mjd)
+    print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -1552,7 +1553,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
     objhtml.close()
     cfile.close()
     plt.ion()
-    print("----> makeObjQA: Done with plate "+plate+", mjd "+mjd+".\n")
+    print("----> makeObjQA: Done with plate "+plate+", MJD "+mjd+".\n")
 
 #    if starfiber is None:
 #        txt1 = 'Left plots: red are targets, blue are telluric. Observed mags are calculated '
