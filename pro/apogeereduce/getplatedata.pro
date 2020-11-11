@@ -434,7 +434,6 @@ if platenum ge 15000 then begin
       print,'No results'
     endelse
   endif
-
   ;; Add catalogdb information
   for i=0,nobjind-1 do begin
     istar = objind[i]
@@ -445,7 +444,52 @@ if platenum ge 15000 then begin
       ind1 = where(dist lt 0.5,nmatch)
       if nmatch gt 1 then ind1 = first_el(minloc(dist))
     endif
+    ;; Still no match, just get catalogdb.catalog information 
+    if nmatch eq 0 then begin
+      ;; We have catalogid 
+      if fiber[istar].catalogid gt 0 then begin
+         cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where catalogid="+strtrim(fiber[istar].catalogid,2))
+      ;; Use coordinates instead
+      endif else begin
+         cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where q3c_radial_query(ra,dec,"+$
+                       strtrim(fiber[istar].ra,2)+","+strtrim(fiber[istar].dec,2)+",0.0001)")
+      endelse
+      ;; If there are multiple results, pick the closest
+      if n_elements(cat) gt 1 then begin
+         dist = sphdist(fiber[istar].ra,fiber[istar].dec,cat.ra,cat.dec,/deg)*3600
+         minind = first_el(minloc(dist))
+         cat = cat[minind]
+      endif
+      ;; Add to catdb
+      if n_elements(cat) gt 0 then begin
+         addcat = catdb[0]
+         struct_assign,{dum:''},addcat
+         for k=0,n_tags(addcat)-1 do begin
+           if size(addcat.(k),/type) eq 4 or size(addcat.(k),/type) eq 5 then addcat.(k)=!values.f_nan
+           if size(addcat.(k),/type) eq 2 or size(addcat.(k),/tpe) eq 3 then addcat.(k)=-1
+           if size(addcat.(k),/type) eq 7 then addcat.(k)='None'
+         endfor
+         addcat.catalogid = cat.catalogid
+         addcat.ra = cat.ra
+         addcat.dec = cat.dec
+         addcat.hmag = 99.99
+         catdb = [catdb,addcat]
+         ind1 = n_elements(catdb)-1   ;; the match for this star, last one in catdb                                                                                                             
+         nmatch = 1
+       endif
+    endif
     if nmatch gt 0 then begin
+      ;; Sometimes the plateHoles tmass_style are "None", try to fix with catalogdb information
+      if fiber[istar].tmass_style eq '2MNone' then begin
+        ;; Use catalogdb.tic_v8 twomass name                                                                                                                                            
+        if catdb[ind1[0]].twomass ne 'None' then begin
+          fiber[istar].tmass_style = '2M'+catdb[ind1[0]].twomass
+        ;; Construct 2MASS-style name from GaiaDR2 RA/DEC
+        endif else begin
+          fiber[istar].tmass_style = '2M'+coords2tmass(catdb[ind1[0]].ra,catdb[ind1[0]].dec)
+        endelse
+        print('Fixing tmass_style ID for '+fiber['tmass_style'][istar])
+      endif
       if fiber[istar].catalogid lt 0 then $
         fiber[istar].catalogid=catalogdb[ind1[0]].catalogid
       fiber[istar].twomass_designation = catalogdb[ind1[0]].twomass

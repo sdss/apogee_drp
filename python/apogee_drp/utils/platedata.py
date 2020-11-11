@@ -24,7 +24,7 @@ from astropy import units as u
 
 # filter the warnings
 
-def coords2obj(ra,dec):
+def coords2tmass(ra,dec):
     """ Construct 2MASS-style name (without prefix) from RA/DEC coordinates (in deg)."""
 
     # apogeetarget/pro/make_2mass_style_id.pro makes these
@@ -452,7 +452,6 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     catdb.add_row(addcat)
                     ind1 = len(catdb)-1   # the match for this star, last one in catdb
                     nmatch = 1
-
             if nmatch>0:
                 ind1 = np.atleast_1d(ind1)
                 # Sometimes the plateHoles tmass_style are "None", try to fix with catalogdb information
@@ -462,7 +461,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         fiber['tmass_style'][istar] = '2M'+catdb['twomass'][ind1[0]]
                     # Construct 2MASS-style name from GaiaDR2 RA/DEC
                     else:
-                        fiber['tmass_style'][istar] = '2M'+coords2obj(catdb['ra'][ind1[0]],catdb['dec'][ind1[0]])
+                        fiber['tmass_style'][istar] = '2M'+coords2tmass(catdb['ra'][ind1[0]],catdb['dec'][ind1[0]])
                     print('Fixing tmass_style ID for '+fiber['tmass_style'][istar])
                 if fiber['catalogid'][istar]<0:
                     fiber['catalogid'][istar]=catdb['catalogid'][ind1[0]]
