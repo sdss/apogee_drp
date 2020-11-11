@@ -49,10 +49,10 @@ if __name__ == '__main__' :
     # Code copied from rv.dopple_rv()
     mjd = args.mjd[0]
     observatory = args.observatory[0]
-    apred = args.apred[0]
+    apred = args.apred
 
     # Run the QA code
-    qa.apqaMJD(mjd=mjd, observatory=observatory, apred=pred)
+    qa.apqaMJD(mjd=mjd, observatory=observatory, apred=apred)
 
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))

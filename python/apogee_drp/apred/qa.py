@@ -60,7 +60,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily'):
 
     # Find the list of plan files
     apodir = os.environ.get('APOGEE_REDUX')+'/'
-    planlist = apodir + apred + '/log/'+observatory+'/' + mjd + '.plans'
+    planlist = apodir + apred + '/log/'+observatory+'/' + str(mjd) + '.plans'
     plans = open(planlist, 'r')
     plans = plans.readlines()
     nplans = len(plans)
