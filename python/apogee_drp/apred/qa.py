@@ -1354,7 +1354,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
     if os.path.exists(htmldir) is False: subprocess.call(['mkdir',htmldir])
 
     if os.path.exists(htmldir+'sorttable.js') is False:
-        print("getting sorttable.js...")
+        print("----> makeObjQA: getting sorttable.js...")
         subprocess.call(['wget', '-q', sort_table_link])
         subprocess.call(['mv', 'sorttable.js', htmldir])
 
