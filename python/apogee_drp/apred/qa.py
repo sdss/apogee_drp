@@ -1748,7 +1748,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     nplanfiles = len(planfiles)
     if nplanfiles >= 1:
         planfiles = np.array(planfiles)
-        html.write('<H2>Observed plates:</H2><BR><TABLE BORDER=2>\n')
+        html.write('<H2>Observed plates:</H2><TABLE BORDER=2>\n')
         html.write('<TR bgcolor='+thcolor+'><TH>Planfile<TH>Nframes<TH>Median zeropoint<TH>Median RMS zeropoint<TH>Cartridge<TH>Unmapped<TH>Missing\n')
         for i in range(nplanfiles):
             planfilebase = os.path.basename(planfiles[i])
