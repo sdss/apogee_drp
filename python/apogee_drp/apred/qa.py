@@ -1620,7 +1620,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     reddir =     expdir + mjd + '/'
     outdir =     expdir + mjd + '/html/'
     htmlfile =   outdir + mjd + '.html'
-    plotsdir =   outdir + mjd + '/plots/'
+    plotsdir =   expdir + mjd + '/plots/'
     print("----> makeNightQA: "+htmlfile)
 
     # Make the html folder if it doesn't already exist
