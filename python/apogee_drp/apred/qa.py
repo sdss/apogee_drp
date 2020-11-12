@@ -1865,7 +1865,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
         ax1.scatter(ims % 10000, zero, marker='o', s=150, c='dodgerblue', edgecolors='k', alpha=0.8)
 
-        fig.subplots_adjust(left=0.09,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
+        fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
         plt.savefig(plotsdir + plotfile)
         plt.close('all')
 
