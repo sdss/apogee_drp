@@ -1864,7 +1864,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         html.write('</TABLE>\n')
         html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
 
-        html.write('<p><H3>Observed plates:</H3>\n')
+        html.write('<p><H3>Observed Plate Exposure Data:</H3>\n')
         html.write('<TABLE BORDER=2>\n')
         th0 = '<TR bgcolor='+thcolor+'>'
         th1 = '<TH>Plate <TH>Frame <TH>Cart <TH>sec(z) <TH>HA <TH>Design<BR>HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads '
