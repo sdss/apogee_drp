@@ -1751,7 +1751,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     for i in range(nplanfiles):
         if planfiles[i] != '':
             planfilebase = os.path.basename(planfiles[i])
-            planfilebase_noext = tmp.split('.')[0]
+            planfilebase_noext = planfilebase.split('.')[0]
             # Planfile name
             html.write('<TR><TD>' + planfilebase_noext + '\n')
             planstr = plan.load(planfiles[i], np=True)
