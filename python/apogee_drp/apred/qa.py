@@ -1887,7 +1887,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 tmp1 = str("%.1f" % round(platetab['DESIGN_HA'][j][0],1))
                 tmp2 = str("%.1f" % round(platetab['DESIGN_HA'][j][1],1))
                 tmp3 = str("%.1f" % round(platetab['DESIGN_HA'][j][2],1))
-                html.write('<TD align="right">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 '\n')
+                html.write('<TD align="right">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
                 html.write('<TD align="right">' + str("%.3f" % round(platetab['SEEING'][j],3)) + '\n')
                 html.write('<TD align="right">' + str("%.3f" % round(platetab['FWHM'][j],3)) + '\n')
                 html.write('<TD align="right">' + str("%.3f" % round(platetab['GDRMS'][j],3)) + '\n')
