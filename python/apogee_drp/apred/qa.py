@@ -1774,9 +1774,9 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 # Cart
                 html.write('<TD>' + str(platetab['CART']) + '\n')
                 unplugged, = np.where(platefiber['FIBERID'] < 0)
-                html.write('<TD>'
+                html.write('<TD>')
                 if len(unplugged) >= 0: html.write(str(300 - unplugged) + '\n')
-                html.write('<TD>'
+                html.write('<TD>')
                 expfile = load.filename('1D', num=planstr['fluxid'], chips='b')
                 if os.path.exists(expfile):
                     domeflat = fits.getdata(expfile)
