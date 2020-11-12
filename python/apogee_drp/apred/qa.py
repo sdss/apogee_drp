@@ -1399,7 +1399,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
     objhtml = open(htmldir+htmlfile+'.html','w')
     objhtml.write('<HTML>\n')
     objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
-    html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>'+htmlfile+'</title></head>\n')
+    objhtml.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>'+htmlfile+'</title></head>\n')
     objhtml.write('<BODY>\n')
 
     objhtml.write('<H1>'+htmlfile+'</H1>\n')
