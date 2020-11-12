@@ -1865,6 +1865,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
 
         html.write('<p><H3>Observed Plate Exposure Data:</H3>\n')
+        html.write('<p>Note: Sky continuum, S/N, and S/N(c) columns give values for blue, green, and red detectors</p>\n')
         html.write('<TABLE BORDER=2>\n')
         th0 = '<TR bgcolor='+thcolor+'>'
         th1 = '<TH>Plate <TH>Frame <TH>Cart <TH>sec(z) <TH>HA <TH>Design HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads '
@@ -1896,17 +1897,17 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERO'][j],3)) + '\n')
                 html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERORMS'][j],3)) + '\n')
                 html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERONORM'][j],3)) + '\n')
-                tmp1 = str("%.3f" % round(platetab['SKY'][j][0],3))
+                tmp1 = str("%.3f" % round(platetab['SKY'][j][2],3))
                 tmp2 = str("%.3f" % round(platetab['SKY'][j][1],3))
-                tmp3 = str("%.3f" % round(platetab['SKY'][j][2],3))
+                tmp3 = str("%.3f" % round(platetab['SKY'][j][0],3))
                 html.write('<TD align="right">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
-                tmp1 = str("%.3f" % round(platetab['SN'][j][0],3))
+                tmp1 = str("%.3f" % round(platetab['SN'][j][2],3))
                 tmp2 = str("%.3f" % round(platetab['SN'][j][1],3))
-                tmp3 = str("%.3f" % round(platetab['SN'][j][2],3))
+                tmp3 = str("%.3f" % round(platetab['SN'][j][0],3))
                 html.write('<TD align="right">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
-                tmp1 = str("%.3f" % round(platetab['SNC'][j][0],3))
+                tmp1 = str("%.3f" % round(platetab['SNC'][j][2],3))
                 tmp2 = str("%.3f" % round(platetab['SNC'][j][1],3))
-                tmp3 = str("%.3f" % round(platetab['SNC'][j][2],3))
+                tmp3 = str("%.3f" % round(platetab['SNC'][j][0],3))
                 html.write('<TD align="right">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
                 #tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
                 #zero = np.nanmedian(tmp)
@@ -1916,6 +1917,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 html.write('<TD> \n')
                 html.write('<TD> \n')
 
+    html.write('<BR><BR>\n')
     html.write('</TABLE>\n')
 
     html.close()
