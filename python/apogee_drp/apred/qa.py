@@ -1670,7 +1670,9 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
 
     html = open(htmlfile, 'w')
-    html.write('<HTML><BODY><H1>Nightly QA for MJD '+mjd+'</H1>\n')
+    html.write('<HTML><BODY>')
+    html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>Nightly QA for MJD '+mjd+'</title></head>\n')
+    html.write('<H1>Nightly QA for MJD '+mjd+'</H1>\n')
 
     if telescope == 'apo25m': html.write(' <a href="'+reportLink+'"> <H3>APO 2.5m Observing report </H3></a>\n')
     if telescope == 'lco25m':  html.write(' <a href="'+reportLink+'"> <H3>LCO 2.5m Observing report </H3></a>\n')
