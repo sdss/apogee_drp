@@ -1593,6 +1593,16 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     # HTML header background color
     thcolor = '#DCDCDC'
 
+    # Set up some basic plotting parameters, starting by turning off interactive plotting.
+    plt.ioff()
+    fontsize = 24;   fsz = fontsize * 0.75
+    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    alpha = 0.6
+    axwidth=1.5
+    axmajlen=7
+    axminlen=3.5
+    cmap = 'RdBu'
+
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
@@ -1806,6 +1816,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             platefiledir = os.path.dirname(platefiles[i])
             platehdus = fits.open(platefiles[i])
             platetab = platehdus[1].data
+            mjd = str(int(round(platetab['MJD'][0])))
             #sntab, tabs=platefiles[i], outfile=platefiledir + '/sn-' + plate + '-' + mjd + '.dat'
             #sntab, tabs=platefiles[i], outfile=platefiledir + '/altsn-' + plate + '-' + mjd + '.dat', /altsn
             if i == 0:
@@ -1825,6 +1836,37 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
         html.write('<H2>Zeropoints and sky levels: </H2>\n')
         html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Zeropoints <TH>Sky level <TH>Sky level vs moon distance\n')
+
+        plotfile = mjd + 'zero.png'
+        print("----> makeNightQA: Making "+plotfile)
+
+        fig=plt.figure(figsize=(14,8))
+        ax1 = plt.subplot2grid((1,1), (0,0))
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
+        ax1.minorticks_on()
+        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax1.tick_params(axis='both',which='major',length=axmajlen)
+        ax1.tick_params(axis='both',which='minor',length=axminlen)
+        ax1.tick_params(axis='both',which='both',width=axwidth)
+        ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Zeropoint per pixel')
+
+        xmin = np.min(ims % 10000)-1
+        xmax = np.max(ims % 10000)+1
+        ax1.set_xlim(xmin, xmax)
+
+        gd, = np.where(zero > 0)
+        ymin = np.min(zero[gd])
+        ymax = np.max(zero)
+        if ymin > 15: ymin = 15
+        if ymax < 20: ymax = 20
+        ax1.set_ylim(ymin, ymax)
+
+        ax1.scatter(ims % 10000, zero, marker='o', s=150, c='dodgerblue', edgecolors='k', alpha=0.8)
+
+        fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
+        plt.savefig(reddir + '/plots/' + plotfile)
+        plt.close('all')
+
 
         #if not file_test(reddir+'/plots',/dir) then file_mkdir,reddir+'/plots'
         #device,file=reddir+'/plots/'+cmjd+'zero.eps',/encap,ysize=8,/color
@@ -1921,6 +1963,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     html.write('</TABLE>\n')
 
     html.close()
+
+    plt.ion()
 
     print("----> makeNightQA: Done with MJD "+mjd+"\n")
 
