@@ -1620,10 +1620,12 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     reddir =     expdir + mjd + '/'
     outdir =     expdir + mjd + '/html/'
     htmlfile =   outdir + mjd + '.html'
+    plotsdir =   outdir + mjd + '/plots/'
     print("----> makeNightQA: "+htmlfile)
 
     # Make the html folder if it doesn't already exist
     if os.path.exists(outdir) is False: subprocess.call(['mkdir',outdir])
+    if os.path.exists(plotsdir) is False: subprocess.call(['mkdir',plotsdir])
 
     # Get all apR file numbers for the night
     rawfiles = glob.glob(datadir + mjd + '/a*R-*.apz')
@@ -1864,7 +1866,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         ax1.scatter(ims % 10000, zero, marker='o', s=150, c='dodgerblue', edgecolors='k', alpha=0.8)
 
         fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
-        plt.savefig(reddir + '/plots/' + plotfile)
+        plt.savefig(plotsdir + plotfile)
         plt.close('all')
 
 
