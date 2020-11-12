@@ -1350,10 +1350,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
     if os.path.exists(plotsdir) is False: subprocess.call(['mkdir',plotsdir])
     if os.path.exists(htmldir) is False: subprocess.call(['mkdir',htmldir])
 
-#    if os.path.exists(htmldir+'sorttable.js') is False:
-#        print("getting sorttable.js...")
-#        subprocess.call(['wget', '-q', sort_table_link])
-#        subprocess.call(['mv', 'sorttable.js', htmldir])
+    if os.path.exists(htmldir+'sorttable.js') is False:
+        print("getting sorttable.js...")
+        subprocess.call(['wget', '-q', sort_table_link])
+        subprocess.call(['mv', 'sorttable.js', htmldir])
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     plt.ioff()
