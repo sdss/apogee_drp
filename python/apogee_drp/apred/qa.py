@@ -1858,7 +1858,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         #device,/close
         #ps2gif,reddir+'/plots/'+cmjd+'moonsky.eps',chmod='664'o,/delete,/eps
         html.write('<TD><A HREF=../plots/' + mjd + 'moonsky.png target="_blank"><IMG SRC=../plots/' + mjd + 'moonsky.png WIDTH=500></A>\n')
-        html.write('</TABLE>'
+        html.write('</TABLE>\n')
         html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
 
     html.write('<p><H3>Observed plates:</H3>\n')
@@ -1866,7 +1866,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     html.write('<TR bgcolor='+thcolor+'>')
     html.write('<TH>Frame <TH>Plate <TH>Cart <TH>sec(z) <TH>HA <TH>Design<BR>HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads ')
     html.write('<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n')
-    html.write('</TABLE>'
+    html.write('</TABLE>\n')
 
     html.close()
 
