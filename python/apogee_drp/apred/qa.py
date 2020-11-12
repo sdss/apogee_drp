@@ -1664,12 +1664,12 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     if telescope == 'lco25m':  html.write(' <a href="'+reportLink+'"> <H3>LCO 2.5m Observing report </H3></a>\n')
 
     # Look for missing raw frames (assuming contiguous sequence)
-    html.write('<H3>Raw frames:</H3> ' + str(firstExposure) + ' to ' + str(lastExposure))
+    html.write('<H2>Raw frames:</H2> ' + str(firstExposure) + ' to ' + str(lastExposure))
 #    html.write(' (<a href=../../../../../../'+os.path.basename(dirs.datadir)+'/'+cmjd+'/'+cmjd+'.log.html> image log</a>)\n')
     html.write(' (image log... nope)\n')
     html.write('<BR>\n')
 
-    html.write('<H3>Missing raw data:</H3>\n')
+    html.write('<H2>Missing raw data:</H2>\n')
     nmiss = 0
     for i in range(nchips):
         html.write('<FONT color=red>\n')
@@ -1698,7 +1698,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     # look for missing reduced frames
 #    print,'looking for missing reduced data...'
-    html.write('<h3>Missing reduced data:</h3><TABLE BORDER=2>\n')
+    html.write('<H2>Missing reduced data:</H2><TABLE BORDER=2>\n')
     html.write('<TR bgcolor='+thcolor+'><TH>ID<TH>NFRAMES/NREAD<TH>TYPE<TH>PLATEID<TH>CARTID<TH>1D missing<TH>2D missing\n')
     for i in range(nuExposures):
         n = int(round(uExposures[i]))
@@ -1748,7 +1748,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     nplanfiles = len(planfiles)
     if nplanfiles >= 1:
         planfiles = np.array(planfiles)
-        html.write('<H3>Observed plates:</H3><BR><TABLE BORDER=2>\n')
+        html.write('<H2>Observed plates:</H2><BR><TABLE BORDER=2>\n')
         html.write('<TR bgcolor='+thcolor+'><TH>Planfile<TH>Nframes<TH>Median zeropoint<TH>Median RMS zeropoint<TH>Cartridge<TH>Unmapped<TH>Missing\n')
         for i in range(nplanfiles):
             planfilebase = os.path.basename(planfiles[i])
@@ -1823,7 +1823,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 skyb = np.concatenate([skyb, platetab['SKY'][:,2]])
                 moondist = np.concatenate([moondist, platetab['MOONDIST']])
 
-        html.write('<H3>Zeropoints and sky levels: </H3>\n')
+        html.write('<H2>Zeropoints and sky levels: </H2>\n')
         html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Zeropoints <TH>Sky level <TH>Sky level vs moon distance\n')
 
         #if not file_test(reddir+'/plots',/dir) then file_mkdir,reddir+'/plots'
@@ -1864,7 +1864,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         html.write('</TABLE>\n')
         html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
 
-        html.write('<p><H3>Observed Plate Exposure Data:</H3>\n')
+        html.write('<p><H2>Observed Plate Exposure Data:</H2>\n')
         html.write('<p>Note: Sky continuum, S/N, and S/N(c) columns give values for blue, green, and red detectors</p>\n')
         html.write('<TABLE BORDER=2>\n')
         th0 = '<TR bgcolor='+thcolor+'>'
