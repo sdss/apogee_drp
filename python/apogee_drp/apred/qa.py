@@ -2202,7 +2202,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
         for i in range(nplates):
             color='#ffb3b3'
             if iprogram[i] == 'RM': color = '#FCF793' 
-            if iprogram[i] == 'AQMES-Wide': color='#B9FC93'
+            if iprogram[i] == 'AQMES-Wide': color = '#B9FC93'
+            if iprogram[i] == 'AQMES-Medium': color = '#54A71E'
 
             html.write('<TR bgcolor='+color+'><TD>'+iname[i]+'\n') 
             html.write('<TD>'+str(iprogram[i])+'\n') 
