@@ -1844,6 +1844,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         html.write('<H2>Zeropoints and sky levels: </H2>\n')
         html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Zeropoints <TH>Sky level <TH>Sky level vs moon distance\n')
 
+        # Plot of zeropoint versus image number
         plotfile = mjd + 'zero.png'
         print("----> makeNightQA: Making "+plotfile)
 
@@ -1855,12 +1856,11 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         ax1.tick_params(axis='both',which='major',length=axmajlen)
         ax1.tick_params(axis='both',which='minor',length=axminlen)
         ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Zeropoint per pixel')
+        ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Zeropoint Per Pixel')
 
         xmin = np.min(ims % 10000)-1
         xmax = np.max(ims % 10000)+1
         ax1.set_xlim(xmin, xmax)
-
         gd, = np.where(zero > 0)
         ymin = np.min(zero[gd])
         ymax = np.max(zero)
@@ -1874,43 +1874,67 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         plt.savefig(plotsdir + plotfile)
         plt.close('all')
 
-
-        #if not file_test(reddir+'/plots',/dir) then file_mkdir,reddir+'/plots'
-        #device,file=reddir+'/plots/'+cmjd+'zero.eps',/encap,ysize=8,/color
-        #xmin=min(ims mod 10000)-1 & xmax=max(ims mod 10000)+1
-        #good=where(zero gt 0)
-        #ymin=min(zero(good)) & ymax=max(zero)
-        #if ymin gt 15 then ymin=15
-        #if ymax lt 20 then ymax=20
-        #plot,ims mod 10000,zero,psym=6,yrange=[ymin,ymax],xrange=[xmin,xmax],xtitle='Image number',ytitle='Zeropoint per pixel'
-        #device,/close
-        #ps2gif,reddir+'/plots/'+cmjd+'zero.eps',chmod='664'o,/delete,/eps
         html.write('<TR><TD><A HREF=../plots/' + mjd + 'zero.png target="_blank"><IMG SRC=../plots/' + mjd + 'zero.png WIDTH=500></A>\n')
 
-        #device,file=reddir+'/plots/'+cmjd+'sky.eps',/encap,ysize=8,/color
-        #ymin=min(skyr) & ymax=max(skyr)
-        #if ymin gt 11 then ymin=11
-        #if ymax lt 16 then ymax=16
-        #plot,ims mod 10000,skyr,psym=6,yrange=[ymax,ymin],xrange=[xmin,xmax],xtitle='Image number',ytitle='Continuum sky per pixel '
-        #oplot,ims mod 10000,skyr,psym=6,color=2
-        #oplot,ims mod 10000,skyg,psym=6,color=3
-        #oplot,ims mod 10000,skyb,psym=6,color=4
-        #device,/close
-        #ps2gif,reddir+'/plots/'+cmjd+'sky.eps',chmod='664'o,/delete,/eps
-        html.write('<TD><A HREF=../plots/' + mjd + 'sky.png target="_blank"><IMG SRC=../plots/' + mjd + 'sky.png WIDTH=500></A>\n')
+        # Plot of zeropoint versus image number
+        plotfile = mjd + 'sky.png'
+        print("----> makeNightQA: Making "+plotfile)
 
-        #device,file=reddir+'/plots/'+cmjd+'moonsky.eps',/encap,ysize=8,/color
-        #ymin=min(skyr) & ymax=max(skyr)
-        #if ymin gt 11 then ymin=11
-        #if ymax lt 16 then ymax=16
-        #plot,moondist,skyr,psym=6,yrange=[ymax,ymin],xtitle='Moon distance',ytitle='Continuum sky per pixel '
-        #oplot,moondist,skyr,psym=6,color=2
-        #oplot,moondist,skyg,psym=6,color=3
-        #oplot,moondist,skyb,psym=6,color=4
-        #device,/close
-        #ps2gif,reddir+'/plots/'+cmjd+'moonsky.eps',chmod='664'o,/delete,/eps
-        html.write('<TD><A HREF=../plots/' + mjd + 'moonsky.png target="_blank"><IMG SRC=../plots/' + mjd + 'moonsky.png WIDTH=500></A>\n')
+        fig=plt.figure(figsize=(14,8))
+        ax1 = plt.subplot2grid((1,1), (0,0))
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
+        ax1.minorticks_on()
+        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax1.tick_params(axis='both',which='major',length=axmajlen)
+        ax1.tick_params(axis='both',which='minor',length=axminlen)
+        ax1.tick_params(axis='both',which='both',width=axwidth)
+        ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
+
+        ax1.set_xlim(xmin, xmax)
+        if ymin > 11: ymin = 11
+        if ymax < 16: ymax = 16
+        ax1.set_ylim(ymin, ymax)
+
+        ax1.scatter(ims % 10000, skyr, marker='o', s=150, c='r', edgecolors='k', alpha=0.8)
+        ax1.scatter(ims % 10000, skyg, marker='o', s=150, c='g', edgecolors='k', alpha=0.8)
+        ax1.scatter(ims % 10000, skyb, marker='o', s=150, c='b', edgecolors='k', alpha=0.8)
+
+        fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
+        plt.savefig(plotsdir + plotfile)
+        plt.close('all')
+
+        html.write('<TD><A HREF=../plots/' + plotfile + ' target="_blank"><IMG SRC=../plots/' + plotfile + ' WIDTH=500></A>\n')
+
+        # Plot of moon distance versus sky continuum
+        plotfile = mjd + 'moonsky.png'
+        print("----> makeNightQA: Making "+plotfile)
+
+        fig=plt.figure(figsize=(14,8))
+        ax1 = plt.subplot2grid((1,1), (0,0))
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
+        ax1.minorticks_on()
+        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax1.tick_params(axis='both',which='major',length=axmajlen)
+        ax1.tick_params(axis='both',which='minor',length=axminlen)
+        ax1.tick_params(axis='both',which='both',width=axwidth)
+        ax1.set_xlabel(r'Moon Distance');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
+
+        ax1.set_xlim(xmin, xmax)
+        if ymin > 11: ymin = 11
+        if ymax < 16: ymax = 16
+        ax1.set_ylim(ymin, ymax)
+
+        ax1.scatter(moondist, skyr, marker='o', s=150, c='r', edgecolors='k', alpha=0.8)
+        ax1.scatter(moondist, skyg, marker='o', s=150, c='g', edgecolors='k', alpha=0.8)
+        ax1.scatter(moondist, skyb, marker='o', s=150, c='b', edgecolors='k', alpha=0.8)
+
+        fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
+        plt.savefig(plotsdir + plotfile)
+        plt.close('all')
+
+        html.write('<TD><A HREF=../plots/' + mjd + 'moonsky.png target="_blank"><IMG SRC=../plots/' + plotfile+' WIDTH=500></A>\n')
         html.write('</TABLE>\n')
+
         html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
 
         html.write('<p><H2>Observed Plate Exposure Data:</H2>\n')
