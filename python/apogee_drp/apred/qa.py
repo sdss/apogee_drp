@@ -87,7 +87,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
                      makeplots=makeplots, makespecplots=makespecplots, makenightqa=False)
         else:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makemasterqa=makemasterqa,
-                     makeplots=makeplots, makespecplots=makespecplots, makenightqa=makemasterqa)
+                     makeplots=makeplots, makespecplots=makespecplots, makenightqa=makenightqa)
     print("Done with APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
 
 
