@@ -81,13 +81,13 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
         tmp = gdplans[i].split('-')
         plate = tmp[1]
         mjd = tmp[2].split('.')[0]
-        # Only run makemasterqa after the last plate on this mjd
+        # Only run makemasterqa and makenightqa after the last plate on this mjd
         if i < nplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makemasterqa=False,
                      makeplots=makeplots, makespecplots=makespecplots, makenightqa=False)
         else:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makemasterqa=makemasterqa,
-                     makeplots=makeplots, makespecplots=makespecplots, makenightqa=True)
+                     makeplots=makeplots, makespecplots=makespecplots, makenightqa=makemasterqa)
     print("Done with APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
 
 
