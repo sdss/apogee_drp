@@ -1919,7 +1919,6 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Moon Distance');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
 
-        ax1.set_xlim(xmin, xmax)
         if ymin > 11: ymin = 11
         if ymax < 16: ymax = 16
         ax1.set_ylim(ymin, ymax)
