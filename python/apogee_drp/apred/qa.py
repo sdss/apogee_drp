@@ -1744,18 +1744,21 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     # Get all observed plates (from planfiles)
     # print,'getting observed plates ....'
-    planfiles = np.array(glob.glob(platedir + '*Plan*.yaml'))
+    planfiles = glob.glob(platedir + '*Plan*.yaml')
     nplanfiles = len(planfiles)
-    html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor='+thcolor+'><TH>Planfile<TH>Nframes<TH>Median zeropoint<TH>Median RMS zeropoint<TH>Cartridge<TH>Unmapped<TH>Missing\n')
-    for i in range(nplanfiles):
-        if planfiles[i] != '':
+    if nplanfiles >= 1:
+        planfiles = np.array(planfiles)
+        html.write('<TABLE BORDER=2>\n')
+        html.write('<TR bgcolor='+thcolor+'><TH>Planfile<TH>Nframes<TH>Median zeropoint<TH>Median RMS zeropoint<TH>Cartridge<TH>Unmapped<TH>Missing\n')
+        for i in range(nplanfiles):
             planfilebase = os.path.basename(planfiles[i])
             planfilebase_noext = planfilebase.split('.')[0]
             # Planfile name
             html.write('<TR><TD>' + planfilebase_noext + '\n')
             planstr = plan.load(planfiles[i], np=True)
-            platefile = load.filename('PlateSum', plate=int(plate), mjd=planstr['mjd'])
+            plate = str(int(round(planstr['plateid'])))
+            mjd = str(int(round(planstr['mjd'])))
+            platefile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
             platefilebase = os.path.basename(platefile)
             platefiledir = os.path.dirname(planfiles[i])
             if (planstr['platetype'] == 'normal') & (os.path.exists(platefile)): 
