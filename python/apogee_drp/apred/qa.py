@@ -1849,9 +1849,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                     field = tmp[2]
                     plate = tmp[3]
                     if j < nplates:
-                        html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'>'+plate+': '+field+'"</A><BR>\n')
+                        html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                     else:
-                        html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'>'+plate+': '+field+'"</A>\n')
+                        html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
 
             # Column 5: Combined files for this night
             #html.write('<TD>\n')
