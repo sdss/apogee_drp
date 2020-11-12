@@ -56,7 +56,8 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #--------------------------------------------------------------------------------------------------
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
-def apqaMJD(mjd='59146', observatory='apo', apred='daily'):
+def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
+            makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True):
 
     # Find the list of plan files
     apodir = os.environ.get('APOGEE_REDUX')+'/'
@@ -82,9 +83,11 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily'):
         mjd = tmp[2].split('.')[0]
         # Only run makemasterqa after the last plate on this mjd
         if i < nplans-1:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makemasterqa=False)
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makemasterqa=False,
+                     makeplots=makeplots, makespecplots=makespecplots, makenightqa=False)
         else:
-            x = apqa(plate=plate, mjd=mjd, apred=apred)
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makemasterqa=makemasterqa,
+                     makeplots=makeplots, makespecplots=makespecplots, makenightqa=True)
     print("Done with APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
 
 
