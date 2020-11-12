@@ -1698,7 +1698,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     # look for missing reduced frames
 #    print,'looking for missing reduced data...'
-    html.write('<h3>Missing reduced data:</h3><BR><TABLE BORDER=2>\n')
+    html.write('<h3>Missing reduced data:</h3><TABLE BORDER=2>\n')
     html.write('<TR bgcolor='+thcolor+'><TH>ID<TH>NFRAMES/NREAD<TH>TYPE<TH>PLATEID<TH>CARTID<TH>1D missing<TH>2D missing\n')
     for i in range(nuExposures):
         n = int(round(uExposures[i]))
@@ -1748,7 +1748,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     nplanfiles = len(planfiles)
     if nplanfiles >= 1:
         planfiles = np.array(planfiles)
-        html.write('<TABLE BORDER=2>\n')
+        html.write('<H3>Observed plates:</H3><BR><TABLE BORDER=2>\n')
         html.write('<TR bgcolor='+thcolor+'><TH>Planfile<TH>Nframes<TH>Median zeropoint<TH>Median RMS zeropoint<TH>Cartridge<TH>Unmapped<TH>Missing\n')
         for i in range(nplanfiles):
             planfilebase = os.path.basename(planfiles[i])
@@ -1766,20 +1766,20 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 platetab = platehdus[1].data
                 platefiber = platehdus[2].data
                 # Nframes
-                html.write('<TD>' + str(len(platetab)) + '\n')
+                html.write('<TD align="right">' + str(len(platetab)) + '\n')
                 # Zero and zerorms
                 if len(platetab['ZERO']) > 1:
-                    html.write('<TD>' + str("%.2f" % round(np.nanmedian(platetab['ZERO']),2)) + '\n')
-                    html.write('<TD>' + str("%.2f" % round(np.nanmedian(platetab['ZERORMS']),2)) + '\n')
+                    html.write('<TD align="right">' + str("%.2f" % round(np.nanmedian(platetab['ZERO']),2)) + '\n')
+                    html.write('<TD align="right">' + str("%.2f" % round(np.nanmedian(platetab['ZERORMS']),2)) + '\n')
                 else:
-                    html.write('<TD>' + str("%.2f" % round(platetab['ZERO'],2)) + '\n')
-                    html.write('<TD>' + str("%.2f" % round(platetab['ZERORMS'],2)) + '\n')
+                    html.write('<TD align="right">' + str("%.2f" % round(platetab['ZERO'],2)) + '\n')
+                    html.write('<TD align="right">' + str("%.2f" % round(platetab['ZERORMS'],2)) + '\n')
                 # Cart
-                html.write('<TD>' + str(platetab['CART']) + '\n')
+                html.write('<TD align="center">' + str(platetab['CART']) + '\n')
                 unplugged, = np.where(platefiber['FIBERID'] < 0)
-                html.write('<TD>')
+                html.write('<TD align="center">')
                 if len(unplugged) >= 0: html.write(str(300 - unplugged) + '\n')
-                html.write('<TD>')
+                html.write('<TD align="center">')
                 expfile = load.filename('1D', num=planstr['fluxid'], chips='b')
                 if os.path.exists(expfile):
                     domeflat = fits.getdata(expfile)
@@ -1823,8 +1823,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 skyb = np.concatenate([skyb, platetab['SKY'][:,2]])
                 moondist = np.concatenate([moondist, platetab['MOONDIST']])
 
-        html.write('<H3>Zeropoints and sky levels: </H3><br>\n')
-        html.write('<table border=2><TR bgcolor='+thcolor+'><TH>Zeropoints <TH>Sky level <TH>Sky level vs moon distance\n')
+        html.write('<H3>Zeropoints and sky levels: </H3>\n')
+        html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Zeropoints <TH>Sky level <TH>Sky level vs moon distance\n')
 
         #if not file_test(reddir+'/plots',/dir) then file_mkdir,reddir+'/plots'
         #device,file=reddir+'/plots/'+cmjd+'zero.eps',/encap,ysize=8,/color
@@ -1864,11 +1864,47 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         html.write('</TABLE>\n')
         html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
 
-    html.write('<p><H3>Observed plates:</H3>\n')
-    html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor='+thcolor+'>')
-    html.write('<TH>Frame <TH>Plate <TH>Cart <TH>sec(z) <TH>HA <TH>Design<BR>HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads ')
-    html.write('<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n')
+        html.write('<p><H3>Observed plates:</H3>\n')
+        html.write('<TABLE BORDER=2>\n')
+        html.write('<TR bgcolor='+thcolor+'>')
+        th1 = '<TH>Plate <TH>Frame <TH>Cart <TH>sec(z) <TH>HA <TH>Design<BR>HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads '
+        th2 = '<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n'
+        html.write(th1 + th2)
+        for i in range(nplates):
+            platehdus = fits.open(platefiles[i])
+            platetab = platehdus[1].data
+            plate = str(int(round(platetab['PLATE'][0])))
+            cart = str(int(round(platetab['CART'][0])))
+            nreads = str(int(round(platetab['NREADS'][0])))
+            n_exposures = len(platetab['IM'])
+            for j in range(n_exposures):
+                if (i >0) & (j==0):
+                    html.write(th1 + th2)
+                html.write('<TD align="left">' + plate + '\n')
+                html.write('<TD align="left">' + str(int(round(platetab['IM'][j]))) + '\n')
+                html.write('<TD align="center">' + cart + '\n')
+                html.write('<TD align="right">' + str("%.3f" % round(platetab['SECZ'][j],3)) + '\n')
+                html.write('<TD align="right">' + str(platetab['HA'][j]) + '\n')
+                html.write('<TD align="right">' + str(platetab['DESIGN_HA'][j]) + '\n')
+                html.write('<TD align="right">' + str("%.3f" % round(platetab['SEEING'][j],3)) + '\n')
+                html.write('<TD align="right">' + str("%.3f" % round(platetab['FWHM'][j],3)) + '\n')
+                html.write('<TD align="right">' + str("%.3f" % round(platetab['GDRMS'][j],3)) + '\n')
+                html.write('<TD align="right">' + nreads + '\n')
+                html.write('<TD align="right">' + str("%.3f" % round(platetab['DITHER'][j],3)) + '\n')
+                html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERO'][j],3)) + '\n')
+                html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERORMS'][j],3)) + '\n')
+                html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERONORM'][j],3)) + '\n')
+                html.write('<TD align="right">' + str(platetab['SKY'][j]) + '\n')
+                html.write('<TD align="right">' + str(platetab['SN'][j]) + '\n')
+                html.write('<TD align="right">' + str(platetab['SNC'][j]) + '\n')
+                #tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
+                #zero = np.nanmedian(tmp)
+                #zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
+                #faint, = np.where((tmp - zero) < -0.5)
+                #nfaint = len(faint)
+                html.write('<TD \n')
+                html.write('<TD \n')
+
     html.write('</TABLE>\n')
 
     html.close()
