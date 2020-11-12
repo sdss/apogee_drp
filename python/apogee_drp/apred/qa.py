@@ -1749,7 +1749,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     if nplanfiles >= 1:
         planfiles = np.array(planfiles)
         html.write('<H2>Observed plates:</H2><TABLE BORDER=2>\n')
-        html.write('<TR bgcolor='+thcolor+'><TH>Planfile<TH>Nframes<TH>Median zeropoint<TH>Median RMS zeropoint<TH>Cartridge<TH>Unmapped<TH>Missing\n')
+        html.write('<TR bgcolor='+thcolor+'><TH>Planfile <TH>Nframes <TH>Median<BR>Zeropoint <TH>Median RMS<BR>Zeropoint <TH>Cart <TH>Unmapped <TH>Missing\n')
         for i in range(nplanfiles):
             planfilebase = os.path.basename(planfiles[i])
             planfilebase_noext = planfilebase.split('.')[0]
@@ -1775,7 +1775,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                     html.write('<TD align="right">' + str("%.2f" % round(platetab['ZERO'],2)) + '\n')
                     html.write('<TD align="right">' + str("%.2f" % round(platetab['ZERORMS'],2)) + '\n')
                 # Cart
-                html.write('<TD align="center">' + str(platetab['CART']) + '\n')
+                html.write('<TD align="center">' + str(platetab['CART'][0]) + '\n')
                 unplugged, = np.where(platefiber['FIBERID'] < 0)
                 html.write('<TD align="center">')
                 if len(unplugged) >= 0: html.write(str(300 - unplugged) + '\n')
