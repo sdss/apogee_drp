@@ -2026,7 +2026,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write("<TR bgcolor=eaeded><TH>Observers'<BR>Log <TH>Exposure<BR>Log <TH>Raw<BR>Data <TH>Night QA<TH>Observed Plate QA<TH>Summary Files\n")
+        html.write('<TR bgcolor="#eaeded"><TH>Observer<BR>Log <TH>Exposure<BR>Log <TH>Raw<BR>Data <TH>Night QA<TH>Observed Plate QA<TH>Summary Files\n')
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
             # Establish telescope and instrument and setup apLoad depending on telescope.
