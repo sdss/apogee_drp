@@ -1604,6 +1604,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     apodir =     os.environ.get('APOGEE_REDUX') + '/'
     spectrodir = apodir + apred + '/'
+    platedir =   spectrodir+'/visit/'+telescope+'/*/*/'+mjd+'/'
     caldir =     spectrodir + 'cal/'
     expdir =     spectrodir + 'exposures/' + instrument + '/'
     reddir =     expdir + mjd + '/'
@@ -1738,8 +1739,134 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 html.write('<TD> '+file1d+'\n')
                 if (os.path.exists(reddir+file2d) is False) & (os.path.exists(reddir+file2d+'.fz') is False):
                     html.write('<TD> '+file2d+'\n')
-            
     html.write('</TABLE>\n')
+    html.write('<BR>\n')
+
+    # Get all observed plates (from planfiles)
+    # print,'getting observed plates ....'
+    planfiles = np.array(glob.glob(platedir + '*Plan*.yaml'))
+    nplanfiles = len(planfiles)
+    html.write('<TABLE BORDER=2>\n')
+    html.write('<TR bgcolor='+thcolor+'><TH>Planfile<TH>Nframes<TH>Median zeropoint<TH>Median RMS zeropoint<TH>Cartridge<TH>Unmapped<TH>Missing\n')
+    for i in range(nplanfiles):
+        if planfiles[i] != '':
+            planfilebase = os.path.basename(planfiles[i])
+            planfilebase_noext = tmp.split('.')[0]
+            # Planfile name
+            html.write('<TR><TD>' + planfilebase_noext + '\n')
+            planstr = plan.load(planfiles[i], np=True)
+            platefile = load.filename('PlateSum', plate=int(plate), mjd=planstr['mjd'])
+            platefilebase = os.path.basename(platefile)
+            platefiledir = os.path.dirname(planfiles[i])
+            if (planstr['platetype'] == 'normal') & (os.path.exists(platefile)): 
+                platehdus = fits.open(platefile)
+                platetab = platehdus[1].data
+                platefiber = platehdus[2].data
+                # Nframes
+                html.write('<TD>' + str(len(platetab)) + '\n')
+                # Zero and zerorms
+                if len(platetab['ZERO']) > 1:
+                    html.write('<TD>' + str("%.2f" % round(np.nanmedian(platetab['ZERO']),2)) + '\n')
+                    html.write('<TD>' + str("%.2f" % round(np.nanmedian(platetab['ZERORMS']),2)) + '\n')
+                else:
+                    html.write('<TD>' + str("%.2f" % round(platetab['ZERO'],2)) + '\n')
+                    html.write('<TD>' + str("%.2f" % round(platetab['ZERORMS'],2)) + '\n')
+                # Cart
+                html.write('<TD>' + str(platetab['CART']) + '\n')
+                unplugged, = np.where(platefiber['FIBERID'] < 0)
+                html.write('<TD>'
+                if len(unplugged) >= 0: html.write(str(300 - unplugged) + '\n')
+                html.write('<TD>'
+                expfile = load.filename('1D', num=planstr['fluxid'], chips='b')
+                if os.path.exists(expfile):
+                    domeflat = fits.getdata(expfile)
+                    level = np.nanmedian(domeflat, axis=1)
+                    bad, = np.where(level == 0)
+                    if len(bad) >= 0: html.write(str(300 - bad) + '\n')
+    html.write('</TABLE>\n')
+
+#    print,'wavehtml...'
+#    wavefile = caldir + 'wave/html/wave' + mjd + '.html'
+#    if os.path.exists(wavefile):
+#        spawn,'cat '+file,wavehtml
+#        for i=1,n_elements(wavehtml)-2 do html.write(wavehtml[i]
+
+    # Get all succesfully reduced plates
+    #print,'getting successfully reduced plates...'
+    platefiles = glob.glob(platedir + '*PlateSum*.fits')
+    # Make master plot of zeropoint and sky levels for the night
+    if (len(platefiles) >= 1): 
+        platefiles.sort()
+        platefiles = np.array(platefiles)
+        nplates = len(platefiles)
+        for i in range(nplates):
+            platefiledir = os.path.dirname(platefiles[i])
+            platehdus = fits.open(platefiles[i])
+            platetab = platehdus[1].data
+            #sntab, tabs=platefiles[i], outfile=platefiledir + '/sn-' + plate + '-' + mjd + '.dat'
+            #sntab, tabs=platefiles[i], outfile=platefiledir + '/altsn-' + plate + '-' + mjd + '.dat', /altsn
+            if i == 0:
+                zero = platetab['ZERO']
+                ims = platetab['IM']
+                moondist = platetab['MOONDIST']
+                skyr = platetab['SKY'][:,0]
+                skyg = platetab['SKY'][:,1]
+                skyb = platetab['SKY'][:,2]
+            else:
+                zero = np.concatenate([zero, platetab['ZERO']])
+                ims = np.concatenate([ims, platetab['IM']])
+                skyr = np.concatenate([skyr, platetab['SKY'][:,0]])
+                skyg = np.concatenate([skyg, platetab['SKY'][:,1]])
+                skyb = np.concatenate([skyb, platetab['SKY'][:,2]])
+                moondist = np.concatenate([moondist, platetab['MOONDIST']])
+
+        html.write('<H3>Zeropoints and sky levels: </H3><br>\n')
+        html.write('<table border=2><TR bgcolor='+thcolor+'><TH>Zeropoints <TH>Sky level <TH>Sky level vs moon distance\n')
+
+        #if not file_test(reddir+'/plots',/dir) then file_mkdir,reddir+'/plots'
+        #device,file=reddir+'/plots/'+cmjd+'zero.eps',/encap,ysize=8,/color
+        #xmin=min(ims mod 10000)-1 & xmax=max(ims mod 10000)+1
+        #good=where(zero gt 0)
+        #ymin=min(zero(good)) & ymax=max(zero)
+        #if ymin gt 15 then ymin=15
+        #if ymax lt 20 then ymax=20
+        #plot,ims mod 10000,zero,psym=6,yrange=[ymin,ymax],xrange=[xmin,xmax],xtitle='Image number',ytitle='Zeropoint per pixel'
+        #device,/close
+        #ps2gif,reddir+'/plots/'+cmjd+'zero.eps',chmod='664'o,/delete,/eps
+        html.write('<TR><TD><A HREF=../plots/' + mjd + 'zero.png target="_blank"><IMG SRC=../plots/' + mjd + 'zero.png WIDTH=500></A>\n')
+
+        #device,file=reddir+'/plots/'+cmjd+'sky.eps',/encap,ysize=8,/color
+        #ymin=min(skyr) & ymax=max(skyr)
+        #if ymin gt 11 then ymin=11
+        #if ymax lt 16 then ymax=16
+        #plot,ims mod 10000,skyr,psym=6,yrange=[ymax,ymin],xrange=[xmin,xmax],xtitle='Image number',ytitle='Continuum sky per pixel '
+        #oplot,ims mod 10000,skyr,psym=6,color=2
+        #oplot,ims mod 10000,skyg,psym=6,color=3
+        #oplot,ims mod 10000,skyb,psym=6,color=4
+        #device,/close
+        #ps2gif,reddir+'/plots/'+cmjd+'sky.eps',chmod='664'o,/delete,/eps
+        html.write('<TD><A HREF=../plots/' + mjd + 'sky.png target="_blank"><IMG SRC=../plots/' + mjd + 'sky.png WIDTH=500></A>\n')
+
+        #device,file=reddir+'/plots/'+cmjd+'moonsky.eps',/encap,ysize=8,/color
+        #ymin=min(skyr) & ymax=max(skyr)
+        #if ymin gt 11 then ymin=11
+        #if ymax lt 16 then ymax=16
+        #plot,moondist,skyr,psym=6,yrange=[ymax,ymin],xtitle='Moon distance',ytitle='Continuum sky per pixel '
+        #oplot,moondist,skyr,psym=6,color=2
+        #oplot,moondist,skyg,psym=6,color=3
+        #oplot,moondist,skyb,psym=6,color=4
+        #device,/close
+        #ps2gif,reddir+'/plots/'+cmjd+'moonsky.eps',chmod='664'o,/delete,/eps
+        html.write('<TD><A HREF=../plots/' + mjd + 'moonsky.png target="_blank"><IMG SRC=../plots/' + mjd + 'moonsky.png WIDTH=500></A>\n')
+        html.write('</TABLE>'
+        html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
+
+    html.write('<p><H3>Observed plates:</H3>\n')
+    html.write('<TABLE BORDER=2>\n')
+    html.write('<TR bgcolor='+thcolor+'>')
+    html.write('<TH>Frame <TH>Plate <TH>Cart <TH>sec(z) <TH>HA <TH>Design<BR>HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads ')
+    html.write('<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n')
+    html.write('</TABLE>'
 
     html.close()
 
