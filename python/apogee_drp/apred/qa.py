@@ -1878,6 +1878,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             nreads = str(int(round(platetab['NREADS'][0])))
             n_exposures = len(platetab['IM'])
             for j in range(n_exposures):
+                html.write('<TR>\n')
                 if (i >0) & (j==0):
                     html.write(th1 + th2)
                 html.write('<TD align="left">' + plate + '\n')
