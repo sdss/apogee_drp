@@ -1903,8 +1903,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 #zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
                 #faint, = np.where((tmp - zero) < -0.5)
                 #nfaint = len(faint)
-                html.write('<TD \n')
-                html.write('<TD \n')
+                html.write('<TD> \n')
+                html.write('<TD> \n')
 
     html.write('</TABLE>\n')
 
