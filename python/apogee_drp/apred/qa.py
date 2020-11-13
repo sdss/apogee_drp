@@ -2230,15 +2230,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
         idec = idec[order]
 
         for i in range(nplates):
-            color='#ffb3b3'
+            color = '#ffb3b3'
             if iprogram[i] == 'RM': color = '#FCF793' 
             if iprogram[i] == 'AQMES-Wide': color = '#B9FC93'
             if iprogram[i] == 'AQMES-Medium': color = '#54A71E'
 
-            html.write('<TR bgcolor='+color+'><TD>'+iname[i]+'\n') 
-            html.write('<TD>'+str(iprogram[i])+'\n') 
+            html.write('<TR bgcolor=' + color + '><TD>' + iname[i] + '\n') 
+            html.write('<TD>' + str(iprogram[i]) + '\n') 
             html.write('<TD> --- \n')
-            qalink = '../visit/'+itel[i]+'/'+iname[i]+'/'+iplate[i]+'/'+imjd[i]+'/html/apQA-'+iplate[i]+'-'+imjd[i]+'.html'
+            qalink = '../visit/' + itel[i] + '/' + iname[i] + '/' + iplate[i] + '/' + imjd[i] + '/html/apQA-' + iplate[i] + '-' + imjd[i] + '.html'
             html.write('<TD align="center"><A HREF="'+qalink+'" target="_blank">'+iplate[i]+'</A>\n')
             html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+imjd[i]+'/html/'+imjd[i]+'.html">'+imjd[i]+'</A>\n') 
             html.write('<TD align="center">'+iloc[i]+'\n')
@@ -2266,10 +2266,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
         nplots = 2
 
         for j in range(nplots):
-            if j == 0: ptype = 'galatic'
+            if j == 0: ptype = 'galactic'
             if j == 1: ptype = 'equatorial'
-            plotfile = 'aitoff_'+ptype+'.png'
-            print("----> makeMasterQApages: Making "+plotfile)
+            plotfile = 'aitoff_' + ptype + '.png'
+            print("----> makeMasterQApages: Making " + plotfile)
 
             fig=plt.figure(figsize=(13,8))
             ax1 = fig.add_subplot(111, projection = 'aitoff')
