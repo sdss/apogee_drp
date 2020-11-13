@@ -2130,7 +2130,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             # Column 7: Summary files
             visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
             starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
-            if nplates != 0: 
+            if nplates >= 1: 
                 html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
                 html.write('<BR><a href="'+starSumPath+'">allStarMJD</a></TD>\n')
             else:
