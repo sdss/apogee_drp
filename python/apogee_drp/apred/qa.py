@@ -2104,8 +2104,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
             plateQAfiles = np.array(glob.glob(plateQApaths))
             nplates = len(plateQAfiles)
-            if nplates != 0:
+            if nplates >= 1:
                 html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
+            else:
+                html.write('<TD>\n')
             html.write('<TD align="left">')
             for j in range(nplates):
                 if plateQAfiles[j] != '':
@@ -2132,9 +2134,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
             if nplates >= 1: 
                 html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
-                html.write('<BR><a href="'+starSumPath+'">allStarMJD</a></TD>\n')
+                html.write('<BR><a href="'+starSumPath+'">allStarMJD</a>\n')
             else:
-                html.write('<TD></TD>\n')
+                html.write('<TD>\n')
 
         html.write('</table>\n')
 
