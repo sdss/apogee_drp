@@ -1452,6 +1452,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
 
             snratio = ''
             starflagtxt = ''
+            if os.path.exists(visitfile) is False:
+                visitfile = visitfile.replace('-apo25m-', '-')
             if os.path.exists(visitfile):
                 visithdr = fits.getheader(visitfile)
                 starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
@@ -2128,7 +2130,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             # Column 7: Summary files
             visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
             starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
-            if len(nplates) != 0: 
+            if nplates != 0: 
                 html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
                 html.write('<BR><a href="'+starSumPath+'">allStarMJD</a></TD>\n')
             else:
