@@ -2254,63 +2254,61 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
         html.write('</BODY></HTML>\n')
         html.close()
 
-        if makeplots is True:
-            #---------------------------------------------------------------------------------------
-            # Aitoff maps
-            # Set up some basic plotting parameters, starting by turning off interactive plotting.
-            fontsize = 24;   fsz = fontsize * 0.60
-            matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-            alf = 0.80
-            axwidth = 1.5
-            axmajlen = 7
-            axminlen = 3.5
-            msz = 100
-            nplots = 2
+        #---------------------------------------------------------------------------------------
+        # Aitoff maps
+        # Set up some basic plotting parameters, starting by turning off interactive plotting.
+        fontsize = 24;   fsz = fontsize * 0.60
+        matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+        alf = 0.80
+        axwidth = 1.5
+        axmajlen = 7
+        axminlen = 3.5
+        msz = 100
+        nplots = 2
 
-            for j in range(nplots):
-                if j == 0: ptype = 'galatic'
-                if j == 1: ptype = 'equatorial'
-                plotfile = 'aitoff_'+ptype+'.png'
-                print("----> makeMasterQApages: Making "+plotfile)
+        for j in range(nplots):
+            if j == 0: ptype = 'galatic'
+            if j == 1: ptype = 'equatorial'
+            plotfile = 'aitoff_'+ptype+'.png'
+            print("----> makeMasterQApages: Making "+plotfile)
 
-                fig=plt.figure(figsize=(13,8))
-                ax1 = fig.add_subplot(111, projection = 'aitoff')
-                ax1.grid(True)
-                #ax2 = fig.add_subplot(122, projection = 'aitoff')
-                #axes = [ax1, ax2]
+            fig=plt.figure(figsize=(13,8))
+            ax1 = fig.add_subplot(111, projection = 'aitoff')
+            ax1.grid(True)
+            #ax2 = fig.add_subplot(122, projection = 'aitoff')
+            #axes = [ax1, ax2]
 
-                ra = ira.astype(float)
-                dec = idec.astype(float)
-                c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
-                if j == 0:
-                    gl = c.galactic.l.degree
-                    gb = c.galactic.b.degree
-                    uhoh, = np.where(gl > 180)
-                    if len(uhoh) > 0: gl[uhoh] -= 360
-                    x = gl * (math.pi/180)
-                    y = gb * (math.pi/180)
-                    import pdb; pdb.set_trace()
-                else:
-                    ra = c.ra.degree
-                    dec = c.dec.degree
-                    uhoh, = np.where(ra > 180)
-                    if len(uhoh) > 0: ra[uhoh] -= 360
-                    x = ra * (math.pi/180)
-                    y = dec * (math.pi/180)
+            ra = ira.astype(float)
+            dec = idec.astype(float)
+            c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
+            if j == 0:
+                gl = c.galactic.l.degree
+                gb = c.galactic.b.degree
+                uhoh, = np.where(gl > 180)
+                if len(uhoh) > 0: gl[uhoh] -= 360
+                x = gl * (math.pi/180)
+                y = gb * (math.pi/180)
+            else:
+                ra = c.ra.degree
+                dec = c.dec.degree
+                uhoh, = np.where(ra > 180)
+                if len(uhoh) > 0: ra[uhoh] -= 360
+                x = ra * (math.pi/180)
+                y = dec * (math.pi/180)
 
-                p, = np.where(iprogram == 'AQMES-Wide')
-                if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#B9FC93', label='AQMES-Wide ('+str(len(p))+')')
-                p, = np.where(iprogram == 'RM')
-                if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#FCF793', label='RM ('+str(len(p))+')')
-                p, = np.where(iprogram == 'AQMES-Medium')
-                if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#54A71E', label='AQMES-Medium ('+str(len(p))+')')
+            p, = np.where(iprogram == 'AQMES-Wide')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#B9FC93', label='AQMES-Wide ('+str(len(p))+')')
+            p, = np.where(iprogram == 'RM')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#FCF793', label='RM ('+str(len(p))+')')
+            p, = np.where(iprogram == 'AQMES-Medium')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#54A71E', label='AQMES-Medium ('+str(len(p))+')')
 
-                ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
-                ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
+            ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
+            ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
 
-                fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
-                plt.savefig(qadir+plotfile)
-                plt.close('all')
+            fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
+            plt.savefig(qadir+plotfile)
+            plt.close('all')
 
     plt.ion()
     print("----> makeMasterQApages: Done.\n")
