@@ -224,7 +224,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
 
     # Get the fiber association for this plate. Also get some other values
     onedfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
-    import pdb; pdb.set_trace()
     tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
     ra = tothdr['RADEG']
     dec = tothdr['DECDEG']
