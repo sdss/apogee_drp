@@ -2266,9 +2266,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             axminlen = 3.5
             msz = 100
 
-            for i in range(2):
-                if i == 0: ptype = 'galatic'
-                if i == 1: ptype = 'equatorial'
+            for j in range(2):
+                if j == 0: ptype = 'galatic'
+                if j == 1: ptype = 'equatorial'
                 plotfile = 'aitoff_'+ptype+'.png'
                 print("----> makeMasterQApages: Making "+plotfile)
 
@@ -2281,7 +2281,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                 ra = ira.astype(float)
                 dec = idec.astype(float)
                 c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
-                if i == 0:
+                if j == 0:
                     gl = c.galactic.l.degree
                     gb = c.galactic.b.degree
                     uhoh, = np.where(gl > 180)
