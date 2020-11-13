@@ -2265,8 +2265,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             axmajlen = 7
             axminlen = 3.5
             msz = 100
+            nplots = 2
 
-            for j in range(2):
+            for j in range(nplots):
                 if j == 0: ptype = 'galatic'
                 if j == 1: ptype = 'equatorial'
                 plotfile = 'aitoff_'+ptype+'.png'
