@@ -1463,7 +1463,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
                     print("----> makeObjQA: Problem with "+visitfilebase+"... SNR = NaN.")
 
             # column 1
-            objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+' target="_blank">'+cfiber+'</A>\n')
+            objhtml.write('<TR><TD BGCOLOR='+color+'>'+cfiber+'\n')
 
             # column 2
             objhtml.write('<TD BGCOLOR='+color+'>'+objid+'\n')
