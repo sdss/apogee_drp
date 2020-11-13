@@ -1441,8 +1441,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
                                                 jdata['TARGET4'],survey=survey)
             else:
                 targflagtxt = bitmask.targflags(jdata['SDSSV_APOGEE_TARGET0'], 0, 0, 0, survey=survey)
+                if targflagtxt == '': targflagtxt = 'OPS_STD_BOSS?'
             if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
-            targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
+            targflagtxt = targflagtxt.replace(',','<BR>')
 
             # Find apVisit file
             visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber)
