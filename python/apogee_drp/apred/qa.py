@@ -1991,13 +1991,10 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 html.write('<TD> \n')
                 html.write('<TD> \n')
 
-    html.write('<BR><BR>\n')
     html.write('</TABLE>\n')
-
+    html.write('<BR><BR>\n')
     html.close()
-
     plt.ion()
-
     print("----> makeNightQA: Done with MJD "+mjd+"\n")
 
 
