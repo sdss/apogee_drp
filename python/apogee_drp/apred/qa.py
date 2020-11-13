@@ -2002,6 +2002,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fieldfilebase=None,
                       domjd=True, dofields=True, makeplots=True):
 
+    plt.ioff()
+
     # Establish data directories.
     datadirN = os.environ['APOGEE_DATA_N']
     datadirS = os.environ['APOGEE_DATA_S']
@@ -2254,7 +2256,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             #---------------------------------------------------------------------------------------
             # Aitoff maps
             # Set up some basic plotting parameters, starting by turning off interactive plotting.
-            plt.ioff()
             fontsize = 24;   fsz = fontsize * 0.60
             matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
             alf = 0.80
@@ -2285,6 +2286,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                     if len(uhoh) > 0: gl[uhoh] -= 360
                     x = gl * (math.pi/180)
                     y = gb * (math.pi/180)
+                    import pdb; pdb.set_trace()
                 else:
                     ra = c.ra.degree
                     dec = c.dec.degree
@@ -2306,7 +2308,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                 fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
                 plt.savefig(qadir+plotfile)
                 plt.close('all')
-            plt.ion()
+
+    plt.ion()
     print("----> makeMasterQApages: Done.\n")
 
 
