@@ -125,7 +125,7 @@ if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
   if (strtrim(badfiberid,2) eq 'null' or strtrim(strlowcase(badfiberid),2) eq 'none') then undefine,badfiberid  ;; null/none  
 
 ;; Create the output fiber structure
-tmp = create_struct('fiberid',0, 'ra',0.d0, 'dec',0.d0, 'eta',0.d0, 'zeta',0.d0, 'objtype','none', $
+tmp = create_struct('fiberid',-1, 'ra',999999.d0, 'dec',999999.d0, 'eta',999999.d0, 'zeta',999999.d0, 'objtype','none', $
                     'holetype','OBJECT', 'object','', 'tmass_style','', 'target1',0L, 'target2',0L,$
                     'target3',0L, 'target4',0L, 'spectrographid',2, 'mag',fltarr(5), catalog_info_blank(),$
                     'catalogid',-1LL, 'gaia_g',-9999.99, 'gaia_bp',-9999.99, 'gaia_rp',-9999.99, 'sdssv_apogee_target0',0LL,$
@@ -453,6 +453,9 @@ if platenum ge 15000 then begin
       endif else begin
          cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where q3c_radial_query(ra,dec,"+$
                        strtrim(fiber[istar].ra,2)+","+strtrim(fiber[istar].dec,2)+",0.0001)")
+         if size(cat,/type) ne 8 then $
+           cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where q3c_radial_query(ra,dec,"+$
+                         strtrim(fiber[istar].ra,2)+","+strtrim(fiber[istar].dec,2)+",0.0002)")
       endelse
       ;; If there are multiple results, pick the closest
       if n_elements(cat) gt 1 then begin
@@ -516,8 +519,7 @@ if platenum ge 15000 then begin
       fiber[istar].gaiadr2_rpmag = catalogdb[ind1[0]].gaiarp
       fiber[istar].gaiadr2_rperr = catalogdb[ind1[0]].e_gaiarp
     endif else begin
-      print,'no catalogdb match for ',fiber[istar].object
-      stop
+      print,'WARNING: no catalogdb match for ',fiber[istar].object
     endelse
   endfor ; object loop
 

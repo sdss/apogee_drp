@@ -34,7 +34,7 @@ cmd = '#!/usr/bin/env python'
 push,cmd,'from apogee_drp.database import apogeedb'
 push,cmd,'db = apogeedb.DBSession()'
 push,cmd,'cat = db.query(sql="'+sql+'",fmt="table")'
-push,cmd,'cat.write("'+tempfile+'")'
+push,cmd,'if len(cat)>0: cat.write("'+tempfile+'")'
 push,cmd,'db.close()'
 scriptfile = tbase+'.py'
 WRITELINE,scriptfile,cmd
@@ -47,7 +47,7 @@ if errout[0] ne '' or n_elements(errout) gt 1 then begin
 endif
 
 ;; Load the catalog
-if file_test(tempfile) eq 1 then out = MRDFITS(tempfile,1,/silent)
+if file_test(tempfile) eq 1 then out = MRDFITS(tempfile,1,/silent) else out=-1
 
 FILE_DELETE,[tbase,tbase+'.fits',tbase+'.py'],/allow
 
