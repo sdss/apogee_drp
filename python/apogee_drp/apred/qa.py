@@ -224,7 +224,6 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
 
     # Get the fiber association for this plate. Also get some other values
     onedfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
-    import pdb; pdb.set_trace()
     tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
     ra = tothdr['RADEG']
     dec = tothdr['DECDEG']
@@ -1442,8 +1441,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
                                                 jdata['TARGET4'],survey=survey)
             else:
                 targflagtxt = bitmask.targflags(jdata['SDSSV_APOGEE_TARGET0'], 0, 0, 0, survey=survey)
+                if targflagtxt == '': targflagtxt = 'OPS_STD_BOSS?'
             if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
-            targflagtxt = targflagtxt.replace(' gt ','>').replace(',','<BR>')
+            targflagtxt = targflagtxt.replace(',','<BR>')
 
             # Find apVisit file
             visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber)
@@ -1452,6 +1452,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
 
             snratio = ''
             starflagtxt = ''
+            if os.path.exists(visitfile) is False:
+                visitfile = visitfile.replace('-apo25m-', '-')
             if os.path.exists(visitfile):
                 visithdr = fits.getheader(visitfile)
                 starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
@@ -1461,7 +1463,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
                     print("----> makeObjQA: Problem with "+visitfilebase+"... SNR = NaN.")
 
             # column 1
-            objhtml.write('<TR><TD BGCOLOR='+color+'><A HREF=../'+visitfile+' target="_blank">'+cfiber+'</A>\n')
+            objhtml.write('<TR><TD BGCOLOR='+color+'>'+cfiber+'\n')
 
             # column 2
             objhtml.write('<TD BGCOLOR='+color+'>'+objid+'\n')
@@ -1991,19 +1993,18 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 html.write('<TD> \n')
                 html.write('<TD> \n')
 
-    html.write('<BR><BR>\n')
     html.write('</TABLE>\n')
-
+    html.write('<BR><BR>\n')
     html.close()
-
     plt.ion()
-
     print("----> makeNightQA: Done with MJD "+mjd+"\n")
 
 
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
 def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fieldfilebase=None,
                       domjd=True, dofields=True, makeplots=True):
+
+    plt.ioff()
 
     # Establish data directories.
     datadirN = os.environ['APOGEE_DATA_N']
@@ -2056,9 +2057,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
 
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#eaeded"><TH>Observer Log <TH>Exposure Log <TH>Raw Data <TH>Night QA<TH>Observed Plate QA<TH>Summary Files\n')
+        html.write('<TR bgcolor="#eaeded"><TH>Date <TH>Observer Log <TH>Exposure Log <TH>Raw Data <TH>Night QA<TH>Observed Plate QA<TH>Summary Files\n')
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
+            tt = Time(mjd[i], format='mjd')
+            date = tt.fits[0:10]
             # Establish telescope and instrument and setup apLoad depending on telescope.
             telescope = 'apo25m'
             instrument = 'apogee-n'
@@ -2073,9 +2076,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                 color = 'b3ffb3'
             load = apload.ApLoad(apred=apred, telescope=telescope)
 
-            html.write('<TR bgcolor=' + color + '>\n')
-
-            # Column 1: Observing log
+            # Column 2: Data
+            html.write('<TR bgcolor=' + color + ' align="center"><TD>' + date + '\n')
+            # Column 2: Observing log
             reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
             dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
@@ -2087,7 +2090,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
 
 
-            # Column 2-3: Exposure log and raw data link
+            # Column 3-4: Exposure log and raw data link
             logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
             logFilePath = logFileDir + cmjd + '.log.html'
 
@@ -2097,12 +2100,14 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
             html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
             html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
-            # Column 3-4: Night QA and plates reduced for this night
+            # Column 5-6: Night QA and plates reduced for this night
             plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
             plateQAfiles = np.array(glob.glob(plateQApaths))
             nplates = len(plateQAfiles)
-            if nplates != 0:
+            if nplates >= 1:
                 html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
+            else:
+                html.write('<TD>\n')
             html.write('<TD align="left">')
             for j in range(nplates):
                 if plateQAfiles[j] != '':
@@ -2115,19 +2120,19 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
                     else:
                         html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
 
-            # Column 5: Combined files for this night
+            # Column 7: Combined files for this night
             #html.write('<TD>\n')
 
-            # Column 6: Single stars observed for this night
+            # Column 8: Single stars observed for this night
             #html.write('<TD>\n')
 
-            # Column 7: Dome flats observed for this night
+            # Column 9: Dome flats observed for this night
             #html.write('<TD>\n')
 
-            # Column 5: Summary files
+            # Column 7: Summary files
             visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
             starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
-            if len(plateQAfiles) != 0: 
+            if nplates >= 1: 
                 html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
                 html.write('<BR><a href="'+starSumPath+'">allStarMJD</a>\n')
             else:
@@ -2227,18 +2232,17 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
         idec = idec[order]
 
         for i in range(nplates):
-            color='#ffb3b3'
+            color = '#ffb3b3'
             if iprogram[i] == 'RM': color = '#FCF793' 
             if iprogram[i] == 'AQMES-Wide': color = '#B9FC93'
             if iprogram[i] == 'AQMES-Medium': color = '#54A71E'
 
-            html.write('<TR bgcolor='+color+'><TD>'+iname[i]+'\n') 
-            html.write('<TD>'+str(iprogram[i])+'\n') 
+            html.write('<TR bgcolor=' + color + '><TD>' + iname[i] + '\n') 
+            html.write('<TD>' + str(iprogram[i]) + '\n') 
             html.write('<TD> --- \n')
-            qalink = '../visit/'+itel[i]+'/'+iname[i]+'/'+iplate[i]+'/'+imjd[i]+'/html/apQA-'+iplate[i]+'-'+imjd[i]+'.html'
-            html.write('<TD align="center"><A href="'+qalink+'" target="_blank">'+iplate[i]+'</a>\n')
-            html.write('<TD align="center">'+imjd[i]+'</center>\n') 
-            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+mjd+'/html/'+mjd+'.html>'+mjd+'</a>"\n')
+            qalink = '../visit/' + itel[i] + '/' + iname[i] + '/' + iplate[i] + '/' + imjd[i] + '/html/apQA-' + iplate[i] + '-' + imjd[i] + '.html'
+            html.write('<TD align="center"><A HREF="'+qalink+'" target="_blank">'+iplate[i]+'</A>\n')
+            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+imjd[i]+'/html/'+imjd[i]+'.html">'+imjd[i]+'</A>\n') 
             html.write('<TD align="center">'+iloc[i]+'\n')
             html.write('<TD align="right">'+ira[i]+'\n') 
             html.write('<TD align="right">'+idec[i]+'\n')
@@ -2251,63 +2255,63 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fie
         html.write('</BODY></HTML>\n')
         html.close()
 
-        if makeplots is True:
-            #---------------------------------------------------------------------------------------
-            # Aitoff maps
-            # Set up some basic plotting parameters, starting by turning off interactive plotting.
-            plt.ioff()
-            fontsize = 24;   fsz = fontsize * 0.60
-            matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-            alf = 0.80
-            axwidth = 1.5
-            axmajlen = 7
-            axminlen = 3.5
-            msz = 100
+        #---------------------------------------------------------------------------------------
+        # Aitoff maps
+        # Set up some basic plotting parameters, starting by turning off interactive plotting.
+        fontsize = 24;   fsz = fontsize * 0.60
+        matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+        alf = 0.80
+        axwidth = 1.5
+        axmajlen = 7
+        axminlen = 3.5
+        msz = 100
+        nplots = 2
 
-            for i in range(2):
-                if i == 0: ptype = 'galatic'
-                if i == 1: ptype = 'equatorial'
-                plotfile = 'aitoff_'+ptype+'.png'
-                print("----> makeMasterQApages: Making "+plotfile)
+        for j in range(nplots):
+            if j == 0: ptype = 'galactic'
+            if j == 1: ptype = 'equatorial'
+            plotfile = 'aitoff_' + ptype + '.png'
+            print("----> makeMasterQApages: Making " + plotfile)
 
-                fig=plt.figure(figsize=(13,8))
-                ax1 = fig.add_subplot(111, projection = 'aitoff')
-                ax1.grid(True)
-                #ax2 = fig.add_subplot(122, projection = 'aitoff')
-                #axes = [ax1, ax2]
+            fig=plt.figure(figsize=(13,8))
+            ax1 = fig.add_subplot(111, projection = 'aitoff')
+            ax1.grid(True)
+            #ax2 = fig.add_subplot(122, projection = 'aitoff')
+            #axes = [ax1, ax2]
 
-                ra = ira.astype(float)
-                dec = idec.astype(float)
-                c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
-                if i == 0:
-                    gl = c.galactic.l.degree
-                    gb = c.galactic.b.degree
-                    uhoh, = np.where(gl > 180)
-                    if len(uhoh) > 0: gl[uhoh] -= 360
-                    x = gl * (math.pi/180)
-                    y = gb * (math.pi/180)
-                else:
-                    ra = c.ra.degree
-                    dec = c.dec.degree
-                    uhoh, = np.where(ra > 180)
-                    if len(uhoh) > 0: ra[uhoh] -= 360
-                    x = ra * (math.pi/180)
-                    y = dec * (math.pi/180)
+            ra = ira.astype(float)
+            dec = idec.astype(float)
+            c = SkyCoord(ra*u.degree, dec*u.degree, frame='icrs')
+            if j == 0:
+                gl = c.galactic.l.degree
+                gb = c.galactic.b.degree
+                uhoh, = np.where(gl > 180)
+                if len(uhoh) > 0: gl[uhoh] -= 360
+                x = gl * (math.pi/180)
+                y = gb * (math.pi/180)
+            else:
+                ra = c.ra.degree
+                dec = c.dec.degree
+                uhoh, = np.where(ra > 180)
+                if len(uhoh) > 0: ra[uhoh] -= 360
+                x = ra * (math.pi/180)
+                y = dec * (math.pi/180)
 
-                p, = np.where(iprogram == 'AQMES-Wide')
-                if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#B9FC93', label='AQMES-Wide ('+str(len(p))+')')
-                p, = np.where(iprogram == 'RM')
-                if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#FCF793', label='RM ('+str(len(p))+')')
-                p, = np.where(iprogram == 'AQMES-Medium')
-                if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#54A71E', label='AQMES-Medium ('+str(len(p))+')')
+            p, = np.where(iprogram == 'AQMES-Wide')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#B9FC93', label='AQMES-Wide ('+str(len(p))+')')
+            p, = np.where(iprogram == 'RM')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#FCF793', label='RM ('+str(len(p))+')')
+            p, = np.where(iprogram == 'AQMES-Medium')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#54A71E', label='AQMES-Medium ('+str(len(p))+')')
 
-                ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
-                ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
+            ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
+            ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
 
-                fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
-                plt.savefig(qadir+plotfile)
-                plt.close('all')
-            plt.ion()
+            fig.subplots_adjust(left=0.2,right=0.99,bottom=0.05,top=0.90,hspace=0.09,wspace=0.09)
+            plt.savefig(qadir+plotfile)
+            plt.close('all')
+
+    plt.ion()
     print("----> makeMasterQApages: Done.\n")
 
 
