@@ -28,7 +28,7 @@ if __name__ == "__main__":
     else:
         vers = args.vers
     if isinstance(args.mjd,list):
-        mjd = args.mjd[0]
+        mjd = int(args.mjd[0])
     else:
         mjd = None
     if isinstance(args.qos,list):
