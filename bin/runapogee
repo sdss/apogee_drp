@@ -32,7 +32,8 @@ if __name__ == "__main__":
         mjd = None
 
     # Run daily reduction
-    try:
-        runapogee.run_daily(observatory,mjd5=mjd,apred=vers)
-    except:
-        email.send('apogee-pipeline-log@sdss.org',subject='Daily APOGEE reduction crashed',message='Daily APOGEE reduction crashed')
+    #try:
+    #    runapogee.run_daily(observatory,mjd5=mjd,apred=vers)
+    #except:
+    #    email.send('apogee-pipeline-log@sdss.org',subject='Daily APOGEE reduction crashed',message='Daily APOGEE reduction crashed')
+    runapogee.run_daily(observatory,mjd5=mjd,apred=vers)
