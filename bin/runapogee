@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser = ArgumentParser(description='Run APOGEE daily data reduction.')
     parser.add_argument('observatory', type=str, nargs=1, default='apo', help='Observatory (apo or lco)')
     parser.add_argument('--mjd', type=str, nargs=1, default='', help='MJD to run')
+    parser.add_argument('--qos', type=str, nargs=1, default='', help='Which SDSS queue to use.')
     parser.add_argument('-v', '--vers', type=str, nargs=1, default='daily', help='APOGEE Reduction version')
     args = parser.parse_args()
 
@@ -30,10 +31,14 @@ if __name__ == "__main__":
         mjd = args.mjd[0]
     else:
         mjd = None
+    if isinstance(args.qos,list):
+        qos = args.qos[0]
+    else:
+        qos = 'sdss-fast'
 
     # Run daily reduction
     #try:
     #    runapogee.run_daily(observatory,mjd5=mjd,apred=vers)
     #except:
     #    email.send('apogee-pipeline-log@sdss.org',subject='Daily APOGEE reduction crashed',message='Daily APOGEE reduction crashed')
-    runapogee.run_daily(observatory,mjd5=mjd,apred=vers)
+    runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos)
