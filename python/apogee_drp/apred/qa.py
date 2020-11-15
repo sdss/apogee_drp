@@ -397,6 +397,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
         # Do a crude sky subtraction, calculate S/N.
         for ichip in range(nchips):
             chip = chips[ichip]
+            print(ims[i])
 
             fluxarr = d[chip][1].data
             errarr = d[chip][2].data
