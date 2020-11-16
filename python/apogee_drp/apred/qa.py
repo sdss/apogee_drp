@@ -148,7 +148,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         sys.exit("No object images. You are hosed. Give up hope.")
         ims = None
         imsReduced = None
-    import pdb; pdb.set_trace()
 
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
@@ -165,34 +164,27 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         # Make the apPlateSum file if it doesn't already exist.
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
         if (os.path.exists(platesum) is False) | (makeplatesum is True):
-            q = makePlateSum(load=load, plate=plate, mjd=mjd,telescope=telescope, 
+            q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
                              apred=apred, onem=None, starfiber=None, starnames=None, 
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid)
 
             tmpims = np.array([0,ims[0]])
-            q = makePlateSum(load=load, plate=plate, mjd=mjd,telescope=telescope, 
-                             instrument=instrument, ims=ims, imsReduced=imsReduced,
+            q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
+                             instrument=instrument, ims=tmpims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
                              apred=apred, onem=None, starfiber=None, starnames=None, 
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid)
 
-
-            q = makePlateSum(load=load, telescope=telescope, ims=tmpims, plate=plate, mjd=mjd,
-                             instrument=instrument, clobber=True, plugmap=plugmap,
-                             survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
-                             starfiber=None, starnames=None, starmag=None,flat=None,
-                             fixfiberid=fixfiberid, badfiberid=badfiberid)
-
         # Make the observation QA page
-        q = makeObsQApages(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, 
+        q = makeObsQApages(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
                            fluxid=fluxid, telescope=telescope)
 
         # Make plots for the observation QA pages
         if makeplots is True:
             q = makeObsQAplots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
-                              survey=survey, apred=apred, flat=None, fluxid=fluxid)
+                               survey=survey, apred=apred, flat=None, fluxid=fluxid)
 
         # Make the observation spectrum plots and associated pages
         q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, makespecplots=makespecplots)
@@ -224,7 +216,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
 
 ''' MAKEPLATESUM: Plotmag translation '''
-def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=None, mjd=None,
+def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
                  instrument=None, clobber=True, makeplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
@@ -233,10 +225,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
-
-    # Get field name
-    tmp = platesumfile.split(telescope+'/')
-    field = tmp[1].split('/')[0]
 
     print("----> makePlateSum: Making "+platesumbase)
 
@@ -638,7 +626,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
 
 ''' MAKEOBSQAPAGES: mkhtmlplate translation '''
-def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None,
+def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
                    fluxid=None, telescope=None):
 
     print("----> makeObsQApages: Running plate "+plate+", MJD "+mjd)
@@ -663,10 +651,6 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None,
         err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
         err2 = "You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
-
-    # Get field name
-    tmp = platesum.split(telescope+'/')
-    field = tmp[1].split('/')[0]
 
     # Read the plateSum file
     tmp = fits.open(platesum)
@@ -2043,7 +2027,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
 
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
-def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None,fieldfilebase=None,
+def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fieldfilebase=None,
                       domjd=True, dofields=True, makeplots=True):
 
     plt.ioff()
