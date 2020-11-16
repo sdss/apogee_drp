@@ -2280,9 +2280,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         for i in range(nplates):
             color = '#ffb3b3'
-            if iprogram[i] == 'RM': color = '#FCF793' 
-            if iprogram[i] == 'AQMES-Wide': color = '#B9FC93'
-            if iprogram[i] == 'AQMES-Medium': color = '#54A71E'
+            if iprogram[i] == 'RM': color = '#FFF9C4' 
+            if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
+            if iprogram[i] == 'AQMES-Medium': color = '#AED581'
 
             html.write('<TR bgcolor=' + color + '><TD>' + iname[i] + '\n') 
             html.write('<TD>' + str(iprogram[i]) + '\n') 
@@ -2345,11 +2345,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 y = dec * (math.pi/180)
 
             p, = np.where(iprogram == 'AQMES-Wide')
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#B9FC93', label='AQMES-Wide ('+str(len(p))+')')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#FFF9C4', label='AQMES-Wide ('+str(len(p))+')')
             p, = np.where(iprogram == 'RM')
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#FCF793', label='RM ('+str(len(p))+')')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='RM ('+str(len(p))+')')
             p, = np.where(iprogram == 'AQMES-Medium')
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#54A71E', label='AQMES-Medium ('+str(len(p))+')')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#AED581', label='AQMES-Medium ('+str(len(p))+')')
 
             ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
             ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
