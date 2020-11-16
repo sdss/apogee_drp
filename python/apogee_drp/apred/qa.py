@@ -2320,7 +2320,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             plotfile = 'aitoff_' + ptype + '.png'
             print("----> makeMasterQApages: Making " + plotfile)
 
-            fig=plt.figure(figsize=(13,10))
+            fig=plt.figure(figsize=(13,7))
             ax1 = fig.add_subplot(111, projection = 'aitoff')
             ax1.grid(True)
             #ax2 = fig.add_subplot(122, projection = 'aitoff')
