@@ -714,11 +714,12 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, f
     html.write(txt1 + txt2 +'\n')
 
     for i in range(n_exposures):
-        if imsReduced[i] == 1:
+        gd, = np.where(ims[i] == tab1['IM'])
+        if len(gd) >= 1:
             html.write('<TR>\n')
             html.write('<TD align="right">'+str(i+1)+'\n')
             html.write('<TD align="right">'+str(int(round(ims[i])))+'\n')
-            gd, = np.where(ims[i] == tab1['IM'])
+
             html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][gd])))+'\n')
             html.write('<TD align="right">'+str(int(round(tab1['CART'][gd])))+'\n')
             html.write('<TD align="right">'+str("%.3f" % round(tab1['SECZ'][gd],3))+'\n')
