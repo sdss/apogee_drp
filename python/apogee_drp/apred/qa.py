@@ -250,8 +250,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             n_exposures = len(ims)
             onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
 
-        import pdb; pdb.set_trace()
-
         tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
         ra = tothdr['RADEG']
         dec = tothdr['DECDEG']
