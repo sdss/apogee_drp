@@ -1445,8 +1445,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     objhtml = open(htmldir+htmlfile+'.html','w')
     objhtml.write('<HTML>\n')
-    objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
-    objhtml.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>'+htmlfile+'</title></head>\n')
+#    objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
+    objhtml.write('<HEAD><script src="sorttable.js"></script><title>'+htmlfile+'</title></head>\n')
     objhtml.write('<BODY>\n')
 
     objhtml.write('<H1>'+htmlfile+'</H1>\n')
@@ -2094,7 +2094,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         print("----> makeMasterQApages: Creating "+mjdfilebase)
         html = open(mjdfile,'w')
         html.write('<HTML><BODY>\n')
-        html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE MJD Summary</title></head>\n')
+        html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE MJD Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
@@ -2210,7 +2210,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         print("----> makeMasterQApages: Creating "+fieldfilebase)
         html = open(fieldfile,'w')
         html.write('<HTML><BODY>\n')
-        html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><title>APOGEE Field Summary</title></head>\n')
+        html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE Field Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by Field</H1>\n')
         html.write('<p><A HREF=mjd.html>MJD view</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
