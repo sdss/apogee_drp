@@ -2327,7 +2327,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             ax1.grid(True)
             ax1.axes.xaxis.set_ticklabels([])
 
-            ax1.text(0.5, 0.08, r'0$^{\circ}$', ha='center', transform=ax1.transAxes)
+            ax1.text(0.5, 0.05, r'0$^{\circ}$', ha='center', transform=ax1.transAxes)
             #for t in range(nlon): 
             #    ax1.text(lonstart+lonsep*t, 0.5, lonlabs[t], ha='center', va='center', fontsize=fsz, transform=ax1.transAxes)
             #ax1.text(0.165, 0.5, '240', ha='center', va='center', fontsize=fsz, transform=ax1.transAxes)
