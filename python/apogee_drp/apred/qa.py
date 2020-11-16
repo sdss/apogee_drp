@@ -1741,13 +1741,13 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     nmiss = 0
     for i in range(nchips):
         html.write('<FONT color=red>\n')
-        for j in range(firstExposure, lastExposure):
-            checkfile = datadir + mjd + '/apR-' + chips[i] + '-' + str(int(round(j))) + '.apz'
+        for j in range(nuExposures):
+            checkfile = datadir + mjd + '/apR-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz'
             if os.path.exists(checkfile) is False:
-                if (i != nchips) & (j != lastExposure):
-                    html.write('apR-' + chips[i] + '-' + str(int(round(j))) + '.apz, ')
+                if (i != nchips) & (uExposures[j] != lastExposure):
+                    html.write('apR-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz, ')
                 else:
-                    html.write('apR-' + chips[i] + '-' + str(int(round(j))) + '.apz')
+                    html.write('apR-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz')
                 nmiss += 1
         html.write('</font>\n')
     if nmiss == 0: html.write('<font color=green> NONE</font>\n')
