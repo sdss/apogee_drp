@@ -131,9 +131,19 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
     if n_ims > 0:
         ims = all_ims[gd]
+        # Make an array indicating which exposures were successfully reduced.
+        # 0 = not reduced, 1 = reduced
+        imsReduced = np.zeros(n_ims)
+        for i in range(n_ims):
+            onedfile = load.filename('1D',  plate=int(plate), num=ims[i], mjd=mjd, chips=True)
+            if os.path.exists(onedfile.replace('1D-','1D-a-')): imsReduced[i] = 1
+        good, = np.where(imsReduced == 1)
+        if len(good) < 1:
+            sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd)
     else:
-        print("No object images. You are hosed. Give up hope.")
+        sys.exit("No object images. You are hosed. Give up hope.")
         ims = None
+        imsReduced = None
 
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
@@ -150,13 +160,20 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         # Make the apPlateSum file if it doesn't already exist.
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
         if (os.path.exists(platesum) is False) | (makeplatesum is True):
-            q = makePlateSum(load=load, telescope=telescope, ims=ims, plate=plate, mjd=mjd,
-                             instrument=instrument, clobber=True, plugmap=plugmap,
-                             survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
-                             starfiber=None, starnames=None, starmag=None,flat=None,
-                             fixfiberid=fixfiberid, badfiberid=badfiberid)
+            q = makePlateSum(load=load, plate=plate, mjd=mjd,telescope=telescope, 
+                             instrument=instrument, ims=ims, imsReduced=imsReduced
+                             plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
+                             apred=apred, onem=None, starfiber=None, starnames=None, 
+                             starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid)
 
             tmpims = np.array([0,ims[0]])
+            q = makePlateSum(load=load, plate=plate, mjd=mjd,telescope=telescope, 
+                             instrument=instrument, ims=ims, imsReduced=imsReduced
+                             plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
+                             apred=apred, onem=None, starfiber=None, starnames=None, 
+                             starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid)
+
+
             q = makePlateSum(load=load, telescope=telescope, ims=tmpims, plate=plate, mjd=mjd,
                              instrument=instrument, clobber=True, plugmap=plugmap,
                              survey=survey, mapper_data=mapper_data, apred=apred, onem=None,
@@ -164,7 +181,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              fixfiberid=fixfiberid, badfiberid=badfiberid)
 
         # Make the observation QA page
-        q = makeObsQApages(load=load, plate=plate, mjd=mjd, fluxid=fluxid, telescope=telescope)
+        q = makeObsQApages(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, 
+                           fluxid=fluxid, telescope=telescope)
 
         # Make plots for the observation QA pages
         if makeplots is True:
@@ -201,7 +219,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
 
 ''' MAKEPLATESUM: Plotmag translation '''
-def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
+def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=None, mjd=None,
                  instrument=None, clobber=True, makeplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
@@ -217,13 +235,19 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
 
     print("----> makePlateSum: Making "+platesumbase)
 
-    n_exposures = len(ims)
-    if ims[0] == 0: n_exposures = 1
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
     # Get the fiber association for this plate. Also get some other values
-    onedfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
+    if ims[0] == 0:
+        n_exposures = 1
+        onedfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
+    else:
+        gdims, = np.where(imsReduced == 1)
+        ims = ims[gdims]
+        n_exposures = len(ims)
+        onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
+
     tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
     ra = tothdr['RADEG']
     dec = tothdr['DECDEG']
@@ -231,8 +255,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
 
     if ims[0] == 0: 
         tot = load.apPlate(int(plate), mjd)
-        n_exposures = 1
-    else: 
+    else:
         tot = load.ap1D(ims[0])
 
     if type(tot) != dict:
@@ -358,8 +381,7 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
             cframe = load.apPlate(int(plate), mjd)
             if type(d)!=dict: print("----> makePlateSum: Problem with apPlate!")
             dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
-
-        if ims[0] != 0:
+        else:
             pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[i], mjd=mjd, chips=True))
             dfile = load.filename('1D',  plate=int(plate), num=ims[i], mjd=mjd, chips=True)
             d = load.ap1D(ims[i])
@@ -611,7 +633,9 @@ def makePlateSum(load=None, telescope=None, ims=None, plate=None, mjd=None,
 
 
 ''' MAKEOBSQAPAGES: mkhtmlplate translation '''
-def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None):
+def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None,
+                   fluxid=None, telescope=None):
+
     print("----> makeObsQApages: Running plate "+plate+", MJD "+mjd)
 
     # HTML header background color
@@ -619,6 +643,8 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
+
+    n_exposures = len(ims)
 
     prefix = 'ap'
     if telescope == 'lco25m': prefix = 'as'
@@ -698,41 +724,48 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
     txt2 = '<TH>Pixshift<TH>Zero<TH>Zero RMS<TH>Sky Continuum<TH>S/N<TH>S/N(cframe)<TH>Moon Phase<TH>Moon Dist.'
     html.write(txt1 + txt2 +'\n')
 
-    for i in range(len(tab1)):
-        html.write('<TR>\n')
-        html.write('<TD align="right">'+str(i+1)+'\n')
-        html.write('<TD align="right">'+str(int(round(tab1['IM'][i])))+'\n')
-        html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][i])))+'\n')
-        html.write('<TD align="right">'+str(int(round(tab1['CART'][i])))+'\n')
-        html.write('<TD align="right">'+str("%.3f" % round(tab1['SECZ'][i],3))+'\n')
-        html.write('<TD align="right">'+str("%.2f" % round(tab1['HA'][i],2))+'\n')
-        html.write('<TD align="right">'+str(np.round(tab1['DESIGN_HA'][i],0)).replace('[',' ')[:-1]+'\n')
-        html.write('<TD align="right">'+str("%.3f" % round(tab1['SEEING'][i],3))+'\n')
-        html.write('<TD align="right">'+str("%.3f" % round(tab1['FWHM'][i],3))+'\n')
-        html.write('<TD align="right">'+str("%.3f" % round(tab1['GDRMS'][i],3))+'\n')
-        html.write('<TD align="right">'+str(tab1['NREADS'][i])+'\n')
-        j = np.where(shiftstr['FRAMENUM'] == str(tab1['IM'][i]))
-        nj = len(j[0])
-        nodither, = np.where(shiftstr['SHIFT'] == 0)
-        if (nj > 0) & (len(nodither) != len(tab1['IM'])):
-            html.write('<TD align="right">'+str("%.4f" % round(shiftstr['SHIFT'][j][0],4)).rjust(7)+'\n')
-            html.write('<TD align="right">'+str("%.2f" % round(shiftstr['PIXSHIFT'][j][0],2))+'\n')
+    for i in range(n_exposures):
+        if imsReduced[i] == 1:
+            html.write('<TR>\n')
+            html.write('<TD align="right">'+str(i+1)+'\n')
+            html.write('<TD align="right">'+str(int(round(ims[i])))+'\n')
+            html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][i])))+'\n')
+            html.write('<TD align="right">'+str(int(round(tab1['CART'][i])))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['SECZ'][i],3))+'\n')
+            html.write('<TD align="right">'+str("%.2f" % round(tab1['HA'][i],2))+'\n')
+            html.write('<TD align="right">'+str(np.round(tab1['DESIGN_HA'][i],0)).replace('[',' ')[:-1]+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['SEEING'][i],3))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['FWHM'][i],3))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['GDRMS'][i],3))+'\n')
+            html.write('<TD align="right">'+str(tab1['NREADS'][i])+'\n')
+            j = np.where(shiftstr['FRAMENUM'] == str(tab1['IM'][i]))
+            nj = len(j[0])
+            nodither, = np.where(shiftstr['SHIFT'] == 0)
+            if (nj > 0) & (len(nodither) != len(tab1['IM'])):
+                html.write('<TD align="right">'+str("%.4f" % round(shiftstr['SHIFT'][j][0],4)).rjust(7)+'\n')
+                html.write('<TD align="right">'+str("%.2f" % round(shiftstr['PIXSHIFT'][j][0],2))+'\n')
+            else:
+                html.write('<TD align="center">---\n')
+                html.write('<TD align="center">---\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['ZERO'][i],3))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['ZERORMS'][i],3))+'\n')
+            q = tab1['SKY'][i]
+            txt = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
+            html.write('<TD align="center">'+'['+txt+']\n')
+            q = tab1['SN'][i]
+            txt = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
+            html.write('<TD align="center">'+'['+txt+']\n')
+            q = tab1['SNC'][i]
+            txt = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
+            html.write('<TD align="center">'+'['+txt+']\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONPHASE'][i],3))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONDIST'][i],3))+'\n')
         else:
-            html.write('<TD align="center">---\n')
-            html.write('<TD align="center">---\n')
-        html.write('<TD align="right">'+str("%.3f" % round(tab1['ZERO'][i],3))+'\n')
-        html.write('<TD align="right">'+str("%.3f" % round(tab1['ZERORMS'][i],3))+'\n')
-        q = tab1['SKY'][i]
-        txt = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
-        html.write('<TD align="center">'+'['+txt+']\n')
-        q = tab1['SN'][i]
-        txt = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
-        html.write('<TD align="center">'+'['+txt+']\n')
-        q = tab1['SNC'][i]
-        txt = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
-        html.write('<TD align="center">'+'['+txt+']\n')
-        html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONPHASE'][i],3))+'\n')
-        html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONDIST'][i],3))+'\n')
+            html.write('<TR bgcolor=red>\n')
+            html.write('<TD align="right">'+str(i+1)+'\n')
+            html.write('<TD align="right">'+str(int(round(ims[i])))+'\n')
+            html.write('<TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD>\n')
+
     Msecz = str("%.3f" % round(np.nanmean(tab1['SECZ']),3))
     Mseeing = str("%.3f" % round(np.nanmean(tab1['SEEING']),3))
     Mfwhm = str("%.3f" % round(tab3['FWHM'][0],3))
@@ -816,36 +849,37 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
     html.write('<TH>Spatial sky telluric CO2\n')
     html.write('<TH>Spatial sky telluric H2O\n')
 
-    for i in range(len(tab1)):
-        im=tab1['IM'][i]
-        oneDfile = os.path.basename(load.filename('1D', plate=int(plate), num=im, mjd=mjd, chips=True)).replace('.fits','')
-        #html.write('<TR><TD bgcolor="'+thcolor+'"><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
-        html.write('<TR><TD bgcolor="'+thcolor+'">'+str(im)+'\n')
-        html.write('<TD><TABLE BORDER=1><TD><TD bgcolor="'+thcolor+'">Red<TD bgcolor="'+thcolor+'">Green<TD bgcolor="'+thcolor+'">Blue\n')
-        html.write('<TR><TD bgcolor="'+thcolor+'">z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
-        html.write('<TR><TD bgcolor="'+thcolor+'">znorm<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][i],2))+'\n')
-        txt='<TD>'+str("%.1f" % round(tab1['SKY'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SKY'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SKY'][i][2],1))
-        html.write('<TR><TD bgcolor="'+thcolor+'">sky'+txt+'\n')
-        txt='<TD>'+str("%.1f" % round(tab1['SN'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SN'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SN'][i][2],1))
-        html.write('<TR><TD bgcolor="'+thcolor+'">S/N'+txt+'\n')
-        txt='<TD>'+str("%.1f" % round(tab1['SNC'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][i][2],1))
-        html.write('<TR><TD bgcolor="'+thcolor+'">S/N(c)'+txt+'\n')
-#        if tag_exist(tab1[i],'snratio'):
-        html.write('<TR><TD bgcolor="'+thcolor+'">SN(E/C)<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
-        html.write('</TABLE>\n')
+    for i in range(n_exposures):
+        if imsReduced[i] == 1:
+            oneDfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
+            #html.write('<TR><TD bgcolor="'+thcolor+'"><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">'+str(int(round(ims[i])))+'\n')
+            html.write('<TD><TABLE BORDER=1><TD><TD bgcolor="'+thcolor+'">Red<TD bgcolor="'+thcolor+'">Green<TD bgcolor="'+thcolor+'">Blue\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][i],2))+'\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">znorm<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][i],2))+'\n')
+            txt='<TD>'+str("%.1f" % round(tab1['SKY'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SKY'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SKY'][i][2],1))
+            html.write('<TR><TD bgcolor="'+thcolor+'">sky'+txt+'\n')
+            txt='<TD>'+str("%.1f" % round(tab1['SN'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SN'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SN'][i][2],1))
+            html.write('<TR><TD bgcolor="'+thcolor+'">S/N'+txt+'\n')
+            txt='<TD>'+str("%.1f" % round(tab1['SNC'][i][0],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][i][1],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][i][2],1))
+            html.write('<TR><TD bgcolor="'+thcolor+'">S/N(c)'+txt+'\n')
+    #        if tag_exist(tab1[i],'snratio'):
+            html.write('<TR><TD bgcolor="'+thcolor+'">SN(E/C)<TD>'+str(np.round(tab1['SNRATIO'][i],2))+'\n')
+            html.write('</TABLE>\n')
 
-        html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=400></A>\n')
-        html.write('<TD><A HREF=../plots/'+oneDfile+'_spatialresid.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_spatialresid.png WIDTH=450></A>\n')
-        html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skyemission.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skyemission.png WIDTH=450>\n')
-        html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skycontinuum.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skycontinuum.png WIDTH=450>\n')
-        cim=str(im)
-        html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg WIDTH=450></a>\n')
-        html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg WIDTH=450></a>\n')
-        html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg WIDTH=450></a>\n')
+            html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=400></A>\n')
+            html.write('<TD><A HREF=../plots/'+oneDfile+'_spatialresid.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_spatialresid.png WIDTH=450></A>\n')
+            html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skyemission.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skyemission.png WIDTH=450>\n')
+            html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skycontinuum.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skycontinuum.png WIDTH=450>\n')
+            cim=str(im)
+            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg WIDTH=450></a>\n')
+            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg WIDTH=450></a>\n')
+            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg WIDTH=450></a>\n')
+        else:
+            html.write('<TR><TD bgcolor="'+thcolor+'">'+str(int(round(ims[i])))+'\n')
+            html.write('<TD><TD><TD><TD><TD><TD><TD><TD>\n')
     html.write('</table>\n')
-
     html.write('<BR><BR>\n')
-
     html.write('</BODY></HTML>\n')
     html.close()
 
@@ -853,8 +887,9 @@ def makeObsQApages(load=None, plate=None, mjd=None, fluxid=None, telescope=None)
 
 
 ''' MAKEOBSQAPLOTS: plots for the master QA page '''
-def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, apred=None,
-                  flat=None, fluxid=None, survey=None): 
+def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, instrument=None,
+                   apred=None, flat=None, fluxid=None, survey=None): 
+
     print("----> makeObsQAplots: Running plate "+plate+", MJD "+mjd)
 
     n_exposures = len(ims)
@@ -1060,284 +1095,285 @@ def makeObsQAplots(load=None, ims=None, plate=None, mjd=None, instrument=None, a
 
     # Loop over the exposures to make other plots.
     for i in range(n_exposures):
-        #------------------------------------------------------------------------------------------
-        # PLOTS 7: 3 panel mag/SNR plots for each exposure
-        #----------------------------------------------------------------------------------------------
-        plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
-        print("----> makeObsQAplots: Making "+plotfile)
+        if imsReduced[i] == 1:
+            #------------------------------------------------------------------------------------------
+            # PLOTS 7: 3 panel mag/SNR plots for each exposure
+            #----------------------------------------------------------------------------------------------
+            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
+            print("----> makeObsQAplots: Making "+plotfile)
 
-        telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
-        ntelluric = len(telluric)
-        science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
-        nscience = len(science)
-        sky, = np.where(plSum2['OBJTYPE'] == 'SKY')
-        nsky = len(sky)
+            telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
+            ntelluric = len(telluric)
+            science, = np.where((plSum2['OBJTYPE'] != 'SPECTROPHOTO_STD') & (plSum2['OBJTYPE'] != 'HOT_STD') & (plSum2['OBJTYPE'] != 'SKY'))
+            nscience = len(science)
+            sky, = np.where(plSum2['OBJTYPE'] == 'SKY')
+            nsky = len(sky)
 
-        notsky, = np.where(plSum2['HMAG'] < 30)
-        hmagarr = plSum2['HMAG'][notsky]
-        minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
-        xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
+            notsky, = np.where(plSum2['HMAG'] < 30)
+            hmagarr = plSum2['HMAG'][notsky]
+            minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
+            xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
 
-        fig=plt.figure(figsize=(11,14))
-        ax1 = plt.subplot2grid((3,1), (0,0))
-        ax2 = plt.subplot2grid((3,1), (1,0))
-        ax3 = plt.subplot2grid((3,1), (2,0))
-        axes = [ax1, ax2, ax3]#, ax4, ax5]
-        ax2.set_ylim(-10,1)
+            fig=plt.figure(figsize=(11,14))
+            ax1 = plt.subplot2grid((3,1), (0,0))
+            ax2 = plt.subplot2grid((3,1), (1,0))
+            ax3 = plt.subplot2grid((3,1), (2,0))
+            axes = [ax1, ax2, ax3]#, ax4, ax5]
+            ax2.set_ylim(-10,1)
 
-        for ax in axes:
-            ax.set_xlim(xmin,xmax)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
+            for ax in axes:
+                ax.set_xlim(xmin,xmax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
 
-        ax1.axes.xaxis.set_ticklabels([])
-        ax2.axes.xaxis.set_ticklabels([])
+            ax1.axes.xaxis.set_ticklabels([])
+            ax2.axes.xaxis.set_ticklabels([])
 
-        ax3.set_xlabel(r'$H$')
-        ax1.text(-0.15,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
-        ax2.text(-0.15,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
-        ax3.text(-0.15,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
+            ax3.set_xlabel(r'$H$')
+            ax1.text(-0.15,0.50,r'm = -2.5*log(counts)',transform=ax1.transAxes,rotation=90,ha='left',va='center')
+            ax2.text(-0.15,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
+            ax3.text(-0.15,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
 
-        # PLOTS 7a: observed mag vs H mag
-        x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
-        ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
-        x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
-        ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue', label='Telluric')
-        ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+            # PLOTS 7a: observed mag vs H mag
+            x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
+            ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
+            x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
+            ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue', label='Telluric')
+            ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-        # PLOTS 7b: observed mag - fit mag vs H mag
-        x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
-        yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
-        ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
-        x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
-        ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
-        ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue')
-        ymin = np.min([yminsci,ymintel])
-        ymax = np.max([ymaxsci,ymaxtel])
-        yspan=ymax-ymin
-        ax2.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
+            # PLOTS 7b: observed mag - fit mag vs H mag
+            x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,i,1]
+            yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
+            ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
+            x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,i,1]
+            ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
+            ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue')
+            ymin = np.min([yminsci,ymintel])
+            ymax = np.max([ymaxsci,ymaxtel])
+            yspan=ymax-ymin
+            ax2.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
 
-        # PLOTS 7c: S/N as calculated from ap1D frame
-        #c = ['r','g','b']
-        #for ichip in range(nchips):
-        #    x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,ichip]
-        #    ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
-        #    x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,ichip]
-        #    ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
-        x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,1]
-        yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
-        ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
-        x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
-        ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
-        ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
-        ymin = np.min([yminsci,ymintel])
-        ymax = np.max([ymaxsci,ymaxtel])
-        yspan=ymax-ymin
-        ax3.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
+            # PLOTS 7c: S/N as calculated from ap1D frame
+            #c = ['r','g','b']
+            #for ichip in range(nchips):
+            #    x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,ichip]
+            #    ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
+            #    x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,ichip]
+            #    ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
+            x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,1]
+            yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
+            ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
+            x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,1]
+            ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
+            ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
+            ymin = np.min([yminsci,ymintel])
+            ymax = np.max([ymaxsci,ymaxtel])
+            yspan=ymax-ymin
+            ax3.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
 
-        # overplot the target S/N line
-        sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
-        sntargetmag = 12.2
-        x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
-        ax3.plot(x, y, color='k',linewidth=1.5)
+            # overplot the target S/N line
+            sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
+            sntargetmag = 12.2
+            x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
+            ax3.plot(x, y, color='k',linewidth=1.5)
 
-        fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.99,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir+plotfile)
-        plt.close('all')
+            fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.99,hspace=0.2,wspace=0.0)
+            plt.savefig(plotsdir+plotfile)
+            plt.close('all')
 
-        #------------------------------------------------------------------------------------------
-        # PLOT 3: spatial residuals for each exposure
-        #----------------------------------------------------------------------------------------------
-        plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
-        print("----> makeObsQAplots: Making "+plotfile)
+            #------------------------------------------------------------------------------------------
+            # PLOT 3: spatial residuals for each exposure
+            #----------------------------------------------------------------------------------------------
+            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
+            print("----> makeObsQAplots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(14,15))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.set_xlim(-1.6,1.6)
-        ax1.set_ylim(-1.6,1.6)
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
-        #cmap = plt.get_cmap('jet');    minval = 0.05;    maxval = 0.92;    ncol = 100
-        #gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
-        #           a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
+            fig=plt.figure(figsize=(14,15))
+            ax1 = plt.subplot2grid((1,1), (0,0))
+            ax1.set_xlim(-1.6,1.6)
+            ax1.set_ylim(-1.6,1.6)
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            ax1.minorticks_on()
+            ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax1.tick_params(axis='both',which='major',length=axmajlen)
+            ax1.tick_params(axis='both',which='minor',length=axminlen)
+            ax1.tick_params(axis='both',which='both',width=axwidth)
+            ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
+            #cmap = plt.get_cmap('jet');    minval = 0.05;    maxval = 0.92;    ncol = 100
+            #gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
+            #           a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
 
-        x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
-        c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
-        psci = ax1.scatter(x, y, marker='*', s=400, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
+            x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
+            c = plSum2['HMAG'][science] - plSum2['obsmag'][science,i,1]
+            psci = ax1.scatter(x, y, marker='*', s=400, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
-        x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
-        c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
-        ptel = ax1.scatter(x, y, marker='o', s=215, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
+            x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
+            c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,i,1]
+            ptel = ax1.scatter(x, y, marker='o', s=215, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
-        #try:
-        #    x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
-        #    c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
-        #    psky = ax1.scatter(x, y, marker='s', s=140, c='white', edgecolors='k', alpha=1, label='Sky')
-        #except:
-        #    print("----> makeObsQAplots: Problem!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
+            #try:
+            #    x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
+            #    c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
+            #    psky = ax1.scatter(x, y, marker='s', s=140, c='white', edgecolors='k', alpha=1, label='Sky')
+            #except:
+            #    print("----> makeObsQAplots: Problem!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
 
-        ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+            ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-        ax1_divider = make_axes_locatable(ax1)
-        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-        cb = colorbar(psci, cax=cax1, orientation="horizontal")
-        cax1.xaxis.set_ticks_position("top")
-        cax1.minorticks_on()
-        ax1.text(0.5, 1.12, r'$H$ + 2.5*log(m - zero)',ha='center', transform=ax1.transAxes)
+            ax1_divider = make_axes_locatable(ax1)
+            cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+            cb = colorbar(psci, cax=cax1, orientation="horizontal")
+            cax1.xaxis.set_ticks_position("top")
+            cax1.minorticks_on()
+            ax1.text(0.5, 1.12, r'$H$ + 2.5*log(m - zero)',ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.11,right=0.97,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir+plotfile)
-        plt.close('all')
+            fig.subplots_adjust(left=0.11,right=0.97,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
+            plt.savefig(plotsdir+plotfile)
+            plt.close('all')
 
-        #------------------------------------------------------------------------------------------
-        # PLOT 4: spatial sky line emission
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
-        #------------------------------------------------------------------------------------------
-        plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_skyemission.png'
-        print("----> makeObsQAplots: Making "+plotfile)
+            #------------------------------------------------------------------------------------------
+            # PLOT 4: spatial sky line emission
+            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
+            #------------------------------------------------------------------------------------------
+            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_skyemission.png'
+            print("----> makeObsQAplots: Making "+plotfile)
 
-        #d = load.apPlate(int(plate), mjd) 
-        d = load.ap1D(ims[i])
-        rows = 300-platesum2['FIBERID']
+            #d = load.apPlate(int(plate), mjd) 
+            d = load.ap1D(ims[i])
+            rows = 300-platesum2['FIBERID']
 
-        fibersky, = np.where(platesum2['OBJTYPE'] == 'SKY')
-        nsky = len(fibersky)
-        sky = rows[fibersky]
+            fibersky, = np.where(platesum2['OBJTYPE'] == 'SKY')
+            nsky = len(fibersky)
+            sky = rows[fibersky]
 
-        fibertelluric, = np.where((platesum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (platesum2['OBJTYPE'] == 'HOT_STD'))
-        ntelluric = len(fibertelluric)
-        telluric = rows[fibertelluric]
+            fibertelluric, = np.where((platesum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (platesum2['OBJTYPE'] == 'HOT_STD'))
+            ntelluric = len(fibertelluric)
+            telluric = rows[fibertelluric]
 
-        fiberobj, = np.where((platesum2['OBJTYPE'] == 'STAR_BHB') | (platesum2['OBJTYPE'] == 'STAR') |
-                             (platesum2['OBJTYPE'] == 'EXTOBJ') | (platesum2['OBJTYPE'] == 'OBJECT'))
-        nobj = len(fiberobj)
-        obj = rows[fiberobj]
+            fiberobj, = np.where((platesum2['OBJTYPE'] == 'STAR_BHB') | (platesum2['OBJTYPE'] == 'STAR') |
+                                 (platesum2['OBJTYPE'] == 'EXTOBJ') | (platesum2['OBJTYPE'] == 'OBJECT'))
+            nobj = len(fiberobj)
+            obj = rows[fiberobj]
 
-        # Define skylines structure which we will use to get crude sky levels in lines.
-        dt = np.dtype([('W1',   np.float64),
-                       ('W2',   np.float64),
-                       ('C1',   np.float64),
-                       ('C2',   np.float64),
-                       ('C3',   np.float64),
-                       ('C4',   np.float64),
-                       ('FLUX', np.float64, (nfiber)),
-                       ('TYPE', np.int32)])
+            # Define skylines structure which we will use to get crude sky levels in lines.
+            dt = np.dtype([('W1',   np.float64),
+                           ('W2',   np.float64),
+                           ('C1',   np.float64),
+                           ('C2',   np.float64),
+                           ('C3',   np.float64),
+                           ('C4',   np.float64),
+                           ('FLUX', np.float64, (nfiber)),
+                           ('TYPE', np.int32)])
 
-        skylines = np.zeros(2,dtype=dt)
-        nskylines=len(skylines)
+            skylines = np.zeros(2,dtype=dt)
+            nskylines=len(skylines)
 
-        skylines['W1']   = 16230.0, 15990.0
-        skylines['W2']   = 16240.0, 16028.0
-        skylines['C1']   = 16215.0, 15980.0
-        skylines['C2']   = 16225.0, 15990.0
-        skylines['C3']   = 16245.0, 0.0
-        skylines['C4']   = 16255.0, 0.0
-        skylines['TYPE'] = 1, 0
+            skylines['W1']   = 16230.0, 15990.0
+            skylines['W2']   = 16240.0, 16028.0
+            skylines['C1']   = 16215.0, 15980.0
+            skylines['C2']   = 16225.0, 15990.0
+            skylines['C3']   = 16245.0, 0.0
+            skylines['C4']   = 16255.0, 0.0
+            skylines['TYPE'] = 1, 0
 
-        for iline in range(nskylines):
-            skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
+            for iline in range(nskylines):
+                skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
 
-        medsky = np.nanmedian(skylines['FLUX'][0][fibersky])
+            medsky = np.nanmedian(skylines['FLUX'][0][fibersky])
 
-        fig=plt.figure(figsize=(14,15))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.set_xlim(-1.6,1.6)
-        ax1.set_ylim(-1.6,1.6)
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
+            fig=plt.figure(figsize=(14,15))
+            ax1 = plt.subplot2grid((1,1), (0,0))
+            ax1.set_xlim(-1.6,1.6)
+            ax1.set_ylim(-1.6,1.6)
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            ax1.minorticks_on()
+            ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax1.tick_params(axis='both',which='major',length=axmajlen)
+            ax1.tick_params(axis='both',which='minor',length=axminlen)
+            ax1.tick_params(axis='both',which='both',width=axwidth)
+            ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-        xx = platesum2['ZETA'][fiberobj]
-        yy = platesum2['ETA'][fiberobj]
-        cc = skylines['FLUX'][0][fiberobj] / medsky
-        ax1.scatter(xx, yy, marker='*', s=400, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
+            xx = platesum2['ZETA'][fiberobj]
+            yy = platesum2['ETA'][fiberobj]
+            cc = skylines['FLUX'][0][fiberobj] / medsky
+            ax1.scatter(xx, yy, marker='*', s=400, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
 
-        xx = platesum2['ZETA'][fibertelluric]
-        yy = platesum2['ETA'][fibertelluric]
-        cc = skylines['FLUX'][0][fibertelluric] / medsky
-        ax1.scatter(xx, yy, marker='o', s=215, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
+            xx = platesum2['ZETA'][fibertelluric]
+            yy = platesum2['ETA'][fibertelluric]
+            cc = skylines['FLUX'][0][fibertelluric] / medsky
+            ax1.scatter(xx, yy, marker='o', s=215, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
 
-        xx = platesum2['ZETA'][fibersky]
-        yy = platesum2['ETA'][fibersky]
-        cc = skylines['FLUX'][0][fibersky] / medsky
-        sc = ax1.scatter(xx, yy, marker='s', s=230, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
+            xx = platesum2['ZETA'][fibersky]
+            yy = platesum2['ETA'][fibersky]
+            cc = skylines['FLUX'][0][fibersky] / medsky
+            sc = ax1.scatter(xx, yy, marker='s', s=230, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
 
-        ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+            ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-        ax1_divider = make_axes_locatable(ax1)
-        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-        cb = colorbar(sc, cax=cax1, orientation="horizontal")
-        cax1.xaxis.set_ticks_position("top")
-        cax1.minorticks_on()
-        ax1.text(0.5, 1.12, r'Sky emission deviation',ha='center', transform=ax1.transAxes)
+            ax1_divider = make_axes_locatable(ax1)
+            cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+            cb = colorbar(sc, cax=cax1, orientation="horizontal")
+            cax1.xaxis.set_ticks_position("top")
+            cax1.minorticks_on()
+            ax1.text(0.5, 1.12, r'Sky emission deviation',ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir+plotfile)
-        plt.close('all')
+            fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
+            plt.savefig(plotsdir+plotfile)
+            plt.close('all')
 
-        #------------------------------------------------------------------------------------------
-        # PLOT 5: spatial continuum emission
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
-        #------------------------------------------------------------------------------------------
-        plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_skycontinuum.png'
-        print("----> makeObsQAplots: Making "+plotfile)
+            #------------------------------------------------------------------------------------------
+            # PLOT 5: spatial continuum emission
+            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
+            #------------------------------------------------------------------------------------------
+            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_skycontinuum.png'
+            print("----> makeObsQAplots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(14,15))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.set_xlim(-1.6,1.6)
-        ax1.set_ylim(-1.6,1.6)
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
+            fig=plt.figure(figsize=(14,15))
+            ax1 = plt.subplot2grid((1,1), (0,0))
+            ax1.set_xlim(-1.6,1.6)
+            ax1.set_ylim(-1.6,1.6)
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            ax1.minorticks_on()
+            ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax1.tick_params(axis='both',which='major',length=axmajlen)
+            ax1.tick_params(axis='both',which='minor',length=axminlen)
+            ax1.tick_params(axis='both',which='both',width=axwidth)
+            ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-        skyzero=14.75 + 2.5 * np.log10(plSum1['NREADS'][i])
-        xx = platesum2['ZETA'][fibersky]
-        yy = platesum2['ETA'][fibersky]
-        cc = platesum2['obsmag'][fibersky, i, 1] + skyzero - plSum1['ZERO'][i]
-        sc = ax1.scatter(xx, yy, marker='s', s=270, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=13, vmax=15)
+            skyzero=14.75 + 2.5 * np.log10(plSum1['NREADS'][i])
+            xx = platesum2['ZETA'][fibersky]
+            yy = platesum2['ETA'][fibersky]
+            cc = platesum2['obsmag'][fibersky, i, 1] + skyzero - plSum1['ZERO'][i]
+            sc = ax1.scatter(xx, yy, marker='s', s=270, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=13, vmax=15)
 
-        ax1_divider = make_axes_locatable(ax1)
-        cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-        cb = colorbar(sc, cax=cax1, orientation="horizontal")
-        cax1.xaxis.set_ticks_position("top")
-        cax1.minorticks_on()
-        ax1.text(0.5, 1.12, r'Sky continuum (mag.)',ha='center', transform=ax1.transAxes)
+            ax1_divider = make_axes_locatable(ax1)
+            cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+            cb = colorbar(sc, cax=cax1, orientation="horizontal")
+            cax1.xaxis.set_ticks_position("top")
+            cax1.minorticks_on()
+            ax1.text(0.5, 1.12, r'Sky continuum (mag.)',ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir+plotfile)
-        plt.close('all')
+            fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
+            plt.savefig(plotsdir+plotfile)
+            plt.close('all')
 
 
-        #----------------------------------------------------------------------------------------------
-        # PLOT 7: make plot of sky levels for this plate
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257sky.gif
-        #----------------------------------------------------------------------------------------------
-        #skyfile = 'sky-'+gfile
-        #print("PLOTS 7: Sky level plots will be made here.")
+            #----------------------------------------------------------------------------------------------
+            # PLOT 7: make plot of sky levels for this plate
+            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257sky.gif
+            #----------------------------------------------------------------------------------------------
+            #skyfile = 'sky-'+gfile
+            #print("PLOTS 7: Sky level plots will be made here.")
 
-        #----------------------------------------------------------------------------------------------
-        # PLOT 8: make plot of zeropoints for this plate
-        # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257zero.gif
-        #----------------------------------------------------------------------------------------------
-        #zerofile = 'zero-'+gfile
-        #print("PLOTS 8: Zeropoints plots will be made here.")
+            #----------------------------------------------------------------------------------------------
+            # PLOT 8: make plot of zeropoints for this plate
+            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/exposures/apogee-n/56257/plots/56257zero.gif
+            #----------------------------------------------------------------------------------------------
+            #zerofile = 'zero-'+gfile
+            #print("PLOTS 8: Zeropoints plots will be made here.")
 
     plt.ion()
     print("----> makeObsQAplots: Done with plate "+plate+", MJD "+mjd+"\n")
