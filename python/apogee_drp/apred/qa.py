@@ -2280,7 +2280,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         for i in range(nplates):
             color = '#ffb3b3'
-            if iprogram[i] == 'RM': color = '#FFF9C4' 
+            if iprogram[i] == 'RM': color = '#B3E5FC' 
             if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
             if iprogram[i] == 'AQMES-Medium': color = '#AED581'
 
@@ -2344,10 +2344,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 x = ra * (math.pi/180)
                 y = dec * (math.pi/180)
 
-            p, = np.where(iprogram == 'AQMES-Wide')
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#FFF9C4', label='AQMES-Wide ('+str(len(p))+')')
             p, = np.where(iprogram == 'RM')
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='RM ('+str(len(p))+')')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#B3E5FC', label='RM ('+str(len(p))+')')
+            p, = np.where(iprogram == 'AQMES-Wide')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='AQMES-Wide ('+str(len(p))+')')
             p, = np.where(iprogram == 'AQMES-Medium')
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#AED581', label='AQMES-Medium ('+str(len(p))+')')
 
