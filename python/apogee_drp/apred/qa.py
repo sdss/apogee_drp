@@ -720,16 +720,16 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, f
             html.write('<TD align="right">'+str(i+1)+'\n')
             html.write('<TD align="right">'+str(int(round(ims[i])))+'\n')
             import pdb; pdb.set_trace()
-            html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][gd])))+'\n')
-            html.write('<TD align="right">'+str(int(round(tab1['CART'][gd])))+'\n')
-            html.write('<TD align="right">'+str("%.3f" % round(tab1['SECZ'][gd],3))+'\n')
-            html.write('<TD align="right">'+str("%.2f" % round(tab1['HA'][gd],2))+'\n')
-            html.write('<TD align="right">'+str(np.round(tab1['DESIGN_HA'][gd],0)).replace('[',' ')[:-1]+'\n')
-            html.write('<TD align="right">'+str("%.3f" % round(tab1['SEEING'][gd],3))+'\n')
-            html.write('<TD align="right">'+str("%.3f" % round(tab1['FWHM'][gd],3))+'\n')
-            html.write('<TD align="right">'+str("%.3f" % round(tab1['GDRMS'][gd],3))+'\n')
-            html.write('<TD align="right">'+str(tab1['NREADS'][gd])+'\n')
-            j = np.where(shiftstr['FRAMENUM'] == str(tab1['IM'][gd]))
+            html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][gd][0])))+'\n')
+            html.write('<TD align="right">'+str(int(round(tab1['CART'][gd][0])))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['SECZ'][gd][0],3))+'\n')
+            html.write('<TD align="right">'+str("%.2f" % round(tab1['HA'][gd][0],2))+'\n')
+            html.write('<TD align="right">'+str(np.round(tab1['DESIGN_HA'][gd][0],0)).replace('[',' ')[:-1]+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['SEEING'][gd][0],3))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['FWHM'][gd][0],3))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['GDRMS'][gd][0],3))+'\n')
+            html.write('<TD align="right">'+str(tab1['NREADS'][gd][0])+'\n')
+            j = np.where(shiftstr['FRAMENUM'] == str(tab1['IM'][gd][0]))
             nj = len(j[0])
             nodither, = np.where(shiftstr['SHIFT'] == 0)
             if (nj > 0) & (len(nodither) != len(tab1['IM'])):
@@ -738,19 +738,19 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, f
             else:
                 html.write('<TD align="center">---\n')
                 html.write('<TD align="center">---\n')
-            html.write('<TD align="right">'+str("%.3f" % round(tab1['ZERO'][gd],3))+'\n')
-            html.write('<TD align="right">'+str("%.3f" % round(tab1['ZERORMS'][gd],3))+'\n')
-            q = tab1['SKY'][gd]
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['ZERO'][gd][0],3))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['ZERORMS'][gd][0],3))+'\n')
+            q = tab1['SKY'][gd][0]
             txt = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
             html.write('<TD align="center">'+'['+txt+']\n')
-            q = tab1['SN'][gd]
+            q = tab1['SN'][gd][0]
             txt = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
             html.write('<TD align="center">'+'['+txt+']\n')
-            q = tab1['SNC'][gd]
+            q = tab1['SNC'][gd][0]
             txt = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
             html.write('<TD align="center">'+'['+txt+']\n')
-            html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONPHASE'][gd],3))+'\n')
-            html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONDIST'][gd],3))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONPHASE'][gd][0],3))+'\n')
+            html.write('<TD align="right">'+str("%.3f" % round(tab1['MOONDIST'][gd][0],3))+'\n')
         else:
             html.write('<TR bgcolor=red>\n')
             html.write('<TD align="right">'+str(i+1)+'\n')
