@@ -2215,7 +2215,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<p><A HREF=mjd.html>MJD view</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
 
-        html.write('<p>APOGEE sky coverage plots: <p>\n')
+        html.write('<p>Sky coverage plots: <p>\n')
         html.write('<A HREF="aitoff_galactic.png" target="_blank"><IMG SRC=aitoff_galactic.png WIDTH=800></A>\n')
         html.write('<A HREF="aitoff_equatorial.png" target="_blank"><IMG SRC=aitoff_equatorial.png WIDTH=800></A>\n')
 #        html.write('<img src=aitoff.png width=45%>\n')
