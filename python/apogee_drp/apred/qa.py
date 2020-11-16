@@ -194,8 +194,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                                survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
         # Make the observation spectrum plots and associated pages
-        q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, makespecplots=makespecplots,
-                     clobber=clobber)
+        q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, makespecplots=makespecplots)
 
         # Make the nightly QA page
         if makenightqa is True:
