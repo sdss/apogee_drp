@@ -1086,11 +1086,12 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
     # Loop over the exposures to make other plots.
     for i in range(n_exposures):
-        if imsReduced[i] == 1:
+        gd, = np.where(ims[i] == plSum1['IM'])
+        if len(gd) >= 1:
             #------------------------------------------------------------------------------------------
             # PLOTS 7: 3 panel mag/SNR plots for each exposure
             #----------------------------------------------------------------------------------------------
-            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_magplots.png'
+            plotfile = 'ap1D-'+str(plSum1['IM'][gd][0])+'_magplots.png'
             print("----> makeObsQAplots: Making "+plotfile)
 
             telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
@@ -1130,9 +1131,9 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             ax3.text(-0.15,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
 
             # PLOTS 7a: observed mag vs H mag
-            x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][i]
+            x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,i,1]-plSum1['ZERO'][gd][0]
             ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
-            x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][i]
+            x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,i,1]-plSum1['ZERO'][gd][0]
             ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue', label='Telluric')
             ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
@@ -1167,7 +1168,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             ax3.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
 
             # overplot the target S/N line
-            sntarget = 100 * np.sqrt(plSum1['EXPTIME'][i] / (3.0 * 3600))
+            sntarget = 100 * np.sqrt(plSum1['EXPTIME'][gd][0] / (3.0 * 3600))
             sntargetmag = 12.2
             x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
             ax3.plot(x, y, color='k',linewidth=1.5)
@@ -1179,7 +1180,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             #------------------------------------------------------------------------------------------
             # PLOT 3: spatial residuals for each exposure
             #----------------------------------------------------------------------------------------------
-            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_spatialresid.png'
+            plotfile = 'ap1D-'+str(plSum1['IM'][gd][0])+'_spatialresid.png'
             print("----> makeObsQAplots: Making "+plotfile)
 
             fig=plt.figure(figsize=(14,15))
@@ -1229,11 +1230,11 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             # PLOT 4: spatial sky line emission
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
             #------------------------------------------------------------------------------------------
-            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_skyemission.png'
+            plotfile = 'ap1D-'+str(plSum1['IM'][gd][0])+'_skyemission.png'
             print("----> makeObsQAplots: Making "+plotfile)
 
             #d = load.apPlate(int(plate), mjd) 
-            d = load.ap1D(ims[i])
+            d = load.ap1D(ims[gd][0])
             rows = 300-platesum2['FIBERID']
 
             fibersky, = np.where(platesum2['OBJTYPE'] == 'SKY')
@@ -1319,7 +1320,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             # PLOT 5: spatial continuum emission
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
             #------------------------------------------------------------------------------------------
-            plotfile = 'ap1D-'+str(plSum1['IM'][i])+'_skycontinuum.png'
+            plotfile = 'ap1D-'+str(plSum1['IM'][gd][0])+'_skycontinuum.png'
             print("----> makeObsQAplots: Making "+plotfile)
 
             fig=plt.figure(figsize=(14,15))
@@ -1334,10 +1335,10 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             ax1.tick_params(axis='both',which='both',width=axwidth)
             ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-            skyzero=14.75 + 2.5 * np.log10(plSum1['NREADS'][i])
+            skyzero=14.75 + 2.5 * np.log10(plSum1['NREADS'][gd][0])
             xx = platesum2['ZETA'][fibersky]
             yy = platesum2['ETA'][fibersky]
-            cc = platesum2['obsmag'][fibersky, i, 1] + skyzero - plSum1['ZERO'][i]
+            cc = platesum2['obsmag'][fibersky, i, 1] + skyzero - plSum1['ZERO'][gd][0]
             sc = ax1.scatter(xx, yy, marker='s', s=270, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=13, vmax=15)
 
             ax1_divider = make_axes_locatable(ax1)
