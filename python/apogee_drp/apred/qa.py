@@ -161,14 +161,14 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
         if (os.path.exists(platesum) is False) | (makeplatesum is True):
             q = makePlateSum(load=load, plate=plate, mjd=mjd,telescope=telescope, 
-                             instrument=instrument, ims=ims, imsReduced=imsReduced
+                             instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
                              apred=apred, onem=None, starfiber=None, starnames=None, 
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid)
 
             tmpims = np.array([0,ims[0]])
             q = makePlateSum(load=load, plate=plate, mjd=mjd,telescope=telescope, 
-                             instrument=instrument, ims=ims, imsReduced=imsReduced
+                             instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
                              apred=apred, onem=None, starfiber=None, starnames=None, 
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid)
