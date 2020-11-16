@@ -140,7 +140,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         imsReduced = np.zeros(n_ims)
         for i in range(n_ims):
             cframe = load.filename('Cframe', field=field, plate=int(plate), mjd=mjd, num=ims[i], chips=True)
-            if os.path.exists(cframe.replace('1D-','1D-a-')): imsReduced[i] = 1
+            if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
         if len(good) < 1:
             sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd)
