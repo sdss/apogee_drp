@@ -2323,7 +2323,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             fig=plt.figure(figsize=(13,7))
             ax1 = fig.add_subplot(111, projection = 'aitoff')
             ax1.set_xticks([-150,-120,-90,-60,-30,0,30,60,90,120,150])
-            ax1.set_xticklabels('210','240','270','300','330','0','30','60','90','120','150')
+            ax1.set_xticklabels(['210','240','270','300','330','0','30','60','90','120','150'])
             ax1.grid(True)
             #ax2 = fig.add_subplot(122, projection = 'aitoff')
             #axes = [ax1, ax2]
