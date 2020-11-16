@@ -57,7 +57,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
-            makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True
+            makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True,
             clobber=False):
 
     # Find the list of plan files
