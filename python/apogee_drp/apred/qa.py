@@ -2325,6 +2325,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             ax1.grid(True)
             ax1.axes.xaxis.set_ticklabels([])
             ax1.text(0.085, 0.5, '210', ha='center', va='center', fontsize=fsz, transform=ax1.transAxes)
+            ax1.text(0.13, 0.5, '240', ha='center', va='center', fontsize=fsz, transform=ax1.transAxes)
             #ax1.set_xticks([-150,-120,-90,-60,-30,0,30,60,90,120,150])
             #ax1.set_xticklabels(['210','240','270','300','330','0','30','60','90','120','150'])
             #ax2 = fig.add_subplot(122, projection = 'aitoff')
