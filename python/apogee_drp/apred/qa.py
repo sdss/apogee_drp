@@ -104,6 +104,10 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
     planstr = plan.load(planfile, np=True)
 
+    # Get field name
+    tmp = planfile.split(telescope+'/')
+    field = tmp[1].split('/')[0]
+
     # Get values from plan file.
     fixfiberid = planstr['fixfiberid']
     badfiberid = planstr['badfiberid']
@@ -131,12 +135,12 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
     if n_ims > 0:
         ims = all_ims[gd]
-        # Make an array indicating which exposures were successfully reduced.
+        # Make an array indicating which exposures made it to apCframe
         # 0 = not reduced, 1 = reduced
         imsReduced = np.zeros(n_ims)
         for i in range(n_ims):
-            onedfile = load.filename('1D',  plate=int(plate), num=ims[i], mjd=mjd, chips=True)
-            if os.path.exists(onedfile.replace('1D-','1D-a-')): imsReduced[i] = 1
+            cframe = load.apCframe(field, int(plate), mjd, ims[i])
+            if os.path.exists(cframe.replace('1D-','1D-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
         if len(good) < 1:
             sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd)
