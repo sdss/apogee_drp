@@ -139,7 +139,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         # 0 = not reduced, 1 = reduced
         imsReduced = np.zeros(n_ims)
         for i in range(n_ims):
-            cframe = load.apCframe(field, int(plate), mjd, ims[i])
+            cframe = load.filename('Cframe', field=field, plate=int(plate), mjd=mjd, num=ims[i], chips=True)
             if os.path.exists(cframe.replace('1D-','1D-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
         if len(good) < 1:
