@@ -2314,6 +2314,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         msz = 100
         lonlabs = ['210','240','270','300','330','0','30','60','90','120','150']
         nlon = len(lonlabs);  lonstart = 0.085;  lonsep = 0.083
+        nplots = 2
 
         for j in range(nplots):
             if j == 0: ptype = 'galactic'
