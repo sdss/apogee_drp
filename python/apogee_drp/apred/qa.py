@@ -1516,7 +1516,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
             objhtml.write('<TD BGCOLOR='+color+'>'+objid+'\n')
             objhtml.write(simbadlink+'\n')
             if objtype != 'SKY':
-                objhtml.write('<BR><a href=../plots/'+vplotfile+'>apVisit file</A>\n')
+                objhtml.write('<BR><a href=../'+visitfilebase+'>apVisit file</A>\n')
                 objhtml.write('<BR>apStar file\n')
 
             if objtype != 'SKY':
