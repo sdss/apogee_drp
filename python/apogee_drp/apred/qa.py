@@ -1535,17 +1535,17 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
                 objhtml.write('<TD align ="right">'+snratio)
             else:
-                objhtml.write('<TD>---')
+                objhtml.write('<TD align="center">---')
                 #objhtml.write('<TD BGCOLOR='+color+'>---\n')
-                objhtml.write('<TD>---')
+                objhtml.write('<TD align="center">---')
 
             if objtype == 'SKY': 
-                objhtml.write('<TD>SKY')
+                objhtml.write('<TD align="center">SKY')
             else:
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
-                    objhtml.write('<TD>TEL')
+                    objhtml.write('<TD align="center">TEL')
                 else:
-                    objhtml.write('<TD>SCI')
+                    objhtml.write('<TD align="center">SCI')
 
             objhtml.write('<TD align="left">'+targflagtxt)
             objhtml.write('<BR><BR>'+starflagtxt)
@@ -1557,11 +1557,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd][0],3))
                     rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
                     ncomp = str(allV['N_COMPONENTS'][gd][0])
-                    objhtml.write('<TD align ="right">' + vhelio + '<TD align ="right">' + rvteff + '<TD align ="right">' + ncomp)
+                    objhtml.write('<TD align ="right">' + vhelio + '<TD align ="right">' + rvteff + '<TD align ="center">' + ncomp)
                 else:
-                    objhtml.write('<TD><TD><TD>')
+                    objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---')
             else:
-                objhtml.write('<TD><TD><TD>')
+                objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---')
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
