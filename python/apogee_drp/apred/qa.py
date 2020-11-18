@@ -1802,13 +1802,13 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             else:
                 miss2d = 0
 
-            type = 'unknown'
+            imtype = 'unknown'
             color = 'white'
 
-            rawfile = load.apR(n)
+            rawfile = load.filename('R', num=n, mjd=mjd, chips='a').replace('apR-', 'apR-c-')
             if os.path.exists(rawfile):
-                #a=mrdfits(datadir+'apR-a-'+string(format='(i8.8)',n)+'.apz',1,head,/silent)
-                head = rawfile['a'][0].header
+                rawdata = load.apR(n)
+                head = rawdata['a'][0].header
                 imtype = head['IMAGETYP']
                 if imtype == 'Object': color = 'red'
                 if imtype == 'unknown': color = 'magenta'
