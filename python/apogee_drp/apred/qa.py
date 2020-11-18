@@ -1794,16 +1794,16 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     html.write('<TR bgcolor='+thcolor+'><TH>ID<TH>NFRAMES/NREAD<TH>TYPE<TH>PLATEID<TH>CARTID<TH>1D missing<TH>2D missing\n')
     for i in range(nuExposures):
         n = int(round(uExposures[i]))
-        file1d = load.filename('1D', num=n, chips='c').replace('1D-', '1D-c-')
+        file1d = load.filename('1D', mjd=mjd, num=n, chips='c').replace('1D-', '1D-c-')
         if os.path.exists(file1d) is False:
-            file2d = load.filename('2D', num=n, chips='c').replace('1D-', '1D-c-')
+            file2d = load.filename('2D', mjd=mjd, num=n, chips='c').replace('1D-', '1D-c-')
             if (os.path.exists(file2d) is False) & (os.path.exists(file2d + '.fz') is False):
                 miss2d = 1
             else:
                 miss2d = 0
             type = 'unknown'
             head = [' ',' ']
-            rawfile = load.filename('R', num=n, mjd=mjd, chips='a')
+            rawfile = load.filename('R', num=n, mjd=mjd, chips='a').replace('apR-', 'apR-c-')
             color = 'white'
             if os.path.exists(rawfile):
                 #a=mrdfits(datadir+'apR-a-'+string(format='(i8.8)',n)+'.apz',1,head,/silent)
