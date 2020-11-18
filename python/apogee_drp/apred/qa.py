@@ -1552,7 +1552,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
             # Vhelio, RV_TEFF, and N_components from allVisitMJD
             if allV is not None:
-                gd, = np.where(objid == allV['APOGEE_ID'])
+                gd = np.where(objid == allV['APOGEE_ID'])
                 if len(gd[0]) == 1:
                     vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd][0],3))
                     rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
