@@ -1758,7 +1758,9 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     # Look for missing raw frames (assuming contiguous sequence)
     html.write('<H2>Raw frames:</H2> ' + str(firstExposure) + ' to ' + str(lastExposure))
 #    html.write(' (<a href=../../../../../../'+os.path.basename(dirs.datadir)+'/'+cmjd+'/'+cmjd+'.log.html> image log</a>)\n')
-    html.write(' (image log... nope)\n')
+    logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
+    logFileDir = os.path.dirname(logFile)
+    html.write('(<A HREF="'+logFile+'">image log</A>)\n')
     html.write('<BR>\n')
 
     html.write('<H2>Missing raw data:</H2>\n')
