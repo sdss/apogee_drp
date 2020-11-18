@@ -1557,7 +1557,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd][0],3))
                     rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
                     ncomp = str(allV['N_COMPONENTS'][gd][0])
-                    import pdb; pdb.set_trace()
                     objhtml.write('<TD align ="right">' + vhelio + '<TD align ="right">' + rvteff + '<TD align ="right">' + ncomp + '\n')
                 else:
                     objhtml.write('<TD><TD><TD>\n')
