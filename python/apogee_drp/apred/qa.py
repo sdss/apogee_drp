@@ -1554,9 +1554,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if allV is not None:
                 gd, = np.where(objid == allV['APOGEE_ID'])
                 if len(gd) == 1:
-                    vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd],3))
-                    rvteff = str(int(round(allV['RV_TEFF'][gd])))
-                    ncomp = str(allV['N_COMPONENTS'][gd])
+                    vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd][0],3))
+                    rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
+                    ncomp = str(allV['N_COMPONENTS'][gd][0])
                     objhtml.write('<TD>' + vhelio + '<TD>' + rvteff + '<TD>' + ncomp + '\n')
                 else:
                     objhtml.write('<TD><TD><TD>\n')
