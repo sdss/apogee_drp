@@ -1760,7 +1760,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 #    html.write(' (<a href=../../../../../../'+os.path.basename(dirs.datadir)+'/'+cmjd+'/'+cmjd+'.log.html> image log</a>)\n')
     logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + mjd + '/' + mjd + '.log.html'
     logFileDir = os.path.dirname(logFile)
-    html.write('(<A HREF="'+logFile+'">image log</A>)\n')
+    html.write(' (<A HREF="'+logFile+'">image log</A>)\n')
     html.write('<BR>\n')
 
     html.write('<H2>Missing raw data:</H2>\n')
