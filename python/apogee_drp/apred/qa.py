@@ -1551,9 +1551,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             objhtml.write('<BR><BR>'+starflagtxt)
 
             # Vhelio, RV_TEFF, and N_components from allVisitMJD
-            if allV is not None:
+            if os.path.exists(allVpath):
                 gd = np.where(objid == allV['APOGEE_ID'])
-                if len(gd[0]) == 1:
+                import pdb; pdb.set_trace()
+                if len(gd[0]) > 0:
                     vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd][0],3))
                     rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
                     ncomp = str(allV['N_COMPONENTS'][gd][0])
