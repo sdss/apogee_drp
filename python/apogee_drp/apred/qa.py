@@ -1801,25 +1801,22 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 miss2d = 1
             else:
                 miss2d = 0
+
             type = 'unknown'
-            head = [' ',' ']
-            rawfile = load.filename('R', num=n, mjd=mjd, chips='a').replace('apR-', 'apR-c-')
             color = 'white'
+
+            rawfile = load.apR(n)
             if os.path.exists(rawfile):
                 #a=mrdfits(datadir+'apR-a-'+string(format='(i8.8)',n)+'.apz',1,head,/silent)
-                head = fits.getheader(rawfile)
-                import pdb; pdb.set_trace()
-                type = head['IMAGETYPE']
-
-
-
-                if type == 'Object': color = 'red'
-                if type == 'unknown': color = 'magenta'
-                if (type == 'Dark') & (miss2d == 1): color = 'yellow'
-                if (type != 'Dark') | (miss2d == 1):
+                head = rawfile['a'][0].header
+                imtype = head['IMAGETYP']
+                if imtype == 'Object': color = 'red'
+                if imtype == 'unknown': color = 'magenta'
+                if (imtype == 'Dark') & (miss2d == 1): color = 'yellow'
+                if (imtype != 'Dark') | (miss2d == 1):
                     html.write('<TR bgcolor='+color+'><TD> '+str(int(round(n)))+'\n')
                     html.write('<TD><CENTER>'+str(head['NFRAMES'])+'/'+str(head['NREAD'])+'</CENTER>\n')
-                    html.write('<TD><CENTER>'+head['IMAGETYPE']+'</CENTER>\n')
+                    html.write('<TD><CENTER>'+head['IMAGETYP']+'</CENTER>\n')
                     html.write('<TD><CENTER>'+str(head['PLATEID'])+'</CENTER>\n')
                     html.write('<TD><CENTER>'+str(head['CARTID'])+'</CENTER>\n')
                     html.write('<TD> '+os.path.basename(file1d)+'\n')
