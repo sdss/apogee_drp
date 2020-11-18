@@ -2165,8 +2165,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
             logFilePath = logFileDir + cmjd + '.log.html'
 
-            logFile = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/' + cmjd + '.log.html'
-            logFileDir = 'https://data.sdss.org/sas/apogeework/apogee/spectro/' + datadir1 + '/' + cmjd + '/'
+            logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
+            logFileDir = os.path.dirname(logFile)
 
             html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
             html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
