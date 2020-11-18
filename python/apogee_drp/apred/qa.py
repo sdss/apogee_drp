@@ -1809,6 +1809,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             if os.path.exists(rawfile):
                 rawdata = load.apR(n)
                 head = rawdata['a'][0].header
+                import pdb; pdb.set_trace()
+
                 imtype = head['IMAGETYP']
                 if imtype == 'Object': color = 'red'
                 if imtype == 'unknown': color = 'magenta'
