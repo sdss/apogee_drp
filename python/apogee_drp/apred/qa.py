@@ -1552,7 +1552,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
             # Vhelio, RV_TEFF, and N_components from allVisitMJD
             if os.path.exists(allVpath):
-                gd = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
+                gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
                 import pdb; pdb.set_trace()
                 if len(gd[0]) == 1:
                     vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd][0],3))
