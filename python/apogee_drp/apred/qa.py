@@ -1816,7 +1816,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 if (type != 'Dark') | (miss2d == 1):
                     html.write('<TR bgcolor='+color+'><TD> '+str(int(round(n)))+'\n')
                     html.write('<TD><CENTER>'+str(head['NFRAMES'])+'/'+str(head['NREAD'])+'</CENTER>\n')
-                    html.write('<TD><CENTER>'+head['IMAGETYP']+'</CENTER>\n')
+                    html.write('<TD><CENTER>'+head['IMAGETYPE']+'</CENTER>\n')
                     html.write('<TD><CENTER>'+str(head['PLATEID'])+'</CENTER>\n')
                     html.write('<TD><CENTER>'+str(head['CARTID'])+'</CENTER>\n')
                     html.write('<TD> '+os.path.basename(file1d)+'\n')
