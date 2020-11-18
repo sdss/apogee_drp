@@ -1531,24 +1531,24 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 objhtml.write('<BR>apStar file\n')
 
             if objtype != 'SKY':
-                objhtml.write('<TD align ="right">'+chmag+'\n')
+                objhtml.write('<TD align ="right">'+chmag)
                 #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
-                objhtml.write('<TD align ="right">'+snratio+'\n')
+                objhtml.write('<TD align ="right">'+snratio)
             else:
-                objhtml.write('<TD>---\n')
+                objhtml.write('<TD>---')
                 #objhtml.write('<TD BGCOLOR='+color+'>---\n')
-                objhtml.write('<TD>---\n')
+                objhtml.write('<TD>---')
 
             if objtype == 'SKY': 
-                objhtml.write('<TD>SKY\n')
+                objhtml.write('<TD>SKY')
             else:
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
-                    objhtml.write('<TD>TEL\n')
+                    objhtml.write('<TD>TEL')
                 else:
-                    objhtml.write('<TD>SCI\n')
+                    objhtml.write('<TD>SCI')
 
-            objhtml.write('<TD align="left">'+targflagtxt+'\n')
-            objhtml.write('<BR><BR>'+starflagtxt+'\n')
+            objhtml.write('<TD align="left">'+targflagtxt)
+            objhtml.write('<BR><BR>'+starflagtxt)
 
             # Vhelio, RV_TEFF, and N_components from allVisitMJD
             if allV is not None:
@@ -1557,11 +1557,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd][0],3))
                     rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
                     ncomp = str(allV['N_COMPONENTS'][gd][0])
-                    objhtml.write('<TD align ="right">' + vhelio + '<TD align ="right">' + rvteff + '<TD align ="right">' + ncomp + '\n')
+                    objhtml.write('<TD align ="right">' + vhelio + '<TD align ="right">' + rvteff + '<TD align ="right">' + ncomp)
                 else:
-                    objhtml.write('<TD><TD><TD>\n')
+                    objhtml.write('<TD><TD><TD>')
             else:
-                objhtml.write('<TD><TD><TD>\n')
+                objhtml.write('<TD><TD><TD>')
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
