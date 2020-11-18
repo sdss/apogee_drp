@@ -1794,10 +1794,10 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     html.write('<TR bgcolor='+thcolor+'><TH>ID<TH>NFRAMES/NREAD<TH>TYPE<TH>PLATEID<TH>CARTID<TH>1D missing<TH>2D missing\n')
     for i in range(nuExposures):
         n = int(round(uExposures[i]))
-        file1d = os.path.basename(load.filename('1D', num=n, chips='c')).replace('1D-', '1D-c-')
-        if os.path.exists(reddir + file1d) is False:
-            file2d = os.path.basename(load.filename('2D', num=n, chips='c')).replace('1D-', '1D-c-')
-            if (os.path.exists(reddir + file2d) is False) & (os.path.exists(reddir + file2d + '.fz') is False):
+        file1d = load.filename('1D', num=n, chips='c').replace('1D-', '1D-c-')
+        if os.path.exists(file1d) is False:
+            file2d = load.filename('2D', num=n, chips='c').replace('1D-', '1D-c-')
+            if (os.path.exists(file2d) is False) & (os.path.exists(file2d + '.fz') is False):
                 miss2d = 1
             else:
                 miss2d = 0
@@ -1819,18 +1819,18 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                     html.write('<TD><CENTER>'+head['IMAGETYP']+'</CENTER>\n')
                     html.write('<TD><CENTER>'+str(head['PLATEID'])+'</CENTER>\n')
                     html.write('<TD><CENTER>'+str(head['CARTID'])+'</CENTER>\n')
-                    html.write('<TD> '+file1d+'\n')
-                    if (os.path.exists(reddir+file2d) is False) & (os.path.exists(reddir+file2d+'.fz') is False):
-                        html.write('<TD> '+file2d+'\n')
+                    html.write('<TD> '+os.path.basename(file1d)+'\n')
+                    if (os.path.exists(file2d) is False) & (os.path.exists(file2d+'.fz') is False):
+                        html.write('<TD> '+os.path.basename(file2d)+'\n')
             else:
                 html.write('<TR bgcolor='+color+'><TD> '+str(int(round(n)))+'\n')
                 html.write('<TD><CENTER> </CENTER>\n')
                 html.write('<TD><CENTER> </CENTER>\n')
                 html.write('<TD><CENTER> </CENTER>\n')
                 html.write('<TD><CENTER> </CENTER>\n')
-                html.write('<TD> '+file1d+'\n')
-                if (os.path.exists(reddir+file2d) is False) & (os.path.exists(reddir+file2d+'.fz') is False):
-                    html.write('<TD> '+file2d+'\n')
+                html.write('<TD> '+os.path.basename(file1d)+'\n')
+                if (os.path.exists(file2d) is False) & (os.path.exists(file2d+'.fz') is False):
+                    html.write('<TD> '+os.path.basename(file2d)+'\n')
     html.write('</TABLE>\n')
     html.write('<BR>\n')
 
