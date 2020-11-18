@@ -1423,6 +1423,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     allV = None
     if os.path.exists(allVpath): allV = fits.getdata(allVpath)
 
+    import pdb; pdb.set_trace()
+
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
     data = apPlate['a'][11].data[::-1]
