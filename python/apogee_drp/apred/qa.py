@@ -1423,8 +1423,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     allV = None
     if os.path.exists(allVpath): allV = fits.getdata(allVpath)
 
-    import pdb; pdb.set_trace()
-
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
     data = apPlate['a'][11].data[::-1]
@@ -1555,7 +1553,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             # Vhelio, RV_TEFF, and N_components from allVisitMJD
             if allV is not None:
                 gd, = np.where(objid == allV['APOGEE_ID'])
-                if len(gd) == 1:
+                if len(gd[0]) == 1:
                     vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd][0],3))
                     rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
                     ncomp = str(allV['N_COMPONENTS'][gd][0])
