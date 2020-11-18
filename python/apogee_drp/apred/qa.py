@@ -1421,7 +1421,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     apodir = os.environ.get('APOGEE_REDUX') + '/'
     allVpath = apodir + apred + '/summary/' + mjd + '/allVisitMJD-' + apred + '-' + telescope + '-' + mjd + '.fits'
     allV = None
-    is os.path.exists(allVpath): allV = fits.getdata(allVpath)
+    if os.path.exists(allVpath): allV = fits.getdata(allVpath)
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
