@@ -1810,6 +1810,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 head = fits.getheader(rawfile)
                 type = head['IMAGETYP']
 
+                import pdb; pdb.set_trace()
+
                 if type == 'Object': color = 'red'
                 if type == 'unknown': color = 'magenta'
                 if (type == 'Dark') & (miss2d == 1): color = 'yellow'
