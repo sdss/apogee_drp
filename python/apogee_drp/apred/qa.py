@@ -1808,7 +1808,10 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             if os.path.exists(rawfile):
                 #a=mrdfits(datadir+'apR-a-'+string(format='(i8.8)',n)+'.apz',1,head,/silent)
                 head = fits.getheader(rawfile)
+                import pdb; pdb.set_trace()
                 type = head['IMAGETYPE']
+
+
 
                 if type == 'Object': color = 'red'
                 if type == 'unknown': color = 'magenta'
