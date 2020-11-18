@@ -195,7 +195,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                                survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
         # Make the observation spectrum plots and associated pages
-        q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, makespecplots=makespecplots)
+        q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
+                     makespecplots=makespecplots)
 
         # Make the nightly QA page
         if makenightqa is True:
@@ -1390,8 +1391,11 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
 
 ''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
-def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None): 
+def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, makespecplots=None): 
     print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
+
+    # HTML header background color
+    thcolor = '#DCDCDC'
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
@@ -1412,6 +1416,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
     axwidth=1.5
     axmajlen=7
     axminlen=3.5
+
+    # Load in the allVisitMJD file
+    apodir = os.environ.get('APOGEE_REDUX') + '/'
+    allVpath = apodir + apred + '/summary/' + mjd + '/allVisitMJD-' + apred + '-' + telescope + '-' + mjd + '.fits'
+    allV = None
+    is os.path.exists(allVpath): allV = fits.getdata(allVpath)
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
@@ -1454,7 +1464,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
     #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
 
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
+    objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber <TH>APOGEE ID <TH>H <TH>S/N <TH>Target<BR>Type <TH>Target & Data Flags')
+    objhtml.write('<TH>Vhelio <TH>RV<BR>Teff <TH>N<BR>Comp <TH>Spectrum Plot\n')
 #    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
     cfile = open(plotsdir+htmlfile+'.csh','w')
@@ -1477,8 +1488,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
-            if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = 'plum'
-            if objtype == 'SKY': color = 'silver'
+            if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = '#D2B4DE'
+            if objtype == 'SKY': color = '#D6EAF8'
             pcolor = 'k'
             if objtype == 'SKY': pcolor = 'firebrick'
 
@@ -1510,38 +1521,51 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, makespecplots=None):
                     print("----> makeObjQA: Problem with "+visitfilebase+"... SNR = NaN.")
 
             # column 1
-            objhtml.write('<TR><TD BGCOLOR='+color+'>'+cfiber+'\n')
+            objhtml.write('<TR BGCOLOR='+color+'><TD>'+cfiber+'\n')
 
             # column 2
-            objhtml.write('<TD BGCOLOR='+color+'>'+objid+'\n')
+            objhtml.write('<TD>'+objid+'\n')
             objhtml.write(simbadlink+'\n')
             if objtype != 'SKY':
                 objhtml.write('<BR><a href=../'+visitfilebase+'>apVisit file</A>\n')
                 objhtml.write('<BR>apStar file\n')
 
             if objtype != 'SKY':
-                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+chmag+'\n')
+                objhtml.write('<TD align ="right">'+chmag+'\n')
                 #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
-                objhtml.write('<TD BGCOLOR='+color+' align ="right">'+snratio+'\n')
+                objhtml.write('<TD align ="right">'+snratio+'\n')
             else:
-                objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                objhtml.write('<TD>---\n')
                 #objhtml.write('<TD BGCOLOR='+color+'>---\n')
-                objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                objhtml.write('<TD>---\n')
 
             if objtype == 'SKY': 
-                objhtml.write('<TD BGCOLOR='+color+'>SKY\n')
+                objhtml.write('<TD>SKY\n')
             else:
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
-                    objhtml.write('<TD BGCOLOR='+color+'>TEL\n')
+                    objhtml.write('<TD>TEL\n')
                 else:
-                    objhtml.write('<TD BGCOLOR='+color+'>SCI\n')
+                    objhtml.write('<TD>SCI\n')
 
-            objhtml.write('<TD BGCOLOR='+color+' align="left">'+targflagtxt+'\n')
+            objhtml.write('<TD align="left">'+targflagtxt+'\n')
             objhtml.write('<BR><BR>'+starflagtxt+'\n')
+
+            # Vhelio, RV_TEFF, and N_components from allVisitMJD
+            if allV is not None:
+                gd, = np.where(objid == allV['APOGEE_ID'])
+                if len(gd) == 1:
+                    vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd],3))
+                    rvteff = str(int(round(allV['RV_TEFF'][gd])))
+                    ncomp = str(allV['N_COMPONENTS'][gd])
+                    objhtml.write('<TD>' + vhelio + '<TD>' + rvteff + '<TD>' + ncomp + '\n')
+                else:
+                    objhtml.write('<TD><TD><TD>\n')
+            else:
+                objhtml.write('<TD><TD><TD>\n')
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
-            objhtml.write('<TD BGCOLOR='+color+'><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
+            objhtml.write('<TD><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
             if makespecplots is True:
                 print("----> makeObjQA: Making "+plotfile)
 
