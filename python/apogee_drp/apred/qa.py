@@ -954,8 +954,9 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             hmagarr = Vsum['HMAG']
         else:
             hmagarr = Vsum['H']
-        minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
-        xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
+        gd, = np.where(Vsum['H'] < 20)
+        minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd]);  spanH = maxH - minH
+        xmin = minH - spanH * 0.05;     xmax = maxH + spanH * 0.05
 
         minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
         ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
@@ -1465,7 +1466,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber <TH>APOGEE ID <TH>H <TH>S/N <TH>Target<BR>Type <TH>Target & Data Flags')
-    objhtml.write('<TH>Vhelio <TH>RV<BR>Teff <TH>N<BR>Comp <TH>Spectrum Plot\n')
+    objhtml.write('<TH>Vhelio<BR>(Ncomp) <TH>RV<BR>Teff <TH>N<BR>Comp <TH>Spectrum Plot\n')
 #    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
     cfile = open(plotsdir+htmlfile+'.csh','w')
@@ -1550,18 +1551,21 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             objhtml.write('<TD align="left">'+targflagtxt)
             objhtml.write('<BR><BR>'+starflagtxt)
 
-            # Vhelio, RV_TEFF, and N_components from allVisitMJD
+            # Vhelio, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
             if os.path.exists(allVpath):
                 gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
                 if len(gd) == 1:
                     vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd][0],3))
-                    rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
                     ncomp = str(allV['N_COMPONENTS'][gd][0])
-                    objhtml.write('<TD align ="right">' + vhelio + '<TD align ="right">' + rvteff + '<TD align ="center">' + ncomp)
+                    rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
+                    rvlogg = str("%.3f" % round(allV['RV_LOGG'][gd][0],3))
+                    rvfeh = str("%.3f" % round(allV['RV_FEH'][gd][0],3))
+                    objhtml.write('<TD align ="right">' + vhelio + '<BR>' + ncomp + '<TD align ="right">' + rvteff)
+                    objhtml.write('<TD align ="right">' + rvlogg + '<TD align ="right">' + rvfeh)
                 else:
-                    objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---')
+                    objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---')
             else:
-                objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---')
+                objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---')
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
