@@ -1164,7 +1164,8 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 ymin = np.min([yminsci,ymintel])
                 ymax = np.max([ymaxsci,ymaxtel])
                 yspan=ymax-ymin
-                ax2.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
+                #ax2.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
+                ax2.set_ylim(-8,2)
 
                 # PLOTS 7c: S/N as calculated from ap1D frame
                 #c = ['r','g','b']
