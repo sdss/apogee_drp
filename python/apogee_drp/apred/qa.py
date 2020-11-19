@@ -954,7 +954,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             hmagarr = Vsum['HMAG']
         else:
             hmagarr = Vsum['H']
-        gd, = np.where(Vsum['H'] < 20)
+        gd, = np.where(hmagarr < 20)
         minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd]);  spanH = maxH - minH
         xmin = minH - spanH * 0.05;     xmax = maxH + spanH * 0.05
 
