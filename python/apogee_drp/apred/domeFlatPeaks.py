@@ -55,11 +55,16 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
     tot = np.median(data[:,900:1100], axis=1)
     peaks,_ = find_peaks(tot, height=100, distance=4)
 
+    stot = convolve(tot, Box1DKernel(7))
+    speaks,_ = find_peaks(stot, height=100, distance=4)
+
     plt.clf()
-    plt.plot(tot+sep*0, color='k')
+    plt.plot(tot, color='k')
     plt.xlim(120,200)
     plt.scatter(peaks,tot[peaks], marker='x', color='r')
 
+    plt.plot(stot+200, color='k')
+    plt.scatter(speaks, stot[speaks]+200, marker='x', color='r')
 
 
 #    for i in range(nplans):
