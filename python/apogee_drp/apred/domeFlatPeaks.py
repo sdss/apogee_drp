@@ -117,7 +117,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             cent = pixstart + mediansep*j
             pstart = int(round(np.floor(cent - (mediansep/2.) + 1)))
             pstop = int(round(np.ceil(cent + (mediansep/2.) - 1)))
-            peaks,_ = find_peaks(tot[pstart:pstop], height=100)
+            ptot = tot[pstart:pstop]
+            peaks,_ = find_peaks(ptot, height=100)
             import pdb; pdb.set_trace()
 
 
