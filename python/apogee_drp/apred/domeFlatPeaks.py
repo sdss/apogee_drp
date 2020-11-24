@@ -14,7 +14,7 @@ from astropy.coordinates import SkyCoord
 from numpy.lib.recfunctions import append_fields, merge_arrays
 from astropy import units as astropyUnits
 from scipy.signal import medfilt2d as ScipyMedfilt2D
-from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask
+from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
 from apogee_drp.apred import wave
 from dlnpyutils import utils as dln
 from sdss_access.path import path
@@ -59,18 +59,18 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
     speaks,_ = find_peaks(stot, height=50, distance=4)
 
     plt.clf()
-    plt.plot(tot, color='k')
-    plt.xlim(120,200)
-    plt.scatter(peaks,tot[peaks], marker='x', color='r')
+    plt.plot(tot, color=colors[0])
+    plt.xlim(650,950)
+    #plt.scatter(peaks,tot[peaks], marker='x', color='r')
 
-    plt.plot(stot, color='k')
-    plt.scatter(speaks, stot[speaks], marker='x', color='g')
+    #plt.plot(stot, color='k')
+    #plt.scatter(speaks, stot[speaks], marker='x', color='g')
 
 
-#    for i in range(nplans):
-#        twod = load.ap2D(int(psfid[i]))
-#        data = twod['b'][1].data
-#        tot = np.median(data[:,900:1100], axis=1)
-#        plt.plot(tot+sep*i, color=colors[i%ncolors])
+    for i in range(nplans):
+        twod = load.ap2D(int(psfid[i]))
+        data = twod['b'][1].data
+        tot = np.median(data[:,900:1100], axis=1)
+        plt.plot(tot+sep*i, color=colors[i%ncolors])
 
     return tot
