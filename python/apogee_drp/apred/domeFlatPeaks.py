@@ -46,7 +46,7 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
 
     print(psfid)
 
-    colors = np.array(['r','b','violet','g','k','magenta','cyan'])
+    colors = np.array(['r','b','violet','g','k','darkorange','cyan'])
     ncolors = len(colors)
 
     twod = load.ap2D(int(psfid[0]))
