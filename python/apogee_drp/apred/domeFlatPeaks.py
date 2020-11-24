@@ -36,6 +36,8 @@ def PlotFlats(apred='daily', telescope='apo25m'):
     planfiles = glob.glob(visitDir+'*/*/*/apPlan*')
     nplans = len(planfiles)
 
+    print(planfiles)
+
     psfid = np.empty(nplans).astype(str)
     for i in range(nplans):
         planstr = plan.load(planfiles[i], np=True)
