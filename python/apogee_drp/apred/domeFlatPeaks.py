@@ -46,7 +46,7 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=0.5):
 
     print(psfid)
 
-    colors = np.array('r','b','g','k','purple','orange','cyan')
+    colors = np.array(['r','b','g','k','purple','orange','cyan'])
     ncolors = len(colors)
 
     for i in range(nplans):
