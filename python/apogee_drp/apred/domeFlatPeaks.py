@@ -29,7 +29,7 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 
 '''PlotFlats: overplot some dome flats '''
-def PlotFlats(apred='daily', telescope='apo25m',sep=0.5):
+def PlotFlats(apred='daily', telescope='apo25m',sep=10):
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
     visitDir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/visit/'+telescope+'/'
@@ -54,7 +54,7 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=0.5):
     tot = np.median(data[:,900:1100], axis=1)
     plt.clf()
     plt.plot(tot+sep*0, color=colors[0%ncolors])
-    plt.xlim(0,200)
+    plt.xlim(20,200)
 
     for i in range(nplans):
         twod = load.ap2D(int(psfid[i]))
