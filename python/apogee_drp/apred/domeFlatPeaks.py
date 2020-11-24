@@ -63,8 +63,8 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
     plt.xlim(120,200)
     plt.scatter(peaks,tot[peaks], marker='x', color='r')
 
-    plt.plot(stot+200, color='k')
-    plt.scatter(speaks+200, stot[speaks], marker='x', color='g')
+    plt.plot(stot, color='k')
+    plt.scatter(speaks, stot[speaks], marker='x', color='g')
 
 
 #    for i in range(nplans):
