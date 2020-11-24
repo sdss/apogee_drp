@@ -27,6 +27,7 @@ import matplotlib.ticker as ticker
 import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
+from scipy.signal import find_peaks
 
 '''PlotFlats: overplot some dome flats '''
 def PlotFlats(apred='daily', telescope='apo25m',sep=50):
@@ -52,14 +53,19 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
     twod = load.ap2D(int(psfid[0]))
     data = twod['b'][1].data
     tot = np.median(data[:,900:1100], axis=1)
-    plt.clf()
-    plt.plot(tot+sep*0, color=colors[0%ncolors])
-    plt.xlim(100,200)
+    peaks = find_peaks(tot, height=100, distance=4)
 
-    for i in range(nplans):
-        twod = load.ap2D(int(psfid[i]))
-        data = twod['b'][1].data
-        tot = np.median(data[:,900:1100], axis=1)
-        plt.plot(tot+sep*i, color=colors[i%ncolors])
+    plt.clf()
+    plt.plot(tot+sep*0, color='k')
+    plt.plot(peaks,tot[peaks], "x", color='r')
+    plt.xlim(120,200)
+
+
+
+#    for i in range(nplans):
+#        twod = load.ap2D(int(psfid[i]))
+#        data = twod['b'][1].data
+#        tot = np.median(data[:,900:1100], axis=1)
+#        plt.plot(tot+sep*i, color=colors[i%ncolors])
 
     return tot
