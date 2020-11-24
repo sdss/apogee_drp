@@ -62,4 +62,4 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
         tot = np.median(data[:,900:1100], axis=1)
         plt.plot(tot+sep*i, color=colors[i%ncolors])
 
-    return psfid
+    return tot
