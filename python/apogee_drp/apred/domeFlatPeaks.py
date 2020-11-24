@@ -113,23 +113,25 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         peakstruct['MJD'][i] = t.mjd
 
         tot = np.median(gdata[:,1024-100:1024+100], axis=1)
-        peaks,_ = find_peaks(tot, height=100)
+        peaks,_ = find_peaks(tot, height=80)
+        outfile = 'psfid_'+str("%.3f" % round(t.mjd,3))+'.dat'
+        ascii.write([peaks, tot[peaks]], outfile, names=['x', 'y'], overwrite=True)
 
-        for j in range(nfiber):
-            if j == 0: 
-                cent = pixstart
-            else:
-                cent = peakstruct['XPEAK'][i,j-1] + mediansep
-            pstart = int(round(np.floor(cent - (mediansep/2.) + 1)))
-            pstop = int(round(np.ceil(cent + (mediansep/2.) - 1)))
-            ptot = tot[pstart:pstop]
-            peaks,_ = find_peaks(ptot, height=100)
-            peakstruct['XPEAK'][i,j] = cent
-            peakstruct['YPEAK'][i,j] = 0.0
-            if len(peaks) != 0:
-                peakstruct['YPEAK'][i,j] = ptot[peaks][0]
+        #for j in range(nfiber):
+        #    if j == 0: 
+        #        cent = pixstart
+        #    else:
+        #        cent = peakstruct['XPEAK'][i,j-1] + mediansep
+        #    pstart = int(round(np.floor(cent - (mediansep/2.) + 1)))
+        #    pstop = int(round(np.ceil(cent + (mediansep/2.) - 1)))
+        #    ptot = tot[pstart:pstop]
+        #    peaks,_ = find_peaks(ptot, height=80)
+        #    peakstruct['XPEAK'][i,j] = cent
+        #    peakstruct['YPEAK'][i,j] = 0.0
+        #    if len(peaks) != 0:
+        #        peakstruct['YPEAK'][i,j] = ptot[peaks][0]
 
-    return peakstruct
+    #return peakstruct
 
 
 
