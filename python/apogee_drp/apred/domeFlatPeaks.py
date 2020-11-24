@@ -134,5 +134,42 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
 
     #return peakstruct
 
+def FindAllPeaks2(apred='daily', telescope='apo25m'):
+    load = apload.ApLoad(apred=apred, telescope=telescope)
 
+    nfiber = 300
+
+    d = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/dflat/dflat_xposref.dat')
+    xref = np.array(d['col1'])
+
+    files = glob.glob('/uufs/chpc.utah.edu/common/home/u0955897/dflat/3*dat')
+    files.sort()
+    files=np.array(files)
+    nfiles=len(files)
+
+    # FITS table structure.
+    dt = np.dtype([('PSFID',  np.str, 9),
+                   ('MJD',    np.float64),
+                   ('XPEAK',  np.float64, nfiber),
+                   ('YPEAK',  np.float64, nfiber)])
+    peakstruct = np.zeros(nfiles, dtype=dt)
+
+    for i in range(nfiles):
+        d = ascii.read(files[i])
+        x = np.array(d['x'])
+        y = np.array(d['y'])
+
+        tmp = files[i].split('_')
+        peakstruct['PSFID'][i] = tmp[0]
+        tmp1 = tmp[1].split('.da')
+        peakstruct['MJD'][i] = tmp1[0]
+
+        for j in range(nfiber):
+            peakstruct['XPEAK'][i,j] = xref[j]
+            peakstruct['YPEAK'][i,j] = 0.0
+            dif = np.absolute(x - xref[j])
+            gd, = np.where(dif < 2)
+            if len(gd) > 0: peakstruct['YPEAK'][i,j] = y[gd]
+
+    return peakstruct
 
