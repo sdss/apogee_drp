@@ -105,7 +105,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
     for i in range(nplans):
         planstr = plan.load(planfiles[i], np=True)
         psfid = planstr['psfid']
-        twod = load.ap2D(int(psfid[i]))
+        twod = load.ap2D(int(psfid))
         gdata = twod['b'][1].data
         header = twod['b'][0].header
         t = Time(header['DATE-OBS'], format='fits')
