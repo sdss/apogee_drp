@@ -47,8 +47,12 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
 
     print(psfid)
 
-    colors = np.array(['r','b','violet','g','k','darkorange','cyan'])
-    ncolors = len(colors)
+    #colors = np.array(['r','b','violet','g','k','darkorange','cyan'])
+    #ncolors = len(colors)
+
+    cmap=plt.get_cmap('hot')
+    colors = [cmap(k) for k in np.linspace(0,0.65,nplans)]
+    #colors=colors[::-1]
 
     twod = load.ap2D(int(psfid[0]))
     data = twod['b'][1].data
@@ -71,6 +75,6 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
         twod = load.ap2D(int(psfid[i]))
         data = twod['b'][1].data
         tot = np.median(data[:,900:1100], axis=1)
-        plt.plot(tot+sep*i, color=colors[i%ncolors])
+        plt.plot(tot+sep*i, color=colors[i])
 
     return tot
