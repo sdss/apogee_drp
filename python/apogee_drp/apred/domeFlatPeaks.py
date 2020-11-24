@@ -111,6 +111,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         t = Time(header['DATE-OBS'], format='fits')
         peakstruct['PSFID'][i] = psfid
         peakstruct['MJD'][i] = t.mjd
+
+        tot = np.median(data[:,1024-100:1024+100], axis=1)
         for j in range(nfiber):
             cent = pixstart + mediansep*j
             sec = tot[cent - (mediansep/2.) + 1 : cent + (mediansep/2.) - 1]
