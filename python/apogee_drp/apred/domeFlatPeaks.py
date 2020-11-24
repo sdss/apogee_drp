@@ -37,7 +37,7 @@ def PlotFlats(apred='daily', telescope='apo25m'):
     planfiles.sort()
     planfiles = np.array(planfiles)
     nplans = len(planfiles)
-    print(str(nplans) + 'planfiles found')
+    print(str(nplans) + ' planfiles found')
 
     psfid = np.empty(nplans).astype(str)
     for i in range(nplans):
@@ -46,3 +46,4 @@ def PlotFlats(apred='daily', telescope='apo25m'):
 
     print(psfid)
 
+    return psfid
