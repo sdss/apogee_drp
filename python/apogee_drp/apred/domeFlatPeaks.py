@@ -115,8 +115,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         tot = np.median(gdata[:,1024-100:1024+100], axis=1)
         for j in range(nfiber):
             cent = pixstart + mediansep*j
-            sec = tot[cent - (mediansep/2.) + 1 : cent + (mediansep/2.) - 1]
-            peaks,_ = find_peaks(tot, height=100)
+            gd, = np.where((tot > cent - (mediansep/2.) + 1) & (tot < cent + (mediansep/2.) - 1))
+            peaks,_ = find_peaks(tot[gd], height=100)
             import pdb; pdb.set_trace()
 
 
