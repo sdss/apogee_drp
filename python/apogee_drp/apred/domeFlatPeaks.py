@@ -41,9 +41,11 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
     print(str(nplans) + ' planfiles found')
 
     psfid = np.empty(nplans).astype(str)
+    mjd = np.empty(nplans).astype(str)
     for i in range(nplans):
         planstr = plan.load(planfiles[i], np=True)
         psfid[i] = planstr['psfid']
+        mjd[i] = planstr['mjd']
 
     print(psfid)
 
@@ -77,4 +79,4 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
         tot = np.median(data[:,900:1100], axis=1)
         plt.plot(tot+sep*i, color=colors[i])
 
-    return tot
+    return planstr
