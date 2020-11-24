@@ -120,10 +120,12 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             pstop = int(round(np.ceil(cent + (mediansep/2.) - 1)))
             ptot = tot[pstart:pstop]
             peaks,_ = find_peaks(ptot, height=100)
-            if j == 27: import pdb; pdb.set_trace()
             peakstruct['XPEAK'][i,j] = cent
-            peakstruct['YPEAK'][i,j] = ptot[peaks][0]
+            peakstruct['YPEAK'][i,j] = 0.0
+            if len(peaks) != 0:
+                peakstruct['YPEAK'][i,j] = ptot[peaks][0]
 
+    return peakstruct
 
 
 
