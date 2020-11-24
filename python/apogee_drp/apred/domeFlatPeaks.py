@@ -119,7 +119,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             if j == 0: 
                 cent = pixstart
             else:
-                cent = peakstruct['XPEAK'][i,j-1]
+                cent = peakstruct['XPEAK'][i,j-1] + mediansep
             pstart = int(round(np.floor(cent - (mediansep/2.) + 1)))
             pstop = int(round(np.ceil(cent + (mediansep/2.) - 1)))
             ptot = tot[pstart:pstop]
