@@ -53,7 +53,7 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
     twod = load.ap2D(int(psfid[0]))
     data = twod['b'][1].data
     tot = np.median(data[:,900:1100], axis=1)
-    peaks = find_peaks(tot, height=100, distance=4)
+    peaks,_ = find_peaks(tot, height=100, distance=4)
 
     plt.clf()
     plt.plot(tot+sep*0, color='k')
