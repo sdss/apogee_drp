@@ -33,7 +33,7 @@ def PlotFlats(apred='daily', telescope='apo25m'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
     visitDir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/visit/'+telescope+'/'
-    planfiles = glob.glob(visitDir+'*/*/*/apPlan*')
+    planfiles = glob.glob(visitDir+'*/*/*/apPlan*yaml')
     planfiles.sort()
     planfiles = np.array(planfiles)
     nplans = len(planfiles)
