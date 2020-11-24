@@ -114,6 +114,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
 
         tot = np.median(gdata[:,1024-100:1024+100], axis=1)
         for j in range(nfiber):
+            print(j)
             cent = pixstart + mediansep*j
             pstart = int(round(np.floor(cent - (mediansep/2.) + 1)))
             pstop = int(round(np.ceil(cent + (mediansep/2.) - 1)))
