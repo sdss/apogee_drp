@@ -49,12 +49,16 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=0.5):
     colors = np.array(['r','b','g','k','purple','orange','cyan'])
     ncolors = len(colors)
 
+    twod = load.ap2D(int(psfid[0]))
+    data = twod['b'][1].data
+    plt.clf()
+    plt.plot(tot+sep*0, color=colors[0%ncolors])
+    plt.xlim(0,200)
+
     for i in range(nplans):
         twod = load.ap2D(int(psfid[i]))
         data = twod['b'][1].data
         tot = np.median(data[:,900:1100], axis=1)
-        plt.clf()
         plt.plot(tot+sep*i, color=colors[i%ncolors])
-        plt.xlim(0,200)
 
     return psfid
