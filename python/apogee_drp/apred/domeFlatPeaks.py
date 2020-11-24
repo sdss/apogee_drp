@@ -60,7 +60,7 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
 
     plt.clf()
     plt.plot(tot, color=colors[0])
-    plt.xlim(650,950)
+    plt.xlim(750,900)
     #plt.scatter(peaks,tot[peaks], marker='x', color='r')
 
     #plt.plot(stot, color='k')
@@ -71,6 +71,6 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
         twod = load.ap2D(int(psfid[i]))
         data = twod['b'][1].data
         tot = np.median(data[:,900:1100], axis=1)
-        plt.plot(tot+sep*i, color=colors[i%ncolors])
+        plt.plot(tot, color=colors[i%ncolors])
 
     return tot
