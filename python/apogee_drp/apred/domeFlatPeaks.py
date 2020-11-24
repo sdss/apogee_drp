@@ -80,3 +80,41 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
         plt.plot(tot+sep*i, color=colors[i])
 
     return planstr
+
+def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+
+    nfiber = 300
+    mediansep = 6.65
+    pixstart = 28
+
+    visitDir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/visit/'+telescope+'/'
+    planfiles = glob.glob(visitDir+'*/*/*/apPlan*yaml')
+    planfiles.sort()
+    planfiles = np.array(planfiles)
+    nplans = len(planfiles)
+    print(str(nplans) + ' planfiles found')
+
+    # FITS table structure.
+    dt = np.dtype([('PSFID',  np.str, 9),
+                   ('MJD',    np.float64),
+                   ('XPEAK',  np.float64, nfiber),
+                   ('YPEAK',  np.float64, nfiber)])
+    peakstruct = np.zeros(nplans,dtype=dt)
+
+    for i in range(nplans):
+        planstr = plan.load(planfiles[i], np=True)
+        psfid = planstr['psfid']
+        twod = load.ap2D(int(psfid[i]))
+        gdata = twod['b'][1].data
+        header = twod['b'][0].header
+        t = Time(header['DATE-OBS'], format='fits')
+        peakstruct['PSFID'][i] = psfid
+        peakstruct['MJD'][i] = t.mjd
+        for j in range(nfiber):
+            cent = pixstart + mediansep*j
+            sec = tot[cent - (mediansep/2.) + 1 : cent + (mediansep/2.) - 1]
+            peaks,_ = find_peaks(tot, height=100)
+            import pdb; pdb.set_trace()
+
+
