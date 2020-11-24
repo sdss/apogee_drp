@@ -114,6 +114,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
 
         tot = np.median(gdata[:,1024-100:1024+100], axis=1)
         peaks,_ = find_peaks(tot, height=80)
+        import pdb; pdb.set_trace()
         outfile = '/uufs/chpc.utah.edu/common/home/u0955897/dflat/'+psfid+'_'+str("%.3f" % round(t.mjd,3))+'.dat'
         ascii.write([peaks, tot[peaks]], outfile, names=['x', 'y'], overwrite=True)
         print(len(peaks))
