@@ -34,12 +34,14 @@ def PlotFlats(apred='daily', telescope='apo25m'):
 
     visitDir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/visit/'+telescope+'/'
     planfiles = glob.glob(visitDir+'*/*/*/apPlan*')
+    planfiles.sort()
+    planfiles = np.array(planfiles)
     nplans = len(planfiles)
-
-    print(planfiles)
 
     psfid = np.empty(nplans).astype(str)
     for i in range(nplans):
         planstr = plan.load(planfiles[i], np=True)
         psfid[i] = planstr['psfid']
+
+    print(psfid)
 
