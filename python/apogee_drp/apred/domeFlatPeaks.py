@@ -57,8 +57,8 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
 
     plt.clf()
     plt.plot(tot+sep*0, color='k')
-    plt.plot(peaks,tot[peaks], "x", color='r')
     plt.xlim(120,200)
+    plt.scatter(peaks,tot[peaks], marker='x', color='r')
 
 
 
