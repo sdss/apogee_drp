@@ -56,7 +56,7 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
     peaks,_ = find_peaks(tot, height=100, distance=4)
 
     stot = convolve(tot, Box1DKernel(3))
-    speaks,_ = find_peaks(stot, height=100, distance=4)
+    speaks,_ = find_peaks(stot, height=50, distance=4)
 
     plt.clf()
     plt.plot(tot, color='k')
