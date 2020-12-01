@@ -2262,7 +2262,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<br>Click on column headings to sort<br><br>\n')
 
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD<TH>PROGRAM<TH>ASPCAP<TH>PLATE<TH>MJD<TH>LOC<TH>RA<TH>DEC<TH>S/N(red)<TH>S/N(green)<TH>S/N(blue)\n')
+        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD<TH>PROGRAM<TH>ASPCAP<TH>PLATE<TH>MJD<TH>LOC<TH>RA<TH>DEC<TH>S/N(red)<TH>S/N(green)<TH>S/N(blue)')
+        html.write('<TH>EXPTIME<TH>CART<TH>ZERO\n')
     #    html.write('<TR><TD>FIELD<TD>Program<TD>ASPCAP<br>'+apred_vers+'/'+aspcap_vers+'<TD>PLATE<TD>MJD<TD>LOCATION<TD>RA<TD>DEC<TD>S/N(red)<TD>S/N(green)<TD>S/N(blue)\n')
 
         plates = np.array(glob.glob(apodir+apred+'/visit/*/*/*/*/'+'*PlateSum*.fits'))
@@ -2280,6 +2281,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         iloc = np.zeros(nplates).astype(str)
         ira = np.zeros(nplates).astype(str)
         idec = np.zeros(nplates).astype(str)
+        iexptime = np.zeros(nplates).astype(str)
+        icart = np.zeros(nplates).astype(str)
+        izero = np.zeros(nplates).astype(str)
         for i in range(nplates): 
             plate = os.path.basename(plates[i]).split('-')[1]
             iplate[i] = plate
@@ -2296,6 +2300,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             iloc[i] = str(int(round(plans['PLATEPLANS']['locationid'][gd][0])))
             ira[i] = str("%.6f" % round(plans['PLATEPLANS']['raCen'][gd][0],6))
             idec[i] = str("%.6f" % round(plans['PLATEPLANS']['decCen'][gd][0],6))
+            platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+            tmp = fits.open(platesumfile)
+            plsum1 = tmp[1].data
+            iexptime[i] = str(np.sum(plsum1['EXPTIME']))
+            icart[i] = str(plsum1['CART'][0]))
+            izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
 
         # Sort by MJD
         order = np.argsort(imjd)
@@ -2315,20 +2325,23 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
             if iprogram[i] == 'AQMES-Medium': color = '#AED581'
 
-            html.write('<TR bgcolor=' + color + '><TD>' + iname[i] + '\n') 
-            html.write('<TD>' + str(iprogram[i]) + '\n') 
-            html.write('<TD> --- \n')
+            html.write('<TR bgcolor=' + color + '><TD>' + iname[i]) 
+            html.write('<TD>' + str(iprogram[i])) 
+            html.write('<TD> --- ')
             qalink = '../visit/' + itel[i] + '/' + iname[i] + '/' + iplate[i] + '/' + imjd[i] + '/html/apQA-' + iplate[i] + '-' + imjd[i] + '.html'
-            html.write('<TD align="center"><A HREF="'+qalink+'" target="_blank">'+iplate[i]+'</A>\n')
-            html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+imjd[i]+'/html/'+imjd[i]+'.html">'+imjd[i]+'</A>\n') 
-            html.write('<TD align="center">'+iloc[i]+'\n')
-            html.write('<TD align="right">'+ira[i]+'\n') 
-            html.write('<TD align="right">'+idec[i]+'\n')
+            html.write('<TD align="center"><A HREF="' + qalink + '" target="_blank">' + iplate[i] + '</A>')
+            html.write('<TD align="center"><A HREF="../exposures/' + instrument + '/' + imjd[i] + '/html/' + imjd[i] + '.html">' + imjd[i] + '</A>') 
+            html.write('<TD align="center">' + iloc[i])
+            html.write('<TD align="right">' + ira[i]) 
+            html.write('<TD align="right">' + idec[i])
             tmp = fits.open(plates[i])
             platetab = tmp[3].data
-            html.write('<TD align="right">'+str("%.1f" % round(platetab['SN'][0][0],1))+'\n') 
-            html.write('<TD align="right">'+str("%.1f" % round(platetab['SN'][0][1],1))+'\n') 
-            html.write('<TD align="right">'+str("%.1f" % round(platetab['SN'][0][2],1))+'\n') 
+            html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][0],1))) 
+            html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][1],1))) 
+            html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][2],1))) 
+            html.write('<TD align="right">' + iexptime[i]) 
+            html.write('<TD align="right">' + icart[i]) 
+            html.write('<TD align="right">' + izero[i]) 
 
         html.write('</BODY></HTML>\n')
         html.close()
