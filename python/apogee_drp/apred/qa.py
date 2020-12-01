@@ -2090,6 +2090,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     apodir =   os.environ.get('APOGEE_REDUX')+'/'
     qadir = apodir+apred+'/qa/'
 
+    # Summary file links
     visSumPathN = '../summary/allVisit-daily-apo25m.fits'
     starSumPathN = '../summary/allStar-daily-apo25m.fits'
     visSumPathS = '../summary/allVisit-daily-lco25m.fits'
@@ -2161,6 +2162,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
+            import pdb; pdb.set_trace()
             reports.sort()
             reportfile = reports[0]
             reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
