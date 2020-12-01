@@ -2304,7 +2304,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             tmp = fits.open(platesumfile)
             plsum1 = tmp[1].data
             iexptime[i] = str(np.sum(plsum1['EXPTIME']))
-            icart[i] = str(plsum1['CART'][0]))
+            icart[i] = str(plsum1['CART'][0])
             izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
 
         # Sort by MJD
