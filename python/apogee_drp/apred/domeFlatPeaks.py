@@ -59,6 +59,7 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
     twod = load.ap2D(int(psfid[0]))
     data = twod['b'][1].data
     tot = np.median(data[:,900:1100], axis=1)
+
     peaks,_ = find_peaks(tot, height=100, distance=4)
 
     stot = convolve(tot, Box1DKernel(5))
@@ -113,6 +114,9 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         peakstruct['MJD'][i] = t.mjd
 
         tot = np.median(gdata[:,1024-100:1024+100], axis=1)
+        #import pdb; pdb.set_trace()
+
+
         peaks,_ = find_peaks(tot, height=80)
         outfile = '/uufs/chpc.utah.edu/common/home/u0955897/dflat/'+str(psfid)+'_'+str("%.3f" % round(t.mjd,3))+'.dat'
         ascii.write([peaks, tot[peaks]], outfile, names=['x', 'y'], overwrite=True)
@@ -132,7 +136,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         #    if len(peaks) != 0:
         #        peakstruct['YPEAK'][i,j] = ptot[peaks][0]
 
-    #return peakstruct
+    return tot
 
 def FindAllPeaks2(apred='daily', telescope='apo25m'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
