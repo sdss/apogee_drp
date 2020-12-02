@@ -103,7 +103,10 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     xhi = int(np.round(cen0))+npixwide+1
     xx = x[xlo:xhi]
     y = spec[xlo:xhi]
-    yerr = sigma[xlo:xhi]
+    if sigma is not None:
+        yerr = sigma[xlo:xhi]
+    else:
+        yerr = y*0+1
 
     # Bounds
     initpar = [wtht2, cen0, sigma1, medspec]
