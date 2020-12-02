@@ -136,7 +136,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         #    if len(peaks) != 0:
         #        peakstruct['YPEAK'][i,j] = ptot[peaks][0]
 
-    #return peakstruct
+    return tot
 
 def FindAllPeaks2(apred='daily', telescope='apo25m'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
