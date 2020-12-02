@@ -114,7 +114,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         peakstruct['MJD'][i] = t.mjd
 
         tot = np.median(gdata[:,1024-100:1024+100], axis=1)
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
 
 
         peaks,_ = find_peaks(tot, height=80)
