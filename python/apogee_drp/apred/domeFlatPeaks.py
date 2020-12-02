@@ -27,7 +27,7 @@ import matplotlib.ticker as ticker
 import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
-from scipy.signal import find_peaks
+from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 
 '''PlotFlats: overplot some dome flats '''
 def PlotFlats(apred='daily', telescope='apo25m',sep=50):
@@ -114,7 +114,17 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         peakstruct['MJD'][i] = t.mjd
 
         tot = np.median(gdata[:,1024-100:1024+100], axis=1)
-        #import pdb; pdb.set_trace()
+
+        maxind, = argrelextrema(tot, np.greater)  # maxima
+        # sigma cut on the flux
+        gd, = np.where(tot[maxind] > 100)
+        if len(gd)==0:
+            print('No peaks found')
+            return
+        pix0 = maxind[gd]
+    #pix0 = np.atleast_1d(pix0)
+    #npeaks = len(pix0)
+        import pdb; pdb.set_trace()
 
 
         peaks,_ = find_peaks(tot, height=80)
