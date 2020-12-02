@@ -114,8 +114,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         peakstruct['PSFID'][i] = psfid
         peakstruct['MJD'][i] = t.mjd
 
-        totflux = np.median(flux[:,1024-100:1024+100], axis=1)
-        toterror = np.sqrt(np.mean(error[:,1024-100:1024+100]**2, axis=1))
+        totflux = np.nanmedian(flux[:,1024-100:1024+100], axis=1)
+        toterror = np.sqrt(np.nanmedian(error[:,1024-100:1024+100]**2, axis=1))
 
         maxind, = argrelextrema(totflux, np.greater)  # maxima
         # sigma cut on the flux
