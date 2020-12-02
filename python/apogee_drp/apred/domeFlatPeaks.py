@@ -126,6 +126,10 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         pix0 = maxind[gd]
         peaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
+        #plt.plot(totflux)
+        #plt.xlim(20,70)
+        
+
         import pdb; pdb.set_trace()
 
         peaks,_ = find_peaks(tot, height=80)
