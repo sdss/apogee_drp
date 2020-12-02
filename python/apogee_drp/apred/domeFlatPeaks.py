@@ -107,25 +107,26 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         planstr = plan.load(planfiles[i], np=True)
         psfid = planstr['psfid']
         twod = load.ap2D(int(psfid))
-        gdata = twod['b'][1].data
+        flux = twod['b'][1].data
+        error = twod['b'][2].data
         header = twod['b'][0].header
         t = Time(header['DATE-OBS'], format='fits')
         peakstruct['PSFID'][i] = psfid
         peakstruct['MJD'][i] = t.mjd
 
-        tot = np.median(gdata[:,1024-100:1024+100], axis=1)
+        totflux = np.median(flux[:,1024-100:1024+100], axis=1)
+        toterror = np.sqrt(np.mean(error[:,1024-100:1024+100]**2, axis=1))
 
-        maxind, = argrelextrema(tot, np.greater)  # maxima
+        maxind, = argrelextrema(totflux, np.greater)  # maxima
         # sigma cut on the flux
-        gd, = np.where(tot[maxind] > 100)
+        gd, = np.where(totflux[maxind] > 100)
         if len(gd)==0:
             print('No peaks found')
             return
         pix0 = maxind[gd]
-    #pix0 = np.atleast_1d(pix0)
-    #npeaks = len(pix0)
-        import pdb; pdb.set_trace()
+        peaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
+        import pdb; pdb.set_trace()
 
         peaks,_ = find_peaks(tot, height=80)
         outfile = '/uufs/chpc.utah.edu/common/home/u0955897/dflat/'+str(psfid)+'_'+str("%.3f" % round(t.mjd,3))+'.dat'
