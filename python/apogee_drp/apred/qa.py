@@ -978,64 +978,74 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     fibord = np.argsort(platesum2['FIBERID'])
     plSum2 = platesum2[fibord]
     nfiber = len(plSum2['HMAG'])
+    block = np.around((plSum2['FIBERID'] - 1) / 30)
 
     #----------------------------------------------------------------------------------------------
-    # PLOT 1: HMAG versus S/N for the exposure-combined apVisit
+    # PLOTS 1-2: HMAG versus S/N for the exposure-combined apVisit, second version colored by fiber block
     #----------------------------------------------------------------------------------------------
     Vsum = load.apVisitSum(int(plate), mjd)
     Vsumfile = Vsum.filename()
     Vsum = Vsum[1].data
 
-    plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
-    if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
-        print("----> makeObsQAplots: Making "+plotfile)
+    for i in range(2):
+        plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
+        if i == 1: plotfile = plotfile.replace('SNR','SNRblocks')
+        if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
+            print("----> makeObsQAplots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(18,8))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.tick_params(reset=True)
-        ax1.minorticks_on()
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
-        ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
+            fig=plt.figure(figsize=(18,8))
+            ax1 = plt.subplot2grid((1,1), (0,0))
+            ax1.tick_params(reset=True)
+            ax1.minorticks_on()
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
+            ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax1.tick_params(axis='both',which='major',length=axmajlen)
+            ax1.tick_params(axis='both',which='minor',length=axminlen)
+            ax1.tick_params(axis='both',which='both',width=axwidth)
 
-        if 'HMAG' in Vsum.columns.names:
-            hmagarr = Vsum['HMAG']
-        else:
-            hmagarr = Vsum['H']
-        gd, = np.where(hmagarr < 20)
-        minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd]);  spanH = maxH - minH
-        xmin = minH - spanH * 0.05;     xmax = maxH + spanH * 0.05
+            if 'HMAG' in Vsum.columns.names:
+                hmagarr = Vsum['HMAG']
+            else:
+                hmagarr = Vsum['H']
+            gd, = np.where(hmagarr < 20)
+            minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd]);  spanH = maxH - minH
+            xmin = minH - spanH * 0.05;     xmax = maxH + spanH * 0.05
 
-        minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
-        ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
-        
-        ax1.set_xlim(xmin,xmax)#;  ax1.set_ylim(ymin,ymax)
+            minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
+            ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
+            
+            ax1.set_xlim(xmin,xmax)
+            ax1.set_ylim(1,1000)
+            ax1.set_yscale('log')
 
-        if 'apogee' in survey.lower():
-            telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
-            science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
-                                (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
-        else:
-            telluric, = np.where(bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1))
-            science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
-                                (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
+            if 'apogee' in survey.lower():
+                telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
+                science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
+                                    (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
+            else:
+                telluric, = np.where(bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1))
+                science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
+                                    (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
 
-        x = hmagarr[science];  y = Vsum['SNR'][science]
-        psci = ax1.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='', label='science')
-        x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
-        ptel = ax1.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='', label='Telluric')
+            x = hmagarr[science];  y = Vsum['SNR'][science]
+            scicol = 'r'
+            telcol = 'dodgerblue'
+            if i == 1:
+                scicol = block[science]
+                telcol = block[telluric]
+            psci = ax1.scatter(x, y, marker='*', ms=150, mec='k', alpha=alpha, mfc=scicol, linestyle='', label='science')
+            x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
+            ptel = ax1.scatter(x, y, marker='o', ms=75, mec='k', alpha=alpha, mfc=telcol, linestyle='', label='Telluric')
 
-        ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+            ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-        fig.subplots_adjust(left=0.075,right=0.98,bottom=0.11,top=0.98,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir+plotfile)
-        plt.close('all')
+            fig.subplots_adjust(left=0.075,right=0.98,bottom=0.11,top=0.98,hspace=0.2,wspace=0.0)
+            plt.savefig(plotsdir+plotfile)
+            plt.close('all')
 
     #----------------------------------------------------------------------------------------------
-    # PLOTS 2-4: flat field flux and fiber blocks... previously done by plotflux.pro
+    # PLOTS 3-5: flat field flux and fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
     fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
     flux = load.apFlux(fluxid)
@@ -1081,9 +1091,8 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
         plt.close('all')
 
     #----------------------------------------------------------------------------------------------
-    # PLOT 5: fiber blocks... previously done by plotflux.pro
+    # PLOT 6: fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
-    block = np.around((plSum2['FIBERID'] - 1) / 30)
     plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
         print("----> makeObsQAplots: Making "+plotfile)
@@ -1114,7 +1123,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
         plt.close('all')
 
     #----------------------------------------------------------------------------------------------
-    # PLOT 6: guider rms plot
+    # PLOT 7: guider rms plot
     #----------------------------------------------------------------------------------------------
     expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
     gcamfile = expdir+mjd+'/gcam-'+mjd+'.fits'
@@ -1156,7 +1165,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
         if len(gd) >= 1:
             ii = gd[0]
             #------------------------------------------------------------------------------------------
-            # PLOTS 7: 3 panel mag/SNR plots for each exposure
+            # PLOTS 8: 3 panel mag/SNR plots for each exposure
             #----------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_magplots.png'
             if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
@@ -1198,14 +1207,14 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 ax2.text(-0.15,0.50,r'$H$ - (m+zero)',transform=ax2.transAxes,rotation=90,ha='left',va='center')
                 ax3.text(-0.15,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
 
-                # PLOTS 7a: observed mag vs H mag
+                # PLOTS 8a: observed mag vs H mag
                 x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,ii,1]-plSum1['ZERO'][ii]
                 ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
                 x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,ii,1]-plSum1['ZERO'][ii]
                 ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue', label='Telluric')
                 ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-                # PLOTS 7b: observed mag - fit mag vs H mag
+                # PLOTS 8b: observed mag - fit mag vs H mag
                 x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,ii,1]
                 yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
                 ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
@@ -1218,7 +1227,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 #ax2.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
                 ax2.set_ylim(-8,2)
 
-                # PLOTS 7c: S/N as calculated from ap1D frame
+                # PLOTS 8c: S/N as calculated from ap1D frame
                 #c = ['r','g','b']
                 #for ichip in range(nchips):
                 #    x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,ichip]
@@ -1247,7 +1256,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 plt.close('all')
 
             #------------------------------------------------------------------------------------------
-            # PLOT 3: spatial residuals for each exposure
+            # PLOT 9: spatial residuals for each exposure
             #----------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_spatialresid.png'
             if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
@@ -1297,7 +1306,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 plt.close('all')
 
             #------------------------------------------------------------------------------------------
-            # PLOT 4: spatial sky line emission
+            # PLOT 10: spatial sky line emission
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
             #------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][gd][0])+'_skyemission.png'
@@ -1388,7 +1397,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 plt.close('all')
 
             #------------------------------------------------------------------------------------------
-            # PLOT 5: spatial continuum emission
+            # PLOT 11: spatial continuum emission
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
             #------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_skycontinuum.png'
