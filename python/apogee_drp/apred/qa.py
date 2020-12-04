@@ -660,24 +660,26 @@ def makeSNtab(platesum=None, plate=None, mjd=None, ims=None, plugmap=None, sntab
     for j in range(nout):
         out = open(outfiles[j], 'w')
         for i in range(n_exposures):
-            # Image number
-            im = str(ims[i])
-            # SN or ALTSN
-            if j == 0:
-                sn = str("%.2f" % round(tab1['SN'][i][1], 2)).rjust(5)
-            else:
-                sn = str("%.2f" % round(tab1['ALTSN'][i][1], 2))
-            # APRRED VERSION ?
-            vers = '1'
-            # MJD when plate was plugged
-            plugmjd = plugmap.split('-')[1]
-            # Observation MJD in seconds
-            t = Time(tab1['DATEOBS'][i], format='fits')
-            tsec = str("%.5f" % round(t.mjd * 86400, 5))
-            # Exposure time
-            exptime=str(tab1['EXPTIME'][i])
-            # Write to file
-            out.write(im+'  '+sn+'  '+vers+'  '+plugmjd+'  '+plate+'  '+mjd+'  '+tsec+'  '+exptime+'  Object\n')
+            gd, = np.where(ims[i] == tab1['IM'])
+            if len(gd) == 1:
+                # Image number
+                im = str(ims[i])
+                # SN or ALTSN
+                if j == 0:
+                    sn = str("%.2f" % round(tab1['SN'][gd][1], 2)).rjust(5)
+                else:
+                    sn = str("%.2f" % round(tab1['ALTSN'][gd][1], 2))
+                # APRRED VERSION ?
+                vers = '1'
+                # MJD when plate was plugged
+                plugmjd = plugmap.split('-')[1]
+                # Observation MJD in seconds
+                t = Time(tab1['DATEOBS'][gd], format='fits')
+                tsec = str("%.5f" % round(t.mjd * 86400, 5))
+                # Exposure time
+                exptime=str(tab1['EXPTIME'][gd])
+                # Write to file
+                out.write(im+'  '+sn+'  '+vers+'  '+plugmjd+'  '+plate+'  '+mjd+'  '+tsec+'  '+exptime+'  Object\n')
         out.close()
 
     print("----> makeSNtab: Done with plate "+plate+", MJD "+mjd+"\n")
