@@ -1046,7 +1046,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 cax = ax_divider.append_axes("right", size="4%", pad="1%")
                 cb = colorbar(ptel, cax=cax, orientation="vertical")
                 #cax.xaxis.set_ticks_position("right")
-                cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+                cax.yaxis.set_major_locator(ticker.MultipleLocator(1))
                 ax.text(0.99, 0.5, r'Fiber Block', ha='right', va='center', rotation=90, transform=ax.transAxes)
 
             ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
