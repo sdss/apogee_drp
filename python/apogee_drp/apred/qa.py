@@ -185,9 +185,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-            # Make the sn*dat and altsn*dat files.
-            sntabdir = apodir + apred + '/visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/'
-            q = makeSNtab(platesum=platesum, plate=plate, mjd=mjd, ims=ims, plugmap=plugmap, sntabdir=sntabdir)
+        # Make the sn*dat and altsn*dat files.
+        sntabdir = apodir + apred + '/visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/'
+        q = makeSNtab(platesum=platesum, plate=plate, mjd=mjd, ims=ims, plugmap=plugmap, sntabdir=sntabdir)
 
         # Make the observation QA page
         q = makeObsQApages(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
