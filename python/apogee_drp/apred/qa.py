@@ -995,7 +995,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
         if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
             print("----> makeObsQAplots: Making "+plotfile)
 
-            fig=plt.figure(figsize=(19,8))
+            fig=plt.figure(figsize=(19,10))
             ax = plt.subplot2grid((1,1), (0,0))
             ax.tick_params(reset=True)
             ax.minorticks_on()
@@ -1051,7 +1051,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
             ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-            fig.subplots_adjust(left=0.075,right=0.90,bottom=0.11,top=0.98,hspace=0.2,wspace=0.0)
+            fig.subplots_adjust(left=0.06,right=0.93,bottom=0.11,top=0.98,hspace=0.2,wspace=0.0)
             plt.savefig(plotsdir+plotfile)
             plt.close('all')
 
