@@ -1037,9 +1037,9 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             if i == 1:
                 scicol = block[science]
                 telcol = block[telluric]
-            psci = ax.scatter(x, y, marker='*', s=175, edgecolors='k', alpha=alpha, c=scicol, cmap='jet', label='science')
+            psci = ax.scatter(x, y, marker='*', s=175, edgecolors='k', alpha=alpha, c=scicol, cmap='tab10', vmin=0, vmax=10, label='science')
             x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
-            ptel = ax.scatter(x, y, marker='o', s=100, edgecolors='k', alpha=alpha, c=telcol, cmap='jet', label='Telluric')
+            ptel = ax.scatter(x, y, marker='o', s=100, edgecolors='k', alpha=alpha, c=telcol, cmap='tab10', vmin=0, vmax=10, label='Telluric')
 
             if i == 1:
                 ax_divider = make_axes_locatable(ax)
@@ -1121,7 +1121,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
         ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
 
-        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=block, edgecolors='k', cmap='jet', alpha=1, vmin=0, vmax=10)
+        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=100, c=block, edgecolors='k', cmap='tab10', alpha=1, vmin=0, vmax=10)
 
         ax1_divider = make_axes_locatable(ax1)
         cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
