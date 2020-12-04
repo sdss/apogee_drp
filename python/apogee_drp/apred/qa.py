@@ -1043,7 +1043,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
             if i == 1:
                 ax_divider = make_axes_locatable(ax)
-                cax = ax_divider.append_axes("right", size="4%", pad="1%")
+                cax = ax_divider.append_axes("right", size="2%", pad="1%")
                 cb = colorbar(ptel, cax=cax, orientation="vertical")
                 #cax.xaxis.set_ticks_position("right")
                 cax.yaxis.set_major_locator(ticker.MultipleLocator(1))
@@ -1051,7 +1051,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
             ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-            fig.subplots_adjust(left=0.06,right=0.95,bottom=0.09,top=0.98,hspace=0.2,wspace=0.0)
+            fig.subplots_adjust(left=0.06,right=0.955,bottom=0.09,top=0.98,hspace=0.2,wspace=0.0)
             plt.savefig(plotsdir+plotfile)
             plt.close('all')
 
