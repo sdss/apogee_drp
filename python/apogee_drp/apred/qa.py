@@ -1019,7 +1019,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
             
             ax.set_xlim(xmin,xmax)
-            ax.set_ylim(1,1000)
+            ax.set_ylim(1,1100)
             ax.set_yscale('log')
 
             if 'apogee' in survey.lower():
