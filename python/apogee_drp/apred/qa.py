@@ -995,16 +995,17 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
         if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
             print("----> makeObsQAplots: Making "+plotfile)
 
-            fig=plt.figure(figsize=(18,8))
-            ax1 = plt.subplot2grid((1,1), (0,0))
-            ax1.tick_params(reset=True)
-            ax1.minorticks_on()
-            ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax1.set_xlabel(r'$H$ mag.');  ax1.set_ylabel(r'apVisit S/N')
-            ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax1.tick_params(axis='both',which='major',length=axmajlen)
-            ax1.tick_params(axis='both',which='minor',length=axminlen)
-            ax1.tick_params(axis='both',which='both',width=axwidth)
+            fig=plt.figure(figsize=(19,8))
+            ax = plt.subplot2grid((1,1), (0,0))
+            ax.tick_params(reset=True)
+            ax.minorticks_on()
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax.set_xlabel(r'$H$ mag.')
+            ax.set_ylabel(r'apVisit S/N')
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
 
             if 'HMAG' in Vsum.columns.names:
                 hmagarr = Vsum['HMAG']
@@ -1017,9 +1018,9 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
             
-            ax1.set_xlim(xmin,xmax)
-            ax1.set_ylim(1,1000)
-            ax1.set_yscale('log')
+            ax.set_xlim(xmin,xmax)
+            ax.set_ylim(1,1000)
+            ax.set_yscale('log')
 
             if 'apogee' in survey.lower():
                 telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
@@ -1036,13 +1037,21 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             if i == 1:
                 scicol = block[science]
                 telcol = block[telluric]
-            psci = ax1.scatter(x, y, marker='*', s=150, edgecolors='k', alpha=alpha, c=scicol, cmap='jet', label='science')
+            psci = ax.scatter(x, y, marker='*', s=150, edgecolors='k', alpha=alpha, c=scicol, cmap='jet', label='science')
             x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
-            ptel = ax1.scatter(x, y, marker='o', s=75, edgecolors='k', alpha=alpha, c=telcol, cmap='jet', label='Telluric')
+            ptel = ax.scatter(x, y, marker='o', s=75, edgecolors='k', alpha=alpha, c=telcol, cmap='jet', label='Telluric')
 
-            ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+            if i == 1:
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("right", size="4%", pad="1%")
+                cb = colorbar(ptel, cax=cax, orientation="vertical")
+                cax.xaxis.set_ticks_position("right")
+                cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+                ax.text(0.99, 0.5, r'Fiber Block', ha='right', va='center', rotation=90, transform=ax.transAxes)
 
-            fig.subplots_adjust(left=0.075,right=0.98,bottom=0.11,top=0.98,hspace=0.2,wspace=0.0)
+            ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+
+            fig.subplots_adjust(left=0.075,right=0.90,bottom=0.11,top=0.98,hspace=0.2,wspace=0.0)
             plt.savefig(plotsdir+plotfile)
             plt.close('all')
 
@@ -1117,8 +1126,8 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
         cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
         cb = colorbar(sc, cax=cax1, orientation="horizontal")
         cax1.xaxis.set_ticks_position("top")
-        cax1.minorticks_on()
-        ax1.text(0.5, 1.12, r'Fiber Blocks',ha='center', transform=ax1.transAxes)
+        cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax1.text(0.5, 1.12, r'Fiber Block', ha='center', transform=ax1.transAxes)
 
         fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.91,hspace=0.2,wspace=0.0)
         plt.savefig(plotsdir+plotfile)
