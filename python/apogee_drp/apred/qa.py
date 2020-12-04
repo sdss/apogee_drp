@@ -2314,8 +2314,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<br>Click on column headings to sort<br><br>\n')
 
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD<TH>PROGRAM<TH>ASPCAP<TH>PLATE<TH>MJD<TH>LOC<TH>RA<TH>DEC<TH>S/N(red)<TH>S/N(green)<TH>S/N(blue)')
-        html.write('<TH>EXPTIME<TH>CART<TH>ZERO\n')
+        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASPCAP <TH>PLATE <TH>MJD <TH>LOC <TH>RA <TH>DEC <TH>S/N(red) <TH>S/N(green) <TH>S/N(blue)')
+        html.write('<TH>N<BR>EXP. <TH>TOTAL<BR>EXPTIME <TH>CART <TH>ZERO <TH>MOON<BR>PHASE\n')
     #    html.write('<TR><TD>FIELD<TD>Program<TD>ASPCAP<br>'+apred_vers+'/'+aspcap_vers+'<TD>PLATE<TD>MJD<TD>LOCATION<TD>RA<TD>DEC<TD>S/N(red)<TD>S/N(green)<TD>S/N(blue)\n')
 
         plates = np.array(glob.glob(apodir+apred+'/visit/*/*/*/*/'+'*PlateSum*.fits'))
@@ -2333,9 +2333,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         iloc = np.zeros(nplates).astype(str)
         ira = np.zeros(nplates).astype(str)
         idec = np.zeros(nplates).astype(str)
+        inexposures = np.zeros(nplates).astype(str)
         iexptime = np.zeros(nplates).astype(str)
         icart = np.zeros(nplates).astype(str)
         izero = np.zeros(nplates).astype(str)
+        imoonphase = np.zeros(nplates).astype(str)
         for i in range(nplates): 
             plate = os.path.basename(plates[i]).split('-')[1]
             iplate[i] = plate
@@ -2355,9 +2357,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
             tmp = fits.open(platesumfile)
             plsum1 = tmp[1].data
+            inexposures[i] = str(len(plsum1['IM']))
             iexptime[i] = str(np.sum(plsum1['EXPTIME']))
             icart[i] = str(plsum1['CART'][0])
             izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
+            imoonphase[i] = np.mean(plsum1['MOONPHASE'])
 
         # Sort by MJD
         order = np.argsort(imjd)
@@ -2391,9 +2395,26 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][0],1))) 
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][1],1))) 
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][2],1))) 
+            html.write('<TD align="right">' + inexposures[i]) 
             html.write('<TD align="right">' + iexptime[i]) 
             html.write('<TD align="right">' + icart[i]) 
-            html.write('<TD align="right">' + izero[i]) 
+            html.write('<TD align="right">' + izero[i])
+            bgcolor = '#000000'
+            txtcolor = '#FFFFFF'
+            if imoonphase[i] > 0.5: txtcolor = '#000000'
+
+            if imoonphase[i] > 0.1: bgcolor = '#282828'
+            if imoonphase[i] > 0.2: bgcolor = '#404040'
+            if imoonphase[i] > 0.3: bgcolor = '#606060'
+            if imoonphase[i] > 0.4: bgcolor = '#787878'
+            if imoonphase[i] > 0.5: bgcolor = '#989898'
+            if imoonphase[i] > 0.6: bgcolor = '#B0B0B0'
+            if imoonphase[i] > 0.7: bgcolor = '#C8C8C8'
+            if imoonphase[i] > 0.8: bgcolor = '#E8E8E8'
+            if imoonphase[i] > 0.9: bgcolor = '#FFFFFF'
+
+            mphase = str("%.2f" % round(imoonphase[i],2))
+            html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase+'\n') 
 
         html.write('</BODY></HTML>\n')
         html.close()
