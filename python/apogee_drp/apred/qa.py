@@ -1045,8 +1045,6 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 ax_divider = make_axes_locatable(ax)
                 cax = ax_divider.append_axes("right", size="2%", pad="1%")
                 cb = colorbar(ptel, cax=cax, orientation="vertical")
-                cax.set_yticks([1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5,10.5])
-                cax.set_yticklabels(['1','2','3','4','5','6','7','8','9','10'])
                 #cax.xaxis.set_ticks_position("right")
                 cax.yaxis.set_major_locator(ticker.MultipleLocator(1))
                 ax.text(1.09, 0.5, r'Fiber Block', ha='right', va='center', rotation=-90, transform=ax.transAxes)
