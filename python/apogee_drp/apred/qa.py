@@ -758,8 +758,8 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, f
     html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
     snrplot1 = 'apVisitSNR-'+plate+'-'+mjd+'.png'
     snrplot2 = 'apVisitSNRblocks-'+plate+'-'+mjd+'.png'
-    html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=800></A>')
-    html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=800></A>\n')
+    html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=850></A>')
+    html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     # Table of individual exposures.
@@ -1037,9 +1037,9 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             if i == 1:
                 scicol = block[science]
                 telcol = block[telluric]
-            psci = ax.scatter(x, y, marker='*', s=150, edgecolors='k', alpha=alpha, c=scicol, cmap='jet', label='science')
+            psci = ax.scatter(x, y, marker='*', s=175, edgecolors='k', alpha=alpha, c=scicol, cmap='jet', label='science')
             x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
-            ptel = ax.scatter(x, y, marker='o', s=75, edgecolors='k', alpha=alpha, c=telcol, cmap='jet', label='Telluric')
+            ptel = ax.scatter(x, y, marker='o', s=100, edgecolors='k', alpha=alpha, c=telcol, cmap='jet', label='Telluric')
 
             if i == 1:
                 ax_divider = make_axes_locatable(ax)
