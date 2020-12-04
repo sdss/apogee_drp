@@ -185,6 +185,10 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
+            # Make the sn*dat and altsn*dat files.
+            sntabdir = apodir + apred + '/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/'
+            q = makeSNtab(platesum=platesum, plate=plate, mjd=mjd, ims=ims, plugmap=plugmap, sntabdir=sntabdir)
+
         # Make the observation QA page
         q = makeObsQApages(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
                            fluxid=fluxid, telescope=telescope)
@@ -633,6 +637,54 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             hdulist.close()
 
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
+
+
+''' MAKESNTAB: make sn*dat and altsn*dat files'''
+def makeSNtab(platesum=None, plate=None, mjd=None, ims=None, plugmap=None, sntabdir=None): 
+
+    print("----> makeSNtab: Running plate "+plate+", MJD "+mjd)
+
+    n_exposures = len(ims)
+
+    if os.path.exists(sntabdir) is False:
+        subprocess.call(['mkdir', sntabdir])
+
+    outfile1 = sntabdir + 'sn-' + plate + '-' + mjd + '.dat'
+    outfile2 = sntabdir + 'altsn-' + plate + '-' + mjd + '.dat'
+    outfiles = np.array([outfile1, outfile2])
+    nout = len(outfiles)
+
+    tmp = fits.open(platesum)
+    tab1 = tmp[1].data
+
+    for j in range(nout):
+        out = open(outfiles[j], 'w')
+        for i in range(n_exposures):
+            # Image number
+            im = str(ims[i])
+
+            # SN or ALTSN
+            if j == 0:
+                sn = str("%.2f" % round(tab1['SN'][i][1], 2)).rjust(5)
+            else:
+                sn = str("%.2f" % round(tab1['ALTSN'][i][1], 2))
+
+            # APRRED VERSION ?
+            vers = '1'
+
+            # MJD when plate was plugged
+            plugmjd = plugmap.split('-')[1]
+
+            # Observation MJD in seconds
+            t = Time(tab1['DATEOBS'][i], format='fits')
+            tsec = str("%.5f" % round(t.mjd * 86400, 5))
+
+            # Exposure time
+            exptime=str(tab1['EXPTIME'[i])
+            out.write(im+'  '+sn+'  '+vers+'  '+plugmjd+'  '+plate+'  '+mjd+'  '+tsec+'  '+exptime+'  Object\n')
+        out.close()
+
+    print("----> makeSNtab: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
 ''' MAKEOBSQAPAGES: mkhtmlplate translation '''
