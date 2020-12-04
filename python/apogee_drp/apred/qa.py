@@ -756,8 +756,10 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, f
     html.write('<H3> Plots of apVisit spectra ---> <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html>apPlate-'+plate+'-'+mjd+'</a><H3>\n')
     html.write('<HR>\n')
     html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
-    snrplot = 'apVisitSNR-'+plate+'-'+mjd+'.png'
-    html.write('<A HREF=../plots/'+snrplot+' target="_blank"><IMG SRC=../plots/'+snrplot+' WIDTH=900></A>\n')
+    snrplot1 = 'apVisitSNR-'+plate+'-'+mjd+'.png'
+    snrplot2 = 'apVisitSNRblocks-'+plate+'-'+mjd+'.png'
+    html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=800></A>')
+    html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=800></A>\n')
     html.write('<HR>\n')
 
     # Table of individual exposures.
