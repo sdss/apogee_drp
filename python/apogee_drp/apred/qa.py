@@ -1036,9 +1036,9 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             if i == 1:
                 scicol = block[science]
                 telcol = block[telluric]
-            psci = ax1.scatter(x, y, marker='*', ms=150, mec='k', alpha=alpha, mfc=scicol, linestyle='', label='science')
+            psci = ax1.scatter(x, y, marker='*', s=150, edgecolors='k', alpha=alpha, c=scicol, label='science')
             x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
-            ptel = ax1.scatter(x, y, marker='o', ms=75, mec='k', alpha=alpha, mfc=telcol, linestyle='', label='Telluric')
+            ptel = ax1.scatter(x, y, marker='o', s=75, edgecolors='k', alpha=alpha, c=telcol, label='Telluric')
 
             ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
