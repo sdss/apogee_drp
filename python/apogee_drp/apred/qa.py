@@ -1037,6 +1037,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             if i == 1:
                 scicol = block[science]
                 telcol = block[telluric]
+            import pdb; pdb.set_trace()
             psci = ax.scatter(x, y, marker='*', s=150, edgecolors='k', alpha=alpha, c=scicol, cmap='jet', label='science')
             x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
             ptel = ax.scatter(x, y, marker='o', s=75, edgecolors='k', alpha=alpha, c=telcol, cmap='jet', label='Telluric')
