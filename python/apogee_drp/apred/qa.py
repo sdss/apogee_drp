@@ -662,6 +662,7 @@ def makeSNtab(platesum=None, plate=None, mjd=None, ims=None, plugmap=None, sntab
         for i in range(n_exposures):
             gd, = np.where(ims[i] == tab1['IM'])
             if len(gd) == 1:
+                gd = gd[0]
                 # Image number
                 im = str(ims[i])
                 # SN or ALTSN
