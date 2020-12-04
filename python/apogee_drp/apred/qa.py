@@ -2337,7 +2337,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         iexptime = np.zeros(nplates).astype(str)
         icart = np.zeros(nplates).astype(str)
         izero = np.zeros(nplates).astype(str)
-        imoonphase = np.zeros(nplates).astype(str)
+        imoonphase = np.zeros(nplates)
         for i in range(nplates): 
             plate = os.path.basename(plates[i]).split('-')[1]
             iplate[i] = plate
