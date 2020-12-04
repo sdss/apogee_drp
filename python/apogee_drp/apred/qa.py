@@ -204,7 +204,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the nightly QA page
         if makenightqa is True:
-            q= makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
+            q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
 
         # Make mjd.html and fields.html
         if makemasterqa is True: 
