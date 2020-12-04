@@ -980,7 +980,6 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     fibord = np.argsort(platesum2['FIBERID'])
     plSum2 = platesum2[fibord]
     nfiber = len(plSum2['HMAG'])
-    block = np.around((plSum2['FIBERID'] - 1) / 30)
 
     #----------------------------------------------------------------------------------------------
     # PLOTS 1-2: HMAG versus S/N for the exposure-combined apVisit, second version colored by fiber block
@@ -988,6 +987,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     Vsum = load.apVisitSum(int(plate), mjd)
     Vsumfile = Vsum.filename()
     Vsum = Vsum[1].data
+    block = np.floor((Vsum['FIBERID'] - 1) / 30)
 
     for i in range(2):
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
@@ -1037,7 +1037,6 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             if i == 1:
                 scicol = block[science]
                 telcol = block[telluric]
-            import pdb; pdb.set_trace()
             psci = ax.scatter(x, y, marker='*', s=150, edgecolors='k', alpha=alpha, c=scicol, cmap='jet', label='science')
             x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
             ptel = ax.scatter(x, y, marker='o', s=75, edgecolors='k', alpha=alpha, c=telcol, cmap='jet', label='Telluric')
@@ -1048,7 +1047,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 cb = colorbar(ptel, cax=cax, orientation="vertical")
                 #cax.xaxis.set_ticks_position("right")
                 cax.yaxis.set_major_locator(ticker.MultipleLocator(1))
-                ax.text(0.99, 0.5, r'Fiber Block', ha='right', va='center', rotation=90, transform=ax.transAxes)
+                ax.text(1.10, 0.5, r'Fiber Block', ha='right', va='center', rotation=-90, transform=ax.transAxes)
 
             ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
@@ -1105,6 +1104,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     #----------------------------------------------------------------------------------------------
     # PLOT 6: fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
+    block = np.floor((plSum2['FIBERID'] - 1) / 30)
     plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
         print("----> makeObsQAplots: Making "+plotfile)
