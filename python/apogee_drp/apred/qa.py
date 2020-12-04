@@ -2401,7 +2401,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD align="right">' + izero[i])
             bgcolor = '#000000'
             txtcolor = '#FFFFFF'
-            if imoonphase[i] > 0.5: txtcolor = '#000000'
+            if imoonphase[i] > 0.6: txtcolor = '#000000'
 
             if imoonphase[i] > 0.1: bgcolor = '#282828'
             if imoonphase[i] > 0.2: bgcolor = '#404040'
