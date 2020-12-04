@@ -662,25 +662,21 @@ def makeSNtab(platesum=None, plate=None, mjd=None, ims=None, plugmap=None, sntab
         for i in range(n_exposures):
             # Image number
             im = str(ims[i])
-
             # SN or ALTSN
             if j == 0:
                 sn = str("%.2f" % round(tab1['SN'][i][1], 2)).rjust(5)
             else:
                 sn = str("%.2f" % round(tab1['ALTSN'][i][1], 2))
-
             # APRRED VERSION ?
             vers = '1'
-
             # MJD when plate was plugged
             plugmjd = plugmap.split('-')[1]
-
             # Observation MJD in seconds
             t = Time(tab1['DATEOBS'][i], format='fits')
             tsec = str("%.5f" % round(t.mjd * 86400, 5))
-
             # Exposure time
-            exptime=str(tab1['EXPTIME'[i])
+            exptime=str(tab1['EXPTIME'][i])
+            # Write to file
             out.write(im+'  '+sn+'  '+vers+'  '+plugmjd+'  '+plate+'  '+mjd+'  '+tsec+'  '+exptime+'  Object\n')
         out.close()
 
