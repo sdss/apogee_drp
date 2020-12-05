@@ -344,7 +344,7 @@ def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
         os.makedirs(cal_dir)
 
     parfile = cal_dir+'dailycal.par'
-    with open(parfile,'a'):
+    with open(parfile,'a') as file:
         psf = int(psf)   # must be int
         if waves is not None:
             waves = np.array(waves)  # in case a list was input
