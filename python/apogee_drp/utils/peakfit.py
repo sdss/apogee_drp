@@ -88,7 +88,7 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     #  Gaussian area is A = ht*wid*sqrt(2*pi)
     sigma0 = np.maximum( (totflux*dx)/(ht0*np.sqrt(2*np.pi)) , 0.01)
     cen0 = np.sum(flux*xx0)/totflux
-    cen0 = np.minimum(np.maximum((pix0-dx*0.5), cen0), (pix0+dx*0.5))   # constrain the center
+    cen0 = np.minimum(np.maximum((pix0-dx*0.7), cen0), (pix0+dx*0.7))   # constrain the center
     # Use linear-least squares to calculate height and sigma
     psf1 = np.exp(-0.5*(xx0-cen0)**2/sigma0**2)          # normalized Gaussian
     wtht1 = np.sum(flux*psf1)/np.sum(psf1*psf1)          # linear least squares
@@ -103,7 +103,10 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     xhi = int(np.round(cen0))+npixwide+1
     xx = x[xlo:xhi]
     y = spec[xlo:xhi]
-    yerr = sigma[xlo:xhi]
+    if sigma is not None:
+        yerr = sigma[xlo:xhi]
+    else:
+        yerr = y*0+1
 
     # Bounds
     initpar = [wtht2, cen0, sigma1, medspec]
