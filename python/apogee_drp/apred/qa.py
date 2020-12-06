@@ -2232,7 +2232,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
 
-            if cmjd == '59186': import pdb; pdb.set_trace()
+            #if cmjd == '59186': import pdb; pdb.set_trace()
 
             if len(reports) != 0:
                 # Column 1: Date
