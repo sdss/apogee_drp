@@ -2346,7 +2346,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         plates = np.array(glob.glob(apodir+apred+'/visit/*/*/*/*/'+'*PlateSum*.fits'))
         nplates = len(plates)
-
+        import pdb; pdb.set_trace()
         # should really get this next stuff direct from database!
         plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par', np=True)
 
@@ -2402,6 +2402,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         idec = idec[order]
 
         for i in range(nplates):
+            tmp = fits.open(plates[i])
+            platetab = tmp[3].data
+
             color = '#ffb3b3'
             if iprogram[i] == 'RM': color = '#B3E5FC' 
             if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
@@ -2416,8 +2419,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD align="center">' + iloc[i])
             html.write('<TD align="right">' + ira[i]) 
             html.write('<TD align="right">' + idec[i])
-            tmp = fits.open(plates[i])
-            platetab = tmp[3].data
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][0],1))) 
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][1],1))) 
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][2],1))) 
