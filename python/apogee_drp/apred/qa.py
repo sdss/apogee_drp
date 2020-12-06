@@ -75,7 +75,6 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
             if 'sky' not in plans[i]: gdplans.append(plans[i].replace('\n',''))
     gdplans = np.array(gdplans)
     nplans = len(gdplans)
-    import pdb; pdb.set_trace()
 
     # Run apqa on the science data plans
     print("Running APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
