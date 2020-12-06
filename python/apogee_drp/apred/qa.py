@@ -2291,7 +2291,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 else:
                     html.write('<TD>\n')
 
-            html.write('</table>\n')
+        html.write('</table>\n')
 
         # Summary calibration data
         caldir = 'cal/'
