@@ -2347,7 +2347,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         plates = np.array(glob.glob(apodir+apred+'/visit/*/*/*/*/'+'*PlateSum*.fits'))
         nplates = len(plates)
-        import pdb; pdb.set_trace()
         # should really get this next stuff direct from database!
         plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par', np=True)
 
