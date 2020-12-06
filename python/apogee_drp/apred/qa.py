@@ -71,7 +71,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
     gdplans = []
     for i in range(nplans):
         tmp = plans[i].split('-')
-        if tmp[0] == 'apPlan': gdplans.append(plans[i].replace('\n',''))
+        if tmp[0] == 'apPlan': 
+            if 'sky' not in plans[i]: gdplans.append(plans[i].replace('\n',''))
     gdplans = np.array(gdplans)
     nplans = len(gdplans)
     import pdb; pdb.set_trace()
