@@ -2234,11 +2234,14 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
-            reports.sort()
-            reportfile = reports[0]
-            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
-            html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
-            #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+            if len(reports) != 0:
+                reports.sort()
+                reportfile = reports[0]
+                reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
+                html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
+                #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+            else:
+                html.write('<TD ')
 
 
             # Column 3-4: Exposure log and raw data link
