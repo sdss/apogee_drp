@@ -2293,21 +2293,21 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
             html.write('</table>\n')
 
-            # Summary calibration data
-            caldir = 'cal/'
-            html.write('<P> Calibration Data:\n')
-            html.write('<UL>\n')
-            html.write('<LI> <A HREF='+caldir+'/darkcorr/html/darks.html> Darks </A>\n')
-            html.write('<LI> <A HREF='+caldir+'/flatcorr/html/flats.html> Flats </A>\n')
-            html.write('<LI> <A HREF='+caldir+'/flux/html/flux.html> Fiber fluxes from petal flats </A>\n')
-            html.write('<LI> <A HREF='+caldir+'/trace/html/trace.html> Traces </A>\n')
-            html.write('<LI> <A HREF='+caldir+'/detector/html/rn.html> Readout noise </A>\n')
-            html.write('<LI> <A HREF='+caldir+'/detector/html/gain.html> Gain </A>\n')
-            html.write('<LI> <A HREF='+caldir+'/wave/html/wave.html> Wave cals </A>\n')
-            html.write('</UL>\n')
+        # Summary calibration data
+        caldir = 'cal/'
+        html.write('<P> Calibration Data:\n')
+        html.write('<UL>\n')
+        html.write('<LI> <A HREF='+caldir+'/darkcorr/html/darks.html> Darks </A>\n')
+        html.write('<LI> <A HREF='+caldir+'/flatcorr/html/flats.html> Flats </A>\n')
+        html.write('<LI> <A HREF='+caldir+'/flux/html/flux.html> Fiber fluxes from petal flats </A>\n')
+        html.write('<LI> <A HREF='+caldir+'/trace/html/trace.html> Traces </A>\n')
+        html.write('<LI> <A HREF='+caldir+'/detector/html/rn.html> Readout noise </A>\n')
+        html.write('<LI> <A HREF='+caldir+'/detector/html/gain.html> Gain </A>\n')
+        html.write('<LI> <A HREF='+caldir+'/wave/html/wave.html> Wave cals </A>\n')
+        html.write('</UL>\n')
 
-            html.write('</body></html>\n')
-            html.close()
+        html.write('</body></html>\n')
+        html.close()
 
     #---------------------------------------------------------------------------------------
     # Fields view
