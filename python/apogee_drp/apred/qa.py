@@ -2227,88 +2227,87 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 color = 'b3ffb3'
             load = apload.ApLoad(apred=apred, telescope=telescope)
 
-            # Column 2: Data
-            html.write('<TR bgcolor=' + color + ' align="center"><TD>' + date + '\n')
-            # Column 2: Observing log
             reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
             dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
             if len(reports) != 0:
+                # Column 1: Date
+                html.write('<TR bgcolor=' + color + ' align="center"><TD>' + date + '\n')
+                # Column 2: Observing log
+
                 reports.sort()
                 reportfile = reports[0]
                 reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
                 html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
                 #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
-            else:
-                html.write('<TD ')
 
 
-            # Column 3-4: Exposure log and raw data link
-            logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
-            logFilePath = logFileDir + cmjd + '.log.html'
+                # Column 3-4: Exposure log and raw data link
+                logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
+                logFilePath = logFileDir + cmjd + '.log.html'
 
-            logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
-            logFileDir = os.path.dirname(logFile)
+                logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
+                logFileDir = os.path.dirname(logFile)
 
-            html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
-            html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
+                html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
+                html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
-            # Column 5-6: Night QA and plates reduced for this night
-            plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
-            plateQAfiles = np.array(glob.glob(plateQApaths))
-            nplates = len(plateQAfiles)
-            if nplates >= 1:
-                html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
-            else:
-                html.write('<TD>\n')
-            html.write('<TD align="left">')
-            for j in range(nplates):
-                if plateQAfiles[j] != '':
-                    plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
-                    tmp = plateQApathPartial.split('/')
-                    field = tmp[2]
-                    plate = tmp[3]
-                    if j < nplates:
-                        html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
-                    else:
-                        html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
+                # Column 5-6: Night QA and plates reduced for this night
+                plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
+                plateQAfiles = np.array(glob.glob(plateQApaths))
+                nplates = len(plateQAfiles)
+                if nplates >= 1:
+                    html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
+                else:
+                    html.write('<TD>\n')
+                html.write('<TD align="left">')
+                for j in range(nplates):
+                    if plateQAfiles[j] != '':
+                        plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
+                        tmp = plateQApathPartial.split('/')
+                        field = tmp[2]
+                        plate = tmp[3]
+                        if j < nplates:
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
+                        else:
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
 
-            # Column 7: Combined files for this night
-            #html.write('<TD>\n')
+                # Column 7: Combined files for this night
+                #html.write('<TD>\n')
 
-            # Column 8: Single stars observed for this night
-            #html.write('<TD>\n')
+                # Column 8: Single stars observed for this night
+                #html.write('<TD>\n')
 
-            # Column 9: Dome flats observed for this night
-            #html.write('<TD>\n')
+                # Column 9: Dome flats observed for this night
+                #html.write('<TD>\n')
 
-            # Column 7: Summary files
-            visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
-            starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
-            if nplates >= 1: 
-                html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
-                html.write('<BR><a href="'+starSumPath+'">allStarMJD</a>\n')
-            else:
-                html.write('<TD>\n')
+                # Column 7: Summary files
+                visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
+                starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
+                if nplates >= 1: 
+                    html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
+                    html.write('<BR><a href="'+starSumPath+'">allStarMJD</a>\n')
+                else:
+                    html.write('<TD>\n')
 
-        html.write('</table>\n')
+            html.write('</table>\n')
 
-        # Summary calibration data
-        caldir = 'cal/'
-        html.write('<P> Calibration Data:\n')
-        html.write('<UL>\n')
-        html.write('<LI> <A HREF='+caldir+'/darkcorr/html/darks.html> Darks </A>\n')
-        html.write('<LI> <A HREF='+caldir+'/flatcorr/html/flats.html> Flats </A>\n')
-        html.write('<LI> <A HREF='+caldir+'/flux/html/flux.html> Fiber fluxes from petal flats </A>\n')
-        html.write('<LI> <A HREF='+caldir+'/trace/html/trace.html> Traces </A>\n')
-        html.write('<LI> <A HREF='+caldir+'/detector/html/rn.html> Readout noise </A>\n')
-        html.write('<LI> <A HREF='+caldir+'/detector/html/gain.html> Gain </A>\n')
-        html.write('<LI> <A HREF='+caldir+'/wave/html/wave.html> Wave cals </A>\n')
-        html.write('</UL>\n')
+            # Summary calibration data
+            caldir = 'cal/'
+            html.write('<P> Calibration Data:\n')
+            html.write('<UL>\n')
+            html.write('<LI> <A HREF='+caldir+'/darkcorr/html/darks.html> Darks </A>\n')
+            html.write('<LI> <A HREF='+caldir+'/flatcorr/html/flats.html> Flats </A>\n')
+            html.write('<LI> <A HREF='+caldir+'/flux/html/flux.html> Fiber fluxes from petal flats </A>\n')
+            html.write('<LI> <A HREF='+caldir+'/trace/html/trace.html> Traces </A>\n')
+            html.write('<LI> <A HREF='+caldir+'/detector/html/rn.html> Readout noise </A>\n')
+            html.write('<LI> <A HREF='+caldir+'/detector/html/gain.html> Gain </A>\n')
+            html.write('<LI> <A HREF='+caldir+'/wave/html/wave.html> Wave cals </A>\n')
+            html.write('</UL>\n')
 
-        html.write('</body></html>\n')
-        html.close()
+            html.write('</body></html>\n')
+            html.close()
 
     #---------------------------------------------------------------------------------------
     # Fields view
