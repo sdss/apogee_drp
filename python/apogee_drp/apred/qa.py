@@ -2192,7 +2192,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         logs = logs[gd]
         mjd = mjd[gd]
         nmjd = len(mjd)
-        import pdb; pdb.set_trace()
 
         # Open the mjd file html
         mjdfile = qadir+mjdfilebase
@@ -2232,6 +2231,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
+
+            if cmjd == '59186': import pdb; pdb.set_trace()
+
             if len(reports) != 0:
                 # Column 1: Date
                 html.write('<TR bgcolor=' + color + ' align="center"><TD>' + date + '\n')
