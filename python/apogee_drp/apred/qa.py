@@ -2192,6 +2192,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         logs = logs[gd]
         mjd = mjd[gd]
         nmjd = len(mjd)
+        import pdb; pdb.set_trace()
 
         # Open the mjd file html
         mjdfile = qadir+mjdfilebase
