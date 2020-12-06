@@ -2409,7 +2409,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if iprogram[i] == 'RM': color = '#B3E5FC' 
             if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
             if iprogram[i] == 'AQMES-Medium': color = '#AED581'
-            if iprogram[i] == 'MWM': color = '#E5ADF7'
+            if iprogram[i] == 'MWM': color = '#D39FE4'
 
             html.write('<TR bgcolor=' + color + '><TD>' + iname[i]) 
             html.write('<TD>' + str(iprogram[i])) 
@@ -2506,7 +2506,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             p, = np.where(iprogram == 'AQMES-Medium')
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#AED581', label='AQMES-Medium ('+str(len(p))+')')
             p, = np.where(iprogram == 'MWM')
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#E5ADF7', label='MWM ('+str(len(p))+')')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='*', s=msz*2, edgecolors='k', alpha=alf, c='#E5ADF7', label='MWM ('+str(len(p))+')')
 
 
             ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
