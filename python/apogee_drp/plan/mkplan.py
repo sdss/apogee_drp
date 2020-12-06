@@ -344,7 +344,7 @@ def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
         os.makedirs(cal_dir)
 
     parfile = cal_dir+'dailycal.par'
-    with open(parfile,'a'):
+    with open(parfile,'a') as file:
         psf = int(psf)   # must be int
         if waves is not None:
             waves = np.array(waves)  # in case a list was input
@@ -464,7 +464,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     elif onem==True:
         planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd) 
         if suffix is not None:
-            planfile = os.path.dirname(planfile)+'/'+os.path.splitext(os.path.basename(planfile,'.yaml'))[0]+suffix+'.yaml'
+            planfile = os.path.dirname(planfile)+'/'+os.path.splitext(os.path.basename(planfile))[0]+suffix+'.yaml'
     else:
         planfile = load.filename('Plan',plate=plate,mjd=mjd)
     # Make sure the file ends with .yaml
@@ -485,10 +485,10 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
 
     # outplan plan file name
     if (stars is not None) & (onem==False):
-        planfile = os.path.dirname(planfile)+'/'+os.path.basename(planfile,'.yaml')+'star.yaml'
+        planfile = os.path.dirname(planfile)+'/'+os.path.splitext(os.path.basename(planfile))[0]+'star.yaml'
     else:
         if sky==True:
-            planfile = os.path.dirname(planfile)+'/'+os.path.basename(planfile,'.yaml')+'sky.yaml' 
+            planfile = os.path.dirname(planfile)+'/'+os.path.splitext(os.path.basename(planfile))[0]+'sky.yaml' 
 
     if sky==True:
         logger.info('apdailycals')
