@@ -71,7 +71,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
     gdplans = []
     for i in range(nplans):
         tmp = plans[i].split('-')
-        if tmp[0] == 'apPlan': gdplans.append(plans[i].replace('\n',''))
+        if tmp[0] == 'apPlan': 
+            if 'sky' not in plans[i]: gdplans.append(plans[i].replace('\n',''))
     gdplans = np.array(gdplans)
     nplans = len(gdplans)
 
@@ -2227,67 +2228,72 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 color = 'b3ffb3'
             load = apload.ApLoad(apred=apred, telescope=telescope)
 
-            # Column 2: Data
-            html.write('<TR bgcolor=' + color + ' align="center"><TD>' + date + '\n')
-            # Column 2: Observing log
             reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
             dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
-            reports.sort()
-            reportfile = reports[0]
-            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
-            html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
-            #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+
+            #if cmjd == '59186': import pdb; pdb.set_trace()
+
+            if len(reports) != 0:
+                # Column 1: Date
+                html.write('<TR bgcolor=' + color + ' align="center"><TD>' + date + '\n')
+                # Column 2: Observing log
+
+                reports.sort()
+                reportfile = reports[0]
+                reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
+                html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
+                #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
 
 
-            # Column 3-4: Exposure log and raw data link
-            logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
-            logFilePath = logFileDir + cmjd + '.log.html'
+                # Column 3-4: Exposure log and raw data link
+                logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
+                logFilePath = logFileDir + cmjd + '.log.html'
 
-            logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
-            logFileDir = os.path.dirname(logFile)
+                logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
+                logFileDir = os.path.dirname(logFile)
 
-            html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
-            html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
+                html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
+                html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
-            # Column 5-6: Night QA and plates reduced for this night
-            plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
-            plateQAfiles = np.array(glob.glob(plateQApaths))
-            nplates = len(plateQAfiles)
-            if nplates >= 1:
-                html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
-            else:
-                html.write('<TD>\n')
-            html.write('<TD align="left">')
-            for j in range(nplates):
-                if plateQAfiles[j] != '':
-                    plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
-                    tmp = plateQApathPartial.split('/')
-                    field = tmp[2]
-                    plate = tmp[3]
-                    if j < nplates:
-                        html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
-                    else:
-                        html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
+                # Column 5-6: Night QA and plates reduced for this night
+                plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
+                plateQAfiles = np.array(glob.glob(plateQApaths))
+                nplates = len(plateQAfiles)
+                if nplates >= 1:
+                    html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
+                else:
+                    html.write('<TD>\n')
+                html.write('<TD align="left">')
+                for j in range(nplates):
+                    if plateQAfiles[j] != '':
+                        plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
+                        tmp = plateQApathPartial.split('/')
+                        field = tmp[2]
+                        plate = tmp[3]
+                        if j < nplates:
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
+                        else:
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
 
-            # Column 7: Combined files for this night
-            #html.write('<TD>\n')
+                # Column 7: Combined files for this night
+                #html.write('<TD>\n')
 
-            # Column 8: Single stars observed for this night
-            #html.write('<TD>\n')
+                # Column 8: Single stars observed for this night
+                #html.write('<TD>\n')
 
-            # Column 9: Dome flats observed for this night
-            #html.write('<TD>\n')
+                # Column 9: Dome flats observed for this night
+                #html.write('<TD>\n')
 
-            # Column 7: Summary files
-            visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
-            starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
-            if nplates >= 1: 
-                html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
-                html.write('<BR><a href="'+starSumPath+'">allStarMJD</a>\n')
-            else:
-                html.write('<TD>\n')
+                # Column 7: Summary files
+                visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
+                starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
+                if nplates >= 1: 
+                    html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
+                    html.write('<BR><a href="'+starSumPath+'">allStarMJD</a>\n')
+                else:
+                    html.write('<TD>\n')
 
         html.write('</table>\n')
 
@@ -2341,7 +2347,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         plates = np.array(glob.glob(apodir+apred+'/visit/*/*/*/*/'+'*PlateSum*.fits'))
         nplates = len(plates)
-
         # should really get this next stuff direct from database!
         plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par', np=True)
 
@@ -2397,10 +2402,14 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         idec = idec[order]
 
         for i in range(nplates):
+            tmp = fits.open(plates[i])
+            platetab = tmp[3].data
+
             color = '#ffb3b3'
             if iprogram[i] == 'RM': color = '#B3E5FC' 
             if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
             if iprogram[i] == 'AQMES-Medium': color = '#AED581'
+            if iprogram[i] == 'MWM': color = '#D39FE4'
 
             html.write('<TR bgcolor=' + color + '><TD>' + iname[i]) 
             html.write('<TD>' + str(iprogram[i])) 
@@ -2411,8 +2420,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD align="center">' + iloc[i])
             html.write('<TD align="right">' + ira[i]) 
             html.write('<TD align="right">' + idec[i])
-            tmp = fits.open(plates[i])
-            platetab = tmp[3].data
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][0],1))) 
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][1],1))) 
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][2],1))) 
@@ -2498,6 +2505,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='AQMES-Wide ('+str(len(p))+')')
             p, = np.where(iprogram == 'AQMES-Medium')
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#AED581', label='AQMES-Medium ('+str(len(p))+')')
+            p, = np.where(iprogram == 'MWM')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='*', s=msz*2, edgecolors='k', alpha=alf, c='#E5ADF7', label='MWM ('+str(len(p))+')')
+
 
             ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
             ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
