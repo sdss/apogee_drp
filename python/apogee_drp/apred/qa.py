@@ -2321,8 +2321,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 else:
                     bgcolor = '#000000'
                     txtcolor = '#FFFFFF'
-                    import pdb; pdb.set_trace()
-                    meanmoonphase = moon_illumination(tt.fits)
+                    meanmoonphase = moon_illumination(tt)
                     if meanmoonphase > 0.5: txtcolor = '#000000'
                     if meanmoonphase > 0.1: bgcolor = '#282828'
                     if meanmoonphase > 0.2: bgcolor = '#404040'
