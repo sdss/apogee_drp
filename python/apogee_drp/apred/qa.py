@@ -2209,7 +2209,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#eaeded"><TH>Date <TH>Observer Log <TH>Exposure Log <TH>Raw Data <TH>Night QA<TH>Observed Plate QA<TH>Summary Files\n')
+        html.write('<TR bgcolor="#eaeded"><TH>Date <TH>Observer<BR>Log <TH>Exposure<BR>Log <TH>Raw<BR>Data <TH>Night<BR>QA<TH>Observed Plate QA<TH>Summary<BR>Files<TH>Moon<BR>Phase\n')
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
@@ -2295,6 +2295,30 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 else:
                     html.write('<TD>\n')
 
+                # Column 8: Mean moon phase
+                plates = np.array(glob.glob(apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/'+'*PlateSum*.fits'))
+                moonphase = np.empty(len(plates))
+                for k in range(nplates):
+                    tmp = fits.open(plates[k])
+                    plsum1 = tmp[1].data
+                    mphase[k] = np.mean(plsum1['MOONPHASE'])
+                meanmoonphase = np.mean(mphase)
+                bgcolor = '#000000'
+                txtcolor = '#FFFFFF'
+                if meanmoonphase > 0.5: txtcolor = '#000000'
+
+                if meanmoonphase > 0.1: bgcolor = '#282828'
+                if meanmoonphase > 0.2: bgcolor = '#404040'
+                if meanmoonphase > 0.3: bgcolor = '#606060'
+                if meanmoonphase > 0.4: bgcolor = '#787878'
+                if meanmoonphase > 0.5: bgcolor = '#989898'
+                if meanmoonphase > 0.6: bgcolor = '#B0B0B0'
+                if meanmoonphase > 0.7: bgcolor = '#C8C8C8'
+                if meanmoonphase > 0.8: bgcolor = '#E8E8E8'
+                if meanmoonphase > 0.9: bgcolor = '#FFFFFF'
+
+                mphase = str(int(round(meanmoonphase*100)))+'%'
+                html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase+'\n') 
         html.write('</table>\n')
 
         # Summary calibration data
@@ -2429,7 +2453,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD align="right">' + izero[i])
             bgcolor = '#000000'
             txtcolor = '#FFFFFF'
-            if imoonphase[i] > 0.6: txtcolor = '#000000'
+            if imoonphase[i] > 0.5: txtcolor = '#000000'
 
             if imoonphase[i] > 0.1: bgcolor = '#282828'
             if imoonphase[i] > 0.2: bgcolor = '#404040'
