@@ -2301,8 +2301,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 for k in range(nplates):
                     tmp = fits.open(plates[k])
                     plsum1 = tmp[1].data
-                    mphase[k] = np.mean(plsum1['MOONPHASE'])
-                meanmoonphase = np.mean(mphase)
+                    moonphase[k] = np.mean(plsum1['MOONPHASE'])
+                meanmoonphase = np.mean(moonphase)
                 bgcolor = '#000000'
                 txtcolor = '#FFFFFF'
                 if meanmoonphase > 0.5: txtcolor = '#000000'
