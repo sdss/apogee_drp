@@ -2316,12 +2316,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     if meanmoonphase > 0.7: bgcolor = '#C8C8C8'
                     if meanmoonphase > 0.8: bgcolor = '#E8E8E8'
                     if meanmoonphase > 0.9: bgcolor = '#FFFFFF'
-
                     mphase = str(int(round(meanmoonphase*100)))+'%'
                     html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase+'\n') 
                 else:
                     bgcolor = '#000000'
                     txtcolor = '#FFFFFF'
+                    meanmoonphase = moon_illumination(tt.fits)
                     if meanmoonphase > 0.5: txtcolor = '#000000'
                     if meanmoonphase > 0.1: bgcolor = '#282828'
                     if meanmoonphase > 0.2: bgcolor = '#404040'
@@ -2332,8 +2332,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     if meanmoonphase > 0.7: bgcolor = '#C8C8C8'
                     if meanmoonphase > 0.8: bgcolor = '#E8E8E8'
                     if meanmoonphase > 0.9: bgcolor = '#FFFFFF'
-                    moonphase = moon_illumination(tt.fits)
-                    mphase = str(int(round(moonphase*100)))+'%'
+                    mphase = str(int(round(meanmoonphase*100)))+'%'
                     html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase+'\n') 
         html.write('</table>\n')
 
