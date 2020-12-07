@@ -624,7 +624,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         rootLogger.info('==============')
         rootLogger.info('')
         queue = pbsqueue(verbose=True)
-        queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, walltime=walltime, notification=False)
+        queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
+                     qos=qos, shared=shared, walltime=walltime, notification=False)
         for pf in planfiles:
             queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
         queue.commit(hard=True,submit=True)
