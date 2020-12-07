@@ -2298,7 +2298,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 # Column 8: Mean moon phase
                 plates = np.array(glob.glob(apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/'+'*PlateSum*.fits'))
                 moonphase = np.empty(len(plates))
-                for k in range(nplates):
+                for k in range(len(plates)):
                     tmp = fits.open(plates[k])
                     plsum1 = tmp[1].data
                     moonphase[k] = np.mean(plsum1['MOONPHASE'])
