@@ -2302,6 +2302,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     tmp = fits.open(plates[k])
                     plsum1 = tmp[1].data
                     moonphase[k] = np.mean(plsum1['MOONPHASE'])
+                import pdb; pdb.set_trace()
                 meanmoonphase = np.mean(moonphase)
                 bgcolor = '#000000'
                 txtcolor = '#FFFFFF'
