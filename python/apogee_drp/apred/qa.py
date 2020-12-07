@@ -2403,6 +2403,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         for i in range(nplates):
             tmp = fits.open(plates[i])
+            print(plates[i])
             platetab = tmp[3].data
 
             color = '#ffb3b3'
