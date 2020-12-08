@@ -1698,7 +1698,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     #if cfiber == '095': import pdb; pdb.set_trace()
 
-                    fig=plt.figure(figsize=(28,6))
+                    fig=plt.figure(figsize=(28,8))
                     ax1 = plt.subplot2grid((1,1), (0,0))
                     ax1.tick_params(reset=True)
                     ax1.set_xlim(xmin,xmax)
