@@ -1641,8 +1641,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
                     rvlogg = str("%.3f" % round(allV['RV_LOGG'][gd][0],3))
                     rvfeh = str("%.3f" % round(allV['RV_FEH'][gd][0],3))
-                    objhtml.write('<TD align ="right">' + vhelio + '<TD align ="center">' + ncomp + '<TD align ="right">' + rvteff)
-                    objhtml.write('<TD align ="right">' + rvlogg + '<TD align ="right">' + rvfeh)
+                    fcol = 'black'
+                    if np.absolute(vhelio) > 400: fcol = 'red'
+                    objhtml.write('<FONT COLOR="'+fcol+'"+<TD align ="right">' + vhelio + '<TD align ="center">' + ncomp + '<TD align ="right">' + rvteff)
+                    objhtml.write('<TD align ="right">' + rvlogg + '<TD align ="right">' + rvfeh + '</FONT>')
                 else:
                     objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---')
             else:
@@ -1720,9 +1722,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         for ll in hlines: ax1.axvline(x=ll, color=hcolor, alpha=0.6)
                         for ll in ce3lines: ax1.axvline(x=ll, color=ce3color, alpha=0.6)
                         for ll in mn2lines: ax1.axvline(x=ll, color=mn2color, alpha=0.6)
-                        ax1.text(16811.111, ymin+yspan*0.05, 'H I', color=hcolor, bbox=bboxpar, fontsize=fsz, ha='center')
-                        ax1.text(15412.667, ymin+yspan*0.05, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
-                        ax1.text(15961.157, ymin+yspan*0.05, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
+                        ax1.text(16811.111, ymin+yspan*0.03, 'H I', color=hcolor, bbox=bboxpar, fontsize=fsz, ha='center')
+                        ax1.text(15412.667, ymin+yspan*0.03, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
+                        ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
 
                         ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color='white', linewidth=10)
                         ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color='white', linewidth=10)
