@@ -1619,10 +1619,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
                 objhtml.write('<TD align ="right">'+snratio)
             else:
-                objhtml.write('<TD align="center">---')
-                objhtml.write('<TD align="center">---')
+                objhtml.write('<TD align="center">-99.9')
+                objhtml.write('<TD align="center">-99.9')
                 #objhtml.write('<TD BGCOLOR='+color+'>---\n')
-                objhtml.write('<TD align="center">---')
+                objhtml.write('<TD align="center">-99.9')
 
             if objtype == 'SKY': 
                 objhtml.write('<TD align="center">SKY')
@@ -1649,9 +1649,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     objhtml.write('<TD align ="right" style="color:'+fcol+'">' + vhelio + '<TD align ="center" style="color:'+fcol+'">' + ncomp + '<TD align ="right" style="color:'+fcol+'">' + rvteff)
                     objhtml.write('<TD align ="right" style="color:'+fcol+'">' + rvlogg + '<TD align ="right" style="color:'+fcol+'">' + rvfeh)
                 else:
-                    objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---')
+                    objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
             else:
-                objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---')
+                objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
