@@ -1643,8 +1643,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     rvfeh = str("%.3f" % round(allV['RV_FEH'][gd][0],3))
                     fcol = 'black'
                     if np.absolute(allV['VHELIOBARY'][gd][0]) > 400: fcol = 'red'
-                    objhtml.write('<FONT COLOR="'+fcol+'"><TD align ="right">' + vhelio + '<TD align ="center">' + ncomp + '<TD align ="right">' + rvteff)
-                    objhtml.write('<TD align ="right">' + rvlogg + '<TD align ="right">' + rvfeh + '</FONT>')
+                    objhtml.write('<FONT COLOR="'+fcol+'"><TD align ="right">' + vhelio + '<TD align ="center">' + ncomp + '<TD align ="right">' + rvteff + '</FONT>')
+                    objhtml.write('<FONT COLOR="'+fcol+'"><TD align ="right">' + rvlogg + '<TD align ="right">' + rvfeh + '</FONT>')
                 else:
                     objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---')
             else:
