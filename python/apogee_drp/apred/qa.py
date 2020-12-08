@@ -1495,7 +1495,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     hlines = np.array([16811.111,16411.692,16113.732,15884.897,15704.970,15560.718,15443.157,15345.999,15264.725,15196.016,15137.357])
     ce3lines = np.array([15851.880,15961.157,15964.928,16133.170,16292.642])
     mn2lines = np.array([15387.220,15412.667,15586.57,15600.576,15620.314])
-    hcolor = 'k'
+    hcolor = 'grey'
     ce3color = 'r'
     mn2color = 'b'
 
@@ -1731,7 +1731,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
                         ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
 
-                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.14,top=0.97,hspace=0.2,wspace=0.0)
+                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
                 plt.close('all')
 
