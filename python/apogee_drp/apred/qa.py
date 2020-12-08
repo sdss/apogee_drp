@@ -1488,9 +1488,16 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     plt.ioff()
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
     axwidth=1.5
     axmajlen=7
     axminlen=3.5
+    hlines = np.array([16811.111,16411.692,16113.732,15884.897,15704.970,15560.718,15443.157,15345.999,15264.725,15196.016,15137.357])
+    ce3lines = np.array([15851.880,15961.157,15964.928,16133.170,16292.642])
+    mn2lines = np.array([15387.220,15412.667,15586.57,15600.576,15620.314])
+    hcolor = 'grey'
+    ce3color = 'red'
+    mn2color = 'purple'
 
     # Load in the allVisitMJD file
     apodir = os.environ.get('APOGEE_REDUX') + '/'
@@ -1704,9 +1711,24 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
                     ax1.set_ylabel(r'Flux')
 
-                    ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
-                    ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
-                    ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
+                    if objtype == 'SKY':
+                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
+                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
+                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
+                    else:
+                        for ll in hlines: ax1.axvline(x=ll, color=hcolor)
+                        for ll in ce3lines: ax1.axvline(x=ll, color=ce3color)
+                        for ll in mn2lines: ax1.axvline(x=ll, color=mn2color)
+                        ax1.text(0.05, 0.05, 'H I', color=hcolor, transform=ax1.transAxes, bbox=bboxpar)
+                        ax1.text(0.14, 0.05, 'Mn II', color=mn2color, transform=ax1.transAxes, bbox=bboxpar)
+                        ax1.text(0.23, 0.05, 'Ce III', color=ce3color, transform=ax1.transAxes, bbox=bboxpar)
+
+                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color='white', linewidth=10)
+                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color='white', linewidth=10)
+                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color='white', linewidth=10)
+                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
+                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
+                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
 
                     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
