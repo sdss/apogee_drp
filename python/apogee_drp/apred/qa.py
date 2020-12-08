@@ -1690,7 +1690,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     ymn = np.nanmin(tmpF)
                     if ymn > 0: 
                         yspn = ymx - ymn
-                        ymin = ymn - (yspn * 0.15)
+                        ymin = ymn - (yspn * 0.10)
                         ymax = ymx + (yspn * 0.15)
                     if objtype == 'SKY':
                         ymin = 0; ymax = 100
@@ -1731,7 +1731,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
                         ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
 
-                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.16,top=0.97,hspace=0.2,wspace=0.0)
+                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.14,top=0.97,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
                 plt.close('all')
 
