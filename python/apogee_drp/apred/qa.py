@@ -1670,7 +1670,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     print("----> makeObjQA: Problem with fiber "+cfib+". Not Plotting.")
                 else:
                     tmpF = convolve(Flux,Box1DKernel(5))
-                    tmpF = Flux#convolve(Flux,Box1DKernel(5))
                     ymx1 = np.nanmax(tmpF[ymxsec1])
                     ymx2 = np.nanmax(tmpF[ymxsec2])
                     ymx3 = np.nanmax(tmpF[ymxsec3])
