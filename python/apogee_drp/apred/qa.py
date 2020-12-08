@@ -1664,14 +1664,18 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
                 ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
                 ymxsec3, = np.where((Wave > 16925) & (Wave < 16950))
-                if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0): 
+                ymxsec4, = np.where((Wave > 16800) & (Wave < 16822))
+                ymxsec5, = np.where((Wave > 15186) & (Wave < 15206))
+                if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0) | (len(ymxsec4) == 0) | (len(ymxsec5) == 0): 
                     print("----> makeObjQA: Problem with fiber "+cfib+". Not Plotting.")
                 else:
                     tmpF = convolve(Flux,Box1DKernel(11))
                     ymx1 = np.nanmax(tmpF[ymxsec1])
                     ymx2 = np.nanmax(tmpF[ymxsec2])
                     ymx3 = np.nanmax(tmpF[ymxsec3])
-                    ymx = np.nanmax([ymx1,ymx2,ymx3])
+                    ymx4 = np.nanmax(tmpF[ymxsec3])
+                    ymx5 = np.nanmax(tmpF[ymxsec3])
+                    ymx = np.nanmax([ymx1,ymx2,ymx3,ymx4,ymx5])
                     ymin = 0
                     yspn = ymx-ymin
                     ymax = ymx + (yspn * 0.15)
