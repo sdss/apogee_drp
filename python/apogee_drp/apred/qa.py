@@ -1663,7 +1663,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 # Establish Ymax
                 ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
                 ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
-                ymxsec3, = np.where((Wave > 16925) & (Wave < 16940))
+                ymxsec3, = np.where((Wave > 16925) & (Wave < 16935))
                 ymxsec4, = np.where((Wave > 16800) & (Wave < 16822))
                 ymxsec5, = np.where((Wave > 15186) & (Wave < 15206))
                 if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0) | (len(ymxsec4) == 0) | (len(ymxsec5) == 0): 
