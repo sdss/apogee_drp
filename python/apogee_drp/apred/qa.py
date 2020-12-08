@@ -1561,7 +1561,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             objtype = jdata['OBJTYPE']
             hmag = jdata['HMAG']
             chmag = str("%.3f" % round(jdata['HMAG'],3))
-            jkcolor = str("%.3f" % round(jdata['JMAG'] - jdata['KMAG'],3))
+            jkcolor = jdata['JMAG'] - jdata['KMAG']
+            cjkcolor = str("%.3f" % round(jkcolor,3))
     #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
             cra = str("%.5f" % round(jdata['RA'],5))
             cdec = str("%.5f" % round(jdata['DEC'],5))
@@ -1615,7 +1616,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
             if objtype != 'SKY':
                 objhtml.write('<TD align ="right">'+chmag)
-                objhtml.write('<TD align ="right">'+jkcolor)
+                objhtml.write('<TD align ="right">'+cjkcolor)
                 #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
                 objhtml.write('<TD align ="right">'+snratio)
             else:
@@ -1717,7 +1718,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
                     ax1.set_ylabel(r'Flux')
 
-                    if objtype == 'SKY':
+                    if (objtype == 'SKY') | (jkcolor > 0.3):
                         ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
                         ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
                         ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
