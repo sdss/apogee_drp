@@ -1718,17 +1718,18 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
                     ax1.set_ylabel(r'Flux')
 
-                    if (objtype == 'SKY') | (jkcolor > 0.3):
+                    if objtype == 'SKY':
                         ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
                         ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
                         ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
                     else:
                         for ll in hlines: ax1.axvline(x=ll, color=hcolor, alpha=0.6)
-                        for ll in ce3lines: ax1.axvline(x=ll, color=ce3color, alpha=0.6)
-                        for ll in mn2lines: ax1.axvline(x=ll, color=mn2color, alpha=0.6)
                         ax1.text(16811.111, ymin+yspan*0.03, 'H I', color=hcolor, bbox=bboxpar, fontsize=fsz, ha='center')
-                        ax1.text(15412.667, ymin+yspan*0.03, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
-                        ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
+                        if jkcolor < 0.3:
+                            for ll in ce3lines: ax1.axvline(x=ll, color=ce3color, alpha=0.6)
+                            for ll in mn2lines: ax1.axvline(x=ll, color=mn2color, alpha=0.6)
+                            ax1.text(15412.667, ymin+yspan*0.03, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
+                            ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
 
                         ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color='white', linewidth=10)
                         ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color='white', linewidth=10)
