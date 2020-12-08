@@ -1674,8 +1674,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     ymx1 = np.nanmax(tmpF[ymxsec1])
                     ymx2 = np.nanmax(tmpF[ymxsec2])
                     ymx3 = np.nanmax(tmpF[ymxsec3])
-                    ymx4 = np.nanmax(tmpF[ymxsec3])
-                    ymx5 = np.nanmax(tmpF[ymxsec3])
+                    ymx4 = np.nanmax(tmpF[ymxsec4])
+                    ymx5 = np.nanmax(tmpF[ymxsec5])
                     ymx = np.nanmax([ymx1,ymx2,ymx3,ymx4,ymx5])
                     ymin = 0
                     yspn = ymx-ymin
@@ -1689,7 +1689,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     if objtype == 'SKY':
                         ymin = 0; ymax = 100
 
-                    if cfiber == '095': import pdb; pdb.set_trace()
+                    #if cfiber == '095': import pdb; pdb.set_trace()
 
                     fig=plt.figure(figsize=(28,6))
                     ax1 = plt.subplot2grid((1,1), (0,0))
