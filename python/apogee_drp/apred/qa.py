@@ -1643,7 +1643,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     rvfeh = str("%.3f" % round(allV['RV_FEH'][gd][0],3))
                     fcol = 'black'
                     if np.absolute(allV['VHELIOBARY'][gd][0]) > 400: fcol = 'red'
-                    objhtml.write('<FONT COLOR="'+fcol+'"+<TD align ="right">' + vhelio + '<TD align ="center">' + ncomp + '<TD align ="right">' + rvteff)
+                    objhtml.write('<FONT COLOR="'+fcol+'"><TD align ="right">' + vhelio + '<TD align ="center">' + ncomp + '<TD align ="right">' + rvteff)
                     objhtml.write('<TD align ="right">' + rvlogg + '<TD align ="right">' + rvfeh + '</FONT>')
                 else:
                     objhtml.write('<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---<TD align="center">---')
@@ -1733,7 +1733,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
                         ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
 
-                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
+                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.975,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
                 plt.close('all')
 
