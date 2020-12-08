@@ -1556,7 +1556,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
         fiber = jdata['FIBERID']
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
-            import pdb; pdb.set_trace()
+
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
             hmag = jdata['HMAG']
