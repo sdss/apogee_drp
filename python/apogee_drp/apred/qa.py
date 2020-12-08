@@ -1546,7 +1546,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
 
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber <TH>APOGEE ID <TH>H <TH>S/N <TH>Target<BR>Type <TH>Target & Data Flags')
+    objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber <TH>APOGEE ID <TH>H <TH>Raw<BR>J - K <TH>S/N <TH>Target<BR>Type <TH>Target & Data Flags')
     objhtml.write('<TH>Vhelio <TH>N<BR>comp <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Spectrum Plot\n')
 #    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
@@ -1561,6 +1561,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             objtype = jdata['OBJTYPE']
             hmag = jdata['HMAG']
             chmag = str("%.3f" % round(jdata['HMAG'],3))
+            jkcolor = str("%.3f" % round(jdata['JMAG'] - jdata['KMAG'],3))
     #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
             cra = str("%.5f" % round(jdata['RA'],5))
             cdec = str("%.5f" % round(jdata['DEC'],5))
@@ -1614,6 +1615,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
             if objtype != 'SKY':
                 objhtml.write('<TD align ="right">'+chmag)
+                objhtml.write('<TD align ="right">'+jkcolor)
                 #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
                 objhtml.write('<TD align ="right">'+snratio)
             else:
