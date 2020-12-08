@@ -1620,6 +1620,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 objhtml.write('<TD align ="right">'+snratio)
             else:
                 objhtml.write('<TD align="center">---')
+                objhtml.write('<TD align="center">---')
                 #objhtml.write('<TD BGCOLOR='+color+'>---\n')
                 objhtml.write('<TD align="center">---')
 
