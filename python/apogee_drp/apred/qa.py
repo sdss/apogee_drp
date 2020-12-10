@@ -79,9 +79,6 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
     gdplans = np.array(gdplans)
     nplans = len(gdplans)
 
-    # Make array of plate numbers for failed reductions
-    badPlates = []
-
     # Run apqa on the science data plans
     print("Running APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
     for i in range(nplans):
@@ -111,7 +108,6 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
             good, = np.where(imsReduced == 1)
             if len(good) < 1:
                 # Add this to the list of failed plates
-                badPlates.append(plate)
                 print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd)
                 # If last plate fails, still make the nightly and master QA pages
                 if i == nplans-1:
@@ -123,22 +119,18 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
                     if makemasterqa is True: 
                         q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                               mjdfilebase='mjd.html',fieldfilebase='fields.html',
-                                              domjd=True, dofields=True, badPlates=np.array(badPlates))
+                                              domjd=True, dofields=True)
                 continue
 
         # Only run makemasterqa and makenightqa after the last plate on this mjd
         if i < nplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
                      makemasterqa=False, makeplots=makeplots, makespecplots=makespecplots, 
-                     makenightqa=False, badPlates=None, clobber=clobber)
+                     makenightqa=False, clobber=clobber)
         else:
-            if len(badPlates) > 0:
-                badPlates = np.array(badPlates)
-            else:
-                badPlates = None
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
                      makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
-                     makenightqa=makenightqa, badPlates=badPlates, clobber=clobber)
+                     makenightqa=makenightqa, clobber=clobber)
 
     print("Done with APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
 
@@ -2397,13 +2389,25 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase)
 
                 # Column 9: Failed plates
-                if badPlates is not None:
-                    html.write('<TD bgcolor="'+bgcolor+'" align="right">')
-                    for k in range(len(badPlates)):
-                        if k != len(badPlates)-1:
-                            html.write(badPlates[k] + '<BR>')
+                platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/apPlan-*'+cmjd+'.yaml'
+                platePlanFiles = np.array(glob.glob(platePlanPaths))
+                nplates = len(platePlanFiles)
+                badPlates = []
+                for j in range(nplates):
+                    tmp = platePlanFiles[j].split('apPlan-')[1]
+                    plate = tmp.split('-')[0]
+                    platesumfile = load.filename('PlateSum', plate=int(plate), mjd=cmjd)
+                    if os.path.exists(platesumfile) is False: badPlates.append(plate)
+                if len(badPlates) > 0:
+                    badPlates = np.array(badPlates)
+                    html.write('<TD bgcolor="'+color+'" align="right">')
+                    for j in range(len(badPlates)):
+                        if j != len(badPlates)-1:
+                            html.write(badPlates[j] + '<BR>')
                         else:
-                            html.write(badPlates[k] + '\n')
+                            html.write(badPlates[j] + '\n')
+                else:
+                    html.write('<TD bgcolor="'+color+'" align="right">\n')
 
         html.write('</table>\n')
 
