@@ -60,6 +60,9 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
             makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True,
             clobber=True):
 
+    # Establish telescope
+    telescope = observatory + '25m'
+
     # Find the list of plan files
     apodir = os.environ.get('APOGEE_REDUX')+'/'
     planlist = apodir + apred + '/log/'+observatory+'/' + str(mjd) + '.plans'
@@ -83,6 +86,41 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
         tmp = gdplans[i].split('-')
         plate = tmp[1]
         mjd = tmp[2].split('.')[0]
+
+        # Load the plan file
+        load = apload.ApLoad(apred=apred, telescope=telescope)
+        planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
+        planstr = plan.load(planfile, np=True)
+
+        # Get array of object exposures and find out how many are objects.
+        flavor = planstr['APEXP']['flavor']
+        all_ims = planstr['APEXP']['name']
+        gd,= np.where(flavor == 'object')
+        n_ims = len(gd)
+        if n_ims > 0:
+            ims = all_ims[gd]
+            # Make an array indicating which exposures made it to apCframe
+            # 0 = not reduced, 1 = reduced
+            imsReduced = np.zeros(n_ims)
+            for i in range(n_ims):
+                cframe = load.filename('Cframe', field=field, plate=int(plate), mjd=mjd, num=ims[i], chips=True)
+                if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
+            good, = np.where(imsReduced == 1)
+            if len(good) < 1:
+                print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd)
+                # If last plate fails, still make the nightly and master QA pages
+                if i == nplans-1:
+                    # Make the nightly QA page
+                    if makenightqa is True:
+                        q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
+
+                    # Make mjd.html and fields.html
+                    if makemasterqa is True: 
+                        q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
+                                              mjdfilebase='mjd.html',fieldfilebase='fields.html',
+                                              domjd=True, dofields=True, makeplots=True)
+                else:
+                    continue
 
         # Only run makemasterqa and makenightqa after the last plate on this mjd
         if i < nplans-1:
@@ -150,7 +188,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         good, = np.where(imsReduced == 1)
         if len(good) < 1:
             print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd)
-            continue
     else:
         sys.exit("No object images. You are hosed. Give up hope.")
         ims = None
