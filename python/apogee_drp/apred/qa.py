@@ -123,8 +123,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
                     if makemasterqa is True: 
                         q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                               mjdfilebase='mjd.html',fieldfilebase='fields.html',
-                                              domjd=True, dofields=True, makeplots=True,
-                                              badPlates=np.array(badPlates))
+                                              domjd=True, dofields=True, badPlates=np.array(badPlates))
                 continue
 
         # Only run makemasterqa and makenightqa after the last plate on this mjd
