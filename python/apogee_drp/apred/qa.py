@@ -102,9 +102,9 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
             # Make an array indicating which exposures made it to apCframe
             # 0 = not reduced, 1 = reduced
             imsReduced = np.zeros(n_ims)
-            for i in range(n_ims):
-                cframe = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[i], chips=True)
-                if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
+            for j in range(n_ims):
+                cframe = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[j], chips=True)
+                if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[j] = 1
             good, = np.where(imsReduced == 1)
             if len(good) < 1:
                 print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd)
