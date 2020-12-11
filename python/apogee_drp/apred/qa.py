@@ -108,7 +108,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
             good, = np.where(imsReduced == 1)
             if len(good) < 1:
                 # Add this to the list of failed plates
-                print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd)
+                print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
                 # If last plate fails, still make the nightly and master QA pages
                 if i == nplans-1:
                     # Make the nightly QA page
@@ -2352,7 +2352,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     # Check for failed plates
                     plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
                     if os.path.exists(plateQAfile):
-                        plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
+                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplates:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                         else:
