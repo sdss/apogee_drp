@@ -2353,12 +2353,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
                     if os.path.exists(plateQAfile):
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
-                        if j < nplates:
+                        if j < nplatesall:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                         else:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
                     else:
-                        if j < nplates:
+                        if j < nplatesall:
                             html.write('<FONT COLOR="red">'+str(j+1)+') '+plate+': '+field+' (failed)</FONT><BR>\n')
                         else:
                             html.write('<FONT COLOR="red">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT>\n')
