@@ -2285,7 +2285,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#eaeded"><TH>Date <TH>Observer<BR>Log <TH>Exposure<BR>Log <TH>Raw<BR>Data <TH>Night<BR>QA')
-        html.write('<TH>Observed Plate QA <TH>Summary<BR>Files <TH>Moon<BR>Phase <TH>Failed<BR>Plates\n')
+        html.write('<TH>Observed Plate QA <TH>Summary<BR>Files <TH>Moon<BR>Phase\n')
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
@@ -2334,6 +2334,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
                 # Column 5-6: Night QA and plates reduced for this night
+                platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/apPlan-*'+cmjd+'.yaml'
+                platePlanFiles = np.array(glob.glob(platePlanPaths))
+                nplatesall = len(platePlanFiles)
+
                 plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
                 plateQAfiles = np.array(glob.glob(plateQApaths))
                 nplates = len(plateQAfiles)
@@ -2342,16 +2346,21 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 else:
                     html.write('<TD>\n')
                 html.write('<TD align="left">')
-                for j in range(nplates):
-                    if plateQAfiles[j] != '':
-                        plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
-                        tmp = plateQApathPartial.split('/')
-                        field = tmp[2]
-                        plate = tmp[3]
+                for j in range(nplatesall):
+                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                    # Check for failed plates
+                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                    if os.path.exists(plateQAfile):
                         if j < nplates:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                         else:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
+                    else:
+                        if j < nplates:
+                            html.write('<p style="color:red">'+str(j+1)+') '+plate+': '+field+'</p><BR>\n')
+                        else:
+                            html.write('<p style="color:red">('+str(j+1)+') '+plate+': '+field+'</p>\n')
 
                 # Column 7: Combined files for this night
                 #html.write('<TD>\n')
@@ -2387,29 +2396,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 if meanmoonphase > 0.9: bgcolor = '#FFFFFF'
                 mphase = str(int(round(meanmoonphase*100)))+'%'
                 html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase)
-
-                # Column 9: Failed plates
-                platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/apPlan-*'+cmjd+'.yaml'
-                platePlanFiles = np.array(glob.glob(platePlanPaths))
-                nplates = len(platePlanFiles)
-                badPlates = []
-                import pdb; pdb.set_trace()
-                for j in range(nplates):
-                    tmp = platePlanFiles[j].split('apPlan-')[1]
-                    plate = tmp.split('-')[0]
-                    platesumfile = load.filename('PlateSum', plate=int(plate), mjd=cmjd)
-                    if os.path.exists(platesumfile) is False: badPlates.append(plate)
-                if len(badPlates) > 0:
-                    badPlates = np.array(badPlates)
-                    html.write('<TD bgcolor="'+color+'" align="right">')
-                    for j in range(len(badPlates)):
-                        if j != len(badPlates)-1:
-                            html.write(badPlates[j] + '<BR>')
-                        else:
-                            html.write(badPlates[j] + '\n')
-                else:
-                    html.write('<TD bgcolor="'+color+'" align="right">\n')
-
         html.write('</table>\n')
 
         # Summary calibration data
