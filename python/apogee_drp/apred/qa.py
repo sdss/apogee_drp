@@ -2359,9 +2359,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
                     else:
                         if j < nplatesall:
-                            html.write('<FONT COLOR="red">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT><BR>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT><BR>\n')
                         else:
-                            html.write('<FONT COLOR="red">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT>\n')
 
                 # Column 7: Combined files for this night
                 #html.write('<TD>\n')
