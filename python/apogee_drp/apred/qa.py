@@ -2279,7 +2279,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
         #html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
-        html.write( 'Yellow: APO 2.5m, Green: LCO 2.5m\n')
+        html.write( 'Yellow: APO 2.5m, Green: LCO 2.5m <BR>\n')
         #html.write('<br>Click on column headings to sort\n')
 
         # Create web page with entry for each MJD
