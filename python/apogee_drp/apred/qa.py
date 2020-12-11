@@ -2284,8 +2284,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#eaeded"><TH>Date <TH>Observer<BR>Log <TH>Exposure<BR>Log <TH>Raw<BR>Data <TH>Night<BR>QA')
-        html.write('<TH>Observed Plate QA <TH>Summary<BR>Files <TH>Moon<BR>Phase\n')
+        html.write('<TR bgcolor="#eaeded"><TH>Date <TH>Observer Log <TH>Exposure Log <TH>Raw Data <TH>Night QA')
+        html.write('<TH>Observed Plate QA <TH>Summary Files <TH>Moon Phase\n')
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
