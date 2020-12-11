@@ -2393,6 +2393,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 platePlanFiles = np.array(glob.glob(platePlanPaths))
                 nplates = len(platePlanFiles)
                 badPlates = []
+                import pdb; pdb.set_trace()
                 for j in range(nplates):
                     tmp = platePlanFiles[j].split('apPlan-')[1]
                     plate = tmp.split('-')[0]
