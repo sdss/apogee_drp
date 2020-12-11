@@ -188,7 +188,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
         if len(good) < 1:
-            print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd)
+            print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
     else:
         sys.exit("No object images. You are hosed. Give up hope.")
         ims = None
@@ -265,7 +265,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 #                          plugmap=plugmap, makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
 
     runtime = str("%.2f" % (time.time() - start_time))
-    print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.")
+    print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.\n")
 
 
 ''' MAKEPLATESUM: Plotmag translation '''
