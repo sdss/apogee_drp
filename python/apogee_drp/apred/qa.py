@@ -2352,15 +2352,16 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     # Check for failed plates
                     plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
                     if os.path.exists(plateQAfile):
+                        plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
                         if j < nplates:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                         else:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
                     else:
                         if j < nplates:
-                            html.write('<p style="color:red">'+str(j+1)+') '+plate+': '+field+'</p><BR>\n')
+                            html.write('<p style="color:red">'+str(j+1)+') '+plate+': '+field+' (failed)</p><BR>\n')
                         else:
-                            html.write('<p style="color:red">('+str(j+1)+') '+plate+': '+field+'</p>\n')
+                            html.write('<p style="color:red">('+str(j+1)+') '+plate+': '+field+' (failed)</p>\n')
 
                 # Column 7: Combined files for this night
                 #html.write('<TD>\n')
