@@ -62,6 +62,7 @@ FOR i=0L,nplanfiles-1 do begin
   if n_elements(planerror) gt 0 then goto,BOMB
   dirs=getdir(apogee_dir,caldir,spectro_dir,apred_vers)
   prefix=dirs.prefix
+stop
   logfile=apogee_filename('Diag',plate=planstr.plateid,mjd=planstr.mjd)
 
   ; Try to make the required calibration files (if not already made)
