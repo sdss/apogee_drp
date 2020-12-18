@@ -138,7 +138,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True,
          makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True, 
-         badPlates=None, clobber=None):
+         badPlates=None, clobber=True):
 
     start_time = time.time()
 
