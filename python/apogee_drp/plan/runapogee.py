@@ -599,7 +599,6 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     if nplanfiles>0:
         dbload_plans(planfiles)  # load plans into db
         # Write planfiles to MJD5.plans
-        import pdb; pdb.set_trace()
         dln.writelines(logdir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
     else:
         dln.writelines(logdir+str(mjd5)+'.plans','')   # write blank file
