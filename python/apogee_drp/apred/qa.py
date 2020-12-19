@@ -60,6 +60,9 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
             makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True,
             clobber=True):
 
+    # Establish telescope
+    telescope = observatory + '25m'
+
     # Find the list of plan files
     apodir = os.environ.get('APOGEE_REDUX')+'/'
     planlist = apodir + apred + '/log/'+observatory+'/' + str(mjd) + '.plans'
@@ -84,6 +87,41 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
         plate = tmp[1]
         mjd = tmp[2].split('.')[0]
 
+        # Load the plan file
+        load = apload.ApLoad(apred=apred, telescope=telescope)
+        planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
+        planstr = plan.load(planfile, np=True)
+
+        # Get array of object exposures and find out how many are objects.
+        flavor = planstr['APEXP']['flavor']
+        all_ims = planstr['APEXP']['name']
+        gd,= np.where(flavor == 'object')
+        n_ims = len(gd)
+        if n_ims > 0:
+            ims = all_ims[gd]
+            # Make an array indicating which exposures made it to apCframe
+            # 0 = not reduced, 1 = reduced
+            imsReduced = np.zeros(n_ims)
+            for j in range(n_ims):
+                cframe = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[j], chips=True)
+                if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[j] = 1
+            good, = np.where(imsReduced == 1)
+            if len(good) < 1:
+                # Add this to the list of failed plates
+                print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
+                # If last plate fails, still make the nightly and master QA pages
+                if i == nplans-1:
+                    # Make the nightly QA page
+                    if makenightqa is True:
+                        q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
+
+                    # Make mjd.html and fields.html
+                    if makemasterqa is True: 
+                        q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
+                                              mjdfilebase='mjd.html',fieldfilebase='fields.html',
+                                              domjd=True, dofields=True)
+                continue
+
         # Only run makemasterqa and makenightqa after the last plate on this mjd
         if i < nplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
@@ -99,7 +137,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True,
-         makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True, clobber=None):
+         makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True, 
+         badPlates=None, clobber=True):
 
     start_time = time.time()
 
@@ -149,7 +188,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
         if len(good) < 1:
-            sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd)
+            print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
     else:
         sys.exit("No object images. You are hosed. Give up hope.")
         ims = None
@@ -211,7 +250,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         if makemasterqa is True: 
             q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                   mjdfilebase='mjd.html',fieldfilebase='fields.html',
-                                  domjd=True, dofields=True, makeplots=makeplots)
+                                  domjd=True, dofields=True, badPlates=badPlates)
 
         ### NOTE:No python translation for sntab.
 #;        sntab,tabs=platefile,outfile=platefile+'.dat'
@@ -226,7 +265,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 #                          plugmap=plugmap, makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
 
     runtime = str("%.2f" % (time.time() - start_time))
-    print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.")
+    print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.\n")
 
 
 ''' MAKEPLATESUM: Plotmag translation '''
@@ -268,10 +307,10 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             tot = load.ap1D(ims[0])
 
         if type(tot) != dict:
-            html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
-            htmlsum.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
-            html.close()
-            htmlsum.close()
+        #    html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
+        #    htmlsum.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
+        #    html.close()
+        #    htmlsum.close()
             print("----> makePlateSum: Error!")
 
         plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
@@ -2189,7 +2228,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
 def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fieldfilebase=None,
-                      domjd=True, dofields=True, makeplots=True):
+                      domjd=True, dofields=True, badPlates=None):
 
     plt.ioff()
 
@@ -2240,12 +2279,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
         #html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
-        html.write( 'Yellow: APO 2.5m, Green: LCO 2.5m\n')
+        html.write( 'Yellow: APO 2.5m, Green: LCO 2.5m <BR>\n')
         #html.write('<br>Click on column headings to sort\n')
 
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#eaeded"><TH>Date <TH>Observer<BR>Log <TH>Exposure<BR>Log <TH>Raw<BR>Data <TH>Night<BR>QA<TH>Observed Plate QA<TH>Summary<BR>Files<TH>Moon<BR>Phase\n')
+        html.write('<TR bgcolor="#eaeded"><TH>Date <TH>Observer Log <TH>Exposure Log <TH>Raw Data <TH>Night QA')
+        html.write('<TH>Observed Plate QA <TH>Summary Files <TH>Moon Phase\n')
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
@@ -2294,6 +2334,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
                 # Column 5-6: Night QA and plates reduced for this night
+                platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/apPlan-*'+cmjd+'.yaml'
+                platePlanFiles = np.array(glob.glob(platePlanPaths))
+                nplatesall = len(platePlanFiles)
+
                 plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
                 plateQAfiles = np.array(glob.glob(plateQApaths))
                 nplates = len(plateQAfiles)
@@ -2302,16 +2346,22 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 else:
                     html.write('<TD>\n')
                 html.write('<TD align="left">')
-                for j in range(nplates):
-                    if plateQAfiles[j] != '':
-                        plateQApathPartial = plateQAfiles[j].split(apred+'/')[1]
-                        tmp = plateQApathPartial.split('/')
-                        field = tmp[2]
-                        plate = tmp[3]
-                        if j < nplates:
+                for j in range(nplatesall):
+                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                    # Check for failed plates
+                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                    if os.path.exists(plateQAfile):
+                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
+                        if j < nplatesall:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                         else:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
+                    else:
+                        if j < nplatesall:
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT><BR>\n')
+                        else:
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT>\n')
 
                 # Column 7: Combined files for this night
                 #html.write('<TD>\n')
@@ -2346,7 +2396,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 if meanmoonphase > 0.8: bgcolor = '#E8E8E8'
                 if meanmoonphase > 0.9: bgcolor = '#FFFFFF'
                 mphase = str(int(round(meanmoonphase*100)))+'%'
-                html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase+'\n') 
+                html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase)
         html.write('</table>\n')
 
         # Summary calibration data
