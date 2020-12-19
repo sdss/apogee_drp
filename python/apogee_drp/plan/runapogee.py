@@ -599,6 +599,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     if nplanfiles>0:
         dbload_plans(planfiles)  # load plans into db
         # Write planfiles to MJD5.plans
+        import pdb; pdb.set_trace()
         dln.writelines(logdir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
     else:
         dln.writelines(logdir+str(mjd5)+'.plans','')   # write blank file
@@ -625,7 +626,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         rootLogger.info('')
         queue = pbsqueue(verbose=True)
         queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
-                     qos=qos, shared=shared, walltime=walltime, notification=False)
+                     qos=qos, shared=shared, walltime=walltime, mem_per_cpu=4000, notification=False)
         for pf in planfiles:
             queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
         queue.commit(hard=True,submit=True)
