@@ -731,7 +731,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
             # Load up individual mask bits
             for ibit,name in enumerate(pixelmask.name):
-                if name is not '' and len(np.where(apvisit.bitmask[chip,:]&2**ibit)[0]) > 0:
+                if name != '' and len(np.where(apvisit.bitmask[chip,:]&2**ibit)[0]) > 0:
                     raw.append([np.clip(apvisit.bitmask[chip,:]&2**ibit,None,1),None])
 
             # Do the sinc interpolation
@@ -753,7 +753,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             #   defined for each mask bit
             iout = 3
             for ibit,name in enumerate(pixelmask.name):
-                if name is not '' and len(np.where(apvisit.bitmask[chip,:]&2**ibit)[0]) > 0:
+                if name != '' and len(np.where(apvisit.bitmask[chip,:]&2**ibit)[0]) > 0:
                     j = np.where(np.abs(out[iout][0]) > pixelmask.maskcontrib[ibit])[0]
                     stack.bitmask[i,gd[j]] |= 2**ibit
                     iout += 1
