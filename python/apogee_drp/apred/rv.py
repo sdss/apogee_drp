@@ -698,7 +698,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         else: vrel = visit['vrel']
 
         # Skip if we don't have an RV
-        if np.isfinite(vrel) is False : continue
+        if np.isfinite(vrel) == False : continue
 
         # Load the visit
         if load.telescope == 'apo1m':
