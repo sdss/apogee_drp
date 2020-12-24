@@ -602,6 +602,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             if ims[0] != 0: 
                 secz = 1. / np.cos((90. - dhdr['ALT']) * (math.pi/180.))
                 seeing = dhdr['SEEING']
+                if str(seeing).lower().find('nan') != -1: seeing=np.nan
             ### NOTE:'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
     #        design_ha = plug['ha']
             design_ha = [0,0,0]
