@@ -529,7 +529,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     alloc = 'sdss-np'
     shared = True
     ppn = 64
-    cpus = 32
+    cpus = 16   # 32
     walltime = '23:00:00'
 
     # No version input, use 'daily'
