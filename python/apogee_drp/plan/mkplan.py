@@ -588,8 +588,9 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
 
     # Use q3fix
     if 'q3fix' in caldata.keys():
-        if caldata['q3fix']=='1':
-            out['q3fix'] = 1
+        if caldata['q3fix'] is not None:
+            if int(caldata['q3fix'])==1:
+                out['q3fix'] = 1
 
     # Calibration frames to use
     calnames = ['det','bpm','littrow','persist','persistmodel','dark','flat',
@@ -753,6 +754,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
 
     # Get the exposures and info about them
     info = getexpinfo(observatory,mjd)
+    if info is None:
+        logger.info('No exposures for MJD='+str(mjd))
+        return
     nfiles = len(info)
     logger.info(str(nfiles)+' exposures found')
 
