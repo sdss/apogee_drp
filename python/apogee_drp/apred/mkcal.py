@@ -117,6 +117,11 @@ def readcal(calfile):
     #  fixfiber   56764 56773   1
     #  fixfiber   58038 58046   2
     dtdict['fixfiber'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50)])
+    # -- q3fix --
+    #  mjd1, mjd2, name
+    #  q3fix      56930 57600   1
+    #  q3fix      59146 99999   1
+    dtdict['q3fix'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50)])
     # -- Wave --
     #  mjd1, mjd2, name, frames, psfid
     #  wave       55699 55699 01370096 1370096,1370099  1370098
