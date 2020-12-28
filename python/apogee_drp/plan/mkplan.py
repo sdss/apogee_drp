@@ -539,10 +539,6 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     else:
         out['platetype'] = 'normal'
 
-    # Note that q3fix is now done in ap3d.pro, not here!!
-    if (mjd>56930) & (mjd<57600):
-        out['q3fix'] = 1
-
     sdss_path = path.Path()
     rawfile = sdss_path.full('apR',num=ims[0],chip='a',mjd=mjd)
     #rawfile = load.filename('R',chip='a',num=ims[0])
@@ -589,6 +585,11 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
                 file.write(telescope+'/'+str(plate)+'/'+str(mjd)+'/'+os.path.basename(planfile))
             file.close()
     out['plugmap'] = plugid
+
+    # Use q3fix
+    if 'q3fix' in caldata.keys():
+        if caldata['q3fix']=='1':
+            out['q3fix'] = 1
 
     # Calibration frames to use
     calnames = ['det','bpm','littrow','persist','persistmodel','dark','flat',
