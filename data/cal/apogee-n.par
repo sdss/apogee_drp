@@ -69,6 +69,9 @@ badfiber   59146 99999   211,273
 # special fiber mapping
 fixfiber   56764 56773   1     # but only for plates _plugged_ in these dates
 fixfiber   58038 58046   2
+# blue chip quadrant 3 fix
+q3fix      56930 57600   1
+q3fix      59146 99999   1
 # littrow ghost mask
 littrow    55600 56860 06670109 6670109
 littrow    56861 99999 13400052 13400052
@@ -285,3 +288,5 @@ rn 1980083 1980084
 #
 # 3/30/20 (58939): darks, 3377
 # 9/3/20 (59095) : darks 3533
+# 12/28/20 (59211) : the blue chip quadrant 3 issue is back and in all of the SDSS-V data (59146-)
+#                     Adding q3fix calibration type to cover this case.
