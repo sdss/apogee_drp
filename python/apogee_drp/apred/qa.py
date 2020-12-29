@@ -112,11 +112,11 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
                 # If last plate fails, still make the nightly and master QA pages
                 if i == nplans-1:
                     # Make the nightly QA page
-                    if makenightqa is True:
+                    if makenightqa == True:
                         q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
 
                     # Make mjd.html and fields.html
-                    if makemasterqa is True: 
+                    if makemasterqa == True: 
                         q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                               mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                               domjd=True, dofields=True)
@@ -208,7 +208,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the apPlateSum file if it doesn't already exist.
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-        if (os.path.exists(platesum) is False) | (makeplatesum is True):
+        if (os.path.exists(platesum) == False) | (makeplatesum == True):
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
@@ -234,7 +234,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                            fluxid=fluxid, telescope=telescope)
 
         # Make plots for the observation QA pages
-        if makeplots is True:
+        if makeplots == True:
             q = makeObsQAplots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
                                survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
@@ -243,11 +243,11 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                      makespecplots=makespecplots)
 
         # Make the nightly QA page
-        if makenightqa is True:
+        if makenightqa == True:
             q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
 
         # Make mjd.html and fields.html
-        if makemasterqa is True: 
+        if makemasterqa == True: 
             q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                   mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                   domjd=True, dofields=True, badPlates=badPlates)
@@ -280,7 +280,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     platesumbase = os.path.basename(platesumfile)
 
     # Only make the file is doesn't exist or if clobber is True
-    if (os.path.exists(platesumfile) is False) | (clobber is True):
+    if (os.path.exists(platesumfile) == False) | (clobber == True):
         print("----> makePlateSum: Making "+platesumbase)
 
         chips = np.array(['a','b','c'])
@@ -363,9 +363,9 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         # Get guider information.
         if onem is None:
             gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
-            if os.path.exists(gcamdir) is False: subprocess.call(['mkdir',gcamdir])
+            if os.path.exists(gcamdir) == False: subprocess.call(['mkdir',gcamdir])
             gcamfile = gcamdir+'gcam-'+mjd+'.fits'
-            if os.path.exists(gcamfile) is False:
+            if os.path.exists(gcamfile) == False:
                 print("----> makePlateSum: Attempting to make "+os.path.basename(gcamfile)+".")
                 subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--output', gcamfile], shell=False)
                 if os.path.exists(gcamfile):
@@ -602,6 +602,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             if ims[0] != 0: 
                 secz = 1. / np.cos((90. - dhdr['ALT']) * (math.pi/180.))
                 seeing = dhdr['SEEING']
+                if str(seeing).lower().find('nan') != -1: seeing=np.nan
             ### NOTE:'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
     #        design_ha = plug['ha']
             design_ha = [0,0,0]
@@ -686,7 +687,7 @@ def makeSNtab(platesum=None, plate=None, mjd=None, ims=None, plugmap=None, sntab
 
     n_exposures = len(ims)
 
-    if os.path.exists(sntabdir) is False:
+    if os.path.exists(sntabdir) == False:
         subprocess.call(['mkdir', sntabdir])
 
     outfile1 = sntabdir + 'sn-' + plate + '-' + mjd + '.dat'
@@ -748,7 +749,7 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, f
     platesumfile = os.path.basename(platesum)
     platedir = os.path.dirname(platesum)+'/'
 
-    if os.path.exists(platesum) is False:
+    if os.path.exists(platesum) == False:
         err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
         err2 = "You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
@@ -763,7 +764,7 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, f
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
     qafiledir = os.path.dirname(qafile)
     print("----> makeObsQApages:Creating "+os.path.basename(qafile))
-    if os.path.exists(qafiledir) is False: subprocess.call(['mkdir',qafiledir])
+    if os.path.exists(qafiledir) == False: subprocess.call(['mkdir',qafiledir])
 
     html = open(qafile, 'w')
     tmp = os.path.basename(qafile).replace('.html','')
@@ -1008,7 +1009,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
-    if os.path.exists(platesum) is False:
+    if os.path.exists(platesum) == False:
         err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
         err2 = "You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
@@ -1032,7 +1033,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     for i in range(2):
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
         if i == 1: plotfile = plotfile.replace('SNR','SNRblocks')
-        if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
+        if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
             print("----> makeObsQAplots: Making "+plotfile)
 
             fig=plt.figure(figsize=(19,10))
@@ -1103,7 +1104,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     ypos = 300 - platesum2['FIBERID']
 
     plotfile = fluxfile.replace('.fits', '.png')
-    if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
+    if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsQAplots: Making "+plotfile)
 
         fig=plt.figure(figsize=(28,10))
@@ -1146,7 +1147,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     #----------------------------------------------------------------------------------------------
     block = np.floor((plSum2['FIBERID'] - 1) / 30)
     plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
-    if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
+    if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsQAplots: Making "+plotfile)
 
         fig=plt.figure(figsize=(10,10))
@@ -1190,7 +1191,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
         jcam, = np.where((gcam['mjd'] > mjdstart) & (gcam['mjd'] < mjdend))
 
         plotfile = 'guider-'+plate+'-'+mjd+'.png'
-        if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
+        if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
             print("----> makeObsQAplots: Making "+plotfile)
 
             fig=plt.figure(figsize=(10,10))
@@ -1220,7 +1221,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             # PLOTS 8: 3 panel mag/SNR plots for each exposure
             #----------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_magplots.png'
-            if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
+            if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsQAplots: Making "+plotfile)
 
                 telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
@@ -1311,7 +1312,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             # PLOT 9: spatial residuals for each exposure
             #----------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_spatialresid.png'
-            if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
+            if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsQAplots: Making "+plotfile)
 
                 fig=plt.figure(figsize=(14,15))
@@ -1362,7 +1363,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
             #------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][gd][0])+'_skyemission.png'
-            if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
+            if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsQAplots: Making "+plotfile)
 
                 #d = load.apPlate(int(plate), mjd) 
@@ -1453,7 +1454,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
             #------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_skycontinuum.png'
-            if (os.path.exists(plotsdir+plotfile) is False) | (clobber is True):
+            if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsQAplots: Making "+plotfile)
 
                 fig=plt.figure(figsize=(14,15))
@@ -1515,10 +1516,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
     plotsdir = platedir+'/plots/'
     htmldir = platedir+'/html/'
-    if os.path.exists(plotsdir) is False: subprocess.call(['mkdir',plotsdir])
-    if os.path.exists(htmldir) is False: subprocess.call(['mkdir',htmldir])
+    if os.path.exists(plotsdir) == False: subprocess.call(['mkdir',plotsdir])
+    if os.path.exists(htmldir) == False: subprocess.call(['mkdir',htmldir])
 
-    if os.path.exists(htmldir+'sorttable.js') is False:
+    if os.path.exists(htmldir+'sorttable.js') == False:
         print("----> makeObjQA: getting sorttable.js...")
         subprocess.call(['wget', '-q', sort_table_link])
         subprocess.call(['mv', 'sorttable.js', htmldir])
@@ -1552,7 +1553,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
-    if os.path.exists(platesum) is False:
+    if os.path.exists(platesum) == False:
         err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
         err2 = "You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
@@ -1633,7 +1634,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
             snratio = ''
             starflagtxt = ''
-            if os.path.exists(visitfile) is False:
+            if os.path.exists(visitfile) == False:
                 visitfile = visitfile.replace('-apo25m-', '-')
             if os.path.exists(visitfile):
                 visithdr = fits.getheader(visitfile)
@@ -1696,7 +1697,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
             objhtml.write('<TD><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
-            if makespecplots is True:
+            if makespecplots == True:
                 print("----> makeObjQA: Making "+plotfile)
 
                 lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
@@ -1855,8 +1856,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     print("----> makeNightQA: "+htmlfile)
 
     # Make the html folder if it doesn't already exist
-    if os.path.exists(outdir) is False: subprocess.call(['mkdir',outdir])
-    if os.path.exists(plotsdir) is False: subprocess.call(['mkdir',plotsdir])
+    if os.path.exists(outdir) == False: subprocess.call(['mkdir',outdir])
+    if os.path.exists(plotsdir) == False: subprocess.call(['mkdir',plotsdir])
 
     # Get all apR file numbers for the night
     rawfiles = glob.glob(datadir + mjd + '/a*R-*.apz')
@@ -1922,7 +1923,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         html.write('<FONT color=red>\n')
         for j in range(nuExposures):
             checkfile = datadir + mjd + '/apR-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz'
-            if os.path.exists(checkfile) is False:
+            if os.path.exists(checkfile) == False:
                 if (i != nchips) & (uExposures[j] != lastExposure):
                     html.write('apR-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz, ')
                 else:
@@ -1950,9 +1951,9 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     for i in range(nuExposures):
         n = int(round(uExposures[i]))
         file1d = load.filename('1D', mjd=mjd, num=n, chips='c').replace('1D-', '1D-c-')
-        if os.path.exists(file1d) is False:
+        if os.path.exists(file1d) == False:
             file2d = load.filename('2D', mjd=mjd, num=n, chips='c').replace('1D-', '1D-c-')
-            if (os.path.exists(file2d) is False) & (os.path.exists(file2d + '.fz') is False):
+            if (os.path.exists(file2d) == False) & (os.path.exists(file2d + '.fz') == False):
                 miss2d = 1
             else:
                 miss2d = 0
@@ -1975,7 +1976,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                     html.write('<TD><CENTER>'+str(head['PLATEID'])+'</CENTER>\n')
                     html.write('<TD><CENTER>'+str(head['CARTID'])+'</CENTER>\n')
                     html.write('<TD> '+os.path.basename(file1d)+'\n')
-                    if (os.path.exists(file2d) is False) & (os.path.exists(file2d+'.fz') is False):
+                    if (os.path.exists(file2d) == False) & (os.path.exists(file2d+'.fz') == False):
                         html.write('<TD> '+os.path.basename(file2d)+'\n')
             else:
                 html.write('<TR bgcolor='+color+'><TD> '+str(int(round(n)))+'\n')
@@ -1984,7 +1985,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 html.write('<TD><CENTER> </CENTER>\n')
                 html.write('<TD><CENTER> </CENTER>\n')
                 html.write('<TD> '+os.path.basename(file1d)+'\n')
-                if (os.path.exists(file2d) is False) & (os.path.exists(file2d+'.fz') is False):
+                if (os.path.exists(file2d) == False) & (os.path.exists(file2d+'.fz') == False):
                     html.write('<TD> '+os.path.basename(file2d)+'\n')
     html.write('</TABLE>\n')
     html.write('<BR>\n')
@@ -2244,7 +2245,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     visSumPathS = '../summary/allVisit-daily-lco25m.fits'
     starSumPathS = '../summary/allStar-daily-lco25m.fits'
 
-    if domjd is True:
+    if domjd == True:
         # Find all .log.html files, get all MJDs with data
         print("----> makeMasterQApages: Finding log files. Please wait.")
         logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
@@ -2417,7 +2418,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
     #---------------------------------------------------------------------------------------
     # Fields view
-    if dofields is True:
+    if dofields == True:
         fieldfile = qadir+fieldfilebase
         print("----> makeMasterQApages: Creating "+fieldfilebase)
         html = open(fieldfile,'w')

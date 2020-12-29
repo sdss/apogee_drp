@@ -63,4 +63,6 @@ prepend-path IDL_PATH +$PRODUCT_DIR/pro
 #
 # Add any non-standard Module code below this point.
 #
-setenv APOGEE_LOCALDIR /scratch/general/lustre/mwm
+#setenv APOGEE_LOCALDIR /scratch/general/lustre/mwm
+# Changing this temporarily since /scratch/general/lustre/mwm was giving problems (12/28/2020)
+setenv APOGEE_LOCALDIR /scratch/general/nfs1/mwm

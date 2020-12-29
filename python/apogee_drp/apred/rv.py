@@ -199,7 +199,7 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
 
     # Add columns for RV components
     starvisits['n_components'] = -1
-    rv_components = Column(name='rv_components',dtype=float,shape=(3),length=len(starvisits))
+    rv_components = Column(name='rv_components',dtype=float,shape=(3,),length=len(starvisits))
     starvisits.add_column(rv_components)
     rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
     starvisits.add_column(rvtab)
@@ -698,7 +698,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         else: vrel = visit['vrel']
 
         # Skip if we don't have an RV
-        if np.isfinite(vrel) is False : continue
+        if np.isfinite(vrel) == False : continue
 
         # Load the visit
         if load.telescope == 'apo1m':
@@ -731,7 +731,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
             # Load up individual mask bits
             for ibit,name in enumerate(pixelmask.name):
-                if name is not '' and len(np.where(apvisit.bitmask[chip,:]&2**ibit)[0]) > 0:
+                if name != '' and len(np.where(apvisit.bitmask[chip,:]&2**ibit)[0]) > 0:
                     raw.append([np.clip(apvisit.bitmask[chip,:]&2**ibit,None,1),None])
 
             # Do the sinc interpolation
@@ -753,7 +753,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             #   defined for each mask bit
             iout = 3
             for ibit,name in enumerate(pixelmask.name):
-                if name is not '' and len(np.where(apvisit.bitmask[chip,:]&2**ibit)[0]) > 0:
+                if name != '' and len(np.where(apvisit.bitmask[chip,:]&2**ibit)[0]) > 0:
                     j = np.where(np.abs(out[iout][0]) > pixelmask.maskcontrib[ibit])[0]
                     stack.bitmask[i,gd[j]] |= 2**ibit
                     iout += 1
