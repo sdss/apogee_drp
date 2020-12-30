@@ -1586,7 +1586,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
 
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber <TH>APOGEE ID <TH>H <TH>Raw<BR>J - K <TH>S/N <TH>Target<BR>Type <TH>Target & Data Flags')
+    objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber<BR>(block) <TH>APOGEE ID <TH>H <TH>Raw<BR>J - K <TH>S/N <TH>Target<BR>Type <TH>Target & Data Flags')
     objhtml.write('<TH>Vhelio <TH>N<BR>comp <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Spectrum Plot\n')
 #    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
@@ -1596,6 +1596,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
         fiber = jdata['FIBERID']
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
+            cblock = str(np.ceil(fiber/30).astype(int))
 
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
@@ -1645,7 +1646,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     print("----> makeObjQA: Problem with "+visitfilebase+"... SNR = NaN.")
 
             # column 1
-            objhtml.write('<TR BGCOLOR='+color+'><TD>'+cfiber+'\n')
+            objhtml.write('<TR BGCOLOR='+color+'><TD>'+cfiber+'<BR>('+cblock+')\n')
 
             # column 2
             objhtml.write('<TD>'+objid+'\n')
