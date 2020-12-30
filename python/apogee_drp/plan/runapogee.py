@@ -628,7 +628,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
                      qos=qos, shared=shared, walltime=walltime, notification=False)
         #             qos=qos, shared=shared, walltime=walltime, mem_per_cpu=4000, notification=False)
         for pf in planfiles:
-            queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','-'+str(mjd5)+'_pbs.log'), errfile=pf.replace('.yaml','-'+str(mjd5)+'_pbs.err'))
+            queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
@@ -658,8 +658,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
             if os.path.exists(outdir)==False:
                 os.makedirs(outdir)
             # Run with --verbose and --clobber set
-            queue.append('rv %s %s %s -c -v' % (obj,apred,telescope),outfile=apstarfile.replace('.fits','_pbs.log'),
-                         errfile=apstarfile.replace('.fits','_pbs.err'))
+            queue.append('rv %s %s %s -c -v' % (obj,apred,telescope),outfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.log')),
+                         errfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.err'))
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)        
         queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
