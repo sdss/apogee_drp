@@ -2503,6 +2503,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         iloc = iloc[order]
         ira = ira[order]
         idec = idec[order]
+        inexposures = inexposures[order]
+        icart = icart[order]
+        izero = izero[order]
+        imoonphase = imoonphase[order]
 
         for i in range(nplates):
             tmp = fits.open(plates[i])
