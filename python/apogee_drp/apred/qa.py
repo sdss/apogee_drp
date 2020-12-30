@@ -1586,7 +1586,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
 
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber <TH>APOGEE ID <TH>H <TH>Raw<BR>J - K <TH>S/N <TH>Target<BR>Type <TH>Target & Data Flags')
+    objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber<BR>(block) <TH>APOGEE ID <TH>H <TH>Raw<BR>J - K <TH>S/N <TH>Target<BR>Type <TH>Target & Data Flags')
     objhtml.write('<TH>Vhelio <TH>N<BR>comp <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Spectrum Plot\n')
 #    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
@@ -1596,6 +1596,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
         fiber = jdata['FIBERID']
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
+            cblock = str(np.ceil(fiber/30).astype(int))
 
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
@@ -1645,7 +1646,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     print("----> makeObjQA: Problem with "+visitfilebase+"... SNR = NaN.")
 
             # column 1
-            objhtml.write('<TR BGCOLOR='+color+'><TD>'+cfiber+'\n')
+            objhtml.write('<TR BGCOLOR='+color+'><TD>'+cfiber+'<BR>('+cblock+')\n')
 
             # column 2
             objhtml.write('<TD>'+objid+'\n')
@@ -2503,6 +2504,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         iloc = iloc[order]
         ira = ira[order]
         idec = idec[order]
+        inexposures = inexposures[order]
+        icart = icart[order]
+        izero = izero[order]
+        imoonphase = imoonphase[order]
 
         for i in range(nplates):
             tmp = fits.open(plates[i])
@@ -2513,6 +2518,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
             if iprogram[i] == 'AQMES-Medium': color = '#AED581'
             if iprogram[i][0:3] == 'MWM': color = '#D39FE4'
+            if iprogram[i][0:5] == 'eFEDS': color='#FFF9C4'
 
             html.write('<TR bgcolor=' + color + '><TD>' + iname[i]) 
             html.write('<TD>' + str(iprogram[i])) 
@@ -2610,7 +2616,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#AED581', label='AQMES-Medium ('+str(len(p))+')')
             p, = np.where((iprogram == 'MWM') | (iprogram == 'MWM_30min'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='*', s=msz*2, edgecolors='k', alpha=alf, c='#E5ADF7', label='MWM ('+str(len(p))+')')
-
+            p, = np.where((iprogram == 'eFEDS1') | (iprogram == 'eFEDS2'))
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='s', s=msz, edgecolors='k', alpha=alf, c='#FFF9C4', label='eFEDS ('+str(len(p))+')')
 
             ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
             ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
