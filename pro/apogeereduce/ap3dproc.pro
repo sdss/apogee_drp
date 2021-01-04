@@ -710,6 +710,7 @@ if not keyword_set(silent) then begin
   if keyword_set(criter) then print,'Iterative CR detection ON' else print,'Iterative CR detection OFF'
   if keyword_set(clobber) then print,'Clobber ON'
   if keyword_set(outelectrons) then print,'Output will be in ELECTRONS' else print,'Output will be in ADU'
+  if keyword_set(q3fix) then print,'Fixing 3rd quadrant issue in blue detector'
   print,''
 endif
 print,strtrim(nfiles,2),' File(s) input'

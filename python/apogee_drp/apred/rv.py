@@ -429,7 +429,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
                                   lsfsigma=apstar_bc.wave/22500/2.354,instrument='APOGEE',
                                   filename=apstar_bc.filename)
             logger.info('Lots of low-S/N visits. Running BC jointfit for :',obj)
-            out = doppler.rv.jointfit([spec],verbose=verbose,plot=plot,tweak=tweak,maxvel=[-500,500])
+            out = doppler.rv.jointfit([spec],verbose=verbose,plot=plot,tweak=tweak,maxvel=[-500,500],logger=logger)
             rvrange = [out[1][0]['vrel']-50, out[1][0]['vrel']+50]
         except :
             logger.info('  BC jointfit failed')
@@ -476,8 +476,8 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
         pickle.dump(None,fp)
         fp.close()
         logger.info('Running Doppler jointfit for: {:s}  rvrange:[{:.1f},{:.1f}]  nvisits: {:d}'.format(obj,*rvrange,len(speclist)))
-        sumstr,finalstr,bmodel,specmlist,dt = doppler.rv.jointfit(speclist,maxvel=rvrange,verbose=verbose,
-                                                                  plot=plot,saveplot=plot,outdir=outdir+'/',tweak=tweak)
+        sumstr,finalstr,bmodel,specmlist,dt = doppler.rv.jointfit(speclist,maxvel=rvrange,verbose=verbose,plot=plot,
+                                                                  saveplot=plot,outdir=outdir+'/',tweak=tweak,logger=logger)
         logger.info('Running CCF decomposition for: '+obj)
         gout = gauss_decomp(finalstr,phase='two',filt=True)
         fp = open(outdir+'/'+outbase+suffix+'_doppler.pkl','wb')
@@ -942,7 +942,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
                                   mask=apstar.mask[0,:],wave=apstar.wave,lsfpars=np.array([0]),
                                   lsfsigma=apstar.wave/22500/2.354,instrument='APOGEE',
                                   filename=apstar.filename)
-            out = doppler.rv.jointfit([spec],verbose=False,plot=False,tweak=False,maxvel=[-50,50])
+            out = doppler.rv.jointfit([spec],verbose=False,plot=False,tweak=False,maxvel=[-50,50],logger=logger)
             apstar.cont = out[3][0].flux
             apstar.template = out[2][0].flux
         except ValueError as err:
