@@ -1739,8 +1739,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         yspn = ymx - ymn
                         ymin = ymn - (yspn * 0.10)
                         ymax = ymx + (yspn * 0.15)
-                    if objtype == 'SKY':
-                        ymin = 0; ymax = 100
+                    #if objtype == 'SKY':
+                    #    ymin = 0; ymax = 100
                     yspan = ymax-ymin
 
                     #if cfiber == '095': import pdb; pdb.set_trace()
