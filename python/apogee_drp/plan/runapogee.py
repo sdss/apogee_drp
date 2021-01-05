@@ -421,6 +421,7 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     allstarfile = load.filename('allStar').replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allStar file to '+allstarfile)
+    logger.info(str(len(allstar))+' stars')
     if os.path.exists(os.path.dirname(allstarfile))==False:
         os.makedirs(os.path.dirname(allstarfile))
     allstar = Table(allstar)
@@ -443,6 +444,7 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     allvisitfile = load.filename('allVisit').replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allVisit file to '+allvisitfile)
+    logger.info(str(len(allvisit))+' visits')
     if os.path.exists(os.path.dirname(allvisitfile))==False:
         os.makedirs(os.path.dirname(allvisitfile))
     Table(allvisit).write(allvisitfile,overwrite=True)
@@ -463,11 +465,13 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     if os.path.exists(mjdsumdir)==False:
         os.makedirs(mjdsumdir)
     logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
-
+    logger.info(str(len(allstarmjd))+' stars for '+str(mjd5))
     Table(allstarmjd).write(allstarmjdfile,overwrite=True)
+
     allvisitmjdfile = allvisitfile.replace('allVisit','allVisitMJD').replace('.fits','-'+str(mjd5)+'.fits')
     allvisitmjdfile = mjdsumdir+'/'+os.path.basename(allvisitmjdfile)
     logger.info('Writing Nightly allVisitMJD file to '+allvisitmjdfile)
+    logger.info(str(len(allvisitmjd))+' visits for '+str(mjd5))
     Table(allvisitmjd).write(allvisitmjdfile,overwrite=True)
 
     db.close()
