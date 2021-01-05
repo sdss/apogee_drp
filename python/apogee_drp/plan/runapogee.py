@@ -660,7 +660,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
             if os.path.exists(outdir)==False:
                 os.makedirs(outdir)
             # Run with --verbose and --clobber set
-            queue.append('rv %s %s %s -c -v' % (obj,apred,telescope),outfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.log'),
+            queue.append('rv %s %s %s -c -v -m %s' % (obj,apred,telescope,mjd5),outfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.log'),
                          errfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.err'))
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)        
