@@ -414,9 +414,11 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     #    calculating the aggregate value MAX(starver).
     #  We then select the particular row (with all columns) using apogee_id+apred_vers+telescope+starver
     #    from this subquery.
-    allstar = db.query(sql="select * from apogee_drp.star where (apogee_id, apred_vers, telescope, starver) in "+\
-                       "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\
-                       "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    #allstar = db.query(sql="select * from apogee_drp.star where (apogee_id, apred_vers, telescope, starver) in "+\
+    #                   "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\
+    #                   "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    # Using STAR_LATEST seems much faster
+    allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     allstarfile = load.filename('allStar').replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allStar file to '+allstarfile)
     if os.path.exists(os.path.dirname(allstarfile))==False:
@@ -437,22 +439,21 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
              'starflags','dateobs','jd']
     rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
-    cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
-    allvisit = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
-                        "where (rv.apogee_id, rv.apred_vers, rv.telescope, rv.starver) in "+\
-                        "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.rv_visit where "+\
-                        "rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    cols = ','.join(vcols+rvcols)
+    allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     allvisitfile = load.filename('allVisit').replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allVisit file to '+allvisitfile)
     if os.path.exists(os.path.dirname(allvisitfile))==False:
         os.makedirs(os.path.dirname(allvisitfile))
     Table(allvisit).write(allvisitfile,overwrite=True)
 
-    # Nightly allVisit and allStar, allVisitMJD/allStarMJD
-    gdstar, = np.where(allstar['starver']==str(mjd5))
-    allstarmjd = allstar[gdstar]
-    gdvisit, = np.where(allvisit['mjd']==int(mjd5))
-    allvisitmjd = allvisit[gdvisit]
+    # Nightly allStar, allStarMJD
+    allstarmjd = db.query('star',cols='*',where="apred_vers='%s' and telescope='%s' and starver='%s'" % (apred,telescope,mjd5))
+
+    # Nightly allVisit, allVisitMJD
+    cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
+    allvisitmjd = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
+                           "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' and v.mjd="+str(mjd5)+" and rv.starver='"+str(mjd5)+"'")
 
     # maybe in summary/MJD/ or qa/MJD/ ?
     #allstarmjdfile = load.filename('allStarMJD')
@@ -648,7 +649,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
     if len(vcat)>0:
         queue = pbsqueue(verbose=True)
-        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, walltime=walltime, notification=False)
+        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=1,
+                     walltime=walltime, notification=False)
         # Get unique stars
         objects,ui = np.unique(vcat['apogee_id'],return_index=True)
         vcat = vcat[ui]
