@@ -97,6 +97,15 @@ def cast_float_none(value, cursor):
 new_type = pg.extensions.new_type(oids_float, "FLOAT", cast_float_none)
 register_type(new_type)
 
+#def cast_data(data):
+#    """ Cast output sql query data to deal with None's."""
+#
+#    # Recast
+#    out = [
+#        tuple('nan' if isinstance(i, np.floating) and np.isnan(i) else i for i in t)
+#        for t in list(data)
+#    ]
+
 
 def register_date_typecasters(connection):
     """

@@ -631,7 +631,6 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         queue = pbsqueue(verbose=True)
         queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
                      qos=qos, shared=shared, walltime=walltime, notification=False)
-        #             qos=qos, shared=shared, walltime=walltime, mem_per_cpu=4000, notification=False)
         for pf in planfiles:
             queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
         queue.commit(hard=True,submit=True)
@@ -653,7 +652,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
     if len(vcat)>0:
         queue = pbsqueue(verbose=True)
-        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=1,
+        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
                      walltime=walltime, notification=False)
         # Get unique stars
         objects,ui = np.unique(vcat['apogee_id'],return_index=True)
