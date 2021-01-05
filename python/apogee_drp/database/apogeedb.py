@@ -18,6 +18,15 @@ import psycopg2 as pg
 from psycopg2.extras import execute_values
 import datetime
 
+# type code
+#  16  bool
+#  18  char
+#  20  int8, bigint
+#  21  int2, smallint
+#  23  int4, integer
+#  25  text
+# 700  float4, float
+# 701  float8, double
 
 from psycopg2.extensions import register_adapter, AsIs
 def addapt_np_float16(np_float16):
@@ -55,6 +64,38 @@ def cast_date(value, cursor):
 oids = (1082, 1114, 1184) 
 new_type = pg.extensions.new_type(oids, "DATE", cast_date)
 register_type(new_type) 
+# Cast None's for bool
+oids_bool = (16,)
+def cast_bool_none(value, cursor):
+    if value is None:
+        return False
+    return value
+new_type = pg.extensions.new_type(oids_bool, "DATE", cast_bool_none)
+register_type(new_type)
+# Cast None's for text/char
+oids_text = (18,25)
+def cast_text_none(value, cursor):
+    if value is None:
+        return ''
+    return value
+new_type = pg.extensions.new_type(oids_text, "DATE", cast_text_none)
+register_type(new_type)
+# Cast None's for integers
+oids_int = (20,21,23)
+def cast_int_none(value, cursor):
+    if value is None:
+        return -9999
+    return value
+new_type = pg.extensions.new_type(oids_int, "DATE", cast_int_none)
+register_type(new_type)
+# Cast None's for floats
+oids_float = (700,701)
+def cast_float_none(value, cursor):
+    if value is None:
+        return -999999.
+    return value
+new_type = pg.extensions.new_type(oids_float, "DATE", cast_float_none)
+register_type(new_type)
 
 
 def register_date_typecasters(connection):
@@ -164,6 +205,8 @@ class DBSession(object):
                 print('CMD = '+cmd)
             cur.execute(cmd)
             data = cur.fetchall()
+            # The column names from the select query
+            selcolnames = [desc[0] for desc in cur.description]
 
             if len(data)==0:
                 cur.close()
@@ -179,6 +222,7 @@ class DBSession(object):
             head = cur.fetchall()
             cur.close()
             colnames = [h[0] for h in head]
+            headdict = dict(head)
 
             # Return fmt="list" format
             if fmt=='list':
@@ -191,14 +235,17 @@ class DBSession(object):
                    'text':(np.str,200),'char':(np.str,5),'timestamp':(np.str,50), 'timestamp with time zone':(np.str,50),
                    'timestamp without time zone':(np.str,50),'boolean':np.bool}
             dt = []
-            for i,h in enumerate(head):
-                if h[1]=='ARRAY':
-                    # Get number if elements and type from the data itself
-                    shp = np.array(data[0][i]).shape
-                    type1 = np.array(data[0][i]).dtype.type
-                    dt.append( (h[0], type1, shp) )
+            for i,name in enumerate(selcolnames):
+                if name in headdict.keys():
+                    if headdict[name]=='ARRAY':
+                        # Get number if elements and type from the data itself
+                        shp = np.array(data[0][i]).shape
+                        type1 = np.array(data[0][i]).dtype.type
+                        dt.append( (name, type1, shp) )
+                    else:
+                        dt.append( (name, d2d[headdict[name]]) )
                 else:
-                    dt.append( (h[0], d2d[h[1]]) )
+                    raise ValueError(name+' not in header')
             dtype = np.dtype(dt)
 
             # Convert to numpy structured array
