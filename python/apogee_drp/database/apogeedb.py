@@ -69,8 +69,8 @@ oids_bool = (16,)
 def cast_bool_none(value, cursor):
     if value is None:
         return False
-    return value
-new_type = pg.extensions.new_type(oids_bool, "DATE", cast_bool_none)
+    return np.bool(value)
+new_type = pg.extensions.new_type(oids_bool, "BOOL", cast_bool_none)
 register_type(new_type)
 # Cast None's for text/char
 oids_text = (18,25)
@@ -78,23 +78,23 @@ def cast_text_none(value, cursor):
     if value is None:
         return ''
     return value
-new_type = pg.extensions.new_type(oids_text, "DATE", cast_text_none)
+new_type = pg.extensions.new_type(oids_text, "TEXT", cast_text_none)
 register_type(new_type)
 # Cast None's for integers
 oids_int = (20,21,23)
 def cast_int_none(value, cursor):
     if value is None:
         return -9999
-    return value
-new_type = pg.extensions.new_type(oids_int, "DATE", cast_int_none)
+    return np.int(value)
+new_type = pg.extensions.new_type(oids_int, "INT", cast_int_none)
 register_type(new_type)
 # Cast None's for floats
 oids_float = (700,701)
 def cast_float_none(value, cursor):
     if value is None:
         return -999999.
-    return value
-new_type = pg.extensions.new_type(oids_float, "DATE", cast_float_none)
+    return np.float(value)
+new_type = pg.extensions.new_type(oids_float, "FLOAT", cast_float_none)
 register_type(new_type)
 
 
@@ -292,6 +292,7 @@ class DBSession(object):
                 for j in np.arange(1,nind):
                     colnames[ind[j]] += str(j+1)
 
+            import pdb; pdb.set_trace()
             # Use the data returned to get the type
             dt = []
             for i,c in enumerate(colnames):
