@@ -292,7 +292,6 @@ class DBSession(object):
                 for j in np.arange(1,nind):
                     colnames[ind[j]] += str(j+1)
 
-            import pdb; pdb.set_trace()
             # Use the data returned to get the type
             dt = []
             for i,c in enumerate(colnames):
