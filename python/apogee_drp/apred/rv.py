@@ -29,7 +29,7 @@ colors = ['r','g','b','c','m','y','k']
 chips = ['a','b','c']
 
 
-def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
+def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,tweak=False,
                clobber=False,verbose=False,plot=False,logger=None):
     """
     Run Doppler on one star and perform visit combination.
@@ -42,6 +42,8 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
        APOGEE reduction version.
     telescope : str
        APOGEE telescope (apo25m, loc25m, apo1m).
+    mjd : int or str
+       The final MJD to use for visits and for STARVER.
     nres : array, optional
        Array of sinc widths.  Default is nres=[5,4.25,3.5].
     windows : array, optional
@@ -74,7 +76,10 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
 
     # Get the visit files for this star and telescope
     db = apogeedb.DBSession()
-    allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"'")
+    if mjd is None:
+        allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"'")
+    else:
+        allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"' and mjd<="+str(mjd))
     db.close()
     nallvisits = len(allvisits)
     if nallvisits==0:
@@ -87,7 +92,11 @@ def doppler_rv(star,apred,telescope,nres=[5,4.25,3.5],windows=None,tweak=False,
 
     # Get the star version number
     #  this is the largest MJD5 in the FULL list of visits
-    starver = str(np.max(allvisits['mjd'].astype(int)))
+    if mjd is None:
+        starver = str(np.max(allvisits['mjd'].astype(int)))
+    else:
+        # If MJD is input then use that for STARVER
+        starver = str(mjd)
     logger.info('Version='+starver)
 
 
