@@ -1780,7 +1780,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
                         ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
 
-                        ax1.text(0.02, 0.05, objid, transform=ax1.transAxes, bbox=bboxpar)
+                        ax1.text(0.02, 0.05, objid+',  H = '+chmag, transform=ax1.transAxes, bbox=bboxpar)
 
                     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
