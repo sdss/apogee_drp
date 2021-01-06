@@ -1741,9 +1741,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ymin = ymn - (yspn * 0.10)
                             ymax = ymx + (yspn * 0.15)
                     else:
-                        tmpF = convolve(Flux,Box1DKernel(35))
-                        ymin = np.nanmin(tmpF)
-                        ymax = np.nanmax(tmpF)
+                        med = np.nanmedian(flux)
+                        ymin = med-100
+                        ymax = med+100
                     yspan = ymax-ymin
 
                     fig=plt.figure(figsize=(28,8))
