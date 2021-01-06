@@ -1650,8 +1650,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
             # column 2
             objhtml.write('<TD>'+objid+'\n')
-            objhtml.write(simbadlink+'\n')
             if objtype != 'SKY':
+                objhtml.write(simbadlink+'\n')
                 objhtml.write('<BR><a href=../'+visitfilebase+'>apVisit file</A>\n')
                 objhtml.write('<BR>apStar file\n')
 
