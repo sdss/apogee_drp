@@ -1741,7 +1741,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ymin = ymn - (yspn * 0.10)
                             ymax = ymx + (yspn * 0.15)
                     else:
-                        med = np.nanmedian(flux)
+                        med = np.nanmedian(Flux)
                         ymin = med-100
                         ymax = med+100
                     yspan = ymax-ymin
