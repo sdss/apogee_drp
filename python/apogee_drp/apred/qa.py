@@ -1730,20 +1730,20 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     ymx4 = np.nanmax(tmpF[ymxsec4])
                     ymx5 = np.nanmax(tmpF[ymxsec5])
                     ymx = np.nanmax([ymx1,ymx2,ymx3,ymx4,ymx5])
-                    ymin = 0
-                    yspn = ymx-ymin
-                    ymax = ymx + (yspn * 0.15)
-                    # Establish Ymin
-                    ymn = np.nanmin(tmpF)
-                    if ymn > 0: 
-                        yspn = ymx - ymn
-                        ymin = ymn - (yspn * 0.10)
+                    if objtype[j] != 'SKY':
+                        ymin = 0
+                        yspn = ymx-ymin
                         ymax = ymx + (yspn * 0.15)
-                    #if objtype == 'SKY':
-                    #    ymin = 0; ymax = 100
+                        # Establish Ymin
+                        ymn = np.nanmin(tmpF)
+                        if ymn > 0: 
+                            yspn = ymx - ymn
+                            ymin = ymn - (yspn * 0.10)
+                            ymax = ymx + (yspn * 0.15)
+                    else:
+                        ymin = np.nanmin(tmpF)
+                        ymax = np.nanmax(tmpF)
                     yspan = ymax-ymin
-
-                    #if cfiber == '095': import pdb; pdb.set_trace()
 
                     fig=plt.figure(figsize=(28,8))
                     ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1778,6 +1778,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
                         ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
                         ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
+
+                        ax1.text(0.02, 0.05, objid, transform=ax1.transAxes, bbox=bboxpar)
 
                     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
