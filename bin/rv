@@ -38,6 +38,7 @@ if __name__ == '__main__' :
     parser.add_argument('star', type=str, nargs=1,  help='Star Name')
     parser.add_argument('apred', type=str, nargs=1, help='APOGEE reduction version')
     parser.add_argument('telescope', type=str, nargs=1, help='APOGEE telescope (apo25m, lco25m, apo1m)')
+    parser.add_argument('-m',"--mjd",type=str, nargs=1, default='', help='Final MJD5 to use')
     parser.add_argument("--nres",type=float,nargs=3,help='list of sinc widths',default=[5,4.25,3.5])
     parser.add_argument("--windows",type=float,nargs=1,help='Spectral windows')
     parser.add_argument('--tweak', action='store_true', help='do normalization tweak?')
@@ -60,7 +61,12 @@ if __name__ == '__main__' :
     star = args.star[0]
     apred = args.apred[0]
     telescope = args.telescope[0]
-
+    mjd = args.mjd
+    if mjd=='':
+        mjd = None
+    else:
+        mjd = mjd[0]
+    
     # Input list of 
     islist = args.list
     if islist==True:
@@ -79,7 +85,7 @@ if __name__ == '__main__' :
             try:
                 rv.doppler_rv(star,apred,telescope,clobber=args.clobber,tweak=args.tweak,
                               nres=args.nres,windows=args.windows,verbose=args.verbose,
-                              plot=args.plot,logger=logger)
+                              plot=args.plot,logger=logger,mjd=mjd)
             except:
                 logger.exception('Error running Doppler on '+star)
     
@@ -88,7 +94,7 @@ if __name__ == '__main__' :
         # Run doppler_rv_star() for this star
         rv.doppler_rv(star,apred,telescope,clobber=args.clobber,tweak=args.tweak,
                       nres=args.nres,windows=args.windows,verbose=args.verbose,
-                      plot=args.plot,logger=logger)
+                      plot=args.plot,logger=logger,mjd=mjd)
 
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))

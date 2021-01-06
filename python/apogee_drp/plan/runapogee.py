@@ -414,11 +414,14 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     #    calculating the aggregate value MAX(starver).
     #  We then select the particular row (with all columns) using apogee_id+apred_vers+telescope+starver
     #    from this subquery.
-    allstar = db.query(sql="select * from apogee_drp.star where (apogee_id, apred_vers, telescope, starver) in "+\
-                       "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\
-                       "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    #allstar = db.query(sql="select * from apogee_drp.star where (apogee_id, apred_vers, telescope, starver) in "+\
+    #                   "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\
+    #                   "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    # Using STAR_LATEST seems much faster
+    allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     allstarfile = load.filename('allStar').replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allStar file to '+allstarfile)
+    logger.info(str(len(allstar))+' stars')
     if os.path.exists(os.path.dirname(allstarfile))==False:
         os.makedirs(os.path.dirname(allstarfile))
     allstar = Table(allstar)
@@ -437,22 +440,22 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
              'starflags','dateobs','jd']
     rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
-    cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
-    allvisit = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
-                        "where (rv.apogee_id, rv.apred_vers, rv.telescope, rv.starver) in "+\
-                        "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.rv_visit where "+\
-                        "rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    cols = ','.join(vcols+rvcols)
+    allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     allvisitfile = load.filename('allVisit').replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allVisit file to '+allvisitfile)
+    logger.info(str(len(allvisit))+' visits')
     if os.path.exists(os.path.dirname(allvisitfile))==False:
         os.makedirs(os.path.dirname(allvisitfile))
     Table(allvisit).write(allvisitfile,overwrite=True)
 
-    # Nightly allVisit and allStar, allVisitMJD/allStarMJD
-    gdstar, = np.where(allstar['starver']==str(mjd5))
-    allstarmjd = allstar[gdstar]
-    gdvisit, = np.where(allvisit['mjd']==int(mjd5))
-    allvisitmjd = allvisit[gdvisit]
+    # Nightly allStar, allStarMJD
+    allstarmjd = db.query('star',cols='*',where="apred_vers='%s' and telescope='%s' and starver='%s'" % (apred,telescope,mjd5))
+
+    # Nightly allVisit, allVisitMJD
+    cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
+    allvisitmjd = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
+                           "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' and v.mjd="+str(mjd5)+" and rv.starver='"+str(mjd5)+"'")
 
     # maybe in summary/MJD/ or qa/MJD/ ?
     #allstarmjdfile = load.filename('allStarMJD')
@@ -462,11 +465,13 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
     if os.path.exists(mjdsumdir)==False:
         os.makedirs(mjdsumdir)
     logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
-
+    logger.info(str(len(allstarmjd))+' stars for '+str(mjd5))
     Table(allstarmjd).write(allstarmjdfile,overwrite=True)
+
     allvisitmjdfile = allvisitfile.replace('allVisit','allVisitMJD').replace('.fits','-'+str(mjd5)+'.fits')
     allvisitmjdfile = mjdsumdir+'/'+os.path.basename(allvisitmjdfile)
     logger.info('Writing Nightly allVisitMJD file to '+allvisitmjdfile)
+    logger.info(str(len(allvisitmjd))+' visits for '+str(mjd5))
     Table(allvisitmjd).write(allvisitmjdfile,overwrite=True)
 
     db.close()
@@ -529,7 +534,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     alloc = 'sdss-np'
     shared = True
     ppn = 64
-    cpus = 16   # 32
+    cpus = 32
     walltime = '23:00:00'
 
     # No version input, use 'daily'
@@ -625,8 +630,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         rootLogger.info('')
         queue = pbsqueue(verbose=True)
         queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
-                     qos=qos, shared=shared, walltime=walltime, notification=False)
-        #             qos=qos, shared=shared, walltime=walltime, mem_per_cpu=4000, notification=False)
+                     qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
         for pf in planfiles:
             queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
         queue.commit(hard=True,submit=True)
@@ -648,7 +652,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
     if len(vcat)>0:
         queue = pbsqueue(verbose=True)
-        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, walltime=walltime, notification=False)
+        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
+                     walltime=walltime, notification=False)
         # Get unique stars
         objects,ui = np.unique(vcat['apogee_id'],return_index=True)
         vcat = vcat[ui]
@@ -658,7 +663,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
             if os.path.exists(outdir)==False:
                 os.makedirs(outdir)
             # Run with --verbose and --clobber set
-            queue.append('rv %s %s %s -c -v' % (obj,apred,telescope),outfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.log'),
+            queue.append('rv %s %s %s -c -v -m %s' % (obj,apred,telescope,mjd5),outfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.log'),
                          errfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.err'))
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)        
