@@ -1730,7 +1730,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     ymx4 = np.nanmax(tmpF[ymxsec4])
                     ymx5 = np.nanmax(tmpF[ymxsec5])
                     ymx = np.nanmax([ymx1,ymx2,ymx3,ymx4,ymx5])
-                    if objtype[j] != 'SKY':
+                    if objtype != 'SKY':
                         ymin = 0
                         yspn = ymx-ymin
                         ymax = ymx + (yspn * 0.15)
