@@ -555,7 +555,18 @@ if not keyword_set(noobject) and not keyword_set(sdss5) then begin
     ;; Fix NaNs, etc.
     aspcap_fixobject,objects
 
-    spherematch,objects.ra,objects.dec,fiber.ra,fiber.dec,10./3600.,match1,match2,dist,maxmatch=1
+    ;; Match stars with coordinates
+    ;;  deal with fiber RA/DEC = 999999.
+    bdra = where(fiber.ra lt -0.1 or fiber.ra gt 360.1,nbdra)
+    if nbdra gt 0 then begin
+      tra = fiber.ra
+      tra[bdra] = 0.0
+      tdec = fiber.dec
+      tdec[bdra] = -89.9999
+      spherematch,objects.ra,objects.dec,tra,tdec,10./3600.,match1,match2,dist,maxmatch=1
+    endif else begin
+      spherematch,objects.ra,objects.dec,fiber.ra,fiber.dec,10./3600.,match1,match2,dist,maxmatch=1
+    endelse
     for i=0,299 do begin
       if fiber[i].objtype eq 'STAR' or fiber[i].objtype eq 'HOT_STD' then begin
         j = where(match2 eq i,nj)
@@ -573,12 +584,12 @@ if not keyword_set(noobject) and not keyword_set(sdss5) then begin
           ;fiber[i].ak_targ_method = objects[match1[j]].ak_targ_method
           ;if finite(objects[match1[j]].ak_wise) then fiber[i].ak_wise=objects[match1[j]].ak_wise
           ;if finite(objects[match1[j]].sfd_ebv) then fiber[i].sfd_ebv=objects[match1[j]].sfd_ebv
-          fiber[i].jmag = objects[match1[j]].j
-          fiber[i].jerr = objects[match1[j]].j_err
-          fiber[i].hmag = objects[match1[j]].h
-          fiber[i].herr = objects[match1[j]].h_err
-          fiber[i].kmag = objects[match1[j]].k
-          fiber[i].kerr = objects[match1[j]].k_err
+          fiber[i].jmag = objects[match1[j]].jmag
+          fiber[i].jerr = objects[match1[j]].jerr
+          fiber[i].hmag = objects[match1[j]].hmag
+          fiber[i].herr = objects[match1[j]].herr
+          fiber[i].kmag = objects[match1[j]].kmag
+          fiber[i].kerr = objects[match1[j]].kerr
           fiber[i].alt_id = objects[match1[j]].alt_id
           fiber[i].src_h = objects[match1[j]].src_h
           ;fiber[i].wash_m = objects[match1[j]].wash_m
