@@ -175,7 +175,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         logger.info('No visits passed QA cuts')
         # Add starflag and andflag
         starflag,andflag = np.uint64(0),np.uint64(0)
-        for v in len(allvisits):
+        for v in allvisits:
             starflag |= v['starflag'] # bitwise OR
             andflag &= v['starflag']  # bitwise AND
         starflag |= starmask.getval('RV_FAIL')
