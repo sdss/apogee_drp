@@ -657,8 +657,9 @@ FOR i=0L,nplanfiles-1 do begin
     if planstr.plateid ge 15000 then begin
       visitstr.targflags = targflag(visitstr.sdssv_apogee_target0,survey=survey)      
     ;; APOGEE-1/2 flags
-    endif else begin
-      visitstr.targflags = targflag(targ1[istar],targ2[istar],targ3[istar],targ4[istar],survey=survey)
+    endif else begin      
+      visitstr.targflags = targflag(visitstr.apogee_target1,visitstr.apogee_target2,visitstr.apogee_target3,$
+                                    visitstr.apogee_target4,survey=survey)
     endelse
     visitstr.survey = survey
     visitstr.field = plugmap.field
