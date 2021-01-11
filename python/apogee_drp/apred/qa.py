@@ -34,6 +34,8 @@ sdss_path = path.Path()
 
 sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js'
 
+matplotlib.use('agg')
+
 # put import pdb; pdb.set_trace() wherever you want stop
 
 #sdss_path.full('ap2D',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
@@ -998,7 +1000,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     if len(glob.glob(plotsdir)) == 0: subprocess.call(['mkdir',plotsdir])
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
-    plt.ioff()
+    #plt.ioff()
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     alpha = 0.6
@@ -1501,7 +1503,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             #zerofile = 'zero-'+gfile
             #print("PLOTS 8: Zeropoints plots will be made here.")
 
-    plt.ion()
+    #plt.ion()
     print("----> makeObsQAplots: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
@@ -1525,7 +1527,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
         subprocess.call(['mv', 'sorttable.js', htmldir])
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
-    plt.ioff()
+    #plt.ioff()
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
@@ -1788,7 +1790,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     objhtml.close()
     cfile.close()
-    plt.ion()
+    #plt.ion()
     print("----> makeObjQA: Done with plate "+plate+", MJD "+mjd+".\n")
 
 #    if starfiber is None:
@@ -1830,7 +1832,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     thcolor = '#DCDCDC'
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
-    plt.ioff()
+    #plt.ioff()
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     alpha = 0.6
@@ -2227,7 +2229,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     html.write('</TABLE>\n')
     html.write('<BR><BR>\n')
     html.close()
-    plt.ion()
+    #plt.ion()
     print("----> makeNightQA: Done with MJD "+mjd+"\n")
 
 
@@ -2235,7 +2237,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fieldfilebase=None,
                       domjd=True, dofields=True, badPlates=None):
 
-    plt.ioff()
+    #plt.ioff()
 
     # Establish data directories.
     datadirN = os.environ['APOGEE_DATA_N']
@@ -2629,7 +2631,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             plt.savefig(qadir+plotfile)
             plt.close('all')
 
-    plt.ion()
+    #plt.ion()
     print("----> makeMasterQApages: Done.\n")
 
 
