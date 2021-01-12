@@ -1054,7 +1054,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 hmagarr = Vsum['HMAG']
             else:
                 hmagarr = Vsum['H']
-            gd, = np.where(hmagarr < 20)
+            gd, = np.where((hmagarr > 0) & (hmagarr < 20))
             minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd]);  spanH = maxH - minH
             xmin = minH - spanH * 0.05;     xmax = maxH + spanH * 0.05
 
@@ -1064,8 +1064,6 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             ax.set_xlim(xmin,xmax)
             ax.set_ylim(1,1200)
             ax.set_yscale('log')
-
-            import pdb; pdb.set_trace()
 
             if 'apogee' in survey.lower():
                 telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
