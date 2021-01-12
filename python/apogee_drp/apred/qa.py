@@ -1065,6 +1065,8 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             ax.set_ylim(1,1200)
             ax.set_yscale('log')
 
+            import pdb; pdb.set_trace()
+
             if 'apogee' in survey.lower():
                 telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
                 science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
