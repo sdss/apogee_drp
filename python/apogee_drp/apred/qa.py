@@ -1758,6 +1758,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         med = np.nanmedian(Flux)
                         ymin = med-50
                         ymax = med+50
+                        if cfiber == '064':
+                            ymin = med-1000
+                            ymax = med+1000
                     yspan = ymax-ymin
 
                     fig=plt.figure(figsize=(28,8))
