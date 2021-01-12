@@ -317,6 +317,13 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
         plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
 
+        nplug = len(plug['fiberdata']['fiberid'])
+        for k in range(nplug): 
+            fib = str(plug['fiberdata']['fiberid'][k]).rjust(3)
+            nm = plug['fiberdata']['twomass_designation'][k]
+            hm = str(plug['fiberdata']['hmag'][k])
+            print(fib+'  '+nm+'  '+hm)
+
         import pdb; pdb.set_trace()
 
         gd, = np.where(plug['fiberdata']['fiberid'] > 0)
