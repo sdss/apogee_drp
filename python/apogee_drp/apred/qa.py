@@ -1233,7 +1233,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 sky, = np.where(plSum2['OBJTYPE'] == 'SKY')
                 nsky = len(sky)
 
-                notsky, = np.where(plSum2['HMAG'] < 30)
+                notsky, = np.where((plSum2['HMAG'] > 0) & (plSum2['HMAG'] < 30))
                 hmagarr = plSum2['HMAG'][notsky]
                 minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
                 xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
