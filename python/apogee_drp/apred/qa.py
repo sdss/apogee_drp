@@ -323,7 +323,9 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             nm = plug['fiberdata']['twomass_designation'][k].rjust(16)
             hm = str(plug['fiberdata']['hmag'][k]).rjust(6)
             ot = plug['fiberdata']['objtype'][k]
-            print(fib+'  '+nm+'  '+hm+'  '+ot)
+            ra = str("%.6f" % round(plug['fiberdata']['ra'][k],6)).rjust(10)
+            de = str("%.6f" % round(plug['fiberdata']['dec'][k],6)).rjust(10)
+            print(fib+'  '+nm+'  '+hm+'  '+ot+'  '+ra+'  '+de)
 
         import pdb; pdb.set_trace()
 
