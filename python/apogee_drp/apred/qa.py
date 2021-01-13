@@ -1042,9 +1042,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     Vsum = load.apVisitSum(int(plate), mjd)
     Vsumfile = Vsum.filename()
     Vsum = Vsum[1].data
-    block = np.floor((Vsum['FIBERID'] - 1) / 30)
-    import pdb; pdb.set_trace()
-    block = block[::-1]
+    block = np.floor((Vsum['FIBERID'] - 1) / 30)[::-1]
 
     for i in range(2):
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
