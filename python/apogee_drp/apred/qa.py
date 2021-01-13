@@ -1610,7 +1610,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
         fiber = jdata['FIBERID']
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
-            cblock = str(10-np.ceil(fiber/30).astype(int))
+            cblock = str(9-np.ceil(fiber/30).astype(int))
 
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
