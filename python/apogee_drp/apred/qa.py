@@ -1159,7 +1159,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     #----------------------------------------------------------------------------------------------
     # PLOT 6: fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
-    block = np.floor((plSum2['FIBERID'] - 1) / 30)
+    block = np.floor((plSum2['FIBERID'] - 1) / 30)[::-1]
     plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsQAplots: Making "+plotfile)
@@ -1610,7 +1610,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
         fiber = jdata['FIBERID']
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
-            cblock = str(np.ceil(fiber/30).astype(int))
+            cblock = str(10-np.ceil(fiber/30).astype(int))
 
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
