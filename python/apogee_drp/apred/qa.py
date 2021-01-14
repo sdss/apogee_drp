@@ -1650,6 +1650,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 apStarFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits'
                 apStarCheck = glob.glob(apStarPath + apStarFile)
                 apStarCheck.sort();   apStarCheck = np.array(apStarCheck)
+                import pdb; pdb.set_trace()
                 apStarRelPath = apStarCheck[-1]
 
             # Establish html table row background color and spectrum plot color
