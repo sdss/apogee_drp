@@ -1737,8 +1737,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
             # Star level html page
             if j == 0:
-                try:
+                if objtype != 'SKY':
                     # Get visit info from DB
+                    txt = "apogee_id='" + objid + "'"
                     vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
                     nvis = len(vcat)
                     cgl = str("%.5f" % round(vcat['GLON'][0],5))
@@ -1792,8 +1793,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A>\n')
                     starHTML.write('</TABLE>\n<BR><BR><BR>\n')
                     starHTML.close()
-                except:
-                    print("----> makeObjQA: Problem! DB query failed for " + objid)
+               # except:
+                   # print("----> makeObjQA: Problem! DB query failed for " + objid)
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
