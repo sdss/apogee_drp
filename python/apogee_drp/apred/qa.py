@@ -1649,10 +1649,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 apStarPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/'
                 tmpDir = apodir+apred+'/stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/'
                 apStarCheck = glob.glob(tmpDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                import pdb; pdb.set_trace()
                 apStarCheck.sort();   apStarCheck = np.array(apStarCheck)
                 apStarNewest = os.path.basename(apStarCheck[-1])
                 apStarRelPath = apStarPath + apStarNewest
-                import pdb; pdb.set_trace()
+
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
