@@ -1636,6 +1636,15 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD</A>'
             simbadlink = txt1 + txt2
 
+            # Find which healpix this star is in
+            healpix = apload.obj2healpix(objid)
+            subdir = healpix // 1000
+            # Find the associated healpix subdirectory and make the html directory if it doesn't already exist
+            starDir = starHTMLdir + '/' + str(subdir) + '/' + str(healpix) + '/html/'
+            if os.path.exists is False: subprocess.call(['mkdir', starDir])
+            starHTMLpath = starDir + objid + '.html'
+            starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+starHTMLpath
+
             # Establish html table row background color and spectrum plot color
             color = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = '#D2B4DE'
@@ -1679,6 +1688,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 objhtml.write('<BR>' + simbadlink + '\n')
                 objhtml.write('<BR><a href=../' + visitfilebase + '>apVisit file</A>\n')
                 objhtml.write('<BR>apStar file\n')
+                objhtml.write('<BR><A HREF=' + starHTMLrelPath + '>Star Summary Page</A>\n')
 
             if objtype != 'SKY':
                 objhtml.write('<TD align ="right">' + chmag)
@@ -1724,73 +1734,65 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             else:
                 objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
 
-            try:
-                # Get visit info from DB
-                vcat = db.query('visit_latest', where="apogee_id='"+objid+"'", fmt='table')
-                nvis = len(vcat)
-                cgl = str("%.5f" % round(vcat['GLON'][0],5))
-                cgb = str("%.5f" % round(vcat['GLAT'][0],5))
+            # Star level html page
+            if j == 0:
+                try:
+                    # Get visit info from DB
+                    vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
+                    nvis = len(vcat)
+                    cgl = str("%.5f" % round(vcat['GLON'][0],5))
+                    cgb = str("%.5f" % round(vcat['GLAT'][0],5))
 
-                # Find which healpix this star is in
-                healpix = apload.obj2healpix(objid)
-                subdir = healpix // 1000
+                    starHTML = open(starHTMLpath, 'w')
+                    starHTML.write('<HTML>\n')
+                    starHTML.write('<HEAD><script src="' + apodir + 'sorttable.js"></script><title>' +objid+ '</title></head>\n')
+                    starHTML.write('<BODY>\n')
+                    starHTML.write('<H1>' + objid + ', H = ' + chmag + '</H1>\n')
+                    starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
+                    starHTML.write('<TR bgcolor="' + thcolor + '">')
 
-                # Find the associated healpix subdirectory and make the html directory if it doesn't already exist
-                starDir = starHTMLdir + '/' + str(subdir) + '/' + str(healpix) + '/html/'
-                if os.path.exists is False: subprocess.call(['mkdir', starDir])
+                    # Star metadata table
+                    starHTML.write('<TH> SIMBAD <TH>RA, DEC <TH>GLON, GLAT <TH> JMAG <TH>HMAG <TH>KMAG <TH>Raw J-K ')
+                    starhtml.write('<TH>N<BR>Vis <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H]')
+                    starHTML.write('<TD>' + simbadlink + ' <TD>' + cra + '  ' + cdec + ' <TD>' + cgl + '  ' + cgb)
+                    starHTML.write('<TD>' + cjmag + ' <TD>' +chmag + ' <TD>' + ckmag + ' <TD>' + cjkcolor + ' <TD>' + str(nvis)))
+                    if os.path.exists(allVpath):
+                        starHTML.write('<TD>' + rvteff + ' <TD>' + rvlogg + ' <TD>' + rvfeh + '\n')
+                    else:
+                        starHTML.write('<TD> ---- <TD> ---- <TD> ---- \n')
+                    starHTML.write('</TABLE>\n<BR>\n')
 
-                # Star level html page
-                starHTMLpath = starDir + objid + '.html'
-                starHTML = open(starHTMLpath, 'w')
-                starHTML.write('<HTML>\n')
-                starHTML.write('<HEAD><script src="' + apodir + 'sorttable.js"></script><title>' +objid+ '</title></head>\n')
-                starHTML.write('<BODY>\n')
-                starHTML.write('<H1>' + objid + ', H = ' + chmag + '</H1>\n')
-                starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
-                starHTML.write('<TR bgcolor="'+thcolor+'">')
+                    # Star visit table
+                    starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
+                    starHTML.write('<TR bgcolor="'+thcolor+'">')
+                    starHTML.write('<TH> MJD<BR>(Date-obs) <TH>Field<BR> <TH>Plate <TH>Fiber<BR>(MTP) <TH>Cart <TH>S/N <TH>Spectrum Plot\n')
+                    for k in range(nvis):
+                        cmjd = str(vcat['mjd'][k])
+                        dateobs = Time(vcat['mjd'][k], format='mjd').fits
+                        cplate = vcat['plate'][k]
+                        cfield = vcat['field'][k]
+                        cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
+                        cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
+                        platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd)
+                        platehdus = fits.open(platefile)
+                        platetab = platehdus[1].data
+                        ccart = str(platetab['CART'][0])
+                        csnr = str("%.1f" % round(vcat['snr'][k],1))
+                        visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
+                        visplotpath = '../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
+                        visplot = visplotpath + visplotname
 
-                # Star metadata table
-                starHTML.write('<TH> SIMBAD <TH>RA, DEC <TH>GLON, GLAT <TH> JMAG <TH>HMAG <TH>KMAG <TH>Raw J-K ')
-                starhtml.write('<TH>N<BR>Vis <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H]')
-                starHTML.write('<TD>' + simbadlink + ' <TD>' + cra + '  ' + cdec + ' <TD>' + cgl + '  ' + cgb)
-                starHTML.write('<TD>' + cjmag + ' <TD>' +chmag + ' <TD>' + ckmag + ' <TD>' + cjkcolor + ' <TD>' + str(nvis)))
-                if os.path.exists(allVpath):
-                    starHTML.write('<TD>' + rvteff + ' <TD>' + rvlogg + ' <TD>' + rvfeh + '\n')
-                else:
-                    starHTML.write('<TD> ---- <TD> ---- <TD> ---- \n')
-                starHTML.write('</TABLE><BR>\n')
-
-                # Star visit table
-                starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
-                starHTML.write('<TR bgcolor="'+thcolor+'">')
-                starHTML.write('<TH> MJD<BR>(Date-obs) <TH>Field<BR> <TH>Plate <TH>Fiber<BR>(MTP) <TH>Cart <TH>S/N <TH>Spectrum Plot\n')
-                for k in range(nvis):
-                    cmjd = str(vcat['mjd'][k])
-                    dateobs = Time(vcat['mjd'][k], format='mjd').fits
-                    cplate = vcat['plate'][k]
-                    cfield = vcat['field'][k]
-                    cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
-                    cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
-                    platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd)
-                    platehdus = fits.open(platefile)
-                    platetab = platehdus[1].data
-                    ccart = str(platetab['CART'][0])
-                    csnr = str("%.1f" % round(vcat['snr'][k],1))
-                    visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
-                    visplotpath = '../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
-                    visplot = visplotpath + visplotname
-
-                    starHTML.write('<TD><A HREF="' + visplot + '">' + cmjd + '</A><BR>(' + dateobs + ')\n')
-                    starHTML.write('<TD>' + cfield + '\n')
-                    starHTML.write('<TD>' + cplate + '\n')
-                    starHTML.write('<TD>' + cfib + '<BR>(' + cblock + ')\n')
-                    starHTML.write('<TD>' + ccart + '\n')
-                    starHTML.write('<TD>' + csnr + '\n')
-                    starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A>\n')
-                starHTML.write('</TABLE><BR><BR><BR>\n')
-                starHTML.close()
-            except:
-                print("----> makeObjQA: Problem! DB query failed for " + objid)
+                        starHTML.write('<TD><A HREF="' + visplot + '">' + cmjd + '</A><BR>(' + dateobs + ')\n')
+                        starHTML.write('<TD>' + cfield + '\n')
+                        starHTML.write('<TD>' + cplate + '\n')
+                        starHTML.write('<TD>' + cfib + '<BR>(' + cblock + ')\n')
+                        starHTML.write('<TD>' + ccart + '\n')
+                        starHTML.write('<TD>' + csnr + '\n')
+                        starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A>\n')
+                    starHTML.write('</TABLE>\n<BR><BR><BR>\n')
+                    starHTML.close()
+                except:
+                    print("----> makeObjQA: Problem! DB query failed for " + objid)
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
