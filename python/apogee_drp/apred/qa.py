@@ -317,17 +317,17 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
         plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
 
-        nplug = len(plug['fiberdata']['fiberid'])
-        for k in range(nplug): 
-            fib = str(plug['fiberdata']['fiberid'][k]).rjust(3)
-            nm = plug['fiberdata']['twomass_designation'][k].rjust(16)
-            hm = str(plug['fiberdata']['hmag'][k]).rjust(6)
-            ot = plug['fiberdata']['objtype'][k]
-            ra = str("%.6f" % round(plug['fiberdata']['ra'][k],6)).rjust(10)
-            de = str("%.6f" % round(plug['fiberdata']['dec'][k],6)).rjust(10)
-            print(fib+'  '+nm+'  '+hm+'  '+ot+'  '+ra+'  '+de)
+        #nplug = len(plug['fiberdata']['fiberid'])
+        #for k in range(nplug): 
+        #    fib = str(plug['fiberdata']['fiberid'][k]).rjust(3)
+        #    nm = plug['fiberdata']['twomass_designation'][k].rjust(16)
+        #    hm = str(plug['fiberdata']['hmag'][k]).rjust(6)
+        #    ot = plug['fiberdata']['objtype'][k]
+        #    ra = str("%.6f" % round(plug['fiberdata']['ra'][k],6)).rjust(10)
+        #    de = str("%.6f" % round(plug['fiberdata']['dec'][k],6)).rjust(10)
+        #    print(fib+'  '+nm+'  '+hm+'  '+ot+'  '+ra+'  '+de)
 
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
 
         gd, = np.where(plug['fiberdata']['fiberid'] > 0)
         fiber = plug['fiberdata'][gd]
