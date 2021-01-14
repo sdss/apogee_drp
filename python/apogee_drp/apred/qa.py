@@ -1748,7 +1748,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starHTML.write('<HTML>\n')
                 starHTML.write('<HEAD><script src="' + apodir + 'sorttable.js"></script><title>' +objid+ '</title></head>\n')
                 starHTML.write('<BODY>\n')
-                starHTML.write('<H1>' + objid + ', H = ' + chmag + '</H1>\n')
+                starHTML.write('<H1>' + objid + '</H1>\n')
+                starHTML.write('<P>Star info:')
                 starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
                 starHTML.write('<TR bgcolor="' + thcolor + '">')
 
@@ -1766,6 +1767,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starHTML.write('</TABLE>\n<BR>\n')
 
                 # Star visit table
+                starHTML.write('<P>Visit info:')
                 starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
                 starHTML.write('<TR bgcolor="'+thcolor+'">')
                 starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Spectrum Plot </TR>\n')
