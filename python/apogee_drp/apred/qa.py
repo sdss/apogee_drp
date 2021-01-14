@@ -1561,7 +1561,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     if os.path.exists(allVpath): allV = fits.getdata(allVpath)
 
     # Base directory where star-level plots go
-    starHTMLdir = apodir + apred + '/stars/'
+    starHTMLdir = apodir + apred + '/stars/' + telescope +'/'
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
@@ -1641,7 +1641,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             healpix = apload.obj2healpix(objid)
             subdir = healpix // 1000
             # Find the associated healpix subdirectory and make the html directory if it doesn't already exist
-            starDir = starHTMLdir + '/' + str(subdir) + '/' + str(healpix) + '/html/'
+            starDir = starHTMLdir + str(subdir) + '/' + str(healpix) + '/html/'
             if os.path.exists is False: subprocess.call(['mkdir', starDir])
             starHTMLpath = starDir + objid + '.html'
             starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+starHTMLpath
