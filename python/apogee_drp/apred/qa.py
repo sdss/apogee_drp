@@ -1644,8 +1644,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starDir = starHTMLdir + str(subdir) + '/' + str(healpix) + '/html/'
                 if os.path.exists(starDir) is False: os.mkdir(starDir)
                 starHTMLpath = starDir + objid + '.html'
-                starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+starHTMLpath
-                import pdb; pdb.set_trace()
+                starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+objid+'.html'
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
@@ -1737,9 +1736,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
 
             # Star level html page
+            print("----> makeObjQA: Making star level html for " + objid)
             if objtype != 'SKY':
                 # Get visit info from DB
-                txt = "apogee_id='" + objid + "'"
                 vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
                 nvis = len(vcat)
                 cgl = str("%.5f" % round(vcat['glon'][0],5))
