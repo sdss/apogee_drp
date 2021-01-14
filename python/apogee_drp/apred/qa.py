@@ -1760,8 +1760,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<TR bgcolor="' + thcolor + '">')
 
                     # Star metadata table
-                    starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>J <TH>H <TH>K <TH>Raw J-K <TH>Gaia DR2<BR>PMRA ')
-                    starHTML.write('<TH>Gaia DR2<BR>PMDEC <TH>Gaia DR2<BR>G <TH>RV Teff (K) <TH>RV log(g) <TH>RV [Fe/H]')
+                    starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>2MASS<BR>J mag <TH>2MASS<BR>H mag <TH>2MASS<BR>K mag <TH>Raw J-K')
+                    starHTML.write('<TH>Gaia DR2<BR>PMRA <TH>Gaia DR2<BR>PMDEC <TH>Gaia DR2<BR>G mag<TH>RV Teff (K) <TH>RV log(g) <TH>RV [Fe/H]')
                     starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
                     starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
                     starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
