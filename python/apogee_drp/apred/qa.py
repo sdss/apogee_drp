@@ -1634,7 +1634,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             cra = str("%.5f" % round(jdata['RA'],5))
             cdec = str("%.5f" % round(jdata['DEC'],5))
             txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
-            txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD</A>'
+            txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
             simbadlink = txt1 + txt2
 
             if objtype != 'SKY':
@@ -1745,25 +1745,30 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     nvis = len(vcat)
                     cgl = str("%.5f" % round(vcat['glon'][0],5))
                     cgb = str("%.5f" % round(vcat['glat'][0],5))
+                    cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
+                    cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
+                    cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
 
                     starHTML = open(starHTMLpath, 'w')
                     starHTML.write('<HTML>\n')
                     starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
                     starHTML.write('<BODY>\n')
                     starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1>\n')
+                    starHTML.write('<P>' + simbadlink + '\n')
                     starHTML.write('<P>Star info:')
                     starHTML.write('<TABLE BORDER=2>\n')
                     starHTML.write('<TR bgcolor="' + thcolor + '">')
 
                     # Star metadata table
-                    starHTML.write('<TH> SIMBAD <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>J <TH>H <TH>K <TH>Raw J-K ')
-                    starHTML.write('<TH>RV Teff <TH>RV log(g) <TH>RV [Fe/H] </TR>')
+                    starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>J <TH>H <TH>K <TH>Raw J-K <TH>Gaia DR2<BR>PMRA ')
+                    starHTML.write('<TH>Gaia DR2<BR>PMDEC <TH>Gaia DR2<BR>G <TH>RV Teff (K) <TH>RV log(g) <TH>RV [Fe/H]')
                     starHTML.write('<TR> <TD ALIGN=center>' + simbadlink + ' <TD ALIGN=right>' + cra)
                     starHTML.write('<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl + ' <TD ALIGN=right>' + cgb)
                     starHTML.write('<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag + ' <TD ALIGN=right>' + ckmag)
-                    starHTML.write('<TD ALIGN=right>' + cjkcolor)
+                    starHTML.write('<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra + ' <TD ALIGN=right>' + cpmde)
+                    starHTML.write('<TD ALIGN=right>' + cgmag)
                     if os.path.exists(allVpath):
-                        starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>\n')
+                        starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
                     else:
                         starHTML.write('<TD> ---- <TD> ---- <TD> ---- </TR> \n')
                     starHTML.write('</TABLE>\n<BR>\n')
