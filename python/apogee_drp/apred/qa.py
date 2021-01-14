@@ -1695,6 +1695,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if os.path.exists(allVpath):
                 gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
                 if len(gd) == 1:
+                    if type(allV['VHELIOBARY'][gd][0]) == str: import pdb; pdb.set_trace()
                     vhelio = str("%.3f" % round(allV['VHELIOBARY'][gd][0],3))
                     ncomp = str(allV['N_COMPONENTS'][gd][0])
                     rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
