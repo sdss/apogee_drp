@@ -1775,10 +1775,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         cfield = vcat['field'][k]
                         cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
                         cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
+                        ccart = '?'
                         platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd)
-                        platehdus = fits.open(platefile)
-                        platetab = platehdus[1].data
-                        ccart = str(platetab['CART'][0])
+                        if os.path.exists(platefile):
+                            platehdus = fits.open(platefile)
+                            platetab = platehdus[1].data
+                            ccart = str(platetab['CART'][0])
                         csnr = str("%.1f" % round(vcat['snr'][k],1))
                         visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
                         visplotpath = '../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
