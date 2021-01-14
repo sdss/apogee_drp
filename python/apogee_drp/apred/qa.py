@@ -1760,8 +1760,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                     cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                     cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
-                    cvhelio = str("%.2f" % round(np.mean(vcat['vheliobary']),2))
-                    cvscatter = str("%.2f" % round(np.max(vcat['vheliobary']) - np.min(vcat['vheliobary']),2))
+                    gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
+                    cvhelio = '----';  cvscatter = '----'
+                    if len(gd) > 0:
+                        cvhelio = str("%.2f" % round(np.mean(vcat['vheliobary'][gd]),2))
+                        cvscatter = str("%.2f" % round(np.max(vcat['vheliobary']) - np.min(vcat['vheliobary'][gd]),2))
 
                     starHTML = open(starHTMLpath, 'w')
                     starHTML.write('<HTML>\n')
