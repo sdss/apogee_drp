@@ -1637,6 +1637,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             simbadlink = txt1 + txt2
 
             # Find which healpix this star is in
+            print(objid)
             healpix = apload.obj2healpix(objid)
             subdir = healpix // 1000
             # Find the associated healpix subdirectory and make the html directory if it doesn't already exist
