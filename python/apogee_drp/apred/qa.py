@@ -1757,7 +1757,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
                     starHTML.write('<BODY>\n')
                     starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1>\n')
-                    starHTML.write('<P>' + simbadlink + '   <A HREF=' + apStarRelPath + '>apStar File</A>\n')
+                    starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
                     starHTML.write('<P>Star info:')
                     starHTML.write('<TABLE BORDER=2>\n')
                     starHTML.write('<TR bgcolor="' + thcolor + '">')
