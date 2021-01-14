@@ -1647,8 +1647,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starHTMLpath = starDir + objid + '.html'
                 starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+objid+'.html'
                 apStarPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/'
-                apStarFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '.fits'
-                apStarRelPath = apStarPath + apStarFile
+                apStarFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits'
+                apStarCheck = glob.glob(apStarPath + apStarFile)
+                apStarCheck.sort();   apStarCheck = np.array(apStarCheck)
+                apStarRelPath = apStarCheck[-1]
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
