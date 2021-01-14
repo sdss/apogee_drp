@@ -1760,6 +1760,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                     cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                     cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
+                    cvhelio = str("%.2f" % round(np.mean(vcat['vheliobary']),2))
+                    cvscatter = str("%.2f" % round(np.max(vcat['vheliobary']) - np.min(vcat['vheliobary']),2))
 
                     starHTML = open(starHTMLpath, 'w')
                     starHTML.write('<HTML>\n')
@@ -1776,11 +1778,13 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     # Star metadata table
                     starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>2MASS<BR>J mag <TH>2MASS<BR>H mag <TH>2MASS<BR>K mag <TH>Raw J-K')
-                    starHTML.write('<TH>Gaia DR2<BR>PMRA <TH>Gaia DR2<BR>PMDEC <TH>Gaia DR2<BR>G mag<TH>RV Teff (K) <TH>RV logg <TH>RV [Fe/H]')
+                    starHTML.write('<TH>Gaia DR2<BR>PMRA <TH>Gaia DR2<BR>PMDEC <TH>Gaia DR2<BR>G mag<TH>RV Teff<BR>(K) <TH>RV logg <TH>RV [Fe/H]')
+                    starHTML.write('<TH>Mean Vhelio<BR>km/s <TH>Min-max Vhelio<BR>km/s\n')
                     starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
                     starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
                     starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
-                    starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag)
+                    starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag + '<TD ALIGN=right>' + cvhelio)
+                    starHTML.write('<TD ALIGN=right>' + cvscatter)
                     if os.path.exists(allVpath):
                         starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
                     else:
