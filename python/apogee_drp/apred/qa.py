@@ -1698,11 +1698,14 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     vhelio = allV['VHELIOBARY'][gd][0]
                     if type(vhelio) != str: vhelio = str("%.3f" % round(vhelio,3))
                     ncomp = str(allV['N_COMPONENTS'][gd][0])
-                    rvteff = str(int(round(allV['RV_TEFF'][gd][0])))
-                    rvlogg = str("%.3f" % round(allV['RV_LOGG'][gd][0],3))
-                    rvfeh = str("%.3f" % round(allV['RV_FEH'][gd][0],3))
+                    rvteff = allV['RV_TEFF'][gd][0]
+                    if type(rvteff) != str: rvteff = str(int(round(rvteff)))
+                    rvlogg = allV['RV_LOGG'][gd][0]
+                    if type(rvlogg) != str: rvlogg = str("%.3f" % round(rvlogg,3))
+                    rvfeh = allV['RV_FEH'][gd][0]
+                    if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
                     fcol = 'black'
-                    if np.absolute(allV['VHELIOBARY'][gd][0]) > 400: fcol = 'red'
+                    if np.absolute(float(vhelio)) > 400: fcol = 'red'
                     objhtml.write('<TD align ="right" style="color:'+fcol+'">' + vhelio + '<TD align ="center" style="color:'+fcol+'">' + ncomp + '<TD align ="right" style="color:'+fcol+'">' + rvteff)
                     objhtml.write('<TD align ="right" style="color:'+fcol+'">' + rvlogg + '<TD align ="right" style="color:'+fcol+'">' + rvfeh)
                 else:
