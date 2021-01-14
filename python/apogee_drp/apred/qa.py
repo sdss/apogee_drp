@@ -1649,10 +1649,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 apStarPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/'
                 tmpDir = apodir+apred+'/stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/'
                 apStarCheck = glob.glob(tmpDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
-                import pdb; pdb.set_trace()
-                apStarCheck.sort();   apStarCheck = np.array(apStarCheck)
-                apStarNewest = os.path.basename(apStarCheck[-1])
-                apStarRelPath = apStarPath + apStarNewest
+                if len(apStarCheck) > 0:
+                    apStarCheck.sort();   apStarCheck = np.array(apStarCheck)
+                    apStarNewest = os.path.basename(apStarCheck[-1])
+                    apStarRelPath = apStarPath + apStarNewest
+                else:
+                    apStarRelPath = None
 
 
             # Establish html table row background color and spectrum plot color
@@ -1697,7 +1699,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if objtype != 'SKY':
                 objhtml.write('<BR>' + simbadlink + '\n')
                 objhtml.write('<BR><A HREF=../' + visitfilebase + '>apVisit file</A>\n')
-                objhtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
+                if apStarRelPath is not None:
+                    objhtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
+                else:
+                    objhtml.write('<BR>apStar file??\n')
                 objhtml.write('<BR><A HREF=' + starHTMLrelPath + '>Star Summary Page</A>\n')
 
             if objtype != 'SKY':
