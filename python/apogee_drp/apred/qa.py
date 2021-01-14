@@ -1646,6 +1646,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 if os.path.exists(starDir) is False: os.mkdir(starDir)
                 starHTMLpath = starDir + objid + '.html'
                 starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+objid+'.html'
+                apStarPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/'
+                apStarFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '.fits'
+                apStarRelPath = apStarPath + apStarFile
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
@@ -1688,8 +1691,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             objhtml.write('<TD>' + objid + '\n')
             if objtype != 'SKY':
                 objhtml.write('<BR>' + simbadlink + '\n')
-                objhtml.write('<BR><a href=../' + visitfilebase + '>apVisit file</A>\n')
-                objhtml.write('<BR>apStar file\n')
+                objhtml.write('<BR><A HREF=../' + visitfilebase + '>apVisit file</A>\n')
+                objhtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
                 objhtml.write('<BR><A HREF=' + starHTMLrelPath + '>Star Summary Page</A>\n')
 
             if objtype != 'SKY':
@@ -1754,7 +1757,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
                     starHTML.write('<BODY>\n')
                     starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1>\n')
-                    starHTML.write('<P>' + simbadlink + '\n')
+                    starHTML.write('<P>' + simbadlink + '   <A HREF=' + apStarRelPath + '>apStar File</A>\n')
                     starHTML.write('<P>Star info:')
                     starHTML.write('<TABLE BORDER=2>\n')
                     starHTML.write('<TR bgcolor="' + thcolor + '">')
