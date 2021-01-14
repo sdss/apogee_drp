@@ -59,9 +59,8 @@ matplotlib.use('agg')
 #--------------------------------------------------------------------------------------------------
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
-def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
-            makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True,
-            clobber=True):
+def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
+            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, clobber=True):
 
     # Establish telescope
     telescope = observatory + '25m'
@@ -129,18 +128,18 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True,
         if i < nplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
                      makemasterqa=False, makeplots=makeplots, makespecplots=makespecplots, 
-                     makenightqa=False, clobber=clobber)
+                     makenightqa=False, makestarhtml=makestarhtml, clobber=clobber)
         else:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
                      makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
-                     makenightqa=makenightqa, clobber=clobber)
+                     makenightqa=makenightqa, makestarhtml=makestarhtml, clobber=clobber)
 
     print("Done with APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
 
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True,
-         makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True, 
+         makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
          badPlates=None, clobber=True):
 
     start_time = time.time()
@@ -243,7 +242,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the observation spectrum plots and associated pages
         q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                     makespecplots=makespecplots)
+                     makespecplots=makespecplots, makestarhtml=makestarhtml)
 
         # Make the nightly QA page
         if makenightqa == True:
@@ -1521,7 +1520,9 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
 
 ''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
-def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, makespecplots=None): 
+def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
+              makespecplots=None, makestarhtml=None): 
+
     print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
 
     # HTML header background color
@@ -1736,78 +1737,77 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
 
             # Star level html page
-            print("----> makeObjQA: Making star level html for " + objid)
-            if objtype != 'SKY':
-                # Get visit info from DB
-                vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
-                nvis = len(vcat)
-                cgl = str("%.5f" % round(vcat['glon'][0],5))
-                cgb = str("%.5f" % round(vcat['glat'][0],5))
+            if makestarhtml is True:
+                if objtype != 'SKY':
+                    print("----> makeObjQA: Making star level html for " + objid)
+                    # Get visit info from DB
+                    vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
+                    nvis = len(vcat)
+                    cgl = str("%.5f" % round(vcat['glon'][0],5))
+                    cgb = str("%.5f" % round(vcat['glat'][0],5))
 
-                starHTML = open(starHTMLpath, 'w')
-                starHTML.write('<HTML>\n')
-                starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
-                starHTML.write('<BODY>\n')
-                starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1>\n')
-                starHTML.write('<P>Star info:')
-                starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
-                starHTML.write('<TR bgcolor="' + thcolor + '">')
+                    starHTML = open(starHTMLpath, 'w')
+                    starHTML.write('<HTML>\n')
+                    starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
+                    starHTML.write('<BODY>\n')
+                    starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1>\n')
+                    starHTML.write('<P>Star info:')
+                    starHTML.write('<TABLE BORDER=2>\n')
+                    starHTML.write('<TR bgcolor="' + thcolor + '">')
 
-                # Star metadata table
-                starHTML.write('<TH> SIMBAD <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>J <TH>H <TH>K <TH>Raw J-K ')
-                starHTML.write('<TH>RV Teff <TH>RV log(g) <TH>RV [Fe/H] </TR>')
-                starHTML.write('<TR> <TD ALIGN=center>' + simbadlink + ' <TD ALIGN=right>' + cra)
-                starHTML.write('<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl + ' <TD ALIGN=right>' + cgb)
-                starHTML.write('<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag + ' <TD ALIGN=right>' + ckmag)
-                starHTML.write('<TD ALIGN=right>' + cjkcolor)
-                if os.path.exists(allVpath):
-                    starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>\n')
-                else:
-                    starHTML.write('<TD> ---- <TD> ---- <TD> ---- </TR> \n')
-                starHTML.write('</TABLE>\n<BR>\n')
+                    # Star metadata table
+                    starHTML.write('<TH> SIMBAD <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>J <TH>H <TH>K <TH>Raw J-K ')
+                    starHTML.write('<TH>RV Teff <TH>RV log(g) <TH>RV [Fe/H] </TR>')
+                    starHTML.write('<TR> <TD ALIGN=center>' + simbadlink + ' <TD ALIGN=right>' + cra)
+                    starHTML.write('<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl + ' <TD ALIGN=right>' + cgb)
+                    starHTML.write('<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag + ' <TD ALIGN=right>' + ckmag)
+                    starHTML.write('<TD ALIGN=right>' + cjkcolor)
+                    if os.path.exists(allVpath):
+                        starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>\n')
+                    else:
+                        starHTML.write('<TD> ---- <TD> ---- <TD> ---- </TR> \n')
+                    starHTML.write('</TABLE>\n<BR>\n')
 
-                # Star visit table
-                starHTML.write('<P>Visit info:')
-                starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
-                starHTML.write('<TR bgcolor="'+thcolor+'">')
-                starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
-                for k in range(nvis):
-                    cmjd = str(vcat['mjd'][k])
-                    dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
-                    cplate = vcat['plate'][k]
-                    cfield = vcat['field'][k]
-                    cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
-                    cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
-                    ccart = '?'
-                    platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd)
-                    if os.path.exists(platefile):
-                        platehdus = fits.open(platefile)
-                        platetab = platehdus[1].data
-                        ccart = str(platetab['CART'][0])
-                    csnr = str("%.1f" % round(vcat['snr'][k],1))
-                    cvhelio = str("%.2f" % round(vcat['vheliobary'][k],2))
-                    visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
-                    visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
-                    visplot = visplotpath + visplotname
+                    # Star visit table
+                    starHTML.write('<P>Visit info:')
+                    starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
+                    starHTML.write('<TR bgcolor="'+thcolor+'">')
+                    starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
+                    for k in range(nvis):
+                        cmjd = str(vcat['mjd'][k])
+                        dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
+                        cplate = vcat['plate'][k]
+                        cfield = vcat['field'][k]
+                        cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
+                        cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
+                        ccart = '?'
+                        platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd)
+                        if os.path.exists(platefile):
+                            platehdus = fits.open(platefile)
+                            platetab = platehdus[1].data
+                            ccart = str(platetab['CART'][0])
+                        csnr = str("%.1f" % round(vcat['snr'][k],1))
+                        cvhelio = str("%.2f" % round(vcat['vheliobary'][k],2))
+                        visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
+                        visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
+                        visplot = visplotpath + visplotname
 
-                    starHTML.write('<TR><TD ALIGN=center><A HREF="' + visplot + '">' + cmjd + '</A>\n')
-                    starHTML.write('<TD ALIGN=center>' + dateobs + '\n')
-                    starHTML.write('<TD ALIGN=center>' + cfield + '\n')
-                    starHTML.write('<TD ALIGN=center>' + cplate + '\n')
-                    starHTML.write('<TD ALIGN=center>' + cfib + '\n')
-                    starHTML.write('<TD ALIGN=center>' + cblock + '\n')
-                    starHTML.write('<TD ALIGN=center>' + ccart + '\n')
-                    starHTML.write('<TD ALIGN=right>' + csnr + '\n')
-                    starHTML.write('<TD ALIGN=right>' + cvhelio + '\n')
-                    starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
-                starHTML.write('</TABLE>\n<BR><BR><BR>\n')
-                starHTML.close()
-           # except:
-               # print("----> makeObjQA: Problem! DB query failed for " + objid)
+                        starHTML.write('<TR><TD ALIGN=center><A HREF="' + visplot + '">' + cmjd + '</A>\n')
+                        starHTML.write('<TD ALIGN=center>' + dateobs + '\n')
+                        starHTML.write('<TD ALIGN=center>' + cfield + '\n')
+                        starHTML.write('<TD ALIGN=center>' + cplate + '\n')
+                        starHTML.write('<TD ALIGN=center>' + cfib + '\n')
+                        starHTML.write('<TD ALIGN=center>' + cblock + '\n')
+                        starHTML.write('<TD ALIGN=center>' + ccart + '\n')
+                        starHTML.write('<TD ALIGN=right>' + csnr + '\n')
+                        starHTML.write('<TD ALIGN=right>' + cvhelio + '\n')
+                        starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
+                    starHTML.write('</TABLE>\n<BR><BR><BR>\n')
+                    starHTML.close()
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
-            objhtml.write('<TD><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1000></A>\n')
+            objhtml.write('<TD><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1100></A>\n')
             if makespecplots == True:
                 print("----> makeObjQA: Making "+plotfile)
 
