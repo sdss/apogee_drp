@@ -18,6 +18,7 @@ from astropy import units as astropyUnits
 from scipy.signal import medfilt2d as ScipyMedfilt2D
 from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask
 from apogee_drp.apred import wave
+from apogee_drp.database import apogeedb
 from dlnpyutils import utils as dln
 from sdss_access.path import path
 import pdb
@@ -1559,6 +1560,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     allV = None
     if os.path.exists(allVpath): allV = fits.getdata(allVpath)
 
+    # Base directory where star-level plots go
+    starHTMLdir = apodir + apred + '/stars/'
+
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
     data = apPlate['a'][11].data[::-1]
@@ -1604,7 +1608,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     objhtml.write('<TH>Vhelio <TH>N<BR>comp <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Spectrum Plot\n')
 #    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
-    cfile = open(plotsdir+htmlfile+'.csh','w')
+    # Start db session for getting all visit info
+    db = apogeedb.DBSession()
+
+    #cfile = open(plotsdir+htmlfile+'.csh','w')
+
+    # Loop over the fibers
     for j in range(nfiber):
         jdata = data[j]
         fiber = jdata['FIBERID']
@@ -1615,14 +1624,16 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
             hmag = jdata['HMAG']
+            cjmag = str("%.3f" % round(jdata['JMAG'],3))
             chmag = str("%.3f" % round(jdata['HMAG'],3))
+            ckmag = str("%.3f" % round(jdata['KMAG'],3))
             jkcolor = jdata['JMAG'] - jdata['KMAG']
             cjkcolor = str("%.3f" % round(jkcolor,3))
     #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
             cra = str("%.5f" % round(jdata['RA'],5))
             cdec = str("%.5f" % round(jdata['DEC'],5))
-            txt1 = '<BR><A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
-            txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD link</A>'
+            txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
+            txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD</A>'
             simbadlink = txt1 + txt2
 
             # Establish html table row background color and spectrum plot color
@@ -1657,23 +1668,23 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 if type(visithdr['SNR']) != str:
                     snratio = str("%.2f" % round(visithdr['SNR'],2))
                 else:
-                    print("----> makeObjQA: Problem with "+visitfilebase+"... SNR = NaN.")
+                    print("----> makeObjQA: Problem with " + visitfilebase + "... SNR = NaN.")
 
             # column 1
-            objhtml.write('<TR BGCOLOR='+color+'><TD>'+cfiber+'<BR>('+cblock+')\n')
+            objhtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
 
             # column 2
-            objhtml.write('<TD>'+objid+'\n')
+            objhtml.write('<TD>' + objid + '\n')
             if objtype != 'SKY':
-                objhtml.write(simbadlink+'\n')
-                objhtml.write('<BR><a href=../'+visitfilebase+'>apVisit file</A>\n')
+                objhtml.write('<BR>' + simbadlink + '\n')
+                objhtml.write('<BR><a href=../' + visitfilebase + '>apVisit file</A>\n')
                 objhtml.write('<BR>apStar file\n')
 
             if objtype != 'SKY':
-                objhtml.write('<TD align ="right">'+chmag)
-                objhtml.write('<TD align ="right">'+cjkcolor)
+                objhtml.write('<TD align ="right">' + chmag)
+                objhtml.write('<TD align ="right">' + cjkcolor)
                 #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
-                objhtml.write('<TD align ="right">'+snratio)
+                objhtml.write('<TD align ="right">' + snratio)
             else:
                 objhtml.write('<TD align="center">-99.9')
                 objhtml.write('<TD align="center">-99.9')
@@ -1688,8 +1699,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 else:
                     objhtml.write('<TD align="center">SCI')
 
-            objhtml.write('<TD align="left">'+targflagtxt)
-            objhtml.write('<BR><BR>'+starflagtxt)
+            objhtml.write('<TD align="left">' + targflagtxt)
+            objhtml.write('<BR><BR>' + starflagtxt)
 
             # Vhelio, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
             if os.path.exists(allVpath):
@@ -1712,6 +1723,74 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
             else:
                 objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
+
+            try:
+                # Get visit info from DB
+                vcat = db.query('visit_latest', where="apogee_id='"+objid+"'", fmt='table')
+                nvis = len(vcat)
+                cgl = str("%.5f" % round(vcat['GLON'][0],5))
+                cgb = str("%.5f" % round(vcat['GLAT'][0],5))
+
+                # Find which healpix this star is in
+                healpix = apload.obj2healpix(objid)
+                subdir = healpix // 1000
+
+                # Find the associated healpix subdirectory and make the html directory if it doesn't already exist
+                starDir = starHTMLdir + '/' + str(subdir) + '/' + str(healpix) + '/html/'
+                if os.path.exists is False: subprocess.call(['mkdir', starDir])
+
+                # Star level html page
+                starHTMLpath = starDir + objid + '.html'
+                starHTML = open(starHTMLpath, 'w')
+                starHTML.write('<HTML>\n')
+                starHTML.write('<HEAD><script src="' + apodir + 'sorttable.js"></script><title>' +objid+ '</title></head>\n')
+                starHTML.write('<BODY>\n')
+                starHTML.write('<H1>' + objid + ', H = ' + chmag + '</H1>\n')
+                starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
+                starHTML.write('<TR bgcolor="'+thcolor+'">')
+
+                # Star metadata table
+                starHTML.write('<TH> SIMBAD <TH>RA, DEC <TH>GLON, GLAT <TH> JMAG <TH>HMAG <TH>KMAG <TH>Raw J-K ')
+                starhtml.write('<TH>N<BR>Vis <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H]')
+                starHTML.write('<TD>' + simbadlink + ' <TD>' + cra + '  ' + cdec + ' <TD>' + cgl + '  ' + cgb)
+                starHTML.write('<TD>' + cjmag + ' <TD>' +chmag + ' <TD>' + ckmag + ' <TD>' + cjkcolor + ' <TD>' + str(nvis)))
+                if os.path.exists(allVpath):
+                    starHTML.write('<TD>' + rvteff + ' <TD>' + rvlogg + ' <TD>' + rvfeh + '\n')
+                else:
+                    starHTML.write('<TD> ---- <TD> ---- <TD> ---- \n')
+                starHTML.write('</TABLE><BR>\n')
+
+                # Star visit table
+                starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
+                starHTML.write('<TR bgcolor="'+thcolor+'">')
+                starHTML.write('<TH> MJD<BR>(Date-obs) <TH>Field<BR> <TH>Plate <TH>Fiber<BR>(MTP) <TH>Cart <TH>S/N <TH>Spectrum Plot\n')
+                for k in range(nvis):
+                    cmjd = str(vcat['mjd'][k])
+                    dateobs = Time(vcat['mjd'][k], format='mjd').fits
+                    cplate = vcat['plate'][k]
+                    cfield = vcat['field'][k]
+                    cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
+                    cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
+                    platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd)
+                    platehdus = fits.open(platefile)
+                    platetab = platehdus[1].data
+                    ccart = str(platetab['CART'][0])
+                    csnr = str("%.1f" % round(vcat['snr'][k],1))
+                    visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
+                    visplotpath = '../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
+                    visplot = visplotpath + visplotname
+
+                    starHTML.write('<TD><A HREF="' + visplot + '">' + cmjd + '</A><BR>(' + dateobs + ')\n')
+                    starHTML.write('<TD>' + cfield + '\n')
+                    starHTML.write('<TD>' + cplate + '\n')
+                    starHTML.write('<TD>' + cfib + '<BR>(' + cblock + ')\n')
+                    starHTML.write('<TD>' + ccart + '\n')
+                    starHTML.write('<TD>' + csnr + '\n')
+                    starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A>\n')
+                starHTML.write('</TABLE><BR><BR><BR>\n')
+                starHTML.close()
+            except:
+                print("----> makeObjQA: Problem! DB query failed for " + objid)
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
@@ -1805,38 +1884,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 plt.close('all')
 
     objhtml.close()
-    cfile.close()
-    #plt.ion()
+    #cfile.close()
     print("----> makeObjQA: Done with plate "+plate+", MJD "+mjd+".\n")
-
-#    if starfiber is None:
-#        txt1 = 'Left plots: red are targets, blue are telluric. Observed mags are calculated '
-#        txt2 = 'from median value of green chip. Zeropoint gives overall throughput: bigger number is more throughput.'
-#        html.write(txt1+txt2+'\n')
-
-#        txt1 = '<br>First spatial plots: circles are objects, squares are tellurics, crosses are sky fibers. '
-#        txt2 = 'Colors give deviation of observed mag from expected 2MASS mag using the median zeropoint; red is brighter'
-#        html.write(txt1+txt2+'\n')
-
-#        txt1 = '<br>Second spatial plots: circles are sky fibers. '
-#        txt2 = 'Colors give sky line brightness relative to plate median sky line brightness'
-#        html.write(txt1+txt2+'\n')
-
-#        html.write('<TABLE BORDER=2>\n')
-#        html.write('<TR><TD>Frame<TD>Nreads<TD>Zeropoints<TD>Mag plots\n')
-#        html.write('<TH>Spatial mag deviation\n')
-#        html.write('<TH>Spatial sky 16325A emission deviations (filled: sky, open: star)\n')
-#        html.write('<TH>Spatial sky continuum emission \n')
-#        html.write('<TH>Spatial sky telluric CO2 absorption deviations (filled: H &lt 10) \n')
-#    else:
-#        html.write('<TABLE BORDER=2>\n')
-#        html.write('<TR><TH>Frame<TH>Fiber<TH>Star\n')
-
-#    unplugged, = np.where(fiber['fiberid'] < 0)
-#    nunplugged = len(unplugged)
-#    if flat is not None:
-#        fiber['hmag'] = 12
-#        fiber['object'] = 'FLAT'
 
 
 '''  MAKENIGHTQA: makes nightly QA pages '''
