@@ -1773,7 +1773,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Spectrum Plot </TR>\n')
                 for k in range(nvis):
                     cmjd = str(vcat['mjd'][k])
-                    dateobs = Time(vcat['jd'][k], format='jd')
+                    dateobs = Time(vcat['jd'][k], format='jd').fits
                     cplate = vcat['plate'][k]
                     cfield = vcat['field'][k]
                     cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
