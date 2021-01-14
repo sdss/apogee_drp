@@ -1762,11 +1762,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     # Star metadata table
                     starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>J <TH>H <TH>K <TH>Raw J-K <TH>Gaia DR2<BR>PMRA ')
                     starHTML.write('<TH>Gaia DR2<BR>PMDEC <TH>Gaia DR2<BR>G <TH>RV Teff (K) <TH>RV log(g) <TH>RV [Fe/H]')
-                    starHTML.write('<TR> <TD ALIGN=center>' + simbadlink + ' <TD ALIGN=right>' + cra)
-                    starHTML.write('<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl + ' <TD ALIGN=right>' + cgb)
-                    starHTML.write('<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag + ' <TD ALIGN=right>' + ckmag)
-                    starHTML.write('<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra + ' <TD ALIGN=right>' + cpmde)
-                    starHTML.write('<TD ALIGN=right>' + cgmag)
+                    starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
+                    starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
+                    starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
+                    starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag)
                     if os.path.exists(allVpath):
                         starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
                     else:
