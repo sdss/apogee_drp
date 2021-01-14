@@ -1755,7 +1755,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<TH> SIMBAD <TH>RA, DEC <TH>GLON, GLAT <TH> JMAG <TH>HMAG <TH>KMAG <TH>Raw J-K ')
                     starhtml.write('<TH>N<BR>Vis <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H]')
                     starHTML.write('<TD>' + simbadlink + ' <TD>' + cra + '  ' + cdec + ' <TD>' + cgl + '  ' + cgb)
-                    starHTML.write('<TD>' + cjmag + ' <TD>' +chmag + ' <TD>' + ckmag + ' <TD>' + cjkcolor + ' <TD>' + str(nvis)))
+                    starHTML.write('<TD>' + cjmag + ' <TD>' +chmag + ' <TD>' + ckmag + ' <TD>' + cjkcolor + ' <TD>' + str(nvis))
                     if os.path.exists(allVpath):
                         starHTML.write('<TD>' + rvteff + ' <TD>' + rvlogg + ' <TD>' + rvfeh + '\n')
                     else:
