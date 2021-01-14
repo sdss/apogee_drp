@@ -1742,8 +1742,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     txt = "apogee_id='" + objid + "'"
                     vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
                     nvis = len(vcat)
-                    cgl = str("%.5f" % round(vcat['GLON'][0],5))
-                    cgb = str("%.5f" % round(vcat['GLAT'][0],5))
+                    cgl = str("%.5f" % round(vcat['glon'][0],5))
+                    cgb = str("%.5f" % round(vcat['glat'][0],5))
 
                     starHTML = open(starHTMLpath, 'w')
                     starHTML.write('<HTML>\n')
