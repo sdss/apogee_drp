@@ -1748,18 +1748,18 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starHTML.write('<HTML>\n')
                 starHTML.write('<HEAD><script src="' + apodir + 'sorttable.js"></script><title>' +objid+ '</title></head>\n')
                 starHTML.write('<BODY>\n')
-                starHTML.write('<H1>' + objid + '</H1>\n')
+                starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1>\n')
                 starHTML.write('<P>Star info:')
                 starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
                 starHTML.write('<TR bgcolor="' + thcolor + '">')
 
                 # Star metadata table
                 starHTML.write('<TH> SIMBAD <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>J <TH>H <TH>K <TH>Raw J-K ')
-                starHTML.write('<TH>N Vis. <TH>RV Teff <TH>RV log(g) <TH>RV [Fe/H] </TR>')
+                starHTML.write('<TH>RV Teff <TH>RV log(g) <TH>RV [Fe/H] </TR>')
                 starHTML.write('<TR> <TD ALIGN=center>' + simbadlink + ' <TD ALIGN=right>' + cra)
                 starHTML.write('<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl + ' <TD ALIGN=right>' + cgb)
                 starHTML.write('<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag + ' <TD ALIGN=right>' + ckmag)
-                starHTML.write('<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' + str(nvis))
+                starHTML.write('<TD ALIGN=right>' + cjkcolor)
                 if os.path.exists(allVpath):
                     starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>\n')
                 else:
