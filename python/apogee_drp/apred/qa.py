@@ -1636,15 +1636,15 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD</A>'
             simbadlink = txt1 + txt2
 
-            # Find which healpix this star is in
-            print(objid)
-            healpix = apload.obj2healpix(objid)
-            subdir = healpix // 1000
-            # Find the associated healpix subdirectory and make the html directory if it doesn't already exist
-            starDir = starHTMLdir + str(subdir) + '/' + str(healpix) + '/html/'
-            if os.path.exists is False: os.mkdir(starDir)
-            starHTMLpath = starDir + objid + '.html'
-            starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+starHTMLpath
+            if objtype != 'SKY':
+                # Find which healpix this star is in
+                healpix = apload.obj2healpix(objid)
+                subdir = healpix // 1000
+                # Find the associated healpix subdirectory and make the html directory if it doesn't already exist
+                starDir = starHTMLdir + str(subdir) + '/' + str(healpix) + '/html/'
+                if os.path.exists is False: os.mkdir(starDir)
+                starHTMLpath = starDir + objid + '.html'
+                starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+starHTMLpath
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
