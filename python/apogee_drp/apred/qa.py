@@ -1768,10 +1768,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 # Star visit table
                 starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
                 starHTML.write('<TR bgcolor="'+thcolor+'">')
-                starHTML.write('<TH> MJD<BR>(Date-obs) <TH>Field<BR> <TH>Plate <TH>Fiber<BR>(MTP) <TH>Cart <TH>S/N <TH>Spectrum Plot </TR>\n')
+                starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Spectrum Plot </TR>\n')
                 for k in range(nvis):
                     cmjd = str(vcat['mjd'][k])
-                    dateobs = Time(vcat['jd'][k], format='jd').fits[0:10]
+                    dateobs = Time(vcat['jd'][k], format='jd')
                     cplate = vcat['plate'][k]
                     cfield = vcat['field'][k]
                     cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
@@ -1787,10 +1787,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
                     visplot = visplotpath + visplotname
 
-                    starHTML.write('<TR><TD ALIGN=center><A HREF="' + visplot + '">' + cmjd + '</A><BR>(' + dateobs + ')\n')
+                    starHTML.write('<TR><TD ALIGN=center><A HREF="' + visplot + '">' + cmjd + '</A>\n')
+                    starHTML.write('<TD ALIGN=center>' + dateobs + '\n')
                     starHTML.write('<TD ALIGN=center>' + cfield + '\n')
                     starHTML.write('<TD ALIGN=center>' + cplate + '\n')
-                    starHTML.write('<TD ALIGN=center>' + cfib + '<BR>(' + cblock + ')\n')
+                    starHTML.write('<TD ALIGN=center>' + cfib + '\n')
+                    starHTML.write('<TD ALIGN=center>' + cblock + '\n')
                     starHTML.write('<TD ALIGN=center>' + ccart + '\n')
                     starHTML.write('<TD ALIGN=right>' + csnr + '\n')
                     starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
