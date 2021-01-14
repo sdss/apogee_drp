@@ -1642,8 +1642,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 subdir = healpix // 1000
                 # Find the associated healpix subdirectory and make the html directory if it doesn't already exist
                 starDir = starHTMLdir + str(subdir) + '/' + str(healpix) + '/html/'
-                if os.path.isdir is False: 
-                    os.mkdir(starDir)
+                if os.path.exists(starDir) is False: os.mkdir(starDir)
                 starHTMLpath = starDir + objid + '.html'
                 starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+starHTMLpath
 
