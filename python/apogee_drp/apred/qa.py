@@ -1754,19 +1754,19 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                 # Star metadata table
                 starHTML.write('<TH> SIMBAD <TH>RA, DEC <TH>GLON, GLAT <TH> JMAG <TH>HMAG <TH>KMAG <TH>Raw J-K ')
-                starHTML.write('<TH>N<BR>Vis <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H]')
-                starHTML.write('<TD>' + simbadlink + ' <TD>' + cra + '  ' + cdec + ' <TD>' + cgl + '  ' + cgb)
+                starHTML.write('<TH>N<BR>Vis <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] </TR>')
+                starHTML.write('<TR> <TD>' + simbadlink + ' <TD>' + cra + '  ' + cdec + ' <TD>' + cgl + '  ' + cgb)
                 starHTML.write('<TD>' + cjmag + ' <TD>' +chmag + ' <TD>' + ckmag + ' <TD>' + cjkcolor + ' <TD>' + str(nvis))
                 if os.path.exists(allVpath):
-                    starHTML.write('<TD>' + rvteff + ' <TD>' + rvlogg + ' <TD>' + rvfeh + '\n')
+                    starHTML.write('<TD>' + rvteff + ' <TD>' + rvlogg + ' <TD>' + rvfeh + '</TR>\n')
                 else:
-                    starHTML.write('<TD> ---- <TD> ---- <TD> ---- \n')
+                    starHTML.write('<TD> ---- <TD> ---- <TD> ---- </TR> \n')
                 starHTML.write('</TABLE>\n<BR>\n')
 
                 # Star visit table
                 starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
                 starHTML.write('<TR bgcolor="'+thcolor+'">')
-                starHTML.write('<TH> MJD<BR>(Date-obs) <TH>Field<BR> <TH>Plate <TH>Fiber<BR>(MTP) <TH>Cart <TH>S/N <TH>Spectrum Plot\n')
+                starHTML.write('<TH> MJD<BR>(Date-obs) <TH>Field<BR> <TH>Plate <TH>Fiber<BR>(MTP) <TH>Cart <TH>S/N <TH>Spectrum Plot </TR>\n')
                 for k in range(nvis):
                     cmjd = str(vcat['mjd'][k])
                     dateobs = Time(vcat['mjd'][k], format='mjd').fits
@@ -1785,13 +1785,13 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     visplotpath = '../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
                     visplot = visplotpath + visplotname
 
-                    starHTML.write('<TD><A HREF="' + visplot + '">' + cmjd + '</A><BR>(' + dateobs + ')\n')
+                    starHTML.write('<TR><TD><A HREF="' + visplot + '">' + cmjd + '</A><BR>(' + dateobs + ')\n')
                     starHTML.write('<TD>' + cfield + '\n')
                     starHTML.write('<TD>' + cplate + '\n')
                     starHTML.write('<TD>' + cfib + '<BR>(' + cblock + ')\n')
                     starHTML.write('<TD>' + ccart + '\n')
                     starHTML.write('<TD>' + csnr + '\n')
-                    starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A>\n')
+                    starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
                 starHTML.write('</TABLE>\n<BR><BR><BR>\n')
                 starHTML.close()
            # except:
