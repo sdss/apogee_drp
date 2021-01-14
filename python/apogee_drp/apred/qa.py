@@ -1746,7 +1746,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                 starHTML = open(starHTMLpath, 'w')
                 starHTML.write('<HTML>\n')
-                starHTML.write('<HEAD><script src="' + apodir + 'sorttable.js"></script><title>' +objid+ '</title></head>\n')
+                starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
                 starHTML.write('<BODY>\n')
                 starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1>\n')
                 starHTML.write('<P>Star info:')
@@ -1770,7 +1770,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starHTML.write('<P>Visit info:')
                 starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
                 starHTML.write('<TR bgcolor="'+thcolor+'">')
-                starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Spectrum Plot </TR>\n')
+                starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
                 for k in range(nvis):
                     cmjd = str(vcat['mjd'][k])
                     dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
@@ -1785,6 +1785,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         platetab = platehdus[1].data
                         ccart = str(platetab['CART'][0])
                     csnr = str("%.1f" % round(vcat['snr'][k],1))
+                    cvhelio = str("%.2f" % round(vcat['vheliobary'][k],2))
                     visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
                     visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
                     visplot = visplotpath + visplotname
@@ -1797,6 +1798,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<TD ALIGN=center>' + cblock + '\n')
                     starHTML.write('<TD ALIGN=center>' + ccart + '\n')
                     starHTML.write('<TD ALIGN=right>' + csnr + '\n')
+                    starHTML.write('<TD ALIGN=right>' + cvhelio + '\n')
                     starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
                 starHTML.write('</TABLE>\n<BR><BR><BR>\n')
                 starHTML.close()
