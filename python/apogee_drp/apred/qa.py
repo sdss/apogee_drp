@@ -1795,8 +1795,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
                         visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
                         visplot = visplotpath + visplotname
+                        apvispath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
+                        apvisfile = 'apVisit-' + apred + '-' + telescope + '-' + cplate + '-' + cmjd + '-' + cfib + '.fits'
+                        apvis = apvispath + apvisfile
 
-                        starHTML.write('<TR><TD ALIGN=center><A HREF="' + visplot + '">' + cmjd + '</A>\n')
+                        starHTML.write('<TR><TD ALIGN=center><A HREF="' + apvis + '">' + cmjd + '</A>\n')
                         starHTML.write('<TD ALIGN=center>' + dateobs + '\n')
                         starHTML.write('<TD ALIGN=center>' + cfield + '\n')
                         starHTML.write('<TD ALIGN=center>' + cplate + '\n')
