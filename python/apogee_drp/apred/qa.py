@@ -1763,8 +1763,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
                     cvhelio = '----';  cvscatter = '----'
                     if len(gd) > 0:
-                        cvhelio = str("%.2f" % round(np.mean(vcat['vheliobary'][gd]),2))
-                        cvscatter = str("%.2f" % round(np.max(vcat['vheliobary']) - np.min(vcat['vheliobary'][gd]),2))
+                        vels = vcat['vheliobary'][gd]
+                        cvhelio = str("%.2f" % round(np.mean(vels),2))
+                        cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
 
                     starHTML = open(starHTMLpath, 'w')
                     starHTML.write('<HTML>\n')
