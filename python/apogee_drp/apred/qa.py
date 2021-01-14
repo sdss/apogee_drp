@@ -1645,6 +1645,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 if os.path.exists(starDir) is False: os.mkdir(starDir)
                 starHTMLpath = starDir + objid + '.html'
                 starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+starHTMLpath
+                import pdb; pdb.set_trace()
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
