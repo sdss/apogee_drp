@@ -1753,12 +1753,14 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starHTML.write('<TR bgcolor="' + thcolor + '">')
 
                 # Star metadata table
-                starHTML.write('<TH> SIMBAD <TH>RA, DEC <TH>GLON, GLAT <TH> JMAG <TH>HMAG <TH>KMAG <TH>Raw J-K ')
-                starHTML.write('<TH>N<BR>Vis <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] </TR>')
-                starHTML.write('<TR> <TD>' + simbadlink + ' <TD>' + cra + '  ' + cdec + ' <TD>' + cgl + '  ' + cgb)
-                starHTML.write('<TD>' + cjmag + ' <TD>' +chmag + ' <TD>' + ckmag + ' <TD>' + cjkcolor + ' <TD>' + str(nvis))
+                starHTML.write('<TH> SIMBAD <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>J <TH>H <TH>K <TH>Raw J-K ')
+                starHTML.write('<TH>N Vis. <TH>RV Teff <TH>RV log(g) <TH>RV [Fe/H] </TR>')
+                starHTML.write('<TR> <TD ALIGN=center>' + simbadlink + ' <TD ALIGN=right>' + cra)
+                starHTML.write('<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl + ' <TD ALIGN=right>' + cgb)
+                starHTML.write('<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag + ' <TD ALIGN=right>' + ckmag)
+                starHTML.write('<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' + str(nvis))
                 if os.path.exists(allVpath):
-                    starHTML.write('<TD>' + rvteff + ' <TD>' + rvlogg + ' <TD>' + rvfeh + '</TR>\n')
+                    starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>\n')
                 else:
                     starHTML.write('<TD> ---- <TD> ---- <TD> ---- </TR> \n')
                 starHTML.write('</TABLE>\n<BR>\n')
@@ -1769,7 +1771,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starHTML.write('<TH> MJD<BR>(Date-obs) <TH>Field<BR> <TH>Plate <TH>Fiber<BR>(MTP) <TH>Cart <TH>S/N <TH>Spectrum Plot </TR>\n')
                 for k in range(nvis):
                     cmjd = str(vcat['mjd'][k])
-                    dateobs = Time(vcat['mjd'][k], format='mjd').fits
+                    dateobs = Time(vcat['jd'][k], format='jd').fits[0:10]
                     cplate = vcat['plate'][k]
                     cfield = vcat['field'][k]
                     cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
@@ -1782,15 +1784,15 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         ccart = str(platetab['CART'][0])
                     csnr = str("%.1f" % round(vcat['snr'][k],1))
                     visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
-                    visplotpath = '../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
+                    visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
                     visplot = visplotpath + visplotname
 
-                    starHTML.write('<TR><TD><A HREF="' + visplot + '">' + cmjd + '</A><BR>(' + dateobs + ')\n')
-                    starHTML.write('<TD>' + cfield + '\n')
-                    starHTML.write('<TD>' + cplate + '\n')
-                    starHTML.write('<TD>' + cfib + '<BR>(' + cblock + ')\n')
-                    starHTML.write('<TD>' + ccart + '\n')
-                    starHTML.write('<TD>' + csnr + '\n')
+                    starHTML.write('<TR><TD ALIGN=center><A HREF="' + visplot + '">' + cmjd + '</A><BR>(' + dateobs + ')\n')
+                    starHTML.write('<TD ALIGN=center>' + cfield + '\n')
+                    starHTML.write('<TD ALIGN=center>' + cplate + '\n')
+                    starHTML.write('<TD ALIGN=center>' + cfib + '<BR>(' + cblock + ')\n')
+                    starHTML.write('<TD ALIGN=center>' + ccart + '\n')
+                    starHTML.write('<TD ALIGN=right>' + csnr + '\n')
                     starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
                 starHTML.write('</TABLE>\n<BR><BR><BR>\n')
                 starHTML.close()
