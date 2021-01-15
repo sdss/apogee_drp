@@ -1637,8 +1637,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
             simbadlink = txt1 + txt2
 
-            if objtype != 'SKY':
-                print(objid)
+            if (objtype != 'SKY') & (objid != '2MNone'):
                 # Find which healpix this star is in
                 healpix = apload.obj2healpix(objid)
                 subdir = healpix // 1000
@@ -1751,7 +1750,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
             # Star level html page
             if makestarhtml is True:
-                if objtype != 'SKY':
+                if (objtype != 'SKY') & (objid != '2MNone'):
                     print("----> makeObjQA: Making star level html for " + objid)
                     # Get visit info from DB
                     vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
