@@ -73,78 +73,12 @@ def apqaALL(observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
     gd, = np.where(allmjd != 'plots')
     umjd = np.unique(allmjd[gd])
     nmjd = len(umjd)
-    import pdb; pdb.set_trace()
+    print("Running apqaMJD on " + str(nmjd) + " MJDs")
 
-    # Find the list of plan files
-    apodir = os.environ.get('APOGEE_REDUX')+'/'
-    planlist = apodir + apred + '/log/'+observatory+'/' + str(mjd) + '.plans'
-    plans = open(planlist, 'r')
-    plans = plans.readlines()
-    nplans = len(plans)
-
-    # Find the plan files pertaining to science data
-    gdplans = []
-    for i in range(nplans):
-        tmp = plans[i].split('-')
-        if tmp[0] == 'apPlan': 
-            if 'sky' not in plans[i]: gdplans.append(plans[i].replace('\n',''))
-    gdplans = np.array(gdplans)
-    nplans = len(gdplans)
-
-    # Run apqa on the science data plans
-    print("Running APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
-    for i in range(nplans):
-        # Get the plate number and mjd
-        tmp = gdplans[i].split('-')
-        plate = tmp[1]
-        mjd = tmp[2].split('.')[0]
-
-        # Load the plan file
-        load = apload.ApLoad(apred=apred, telescope=telescope)
-        planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
-        planstr = plan.load(planfile, np=True)
-
-        # Get array of object exposures and find out how many are objects.
-        flavor = planstr['APEXP']['flavor']
-        all_ims = planstr['APEXP']['name']
-        gd,= np.where(flavor == 'object')
-        n_ims = len(gd)
-        if n_ims > 0:
-            ims = all_ims[gd]
-            # Make an array indicating which exposures made it to apCframe
-            # 0 = not reduced, 1 = reduced
-            imsReduced = np.zeros(n_ims)
-            for j in range(n_ims):
-                cframe = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[j], chips=True)
-                if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[j] = 1
-            good, = np.where(imsReduced == 1)
-            if len(good) < 1:
-                # Add this to the list of failed plates
-                print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
-                # If last plate fails, still make the nightly and master QA pages
-                if i == nplans-1:
-                    # Make the nightly QA page
-                    if makenightqa == True:
-                        q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
-
-                    # Make mjd.html and fields.html
-                    if makemasterqa == True: 
-                        q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
-                                              mjdfilebase='mjd.html',fieldfilebase='fields.html',
-                                              domjd=True, dofields=True)
-                continue
-
-        # Only run makemasterqa and makenightqa after the last plate on this mjd
-        if i < nplans-1:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
-                     makemasterqa=False, makeplots=makeplots, makespecplots=makespecplots, 
-                     makenightqa=False, makestarhtml=makestarhtml, clobber=clobber)
-        else:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
-                     makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
-                     makenightqa=makenightqa, makestarhtml=makestarhtml, clobber=clobber)
-
-    print("Done with APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
+    for ii in range(nmjd):
+        x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
+                    makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
+                    makenightqa=makenightqa, makestarhtml=makestarhtml, clobber=clobber)
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
