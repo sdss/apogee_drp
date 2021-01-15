@@ -741,6 +741,11 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m') : #,plans=None
 def obj2coords(tmassname):
     """ Get RA/DEC coordinates (in deg) from 2MASS-style name."""
 
+    # Check length of string
+    if len(tmassname)!=18:
+        print(tmassname+' is not in the correct format')
+        return None,None
+
     # apogeetarget/pro/make_2mass_style_id.pro makes these
     # APG-Jhhmmss[.]ss±ddmmss[.]s
     # http://www.ipac.caltech.edu/2mass/releases/allsky/doc/sec1_8a.html
@@ -761,6 +766,11 @@ def obj2coords(tmassname):
 def obj2healpix(tmassname,nside=128):
     """ Calculate healpix number for a star given it's 2MASS-style name."""
     
+    # Check length of string
+    if len(tmassname)!=18:
+        print(tmassname+' is not in the correct format')
+        return None
+
     # Get coordinates from the 2MASS-style name
     ra,dec = obj2coords(tmassname)
 
