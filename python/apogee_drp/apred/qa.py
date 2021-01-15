@@ -67,6 +67,9 @@ def apqaALL(observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
 
     apodir = os.environ.get('APOGEE_REDUX')+'/'
     mjdDirs = np.array(glob.glob(apodir + apred + '/visit/' + telescope + '/*/*/*'))
+    ndirs = len(mjdDirs)
+    allmjd = np.empty(ndirs).astype(str)
+    for i in range(ndirs): allmjd[i] = mjdDirs[i].split('/')[-1]
     import pdb; pdb.set_trace()
 
     # Find the list of plan files
