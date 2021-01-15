@@ -1638,6 +1638,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             simbadlink = txt1 + txt2
 
             if objtype != 'SKY':
+                print(objid)
                 # Find which healpix this star is in
                 healpix = apload.obj2healpix(objid)
                 subdir = healpix // 1000
