@@ -70,6 +70,9 @@ def apqaALL(observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
     ndirs = len(mjdDirs)
     allmjd = np.empty(ndirs).astype(str)
     for i in range(ndirs): allmjd[i] = mjdDirs[i].split('/')[-1]
+    gd, = np.where(allmjd != 'plots')
+    umjd = np.unique(allmjd[gd])
+    nmjd = len(umjd)
     import pdb; pdb.set_trace()
 
     # Find the list of plan files
