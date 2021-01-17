@@ -59,7 +59,7 @@ matplotlib.use('agg')
 #--------------------------------------------------------------------------------------------------
 
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
-def apqaALL(mjdstart='59164',observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
+def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
             makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, clobber=True):
 
     # Establish telescope
@@ -72,8 +72,8 @@ def apqaALL(mjdstart='59164',observatory='apo', apred='daily', makeplatesum=True
     for i in range(ndirs): allmjd[i] = mjdDirs[i].split('/')[-1]
     gd, = np.where(allmjd != 'plots')
     umjd = np.unique(allmjd[gd])
-    import pdb; pdb.set_trace()
-
+    gd, = np.where(umjd == mjdstart)
+    umjd = umjd[gd[0]:]
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
 
