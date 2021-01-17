@@ -59,7 +59,7 @@ matplotlib.use('agg')
 #--------------------------------------------------------------------------------------------------
 
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
-def apqaALL(observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
+def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
             makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, clobber=True):
 
     # Establish telescope
@@ -72,6 +72,8 @@ def apqaALL(observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
     for i in range(ndirs): allmjd[i] = mjdDirs[i].split('/')[-1]
     gd, = np.where(allmjd != 'plots')
     umjd = np.unique(allmjd[gd])
+    gd, = np.where(umjd == mjdstart)
+    umjd = umjd[gd[0]:]
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
 
@@ -1035,6 +1037,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
+    matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     alpha = 0.6
@@ -1564,6 +1567,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
+    matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
@@ -1782,12 +1786,20 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                     cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                     cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
-                    gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
+
                     cvhelio = '----';  cvscatter = '----'
+                    gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
                     if len(gd) > 0:
                         vels = vcat['vheliobary'][gd]
                         cvhelio = str("%.2f" % round(np.mean(vels),2))
                         cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
+
+                    rvteff = '----'; rvlogg = '----'; rvfeh = '---'
+                    gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
+                    if len(gd) > 0:
+                        rvteff = str(int(round(vcat['rv_teff'][gd][0])))
+                        rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
+                        rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
 
                     starHTML = open(starHTMLpath, 'w')
                     starHTML.write('<HTML>\n')
@@ -1804,17 +1816,14 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     # Star metadata table
                     starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>2MASS<BR>J<BR>(mag) <TH>2MASS<BR>H<BR>(mag) <TH>2MASS<BR>J<BR>(mag) <TH>Raw J-K')
-                    starHTML.write('<TH>Gaia DR2<BR>PMRA <TH>Gaia DR2<BR>PMDEC <TH>Gaia DR2<BR>G<BR>(mag) <TH>Mean<BR>Vhelio<BR>(km/s)') 
+                    starHTML.write('<TH>Gaia DR2<BR>PMRA<BR>(mas) <TH>Gaia DR2<BR>PMDEC<BR>(mas) <TH>Gaia DR2<BR>G<BR>(mag) <TH>Mean<BR>Vhelio<BR>(km/s)') 
                     starHTML.write('<TH>Min-max<BR>Vhelio<BR>(km/s) <TH>RV Teff<BR>(K) <TH>RV logg <TH>RV [Fe/H] \n')
                     starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
                     starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
                     starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
                     starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag + '<TD ALIGN=right>' + cvhelio)
                     starHTML.write('<TD ALIGN=right>' + cvscatter)
-                    if os.path.exists(allVpath):
-                        starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
-                    else:
-                        starHTML.write('<TD> ---- <TD> ---- <TD> ---- </TR> \n')
+                    starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
                     starHTML.write('</TABLE>\n<BR>\n')
 
                     # Star visit table
@@ -1841,11 +1850,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
                         visplot = visplotpath + visplotname
                         apvispath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
+                        apqahtml = apvispath + '/html/apQA-' + cplate + '-' + cmjd + '.html'
                         apvisfile = 'apVisit-' + apred + '-' + telescope + '-' + cplate + '-' + cmjd + '-' + cfib + '.fits'
                         apvis = apvispath + apvisfile
 
-                        starHTML.write('<TR><TD ALIGN=center><A HREF="' + apvis + '">' + cmjd + '</A>\n')
-                        starHTML.write('<TD ALIGN=center>' + dateobs + '\n')
+                        starHTML.write('<TR><TD ALIGN=center><A HREF="' + apqahtml + '">' + cmjd + '</A>\n')
+                        starHTML.write('<TD ALIGN=center><A HREF="' + apvis + '">' + dateobs + '</A>\n')
                         starHTML.write('<TD ALIGN=center>' + cfield + '\n')
                         starHTML.write('<TD ALIGN=center>' + cplate + '\n')
                         starHTML.write('<TD ALIGN=center>' + cfib + '\n')
@@ -1963,6 +1973,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
+    matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     alpha = 0.6
@@ -2693,7 +2704,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         #---------------------------------------------------------------------------------------
         # Aitoff maps
-        # Set up some basic plotting parameters, starting by turning off interactive plotting.
+        # Set up some basic plotting parameters.
+        matplotlib.use('agg')
         fontsize = 24;   fsz = fontsize * 0.60
         matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
         alf = 0.80
