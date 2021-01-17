@@ -318,12 +318,17 @@ FOR i=0L,nplanfiles-1 do begin
         endif
            
         if planstr.platetype eq 'single' then nofit=1 else nofit=0
-        shiftout=APDITHERSHIFT(ref_frame,frame,shift,shifterr,/xcorr,pfile=pfile,plot=plot,plugmap=plugmap,nofit=nofit,mjd=planstr.mjd)
+        shiftout = APDITHERSHIFT(ref_frame,frame,/xcorr,pfile=pfile,plot=plot,plugmap=plugmap,nofit=nofit,mjd=planstr.mjd)
+        shift = shiftout.shiftfit
+        shifterr = shiftout.shifterr
         if keyword_set(stp) then stop
         print,'Measured dither shift: ',ashift,shift
 
       ; First frame, reference frame
       endif else begin
+        ;; measure shift anyway
+        shiftout = APDITHERSHIFT(ref_frame,frame,/xcorr,pfile=pfile,plot=plot,plugmap=plugmap,nofit=nofit,mjd=planstr.mjd)
+        print,'Measured dither shift: ',shiftout.shiftfit
         ; note reference frame wants to include sky and telluric!
         ref_frame = frame
         shift = [0.0,0.0] & ashift=[0.0,0.0]
