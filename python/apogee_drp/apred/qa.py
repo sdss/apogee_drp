@@ -59,7 +59,7 @@ matplotlib.use('agg')
 #--------------------------------------------------------------------------------------------------
 
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
-def apqaALL(observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
+def apqaALL(mjdstart='59163',observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
             makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, clobber=True):
 
     # Establish telescope
@@ -72,6 +72,8 @@ def apqaALL(observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
     for i in range(ndirs): allmjd[i] = mjdDirs[i].split('/')[-1]
     gd, = np.where(allmjd != 'plots')
     umjd = np.unique(allmjd[gd])
+    import pdb; pdb.set_trace()
+
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
 
@@ -1811,6 +1813,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
                     starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag + '<TD ALIGN=right>' + cvhelio)
                     starHTML.write('<TD ALIGN=right>' + cvscatter)
+                    if objid == '2M23341621-0030491': import pdb; pdb.set_trace()
                     if os.path.exists(allVpath):
                         starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
                     else:
