@@ -1784,12 +1784,20 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                     cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                     cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
-                    gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
+
                     cvhelio = '----';  cvscatter = '----'
+                    gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
                     if len(gd) > 0:
                         vels = vcat['vheliobary'][gd]
                         cvhelio = str("%.2f" % round(np.mean(vels),2))
                         cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
+
+                    rvteff = '----'; rvlogg = '----'; rvfeh = '---'
+                    gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
+                    if len(gd) > 0:
+                        rvteff = str(int(round(vcat['rv_teff'][gd][0])))
+                        rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
+                        rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
 
                     starHTML = open(starHTMLpath, 'w')
                     starHTML.write('<HTML>\n')
@@ -1813,11 +1821,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
                     starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag + '<TD ALIGN=right>' + cvhelio)
                     starHTML.write('<TD ALIGN=right>' + cvscatter)
-                    import pdb; pdb.set_trace()
-                    if os.path.exists(allVpath):
-                        starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
-                    else:
-                        starHTML.write('<TD> ---- <TD> ---- <TD> ---- </TR> \n')
+                    starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
                     starHTML.write('</TABLE>\n<BR>\n')
 
                     # Star visit table
