@@ -1037,6 +1037,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
+    matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     alpha = 0.6
@@ -1566,6 +1567,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
+    matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
@@ -1970,6 +1972,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
+    matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     alpha = 0.6
@@ -2700,7 +2703,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         #---------------------------------------------------------------------------------------
         # Aitoff maps
-        # Set up some basic plotting parameters, starting by turning off interactive plotting.
+        # Set up some basic plotting parameters.
+        matplotlib.use('agg')
         fontsize = 24;   fsz = fontsize * 0.60
         matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
         alf = 0.80
