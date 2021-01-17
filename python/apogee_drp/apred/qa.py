@@ -1816,7 +1816,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     # Star metadata table
                     starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>2MASS<BR>J<BR>(mag) <TH>2MASS<BR>H<BR>(mag) <TH>2MASS<BR>J<BR>(mag) <TH>Raw J-K')
-                    starHTML.write('<TH>Gaia DR2<BR>PMRA <TH>Gaia DR2<BR>PMDEC <TH>Gaia DR2<BR>G<BR>(mag) <TH>Mean<BR>Vhelio<BR>(km/s)') 
+                    starHTML.write('<TH>Gaia DR2<BR>PMRA<BR>(mas) <TH>Gaia DR2<BR>PMDEC<BR>(mas) <TH>Gaia DR2<BR>G<BR>(mag) <TH>Mean<BR>Vhelio<BR>(km/s)') 
                     starHTML.write('<TH>Min-max<BR>Vhelio<BR>(km/s) <TH>RV Teff<BR>(K) <TH>RV logg <TH>RV [Fe/H] \n')
                     starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
                     starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
@@ -1850,11 +1850,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
                         visplot = visplotpath + visplotname
                         apvispath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
+                        apqahtml = apvispath + '/html/apQA-' + cplate + '-' + cmjd + '.html'
                         apvisfile = 'apVisit-' + apred + '-' + telescope + '-' + cplate + '-' + cmjd + '-' + cfib + '.fits'
                         apvis = apvispath + apvisfile
 
-                        starHTML.write('<TR><TD ALIGN=center><A HREF="' + apvis + '">' + cmjd + '</A>\n')
-                        starHTML.write('<TD ALIGN=center>' + dateobs + '\n')
+                        starHTML.write('<TR><TD ALIGN=center><A HREF="' + apqahtml + '">' + cmjd + '</A>\n')
+                        starHTML.write('<TD ALIGN=center><A HREF="' + apvis + '">' + dateobs + '</A>\n')
                         starHTML.write('<TD ALIGN=center>' + cfield + '\n')
                         starHTML.write('<TD ALIGN=center>' + cplate + '\n')
                         starHTML.write('<TD ALIGN=center>' + cfib + '\n')
