@@ -1,0 +1,396 @@
+import sys
+import glob
+import os
+import subprocess
+import math
+import time
+import numpy as np
+from pathlib import Path
+from astropy.io import fits, ascii
+from astropy.table import Table
+from astropy.time import Time
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+from numpy.lib.recfunctions import append_fields, merge_arrays
+from astroplan import moon_illumination
+from astropy.coordinates import SkyCoord, get_moon
+from astropy import units as astropyUnits
+from scipy.signal import medfilt2d as ScipyMedfilt2D
+from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask
+from apogee_drp.apred import wave
+from apogee_drp.database import apogeedb
+from dlnpyutils import utils as dln
+from sdss_access.path import path
+import pdb
+import matplotlib.pyplot as plt
+import matplotlib
+from astropy.convolution import convolve, Box1DKernel
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter, MaxNLocator
+import matplotlib.ticker as ticker
+import matplotlib.colors as mplcolors
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
+from mpl_toolkits.axes_grid1.colorbar import colorbar
+
+
+''' MONITOR: Instrument monitoring plots and html '''
+def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
+
+    print("----> monitor starting")
+
+    chips=np.array(['a','b','c'])
+    nchips = len(chips)
+
+    fibers = np.array([10,80,150,220,290])
+    nfibers = len(fibers)
+
+    nlines = 2
+
+    nquad = 4
+
+    # Establish  directories... hardcode sdss4/apogee2 for now
+
+    specdir5 = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
+    specdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
+    sdir5 = specdir5 + 'monitor/' + instrument + '/'
+    sdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/apogee-n/'
+    mdir = 'monitor/' + instrument + '/'
+
+    if read is True:
+        # NOTE: we probably don't want the below files in the redux/daily directory.
+        allcal =  fits.open(specdir + instrument + 'Cal.fits')[1].data
+        alldark = fits.open(specdir + instrument + 'Cal.fits')[2].data
+        allexp =  fits.open(specdir + instrument + 'Exp.fits')[1].data
+        allsci =  fits.open(specdir + instrument + 'Sci.fits')[1].data
+    else:
+        ###########################################################################################
+        # MAKE MASTER QACAL FILE
+        outfile = specdir5 + 'monitor/' + instrument + '_Cal.fits'
+        print("----> monitor: Making " + os.path.basename(outfile))
+
+        # Append together the individual QAcal files
+        files = glob.glob(specdir + '/cal/' + instrument + '/*/*QAcal*.fits')
+        if len(files) < 1:
+            print("----> monitor: No files! do you have correct version set?")
+        else:
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+            for i in range(nfiles):
+                print("---->    monitor: reading " + files[i])
+                a = fits.open(files[i])[1].data
+
+                # Make output structure and write to fits file
+                dt = np.dtype([('NAME',    np.str,30),
+                               ('MJD',     np.str,30),
+                               ('JD',      np.float64),
+                               ('NFRAMES', np.int32),
+                               ('NREAD',   np.int32),
+                               ('EXPTIME', np.float64),
+                               ('QRTZ',    np.int32),
+                               ('UNE',     np.int32),
+                               ('THAR',    np.int32),
+                               ('FLUX',    np.float64,(300,nchips)),
+                               ('GAUSS',   np.float64,(4,nfibers,nchips,nlines)),
+                               ('WAVE',    np.float64,(nfibers,nchips,nlines)),
+                               ('FIBERS',  np.float64,(nfibers)),
+                               ('LINES',   np.float64,(nchips,nlines))])
+                struct = np.zeros(len(a['NAME']), dtype=dt)
+
+                struct['NAME'] = a['NAME']
+                struct['MJD'] = a['MJD']
+                struct['JD'] = a['JD']
+                struct['NFRAMES'] = a['NFRAMES']
+                struct['NREAD'] = a['NREAD']
+                struct['EXPTIME'] = a['EXPTIME']
+                struct['QRTZ'] = a['QRTZ']
+                struct['UNE'] = a['UNE']
+                struct['THAR'] = a['THAR']
+                struct['FLUX'] = a['FLUX']
+                struct['GAUSS'] = a['GAUSS']
+                struct['WAVE'] = a['WAVE']
+                struct['FIBERS'] = a['FIBERS']
+                struct['LINES'] = a['LINES']
+
+                if i == 0:
+                    allcal = struct
+                else:
+                    allcal = np.concatenate([allcal, struct])
+
+            Table(allcal).write(outfile, overwrite=True)
+
+            print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
+
+        ###########################################################################################
+        # APPEND QADARKFLAT INFO TO MASTER QACAL FILE
+        print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
+
+        # Append together the individual QAdarkflat files
+        files = glob.glob(specdir + '/cal/' + instrument + '/*/*QAdarkflat*.fits')
+        if len(files) < 1:
+            print("----> monitor: No files! do you have correct version set?")
+        else:
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+            for i in range(nfiles):
+                print("---->    monitor: reading " + files[i])
+                a = fits.open(files[i])[1].data
+
+                # Make output structure.
+                dt = np.dtype([('NAME',    np.str, 30),
+                               ('MJD',     np.str, 30),
+                               ('JD',      np.float64),
+                               ('NFRAMES', np.int32),
+                               ('NREAD',   np.int32),
+                               ('EXPTIME', np.float64),
+                               ('QRTZ',    np.int32),
+                               ('UNE',     np.int32),
+                               ('THAR',    np.int32),
+                               ('EXPTYPE', np.str, 30),
+                               ('MEAN',    np.float64, (nchips,nquad)),
+                               ('SIG',     np.float64, (nchips,nquad))])
+                struct = np.zeros(len(a['NAME']), dtype=dt)
+
+                struct['NAME'] = a['NAME']
+                struct['MJD'] = a['MJD']
+                struct['JD'] = a['JD']
+                struct['NFRAMES'] = a['NFRAMES']
+                struct['NREAD'] = a['NREAD']
+                struct['EXPTIME'] = a['EXPTIME']
+                struct['QRTZ'] = a['QRTZ']
+                struct['UNE'] = a['UNE']
+                struct['THAR'] = a['THAR']
+                struct['EXPTYPE'] = a['EXPTYPE']
+                struct['MEAN'] = a['MEAN']
+                struct['SIG'] = a['SIG']
+
+                if i == 0:
+                    alldark = struct
+                else:
+                    alldark = np.concatenate([alldark, struct])
+
+            hdulist = fits.open(outfile)
+            hdu1 = fits.table_to_hdu(Table(struct))
+            hdulist.append(hdu1)
+            hdulist.writeto(outfile, overwrite=True)
+            hdulist.close()
+
+            print("----> monitor: Finished adding QAdarkflat info to " + os.path.basename(outfile))
+
+        ###########################################################################################
+        # MAKE MASTER EXP FILE
+        outfile = specdir5 + 'monitor/' + instrument + '_Exp.fits'
+        print("----> monitor: Making " + os.path.basename(outfile))
+
+        # Get long term trends from dome flats
+        # Append together the individual exp files
+        files = glob.glob(specdir + '/exposures/' + instrument + '/*/5*exp.fits')
+        files.sort()
+        files = np.array(files)
+        nfiles=len(files)
+        for i in range(nfiles):
+            print("---->    monitor: reading " + files[i])
+            a = fits.open(files[i])[1].data
+
+            # Make output structure.
+            dt = np.dtype([('MJD',       np.int32),
+                           ('DATEOBS',   np.str, 23),
+                           ('JD',        np.float64),
+                           ('NUM',       np.int32),
+                           ('NFRAMES',   np.int32),
+                           ('IMAGETYPE', np.str, 10),
+                           ('PLATEID',   np.int32),
+                           ('CARTID',    np.int32),
+                           ('RA',        np.float64),
+                           ('DEC',       np.float64),
+                           ('SEEING',    np.float64),
+                           ('ALT',       np.float64),
+                           ('QRTZ',      np.int32),
+                           ('THAR',      np.int32),
+                           ('UNE',       np.int32),
+                           ('FFS',       np.str, 15),
+                           ('LN2LEVEL',  np.float64),
+                           ('DITHPIX',   np.float64),
+                           ('TRACEDIST', np.float64),
+                           ('MED',       np.float64,(300,nchips))])
+            struct = np.zeros(len(a['MJD']), dtype=dt)
+
+            struct['MJD'] = a['MJD']
+            struct['DATEOBS'] = a['DATEOBS']
+            struct['JD'] = a['JD']
+            struct['NUM'] = a['NUM']
+            struct['NFRAMES'] = a['NFRAMES']
+            struct['IMAGETYPE'] = a['IMAGETYPE']
+            struct['PLATEID'] = a['PLATEID']
+            struct['CARTID'] = a['CARTID']
+            struct['RA'] = a['RA']
+            struct['DEC'] = a['DEC']
+            struct['SEEING'] = a['SEEING']
+            struct['ALT'] = a['ALT']
+            struct['QRTZ'] = a['QRTZ']
+            struct['THAR'] = a['THAR']
+            struct['UNE'] = a['UNE']
+            struct['FFS'] = a['FFS']
+            struct['LN2LEVEL'] = a['LN2LEVEL']
+            struct['DITHPIX'] = a['DITHPIX']
+            struct['TRACEDIST'] = a['TRACEDIST']
+            struct['MED'] = a['MED']
+
+            if i == 0:
+                allexp = struct 
+            else:
+                allexp = np.concatenate([allexp, struct])
+
+        Table(allcal).write(outfile, overwrite=True)
+        print("----> monitor: Finished making " + os.path.basename(outfile))
+
+        ###########################################################################################
+        # MAKE MASTER apPlateSum FILE
+        outfile = specdir5 + 'monitor/' + instrument + '_Sci.fits'
+        print("----> monitor: Making " + os.path.basename(outfile))
+
+        # Get zeropoint info from apPlateSum files
+        files = glob.glob(specdir + '/visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
+        if len(files) < 1:
+            print("----> monitor: No files! do you have correct version set?")
+        else:
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+            for i in range(nfiles):
+                print("---->    monitor: reading " + files[i])
+                a = fits.open(files[i])[1].data
+
+                # Make output structure.
+                dt = np.dtype([('TELESCOPE', np.str, 6),
+                               ('PLATE',     np.int32),
+                               ('NREADS',    np.int32),
+                               ('DATEOBS',   np.str, 30),
+                               ('EXPTIME',   np.int32),
+                               ('SECZ',      np.float64),
+                               ('HA',        np.float64),
+                               ('DESIGN_HA', np.float64, 3),
+                               ('SEEING',    np.float64),
+                               ('FWHM',      np.float64),
+                               ('GDRMS',     np.float64),
+                               ('CART',      np.int32),
+                               ('PLUGID',    np.str, 30),
+                               ('DITHER',    np.float64),
+                               ('MJD',       np.int32),
+                               ('IM',        np.int32),
+                               ('ZERO',      np.float64),
+                               ('ZERORMS',   np.float64),
+                               ('ZERONORM',  np.float64),
+                               ('SKY',       np.float64, 3),
+                               ('SN',        np.float64, 3),
+                               ('SNC',       np.float64, 3),
+                               #('SNT',       np.float64, 3),
+                               ('ALTSN',     np.float64, 3),
+                               ('NSN',       np.int32),
+                               ('SNRATIO',   np.float64),
+                               ('MOONDIST',  np.float64),
+                               ('MOONPHASE', np.float64),
+                               ('TELLFIT',   np.float64, (3,6))])
+                struct = np.zeros(len(a['PLATE']), dtype=dt)
+
+                if i == 0:
+                    allsci = struct
+                else:
+                    allsci = np.concatenate([allsci, struct])
+
+            Table(allsci).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
+
+    # MAKE THE MONITOR HTML
+    outfile = specdir5 + 'monitor/' + instrument + '-monitor.html'
+    print("----> monitor: Making " + os.path.basename(outfile))
+
+    html = open(outfile, 'w')
+    tmp = os.path.basename(qafile).replace('.html','')
+    tit = 'APOGEE-N Instrument Monitor'
+    if instrument != 'apogee-n': tit = 'APOGEE-S Instrument Monitor'
+    html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
+    html.write('<H1>' + tit + '</H1>\n')
+    html.write('<ul>\n')
+    html.write('<li> Throughput / lamp monitors\n')
+    html.write('<ul>\n')
+    html.write('<li> <a href=#quartz> Cal channel quartz</a>\n')
+    html.write('<li> <a href=monitor/fiber/fiber.html>Individual fiber throughputs</a>\n')
+    html.write('<li> <a href=#tharflux> Cal channel ThAr</a>\n')
+    html.write('<li> <a href=#uneflux> Cal channel UNe</a>\n')
+    html.write('<li> <a href=#dome>Dome flats</a>\n')
+    html.write('<li> <a href=#zero>Plate zeropoints</a>\n')
+    html.write('</ul>\n')
+    html.write('<li> Positions\n')
+    html.write('<ul>\n')
+    html.write('<li> <a href=#tpos>ThAr line position</a>\n')
+    html.write('</ul>\n')
+    html.write('<li> Line widths\n')
+    html.write('<ul>\n')
+    html.write('<li> <a href=#tfwhm>ThAr line FWHM</a>\n')
+    html.write('</ul>\n')
+    html.write('<li> <a href=#trace>Trace locations</a>\n')
+    html.write('<li> <a href=#detectors> Detectors\n')
+    html.write('<li> <a href=#sky> Sky brightness\n')
+    html.write('</ul>\n')
+
+    # find the different lamp types
+    thar, = np.where(allcal['THAR'] == 1)
+    une, = np.where(allcal['UNE'] == 1)
+    qrtz, = np.where(allcal.['QRTZ'] == 1)
+
+    html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
+    html.write('<A HREF=qflux.png target="_blank"><IMG SRC==qflux.png></A>\n')
+
+    html.write('<H3> <a href=fiber/fiber.html> Individual fiber throughputs from quartz </H3>\n')
+
+    html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
+    html.write('<A HREF=tharflux.png target="_blank"><IMG SRC==tharflux.png></A>\n')
+
+    html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
+    html.write('<A HREF=uneflux.png target="_blank"><IMG SRC==uneflux.png></A>\n')
+
+    html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
+    html.write('<A HREF=dome.png target="_blank"><IMG SRC==dome.png></A>\n')
+
+    html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
+    html.write('<A HREF=zero.png target="_blank"><IMG SRC==zero.png></A>\n')
+
+    html.write('<H3> <a name=tpos></a>ThArNe lamp line position</H3>\n')
+    html.write('<A HREF=tpos.png target="_blank"><IMG SRC==tpos.png></A>\n')
+
+    for iline in range(2):
+        plotfile='tfwhm' + str(iline) + '.png'
+        tmp1 = str("%.1f" % round(allcal['LINES'][thar][0][0,iline],1))
+        tmp2 = str("%.1f" % round(allcal['LINES'][thar][0][1,iline],1))
+        tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][2,iline],1))
+        txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
+        html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
+        html.write('<A HREF=' + plotfile + ' target="_blank"><img src=' + plotfile + '></A>\n')
+
+    html.write('<H3> <a name=trace></a> Trace position, fiber 150, column 1000</H3>\n')
+    html.write('<A HREF=trace.png target="_blank"><IMG SRC==trace.png></A>\n')
+
+    html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
+    html.write('<H4> Dark Mean </h4>\n')
+    html.write('<A HREF=biasmean.png target="_blank"><IMG SRC==biasmean.png></A>\n')
+
+    html.write('<H4> Dark Sigma </h4>\n')
+    html.write('<A HREF=biassig.png target="_blank"><IMG SRC==biassig.png></A>\n')
+
+    html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
+    html.write('<A HREF=moonsky.png target="_blank"><IMG SRC==moonsky.png></A>\n')
+
+    html.close()
+
+    print("----> monitor done")
+
+
+
+
+
+
+
+
+
+
