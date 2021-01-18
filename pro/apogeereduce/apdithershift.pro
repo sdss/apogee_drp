@@ -1,4 +1,4 @@
-function apdithershift,frame1,frame2,shift,shifterr,xcorr=xcorr,lines=lines,object=object,plot=plot,pfile=pfile,stp=stp,shiftarr=shiftarr,plugmap=plugmap,nofit=nofit,mjd=mjd
+function apdithershift,frame1,frame2,xcorr=xcorr,lines=lines,object=object,plot=plot,pfile=pfile,stp=stp,shiftarr=shiftarr,plugmap=plugmap,nofit=nofit,mjd=mjd
 
 ;+
 ;
@@ -18,27 +18,31 @@ function apdithershift,frame1,frame2,shift,shifterr,xcorr=xcorr,lines=lines,obje
 ;  /stp      Stop at the end of the program.
 ;
 ; OUTPUTS:
-;  shift     The shift in pixels between frame2 and frame1.  A positive
-;              shift means that frame2 is to the RIGHT of frame1.
-;  shifterr  The uncertainty of the shift measurement.
+;  shiftstr  Structure with results
+;     type       'xcorr' or 'lines'
+;     shiftfit    The shift in pixels between frame2 and frame1.  A positive
+;                  shift means that frame2 is to the RIGHT of frame1.
+;     shifterr   The uncertainty of the shift measurement.
+;     chipshift  The measured shifts for each chip.
+;     chipsfit   The fitted shift parameters for each chip.
 ;
 ; USAGE:
-;  IDL>apdithershift,frame1,frame2,shift
+;  IDL>shiftstr = apdithershift(frame1,frame2)
 ;
 ; By D. Nidever  March 2010
 ;-
 
-apgundef,shift,shifterr
+apgundef,shift,shifterr,shiftstr
 
 nframe1 = n_elements(frame1)
 nframe2 = n_elements(frame2)
 
 ; Not enough inputs
 if nframe1 eq 0 or nframe2 eq 0 then begin
-  print,'Syntax - apdithershift,frame1,frame2,shift,shifterr,xcorr=xcorr,lines=lines,object=object,pl=pl,stp=stp'
+  print,'Syntax - shiftstr = apdithershift(frame1,frame2,xcorr=xcorr,lines=lines,object=object,pl=pl,stp=stp)'
   return,-1
 endif
-
+if n_elements(mjd) eq 0 then mjd=999999L
 
 ; Checking the tags of the input structure in FRAME1
 tags = tag_names(frame1)
@@ -97,7 +101,7 @@ pars=fltarr(4)
 ; Using CROSS-CORRELATION
 ;-------------------------
 if keyword_set(xcorr) then begin
-
+  shtype = 'xcorr'
   print,'Using Cross-correlation to measure the dither shift'
 
   if keyword_set(plugmap) then begin
@@ -334,6 +338,7 @@ if keyword_set(xcorr) then begin
 
   endif
 
+
   fitend:
 
 ;----------------------
@@ -341,6 +346,7 @@ if keyword_set(xcorr) then begin
 ;----------------------
 Endif else begin
 
+  shtype = 'lines'
   print,'Using Emission Lines to measure the dither shift'
 
   chiptag = ['a','b','c']
@@ -442,11 +448,10 @@ Endif else begin
   ; This should be accurate to ~0.001 if there are ~18 lines per fiber
   shift=[shift,0.]
 
-  ;stop
 
 Endelse  ; using emission lines
 
-shiftstr = { shiftfit: shift, chipshift: chipshift,  chipfit: pars }
+shiftstr = { type:shtype, shiftfit: shift, shifterr:shifterr, chipshift: chipshift,  chipfit: pars }
 
 if keyword_set(stp) then stop
 

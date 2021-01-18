@@ -569,6 +569,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
     rootLogger.setLevel(logging.NOTSET)
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S") 
 
     rootLogger.info('Running daily APOGEE data reduction for '+str(observatory).upper()+' '+str(mjd5)+' '+apred)
 
@@ -632,7 +633,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
                      qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
         for pf in planfiles:
-            queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.log'), errfile=pf.replace('.yaml','_pbs.err'))
+            queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.'+logtime+'.log'), errfile=pf.replace('.yaml','_pbs.'+logtime+'.err'))
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
@@ -663,8 +664,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
             if os.path.exists(outdir)==False:
                 os.makedirs(outdir)
             # Run with --verbose and --clobber set
-            queue.append('rv %s %s %s -c -v -m %s' % (obj,apred,telescope,mjd5),outfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.log'),
-                         errfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.err'))
+            queue.append('rv %s %s %s -c -v -m %s' % (obj,apred,telescope,mjd5),outfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.log'),
+                         errfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.err'))
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)        
         queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
@@ -683,8 +684,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     rootLogger.info('')
     queue = pbsqueue(verbose=True)
     queue.create(label='qa', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
-    qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.log'
-    qaerrfile = qaoutfile.replace('-qa.log','-qa.err')
+    qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.'+logtime+'.log'
+    qaerrfile = qaoutfile.replace('-qa.log','-qa.'+logtime+'.err')
     if os.path.exists(os.path.dirname(qaoutfile))==False:
         os.makedirs(os.path.dirname(qaoutfile))
     queue.append('apqa {0} {1}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
