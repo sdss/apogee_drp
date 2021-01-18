@@ -311,6 +311,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
     if instrument != 'apogee-n': tit = 'APOGEE-S Instrument Monitor'
     html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
     html.write('<H1>' + tit + '</H1>\n')
+    html.write('<HR>\n')
     html.write('<ul>\n')
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
