@@ -342,30 +342,30 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     qrtz, = np.where(allcal['QRTZ'] == 1)
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
-    html.write('<A HREF=qflux.png target="_blank"><IMG SRC==qflux.png  WIDTH=1200>></A>\n')
+    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png  WIDTH=1200>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a href=fiber/fiber.html> Individual fiber throughputs from quartz </H3>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=tharflux.png target="_blank"><IMG SRC==tharflux.png></A>\n')
+    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=uneflux.png target="_blank"><IMG SRC==uneflux.png></A>\n')
+    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
-    html.write('<A HREF=dome.png target="_blank"><IMG SRC==dome.png></A>\n')
+    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
-    html.write('<A HREF=zero.png target="_blank"><IMG SRC==zero.png></A>\n')
+    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tpos></a>ThArNe lamp line position</H3>\n')
-    html.write('<A HREF=tpos.png target="_blank"><IMG SRC==tpos.png></A>\n')
+    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png></A>\n')
     html.write('<HR>\n')
 
     for iline in range(2):
@@ -375,22 +375,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][iline][2],1))
         txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
         html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
-        html.write('<A HREF=' + plotfile + ' target="_blank"><img src=' + plotfile + '></A>\n')
+        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + '></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a> Trace position, fiber 150, column 1000</H3>\n')
-    html.write('<A HREF=trace.png target="_blank"><IMG SRC==trace.png></A>\n')
+    html.write('<A HREF=trace.png target="_blank"><IMG SRC=trace.png></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
     html.write('<H4> Dark Mean </h4>\n')
-    html.write('<A HREF=biasmean.png target="_blank"><IMG SRC==biasmean.png></A>\n')
+    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png></A>\n')
 
     html.write('<H4> Dark Sigma </h4>\n')
-    html.write('<A HREF=biassig.png target="_blank"><IMG SRC==biassig.png></A>\n')
+    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png></A>\n')
 
     html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
-    html.write('<A HREF=moonsky.png target="_blank"><IMG SRC==moonsky.png></A>\n')
+    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png></A>\n')
 
     html.close()
 
