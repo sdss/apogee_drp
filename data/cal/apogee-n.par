@@ -10,7 +10,7 @@
 #dark       99999 99999 05560001 5560001-5560020
 dark       55600 56860 12910009 12910009-12910037
 #dark       99999 99999 13380002 13380002-13380030
-#dark       56861 99999 15640003 15640003-15640021
+#dark       56861 57599 15640003 15640003-15640021
 #dark       99999 99999 23870002 23870002-23870026
 dark       56861 57960 23890001 23890001-23890030
 #dark       99999 99999 27420001 27420001-27420030
@@ -35,7 +35,7 @@ flat       55600 56860 04750009 4750009-4750028 1 0
 #flat       99999 99999 05570002 5570002-5570021 1 0
 #flat       99999 99999 12480067 12480067-12480086 1 0 
 #flat       99999 99999 12900001 12900002-12900021 1 0 
-flat       56861 99999 13360054 13360054-13360083 1 0 
+flat       56861 57960 13360054 13360054-13360083 1 0 
 #flat       99999 99999 23880002 23880002-23880031 1 0 
 flat       57961 99999 23890031 23890031-23890060 1 0
 # bpm      start end   name     darkid   flatid 
@@ -282,7 +282,7 @@ rn 1980083 1980084
 # 7/15/17 (57949) : 100-read darks
 # 7/17/17 (57951) : 100-read darks
 # 7/18/17 (57952) : single intflats at multiple exptimes
-# summer 2017 : instrument warmed but not opened
+# summer 2017 (57970) : instrument warmed but not opened
 # summer 2017: rodents check through fiber bundle that has fibers 121-150
 # summer 2017: intflat LEDs no longer working after cooldown
 # 9/20/17:  121-150 repaired by Rob Stoll 9/20/17, also attempted repair of fiber 277
@@ -292,5 +292,18 @@ rn 1980083 1980084
 #
 # 3/30/20 (58939): darks, 3377
 # 9/3/20 (59095) : darks 3533
-# 12/28/20 (59211) : the blue chip quadrant 3 issue is back and in all of the SDSS-V data (59146-)
-#                     Adding q3fix calibration type to cover this case.
+# 10/23/20 (59145) : darks 3583
+#
+# year 1: 55800 238    (8/27/11)
+# year 2: 56130 568    (7/22/12)
+# year 3: 56512 950    (8/8/13)
+# instrument opened, chip swapped
+# year 4: 56876 1314   (8/7/2014)
+# year 5: 57230 1668   (7/25/2015)
+# year 6: 57600 2038   (7/31/2016)
+# instrument warmed, not opened
+# year 7: 57966 2404   (8/1/2017)
+# year 8: 58360 2798   (8/30/2018) 
+# year 9: 58700 3138   (8/5/2019)
+# year 10: 58950 3388  (4/11/2020)  COVID!
+# year 11:
