@@ -342,30 +342,30 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     qrtz, = np.where(allcal['QRTZ'] == 1)
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
-    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png  WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1400></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a href=fiber/fiber.html> Individual fiber throughputs from quartz </H3>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png></A>\n')
+    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=1400>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png></A>\n')
+    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=1400>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png></A>\n')
+    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1400>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
-    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png></A>\n')
+    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=1400>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tpos></a>ThArNe lamp line position</H3>\n')
-    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png></A>\n')
+    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=1400>></A>\n')
     html.write('<HR>\n')
 
     for iline in range(2):
@@ -379,18 +379,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a> Trace position, fiber 150, column 1000</H3>\n')
-    html.write('<A HREF=trace.png target="_blank"><IMG SRC=trace.png></A>\n')
+    html.write('<A HREF=trace.png target="_blank"><IMG SRC=trace.png WIDTH=1400>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
     html.write('<H4> Dark Mean </h4>\n')
-    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png></A>\n')
+    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=1400>></A>\n')
 
     html.write('<H4> Dark Sigma </h4>\n')
-    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png></A>\n')
+    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=1400>></A>\n')
 
     html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png></A>\n')
+    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=1400>></A>\n')
 
     html.close()
 
@@ -445,7 +445,45 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
 
-        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
+        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+    # tharflux.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
+    if (os.path.exists(plotfile) == False) | (clobber == True):
+        print("----> monitor: Making " + plotfile)
+
+        fig=plt.figure(figsize=(28,14))
+        yr = [-2000,500000]
+
+        tcal = allcal[thar]
+        tcaljd = tcal['JD']-2.4e6
+
+        for ichip in range(nchips):
+            chip = chips[ichip]
+
+            ax = plt.subplot2grid((nchips,1), (ichip,0))
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(yr[0], yr[1])
+            #ax.xaxis.set_major_locator(ticker.MultipleLocator(5000))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+            ax.set_ylabel(r'Line Flux')
+            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+            ax.scatter(tcaljd, tcal['FLUX'][:, ichip, 290] / tcal['NREAD']*10.0, marker='*', s=60, edgecolors='purple', color='white', alpha=alpha, label='Fiber 290')
+            ax.scatter(tcaljd, tcal['FLUX'][:, ichip, 150] / tcal['NREAD']*10.0, marker='^', s=30, edgecolors='darkorange', color='white', alpha=alpha, label='Fiber 150')
+            ax.scatter(tcaljd, tcal['FLUX'][:, ichip, 10]  / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='green', color='white', alpha=alpha, label='Fiber 10')
+
+            ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
+
+        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
