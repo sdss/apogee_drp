@@ -34,11 +34,11 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 # import pdb; pdb.set_trace()
 
 ''' MONITOR: Instrument monitoring plots and html '''
-def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
+def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=False):
 
     print("----> monitor starting")
 
-    chips=np.array(['a','b','c'])
+    chips=np.array(['blue','green','red'])
     nchips = len(chips)
 
     fibers = np.array([10,80,150,220,290])
@@ -56,7 +56,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
     sdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/apogee-n/'
     mdir = 'monitor/' + instrument + '/'
 
-    if read is True:
+    if makesumfiles is False:
         # NOTE: we probably don't want the below files in the redux/daily directory.
         allcal =  fits.open(specdir + instrument + 'Cal.fits')[1].data
         alldark = fits.open(specdir + instrument + 'Cal.fits')[2].data
@@ -393,6 +393,71 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
     html.write('<A HREF=moonsky.png target="_blank"><IMG SRC==moonsky.png></A>\n')
 
     html.close()
+
+    # Set up some basic plotting parameters
+    matplotlib.use('agg')
+    fontsize = 24;   fsz = fontsize * 0.75
+    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
+    axwidth = 1.5
+    axmajlen = 7
+    axminlen = 3.5
+    alpha = 0.6
+
+    # qflux.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
+    if (os.path.exists(plotfile) == False) | (clobber == True):
+        print("----> monitor: Making " + plotfile)
+
+        fig=plt.figure(figsize=(28,14))
+        yr = [-1000, 30000]
+        if instrument == 'apogee-s': yr = [-1000, 100000]
+
+        qcal = allcal[quartz]
+        qcaljd = qcal['JD']-2.4e6
+
+        for ichip in range(nchips):
+            chip = chips[ichip]
+
+            minjd = np.min(qcaljd)
+            maxjd = np.max(qcaljd)
+            jdspan = maxjd - minjd
+            xmin = minjd-jdspan*0.05
+            xmax = maxjd+jdspan*0.15
+
+            ax = plt.subplot2grid((nchips,1), (ichip,0))
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(yr[0], yr[1])
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(5000))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if i == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+            if ichip == 1: ax.set_ylabel(r'Median Flux')
+            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+            ax.scatter(qcaljd, qcal['FLUX'][10, ichip] / qcal['NREAD']*10.0, marker='o', s=60, color='b', alpha=alpha, label='Fiber 10')
+            ax.scatter(qcaljd, qcal['FLUX'][150, ichip] / qcal['NREAD']*10.0, marker='^', s=60, color='g', alpha=alpha, label='Fiber 150')
+            ax.scatter(qcaljd, qcal['FLUX'][290, ichip] / qcal['NREAD']*10.0, marker='*', s=100, color='r', alpha=alpha, label='Fiber 290')
+
+            ax.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top')
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fsz)
+
+            ax.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top')
+
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("top", size="4%", pad="1%")
+            cb = colorbar(sc, cax=cax, orientation="horizontal")
+            cax.xaxis.set_ticks_position("top")
+            cax.minorticks_on()
+            ax.text(0.90, 0.90, chip + 'chip', ha='right', va='top', transform=ax.transAxes)
+
+        fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.00,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
+
 
     print("----> monitor done")
 
