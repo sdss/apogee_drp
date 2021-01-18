@@ -361,9 +361,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
     for iline in range(2):
         plotfile='tfwhm' + str(iline) + '.png'
         import pdb; pdb.set_trace()
-        tmp1 = str("%.1f" % round(allcal['LINES'][thar][0][0,iline],1))
-        tmp2 = str("%.1f" % round(allcal['LINES'][thar][0][1,iline],1))
-        tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][2,iline],1))
+        tmp1 = str("%.1f" % round(allcal['LINES'][thar][0][iline][0],1))
+        tmp2 = str("%.1f" % round(allcal['LINES'][thar][0][iline][1],1))
+        tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][iline][2],1))
         txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
         html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
         html.write('<A HREF=' + plotfile + ' target="_blank"><img src=' + plotfile + '></A>\n')
