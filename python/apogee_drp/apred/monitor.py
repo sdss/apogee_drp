@@ -410,7 +410,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + plotfile)
 
         fig=plt.figure(figsize=(28,14))
-        yr = [-1000,100000]
+        yr = [-1000,30000]
         if instrument == 'apogee-s': yr = [-1000, 100000]
 
         qcal = allcal[qrtz]
@@ -438,9 +438,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             if ichip == 1: ax.set_ylabel(r'Median Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 10]  / qcal['NREAD']*10.0, marker='o', s=60, color='b', alpha=alpha, label='Fiber 10')
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=60, color='g', alpha=alpha, label='Fiber 150')
             ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 290] / qcal['NREAD']*10.0, marker='*', s=100, color='r', alpha=alpha, label='Fiber 290')
+            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=60, color='g', alpha=alpha, label='Fiber 150')
+            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 10]  / qcal['NREAD']*10.0, marker='o', s=60, color='b', alpha=alpha, label='Fiber 10')
 
             ax.text(0.98,0.90,chip + ' chip', transform=ax.transAxes, ha='right', va='top')
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fsz)
