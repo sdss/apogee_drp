@@ -422,8 +422,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             minjd = np.min(qcaljd)
             maxjd = np.max(qcaljd)
             jdspan = maxjd - minjd
-            xmin = minjd-jdspan*0.05
-            xmax = maxjd+jdspan*0.15
+            xmin = minjd-jdspan*0.02
+            xmax = maxjd+jdspan*0.10
 
             ax = plt.subplot2grid((nchips,1), (ichip,0))
             ax.set_xlim(xmin, xmax)
