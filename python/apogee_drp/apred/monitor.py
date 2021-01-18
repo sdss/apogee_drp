@@ -434,7 +434,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            if i == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+            if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
             if ichip == 1: ax.set_ylabel(r'Median Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
