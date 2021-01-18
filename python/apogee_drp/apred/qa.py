@@ -1672,10 +1672,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                 # Find the associated healpix directories and make them if they don't already exist
                 healpixgroupDir = starHTMLdir + str(healpixgroup) + '/'
-                if os.path.exists(healpixgroupDir): os.mkdir(healpixgroupDir)
+                if os.path.exists(healpixgroupDir) is False: os.mkdir(healpixgroupDir)
 
                 healpixDir = healpixgroupDir + str(healpix) + '/'
-                if os.path.exists(healpixDir): os.mkdir(healpixDir)
+                if os.path.exists(healpixDir) is False: os.mkdir(healpixDir)
 
                 starHtmlDir = healpixDir + '/html/'
                 if os.path.exists(starHtmlDir) is False: os.mkdir(starHtmlDir)
