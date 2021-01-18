@@ -413,7 +413,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         yr = [-1000, 30000]
         if instrument == 'apogee-s': yr = [-1000, 100000]
 
-        qcal = allcal[quartz]
+        qcal = allcal[qrtz]
         qcaljd = qcal['JD']-2.4e6
 
         for ichip in range(nchips):
