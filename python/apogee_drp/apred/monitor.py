@@ -410,7 +410,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + plotfile)
 
         fig=plt.figure(figsize=(28,14))
-        yr = [-1000,40000]
+        yr = [-1000,42000]
         if instrument == 'apogee-s': yr = [-1000, 100000]
 
         qcal = allcal[qrtz]
@@ -443,9 +443,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 10]  / qcal['NREAD']*10.0, marker='o', s=30, edgecolors='green', color='white', alpha=alpha, label='Fiber 10')
 
             ax.text(0.98,0.90,chip + ' chip', transform=ax.transAxes, ha='right', va='top')
-            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fsz)
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
 
-        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.07,top=0.98,hspace=0.1,wspace=0.00)
+        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.06,top=0.98,hspace=0.1,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
