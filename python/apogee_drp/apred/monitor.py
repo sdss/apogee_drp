@@ -31,6 +31,7 @@ import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 
+# import pdb; pdb.set_trace()
 
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
@@ -360,7 +361,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
 
     for iline in range(2):
         plotfile='tfwhm' + str(iline) + '.png'
-        import pdb; pdb.set_trace()
         tmp1 = str("%.1f" % round(allcal['LINES'][thar][0][iline][0],1))
         tmp2 = str("%.1f" % round(allcal['LINES'][thar][0][iline][1],1))
         tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][iline][2],1))
