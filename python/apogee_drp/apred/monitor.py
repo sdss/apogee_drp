@@ -428,7 +428,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax = plt.subplot2grid((nchips,1), (ichip,0))
             ax.set_xlim(xmin, xmax)
             ax.set_ylim(yr[0], yr[1])
-            #ax.xaxis.set_major_locator(ticker.MultipleLocator(5000))
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
             ax.tick_params(axis='both',which='major',length=axmajlen)
@@ -455,7 +455,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + plotfile)
 
         fig=plt.figure(figsize=(28,14))
-        yr = [-2000,500000]
+        #yr = [-2000,500000]
 
         tcal = allcal[thar]
         tcaljd = tcal['JD']-2.4e6
@@ -465,8 +465,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             ax = plt.subplot2grid((nchips,1), (ichip,0))
             ax.set_xlim(xmin, xmax)
-            ax.set_ylim(yr[0], yr[1])
-            #ax.xaxis.set_major_locator(ticker.MultipleLocator(5000))
+            #ax.set_ylim(yr[0], yr[1])
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
             ax.tick_params(axis='both',which='major',length=axmajlen)
