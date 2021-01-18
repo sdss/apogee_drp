@@ -342,7 +342,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     qrtz, = np.where(allcal['QRTZ'] == 1)
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
-    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png  WIDTH=1200>></A>\n')
+    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png  WIDTH=1400>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a href=fiber/fiber.html> Individual fiber throughputs from quartz </H3>\n')
