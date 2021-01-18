@@ -1668,6 +1668,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 healpix = apload.obj2healpix(objid)
                 subdir = healpix // 1000
                 # Find the associated healpix subdirectory and make the html directory if it doesn't already exist
+                import pdb; pdb.set_trace()
                 starDir = starHTMLdir + str(subdir) + '/' + str(healpix) + '/html/'
                 if os.path.exists(starDir) is False: os.mkdir(starDir)
                 starHTMLpath = starDir + objid + '.html'
