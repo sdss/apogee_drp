@@ -38,7 +38,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     print("----> monitor starting")
 
-    chips=np.array(['blue','green','red'])
+    chips = np.array(['blue','green','red'])
     nchips = len(chips)
 
     fibers = np.array([10,80,150,220,290])
@@ -442,7 +442,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=60, color='g', alpha=alpha, label='Fiber 150')
             ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 290] / qcal['NREAD']*10.0, marker='*', s=100, color='r', alpha=alpha, label='Fiber 290')
 
-            ax.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top')
+            ax.text(0.03,0.97,chips[ichip] + ' chip', transform=ax.transAxes, ha='left', va='top')
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fsz)
 
             ax.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top')
