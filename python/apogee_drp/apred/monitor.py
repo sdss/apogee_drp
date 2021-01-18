@@ -334,6 +334,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
     html.write('<li> <a href=#detectors> Detectors\n')
     html.write('<li> <a href=#sky> Sky brightness\n')
     html.write('</ul>\n')
+    html.write('<HR>\n')
 
     # find the different lamp types
     thar, = np.where(allcal['THAR'] == 1)
@@ -342,23 +343,30 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
     html.write('<A HREF=qflux.png target="_blank"><IMG SRC==qflux.png></A>\n')
+    html.write('<HR>\n')
 
     html.write('<H3> <a href=fiber/fiber.html> Individual fiber throughputs from quartz </H3>\n')
+    html.write('<HR>\n')
 
     html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
     html.write('<A HREF=tharflux.png target="_blank"><IMG SRC==tharflux.png></A>\n')
+    html.write('<HR>\n')
 
     html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
     html.write('<A HREF=uneflux.png target="_blank"><IMG SRC==uneflux.png></A>\n')
+    html.write('<HR>\n')
 
     html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
     html.write('<A HREF=dome.png target="_blank"><IMG SRC==dome.png></A>\n')
+    html.write('<HR>\n')
 
     html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
     html.write('<A HREF=zero.png target="_blank"><IMG SRC==zero.png></A>\n')
+    html.write('<HR>\n')
 
     html.write('<H3> <a name=tpos></a>ThArNe lamp line position</H3>\n')
     html.write('<A HREF=tpos.png target="_blank"><IMG SRC==tpos.png></A>\n')
+    html.write('<HR>\n')
 
     for iline in range(2):
         plotfile='tfwhm' + str(iline) + '.png'
@@ -368,9 +376,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
         txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
         html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
         html.write('<A HREF=' + plotfile + ' target="_blank"><img src=' + plotfile + '></A>\n')
+    html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a> Trace position, fiber 150, column 1000</H3>\n')
     html.write('<A HREF=trace.png target="_blank"><IMG SRC==trace.png></A>\n')
+    html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
     html.write('<H4> Dark Mean </h4>\n')
