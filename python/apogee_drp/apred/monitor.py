@@ -306,7 +306,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
     print("----> monitor: Making " + os.path.basename(outfile))
 
     html = open(outfile, 'w')
-    tmp = os.path.basename(qafile).replace('.html','')
     tit = 'APOGEE-N Instrument Monitor'
     if instrument != 'apogee-n': tit = 'APOGEE-S Instrument Monitor'
     html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
