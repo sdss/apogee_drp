@@ -436,7 +436,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.tick_params(axis='both',which='both',width=axwidth)
             if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
             if ichip == 1: ax.set_ylabel(r'Median Flux')
-            if ichip != 2: ax.axes.xaxis.set_ticklabels([])
+            #if ichip != 2: ax.axes.xaxis.set_ticklabels([])
 
             ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 10]  / qcal['NREAD']*10.0, marker='o', s=60, color='b', alpha=alpha, label='Fiber 10')
             ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=60, color='g', alpha=alpha, label='Fiber 150')
