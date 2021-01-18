@@ -462,6 +462,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         tcaljd = tcal['JD']-2.4e6
 
         flux = tcal['GAUSS'][:,:,0] * tcal['GAUSS'][:,:,2]**2
+        import pdb; pdb.set_trace()
 
         for ichip in range(nchips):
             chip = chips[ichip]
