@@ -360,6 +360,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
 
     for iline in range(2):
         plotfile='tfwhm' + str(iline) + '.png'
+        import pdb; pdb.set_trace()
         tmp1 = str("%.1f" % round(allcal['LINES'][thar][0][0,iline],1))
         tmp2 = str("%.1f" % round(allcal['LINES'][thar][0][1,iline],1))
         tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][2,iline],1))
