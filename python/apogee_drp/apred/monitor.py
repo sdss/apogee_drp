@@ -337,7 +337,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, read=False):
     # find the different lamp types
     thar, = np.where(allcal['THAR'] == 1)
     une, = np.where(allcal['UNE'] == 1)
-    qrtz, = np.where(allcal.['QRTZ'] == 1)
+    qrtz, = np.where(allcal['QRTZ'] == 1)
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
     html.write('<A HREF=qflux.png target="_blank"><IMG SRC==qflux.png></A>\n')
