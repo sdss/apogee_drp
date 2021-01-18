@@ -410,7 +410,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + plotfile)
 
         fig=plt.figure(figsize=(28,14))
-        yr = [-1000,42000]
+        yr = [-2000,43000]
         if instrument == 'apogee-s': yr = [-1000, 100000]
 
         qcal = allcal[qrtz]
