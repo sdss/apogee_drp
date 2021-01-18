@@ -461,6 +461,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         tcal = allcal[thar]
         tcaljd = tcal['JD']-2.4e6
 
+        flux = tcal['GAUSS'][0,:,:] * tcal['GAUSS'][2,:,:]**2
+
         for ichip in range(nchips):
             chip = chips[ichip]
 
@@ -477,9 +479,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            ax.scatter(tcaljd, tcal['FLUX'][:, ichip, 290] / tcal['NREAD']*10.0, marker='*', s=60, edgecolors='purple', color='white', alpha=alpha, label='Fiber 290')
-            ax.scatter(tcaljd, tcal['FLUX'][:, ichip, 150] / tcal['NREAD']*10.0, marker='^', s=30, edgecolors='darkorange', color='white', alpha=alpha, label='Fiber 150')
-            ax.scatter(tcaljd, tcal['FLUX'][:, ichip, 10]  / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='green', color='white', alpha=alpha, label='Fiber 10')
+            ax.scatter(tcaljd, flux[:, ichip, 290] / tcal['NREAD']*10.0, marker='*', s=60, edgecolors='purple', color='white', alpha=alpha, label='Fiber 290')
+            ax.scatter(tcaljd, flux[:, ichip, 150] / tcal['NREAD']*10.0, marker='^', s=30, edgecolors='darkorange', color='white', alpha=alpha, label='Fiber 150')
+            ax.scatter(tcaljd, flux[:, ichip, 10]  / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='green', color='white', alpha=alpha, label='Fiber 10')
 
             ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
