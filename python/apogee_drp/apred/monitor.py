@@ -438,9 +438,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             if ichip == 1: ax.set_ylabel(r'Median Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 290] / qcal['NREAD']*10.0, marker='*', s=60, edgecolors='k', color='violet', alpha=alpha, label='Fiber 290')
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=30, edgecolors='k', color='gold', alpha=alpha, label='Fiber 150')
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 10]  / qcal['NREAD']*10.0, marker='o', s=30, edgecolors='k', color='seagreen', alpha=alpha, label='Fiber 10')
+            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 290] / qcal['NREAD']*10.0, marker='*', s=60, edgecolors='purple', color='white', alpha=alpha, label='Fiber 290')
+            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=30, edgecolors='darkorange', color='white', alpha=alpha, label='Fiber 150')
+            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 10]  / qcal['NREAD']*10.0, marker='o', s=30, edgecolors='green', color='white', alpha=alpha, label='Fiber 10')
 
             ax.text(0.98,0.90,chip + ' chip', transform=ax.transAxes, ha='right', va='top')
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fsz)
