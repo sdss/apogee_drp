@@ -461,7 +461,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         tcal = allcal[thar]
         tcaljd = tcal['JD']-2.4e6
 
-        flux = tcal['GAUSS'][0,:,:] * tcal['GAUSS'][2,:,:]**2
+        flux = tcal['GAUSS'][:,:,0] * tcal['GAUSS'][:,:,2]**2
 
         for ichip in range(nchips):
             chip = chips[ichip]
