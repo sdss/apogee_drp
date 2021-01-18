@@ -442,17 +442,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=60, color='g', alpha=alpha, label='Fiber 150')
             ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 290] / qcal['NREAD']*10.0, marker='*', s=100, color='r', alpha=alpha, label='Fiber 290')
 
-            ax.text(0.03,0.97,chips[ichip] + ' chip', transform=ax.transAxes, ha='left', va='top')
+            ax.text(0.90,0.90,chip + ' chip', transform=ax.transAxes, ha='right', va='top')
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fsz)
-
-            ax.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top')
-
-            ax_divider = make_axes_locatable(ax)
-            cax = ax_divider.append_axes("top", size="4%", pad="1%")
-            cb = colorbar(sc, cax=cax, orientation="horizontal")
-            cax.xaxis.set_ticks_position("top")
-            cax.minorticks_on()
-            ax.text(0.90, 0.90, chip + 'chip', ha='right', va='top', transform=ax.transAxes)
 
         fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.00,wspace=0.00)
         plt.savefig(plotfile)
