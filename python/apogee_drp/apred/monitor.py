@@ -445,6 +445,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
 
+
         fig.subplots_adjust(left=0.06,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
