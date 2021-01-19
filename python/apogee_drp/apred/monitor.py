@@ -456,7 +456,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         fig=plt.figure(figsize=(28,14))
         ymin = np.array([-4000, -3500, -3000])
-        ymax = np.array([400000, 80000, 20000]) 
+        ymax = np.array([500000, 60000, 12000]) 
 
         tcal = allcal[thar]
         tcaljd = tcal['JD']-2.4e6
