@@ -575,7 +575,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + plotfile)
 
         fig = plt.figure(figsize=(28,14))
-        ymax = 20000
+        ymax = 16000
         ymin = 0 - ymax*0.05
 
         gdcal = allexp[dome]
