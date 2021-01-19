@@ -675,6 +675,12 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         rootLogger.info('No visit files for MJD=%d' % mjd5)
         chkrv = None
 
+
+    # Create daily and full allVisit/allStar files
+    # The QA code needs these
+    create_sumfiles(mjd5,apred,telescope)
+
+
     # Run QA script
     #--------------
     rootLogger.info('')
@@ -692,9 +698,6 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     queue.commit(hard=True,submit=True)
     queue_wait(queue)  # wait for jobs to complete
     del queue
-
-    # Create daily and full allVisit/allStar files
-    create_sumfiles(mjd5,apred,telescope)
 
     # Update daily_status table
     daycat = np.zeros(1,dtype=np.dtype([('pk',int),('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
