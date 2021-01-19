@@ -387,7 +387,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<HR>\n')
 
     html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
-    html.write('<P> (horizontal lines are the medians across all fibers) </P>\n')
+    html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
     html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
@@ -406,6 +406,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][iline][2],1))
         txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
         html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
+        html.write('<P> (Note: horizontal lines are the median value for each fiber.) </P>\n')
         html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
