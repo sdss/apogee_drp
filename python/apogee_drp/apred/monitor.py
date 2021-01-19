@@ -757,8 +757,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
                 w = np.nanmedian(2.354 * gdcal['GAUSS'][:, iline, ichip, :, 2])
-                ymin = w * 0.7
-                ymax = w * 1.3
+                ymin = w * 0.6
+                ymax = w * 1.2
                 yspan = ymax - ymin
                 ax.set_ylim(ymin, ymax)
 
