@@ -530,7 +530,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
             for ifib in range(nplotfibs):
-                yvals = flux[:, 0, ichip, fibers[ifib]] / gdcal['NREAD']*10.0
+                yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
                 ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
             ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
