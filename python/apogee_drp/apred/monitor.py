@@ -451,6 +451,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     # tharflux.png
     markersz = 7
+    colors = np.array(['darkred', 'orange', 'limegreen', 'dodgerblue', 'orchid'])
     plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
