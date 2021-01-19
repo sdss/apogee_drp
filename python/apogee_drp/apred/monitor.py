@@ -478,11 +478,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            ax.scatter(tcaljd, flux[:, 0, ichip, 0] / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='darkred', color='white', alpha=alpha)#, label='Fiber 290')
-            ax.scatter(tcaljd, flux[:, 0, ichip, 1] / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='red', color='white', alpha=alpha)#, label='Fiber 150')
-            ax.scatter(tcaljd, flux[:, 0, ichip, 2] / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='gold', color='white', alpha=alpha)#, label='Fiber 150')
-            ax.scatter(tcaljd, flux[:, 0, ichip, 3] / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='yellowgreen', color='white', alpha=alpha)#, label='Fiber 150')
-            ax.scatter(tcaljd, flux[:, 0, ichip, 4]  / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='seagreen', color='white', alpha=alpha)#, label='Fiber 10')
+            ax.scatter(tcaljd, flux[:, 0, ichip, 0] / tcal['NREAD']*10.0, marker='o', s=20, color='darkred', alpha=alpha)#, label='Fiber 290', edgecolors='darkred')
+            ax.scatter(tcaljd, flux[:, 0, ichip, 1] / tcal['NREAD']*10.0, marker='o', s=20, color='red', alpha=alpha)#, label='Fiber 150', edgecolors='red')
+            ax.scatter(tcaljd, flux[:, 0, ichip, 2] / tcal['NREAD']*10.0, marker='o', s=20, color='gold', alpha=alpha)#, label='Fiber 150', edgecolors='gold')
+            ax.scatter(tcaljd, flux[:, 0, ichip, 3] / tcal['NREAD']*10.0, marker='o', s=20, color='yellowgreen', alpha=alpha)#, label='Fiber 150', edgecolors='yellowgreen')
+            ax.scatter(tcaljd, flux[:, 0, ichip, 4]  / tcal['NREAD']*10.0, marker='o', s=20, color='seagreen', alpha=alpha)#, label='Fiber 10', edgecolors='seagreen')
 
             ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
             #ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
