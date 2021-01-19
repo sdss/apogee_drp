@@ -438,7 +438,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
     fibers = np.array([10, 80, 150, 220, 290])
     nplotfibs = len(fibers)
-    years = np.array([2011, 2012, 2013, 2014
+    #years = np.array([2011, 2012, 2013, 2014
 
     ###############################################################################################
     # qflux.png
