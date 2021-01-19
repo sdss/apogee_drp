@@ -481,7 +481,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
             for year in years:
-                t = Time(years[i], format='byear')
+                t = Time(year, format='byear')
                 ax.axvline(x=t.jd-2.4e6, color='k')
                 if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.01, str(int(round(year))), fontsize=fsz, ha='center')
 
