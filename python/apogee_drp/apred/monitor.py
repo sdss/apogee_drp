@@ -482,15 +482,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             for year in years:
                 t = Time(year, format='byear')
-                ax.axvline(x=t.jd-2.4e6, color='k')
+                ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
                 if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.02, str(int(round(year))), ha='center')
 
             for ifib in range(nplotfibs):
                 yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
                 ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
-            ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
-            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k')
+            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', alpha=1)
 
         fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.95,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
