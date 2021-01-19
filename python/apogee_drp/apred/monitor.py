@@ -857,8 +857,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax1.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
             ax1.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
 
-        ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*5, color='cyan', edgecolors='k', alpha=alf)
-        ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*3, color='teal', alpha=alf)
+        ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
+        ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
 
         fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
         plt.savefig(plotfile)
