@@ -486,7 +486,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for year in years:
                 t = Time(year, format='byear')
                 ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.02, str(int(round(year))), ha='center')
+                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
 
             for ifib in range(nplotfibs):
                 yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
@@ -533,7 +533,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for year in years:
                 t = Time(year, format='byear')
                 ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.02, str(int(round(year))), ha='center')
+                if ichip == 0: ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.025, str(int(round(year))), ha='center')
 
             for ifib in range(nplotfibs):
                 yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
@@ -580,7 +580,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for year in years:
                 t = Time(year, format='byear')
                 ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.02, str(int(round(year))), ha='center')
+                if ichip == 0: ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.025, str(int(round(year))), ha='center')
 
             for ifib in range(nplotfibs):
                 yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
@@ -626,7 +626,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for year in years:
                 t = Time(year, format='byear')
                 ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.02, str(int(round(year))), ha='center')
+                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
 
             w = np.nanmedian(gdcal['MED'][ichip, :])
 
