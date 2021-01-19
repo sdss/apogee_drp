@@ -62,16 +62,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         alldark = fits.open(specdir + instrument + 'Cal.fits')[2].data
         allexp =  fits.open(specdir + instrument + 'Exp.fits')[1].data
         allsci =  fits.open(specdir + instrument + 'Sci.fits')[1].data
+        allepsf = fits.open(specdir + instrument + 'Trace.fits')[1].data
     else:
         ###########################################################################################
         # MAKE MASTER QACAL FILE
-        outfile = specdir5 + 'monitor/' + instrument + '_Cal.fits'
+        outfile = specdir5 + 'monitor/' + instrument + 'Cal.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
         # Append together the individual QAcal files
         files = glob.glob(specdir + '/cal/' + instrument + '/*/*QAcal*.fits')
         if len(files) < 1:
-            print("----> monitor: No files! do you have correct version set?")
+            print("----> monitor: No QAcal files!")
         else:
             files.sort()
             files = np.array(files)
@@ -118,7 +119,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     allcal = np.concatenate([allcal, struct])
 
             Table(allcal).write(outfile, overwrite=True)
-
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
 
         ###########################################################################################
@@ -128,7 +128,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # Append together the individual QAdarkflat files
         files = glob.glob(specdir + '/cal/' + instrument + '/*/*QAdarkflat*.fits')
         if len(files) < 1:
-            print("----> monitor: No files! do you have correct version set?")
+            print("----> monitor: No QAdarkflat files!")
         else:
             files.sort()
             files = np.array(files)
@@ -175,85 +175,87 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             hdulist.append(hdu1)
             hdulist.writeto(outfile, overwrite=True)
             hdulist.close()
-
             print("----> monitor: Finished adding QAdarkflat info to " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER EXP FILE
-        outfile = specdir5 + 'monitor/' + instrument + '_Exp.fits'
+        outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
         # Get long term trends from dome flats
         # Append together the individual exp files
-        files = glob.glob(specdir + '/exposures/' + instrument + '/*/5*exp.fits')
-        files.sort()
-        files = np.array(files)
-        nfiles=len(files)
-        for i in range(nfiles):
-            print("---->    monitor: reading " + files[i])
-            a = fits.open(files[i])[1].data
+        files = glob.glob(specdir + '/exposures/' + instrument + '/*/*exp.fits')
+        if len(files) < 1:
+            print("----> monitor: No exp files!")
+        else:
+            files.sort()
+            files = np.array(files)
+            nfiles=len(files)
+            for i in range(nfiles):
+                print("---->    monitor: reading " + files[i])
+                a = fits.open(files[i])[1].data
 
-            # Make output structure.
-            dt = np.dtype([('MJD',       np.int32),
-                           ('DATEOBS',   np.str, 23),
-                           ('JD',        np.float64),
-                           ('NUM',       np.int32),
-                           ('NFRAMES',   np.int32),
-                           ('IMAGETYPE', np.str, 10),
-                           ('PLATEID',   np.int32),
-                           ('CARTID',    np.int32),
-                           ('RA',        np.float64),
-                           ('DEC',       np.float64),
-                           ('SEEING',    np.float64),
-                           ('ALT',       np.float64),
-                           ('QRTZ',      np.int32),
-                           ('THAR',      np.int32),
-                           ('UNE',       np.int32),
-                           ('FFS',       np.str, 15),
-                           ('LN2LEVEL',  np.float64),
-                           ('DITHPIX',   np.float64),
-                           ('TRACEDIST', np.float64),
-                           ('MED',       np.float64,(300,nchips))])
-            struct = np.zeros(len(a['MJD']), dtype=dt)
+                # Make output structure.
+                dt = np.dtype([('MJD',       np.int32),
+                               ('DATEOBS',   np.str, 23),
+                               ('JD',        np.float64),
+                               ('NUM',       np.int32),
+                               ('NFRAMES',   np.int32),
+                               ('IMAGETYPE', np.str, 10),
+                               ('PLATEID',   np.int32),
+                               ('CARTID',    np.int32),
+                               ('RA',        np.float64),
+                               ('DEC',       np.float64),
+                               ('SEEING',    np.float64),
+                               ('ALT',       np.float64),
+                               ('QRTZ',      np.int32),
+                               ('THAR',      np.int32),
+                               ('UNE',       np.int32),
+                               ('FFS',       np.str, 15),
+                               ('LN2LEVEL',  np.float64),
+                               ('DITHPIX',   np.float64),
+                               ('TRACEDIST', np.float64),
+                               ('MED',       np.float64,(300,nchips))])
+                struct = np.zeros(len(a['MJD']), dtype=dt)
 
-            struct['MJD'] = a['MJD']
-            struct['DATEOBS'] = a['DATEOBS']
-            struct['JD'] = a['JD']
-            struct['NUM'] = a['NUM']
-            struct['NFRAMES'] = a['NFRAMES']
-            struct['IMAGETYPE'] = a['IMAGETYPE']
-            struct['PLATEID'] = a['PLATEID']
-            struct['CARTID'] = a['CARTID']
-            struct['RA'] = a['RA']
-            struct['DEC'] = a['DEC']
-            struct['SEEING'] = a['SEEING']
-            struct['ALT'] = a['ALT']
-            struct['QRTZ'] = a['QRTZ']
-            struct['THAR'] = a['THAR']
-            struct['UNE'] = a['UNE']
-            struct['FFS'] = a['FFS']
-            struct['LN2LEVEL'] = a['LN2LEVEL']
-            struct['DITHPIX'] = a['DITHPIX']
-            struct['TRACEDIST'] = a['TRACEDIST']
-            struct['MED'] = a['MED']
+                struct['MJD'] = a['MJD']
+                struct['DATEOBS'] = a['DATEOBS']
+                struct['JD'] = a['JD']
+                struct['NUM'] = a['NUM']
+                struct['NFRAMES'] = a['NFRAMES']
+                struct['IMAGETYPE'] = a['IMAGETYPE']
+                struct['PLATEID'] = a['PLATEID']
+                struct['CARTID'] = a['CARTID']
+                struct['RA'] = a['RA']
+                struct['DEC'] = a['DEC']
+                struct['SEEING'] = a['SEEING']
+                struct['ALT'] = a['ALT']
+                struct['QRTZ'] = a['QRTZ']
+                struct['THAR'] = a['THAR']
+                struct['UNE'] = a['UNE']
+                struct['FFS'] = a['FFS']
+                struct['LN2LEVEL'] = a['LN2LEVEL']
+                struct['DITHPIX'] = a['DITHPIX']
+                struct['TRACEDIST'] = a['TRACEDIST']
+                struct['MED'] = a['MED']
 
-            if i == 0:
-                allexp = struct 
-            else:
-                allexp = np.concatenate([allexp, struct])
+                if i == 0:
+                    allexp = struct 
+                else:
+                    allexp = np.concatenate([allexp, struct])
 
-        Table(allcal).write(outfile, overwrite=True)
-        print("----> monitor: Finished making " + os.path.basename(outfile))
+            Table(allcal).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
-        outfile = specdir5 + 'monitor/' + instrument + '_Sci.fits'
+        outfile = specdir5 + 'monitor/' + instrument + 'Sci.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
         # Get zeropoint info from apPlateSum files
         files = glob.glob(specdir + '/visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
         if len(files) < 1:
-            print("----> monitor: No files! do you have correct version set?")
+            print("----> monitor: No apPlateSum files!")
         else:
             files.sort()
             files = np.array(files)
@@ -331,6 +333,45 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             Table(allsci).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
+        ###########################################################################################
+        # MAKE MASTER TRACE FILE
+        outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+        print("----> monitor: Making " + os.path.basename(outfile))
+
+        # Append together the individual QAcal files
+        files = glob.glob(specdir + '/cal/psf/apEPSF-b-*.fits')
+        if len(files) < 1:
+            print("----> monitor: No apEPSF-b files!")
+        else:
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+
+            dt = np.dtype([('NUM',      np.int32),
+                           ('MJD',      np.float64),
+                           ('CENT',     np.float64),
+                           ('LN2LEVEL', np.int32)])
+            struct = np.zeros(nfiles, dtype=dt)
+
+            for i in range(nfiles):
+                print("---->    monitor: reading " + files[i])
+                a = fits.open(files[i])[1].data
+                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
+                if num > 1000:
+                    hdr = fits.getheader(files[i])
+                    for j in range(147,156):
+                        a = fits.open(files[i])[j].data
+                        if a['FIBER'] == 150:
+                            struct['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
+                            struct['CENT'][i] = a['CENT'][1000]
+                            struct['MJD'][i] = hdr['JD-MJD'] - 2400000.5
+                            struct['LN2LEVEL'][i] = hdr['LN2LEVEL']
+                            break
+
+            Table(struct).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
+
+    ###############################################################################################
     # MAKE THE MONITOR HTML
     outfile = specdir5 + 'monitor/' + instrument + '-monitor.html'
     print("----> monitor: Making " + os.path.basename(outfile))
@@ -780,6 +821,48 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
+
+    ###############################################################################################
+    # trace.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
+    if (os.path.exists(plotfile) == False) | (clobber == True):
+        print("----> monitor: Making " + plotfile)
+
+        fig = plt.figure(figsize=(30,11))
+        ymax = np.nanmedian(allepsf['CENT']) + 1
+        ymin = np.nanmedian(allepsf['CENT']) - 1
+        yspan = ymax - ymin
+
+        caljd = Time(allepsf['MJD'], format='mjd').jd - 2.4e6
+
+        ax1 = plt.subplot2grid((2,1), (0,0))
+        ax2 = plt.subplot2grid((2,1), (1,0))
+        axes = [ax1, ax2]
+
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(500))
+        ax1.set_xlim(xmin, xmax)
+        ax1.set_xlabel(r'JD - 2,400,000')
+        ax2.set_xlabel(r'LN2 Level')
+        for ax in axes:
+            ax.set_ylim(ymin, ymax)
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_ylabel(r'Trace Center')
+
+        for year in years:
+            t = Time(year, format='byear')
+            ax1.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
+            ax1.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
+
+        ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*2, color='teal', alpha=alf)
+        ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*2, color='teal', alpha=alf)
+
+        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.15,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
 
     print("----> monitor done")
 
