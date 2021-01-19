@@ -406,7 +406,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     axminlen = 3.5
     alf = 0.6
     markersz = 7
-    colors = np.array(['crimson', 'limegreen', 'orange', 'olive', 'royalblue'])
+    colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
     fibers = np.array([10, 80, 150, 220, 290])
     nplotfibs = len(fibers)
 
