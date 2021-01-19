@@ -343,30 +343,30 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
-    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1400></A>\n')
+    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a href=fiber/fiber.html> Individual fiber throughputs from quartz </H3>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=1200>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=1200>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
-    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=1200>></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tpos></a>ThArNe lamp line position</H3>\n')
-    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=1200>></A>\n')
     html.write('<HR>\n')
 
     for iline in range(2):
@@ -385,16 +385,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
     html.write('<H4> Dark Mean </h4>\n')
-    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=1200>></A>\n')
 
     html.write('<H4> Dark Sigma </h4>\n')
-    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=1200>></A>\n')
 
     html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=1200>></A>\n')
 
     html.close()
 
+    ###############################################################################################
     # Set up some basic plotting parameters
     matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
@@ -409,12 +410,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fibers = np.array([10, 80, 150, 220, 290])
     nplotfibs = len(fibers)
 
+    ###############################################################################################
     # qflux.png
     plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig=plt.figure(figsize=(28,14))
+        fig = plt.figure(figsize=(28,14))
         ymax = 44000
         ymin = 0 - ymax*0.05
         if instrument == 'apogee-s': yr = [-1000, 100000]
@@ -455,18 +457,19 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         plt.savefig(plotfile)
         plt.close('all')
 
+    ###############################################################################################
     # tharflux.png
     plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig=plt.figure(figsize=(28,14))
+        fig = plt.figure(figsize=(28,14))
         ymax = np.array([510000, 58000, 11000]) 
         ymin = 0 - ymax*0.05
 
         gdcal = allcal[thar]
         caljd = gdcal['JD']-2.4e6
-        flux = tcal['GAUSS'][:,:,:,:,0] * tcal['GAUSS'][:,:,:,:,2]**2
+        flux = gdcal['GAUSS'][:,:,:,:,0] * gdcal['GAUSS'][:,:,:,:,2]**2
 
         for ichip in range(nchips):
             chip = chips[ichip]
@@ -495,19 +498,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         plt.savefig(plotfile)
         plt.close('all')
 
+    ###############################################################################################
     # uneflux.png
     plotfile = specdir5 + 'monitor/' + instrument + '/uneflux.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig=plt.figure(figsize=(28,14))
+        fig = plt.figure(figsize=(28,14))
         ymax = np.array([40000, 3000, 7700])
         ymin = 0 - ymax*0.05
 
         gdcal = allcal[une]
         caljd = gdcal['JD']-2.4e6
+        flux = gdcal['GAUSS'][:,:,:,:,0] * gdcal['GAUSS'][:,:,:,:,2]**2
 
-        flux = ucal['GAUSS'][:,:,:,:,0] * ucal['GAUSS'][:,:,:,:,2]**2
         for ichip in range(nchips):
             chip = chips[ichip]
 
@@ -535,17 +539,19 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         plt.savefig(plotfile)
         plt.close('all')
 
+    ###############################################################################################
     # dome.png
     plotfile = specdir5 + 'monitor/' + instrument + '/dome.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig=plt.figure(figsize=(28,14))
+        fig = plt.figure(figsize=(28,14))
         ymax = 20000
         ymin = 0 - ymax*0.05
 
         gdcal = allexp[dome]
         caljd = gdcal['JD']-2.4e6
+
         for ichip in range(nchips):
             chip = chips[ichip]
 
