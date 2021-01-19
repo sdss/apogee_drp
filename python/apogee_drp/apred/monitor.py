@@ -448,7 +448,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     minjd = np.min(caljd)
     maxjd = np.max(caljd)
     jdspan = maxjd - minjd
-    xmin = minjd - jdspan * 0.02
+    xmin = minjd - jdspan * 0.01
     xmax = maxjd + jdspan * 0.10
 
     ###############################################################################################
@@ -600,7 +600,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + plotfile)
 
         fig = plt.figure(figsize=(30,14))
-        ymax = 16000
+        ymax = 13000
         ymin = 0 - ymax*0.05
         yspan = ymax - ymin
 
@@ -628,6 +628,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
                 if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
 
+            import pdb; pdb.set_trace()
             w = np.nanmedian(gdcal['MED'][ichip, :])
 
             ax.axhline(y=w, color='silver', linewidth=3)
