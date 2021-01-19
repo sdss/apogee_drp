@@ -505,9 +505,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig = plt.figure(figsize=(28,14))
+        fig = plt.figure(figsize=(28,16))
         ymax = np.array([510000, 58000, 11000]) 
-        ymin = 0 - ymax*0.05
+        ymin = 0 - ymax * 0.05
+        yspan = ymax - ymin
 
         gdcal = allcal[thar]
         caljd = gdcal['JD']-2.4e6
@@ -533,10 +534,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
                 ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
-            ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
-            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k')
+            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k', framealpha=1)
 
-        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
+        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
@@ -575,7 +576,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
                 ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
-            ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
+            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k', framealpha=1)
 
         fig.subplots_adjust(left=0.06,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
