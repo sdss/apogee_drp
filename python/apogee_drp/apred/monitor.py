@@ -629,11 +629,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
 
             w = np.nanmedian(gdcal['MED'][:, ichip, :])
-            ax.axhline(y=w, color='silver', linewidth=3)
+            ax.axhline(y=w, color='k', linewidth=3, zorder=1)
 
             for ifib in range(nplotfibs):
                 yvals = gdcal['MED'][:, ichip, fibers[ifib]]
-                ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
+                ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]), zorder=3)
 
             ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
