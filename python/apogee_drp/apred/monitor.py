@@ -769,7 +769,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for ifib in range(nplotfibs):
                     w = np.nanmedian(2.354 * gdcal['GAUSS'][:, iline, ichip, ifib, 2])
-                    ax.axhline(y=w, color=colors[ifib], linewidth=2, zorder=2)
+                    ax.axhline(y=w, color=colors[ifib], linewidth=3, zorder=2)
                     ax.axhline(y=w, color='k', linewidth=4, zorder=1)
                     yvals = 2.354 * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
                     ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]), zorder=3)
