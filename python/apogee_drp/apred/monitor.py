@@ -452,7 +452,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a> Trace position, fiber 150, column 1000</H3>\n')
-    html.write('<A HREF=trace.png target="_blank"><IMG SRC=trace.png WIDTH=1400></A>\n')
+    html.write('<A HREF=' + instrument + '/trace.png target="_blank"><IMG SRC=' + instrument + '/trace.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
