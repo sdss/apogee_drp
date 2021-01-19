@@ -828,7 +828,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig = plt.figure(figsize=(30,11))
+        fig = plt.figure(figsize=(30,12))
         ymax = np.nanmedian(allepsf['CENT']) + 1
         ymin = np.nanmedian(allepsf['CENT']) - 1
         yspan = ymax - ymin
@@ -860,7 +860,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*2, color='teal', alpha=alf)
         ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*3, color='teal', alpha=alf)
 
-        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.15,wspace=0.00)
+        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
