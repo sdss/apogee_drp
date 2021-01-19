@@ -634,7 +634,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
         t = Time(allsci['DATEOBS'], format='fits')
-        jd = t.hd - 2.4e6
+        jd = t.jd - 2.4e6
         ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, color='k', alpha=alf)
 
         fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
