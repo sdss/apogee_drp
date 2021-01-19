@@ -616,9 +616,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig = plt.figure(figsize=(28,4.7))
-        ymax = 22
-        ymin = 11
+        fig = plt.figure(figsize=(28,5.5))
+        ymax = 20.8
+        ymin = 10
 
         ax = plt.subplot2grid((1,1), (0,0))
         ax.set_xlim(xmin, xmax)
@@ -637,7 +637,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         jd = t.jd - 2.4e6
         ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, color='k', alpha=alf)
 
-        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
+        fig.subplots_adjust(left=0.04,right=0.99,bottom=0.12,top=0.98,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
