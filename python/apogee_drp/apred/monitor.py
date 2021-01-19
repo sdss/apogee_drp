@@ -568,7 +568,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Median Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            w = np.nanmedian(dcal['MED'][ichip, :])
+            w = np.nanmedian(gdcal['MED'][ichip, :])
 
             for ifib in range(nplotfibs):
                 yvals = gdcal['MED'][:, ichip, fibers[ifib]]
