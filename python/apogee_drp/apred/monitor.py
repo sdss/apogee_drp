@@ -505,13 +505,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig = plt.figure(figsize=(28,16))
+        fig = plt.figure(figsize=(28,14))
         ymax = np.array([510000, 58000, 11000]) 
-        ymin = 0 - ymax * 0.05
-        yspan = ymax - ymin
+        ymin = 0 - ymax*0.05
 
         gdcal = allcal[thar]
-        caljd = gdcal['JD'] - 2.4e6
+        caljd = gdcal['JD']-2.4e6
         flux = gdcal['GAUSS'][:,:,:,:,0] * gdcal['GAUSS'][:,:,:,:,2]**2
 
         for ichip in range(nchips):
@@ -530,20 +529,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            print('fuck')
-            for year in years:
-                t = Time(year, format='byear')
-                ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.02, str(int(round(year))), ha='center')
-
             for ifib in range(nplotfibs):
-                yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
+                yvals = flux[:, 0, ichip, fibers[ifib]] / gdcal['NREAD']*10.0
                 ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
             ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
-            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k')
 
-        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
