@@ -706,7 +706,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Median Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            w = np.nanmedian(gdcal['GAUSS'][:, :, ichip, :, 1])
+            w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
             ymin = w - 10
             ymax = w + 10
             yspan = ymax - ymin
