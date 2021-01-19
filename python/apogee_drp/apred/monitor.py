@@ -379,24 +379,24 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=1200>></A>\n')
+    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=1200>></A>\n')
+    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
     html.write('<P> (horizontal lines are the medians across all fibers) </P>\n')
-    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200>></A>\n')
+    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
-    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=1200>></A>\n')
+    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tpos></a>ThArNe lamp line position</H3>\n')
-    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=1200>></A>\n')
+    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     for iline in range(2):
@@ -406,22 +406,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][iline][2],1))
         txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
         html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
-        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + '></A>\n')
+        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a> Trace position, fiber 150, column 1000</H3>\n')
-    html.write('<A HREF=trace.png target="_blank"><IMG SRC=trace.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=trace.png target="_blank"><IMG SRC=trace.png WIDTH=1400></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
     html.write('<H4> Dark Mean </h4>\n')
-    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=1200>></A>\n')
+    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=1200></A>\n')
 
     html.write('<H4> Dark Sigma </h4>\n')
-    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=1200>></A>\n')
+    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=1200></A>\n')
 
     html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=1200>></A>\n')
+    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=1200></A>\n')
 
     html.close()
 
@@ -727,6 +727,57 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
+
+    ###############################################################################################
+    # ThArNe lamp line FWHM
+    for iline in range(2):
+        plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + plotfile)
+
+            fig = plt.figure(figsize=(30,14))
+
+            gdcal = allcal[thar]
+            caljd = gdcal['JD']-2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'FWHM ($\rm \AA$)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                w = np.nanmedian(2.354 * gdcal['GAUSS'][:, iline, ichip, :, 2])
+                ymin = w * 0.7
+                ymax = w * 1.3
+                yspan = ymax - ymin
+                ax.set_ylim(ymin, ymax)
+
+                for year in years:
+                    t = Time(year, format='byear')
+                    ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
+
+                for ifib in range(nplotfibs):
+                    w = np.nanmedian(2.354 * gdcal['GAUSS'][:, iline, ichip, ifib, 2])
+                    ax.axhline(y=w, color=colors[ifib], linewidth=3, zorder=1)
+                    yvals = 2.354 * gdcal['GAUSS'][:, iline, ichip, 0, 2]
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]), zorder=3)
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
 
     print("----> monitor done")
 
