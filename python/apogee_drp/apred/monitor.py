@@ -410,7 +410,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + plotfile)
 
         fig=plt.figure(figsize=(28,14))
-        yr = [-2000,43000]
+        ymax = 44000
+        ymin = 0 - ymax*0.05
         if instrument == 'apogee-s': yr = [-1000, 100000]
 
         qcal = allcal[qrtz]
@@ -427,7 +428,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             ax = plt.subplot2grid((nchips,1), (ichip,0))
             ax.set_xlim(xmin, xmax)
-            ax.set_ylim(yr[0], yr[1])
+            ax.set_ylim(ymin, ymax)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
