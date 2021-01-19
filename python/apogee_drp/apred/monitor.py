@@ -456,7 +456,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + plotfile)
 
         fig=plt.figure(figsize=(28,14))
-        ymin = np.array([-8000, -2000, -400])
+        ymin = np.array([-12000, -2000, -400])
         ymax = np.array([510000, 58000, 11000]) 
 
         tcal = allcal[thar]
