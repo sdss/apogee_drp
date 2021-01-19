@@ -457,7 +457,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig = plt.figure(figsize=(28,16))
+        fig = plt.figure(figsize=(30,14))
         ymax = 44000
         if instrument == 'apogee-s': 
             ymax = 100000
@@ -505,7 +505,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig = plt.figure(figsize=(28,16))
+        fig = plt.figure(figsize=(30,14))
         ymax = np.array([510000, 58000, 11000]) 
         ymin = 0 - ymax * 0.05
         yspan = ymax - ymin
@@ -552,7 +552,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig = plt.figure(figsize=(28,16))
+        fig = plt.figure(figsize=(30,14))
         ymax = np.array([40000, 3000, 7700])
         ymin = 0 - ymax*0.05
         yspan = ymax - ymin
