@@ -442,7 +442,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     tmp = allcal[qrtz]
     caljd = tmp['JD'] - 2.4e6
-    t = Time(gdcal['JD'], format='jd')
+    t = Time(tmp['JD'], format='jd')
     years = np.unique(np.floor(t.byear)) + 1
     nyears = len(years)
     minjd = np.min(caljd)
