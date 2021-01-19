@@ -294,6 +294,35 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                                ('TELLFIT',   np.float64, (3,6))])
                 struct = np.zeros(len(a['PLATE']), dtype=dt)
 
+                struct['TELESCOPE'] = a['TELESCOPE']
+                struct['PLATE'] = a['PLATE']
+                struct['NREADS'] = a['NREADS']
+                struct['DATEOBS'] = a['DATEOBS']
+                struct['EXPTIME'] = a['EXPTIME']
+                struct['SECZ'] = a['SECZ']
+                struct['HA'] = a['HA']
+                struct['DESIGN_HA'] = a['DESIGN_HA']
+                struct['SEEING'] = a['SEEING']
+                struct['FWHM'] = a['FWHM']
+                struct['GDRMS'] = a['GDRMS']
+                struct['CART'] = a['CART']
+                struct['PLUGID'] = a['PLUGID']
+                struct['DITHER'] = a['DITHER']
+                struct['MJD'] = a['MJD']
+                struct['IM'] = a['IM']
+                struct['ZERO'] = a['ZERO']
+                struct['ZERORMS'] = a['ZERORMS']
+                struct['ZERONORM'] = a['ZERONORM']
+                struct['SKY'] = a['SKY']
+                struct['SN'] = a['SN']
+                struct['SNC'] = a['SNC']
+                struct['ALTSN'] = a['ALTSN']
+                struct['NSN'] = a['NSN']
+                struct['SNRATIO'] = a['SNRATIO']
+                struct['MOONDIST'] = a['MOONDIST']
+                struct['MOONPHASE'] = a['MOONPHASE']
+                struct['TELLFIT'] = a['TELLFIT']
+
                 if i == 0:
                     allsci = struct
                 else:
@@ -576,6 +605,37 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k')
+
+        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+    ###############################################################################################
+    # zero.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/zero.png'
+    if (os.path.exists(plotfile) == False) | (clobber == True):
+        print("----> monitor: Making " + plotfile)
+
+        fig = plt.figure(figsize=(28,4.7))
+        ymax = 22
+        ymin = 11
+
+        ax = plt.subplot2grid((1,1), (0,0))
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+        ax.set_ylabel(r'Zeropoint (mag.)')
+        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+        t = Time(allsci['DATEOBS'], format='fits')
+        jd = t.hd - 2.4e6
+        ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, color='k', alpha=alf)
 
         fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
