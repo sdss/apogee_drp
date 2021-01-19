@@ -30,6 +30,7 @@ import matplotlib.ticker as ticker
 import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
+from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 
 sdss_path = path.Path()
 
@@ -1666,15 +1667,24 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if (objtype != 'SKY') & (objid != '2MNone'):
                 # Find which healpix this star is in
                 healpix = apload.obj2healpix(objid)
-                subdir = healpix // 1000
-                # Find the associated healpix subdirectory and make the html directory if it doesn't already exist
-                #import pdb; pdb.set_trace()
-                starDir = starHTMLdir + str(subdir) + '/' + str(healpix) + '/html/'
-                if os.path.exists(starDir) is False: os.mkdir(starDir)
-                starHTMLpath = starDir + objid + '.html'
-                starHTMLrelPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/html/'+objid+'.html'
-                apStarPath = '../../../../../../stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/'
-                tmpDir = apodir+apred+'/stars/'+telescope+'/'+str(subdir)+'/'+str(healpix)+'/'
+                healpixgroup = str(healpix // 1000)
+                healpix = str(healpix)
+
+                # Find the associated healpix directories and make them if they don't already exist
+                healpixgroupDir = starHTMLdir + str(healpixgroup) + '/'
+                if os.path.exists(healpixgroupDir) is False: os.mkdir(healpixgroupDir)
+
+                healpixDir = healpixgroupDir + str(healpix) + '/'
+                if os.path.exists(healpixDir) is False: os.mkdir(healpixDir)
+
+                starHtmlDir = healpixDir + '/html/'
+                if os.path.exists(starHtmlDir) is False: os.mkdir(starHtmlDir)
+
+                starHTMLpath = starHtmlDir + objid + '.html'
+                relpath = '../../../../../../stars/' + telescope + '/'
+                starHTMLrelPath = relpath + healpixgroup + '/' + healpix + '/html/' + objid + '.html'
+                apStarPath = relpath + '/' +healpixgroup + '/' + healpix + '/'
+                tmpDir = starHTMLdir + healpixgroup + '/' + healpix + '/'
                 apStarCheck = glob.glob(tmpDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
                 if len(apStarCheck) > 0:
                     apStarCheck.sort();   apStarCheck = np.array(apStarCheck)
@@ -2855,6 +2865,16 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         # https://github.com/sdss/apogee/blob/master/python/apogee/apred/wave.py
 
 #;                        APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
+
+                        maxind, = argrelextrema(oneD[ichip], np.greater)  # maxima
+                        # sigma cut on the flux
+                        gd, = np.where(oneD[ichip][maxind] > 10)
+                        if len(gd) == 0:
+                            print('No peaks found')
+                            return
+                        pix0 = maxind[gd]
+                        peaks = peakfit.peakfit(oneD[ichip], sigma=toterror, pix0=pix0)
+
                         linestr = wave.findlines(oneD, rows=fibers, lines=line)
                         linestr = wave.peakfit(oneD[chips[ichip]][1].data)
 
@@ -2862,7 +2882,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                             fibers = fibers[ifiber]
                             j = np.where(linestr['FIBER'] == fiber)
                             nj = len(j)
-                            if nj>0:
+                            if nj > 0:
                                 junk = np.nanmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
                                 jline = np.argmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
                                 struct['GAUSS'][:,ifiber,ichip,iline][i] = linestr['GPAR'][j][jline]
