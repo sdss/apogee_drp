@@ -462,7 +462,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         tcaljd = tcal['JD']-2.4e6
 
         flux = tcal['GAUSS'][:,:,:,:,0] * tcal['GAUSS'][:,:,:,:,2]**2
-        import pdb; pdb.set_trace()
         for ichip in range(nchips):
             chip = chips[ichip]
 
@@ -479,9 +478,53 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            ax.scatter(tcaljd, flux[:, ichip, 0, :] / tcal['NREAD']*10.0, marker='*', s=60, edgecolors='purple', color='white', alpha=alpha)#, label='Fiber 290')
-            ax.scatter(tcaljd, flux[:, ichip, 2, :] / tcal['NREAD']*10.0, marker='^', s=30, edgecolors='darkorange', color='white', alpha=alpha)#, label='Fiber 150')
-            ax.scatter(tcaljd, flux[:, ichip, 4, :]  / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='green', color='white', alpha=alpha)#, label='Fiber 10')
+            ax.scatter(tcaljd, flux[:, 0, ichip, 0] / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='darkred', color='white', alpha=alpha)#, label='Fiber 290')
+            ax.scatter(tcaljd, flux[:, 0, ichip, 1] / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='red', color='white', alpha=alpha)#, label='Fiber 150')
+            ax.scatter(tcaljd, flux[:, 0, ichip, 2] / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='gold', color='white', alpha=alpha)#, label='Fiber 150')
+            ax.scatter(tcaljd, flux[:, 0, ichip, 3] / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='yellowgreen', color='white', alpha=alpha)#, label='Fiber 150')
+            ax.scatter(tcaljd, flux[:, 0, ichip, 4]  / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='seagreen', color='white', alpha=alpha)#, label='Fiber 10')
+
+            ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
+            #ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
+
+        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+    # uneflux.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/uneflux.png'
+    if (os.path.exists(plotfile) == False) | (clobber == True):
+        print("----> monitor: Making " + plotfile)
+
+        fig=plt.figure(figsize=(28,14))
+        ymin = np.array([-4000, -3500, -3000])
+        ymax = np.array([380000, 320000, 130000]) 
+
+        ucal = allcal[une]
+        ucaljd = ucal['JD']-2.4e6
+
+        flux = ucal['GAUSS'][:,:,:,:,0] * ucal['GAUSS'][:,:,:,:,2]**2
+        for ichip in range(nchips):
+            chip = chips[ichip]
+
+            ax = plt.subplot2grid((nchips,1), (ichip,0))
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(ymin[ichip], ymax[ichip])
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+            ax.set_ylabel(r'Line Flux')
+            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+            ax.scatter(ucaljd, flux[:, 0, ichip, 0] / ucal['NREAD']*10.0, marker='o', s=30, edgecolors='darkred', color='white', alpha=alpha)#, label='Fiber 290')
+            ax.scatter(ucaljd, flux[:, 0, ichip, 1] / ucal['NREAD']*10.0, marker='o', s=30, edgecolors='red', color='white', alpha=alpha)#, label='Fiber 150')
+            ax.scatter(ucaljd, flux[:, 0, ichip, 2] / ucal['NREAD']*10.0, marker='o', s=30, edgecolors='gold', color='white', alpha=alpha)#, label='Fiber 150')
+            ax.scatter(ucaljd, flux[:, 0, ichip, 3] / ucal['NREAD']*10.0, marker='o', s=30, edgecolors='yellowgreen', color='white', alpha=alpha)#, label='Fiber 150')
+            ax.scatter(ucaljd, flux[:, 0, ichip, 4]  / ucal['NREAD']*10.0, marker='o', s=30, edgecolors='seagreen', color='white', alpha=alpha)#, label='Fiber 10')
 
             ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
             #ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
