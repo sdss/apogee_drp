@@ -449,13 +449,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         fig = plt.figure(figsize=(28,16))
         ymax = 44000
         ymin = 0 - ymax*0.05
+        yspan = ymax - ymin
         if instrument == 'apogee-s': yr = [-1000, 100000]
 
         gdcal = allcal[qrtz]
         caljd = gdcal['JD']-2.4e6
         t = Time(gdcal['JD'], format='jd')
         years = np.unique(np.floor(t.byear))
-        import pdb; pdb.set_trace()
+        nyears = len(years)
 
         for ichip in range(nchips):
             chip = chips[ichip]
@@ -478,6 +479,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
             ax.set_ylabel(r'Median Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+            for year in years:
+                t = Time(years[i], format='byear')
+                ax.axvline(x=t.jd-2.4e6, color='k')
+                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.01, str(int(round(year))), fontsize=fsz, ha='center')
 
             for ifib in range(nplotfibs):
                 yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
