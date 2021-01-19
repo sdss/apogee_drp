@@ -340,6 +340,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     thar, = np.where(allcal['THAR'] == 1)
     une, = np.where(allcal['UNE'] == 1)
     qrtz, = np.where(allcal['QRTZ'] == 1)
+    dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1400></A>\n')
@@ -403,6 +404,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     axmajlen = 7
     axminlen = 3.5
     alf = 0.6
+    markersz = 7
+    colors = np.array(['salmon', 'limegreen', 'gold', 'dodgerblue', 'orchid'])
+    fibers = np.array([10, 80, 150, 220, 290])
+    nplotfibs = len(fibers)
 
     # qflux.png
     plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
@@ -414,14 +419,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         ymin = 0 - ymax*0.05
         if instrument == 'apogee-s': yr = [-1000, 100000]
 
-        qcal = allcal[qrtz]
-        qcaljd = qcal['JD']-2.4e6
+        gdcal = allcal[qrtz]
+        caljd = gdcal['JD']-2.4e6
 
         for ichip in range(nchips):
             chip = chips[ichip]
 
-            minjd = np.min(qcaljd)
-            maxjd = np.max(qcaljd)
+            minjd = np.min(caljd)
+            maxjd = np.max(caljd)
             jdspan = maxjd - minjd
             xmin = minjd-jdspan*0.02
             xmax = maxjd+jdspan*0.10
@@ -439,21 +444,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Median Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 10]  / qcal['NREAD']*10.0, marker='o', s=30, edgecolors='orange', color='white', alpha=alf, label='Fiber 10')
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=30, edgecolors='orchid', color='white', alpha=alf, label='Fiber 150')
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 290] / qcal['NREAD']*10.0, marker='*', s=60, edgecolors='darkred', color='white', alpha=alf, label='Fiber 290')
+            for ifib in range(nplotfibs):
+                yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
+                ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
             ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
-            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz, edgecolor='k')
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k')
 
         fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
     # tharflux.png
-    markersz = 7
-    colors = np.array(['darkred', 'limegreen', 'orchid', 'dodgerblue', 'orange'])[::-1]
-    fibers = np.array(['10', '80', '150', '220', '290'])
     plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
@@ -462,10 +464,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         ymax = np.array([510000, 58000, 11000]) 
         ymin = 0 - ymax*0.05
 
-        tcal = allcal[thar]
-        tcaljd = tcal['JD']-2.4e6
-
+        gdcal = allcal[thar]
+        caljd = gdcal['JD']-2.4e6
         flux = tcal['GAUSS'][:,:,:,:,0] * tcal['GAUSS'][:,:,:,:,2]**2
+
         for ichip in range(nchips):
             chip = chips[ichip]
 
@@ -482,9 +484,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            for iline in range(5):
-                yvals = flux[:, 0, ichip, iline] / tcal['NREAD']*10.0
-                ax.scatter(tcaljd, yvals, marker='o', s=markersz, color=colors[iline], alpha=alf, label='Fiber ' + fibers[iline])
+            for ifib in range(nplotsfibs):
+                yvals = flux[:, 0, ichip, fibers[ifib]] / gdcal['NREAD']*10.0
+                ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
             ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k')
@@ -502,8 +504,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         ymax = np.array([40000, 3000, 7700])
         ymin = 0 - ymax*0.05
 
-        ucal = allcal[une]
-        ucaljd = ucal['JD']-2.4e6
+        gdcal = allcal[une]
+        caljd = gdcal['JD']-2.4e6
 
         flux = ucal['GAUSS'][:,:,:,:,0] * ucal['GAUSS'][:,:,:,:,2]**2
         for ichip in range(nchips):
@@ -522,9 +524,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            for iline in range(5):
-                yvals = flux[:, 0, ichip, iline] / ucal['NREAD']*10.0
-                ax.scatter(ucaljd, yvals, marker='o', s=markersz, color=colors[iline], alpha=alf, label='Fiber ' + fibers[iline])
+            for ifib in range(nplotsfibs):
+                yvals = flux[:, 0, ichip, fibers[ifib]] / gdcal['NREAD']*10.0
+                ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
             ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k')
@@ -542,12 +544,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         ymax = 20000
         ymin = 0 - ymax*0.05
 
-        # Get long term trends from dome flats
-        # Append together the individual summary files
-        # find the domeflats
-        dome = np.where(allexp['IMAGETYP'] == 'DomeFlat')
-        dcal = allexp[dome]
-        dcaljd = dcal['JD']-2.4e6
+        gdcal = allexp[dome]
+        caljd = gdcal['JD']-2.4e6
         for ichip in range(nchips):
             chip = chips[ichip]
 
@@ -566,9 +564,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             w = np.nanmedian(dcal['MED'][ichip, :])
 
-            ax.scatter(dcaljd, dcal['MED'][:, ichip, 10], marker='o', s=30, edgecolors='orange', color='white', alpha=alf, label='Fiber 10')
-            ax.scatter(dcaljd, dcal['MED'][:, ichip, 150], marker='^', s=30, edgecolors='orchid', color='white', alpha=alf, label='Fiber 150')
-            ax.scatter(dcaljd, dcal['MED'][:, ichip, 290], marker='*', s=60, edgecolors='darkred', color='white', alpha=alf, label='Fiber 290')
+            for ifib in range(nplotsfibs):
+                yvals = gdcal['MED'][:, ichip, fibers[ifib]]
+                ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
             ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k')
