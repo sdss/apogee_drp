@@ -530,6 +530,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
+            print('fuck')
             for year in years:
                 t = Time(year, format='byear')
                 ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
