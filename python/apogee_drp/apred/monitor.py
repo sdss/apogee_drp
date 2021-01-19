@@ -566,6 +566,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             w = np.nanmedian(dcal['MED'][ichip, :])
 
+            import pdb; pdb.set_trace()
             ax.scatter(dcaljd, dcal['MED'][ichip, 10], marker='o', s=30, edgecolors='orange', color='white', alpha=alf, label='Fiber 10')
             ax.scatter(dcaljd, dcal['MED'][ichip, 150], marker='^', s=30, edgecolors='orchid', color='white', alpha=alf, label='Fiber 150')
             ax.scatter(dcaljd, dcal['MED'][ichip, 290], marker='*', s=60, edgecolors='darkred', color='white', alpha=alf, label='Fiber 290')
