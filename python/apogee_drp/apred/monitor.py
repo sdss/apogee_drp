@@ -479,8 +479,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-    fibers = np.array([10,80,150,220,290])
-
             ax.scatter(tcaljd, flux[:, 0, ichip, 0] / tcal['NREAD']*10.0, marker='o', s=markersz, color='darkred', alpha=alpha, label='Fiber 10')#, edgecolors='darkred')
             ax.scatter(tcaljd, flux[:, 0, ichip, 1] / tcal['NREAD']*10.0, marker='o', s=markersz, color='red', alpha=alpha, label='Fiber 80')#, edgecolors='red')
             ax.scatter(tcaljd, flux[:, 0, ichip, 2] / tcal['NREAD']*10.0, marker='o', s=markersz, color='gold', alpha=alpha, label='Fiber 150')#, edgecolors='gold')
