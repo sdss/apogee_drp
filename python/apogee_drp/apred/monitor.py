@@ -485,7 +485,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.scatter(tcaljd, flux[:, 0, ichip, 3] / tcal['NREAD']*10.0, marker='o', s=markersz, color='yellowgreen', alpha=alpha, label='Fiber 220')#, edgecolors='yellowgreen')
             ax.scatter(tcaljd, flux[:, 0, ichip, 4]  / tcal['NREAD']*10.0, marker='o', s=markersz, color='seagreen', alpha=alpha, label='Fiber 290')#, edgecolors='seagreen')
 
-            ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
+            ax.text(0.95,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top')
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k')
 
         fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
