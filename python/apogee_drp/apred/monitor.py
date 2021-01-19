@@ -756,7 +756,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.set_ylabel(r'FWHM ($\rm \AA$)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-                w = np.nanmedian(2.354 * gdcal['GAUSS'][:, iline, ichip, :, 2])
+                w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
                 ymin = w * 0.8
                 ymax = w * 1.25
                 yspan = ymax - ymin
@@ -768,10 +768,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
 
                 for ifib in range(nplotfibs):
-                    w = np.nanmedian(2.354 * gdcal['GAUSS'][:, iline, ichip, ifib, 2])
+                    w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2])
                     ax.axhline(y=w, color=colors[ifib], linewidth=2, zorder=2)
                     ax.axhline(y=w, color='k', linewidth=3, zorder=1)
-                    yvals = 2.354 * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
+                    yvals = 2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
                     ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]), zorder=3)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
