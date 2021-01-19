@@ -439,9 +439,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Median Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 290] / qcal['NREAD']*10.0, marker='*', s=60, edgecolors='purple', color='white', alpha=alf, label='Fiber 290')
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=30, edgecolors='darkorange', color='white', alpha=alf, label='Fiber 150')
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 10]  / qcal['NREAD']*10.0, marker='o', s=30, edgecolors='green', color='white', alpha=alf, label='Fiber 10')
+            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 10]  / qcal['NREAD']*10.0, marker='o', s=30, edgecolors='orange', color='white', alpha=alf, label='Fiber 10')
+            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=30, edgecolors='orchid', color='white', alpha=alf, label='Fiber 150')
+            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 290] / qcal['NREAD']*10.0, marker='*', s=60, edgecolors='darkred', color='white', alpha=alf, label='Fiber 290')
 
             ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz, edgecolor='k')
@@ -452,7 +452,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     # tharflux.png
     markersz = 7
-    colors = np.array(['darkred', 'orange', 'limegreen', 'dodgerblue', 'orchid'])[::-1]
+    colors = np.array(['darkred', 'limegreen', 'orchid', 'dodgerblue', 'orange'])[::-1]
     fibers = np.array(['10', '80', '150', '220', '290'])
     plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -533,6 +533,49 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         plt.savefig(plotfile)
         plt.close('all')
 
+    # dome.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/dome.png'
+    if (os.path.exists(plotfile) == False) | (clobber == True):
+        print("----> monitor: Making " + plotfile)
+
+        fig=plt.figure(figsize=(28,14))
+        ymax = 20000
+        ymin = 0 - ymax*0.05
+
+        # Get long term trends from dome flats
+        # Append together the individual summary files
+        # find the domeflats
+        dome = np.where(allexp['IMAGETYP'] == 'DomeFlat')
+        dcal = allexp[dome]
+        dcaljd = dcal['JD']-2.4e6
+        for ichip in range(nchips):
+            chip = chips[ichip]
+
+            ax = plt.subplot2grid((nchips,1), (ichip,0))
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(ymin[ichip], ymax[ichip])
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+            ax.set_ylabel(r'Median Flux')
+            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+            w = np.nanmedian(dcal['MED'][ichip, :])
+
+            ax.scatter(dcaljd, dcal['MED'][ichip, 10], marker='o', s=30, edgecolors='orange', color='white', alpha=alf, label='Fiber 10')
+            ax.scatter(dcaljd, dcal['MED'][ichip, 150], marker='^', s=30, edgecolors='orchid', color='white', alpha=alf, label='Fiber 150')
+            ax.scatter(dcaljd, dcal['MED'][ichip, 290], marker='*', s=60, edgecolors='darkred', color='white', alpha=alf, label='Fiber 290')
+
+            ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k')
+
+        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
 
     print("----> monitor done")
 
