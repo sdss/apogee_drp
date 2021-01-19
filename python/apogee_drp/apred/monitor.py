@@ -450,7 +450,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         plt.close('all')
 
     # tharflux.png
-    markersz = 10
+    markersz = 7
     plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
