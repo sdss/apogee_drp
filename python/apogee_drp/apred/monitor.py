@@ -438,6 +438,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
     fibers = np.array([10, 80, 150, 220, 290])
     nplotfibs = len(fibers)
+    years = np.array([2011, 2012, 2013, 2014
 
     ###############################################################################################
     # qflux.png
@@ -445,13 +446,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig = plt.figure(figsize=(28,14))
+        fig = plt.figure(figsize=(28,16))
         ymax = 44000
         ymin = 0 - ymax*0.05
         if instrument == 'apogee-s': yr = [-1000, 100000]
 
         gdcal = allcal[qrtz]
         caljd = gdcal['JD']-2.4e6
+        t = Time(gdcal['JD'], format='jd')
+        years = np.unique(np.floor(t.byear))
+        import pdb; pdb.set_trace()
 
         for ichip in range(nchips):
             chip = chips[ichip]
@@ -482,7 +486,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k')
 
-        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
+        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.93,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
