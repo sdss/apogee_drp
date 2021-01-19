@@ -507,7 +507,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         fig = plt.figure(figsize=(28,16))
         ymax = np.array([510000, 58000, 11000]) 
-        ymin = 0 - ymax*0.05
+        ymin = 0 - ymax * 0.05
         yspan = ymax - ymin
 
         gdcal = allcal[thar]
