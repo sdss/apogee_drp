@@ -387,6 +387,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<HR>\n')
 
     html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
+    html.write('<P> (horizontal lines are the medians across all fiber) </P>\n')
     html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200>></A>\n')
     html.write('<HR>\n')
 
