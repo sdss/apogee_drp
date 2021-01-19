@@ -455,7 +455,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         gdcal = allcal[qrtz]
         caljd = gdcal['JD']-2.4e6
         t = Time(gdcal['JD'], format='jd')
-        years = np.unique(np.floor(t.byear))
+        years = np.unique(np.floor(t.byear)) + 1
         nyears = len(years)
 
         for ichip in range(nchips):
