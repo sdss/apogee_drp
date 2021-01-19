@@ -451,7 +451,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     # tharflux.png
     markersz = 7
-    colors = np.array(['darkred', 'orange', 'limegreen', 'dodgerblue', 'orchid'])
+    colors = np.array(['darkred', 'orange', 'limegreen', 'dodgerblue', 'orchid'])[::-1]
     fibers = np.array(['10', '80', '150', '220', '290'])
     plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
