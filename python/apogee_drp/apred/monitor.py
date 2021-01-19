@@ -487,7 +487,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            for ifib in range(nplotsfibs):
+            for ifib in range(nplotfibs):
                 yvals = flux[:, 0, ichip, fibers[ifib]] / gdcal['NREAD']*10.0
                 ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
@@ -528,7 +528,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            for ifib in range(nplotsfibs):
+            for ifib in range(nplotfibs):
                 yvals = flux[:, 0, ichip, fibers[ifib]] / gdcal['NREAD']*10.0
                 ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
@@ -570,7 +570,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             w = np.nanmedian(dcal['MED'][ichip, :])
 
-            for ifib in range(nplotsfibs):
+            for ifib in range(nplotfibs):
                 yvals = gdcal['MED'][:, ichip, fibers[ifib]]
                 ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
