@@ -630,7 +630,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             w = np.nanmedian(gdcal['MED'][ichip, :])
 
-            ax.axvline(y=w, color='silver', linewidth=3)
+            ax.axhline(y=w, color='silver', linewidth=3)
 
             for ifib in range(nplotfibs):
                 yvals = gdcal['MED'][:, ichip, fibers[ifib]]
