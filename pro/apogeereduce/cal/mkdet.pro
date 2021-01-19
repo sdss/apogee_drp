@@ -29,7 +29,7 @@ pro mkdet,detid,linid
  ;; Does product already exist?
  print,'testing detector file: ',detfile
  if file_test(detfile) and not keyword_set(clobber) then begin
-   print,' Detector file: ', detfile+'.fits', ' already made'
+   print,' Detector file: ', detfile, ' already made'
    return
  endif
 

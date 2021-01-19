@@ -31,8 +31,8 @@ caldir = dirs.caldir
 ;; Is another process already creating file
 adarkfile = apogee_filename('Dark',num=i1,chip='a')
 darkdir = file_dirname(adarkfile)
-prefix = strmid(file_basename(adarkfile),0,1)
-darkfile = darkdir+'/'+prefix+'Dark'+string(format='("Dark-",i8.8)',i1) +'.tab'
+prefix = strmid(file_basename(adarkfile),0,2)
+darkfile = darkdir+'/'+prefix+string(format='("Dark-",i8.8)',i1) +'.tab'
 while file_test(darkfile+'.lock') do apwait,darkfile,10
 
 ;; Does file already exist?
