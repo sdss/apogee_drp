@@ -521,14 +521,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Line Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            ax.scatter(ucaljd, flux[:, 0, ichip, 0] / ucal['NREAD']*10.0, marker='o', s=30, edgecolors='darkred', color='white', alpha=alpha)#, label='Fiber 290')
-            ax.scatter(ucaljd, flux[:, 0, ichip, 1] / ucal['NREAD']*10.0, marker='o', s=30, edgecolors='red', color='white', alpha=alpha)#, label='Fiber 150')
-            ax.scatter(ucaljd, flux[:, 0, ichip, 2] / ucal['NREAD']*10.0, marker='o', s=30, edgecolors='gold', color='white', alpha=alpha)#, label='Fiber 150')
-            ax.scatter(ucaljd, flux[:, 0, ichip, 3] / ucal['NREAD']*10.0, marker='o', s=30, edgecolors='yellowgreen', color='white', alpha=alpha)#, label='Fiber 150')
-            ax.scatter(ucaljd, flux[:, 0, ichip, 4]  / ucal['NREAD']*10.0, marker='o', s=30, edgecolors='seagreen', color='white', alpha=alpha)#, label='Fiber 10')
+            for iline in range(5):
+                yvals = flux[:, 0, ichip, iline] / ucal['NREAD']*10.0
+                ax.scatter(ucaljd, yvals, marker='o', s=markersz, color=colors[iline], alpha=alf, label='Fiber ' + fibers[iline])
 
-            ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
-            #ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
+            ax.text(0.96,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip)
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, fontsize=fsz, edgecolor='k')
 
         fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
