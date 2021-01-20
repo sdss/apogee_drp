@@ -552,6 +552,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
 
             for ichip in range(nchips):
+                import pdb; pdb.set_trace()
                 yvals = gdcal['FLUX'][:, ichip, 300-i+1] / 10000
                 ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
                 ax.text(0.995, 0.50-(0.1*ichip), chips[ichip].capitalize()+' Chip', c=colors2[ichip], 
