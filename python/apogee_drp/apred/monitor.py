@@ -1004,9 +1004,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         cb1 = colorbar(sc2, cax=cax, orientation="vertical")
         cax.minorticks_on()
         cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        ax2.text(1.06, 0.5, r'Zeropoint / Cloudiness',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
+        ax2.text(1.066, 0.5, r'Zeropoint / Cloudiness',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
 
-        fig.subplots_adjust(left=0.05,right=0.95,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+        fig.subplots_adjust(left=0.045,right=0.945,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
