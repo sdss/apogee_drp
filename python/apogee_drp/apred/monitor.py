@@ -986,11 +986,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Sky Brightness')
             ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
-        ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='plasma', alpha=alf, vmin=0, vmax=90)
-        gd, = np.where((allsci['ZERO'] != -np.inf) & (np.isnan(allsci['ZERO']) is False) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
+        ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='copper', alpha=alf, vmin=0, vmax=90)
         gd, = np.where((allsci['ZERO'] != -np.inf) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
-        print(len(gd))
-        ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], cmap='plasma', alpha=alf, vmin=17, vmax=19)
+        ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], cmap='copper', alpha=alf, vmin=17, vmax=19)
 
         fig.subplots_adjust(left=0.06,right=0.92,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
         plt.savefig(plotfile)
