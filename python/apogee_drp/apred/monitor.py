@@ -500,6 +500,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     markersz = 7
     colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
     colors1 = np.array(['k', 'salmon', 'cornflowerblue'])
+    colors2 = np.array(['cornflowerblue', 'salmon', 'mediumspringgreen'])
     fibers = np.array([10, 80, 150, 220, 290])
     nplotfibs = len(fibers)
     #years = np.array([2011, 2012, 2013, 2014
@@ -548,9 +549,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
                 ax.text(t.jd-2.4e6, ymax+yspan*0.02, str(int(round(year))), ha='center')
 
-            import pdb; pdb.set_trace()
-            yvals = gdcal['FLUX'][1,300-ifiber+1]
-            ax.scatter(caljd, yvals, marker='o', s=markersz, c='mediumspringgreen', alpha=alf)
+            for ichip in range(nchips):
+                chip = chips[ichip]
+                yvals = gdcal['FLUX'][:, ichip, 300-ifiber+1]
+                ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf, label=chip.capitalize()+' Chip')
 
             fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
