@@ -531,7 +531,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             fig = plt.figure(figsize=(30,8))
             med = np.nanmedian(gdcal['FLUX'][:, 1, 300-ifiber])
-            ymax = med + 35000
+            ymax = 5
             ymin = 0 - ymax * 0.05
             yspan = ymax - ymin
 
@@ -545,7 +545,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_xlabel(r'JD - 2,400,000')
-            ax.set_ylabel(r'Flux')
+            ax.set_ylabel(r'Flux / 10,000')
 
             for year in years:
                 t = Time(year, format='byear')
@@ -554,7 +554,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             for ichip in range(nchips):
                 chip = chips[ichip]
-                yvals = gdcal['FLUX'][:, ichip, 300-ifiber]
+                yvals = gdcal['FLUX'][:, ichip, 300-ifiber] / 10000
                 ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
                 ax.text(0.99, 0.50-(0.1*ichip), chip.capitalize()+' Chip', c=colors2[ichip], fontsize=fsz*0.9, 
                         va='center', ha='right', transform=ax.transAxes)
