@@ -395,7 +395,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#quartz> Cal channel quartz</a>\n')
-    html.write('<li> <a href=' + instrument + '/fiber/fiber.html>Individual fiber throughputs</a>\n')
+    html.write('<li> <a href=' + instrument + '/fiber/fiber.html target="_blank">Individual fiber throughputs</a>\n')
     html.write('<li> <a href=#tharflux> Cal channel ThAr</a>\n')
     html.write('<li> <a href=#uneflux> Cal channel UNe</a>\n')
     html.write('<li> <a href=#dome>Dome flats</a>\n')
