@@ -529,7 +529,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + plotfile)
 
-            fig = plt.figure(figsize=(30,8))
+            fig = plt.figure(figsize=(28,7.5))
             med = np.nanmedian(gdcal['FLUX'][:, 1, 300-ifiber])
             ymax = 5
             ymin = 0 - ymax * 0.05
