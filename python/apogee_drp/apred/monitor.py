@@ -545,7 +545,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_xlabel(r'JD - 2,400,000')
-            ax.text(-0.03, 0.5, r'Flux / 10,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
+            ax.text(-0.02, 0.5, r'Flux / 10,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
 
             for year in years:
                 t = Time(year, format='byear')
