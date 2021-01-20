@@ -469,6 +469,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
     html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=1300></A>\n')
 
+    html.write('<BR><BR><BR><BR>')
+    html.write('</BODY></HTML>\n')
+
     html.close()
 
     ###############################################################################################
