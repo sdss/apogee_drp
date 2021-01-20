@@ -530,7 +530,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             fig = plt.figure(figsize=(30,8))
             med = np.nanmedian(gdcal['FLUX'][:, 1, 300-ifiber])
-            ymax = med-5000
+            ymax = med + 5000
             ymin = 0 - ymax * 0.05
             yspan = ymax - ymin
 
