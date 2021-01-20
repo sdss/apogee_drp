@@ -914,48 +914,82 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             plt.savefig(plotfile)
             plt.close('all')
 
+        ###############################################################################################
+        # biassig.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/biassig.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + plotfile)
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 1000.0
+            ymin = 0.1
+            yspan = ymax - ymin
+
+            gdcal = alldark[dark]
+            caljd = gdcal['JD'] - 2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == 1: ax.set_ylabel(r'$\sigma$ (column median)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                for year in years:
+                    t = Time(year, format='byear')
+                    ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.25, str(int(round(year))), ha='center')
+
+                for ibias in range(3):
+                    ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, mec=colors1[ibias], mfc=colors1[ibias], linestyle='')
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
+                #if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
     ###############################################################################################
-    # biassig.png
-    plotfile = specdir5 + 'monitor/' + instrument + '/biassig.png'
+    # moonsky.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/moonsky.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
         fig = plt.figure(figsize=(30,14))
-        ymax = 1000.0
-        ymin = 0.1
+        ymax = 0
+        ymin = 1
         yspan = ymax - ymin
 
-        gdcal = alldark[dark]
-        caljd = gdcal['JD'] - 2.4e6
+        ax1 = plt.subplot2grid((2,1), (0,0))
+        ax2 = plt.subplot2grid((2,1), (1,0))
+        axes = [ax1, ax2]
 
-        for ichip in range(nchips):
-            chip = chips[ichip]
-
-            ax = plt.subplot2grid((nchips,1), (ichip,0))
+        for ax in axes:
             ax.set_xlim(xmin, xmax)
             ax.set_ylim(ymin, ymax)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-            if ichip == 1: ax.set_ylabel(r'$\sigma$ (column median)')
-            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            ax.set_xlabel(r'Moon Phase')
+            ax.set_ylabel(r'Sky Brightness')
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
-            for year in years:
-                t = Time(year, format='byear')
-                ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.25, str(int(round(year))), ha='center')
+        ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][1], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
+        #ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
 
-            for ibias in range(3):
-                ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, mec=colors1[ibias], mfc=colors1[ibias], linestyle='')
-
-            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-            #if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
-
-        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
