@@ -986,7 +986,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Sky Brightness')
             ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
-        sc1 = ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='rainbow_r', alpha=0.8, vmin=0, vmax=90.1)
+        sc1 = ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='rainbow', alpha=0.8, vmin=0, vmax=90.01)
         gd, = np.where((allsci['ZERO'] != -np.inf) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
         sc2 = ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], cmap='rainbow', alpha=0.8, vmin=17, vmax=19)
 
