@@ -894,7 +894,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-            ax.set_ylabel(r'Mean (column median)')
+            if ichip == 1: ax.set_ylabel(r'Mean (column median)')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
             for year in years:
