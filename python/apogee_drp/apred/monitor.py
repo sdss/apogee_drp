@@ -531,7 +531,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         ymin = 0 - ymax * 0.05
         yspan = ymax - ymin
 
-        for i in range(5):
+        for i in range(300):
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
             if (os.path.exists(plotfile) == False) | (clobber == True):
                 print("----> monitor: Making " + plotfile)
