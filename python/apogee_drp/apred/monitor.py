@@ -515,6 +515,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     jdspan = maxjd - minjd
     xmin = minjd - jdspan * 0.01
     xmax = maxjd + jdspan * 0.10
+    xspan = xmax-xmin
 
     ###########################################################################################
     # Individual fiber throughput plots
@@ -554,7 +555,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for ichip in range(nchips):
                 chip = chips[ichip]
                 yvals = gdcal['FLUX'][:, ichip, 300-ifiber]
-                ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf, label=chip.capitalize()+' Chip')
+                ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                ax.text(0.98, 0.60-0.1*i,chip.capitalize()+' Chip', c=colors2[ichip], fontsize=fsz, va='center', ha='right')
 
             fig.subplots_adjust(left=0.06,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
