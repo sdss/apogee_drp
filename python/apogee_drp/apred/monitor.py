@@ -560,8 +560,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 for ichip in range(nchips):
                     yvals = gdcal['FLUX'][:, ichip, 299-i] / 10000
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
-                    ax.text(0.995, 0.50-(0.1*ichip), chips[ichip].capitalize()+' Chip', c=colors2[ichip], 
-                            fontsize=fsz*0.9, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
+                    ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
+                            fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
 
                 fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
