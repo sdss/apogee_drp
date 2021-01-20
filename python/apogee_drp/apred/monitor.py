@@ -870,7 +870,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     ###############################################################################################
     # biasmean.png
-    colors1 = np.array(['mediumspringgreen', 'salmon', 'darkorchid'])
+    colors1 = np.array(['mediumspringgreen', 'salmon', 'slategray'])
     plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
