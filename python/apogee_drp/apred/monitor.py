@@ -470,6 +470,24 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.close()
 
     ###############################################################################################
+    # HTML for individual fiber throughput plots
+    fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
+    if os.path.exists(fibdir) is False: os.mkdir(fibdir)
+    fhtml = open(fibdir + 'fiber.html', 'w')
+    tit = 'APOGEE-N Fiber Throughput'
+    if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput'
+    fhtml.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
+    fhtml.write('<H1>' + tit + '</H1>\n')
+    fhtml.write('<TABLE BORDER=2>\n')
+
+    for ifiber in range(300):
+        cfib = str(ifiber+1).zfill(3)
+        plotfile = 'fiber' + cfib + '.png'
+        fhtml.write('<TR><TD>' + cfib + '<TD> <A HREF=' + plotfile + ' target="_blank"><IMG SRC=' + plotfile + ' WIDTH=1000></A>\n')
+    fhtml.write('</TABLE></BODY></HTML>\n')
+    fhtml.close()
+
+    ###############################################################################################
     # Set up some basic plotting parameters
     matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
