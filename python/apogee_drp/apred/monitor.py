@@ -481,6 +481,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     alf = 0.6
     markersz = 7
     colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
+    colors1 = np.array(['k', 'salmon', 'cornflowerblue'])
     fibers = np.array([10, 80, 150, 220, 290])
     nplotfibs = len(fibers)
     #years = np.array([2011, 2012, 2013, 2014
@@ -870,7 +871,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         ###############################################################################################
         # biasmean.png
-        colors1 = np.array(['k', 'salmon', 'cornflowerblue'])
         plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + plotfile)
