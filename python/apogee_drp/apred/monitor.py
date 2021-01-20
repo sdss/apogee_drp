@@ -985,7 +985,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.text(-0.06, 0.5, 'Sky Brightness', ha='right', va='center', rotation=90, transform=ax.transAxes)
+            ax.text(-0.04, 0.5, 'Sky Brightness', ha='right', va='center', rotation=90, transform=ax.transAxes)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
         sc1 = ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='rainbow', alpha=0.8, vmin=0, vmax=90.01)
