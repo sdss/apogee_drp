@@ -538,7 +538,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         for i in range(300):
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
             if (os.path.exists(plotfile) == False) | (clobber == True):
-                print("----> monitor: Making " + plotfile)
+                print("----> monitor: Making " + os.path.basename(plotfile))
 
                 fig = plt.figure(figsize=(28,7.5))
                 ax = plt.subplot2grid((1,1), (0,0))
@@ -572,7 +572,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # qflux.png
         plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
             ymax = 44000
@@ -623,7 +623,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # tharflux.png
         plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
             ymax = np.array([510000, 58000, 11000]) 
@@ -673,7 +673,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # uneflux.png
         plotfile = specdir5 + 'monitor/' + instrument + '/uneflux.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
             ymax = np.array([40000, 3000, 7700])
@@ -723,7 +723,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # dome.png
         plotfile = specdir5 + 'monitor/' + instrument + '/dome.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
             ymax = 13000
@@ -775,7 +775,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # zero.png
         plotfile = specdir5 + 'monitor/' + instrument + '/zero.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,8))
             ymax = 21
@@ -811,7 +811,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # tpos.png
         plotfile = specdir5 + 'monitor/' + instrument + '/tpos.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
 
@@ -862,7 +862,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         for iline in range(2):
             plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
             if (os.path.exists(plotfile) == False) | (clobber == True):
-                print("----> monitor: Making " + plotfile)
+                print("----> monitor: Making " + os.path.basename(plotfile))
 
                 fig = plt.figure(figsize=(30,14))
 
@@ -916,7 +916,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # trace.png
         plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,12))
             ymax = np.nanmedian(allepsf['CENT']) + 1
@@ -957,7 +957,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # biasmean.png
         plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
             ymax = 1000.0
@@ -1002,7 +1002,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # biassig.png
         plotfile = specdir5 + 'monitor/' + instrument + '/biassig.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
             ymax = 1000.0
@@ -1047,7 +1047,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # moonsky.png
         plotfile = specdir5 + 'monitor/' + instrument + '/moonsky.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(31,12))
             ymax = 11
