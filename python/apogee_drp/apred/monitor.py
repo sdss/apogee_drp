@@ -986,6 +986,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Sky Brightness')
             ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
+        import pdb; pdb.set_trace()
         ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][1], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
         #ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
 
