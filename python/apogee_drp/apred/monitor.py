@@ -500,7 +500,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     markersz = 7
     colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
     colors1 = np.array(['k', 'salmon', 'cornflowerblue'])
-    colors2 = np.array(['dodgerblue', 'orangered', 'mediumseagreen'])
+    colors2 = np.array(['dodgerblue', 'seagreen', 'tomato'])
     fibers = np.array([10, 80, 150, 220, 290])
     nplotfibs = len(fibers)
     #years = np.array([2011, 2012, 2013, 2014
