@@ -547,7 +547,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_xlabel(r'JD - 2,400,000')
             ax.text(-0.02, 0.5, r'Flux / 10,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
 
-            for iyear in (nyears):
+            for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                 ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
 
