@@ -521,7 +521,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     gd, = np.where(allcal['QRTZ'] > 0)                                                       
     gdcal = allcal[gd]
     caljd = gdcal['JD'] - 2.4e6
-    for ifiber in range(5):
+    for i in range(5):
+        ifiber = i + 1
         cfib = str(ifiber+1).zfill(3)
         plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + cfib + '.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -552,7 +553,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for ichip in range(nchips):
                 chip = chips[ichip]
                 import pdb; pdb.set_trace()
-                yvals = gdcal['FLUX'][:, ichip, 300-ifiber+1]
+                yvals = gdcal['FLUX'][:, ichip, 300-ifiber]
                 ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf, label=chip.capitalize()+' Chip')
 
             fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
