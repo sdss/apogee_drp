@@ -986,7 +986,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Sky Brightness')
             ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
-        ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='cool', edgecolors='k', alpha=alf)
+        ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='cool', alpha=alf)
         #ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
 
         fig.subplots_adjust(left=0.06,right=0.92,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
