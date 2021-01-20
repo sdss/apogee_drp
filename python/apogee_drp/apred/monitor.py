@@ -987,8 +987,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
         ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='gnuplot2', alpha=alf)
-        gd, = np.where((np.isnan(allsci['ZERO']) is False) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
-        import pdb; pdb.set_trace()
+        gd, = np.where((np.isinf(allsci['ZERO']) is False) & (np.isnan(allsci['ZERO']) is False) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
         ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], cmap='gnuplot2', alpha=alf)
 
         fig.subplots_adjust(left=0.06,right=0.92,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
