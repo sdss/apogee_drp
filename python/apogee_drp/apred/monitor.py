@@ -500,7 +500,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     markersz = 7
     colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
     colors1 = np.array(['k', 'salmon', 'cornflowerblue'])
-    colors2 = np.array(['cornflowerblue', 'salmon', 'mediumspringgreen'])
+    colors2 = np.array(['dodgerblue', 'orangered', 'mediumseagreen'])
     fibers = np.array([10, 80, 150, 220, 290])
     nplotfibs = len(fibers)
     #years = np.array([2011, 2012, 2013, 2014
@@ -529,13 +529,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             print("----> monitor: Making " + plotfile)
 
             fig = plt.figure(figsize=(30,8))
-            ymax = 21
-            ymin = 10
+            med = np.nanmedian(gdcal['FLUX'][:, 1, 300-ifiber])
+            ymax = med-5000
+            ymin = 0 - ymax * 0.05
             yspan = ymax - ymin
 
             ax = plt.subplot2grid((1,1), (0,0))
             ax.set_xlim(xmin, xmax)
-            #ax.set_ylim(ymin, ymax)
+            ax.set_ylim(ymin, ymax)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
