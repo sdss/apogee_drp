@@ -965,7 +965,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
 
-        fig = plt.figure(figsize=(30,14))
+        fig = plt.figure(figsize=(32,12))
         ymax = 11
         ymin = 17
         yspan = ymax - ymin
@@ -989,7 +989,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
         #ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
 
-        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+        fig.subplots_adjust(left=0.06,right=0.92,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
