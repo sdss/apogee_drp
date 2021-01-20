@@ -34,7 +34,8 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 # import pdb; pdb.set_trace()
 
 ''' MONITOR: Instrument monitoring plots and html '''
-def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=False, makeplots=True):
+def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=False, makeplots=True,
+            makefiberplots=True):
 
     print("----> monitor starting")
 
@@ -520,46 +521,47 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     xmax = maxjd + jdspan * 0.10
     xspan = xmax-xmin
 
-    ###########################################################################################
-    # Individual fiber throughput plots
-    gd, = np.where(allcal['QRTZ'] > 0)                                                       
-    gdcal = allcal[gd]
-    caljd = gdcal['JD'] - 2.4e6
-    ymax = 5
-    ymin = 0 - ymax * 0.05
-    yspan = ymax - ymin
+    if makefiberplots is True
+        ###########################################################################################
+        # Individual fiber throughput plots
+        gd, = np.where(allcal['QRTZ'] > 0)                                                       
+        gdcal = allcal[gd]
+        caljd = gdcal['JD'] - 2.4e6
+        ymax = 5
+        ymin = 0 - ymax * 0.05
+        yspan = ymax - ymin
 
-    for i in range(5):
-        plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + plotfile)
+        for i in range(5):
+            plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
+            if (os.path.exists(plotfile) == False) | (clobber == True):
+                print("----> monitor: Making " + plotfile)
 
-            fig = plt.figure(figsize=(28,7.5))
-            ax = plt.subplot2grid((1,1), (0,0))
-            ax.set_xlim(xmin, xmax)
-            ax.set_ylim(ymin, ymax)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_xlabel(r'JD - 2,400,000')
-            ax.text(-0.02, 0.5, r'Flux / 10,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
+                fig = plt.figure(figsize=(28,7.5))
+                ax = plt.subplot2grid((1,1), (0,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.set_xlabel(r'JD - 2,400,000')
+                ax.text(-0.02, 0.5, r'Flux / 10,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
 
-            for iyear in range(nyears):
-                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
 
-            for ichip in range(nchips):
-                yvals = gdcal['FLUX'][:, ichip, 299-i] / 10000
-                ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
-                ax.text(0.995, 0.50-(0.1*ichip), chips[ichip].capitalize()+' Chip', c=colors2[ichip], 
-                        fontsize=fsz*0.9, va='center', ha='right', transform=ax.transAxes)
+                for ichip in range(nchips):
+                    yvals = gdcal['FLUX'][:, ichip, 299-i] / 10000
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                    ax.text(0.995, 0.50-(0.1*ichip), chips[ichip].capitalize()+' Chip', c=colors2[ichip], 
+                            fontsize=fsz*0.9, va='center', ha='right', transform=ax.transAxes)
 
-            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
+                fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+                plt.savefig(plotfile)
+                plt.close('all')
 
     if makeplots is True:
         ###########################################################################################
@@ -594,11 +596,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-                for year in years:
-                    t = Time(year, format='byear')
-                    ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: 
-                        ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
@@ -646,11 +646,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.set_ylabel(r'Line Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-                for year in years:
-                    t = Time(year, format='byear')
-                    ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: 
-                        ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.025, str(int(round(year))), ha='center')
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
@@ -698,11 +696,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.set_ylabel(r'Line Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-                for year in years:
-                    t = Time(year, format='byear')
-                    ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: 
-                        ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.025, str(int(round(year))), ha='center')
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
@@ -749,10 +745,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-                for year in years:
-                    t = Time(year, format='byear')
-                    ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 w = np.nanmedian(gdcal['MED'][:, ichip, :])
                 ax.axhline(y=w, color='k', linewidth=3, zorder=1)
@@ -796,10 +791,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Zeropoint (mag.)')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            for year in years:
-                t = Time(year, format='byear')
-                ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                ax.text(t.jd-2.4e6, ymax+yspan*0.02, str(int(round(year))), ha='center')
+            for iyear in range(nyears):
+                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
 
             t = Time(allsci['DATEOBS'], format='fits')
             jd = t.jd - 2.4e6
@@ -841,10 +835,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 yspan = ymax - ymin
                 ax.set_ylim(ymin, ymax)
 
-                for year in years:
-                    t = Time(year, format='byear')
-                    ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
@@ -893,10 +886,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     yspan = ymax - ymin
                     ax.set_ylim(ymin, ymax)
 
-                    for year in years:
-                        t = Time(year, format='byear')
-                        ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                        if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
+                    for iyear in range(nyears):
+                        ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                        if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                     for ifib in range(nplotfibs):
                         w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2])
@@ -946,10 +938,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.set_ylabel(r'Trace Center')
 
-            for year in years:
-                t = Time(year, format='byear')
-                ax1.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                ax1.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
+            for iyear in range(nyears):
+                ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
             ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, c='cyan', edgecolors='k', alpha=alf)
             ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, c='cyan', edgecolors='k', alpha=alf)
@@ -988,10 +979,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == 1: ax.set_ylabel(r'Mean (column median)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-                for year in years:
-                    t = Time(year, format='byear')
-                    ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.25, str(int(round(year))), ha='center')
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 for ibias in range(3):
                     ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
@@ -1034,10 +1024,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == 1: ax.set_ylabel(r'$\sigma$ (column median)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-                for year in years:
-                    t = Time(year, format='byear')
-                    ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.25, str(int(round(year))), ha='center')
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 for ibias in range(3):
                     ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
