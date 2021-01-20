@@ -556,7 +556,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 yvals = gdcal['FLUX'][:, ichip, 300-ifiber]
                 ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf, label=chip.capitalize()+' Chip')
 
-            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.06,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
