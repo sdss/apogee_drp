@@ -372,6 +372,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
     ###############################################################################################
+    # Find the different cals
+    thar, = np.where(allcal['THAR'] == 1)
+    une, = np.where(allcal['UNE'] == 1)
+    qrtz, = np.where(allcal['QRTZ'] == 1)
+    dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
+    dark, = np.where(alldark['EXPTYPE'] == 'DARK')
+
+    ###############################################################################################
     # MAKE THE MONITOR HTML
     outfile = specdir5 + 'monitor/' + instrument + '-monitor.html'
     print("----> monitor: Making " + os.path.basename(outfile))
@@ -405,12 +413,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<li> <a href=#sky> Sky brightness\n')
     html.write('</ul>\n')
     html.write('<HR>\n')
-
-    # find the different lamp types
-    thar, = np.where(allcal['THAR'] == 1)
-    une, = np.where(allcal['UNE'] == 1)
-    qrtz, = np.where(allcal['QRTZ'] == 1)
-    dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1200></A>\n')
@@ -863,6 +865,51 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
+
+    ###############################################################################################
+    # biasmean.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
+    if (os.path.exists(plotfile) == False) | (clobber == True):
+        print("----> monitor: Making " + plotfile)
+
+        fig = plt.figure(figsize=(30,14))
+        ymax = 1000.0
+        ymin = 0.1
+        yspan = ymax - ymin
+
+        gdcal = alldark[dark]
+        caljd = gdcal['JD'] - 2.4e6
+
+        for ichip in range(nchips):
+            chip = chips[ichip]
+
+            ax = plt.subplot2grid((nchips,1), (ichip,0))
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(ymin[ichip], ymax[ichip])
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+            ax.set_ylabel(r'Mean (column median)')
+            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+            for year in years:
+                t = Time(year, format='byear')
+                ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
+                if ichip == 0: ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.025, str(int(round(year))), ha='center')
+
+            ax.semilogy(caljd, gdcal['MEAN'][2,ichip], marker='*', ms=3, alpha=alf, mfc='r', linestyle='')
+
+            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
+            #if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+
+        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
+
 
     print("----> monitor done")
 
