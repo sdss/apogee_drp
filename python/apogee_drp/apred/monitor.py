@@ -34,7 +34,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 # import pdb; pdb.set_trace()
 
 ''' MONITOR: Instrument monitoring plots and html '''
-def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=False, allplots=True):
+def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=False, makeplots=True):
 
     print("----> monitor starting")
 
@@ -418,7 +418,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
-    html.write('<H3> <a href=fiber/fiber.html> Individual fiber throughputs from quartz </H3>\n')
+    html.write('<H3> <a href=' + instrument + 'fiber/fiber.html> Individual fiber throughputs from quartz </A></H3>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
@@ -488,36 +488,35 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml.close()
 
     ###############################################################################################
-    # Set up some basic plotting parameters
-    matplotlib.use('agg')
-    fontsize = 24;   fsz = fontsize * 0.75
-    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-    bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
-    axwidth = 1.5
-    axmajlen = 7
-    axminlen = 3.5
-    alf = 0.6
-    markersz = 7
-    colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
-    colors1 = np.array(['k', 'salmon', 'cornflowerblue'])
-    fibers = np.array([10, 80, 150, 220, 290])
-    nplotfibs = len(fibers)
-    #years = np.array([2011, 2012, 2013, 2014
+    if makeplots is True:
+        # Set up some basic plotting parameters
+        matplotlib.use('agg')
+        fontsize = 24;   fsz = fontsize * 0.75
+        matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+        bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
+        axwidth = 1.5
+        axmajlen = 7
+        axminlen = 3.5
+        alf = 0.6
+        markersz = 7
+        colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
+        colors1 = np.array(['k', 'salmon', 'cornflowerblue'])
+        fibers = np.array([10, 80, 150, 220, 290])
+        nplotfibs = len(fibers)
+        #years = np.array([2011, 2012, 2013, 2014
 
-    tmp = allcal[qrtz]
-    caljd = tmp['JD'] - 2.4e6
-    t = Time(tmp['JD'], format='jd')
-    years = np.unique(np.floor(t.byear)) + 1
-    nyears = len(years)
-    minjd = np.min(caljd)
-    maxjd = np.max(caljd)
-    jdspan = maxjd - minjd
-    xmin = minjd - jdspan * 0.01
-    xmax = maxjd + jdspan * 0.10
+        tmp = allcal[qrtz]
+        caljd = tmp['JD'] - 2.4e6
+        t = Time(tmp['JD'], format='jd')
+        years = np.unique(np.floor(t.byear)) + 1
+        nyears = len(years)
+        minjd = np.min(caljd)
+        maxjd = np.max(caljd)
+        jdspan = maxjd - minjd
+        xmin = minjd - jdspan * 0.01
+        xmax = maxjd + jdspan * 0.10
 
-
-    if allplots is True:
-        ###############################################################################################
+        ###########################################################################################
         # qflux.png
         plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -552,20 +551,25 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 for year in years:
                     t = Time(year, format='byear')
                     ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
+                    if ichip == 0: 
+                        ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]))
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
-        ###############################################################################################
+        ###########################################################################################
         # tharflux.png
         plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -599,20 +603,25 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 for year in years:
                     t = Time(year, format='byear')
                     ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.025, str(int(round(year))), ha='center')
+                    if ichip == 0: 
+                        ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.025, str(int(round(year))), ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]))
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
-        ###############################################################################################
+        ###########################################################################################
         # uneflux.png
         plotfile = specdir5 + 'monitor/' + instrument + '/uneflux.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -646,20 +655,25 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 for year in years:
                     t = Time(year, format='byear')
                     ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.025, str(int(round(year))), ha='center')
+                    if ichip == 0: 
+                        ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.025, str(int(round(year))), ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]))
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
-        ###############################################################################################
+        ###########################################################################################
         # dome.png
         plotfile = specdir5 + 'monitor/' + instrument + '/dome.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -699,16 +713,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['MED'][:, ichip, fibers[ifib]]
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]), zorder=3)
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]), zorder=3)
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
-        ###############################################################################################
+        ###########################################################################################
         # zero.png
         plotfile = specdir5 + 'monitor/' + instrument + '/zero.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -745,7 +763,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             plt.savefig(plotfile)
             plt.close('all')
 
-        ###############################################################################################
+        ###########################################################################################
         # tpos.png
         plotfile = specdir5 + 'monitor/' + instrument + '/tpos.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -786,14 +804,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
-        ###############################################################################################
+        ###########################################################################################
         # ThArNe lamp line FWHM
         for iline in range(2):
             plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
@@ -836,16 +857,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                         ax.axhline(y=w, color=colors[ifib], linewidth=2, zorder=2)
                         ax.axhline(y=w, color='k', linewidth=3, zorder=1)
                         yvals = 2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
-                        ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]), zorder=3)
+                        ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                                   label='Fiber ' + str(fibers[ifib]), zorder=3)
 
-                    ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-                    if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+                    ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                            ha='center', va='top', color=chip, bbox=bboxpar)
+                    if ichip == 0: 
+                        ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                                  fontsize=fsz, edgecolor='k', framealpha=1)
 
                 fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
                 plt.close('all')
 
-        ###############################################################################################
+        ###########################################################################################
         # trace.png
         plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -887,7 +912,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             plt.savefig(plotfile)
             plt.close('all')
 
-        ###############################################################################################
+        ###########################################################################################
         # biasmean.png
         plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -923,16 +948,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.25, str(int(round(year))), ha='center')
 
                 for ibias in range(3):
-                    ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, mec=colors1[ibias], mfc=colors1[ibias], linestyle='')
+                    ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
+                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='')
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-                #if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
-        ###############################################################################################
+        ###########################################################################################
         # biassig.png
         plotfile = specdir5 + 'monitor/' + instrument + '/biassig.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -968,65 +994,69 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.25, str(int(round(year))), ha='center')
 
                 for ibias in range(3):
-                    ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, mec=colors1[ibias], mfc=colors1[ibias], linestyle='')
+                    ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
+                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='')
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-                #if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
-    ###############################################################################################
-    # moonsky.png
-    plotfile = specdir5 + 'monitor/' + instrument + '/moonsky.png'
-    if (os.path.exists(plotfile) == False) | (clobber == True):
-        print("----> monitor: Making " + plotfile)
+        ###########################################################################################
+        # moonsky.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/moonsky.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + plotfile)
 
-        fig = plt.figure(figsize=(31,12))
-        ymax = 11
-        ymin = 16.8
-        yspan = ymax - ymin
+            fig = plt.figure(figsize=(31,12))
+            ymax = 11
+            ymin = 16.8
+            yspan = ymax - ymin
 
-        ax1 = plt.subplot2grid((2,1), (0,0))
-        ax2 = plt.subplot2grid((2,1), (1,0))
-        axes = [ax1, ax2]
+            ax1 = plt.subplot2grid((2,1), (0,0))
+            ax2 = plt.subplot2grid((2,1), (1,0))
+            axes = [ax1, ax2]
 
-        ax1.axes.xaxis.set_ticklabels([])
-        ax2.set_xlabel(r'Moon Phase')
+            ax1.axes.xaxis.set_ticklabels([])
+            ax2.set_xlabel(r'Moon Phase')
 
-        for ax in axes:
-            ax.set_xlim(0, 1)
-            ax.set_ylim(ymin, ymax)
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.text(-0.03, 0.5, 'Sky Brightness', ha='right', va='center', rotation=90, transform=ax.transAxes)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            for ax in axes:
+                ax.set_xlim(0, 1)
+                ax.set_ylim(ymin, ymax)
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.text(-0.03, 0.5, 'Sky Brightness', ha='right', va='center', rotation=90, transform=ax.transAxes)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
-        sc1 = ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='rainbow', alpha=0.8, vmin=0, vmax=90.01)
-        gd, = np.where((allsci['ZERO'] != -np.inf) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
-        sc2 = ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], cmap='rainbow', alpha=0.8, vmin=17, vmax=19)
+            sc1 = ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], 
+                              cmap='rainbow', alpha=0.8, vmin=0, vmax=90.01)
 
-        ax_divider = make_axes_locatable(ax1)
-        cax = ax_divider.append_axes("right", size="2%", pad="1%")
-        cb1 = colorbar(sc1, cax=cax, orientation="vertical")
-        cax.minorticks_on()
-        cax.yaxis.set_major_locator(ticker.MultipleLocator(15))
-        ax1.text(1.06, 0.5, r'Moon Distance (deg.)',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
+            gd, = np.where((allsci['ZERO'] != -np.inf) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
+            sc2 = ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], 
+                              cmap='rainbow', alpha=0.8, vmin=17, vmax=19)
 
-        ax_divider = make_axes_locatable(ax2)
-        cax = ax_divider.append_axes("right", size="2%", pad="1%")
-        cb1 = colorbar(sc2, cax=cax, orientation="vertical")
-        cax.minorticks_on()
-        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        ax2.text(1.066, 0.5, r'Zeropoint / Cloudiness',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
+            ax_divider = make_axes_locatable(ax1)
+            cax = ax_divider.append_axes("right", size="2%", pad="1%")
+            cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+            cax.minorticks_on()
+            cax.yaxis.set_major_locator(ticker.MultipleLocator(15))
+            ax1.text(1.06, 0.5, r'Moon Distance (deg.)',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.045,right=0.945,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
-        plt.savefig(plotfile)
-        plt.close('all')
+            ax_divider = make_axes_locatable(ax2)
+            cax = ax_divider.append_axes("right", size="2%", pad="1%")
+            cb1 = colorbar(sc2, cax=cax, orientation="vertical")
+            cax.minorticks_on()
+            cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            ax2.text(1.066, 0.5, r'Zeropoint / Cloudiness',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
+
+            fig.subplots_adjust(left=0.045,right=0.945,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
 
 
 
