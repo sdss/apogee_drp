@@ -966,8 +966,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + plotfile)
 
         fig = plt.figure(figsize=(30,14))
-        ymax = 0
-        ymin = 1
+        ymax = 11
+        ymin = 17
         yspan = ymax - ymin
 
         ax1 = plt.subplot2grid((2,1), (0,0))
@@ -975,7 +975,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         axes = [ax1, ax2]
 
         for ax in axes:
-            ax.set_xlim(xmin, xmax)
+            ax.set_xlim(0, 1)
             ax.set_ylim(ymin, ymax)
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
