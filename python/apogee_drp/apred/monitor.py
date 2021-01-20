@@ -868,6 +868,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     ###############################################################################################
     # biasmean.png
+    colors1 = np.array(['slategrey','turquoise','darkgoldenrod'])
     plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
     if (os.path.exists(plotfile) == False) | (clobber == True):
         print("----> monitor: Making " + plotfile)
@@ -899,9 +900,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for year in years:
                 t = Time(year, format='byear')
                 ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
+                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.05, str(int(round(year))), ha='center')
 
-            ax.semilogy(caljd, gdcal['MEAN'][:, 2, ichip], marker='*', ms=3, alpha=alf, mfc='r', linestyle='')
+            for ibias in range(3):
+                ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='*', ms=3, alpha=alf, mfc=colors1[ibias], linestyle='')
 
             ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
             #if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
