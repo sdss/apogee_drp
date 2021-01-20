@@ -509,7 +509,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     caljd = tmp['JD'] - 2.4e6
     t = Time(tmp['JD'], format='jd')
     years = np.unique(np.floor(t.byear)) + 1
+    cyears = years.astype(str)
     nyears = len(years)
+    t = Time(years, format='byear')
+    yearjd = t.jd - 2.4e6
     minjd = np.min(caljd)
     maxjd = np.max(caljd)
     jdspan = maxjd - minjd
@@ -522,19 +525,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     gd, = np.where(allcal['QRTZ'] > 0)                                                       
     gdcal = allcal[gd]
     caljd = gdcal['JD'] - 2.4e6
+    ymax = 5
+    ymin = 0 - ymax * 0.05
+    yspan = ymax - ymin
+
     for i in range(5):
-        ifiber = i + 1
-        cfib = str(ifiber).zfill(3)
-        plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + cfib + '.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + plotfile)
 
             fig = plt.figure(figsize=(28,7.5))
-            med = np.nanmedian(gdcal['FLUX'][:, 1, 300-ifiber])
-            ymax = 5
-            ymin = 0 - ymax * 0.05
-            yspan = ymax - ymin
-
             ax = plt.subplot2grid((1,1), (0,0))
             ax.set_xlim(xmin, xmax)
             ax.set_ylim(ymin, ymax)
@@ -547,17 +547,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_xlabel(r'JD - 2,400,000')
             ax.text(-0.02, 0.5, r'Flux / 10,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
 
-            for year in years:
-                t = Time(year, format='byear')
-                ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                ax.text(t.jd-2.4e6, ymax+yspan*0.02, str(int(round(year))), ha='center')
+            for iyear in (nyears):
+                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
 
             for ichip in range(nchips):
-                chip = chips[ichip]
-                yvals = gdcal['FLUX'][:, ichip, 300-ifiber] / 10000
+                yvals = gdcal['FLUX'][:, ichip, 300-i+1] / 10000
                 ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
-                ax.text(0.995, 0.50-(0.1*ichip), chip.capitalize()+' Chip', c=colors2[ichip], fontsize=fsz*0.9, 
-                        va='center', ha='right', transform=ax.transAxes)
+                ax.text(0.995, 0.50-(0.1*ichip), chips[ichip].capitalize()+' Chip', c=colors2[ichip], 
+                        fontsize=fsz*0.9, va='center', ha='right', transform=ax.transAxes)
 
             fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
