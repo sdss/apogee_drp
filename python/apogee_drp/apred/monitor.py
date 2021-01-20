@@ -993,7 +993,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         ax_divider1 = make_axes_locatable(ax1)
         cax1 = ax_divider1.append_axes("right", size="4%", pad="1%")
         cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
-        cax1.xaxis.set_ticks_position("right")
+        cax1.xaxis.set_ticks_position("default")
         cax1.minorticks_on()
         #ax.text(0.5, 1.12, r'Median Flat Field Flux',ha='center', transform=ax.transAxes)
 
