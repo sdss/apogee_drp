@@ -521,7 +521,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     xmax = maxjd + jdspan * 0.10
     xspan = xmax-xmin
 
-    if makefiberplots is True
+    if makefiberplots is True:
         ###########################################################################################
         # Individual fiber throughput plots
         gd, = np.where(allcal['QRTZ'] > 0)                                                       
