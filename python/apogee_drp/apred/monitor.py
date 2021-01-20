@@ -885,7 +885,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             ax = plt.subplot2grid((nchips,1), (ichip,0))
             ax.set_xlim(xmin, xmax)
-            ax.set_ylim(ymin[ichip], ymax[ichip])
+            ax.set_ylim(ymin, ymax)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -899,7 +899,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for year in years:
                 t = Time(year, format='byear')
                 ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(t.jd-2.4e6, ymax[ichip]+yspan[ichip]*0.025, str(int(round(year))), ha='center')
+                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
 
             ax.semilogy(caljd, gdcal['MEAN'][2,ichip], marker='*', ms=3, alpha=alf, mfc='r', linestyle='')
 
