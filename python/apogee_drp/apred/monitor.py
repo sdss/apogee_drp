@@ -538,7 +538,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
@@ -585,7 +585,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
@@ -632,7 +632,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
@@ -681,7 +681,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['MED'][:, ichip, fibers[ifib]]
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]), zorder=3)
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]), zorder=3)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
@@ -721,7 +721,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             t = Time(allsci['DATEOBS'], format='fits')
             jd = t.jd - 2.4e6
-            ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, color='teal', alpha=alf)
+            ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, c='teal', alpha=alf)
 
             fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -766,7 +766,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
@@ -818,7 +818,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                         ax.axhline(y=w, color=colors[ifib], linewidth=2, zorder=2)
                         ax.axhline(y=w, color='k', linewidth=3, zorder=1)
                         yvals = 2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
-                        ax.scatter(caljd, yvals, marker='o', s=markersz, color=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]), zorder=3)
+                        ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]), zorder=3)
 
                     ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
                     if ichip == 0: ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, fontsize=fsz, edgecolor='k', framealpha=1)
@@ -862,8 +862,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax1.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
                 ax1.text(t.jd-2.4e6, ymax+yspan*0.025, str(int(round(year))), ha='center')
 
-            ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
-            ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
+            ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, c='cyan', edgecolors='k', alpha=alf)
+            ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, c='cyan', edgecolors='k', alpha=alf)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
             plt.savefig(plotfile)
@@ -986,7 +986,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Sky Brightness')
             ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
-        ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
+        ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='cool', edgecolors='k', alpha=alf)
         #ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
 
         fig.subplots_adjust(left=0.06,right=0.92,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
