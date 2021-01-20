@@ -995,7 +995,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
         cax1.xaxis.set_ticks_position("default")
         cax1.minorticks_on()
-        cax1.xaxis.set_major_locator(ticker.MultipleLocator(15))
+        cax1.yaxis.set_major_locator(ticker.MultipleLocator(15))
         ax1.text(1.06, 0.5, r'Moon Distance (deg.)',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
         fig.subplots_adjust(left=0.06,right=0.95,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
