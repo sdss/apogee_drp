@@ -986,18 +986,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.set_ylabel(r'Sky Brightness')
             ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
-        sc1 = ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='rainbow', alpha=alf, vmin=0, vmax=90)
+        sc1 = ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='rainbow', alpha=alf, vmin=0, vmax=90.01)
         gd, = np.where((allsci['ZERO'] != -np.inf) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
         ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], cmap='rainbow', alpha=alf, vmin=17, vmax=19)
 
         ax_divider1 = make_axes_locatable(ax1)
-        cax1 = ax_divider1.append_axes("right", size="4%", pad="1%")
+        cax1 = ax_divider1.append_axes("right", size="2%", pad="1%")
         cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
         cax1.xaxis.set_ticks_position("default")
         cax1.minorticks_on()
-        #ax.text(0.5, 1.12, r'Median Flat Field Flux',ha='center', transform=ax.transAxes)
+        ax1.text(1.05, 0.5, r'Moon Distance',ha='left', va='center', rotation=90, transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.06,right=0.92,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+        fig.subplots_adjust(left=0.06,right=0.94,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
