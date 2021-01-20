@@ -903,6 +903,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.25, str(int(round(year))), ha='center')
 
             for ibias in range(3):
+                print(colors1[ibias])
                 ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='*', ms=3, alpha=alf, mfc=colors1[ibias], linestyle='')
 
             ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
