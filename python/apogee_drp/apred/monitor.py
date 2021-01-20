@@ -967,7 +967,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         fig = plt.figure(figsize=(32,12))
         ymax = 11
-        ymin = 17
+        ymin = 16.8
         yspan = ymax - ymin
 
         ax1 = plt.subplot2grid((2,1), (0,0))
@@ -987,7 +987,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 
         ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='gnuplot2', alpha=alf)
-        #ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, color='cyan', edgecolors='k', alpha=alf)
+        gd, = np.where((np.isnan(allsci['ZERO']) is False) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
+        ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], cmap='gnuplot2', alpha=alf)
 
         fig.subplots_adjust(left=0.06,right=0.92,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
         plt.savefig(plotfile)
