@@ -509,7 +509,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     caljd = tmp['JD'] - 2.4e6
     t = Time(tmp['JD'], format='jd')
     years = np.unique(np.floor(t.byear)) + 1
-    cyears = years.astype(str)
+    cyears = years.astype(int).astype(str)
     nyears = len(years)
     t = Time(years, format='byear')
     yearjd = t.jd - 2.4e6
