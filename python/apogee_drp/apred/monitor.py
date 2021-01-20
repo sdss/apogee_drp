@@ -488,34 +488,75 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml.close()
 
     ###############################################################################################
+    # Set up some basic plotting parameters
+    matplotlib.use('agg')
+    fontsize = 24;   fsz = fontsize * 0.75
+    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
+    axwidth = 1.5
+    axmajlen = 7
+    axminlen = 3.5
+    alf = 0.6
+    markersz = 7
+    colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
+    colors1 = np.array(['k', 'salmon', 'cornflowerblue'])
+    fibers = np.array([10, 80, 150, 220, 290])
+    nplotfibs = len(fibers)
+    #years = np.array([2011, 2012, 2013, 2014
+
+    tmp = allcal[qrtz]
+    caljd = tmp['JD'] - 2.4e6
+    t = Time(tmp['JD'], format='jd')
+    years = np.unique(np.floor(t.byear)) + 1
+    nyears = len(years)
+    minjd = np.min(caljd)
+    maxjd = np.max(caljd)
+    jdspan = maxjd - minjd
+    xmin = minjd - jdspan * 0.01
+    xmax = maxjd + jdspan * 0.10
+
+    ###########################################################################################
+    # Individual fiber throughput plots
+    gd, = np.where(allcal['QRTZ'] > 0)                                                       
+    gdcal = allcal[gd]
+    caljd = gdcal['JD'] - 2.4e6
+    for ifiber in range(5):
+        cfib = str(ifiber+1).zfill(3)
+        plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + cfib + '.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + plotfile)
+
+            fig = plt.figure(figsize=(30,8))
+            ymax = 21
+            ymin = 10
+            yspan = ymax - ymin
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            ax.set_xlim(xmin, xmax)
+            #ax.set_ylim(ymin, ymax)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+            ax.set_ylabel(r'Flux')
+
+            for year in years:
+                t = Time(year, format='byear')
+                ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
+                ax.text(t.jd-2.4e6, ymax+yspan*0.02, str(int(round(year))), ha='center')
+
+            import pdb; pdb.set_trace()
+            yvals = gdcal['FLUX'][1,300-ifiber+1]
+            ax.scatter(caljd, yvals, marker='o', s=markersz, c='mediumspringgreen', alpha=alf)
+
+            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
     if makeplots is True:
-        # Set up some basic plotting parameters
-        matplotlib.use('agg')
-        fontsize = 24;   fsz = fontsize * 0.75
-        matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-        bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
-        axwidth = 1.5
-        axmajlen = 7
-        axminlen = 3.5
-        alf = 0.6
-        markersz = 7
-        colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
-        colors1 = np.array(['k', 'salmon', 'cornflowerblue'])
-        fibers = np.array([10, 80, 150, 220, 290])
-        nplotfibs = len(fibers)
-        #years = np.array([2011, 2012, 2013, 2014
-
-        tmp = allcal[qrtz]
-        caljd = tmp['JD'] - 2.4e6
-        t = Time(tmp['JD'], format='jd')
-        years = np.unique(np.floor(t.byear)) + 1
-        nyears = len(years)
-        minjd = np.min(caljd)
-        maxjd = np.max(caljd)
-        jdspan = maxjd - minjd
-        xmin = minjd - jdspan * 0.01
-        xmax = maxjd + jdspan * 0.10
-
         ###########################################################################################
         # qflux.png
         plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
