@@ -559,7 +559,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.text(0.995, 0.50-(0.1*ichip), chip.capitalize()+' Chip', c=colors2[ichip], fontsize=fsz*0.9, 
                         va='center', ha='right', transform=ax.transAxes)
 
-            fig.subplots_adjust(left=0.05,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
