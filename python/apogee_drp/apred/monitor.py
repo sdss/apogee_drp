@@ -900,7 +900,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for year in years:
                 t = Time(year, format='byear')
                 ax.axvline(x=t.jd-2.4e6, color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.05, str(int(round(year))), ha='center')
+                if ichip == 0: ax.text(t.jd-2.4e6, ymax+yspan*0.15, str(int(round(year))), ha='center')
 
             for ibias in range(3):
                 ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='*', ms=3, alpha=alf, mfc=colors1[ibias], linestyle='')
