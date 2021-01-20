@@ -552,7 +552,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             for ichip in range(nchips):
                 chip = chips[ichip]
-                import pdb; pdb.set_trace()
                 yvals = gdcal['FLUX'][:, ichip, 300-ifiber]
                 ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf, label=chip.capitalize()+' Chip')
 
