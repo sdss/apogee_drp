@@ -988,6 +988,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], cmap='gnuplot2', alpha=alf)
         gd, = np.where((allsci['ZERO'] != -np.inf) & (np.isnan(allsci['ZERO']) is False) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
+        gd, = np.where((allsci['ZERO'] != -np.inf) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
         print(len(gd))
         ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], cmap='gnuplot2', alpha=alf)
 
