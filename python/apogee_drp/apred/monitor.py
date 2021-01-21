@@ -515,7 +515,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     pfiles2 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/587*/plots/apFlux-b-*jpg'))
     pfiles3 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/588*/plots/apFlux-b-*jpg'))
     pfiles4 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/589*/plots/apFlux-b-*jpg'))
-    pfiles = np.concatenate([pfiles1, pfiles2, pfiles3, pfiles4])
+    pfiles = np.concatenate([pfiles0, pfiles1, pfiles2, pfiles3, pfiles4])
     for i in range(len(pfiles)):
         tmp = pfiles[i].split(telescope + '/')[1].split('/')
         gfield = tmp[0]
