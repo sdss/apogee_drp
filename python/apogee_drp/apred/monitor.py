@@ -459,6 +459,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
+    html.write('<P> (Note: the four colors indicate the four quadrants in each detector.) </P>\n')
     html.write('<H4> Dark Mean </h4>\n')
     html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=1200></A>\n')
 
