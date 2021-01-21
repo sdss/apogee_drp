@@ -510,13 +510,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml.write('<H1>' + tit + '</H1>\n')
     fhtml.write('<TABLE BORDER=2  CLASS="sortable">\n')
     fhtml.write('<TR bgcolor="#DCDCDC"> <TH>MJD <TH>DATE <TH>FIELD <TH>PLATE <TH>GREEN CHIP PLOT\n')
+    pfiles0 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/585*/plots/apFlux-b-*jpg'))
     pfiles1 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/586*/plots/apFlux-b-*jpg'))
     pfiles2 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/587*/plots/apFlux-b-*jpg'))
     pfiles3 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/588*/plots/apFlux-b-*jpg'))
     pfiles4 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/589*/plots/apFlux-b-*jpg'))
     pfiles = np.concatenate([pfiles1, pfiles2, pfiles3, pfiles4])
     for i in range(len(pfiles)):
-        subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
         tmp = pfiles[i].split(telescope + '/')[1].split('/')
         gfield = tmp[0]
         gplate = tmp[1]
@@ -529,6 +529,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         fhtml.write('<TD ALIGN=center>' + gmjd + '<TD>' + gdate + '<TD>' + gfield + '<TD>' + gplate + '<TD> <A HREF=' + relpath + ' target="_blank"><IMG SRC=' + relpath + ' WIDTH=300></A>')
     fhtml.write('</TABLE></BODY></HTML>\n')
     fhtml.close()
+
+    for i in range(len(pfiles)):
+        gplot = pfiles[i].split(telescope + '/')[1].split('/')[-1]
+        check, = glob.glob('flatflux/' + gplot)
+        if len(check) < 1:
+        subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
 
     ###############################################################################################
     # Set up some basic plotting parameters
