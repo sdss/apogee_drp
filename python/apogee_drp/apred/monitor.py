@@ -506,7 +506,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml = open(specdir5 + 'monitor/' + instrument + '/flatflux.html', 'w')
     tit = 'APOGEE-N Flat Field Relative Flux plots'
     if instrument != 'apogee-n': tit = 'APOGEE-S Flat Field Relative Flux plots'
-    fhtml.write('<HTML><HEAD><script src=".././../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
+    fhtml.write('<HTML><HEAD><script src="../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
     fhtml.write('<TABLE BORDER=2  CLASS="sortable">\n')
     fhtml.write('<TR bgcolor="#DCDCDC"> <TH>MJD <TH>DATE <TH>FIELD <TH>PLATE <TH>GREEN CHIP PLOT\n')
