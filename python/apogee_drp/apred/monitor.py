@@ -517,7 +517,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         gfield = tmp[0]
         gplate = tmp[1]
         gmjd = tmp[2]
-        t = Time(float(gmjd), format=mjd)
+        t = Time(float(gmjd), format='mjd')
         gdate = t.fits
         gplot = tmp[-1]
         relpath = '../../../../../../../../../sdss/apogeework/apogee/spectro/redux/current/visit/' + telescope + '/' + gfield + '/' + gplate + '/' + gmjd + '/plots/' + gplot
