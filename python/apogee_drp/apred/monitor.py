@@ -532,7 +532,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     for i in range(len(pfiles)):
         gplot = pfiles[i].split(telescope + '/')[1].split('/')[-1]
-        check = glob.glob('flatflux/' + gplot)
+        check = glob.glob(instrument + '/flatflux/' + gplot)
         if len(check) < 1: subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
 
     ###############################################################################################
