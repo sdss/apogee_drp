@@ -504,7 +504,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     alf = 0.6
     markersz = 7
     colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
-    colors1 = np.array(['k', 'salmon', 'cornflowerblue', 'limegreen'])
+    colors1 = np.array(['k', 'salmon', 'limegreen', 'cornflowerblue'])
     colors2 = np.array(['dodgerblue', 'seagreen', 'tomato'])
     fibers = np.array([10, 80, 150, 220, 290])[::-1]
     nplotfibs = len(fibers)
@@ -985,14 +985,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.25, cyears[iyear], ha='center')
 
                 for ibias in range(4):
                     ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
-                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='')
+                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='', label='quad '+str(ibias+1))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -1032,12 +1036,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                for ibias in range(3):
+                for ibias in range(4):
                     ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
-                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='')
+                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='', label='quad '+str(ibias+1))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
