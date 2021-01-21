@@ -516,7 +516,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     pfiles4 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/589*/plots/apFlux-b-*jpg'))
     pfiles = np.concatenate([pfiles1, pfiles2, pfiles3, pfiles4])
     for i in range(len(pfiles)):
-        #subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
+        subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
         tmp = pfiles[i].split(telescope + '/')[1].split('/')
         gfield = tmp[0]
         gplate = tmp[1]
