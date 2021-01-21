@@ -797,7 +797,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
+                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
 
             t = Time(allsci['DATEOBS'], format='fits')
             jd = t.jd - 2.4e6
@@ -1034,7 +1034,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.25, cyears[iyear], ha='center')
 
                 for ibias in range(4):
                     ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
