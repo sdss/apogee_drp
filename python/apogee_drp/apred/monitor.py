@@ -504,9 +504,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     alf = 0.6
     markersz = 7
     colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
-    colors1 = np.array(['k', 'salmon', 'cornflowerblue'])
+    colors1 = np.array(['k', 'salmon', 'cornflowerblue', 'limegreen'])
     colors2 = np.array(['dodgerblue', 'seagreen', 'tomato'])
-    fibers = np.array([10, 80, 150, 220, 290])
+    fibers = np.array([10, 80, 150, 220, 290])[::-1]
     nplotfibs = len(fibers)
     #years = np.array([2011, 2012, 2013, 2014
 
@@ -830,7 +830,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Median Flux')
+                ax.set_ylabel(r'Position (pixel)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
                 w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
@@ -859,9 +859,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         ###########################################################################################
         # ThArNe lamp line FWHM
-        for iline in range(2):
-            plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
-            if (os.path.exists(plotfile) == False) | (clobber == True):
+        plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            for iline in range(2):
                 print("----> monitor: Making " + os.path.basename(plotfile))
 
                 fig = plt.figure(figsize=(30,14))
@@ -987,7 +987,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                for ibias in range(3):
+                for ibias in range(4):
                     ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
                                 mec=colors1[ibias], mfc=colors1[ibias], linestyle='')
 
