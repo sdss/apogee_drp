@@ -515,7 +515,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     pfiles2 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/587*/plots/apFlux-b-*jpg'))
     pfiles3 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/588*/plots/apFlux-b-*jpg'))
     pfiles4 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/589*/plots/apFlux-b-*jpg'))
-    pfiles = np.concatenate([pfiles0, pfiles1, pfiles2, pfiles3, pfiles4])
+    pfiles5 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/584*/plots/apFlux-b-*jpg'))
+    pfiles = np.concatenate([pfiles0, pfiles1, pfiles2, pfiles3, pfiles4, pfiles5])
     for i in range(len(pfiles)):
         tmp = pfiles[i].split(telescope + '/')[1].split('/')
         gfield = tmp[0]
@@ -532,7 +533,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     for i in range(len(pfiles)):
         gplot = pfiles[i].split(telescope + '/')[1].split('/')[-1]
-        check = glob.glob(instrument + '/flatflux/' + gplot)
+        check = glob.glob('flatflux/' + gplot)
         if len(check) < 1: subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
 
     ###############################################################################################
