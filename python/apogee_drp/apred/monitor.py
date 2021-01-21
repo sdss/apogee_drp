@@ -514,6 +514,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     pfiles.sort()
     pfiles = np.array(pfiles)
     for i in range(len(pfiles)):
+        subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
         tmp = pfiles[i].split(telescope + '/')[1].split('/')
         gfield = tmp[0]
         gplate = tmp[1]
@@ -521,7 +522,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         t = Time(float(gmjd), format='mjd')
         gdate = t.fits
         gplot = tmp[-1]
-        relpath = '../../../../../../../../../sdss/apogeework/apogee/spectro/redux/current/visit/' + telescope + '/' + gfield + '/' + gplate + '/' + gmjd + '/plots/' + gplot
+        relpath = 'flatflux/' + gplot
         fhtml.write('<TR>')
         fhtml.write('<TD ALIGN=center>' + gmjd + '<TD>' + gdate + '<TD>' + gfield + '<TD>' + gplate + '<TD> <A HREF=' + relpath + ' target="_blank"><IMG SRC=' + relpath + ' WIDTH=500></A>')
     fhtml.write('</TABLE></BODY></HTML>\n')
