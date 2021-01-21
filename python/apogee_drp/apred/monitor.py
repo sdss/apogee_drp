@@ -506,15 +506,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml = open(specdir5 + 'monitor/' + instrument + '/flatflux.html', 'w')
     tit = 'APOGEE-N Flat Field Relative Flux plots'
     if instrument != 'apogee-n': tit = 'APOGEE-S Flat Field Relative Flux plots'
-    fhtml.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
+    fhtml.write('<HTML><HEAD><script src=".././../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
-    fhtml.write('<TABLE BORDER=2>\n')
+    fhtml.write('<TABLE BORDER=2  CLASS="sortable">\n')
     fhtml.write('<TR bgcolor="#DCDCDC"> <TH>MJD <TH>DATE <TH>FIELD <TH>PLATE <TH>GREEN CHIP PLOT\n')
     pfiles = glob.glob(specdir + 'visit/' + telescope + '/*/*/587*/plots/apFlux-b-*jpg')
     pfiles.sort()
     pfiles = np.array(pfiles)
     for i in range(len(pfiles)):
-        subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
+        #subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
         tmp = pfiles[i].split(telescope + '/')[1].split('/')
         gfield = tmp[0]
         gplate = tmp[1]
