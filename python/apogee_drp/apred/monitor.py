@@ -39,6 +39,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     print("----> monitor starting")
 
+    telescope = 'apo25m'
+    if instrument == 'apogee-s': telescope = 'lco25m'
+
     chips = np.array(['blue','green','red'])
     nchips = len(chips)
 
@@ -491,7 +494,35 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     for ifiber in range(300):
         cfib = str(ifiber+1).zfill(3)
         plotfile = 'fiber' + cfib + '.png'
-        fhtml.write('<TR><TD ALIGN=center>' + cfib + '<TD> <A HREF=' + plotfile + ' target="_blank"><IMG SRC=' + plotfile + ' WIDTH=1000></A>\n')
+        fhtml.write('<TR>')
+        fhtml.write('<TD ALIGN=center>' + cfib + '<TD> <A HREF=' + plotfile + ' target="_blank"><IMG SRC=' + plotfile + ' WIDTH=1000></A>')
+        fhtml.write('<TD ALIGN=center>')
+    fhtml.write('</TABLE></BODY></HTML>\n')
+    fhtml.close()
+
+    ###############################################################################################
+    # HTML for flat field relative flux plots
+    fhtml = open(specdir5 + 'monitor/' + instrument + '/flatflux.html', 'w')
+    tit = 'APOGEE-N Flat Field Relative Flux plots'
+    if instrument != 'apogee-n': tit = 'APOGEE-S Flat Field Relative Flux plots'
+    fhtml.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
+    fhtml.write('<H1>' + tit + '</H1>\n')
+    fhtml.write('<TABLE BORDER=2>\n')
+    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>MJD <TH>DATE <TH>FIELD <TH>PLATE <TH>GREEN CHIP PLOT\n')
+    pfiles = glob.glob(specdir + 'visit/' + telescope + '/*/*/587*/plots/apFlux-b-*jpg')
+    pfiles.sort()
+    pfiles = np.array(pfiles)
+    for i in range(len(pfiles)):
+        tmp = pfiles[i].split(telescope + '/')[1].split('/')
+        gfield = tmp[0]
+        gplate = tmp[1]
+        gmjd = tmp[2]
+        t = Time(float(gmjd), format=mjd)
+        gdate = t.fits
+        gplot = tmp[-1]
+        relpath = '../../../../../../../../../sdss/apogeework/apogee/spectro/redux/current/visit/' + telescope + '/' + gfield + '/' + gplate + '/' + gmjd + '/plots/' + gplot
+        fhtml.write('<TR>')
+        fhtml.write('<TD ALIGN=center>' + gmjd + '<TD>' + gdate + '<TD>' + gfield + '<TD>' + gplate + '<TD> <A HREF=' + relpath + ' target="_blank"><IMG SRC=' + relpath + ' WIDTH=500></A>')
     fhtml.write('</TABLE></BODY></HTML>\n')
     fhtml.close()
 
