@@ -484,8 +484,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput'
     fhtml.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
+    fhtml.write('<P> Note: the throughput plots show the quartz flux in each fiber divided by the maximum')
+    fhtml.write('quartz flux across all fibers in a given observation.</P>\n')
     fhtml.write('<TABLE BORDER=2>\n')
-    fhtml.write('<TR bgcolor="#DCDCDC"> <TH> Fiber Number <TH> Throughput Plot\n')
+    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber Number <TH>Quartz Flux <TH>Throughput\n')
     for ifiber in range(300):
         cfib = str(ifiber+1).zfill(3)
         plotfile = 'fiber' + cfib + '.png'
