@@ -202,6 +202,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     flavor = planstr['APEXP']['flavor']
     all_ims = planstr['APEXP']['name']
 
+    import pdb; pdb.set_trace()
+
     gd,= np.where(flavor == 'object')
     n_ims = len(gd)
 
