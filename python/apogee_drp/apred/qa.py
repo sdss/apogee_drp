@@ -2436,6 +2436,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE MJD Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
+        html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
+        html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
         #html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
         html.write( 'Yellow: APO 2.5m, Green: LCO 2.5m <BR>\n')
@@ -2584,6 +2586,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE Field Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by Field</H1>\n')
         html.write('<p><A HREF=mjd.html>MJD view</A></p>\n')
+        html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
+        html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
 
         html.write('<p>Sky coverage plots: <p>\n')
