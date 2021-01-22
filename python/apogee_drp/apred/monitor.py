@@ -578,7 +578,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         gdcal1 = allexp[dome]
         caljd1 = gdcal1['JD'] - 2.4e6
-        ymax1 = 5;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
+        ymax1 = 13;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
         ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
         for i in range(5):
@@ -589,7 +589,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 fig = plt.figure(figsize=(28,7.5))
                 ax = plt.subplot2grid((1,1), (0,0))
                 ax.set_xlim(xmin, xmax)
-                #ax.set_ylim(ymin1, ymax1)
+                ax.set_ylim(ymin1, ymax1)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -604,7 +604,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     ax.text(yearjd[iyear], ymax1+yspan1*0.02, cyears[iyear], ha='center')
 
                 for ichip in range(nchips):
-                    yvals = gdcal1['MED'][:, ichip, 299-i]
+                    yvals = gdcal1['MED'][:, ichip, 299-i] / 1000
                     ax.scatter(caljd1, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
