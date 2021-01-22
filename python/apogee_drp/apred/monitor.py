@@ -577,7 +577,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         gdcal = allcal[gd]
 
         gdcal1 = allexp[dome]
-        caljd1 = gdcal['JD'] - 2.4e6
+        caljd1 = gdcal1['JD'] - 2.4e6
         ymax1 = 5;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
         ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
@@ -636,7 +636,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for ichip in range(nchips):
                     yvals = gdcal1['MED'][:, ichip, 299-i] / np.amax(gdcal1['MED'][:, ichip, :], axis=1)
-                    import pdb; pdb.set_trace()
                     ax.scatter(caljd1, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
