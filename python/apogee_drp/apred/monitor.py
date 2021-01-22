@@ -500,7 +500,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml.write('<P><FONT color="#E53935">Red</FONT> highlighting indicates broken fibers.</P>\n')
     fhtml.write('<P><FONT color="#FFA726">Orange</FONT> highlighting indicates fibers with long-term throughput deviations.</P>\n')
     fhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber<BR>(MTP #) <TH>Fiber "Goodness" <TH>Median Dome Flat Flux <TH>Throughput\n')
+    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber<BR>(MTP #) <TH>Fiber<BR>"Goodness" <TH>Median Dome Flat Flux <TH>Throughput\n')
     for ifiber in range(300):
         cfib = str(ifiber+1).zfill(3)
         cblock = str(np.ceil((ifiber+1)/30).astype(int))
