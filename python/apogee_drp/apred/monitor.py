@@ -481,6 +481,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     ###############################################################################################
     # HTML for individual fiber throughput plots
+    badfibers = np.array(['015','034','105','111','115','121','122','123','124','125','126','127',
+                          '128','129','130','131','132','133','134','135','136','137','135','136',
+                          '137','138','139','140','141','142','143','144','145','146','147','148',
+                          '149','150','151','182','202','227','245','250','277','278','284','289',])
+    deadfibers = np.array(['211','273'])
+
     fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
     if os.path.exists(fibdir) is False: os.mkdir(fibdir)
     fhtml = open(fibdir + 'fiber.html', 'w')
@@ -488,15 +494,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput'
     fhtml.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
-    fhtml.write('<P> Note: the throughput plots show the median dome flat flux in each fiber divided by the maximum ')
+    fhtml.write('<P> The throughput plots show the median dome flat flux in each fiber divided by the maximum ')
     fhtml.write('across all fibers in a given observation.</P>\n')
+    fhtml.write('<P> Red highlighting indicates broken fibers.</P>\n')
+    fhtml.write('<P> Yellow highlighting indicates fibers with long-term throughput deviations.</P>\n')
     fhtml.write('<TABLE BORDER=2>\n')
     fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber Number <TH>Median Dome Flat Flux <TH>Throughput\n')
     for ifiber in range(300):
         cfib = str(ifiber+1).zfill(3)
         plotfile1 = 'fiber' + cfib + '.png'
         plotfile2 = 'fiber' + cfib + '_throughput.png'
-        fhtml.write('<TR>')
+        bgcolor = '#FFFFFF'
+        bd, = np.where(cfib == deadfibers);   if len(bd) == 1: bgcolor = '#E53935'
+        bd, = np.where(cfib == badfibers);   if len(bd) == 1: bgcolor = '#FFEB3B'
+        fhtml.write('<TR bgcolor="' + bgcolor + '">')
         fhtml.write('<TD ALIGN=center>' + cfib + '<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
         fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=1000></A>')
     fhtml.write('</TABLE></BODY></HTML>\n')
@@ -573,11 +584,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if makefiberplots is True:
         ###########################################################################################
         # Individual fiber throughput plots
-        gd, = np.where(allcal['QRTZ'] > 0)                                                       
-        gdcal = allcal[gd]
 
-        gdcal1 = allexp[dome]
-        caljd1 = gdcal1['JD'] - 2.4e6
+        #gd, = np.where(allcal['QRTZ'] > 0)                                                       
+        #gdcal = allcal[gd]
+
+        gdcal = allexp[dome]
+        caljd = gdcal['JD'] - 2.4e6
         ymax1 = 13;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
         ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
@@ -604,8 +616,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     ax.text(yearjd[iyear], ymax1+yspan1*0.02, cyears[iyear], ha='center')
 
                 for ichip in range(nchips):
-                    yvals = gdcal1['MED'][:, ichip, 299-i] / 1000
-                    ax.scatter(caljd1, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                    yvals = gdcal['MED'][:, ichip, 299-i] / 1000
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
 
@@ -635,8 +647,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     ax.text(yearjd[iyear], ymax2+yspan2*0.02, cyears[iyear], ha='center')
 
                 for ichip in range(nchips):
-                    yvals = gdcal1['MED'][:, ichip, 299-i] / np.nanmax(gdcal1['MED'][:, ichip, :], axis=1)
-                    ax.scatter(caljd1, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                    yvals = gdcal['MED'][:, ichip, 299-i] / np.nanmax(gdcal['MED'][:, ichip, :], axis=1)
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
 
