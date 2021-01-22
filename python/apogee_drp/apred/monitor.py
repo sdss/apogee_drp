@@ -57,7 +57,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     specdir5 = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     specdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
     sdir5 = specdir5 + 'monitor/' + instrument + '/'
-    sdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/apogee-n/'
+    sdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/' + instrument + '/'
     mdir = 'monitor/' + instrument + '/'
 
     if makesumfiles is False:
@@ -481,11 +481,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     ###############################################################################################
     # HTML for individual fiber throughput plots
-    badfibers = np.array(['015','034','105','111','115','121','122','123','124','125','126','127',
+    badfibersN = np.array(['015','034','105','111','115','121','122','123','124','125','126','127',
                           '128','129','130','131','132','133','134','135','136','137','138','139',
                           '140','141','142','143','144','145','146','147','148','149','150','151',
                           '182','202','227','245','250','277','278','284','289',])
-    deadfibers = np.array(['211','273'])
+    deadfibersN = np.array(['211','273'])
 
     fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
     if os.path.exists(fibdir) is False: os.mkdir(fibdir)
@@ -507,10 +507,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         plotfile2 = 'fiber' + cfib + '_throughput.png'
 
         bgcolor = '#FFFFFF'
-        bd, = np.where(cfib == deadfibers)
-        if len(bd) >= 1: bgcolor = '#E53935'
-        bd, = np.where(cfib == badfibers)
-        if len(bd) >= 1: bgcolor = '#FFEB3B'
+        if instrument == 'apogee-n':
+            bd, = np.where(cfib == deadfibersN)
+            if len(bd) >= 1: bgcolor = '#E53935'
+            bd, = np.where(cfib == badfibersN)
+            if len(bd) >= 1: bgcolor = '#FFEB3B'
 
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
         fhtml.write('<TD ALIGN=center>' + cfib + '<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
