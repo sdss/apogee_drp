@@ -492,7 +492,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml = open(fibdir + 'fiber.html', 'w')
     tit = 'APOGEE-N Fiber Throughput'
     if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput'
-    fhtml.write('<HTML><HEAD><script src="../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
+    fhtml.write('<HTML><HEAD><script src="../../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
     fhtml.write('<HR>\n')
     fhtml.write('<P> The throughput plots show the median dome flat flux in each fiber divided by the maximum ')
