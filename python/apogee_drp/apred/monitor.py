@@ -500,9 +500,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml.write('<P><FONT color="#E53935">Red</FONT> highlighting indicates broken fibers.</P>\n')
     fhtml.write('<P><FONT color="#FFA726">Orange</FONT> highlighting indicates fibers with long-term throughput deviations.</P>\n')
     fhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber Number <TH>Fiber "Goodness" <TH>Median Dome Flat Flux <TH>Throughput\n')
+    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber<BR>(MTP #) <TH>Fiber "Goodness" <TH>Median Dome Flat Flux <TH>Throughput\n')
     for ifiber in range(300):
         cfib = str(ifiber+1).zfill(3)
+        cblock = str(np.ceil((ifiber+1)/30).astype(int))
         plotfile1 = 'fiber' + cfib + '.png'
         plotfile2 = 'fiber' + cfib + '_throughput.png'
 
@@ -519,7 +520,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 bgcolor = '#FFA726'
 
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
-        fhtml.write('<TD ALIGN=center>' + cfib + '<TD ALIGN=center>' + fibqual)
+        fhtml.write('<TD ALIGN=center>' + cfib + '<BR>(' + cblock + ') <TD ALIGN=center>' + fibqual)
         fhtml.write('<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
         fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=1000></A>\n')
     fhtml.write('</TABLE></BODY></HTML>\n')
