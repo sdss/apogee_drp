@@ -576,9 +576,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         gd, = np.where(allcal['QRTZ'] > 0)                                                       
         gdcal = allcal[gd]
         caljd = gdcal['JD'] - 2.4e6
-        ymax = 5
-        ymin = 0 - ymax * 0.05
-        yspan = ymax - ymin
+        ymax1 = 5;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
+        ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
         for i in range(5):
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
@@ -588,7 +587,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 fig = plt.figure(figsize=(28,7.5))
                 ax = plt.subplot2grid((1,1), (0,0))
                 ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
+                ax.set_ylim(ymin1, ymax1)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -600,7 +599,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
+                    ax.text(yearjd[iyear], ymax1+yspan1*0.02, cyears[iyear], ha='center')
 
                 for ichip in range(nchips):
                     yvals = gdcal['FLUX'][:, ichip, 299-i] / 10000
@@ -616,12 +615,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             if (os.path.exists(plotfile) == False) | (clobber == True):
                 print("----> monitor: Making " + os.path.basename(plotfile))
 
-                ymin = 0;   ymax = 1.1;   yspan = ymax-ymin
-
                 fig = plt.figure(figsize=(28,7.5))
                 ax = plt.subplot2grid((1,1), (0,0))
                 ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
+                ax.set_ylim(ymin2, ymax2)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -633,7 +630,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
+                    ax.text(yearjd[iyear], ymax2+yspan2*0.02, cyears[iyear], ha='center')
 
                 for ichip in range(nchips):
                     yvals = gdcal['FLUX'][:, ichip, 299-i] / np.max(gdcal['FLUX'][:, ichip, :])
