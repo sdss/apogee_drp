@@ -494,10 +494,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber Number <TH>Quartz Flux <TH>Throughput\n')
     for ifiber in range(300):
         cfib = str(ifiber+1).zfill(3)
-        plotfile = 'fiber' + cfib + '.png'
+        plotfile1 = 'fiber' + cfib + '.png'
+        plotfile2 = 'fiber' + cfib + '_throughput.png'
         fhtml.write('<TR>')
-        fhtml.write('<TD ALIGN=center>' + cfib + '<TD> <A HREF=' + plotfile + ' target="_blank"><IMG SRC=' + plotfile + ' WIDTH=1000></A>')
-        fhtml.write('<TD ALIGN=center>')
+        fhtml.write('<TD ALIGN=center>' + cfib + '<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
+        fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=1000></A>')
     fhtml.write('</TABLE></BODY></HTML>\n')
     fhtml.close()
 
