@@ -575,11 +575,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # Individual fiber throughput plots
         gd, = np.where(allcal['QRTZ'] > 0)                                                       
         gdcal = allcal[gd]
-        caljd = gdcal['JD'] - 2.4e6
+
+        gdcal1 = allexp[dome]
+        caljd1 = gdcal['JD'] - 2.4e6
         ymax1 = 5;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
         ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
-        for i in range(300):
+        for i in range(5):
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
             if (os.path.exists(plotfile) == False) | (clobber == True):
                 print("----> monitor: Making " + os.path.basename(plotfile))
@@ -633,8 +635,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     ax.text(yearjd[iyear], ymax2+yspan2*0.02, cyears[iyear], ha='center')
 
                 for ichip in range(nchips):
-                    yvals = gdcal['FLUX'][:, ichip, 299-i] / np.amax(gdcal['FLUX'][:, ichip, :], axis=1)
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                    yvals = gdcal1['MED'][:, 299-i, ichip] / np.amax(gdcal1['MED'][:, :, ichip], axis=1)
+                    ax.scatter(caljd1, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
 
