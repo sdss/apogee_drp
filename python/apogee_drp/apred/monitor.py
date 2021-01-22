@@ -595,7 +595,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.set_xlabel(r'JD - 2,400,000')
-                ax.text(-0.02, 0.5, r'Flux / 10,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
+                ax.text(-0.03, 0.5, r'Flux / 10,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -607,7 +607,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
 
-                fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+                fig.subplots_adjust(left=0.045,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
                 plt.close('all')
 
@@ -626,7 +626,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.set_xlabel(r'JD - 2,400,000')
-                ax.text(-0.02, 0.5, r'Flux / max(Flux)', rotation=90, ha='right', va='center', transform=ax.transAxes)
+                ax.text(-0.03, 0.5, r'Flux / max(Flux)', rotation=90, ha='right', va='center', transform=ax.transAxes)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -638,7 +638,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
 
-                fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+                fig.subplots_adjust(left=0.045,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
                 plt.close('all')
 
