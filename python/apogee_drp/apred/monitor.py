@@ -497,8 +497,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml.write('<HR>\n')
     fhtml.write('<P> The throughput plots show the median dome flat flux in each fiber divided by the maximum ')
     fhtml.write('across all fibers in a given observation.</P>\n')
-    fhtml.write('<P> Red highlighting indicates broken fibers.</P>\n')
-    fhtml.write('<P> Yellow highlighting indicates fibers with long-term throughput deviations.</P>\n')
+    fhtml.write('<P><FONT color="#E53935">Red</FONT> highlighting indicates broken fibers.</P>\n')
+    fhtml.write('<P><FONT color="#FFA726">Orange</FONT> highlighting indicates fibers with long-term throughput deviations.</P>\n')
     fhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber Number <TH>Fiber "Goodness" <TH>Median Dome Flat Flux <TH>Throughput\n')
     for ifiber in range(300):
@@ -516,7 +516,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             bd, = np.where(cfib == badfibersN)
             if len(bd) >= 1:
                 fibqual = 'problematic'
-                bgcolor = '#FFEB3B'
+                bgcolor = '#FFA726'
 
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
         fhtml.write('<TD ALIGN=center>' + cfib + '<TD ALIGN=center>' + fibqual)
