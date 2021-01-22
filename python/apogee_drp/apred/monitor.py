@@ -482,9 +482,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     ###############################################################################################
     # HTML for individual fiber throughput plots
     badfibers = np.array(['015','034','105','111','115','121','122','123','124','125','126','127',
-                          '128','129','130','131','132','133','134','135','136','137','135','136',
-                          '137','138','139','140','141','142','143','144','145','146','147','148',
-                          '149','150','151','182','202','227','245','250','277','278','284','289',])
+                          '128','129','130','131','132','133','134','135','136','137','138','139',
+                          '140','141','142','143','144','145','146','147','148','149','150','151',
+                          '182','202','227','245','250','277','278','284','289',])
     deadfibers = np.array(['211','273'])
 
     fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
@@ -508,9 +508,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         bgcolor = '#FFFFFF'
         bd, = np.where(cfib == deadfibers)
-        if len(bd) == 1: bgcolor = '#E53935'
+        if len(bd) >= 1: bgcolor = '#E53935'
         bd, = np.where(cfib == badfibers)
-        if len(bd) == 1: bgcolor = '#FFEB3B'
+        if len(bd) >= 1: bgcolor = '#FFEB3B'
 
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
         fhtml.write('<TD ALIGN=center>' + cfib + '<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
