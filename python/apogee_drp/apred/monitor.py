@@ -579,7 +579,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         ymin = 0 - ymax * 0.05
         yspan = ymax - ymin
 
-        for i in range(300):
+        for i in range(5):
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
             if (os.path.exists(plotfile) == False) | (clobber == True):
                 print("----> monitor: Making " + os.path.basename(plotfile))
@@ -610,6 +610,40 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
                 plt.close('all')
+
+            plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '_throughput.png'
+            if (os.path.exists(plotfile) == False) | (clobber == True):
+                print("----> monitor: Making " + os.path.basename(plotfile))
+
+                ymin = 0;   ymax = 1.1;   yspan = ymax-ymin
+
+                fig = plt.figure(figsize=(28,7.5))
+                ax = plt.subplot2grid((1,1), (0,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.set_xlabel(r'JD - 2,400,000')
+                ax.text(-0.02, 0.5, r'Flux / max(Flux)', rotation=90, ha='right', va='center', transform=ax.transAxes)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
+
+                for ichip in range(nchips):
+                    yvals = gdcal['FLUX'][:, ichip, 299-i] / np.max(gdcal['FLUX'][:, ichip, :])
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                    ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
+                            fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
+
+                fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+                plt.savefig(plotfile)
+                plt.close('all')
+
 
     if makeplots is True:
         ###########################################################################################
