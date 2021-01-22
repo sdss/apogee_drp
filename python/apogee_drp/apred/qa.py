@@ -1068,7 +1068,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     Vsum = load.apVisitSum(int(plate), mjd)
     Vsumfile = Vsum.filename()
     Vsum = Vsum[1].data
-    block = np.floor((Vsum['FIBERID'] - 1) / 30)[::-1]
+    block = np.floor((Vsum['FIBERID'] - 1) / 30) #[::-1]
 
     for i in range(2):
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
@@ -1169,7 +1169,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             med = np.nanmedian(flux[chip][1].data, axis=1)
             sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='RdBu', alpha=1, vmin=0.0, vmax=2.0)
 
-            ax.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top')
+            ax.text(0.03, 0.97, chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color=chiplab[ichip])
 
             ax_divider = make_axes_locatable(ax)
             cax = ax_divider.append_axes("top", size="4%", pad="1%")
@@ -1185,7 +1185,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     #----------------------------------------------------------------------------------------------
     # PLOT 6: fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
-    block = np.floor((plSum2['FIBERID'] - 1) / 30)[::-1]
+    block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
     plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsQAplots: Making "+plotfile)
@@ -1647,7 +1647,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
         fiber = jdata['FIBERID']
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
-            cblock = str(11-np.ceil(fiber/30).astype(int))
+            cblock = str(np.ceil(fiber/30).astype(int))
 
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
