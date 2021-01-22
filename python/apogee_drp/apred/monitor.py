@@ -494,6 +494,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput'
     fhtml.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
+    fhtml.write('<HR>\n')
     fhtml.write('<P> The throughput plots show the median dome flat flux in each fiber divided by the maximum ')
     fhtml.write('across all fibers in a given observation.</P>\n')
     fhtml.write('<P> Red highlighting indicates broken fibers.</P>\n')
