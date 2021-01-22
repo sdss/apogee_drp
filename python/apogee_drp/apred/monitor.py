@@ -960,55 +960,55 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for iline in range(2):
                 plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
                 if (os.path.exists(plotfile) == False) | (clobber == True):
-                print("----> monitor: Making " + os.path.basename(plotfile))
+                    print("----> monitor: Making " + os.path.basename(plotfile))
 
-                fig = plt.figure(figsize=(30,14))
+                    fig = plt.figure(figsize=(30,14))
 
-                gdcal = allcal[thar]
-                caljd = gdcal['JD']-2.4e6
+                    gdcal = allcal[thar]
+                    caljd = gdcal['JD']-2.4e6
 
-                for ichip in range(nchips):
-                    chip = chips[ichip]
+                    for ichip in range(nchips):
+                        chip = chips[ichip]
 
-                    ax = plt.subplot2grid((nchips,1), (ichip,0))
-                    ax.set_xlim(xmin, xmax)
-                    ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                    ax.minorticks_on()
-                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                    ax.tick_params(axis='both',which='major',length=axmajlen)
-                    ax.tick_params(axis='both',which='minor',length=axminlen)
-                    ax.tick_params(axis='both',which='both',width=axwidth)
-                    if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                    ax.set_ylabel(r'FWHM ($\rm \AA$)')
-                    if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                        ax = plt.subplot2grid((nchips,1), (ichip,0))
+                        ax.set_xlim(xmin, xmax)
+                        ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                        ax.minorticks_on()
+                        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                        ax.tick_params(axis='both',which='major',length=axmajlen)
+                        ax.tick_params(axis='both',which='minor',length=axminlen)
+                        ax.tick_params(axis='both',which='both',width=axwidth)
+                        if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                        ax.set_ylabel(r'FWHM ($\rm \AA$)')
+                        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-                    w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
-                    ymin = w * 0.8
-                    ymax = w * 1.25
-                    yspan = ymax - ymin
-                    ax.set_ylim(ymin, ymax)
+                        w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
+                        ymin = w * 0.8
+                        ymax = w * 1.25
+                        yspan = ymax - ymin
+                        ax.set_ylim(ymin, ymax)
 
-                    for iyear in range(nyears):
-                        ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                        if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                        for iyear in range(nyears):
+                            ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                            if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                    for ifib in range(nplotfibs):
-                        w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2])
-                        ax.axhline(y=w, color=colors[ifib], linewidth=2, zorder=2)
-                        ax.axhline(y=w, color='k', linewidth=3, zorder=1)
-                        yvals = 2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
-                        ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                                   label='Fiber ' + str(fibers[ifib]), zorder=3)
+                        for ifib in range(nplotfibs):
+                            w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2])
+                            ax.axhline(y=w, color=colors[ifib], linewidth=2, zorder=2)
+                            ax.axhline(y=w, color='k', linewidth=3, zorder=1)
+                            yvals = 2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
+                            ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                                       label='Fiber ' + str(fibers[ifib]), zorder=3)
 
-                    ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                            ha='center', va='top', color=chip, bbox=bboxpar)
-                    if ichip == 0: 
-                        ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                                  fontsize=fsz, edgecolor='k', framealpha=1)
+                        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                                ha='center', va='top', color=chip, bbox=bboxpar)
+                        if ichip == 0: 
+                            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                                      fontsize=fsz, edgecolor='k', framealpha=1)
 
-                fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-                plt.savefig(plotfile)
-                plt.close('all')
+                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+                    plt.savefig(plotfile)
+                    plt.close('all')
 
         ###########################################################################################
         # trace.png
