@@ -488,10 +488,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput'
     fhtml.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
-    fhtml.write('<P> Note: the throughput plots show the quartz flux in each fiber divided by the maximum')
-    fhtml.write('quartz flux across all fibers in a given observation.</P>\n')
+    fhtml.write('<P> Note: the throughput plots show the median dome flat flux in each fiber divided by the maximum ')
+    fhtml.write('across all fibers in a given observation.</P>\n')
     fhtml.write('<TABLE BORDER=2>\n')
-    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber Number <TH>Quartz Flux <TH>Throughput\n')
+    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber Number <TH>Median Dome Flat Flux <TH>Throughput\n')
     for ifiber in range(300):
         cfib = str(ifiber+1).zfill(3)
         plotfile1 = 'fiber' + cfib + '.png'
@@ -581,7 +581,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         ymax1 = 13;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
         ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
-        for i in range(5):
+        for i in range(300):
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
             if (os.path.exists(plotfile) == False) | (clobber == True):
                 print("----> monitor: Making " + os.path.basename(plotfile))
@@ -597,7 +597,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.set_xlabel(r'JD - 2,400,000')
-                ax.text(-0.03, 0.5, r'Flux / 10,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
+                ax.text(-0.03, 0.5, r'Median Flux / 10,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
