@@ -504,9 +504,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         cfib = str(ifiber+1).zfill(3)
         plotfile1 = 'fiber' + cfib + '.png'
         plotfile2 = 'fiber' + cfib + '_throughput.png'
+
         bgcolor = '#FFFFFF'
-        bd, = np.where(cfib == deadfibers);   if len(bd) == 1: bgcolor = '#E53935'
-        bd, = np.where(cfib == badfibers);   if len(bd) == 1: bgcolor = '#FFEB3B'
+        bd, = np.where(cfib == deadfibers)
+        if len(bd) == 1: bgcolor = '#E53935'
+        bd, = np.where(cfib == badfibers)
+        if len(bd) == 1: bgcolor = '#FFEB3B'
+
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
         fhtml.write('<TD ALIGN=center>' + cfib + '<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
         fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=1000></A>')
