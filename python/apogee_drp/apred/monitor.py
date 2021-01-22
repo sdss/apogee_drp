@@ -487,7 +487,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                           '182','202','227','245','250','277','278','284','289',])
     deadfibers = np.array(['211','273'])
 
-    badfibersS = np.array(['031','039','061','067','069','083','084','091','129','136','145','151','165','180','241','269'])
+    badfibersS = np.array(['031','034','039','061','067','069','083','084','091','129','136','140',
+                           '145','147','151','165','180','241','269'])
     deadfibersS = None
 
     if instrument == 'apogee-s':
