@@ -519,7 +519,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 bgcolor = '#FFEB3B'
 
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
-        fhtml.write('<TD ALIGN=center>' + cfib + '<TD ALIGN=center>' + fibqual + ')
+        fhtml.write('<TD ALIGN=center>' + cfib + '<TD ALIGN=center>' + fibqual)
         fhtml.write('<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
         fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=1000></A>\n')
     fhtml.write('</TABLE></BODY></HTML>\n')
