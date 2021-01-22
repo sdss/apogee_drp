@@ -492,29 +492,34 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml = open(fibdir + 'fiber.html', 'w')
     tit = 'APOGEE-N Fiber Throughput'
     if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput'
-    fhtml.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
+    fhtml.write('<HTML><HEAD><script src="../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
     fhtml.write('<HR>\n')
     fhtml.write('<P> The throughput plots show the median dome flat flux in each fiber divided by the maximum ')
     fhtml.write('across all fibers in a given observation.</P>\n')
     fhtml.write('<P> Red highlighting indicates broken fibers.</P>\n')
     fhtml.write('<P> Yellow highlighting indicates fibers with long-term throughput deviations.</P>\n')
-    fhtml.write('<TABLE BORDER=2>\n')
-    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber Number <TH>Median Dome Flat Flux <TH>Throughput\n')
+    fhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
+    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber Number <TH>Fiber quality <TH>Median Dome Flat Flux <TH>Throughput\n')
     for ifiber in range(300):
         cfib = str(ifiber+1).zfill(3)
         plotfile1 = 'fiber' + cfib + '.png'
         plotfile2 = 'fiber' + cfib + '_throughput.png'
 
+        fibqual = 'normal'
         bgcolor = '#FFFFFF'
         if instrument == 'apogee-n':
             bd, = np.where(cfib == deadfibersN)
-            if len(bd) >= 1: bgcolor = '#E53935'
+            if len(bd) >= 1: 
+                fibqual = 'dead'
+                bgcolor = '#E53935'
             bd, = np.where(cfib == badfibersN)
-            if len(bd) >= 1: bgcolor = '#FFEB3B'
+            if len(bd) >= 1:
+                fibqual = 'problematic'
+                bgcolor = '#FFEB3B'
 
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
-        fhtml.write('<TD ALIGN=center>' + cfib + '<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
+        fhtml.write('<TD ALIGN=center>' + cfib + '<TD>' + fibqual + '<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
         fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=1000></A>')
     fhtml.write('</TABLE></BODY></HTML>\n')
     fhtml.close()
