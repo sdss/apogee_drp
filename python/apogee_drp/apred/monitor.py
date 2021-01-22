@@ -957,9 +957,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         ###########################################################################################
         # ThArNe lamp line FWHM
-        plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
             for iline in range(2):
+                plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
+                if (os.path.exists(plotfile) == False) | (clobber == True):
                 print("----> monitor: Making " + os.path.basename(plotfile))
 
                 fig = plt.figure(figsize=(30,14))
