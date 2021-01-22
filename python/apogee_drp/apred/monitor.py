@@ -673,7 +673,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             fig = plt.figure(figsize=(30,14))
             ymax = 44000
             if instrument == 'apogee-s': 
-                ymax = 100000
+                ymax = 125000
             ymin = 0 - ymax * 0.05
             yspan = ymax - ymin
 
@@ -723,6 +723,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             fig = plt.figure(figsize=(30,14))
             ymax = np.array([510000, 58000, 11000]) 
+            if instrument == 'apogee-s': ymax = np.array([150000, 30000, 3000])
             ymin = 0 - ymax * 0.05
             yspan = ymax - ymin
 
@@ -773,6 +774,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             fig = plt.figure(figsize=(30,14))
             ymax = np.array([40000, 3000, 7700])
+            if instrument == 'apogee-s': ymax = np.array([10000, 15000, 3000])
             ymin = 0 - ymax*0.05
             yspan = ymax - ymin
 
@@ -1156,6 +1158,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             fig = plt.figure(figsize=(31,12))
             ymax = 11
             ymin = 16.8
+            if instrument == 'apogee-s': 
+                ymax = 12
+                ymin = 18
             yspan = ymax - ymin
 
             ax1 = plt.subplot2grid((2,1), (0,0))
