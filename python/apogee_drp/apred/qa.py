@@ -2891,7 +2891,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
 
             # Quartz exposures.
             if struct['QRTZ'][i] == 1: 
-                    struct['FLUX'][i] = np.nanmedian(oneDstruct['FLUX'], axis=1)
+                    struct['FLUX'][i] = np.nanmedian(oneDstruct['FLUX'], axis=2)
 
             # Arc lamp exposures.
             if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
