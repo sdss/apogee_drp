@@ -502,8 +502,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
     if os.path.exists(fibdir) is False: os.mkdir(fibdir)
     fhtml = open(fibdir + 'fiber.html', 'w')
-    tit = 'APOGEE-N Fiber Throughput'
-    if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput'
+    tit = 'APOGEE-N Fiber Throughput (Dome Flat)'
+    if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput (Dome Flat)'
     fhtml.write('<HTML><HEAD><script src="../../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
     fhtml.write('<HR>\n')
@@ -545,8 +545,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
     if os.path.exists(fibdir) is False: os.mkdir(fibdir)
     fhtml = open(fibdir + 'fiber_qrtz.html', 'w')
-    tit = 'APOGEE-N Fiber Throughput'
-    if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput'
+    tit = 'APOGEE-N Fiber Throughput (Quartz)'
+    if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput (Quartz)'
     fhtml.write('<HTML><HEAD><script src="../../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
     fhtml.write('<HR>\n')
