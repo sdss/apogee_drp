@@ -117,8 +117,6 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     darkplans = np.array(darkplans)
     ndarkplans = len(darkplans)
 
-    import pdb; pdb.set_trace()
-
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
     for i in range(nsciplans):
@@ -172,6 +170,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                      makenightqa=makenightqa, makestarhtml=makestarhtml, clobber=clobber)
 
     print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
+
 
     # Run apqa on the cal  plans
     print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
@@ -2880,6 +2879,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
 
             # Quartz exposures.
             if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.median(oneD['a'][1].data, axis=0)
+            import pdb; pdb.set_trace()
 
             # Arc lamp exposures.
             if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
