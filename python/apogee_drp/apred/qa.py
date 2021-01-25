@@ -2897,9 +2897,9 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         oneDflux = oneD[chip][1].data
                         oneDerr = oneD[chip][2].data
 #;                        APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
-                        import pdb; pdb.set_trace()
 
                         maxind, = argrelextrema(oneDflux, np.greater)  # maxima
+                        import pdb; pdb.set_trace()
                         # sigma cut on the flux
                         gd, = np.where(oneDflux[maxind] > 10)
                         if len(gd) == 0:
