@@ -16,7 +16,7 @@ from astroplan import moon_illumination
 from astropy.coordinates import SkyCoord, get_moon
 from astropy import units as astropyUnits
 from scipy.signal import medfilt2d as ScipyMedfilt2D
-from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask
+from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
 from apogee_drp.apred import wave
 from apogee_drp.database import apogeedb
 from dlnpyutils import utils as dln
