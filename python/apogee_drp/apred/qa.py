@@ -176,6 +176,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
     planstr = plan.load(planfile, np=True)
 
+    print(os.path.basename(planfile))
+
     # Get field name
     tmp = planfile.split(telescope+'/')
     field = tmp[1].split('/')[0]
