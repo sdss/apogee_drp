@@ -723,7 +723,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 fig = plt.figure(figsize=(28,7.5))
                 ax = plt.subplot2grid((1,1), (0,0))
                 ax.set_xlim(xmin, xmax)
-                #ax.set_ylim(ymin1, ymax1)
+                ax.set_ylim(ymin1, ymax1)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
