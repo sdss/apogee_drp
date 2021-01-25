@@ -2862,6 +2862,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                    ('LINES',   np.float64,(nchips,nlines))])
 
     struct = np.zeros(n_exposures, dtype=dt)
+    struct['FIBERS'] = fibers
 
     # Loop over exposures and get 1D images to fill structure.
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
@@ -2898,12 +2899,12 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 if struct['THAR'][i] == 1: line = tharline
                 if struct['THAR'][i] != 1: line = uneline
 
+                import pdb; pdb.set_trace()
                 struct['LINES'][i] = line
 
                 nlines = 1
                 if line.shape[0] != 1: nlines = line.shape[1]
 
-                import pdb; pdb.set_trace()
                 for iline in range(nlines):
                     for ichip in range(nchips):
                         chip = chips[ichip]
