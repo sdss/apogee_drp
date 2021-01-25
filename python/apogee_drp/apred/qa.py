@@ -2855,7 +2855,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                    ('QRTZ',    np.int32),
                    ('UNE',     np.int32),
                    ('THAR',    np.int32),
-                   ('FLUX',    np.float64,(300,nchips)),
+                   ('FLUX',    np.float64,(nchips,300)),
                    ('GAUSS',   np.float64,(4,nfibers,nchips,nlines)),
                    ('WAVE',    np.float64,(nfibers,nchips,nlines)),
                    ('FIBERS',  np.float64,(nfibers)),
