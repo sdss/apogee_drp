@@ -2904,24 +2904,25 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 nlines = 1
                 if line.shape[1] != 1: nlines = line.shape[0]
 
-                import pdb; pdb.set_trace()
-
                 for iline in range(nlines):
                     for ichip in range(nchips):
                         chip = chips[ichip]
-                        oneDflux = oneD[chip][1].data
-                        oneDerr = oneD[chip][2].data
+                        oneDflux = oneDstruct['FLUX'][ichip]
+                        oneDerr = oneDstruct['ERR'][ichip]
+                        toterr = np.sqrt(np.nanmedian(oneDerr[:,1024-100:1024+100]**2, axis=1))
 #;                        APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
 
-                        maxind, = argrelextrema(oneDflux, np.greater)  # maxima
+                        peaks,_ = find_peaks(oneDflux, height=5000)
+                        import pdb; pdb.set_trace()
+                        #maxind, = argrelextrema(oneDflux, np.greater)  # maxima
 
                         # sigma cut on the flux
-                        gd, = np.where(oneDflux[maxind] > 10)
-                        if len(gd) == 0:
-                            print('No peaks found')
-                            return
+                        #gd, = np.where(oneDflux[maxind] > 5000)
+                        #if len(gd) == 0:
+                        #    print('No peaks found')
+                        #    return
                         pix0 = maxind[gd]
-                        peaks = peakfit.peakfit(oneDflux, sigma=toterror, pix0=pix0)
+                        peaks = peakfit.peakfit(oneDflux[fibers], sigma=toterror, pix0=pix0)
 
                         #linestr = wave.findlines(oneD, rows=fibers, lines=line)
                         #linestr = wave.peakfit(oneD[chips[ichip]][1].data)
