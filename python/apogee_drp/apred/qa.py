@@ -2884,9 +2884,9 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
             if struct['QRTZ'][i] == 1: 
                 for ichip in range(nchips):
                     chip = chips[ichip]
+                    import pdb; pdb.set_trace()
                     struct['FLUX'][i] = np.nanmedian(oneD[chip][1].data[i, :], axis=1)
 
-            import pdb; pdb.set_trace()
             # Arc lamp exposures.
             if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
                 if struct['THAR'][i] == 1: line = tharline
