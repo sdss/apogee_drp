@@ -2825,7 +2825,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
 
     print("--------------------------------------------------------------------")
-    print("Running MAKECALFITS for plate "+plate+", mjd "+mjd)
+    print("Running MAKECALFITS for MJD " + mjd)
 
     n_exposures = len(ims)
 
@@ -2932,8 +2932,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     outfile = load.filename('QAcal', mjd=mjd) 
     Table(struct).write(outfile)
 
-    print("Done with MAKECALFITS for plate "+plate+", mjd "+mjd)
-    print("Made "+outfile)
+    print("Done with MAKECALFITS for MJD " + mjd)
+    print("Made " + outfile)
     print("--------------------------------------------------------------------\n")
 
 
@@ -2941,7 +2941,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
 def makeDarkFits(load=None, ims=None, mjd=None):
 
     print("--------------------------------------------------------------------")
-    print("Running MAKEDARKFITS for plate "+plate+", mjd "+mjd)
+    print("Running MAKEDARKFITS for MJD "+mjd)
 
     n_exposures = len(ims)
 
@@ -2997,7 +2997,7 @@ def makeDarkFits(load=None, ims=None, mjd=None):
     outfile = load.filename('QAcal', mjd=mjd).replace('apQAcal','apQAdarkflat')
     Table(struct).write(outfile)
 
-    print("Done with MAKEDARKFITS for plate " + plate + ", mjd " + mjd)
+    print("Done with MAKEDARKFITS for MJD " + mjd)
     print("Made " + outfile)
     print("--------------------------------------------------------------------\n")
 
