@@ -2859,7 +2859,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                    ('GAUSS',   np.float64,(4,nfibers,nchips,nlines)),
                    ('WAVE',    np.float64,(nfibers,nchips,nlines)),
                    ('FIBERS',  np.float64,(nfibers)),
-                   ('LINES',   np.float64,(nchips,nlines))])
+                   ('LINES',   np.float64,(nlines,nchips))])
 
     struct = np.zeros(n_exposures, dtype=dt)
     struct['FIBERS'] = fibers
@@ -2899,11 +2899,12 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 if struct['THAR'][i] == 1: line = tharline
                 if struct['THAR'][i] != 1: line = uneline
 
-                import pdb; pdb.set_trace()
                 struct['LINES'][i] = line
 
                 nlines = 1
                 if line.shape[0] != 1: nlines = line.shape[1]
+
+                import pdb; pdb.set_trace()
 
                 for iline in range(nlines):
                     for ichip in range(nchips):
