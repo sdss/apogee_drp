@@ -2902,7 +2902,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 struct['LINES'][i] = line
 
                 nlines = 1
-                if line.shape[0] != 1: nlines = line.shape[1]
+                if line.shape[1] != 1: nlines = line.shape[0]
 
                 import pdb; pdb.set_trace()
 
