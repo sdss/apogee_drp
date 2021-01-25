@@ -642,7 +642,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         #gd, = np.where(allcal['QRTZ'] > 0)                                                       
         #gdcal = allcal[gd]
 
-        for i in range(300):
+        for i in range(5):
             gdcal = allexp[dome]
             caljd = gdcal['JD'] - 2.4e6
             ymax1 = 13;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
