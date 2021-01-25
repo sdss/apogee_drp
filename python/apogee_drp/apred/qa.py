@@ -36,7 +36,7 @@ sdss_path = path.Path()
 
 sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js'
 
-matplotlib.use('agg')
+#matplotlib.use('agg')
 
 # put import pdb; pdb.set_trace() wherever you want stop
 
@@ -1437,7 +1437,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
                 #d = load.apPlate(int(plate), mjd) 
                 d = load.ap1D(ims[i])
-                rows = 300-platesum2['FIBERID']
+                rows = 300 - platesum2['FIBERID']
 
                 fibersky, = np.where(platesum2['OBJTYPE'] == 'SKY')
                 nsky = len(fibersky)
@@ -1597,7 +1597,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
-    matplotlib.use('agg')
+    #matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
@@ -2830,7 +2830,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     n_exposures = len(ims)
 
     nlines = 2
-    chips=np.array(['a','b','c'])
+    chips = np.array(['a','b','c'])
     nchips = len(chips)
 
     tharline = np.array([[940.,1128.,1130.],[1724.,623.,1778.]])
@@ -2893,21 +2893,23 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
 
                 for iline in range(nlines):
                     for ichip in range(nchips):
-
+                        chip = chips[ichip]
+                        oneDflux = oneD[chip][1].data
+                        oneDerr = oneD[chip][2].data
 #;                        APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
                         import pdb; pdb.set_trace()
 
-                        maxind, = argrelextrema(oneD[ichip], np.greater)  # maxima
+                        maxind, = argrelextrema(oneDflux, np.greater)  # maxima
                         # sigma cut on the flux
-                        gd, = np.where(oneD[ichip][maxind] > 10)
+                        gd, = np.where(oneDflux[maxind] > 10)
                         if len(gd) == 0:
                             print('No peaks found')
                             return
                         pix0 = maxind[gd]
-                        peaks = peakfit.peakfit(oneD[ichip], sigma=toterror, pix0=pix0)
+                        peaks = peakfit.peakfit(oneDflux, sigma=toterror, pix0=pix0)
 
-                        linestr = wave.findlines(oneD, rows=fibers, lines=line)
-                        linestr = wave.peakfit(oneD[chips[ichip]][1].data)
+                        #linestr = wave.findlines(oneD, rows=fibers, lines=line)
+                        #linestr = wave.peakfit(oneD[chips[ichip]][1].data)
 
                         for ifiber in range(nfibers):
                             fibers = fibers[ifiber]
