@@ -550,7 +550,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     fhtml.write('<HTML><HEAD><script src="../../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
     fhtml.write('<HR>\n')
-    fhtml.write('<P> The throughput plots show the median dome flat flux in each fiber divided by the maximum ')
+    fhtml.write('<P> The throughput plots show the quartz lamp flux in each fiber divided by the maximum ')
     fhtml.write('across all fibers in a given observation.</P>\n')
     fhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber<BR>(MTP #) <TH>Quartz Flux <TH>Throughput\n')
@@ -642,7 +642,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         #gd, = np.where(allcal['QRTZ'] > 0)                                                       
         #gdcal = allcal[gd]
 
-        for i in range(5):
+        for i in range(300):
             gdcal = allexp[dome]
             caljd = gdcal['JD'] - 2.4e6
             ymax1 = 13;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
@@ -713,7 +713,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             gd, = np.where(allcal['QRTZ'] > 0)
             gdcal = allcal[gd]
             caljd = gdcal['JD'] - 2.4e6
-            ymax1 = 60;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
+            ymax1 = 50;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
             #ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '_qrtz.png'
