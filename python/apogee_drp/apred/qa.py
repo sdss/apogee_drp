@@ -101,8 +101,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     gdplans = []
     for i in range(nplans):
         tmp = plans[i].split('-')
-        if tmp[0] == 'apPlan': 
-            if 'sky' not in plans[i]: gdplans.append(plans[i].replace('\n',''))
+        #if tmp[0] == 'apPlan': 
+        if 'sky' not in plans[i]: gdplans.append(plans[i].replace('\n',''))
     gdplans = np.array(gdplans)
     nplans = len(gdplans)
 
@@ -169,7 +169,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
     start_time = time.time()
 
-    print("Starting APQA for plate "+plate+", MJD "+mjd+"\n")
+    print("Starting APQA for plate " + plate + ", MJD " + mjd + "\n")
 
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -194,9 +194,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
 
     apodir =     os.environ.get('APOGEE_REDUX')+'/'
-    spectrodir = apodir+apred+'/'
-    caldir =     spectrodir+'cal/'
-    expdir =     spectrodir+'exposures/'+instrument+'/'
+    spectrodir = apodir + apred + '/'
+    caldir =     spectrodir + 'cal/'
+    expdir =     spectrodir + 'exposures/' + instrument + '/'
 
     # Get array of object exposures and find out how many are objects.
     flavor = planstr['APEXP']['flavor']
@@ -2839,7 +2839,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         oneD = load.ap1D(ims[i])
         oneDhdr = oneD['a'][0].header
 
-        if type(oneD)==dict:
+        if type(oneD) == dict:
             struct['NAME'][i] =    ims[i]
             struct['MJD'][i] =     mjd
             struct['JD'][i] =      oneDhdr['JD-MID']
@@ -2851,7 +2851,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
             struct['UNE'][i] =     oneDhdr['LAMPUNE']
 
             # Quartz exposures.
-            if struct['QRTZ'][i]==1: struct['FLUX'][i] = np.median(oneD['a'][1].data, axis=0)
+            if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.median(oneD['a'][1].data, axis=0)
 
             # Arc lamp exposures.
             if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
@@ -2861,16 +2861,13 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 struct['LINES'][i] = line
 
                 nlines = 1
-                if line.shape[0]!=1: nlines = line.shape[1]
+                if line.shape[0] != 1: nlines = line.shape[1]
 
                 for iline in range(nlines):
                     for ichip in range(nchips):
-                        print("Calling appeakfit... no, not really because it's a long IDL code.")
-                        ### NOTE:the below does not work yet... maybe use findlines instead?
-                        # https://github.com/sdss/apogee/blob/master/pro/apogeereduce/appeakfit.pro
-                        # https://github.com/sdss/apogee/blob/master/python/apogee/apred/wave.py
 
 #;                        APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
+                        import pdb; pdb.set_trace()
 
                         maxind, = argrelextrema(oneD[ichip], np.greater)  # maxima
                         # sigma cut on the flux
@@ -2886,7 +2883,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
 
                         for ifiber in range(nfibers):
                             fibers = fibers[ifiber]
-                            j = np.where(linestr['FIBER'] == fiber)
+                            j, = np.where(linestr['FIBER'] == fiber)
                             nj = len(j)
                             if nj > 0:
                                 junk = np.nanmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
