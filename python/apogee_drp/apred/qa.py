@@ -2881,8 +2881,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
             struct['UNE'][i] =     oneDhdr['LAMPUNE']
 
             # Quartz exposures.
-            if struct['QRTZ'][i] == True: struct['FLUX'][i] = np.median(oneD['a'][1].data, axis=1)
             import pdb; pdb.set_trace()
+            if struct['QRTZ'][i] == True: struct['FLUX'][i] = np.nanmedian(oneD['a'][1].data, axis=1)
             # Arc lamp exposures.
             if (struct['THAR'][i] == True) | (struct['UNE'][i] == True):
                 if struct['THAR'][i] == 1: line = tharline
