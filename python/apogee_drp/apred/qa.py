@@ -2877,12 +2877,11 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
             struct['THAR'][i] =    oneDhdr['LAMPTHAR']
             struct['UNE'][i] =     oneDhdr['LAMPUNE']
 
-            import pdb; pdb.set_trace()
             # Quartz exposures.
-            if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.median(oneD['a'][1].data, axis=0)
+            if struct['QRTZ'][i] is True: struct['FLUX'][i] = np.median(oneD['a'][1].data, axis=0)
 
             # Arc lamp exposures.
-            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
+            if (struct['THAR'][i] is True) | (struct['UNE'][i] is True):
                 if struct['THAR'][i] == 1: line = tharline
                 if struct['THAR'][i] != 1: line = uneline
 
