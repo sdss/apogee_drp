@@ -2881,8 +2881,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
             struct['UNE'][i] =     oneDhdr['LAMPUNE']
 
             # Quartz exposures.
-            if struct['QRTZ'][i] == True: struct['FLUX'][i] = np.median(oneD['a'][1].data, axis=0)
-
+            if struct['QRTZ'][i] == True: struct['FLUX'][i] = np.median(oneD['a'][1].data, axis=1)
+            import pdb; pdb.set_trace()
             # Arc lamp exposures.
             if (struct['THAR'][i] == True) | (struct['UNE'][i] == True):
                 if struct['THAR'][i] == 1: line = tharline
@@ -2901,7 +2901,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
 #;                        APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
 
                         maxind, = argrelextrema(oneDflux, np.greater)  # maxima
-                        import pdb; pdb.set_trace()
+
                         # sigma cut on the flux
                         gd, = np.where(oneDflux[maxind] > 10)
                         if len(gd) == 0:
