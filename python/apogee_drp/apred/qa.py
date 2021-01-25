@@ -2877,6 +2877,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
             struct['THAR'][i] =    oneDhdr['LAMPTHAR']
             struct['UNE'][i] =     oneDhdr['LAMPUNE']
 
+            import pdb; pdb.set_trace()
             # Quartz exposures.
             if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.median(oneD['a'][1].data, axis=0)
 
