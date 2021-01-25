@@ -2912,7 +2912,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         toterr = np.sqrt(np.nanmedian(oneDerr[:,1024-100:1024+100]**2, axis=1))
 #;                        APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
 
-                        peaks,_ = find_peaks(oneDflux, height=5000)
+                        peaks,_ = find_peaks(oneDflux[fibers], height=5000)
                         import pdb; pdb.set_trace()
                         #maxind, = argrelextrema(oneDflux, np.greater)  # maxima
 
