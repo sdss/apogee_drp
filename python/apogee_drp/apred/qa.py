@@ -2867,6 +2867,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     for i in range(n_exposures):
         oneD = load.ap1D(ims[i])
+        import pdb; pdb.set_trace()
         oneDhdr = oneD['a'][0].header
 
         if type(oneD) == dict:
