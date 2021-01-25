@@ -2866,6 +2866,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     # Loop over exposures and get 1D images to fill structure.
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     for i in range(n_exposures):
+        print(ims[i])
         oneD = load.ap1D(ims[i])
         oneDhdr = oneD['a'][0].header
 
