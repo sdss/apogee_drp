@@ -87,8 +87,11 @@ def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
             makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, clobber=True):
 
-    # Establish telescope
+    # Establish telescope and instrument
     telescope = observatory + '25m'
+    instrument = 'apogee-n'
+    if observatory == 'lco': instrument = 'apogee-s'
+    load = apload.ApLoad(apred=apred, telescope=telescope)
 
     # Find the list of plan files
     apodir = os.environ.get('APOGEE_REDUX')+'/'
@@ -98,26 +101,33 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     nplans = len(plans)
 
     # Find the plan files pertaining to science data
-    gdplans = []
+    sciplans = []
+    calplans = []
+    darkplans = []
     for i in range(nplans):
         tmp = plans[i].split('-')
-        #if tmp[0] == 'apPlan': 
-        if 'sky' not in plans[i]: gdplans.append(plans[i].replace('\n',''))
-    gdplans = np.array(gdplans)
-    nplans = len(gdplans)
+        if tmp[0] == 'apPlan': 
+            if 'sky' not in plans[i]: sciplans.append(plans[i].replace('\n',''))
+        if tmp[0] == 'apCalPlan': calplans.append(plans[i].replace('\n',''))
+        if tmp[0] == 'apDarkPlan': darkplans.append(plans[i].replace('\n',''))
+    sciplans = np.array(sciplans)
+    nsciplans = len(sciplans)
+    calplans = np.array(calplans)
+    ncalplans = len(calplans)
+    darkplans = np.array(darkplans)
+    ndarkplans = len(darkplans)
 
     import pdb; pdb.set_trace()
 
     # Run apqa on the science data plans
-    print("Running APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
-    for i in range(nplans):
+    print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
+    for i in range(nsciplans):
         # Get the plate number and mjd
-        tmp = gdplans[i].split('-')
+        tmp = sciplans[i].split('-')
         plate = tmp[1]
         mjd = tmp[2].split('.')[0]
 
         # Load the plan file
-        load = apload.ApLoad(apred=apred, telescope=telescope)
         planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
         planstr = plan.load(planfile, np=True)
 
@@ -139,7 +149,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 # Add this to the list of failed plates
                 print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
                 # If last plate fails, still make the nightly and master QA pages
-                if i == nplans-1:
+                if i == nsciplans-1:
                     # Make the nightly QA page
                     if makenightqa == True:
                         q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
@@ -152,7 +162,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 continue
 
         # Only run makemasterqa and makenightqa after the last plate on this mjd
-        if i < nplans-1:
+        if i < nsciplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
                      makemasterqa=False, makeplots=makeplots, makespecplots=makespecplots, 
                      makenightqa=False, makestarhtml=makestarhtml, clobber=clobber)
@@ -161,7 +171,23 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                      makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
                      makenightqa=makenightqa, makestarhtml=makestarhtml, clobber=clobber)
 
-    print("Done with APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
+    print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
+
+    # Run apqa on the cal  plans
+    print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+    for i in range(ncalplans): 
+        mjd = calplans[i].split('-')[3].split('.')[0]
+        all_ims = planstr['APEXP']['name']
+        x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
+    print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+
+    # Run apqa on the dark  plans
+    print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+    for i in range(ndarkplans): 
+        mjd = darkplans[i].split('-')[3].split('.')[0]
+        all_ims = planstr['APEXP']['name']
+        x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
+    print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
@@ -2903,7 +2929,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         else:
             print("type(1D) does not equal dict. This is probably a problem.")
 
-    outfile = load.filename('QAcal', plate=int(plate), mjd=mjd) 
+    outfile = load.filename('QAcal', mjd=mjd) 
     Table(struct).write(outfile)
 
     print("Done with MAKECALFITS for plate "+plate+", mjd "+mjd)
@@ -2912,7 +2938,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
 
 
 ''' MAKEDARKFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants) '''
-def makeDarkFits(load=None, planfile=None, ims=None, mjd=None):
+def makeDarkFits(load=None, ims=None, mjd=None):
 
     print("--------------------------------------------------------------------")
     print("Running MAKEDARKFITS for plate "+plate+", mjd "+mjd)
@@ -2968,11 +2994,11 @@ def makeDarkFits(load=None, planfile=None, ims=None, mjd=None):
         else:
             print("type(2D) does not equal dict. This is probably a problem.")
 
-    outfile = load.filename('QAcal', plate=int(plate), mjd=mjd).replace('apQAcal','apQAdarkflat')
+    outfile = load.filename('QAcal', mjd=mjd).replace('apQAcal','apQAdarkflat')
     Table(struct).write(outfile)
 
-    print("Done with MAKEDARKFITS for plate "+plate+", mjd "+mjd)
-    print("Made "+outfile)
+    print("Done with MAKEDARKFITS for plate " + plate + ", mjd " + mjd)
+    print("Made " + outfile)
     print("--------------------------------------------------------------------\n")
 
 
