@@ -117,6 +117,22 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     darkplans = np.array(darkplans)
     ndarkplans = len(darkplans)
 
+    # Run apqa on the cal  plans
+    print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+    for i in range(ncalplans): 
+        mjd = calplans[i].split('-')[3].split('.')[0]
+        all_ims = planstr['APEXP']['name']
+        x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
+    print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+
+    # Run apqa on the dark  plans
+    print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+    for i in range(ndarkplans): 
+        mjd = darkplans[i].split('-')[3].split('.')[0]
+        all_ims = planstr['APEXP']['name']
+        x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
+    print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
     for i in range(nsciplans):
@@ -170,23 +186,6 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                      makenightqa=makenightqa, makestarhtml=makestarhtml, clobber=clobber)
 
     print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
-
-
-    # Run apqa on the cal  plans
-    print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
-    for i in range(ncalplans): 
-        mjd = calplans[i].split('-')[3].split('.')[0]
-        all_ims = planstr['APEXP']['name']
-        x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
-    print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
-
-    # Run apqa on the dark  plans
-    print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
-    for i in range(ndarkplans): 
-        mjd = darkplans[i].split('-')[3].split('.')[0]
-        all_ims = planstr['APEXP']['name']
-        x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
-    print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
@@ -1701,13 +1700,13 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                 # Find the associated healpix directories and make them if they don't already exist
                 healpixgroupDir = starHTMLdir + str(healpixgroup) + '/'
-                if os.path.exists(healpixgroupDir) is False: os.mkdir(healpixgroupDir)
+                if os.path.exists(healpixgroupDir) is False: os.makedirs(healpixgroupDir)
 
                 healpixDir = healpixgroupDir + str(healpix) + '/'
-                if os.path.exists(healpixDir) is False: os.mkdir(healpixDir)
+                if os.path.exists(healpixDir) is False: os.makedirs(healpixDir)
 
                 starHtmlDir = healpixDir + '/html/'
-                if os.path.exists(starHtmlDir) is False: os.mkdir(starHtmlDir)
+                if os.path.exists(starHtmlDir) is False: os.makedirs(starHtmlDir)
 
                 starHTMLpath = starHtmlDir + objid + '.html'
                 relpath = '../../../../../../stars/' + telescope + '/'
@@ -2930,7 +2929,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         else:
             print("type(1D) does not equal dict. This is probably a problem.")
 
-    outfile = load.filename('QAcal', mjd=mjd) 
+    outfile = load.filename('QAcal', mjd=mjd)
+    if os.path.exists(os.path.basename(outfile)): os.makedirs(os.path.basename(outfile))
     Table(struct).write(outfile)
 
     print("Done with MAKECALFITS for MJD " + mjd)
