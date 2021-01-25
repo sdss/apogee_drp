@@ -120,6 +120,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     # Run apqa on the cal  plans
     print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
     for i in range(ncalplans): 
+        planfile = load.filename('CalPlan', mjd=mjd)
+        planstr = plan.load(planfile, np=True)
         mjd = calplans[i].split('-')[3].split('.')[0]
         all_ims = planstr['APEXP']['name']
         x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
@@ -128,6 +130,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     # Run apqa on the dark  plans
     print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
     for i in range(ndarkplans): 
+        planfile = load.filename('DarkPlan', mjd=mjd)
+        planstr = plan.load(planfile, np=True)
         mjd = darkplans[i].split('-')[3].split('.')[0]
         all_ims = planstr['APEXP']['name']
         x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
