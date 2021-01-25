@@ -2869,6 +2869,14 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         oneD = load.ap1D(ims[i])
         oneDhdr = oneD['a'][0].header
 
+        dt = np.dtype([('FLUX',   np.float64,(300,2048)),
+                       ('ERR',    np.float64,(300,2048))])
+        oneDstruct = np.zeros(nchips, dtype=dt)
+        for ichip in range(nchips):
+            chip = chips[ichip]
+            oneDstruct['FLUX'][ichip] = oneD[chip][1].data
+            oneDstruct['ERR'][ichip] =  oneD[chip][2].data
+
         if type(oneD) == dict:
             struct['NAME'][i] =    ims[i]
             struct['MJD'][i] =     mjd
@@ -2880,12 +2888,10 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
             struct['THAR'][i] =    oneDhdr['LAMPTHAR']
             struct['UNE'][i] =     oneDhdr['LAMPUNE']
 
+            import pdb; pdb.set_trace()
             # Quartz exposures.
             if struct['QRTZ'][i] == 1: 
-                for ichip in range(nchips):
-                    chip = chips[ichip]
-                    import pdb; pdb.set_trace()
-                    struct['FLUX'][i] = np.nanmedian(oneD[chip][1].data[i, :], axis=1)
+                    struct['FLUX'][i] = np.nanmedian(oneDstruct[chip][1].data[i, :], axis=1)
 
             # Arc lamp exposures.
             if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
