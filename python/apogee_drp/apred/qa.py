@@ -4,6 +4,7 @@ import os
 import subprocess
 import math
 import time
+import pickle
 import numpy as np
 from pathlib import Path
 from astropy.io import fits, ascii
@@ -15,8 +16,7 @@ from numpy.lib.recfunctions import append_fields, merge_arrays
 from astroplan import moon_illumination
 from astropy.coordinates import SkyCoord, get_moon
 from astropy import units as astropyUnits
-from scipy.signal import medfilt2d as ScipyMedfilt2D
-from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask
+from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
 from apogee_drp.apred import wave
 from apogee_drp.database import apogeedb
 from dlnpyutils import utils as dln
@@ -30,13 +30,17 @@ import matplotlib.ticker as ticker
 import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
+from scipy.signal import medfilt2d as ScipyMedfilt2D
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
+from scipy.optimize import curve_fit
+
+cspeed = 299792.458e0
 
 sdss_path = path.Path()
 
 sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js'
 
-matplotlib.use('agg')
+#matplotlib.use('agg')
 
 # put import pdb; pdb.set_trace() wherever you want stop
 
@@ -61,7 +65,8 @@ matplotlib.use('agg')
 
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
-            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, clobber=True):
+            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True,
+            makestarplots=True, makeqafits=True, clobber=True):
 
     # Establish telescope
     telescope = observatory + '25m'
@@ -81,14 +86,19 @@ def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True
     for ii in range(nmjd):
         x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
                     makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
-                    makenightqa=makenightqa, makestarhtml=makestarhtml, clobber=clobber)
+                    makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots,
+                    makeqafits=makeqafits, clobber=clobber)
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
-            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, clobber=True):
+            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
+            makestarplots=True, makeqafits=True, clobber=True):
 
-    # Establish telescope
+    # Establish telescope and instrument
     telescope = observatory + '25m'
+    instrument = 'apogee-n'
+    if observatory == 'lco': instrument = 'apogee-s'
+    load = apload.ApLoad(apred=apred, telescope=telescope)
 
     # Find the list of plan files
     apodir = os.environ.get('APOGEE_REDUX')+'/'
@@ -98,24 +108,52 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     nplans = len(plans)
 
     # Find the plan files pertaining to science data
-    gdplans = []
+    sciplans = []
+    calplans = []
+    darkplans = []
     for i in range(nplans):
         tmp = plans[i].split('-')
         if tmp[0] == 'apPlan': 
-            if 'sky' not in plans[i]: gdplans.append(plans[i].replace('\n',''))
-    gdplans = np.array(gdplans)
-    nplans = len(gdplans)
+            if 'sky' not in plans[i]: sciplans.append(plans[i].replace('\n',''))
+        if tmp[0] == 'apCalPlan': calplans.append(plans[i].replace('\n',''))
+        if tmp[0] == 'apDarkPlan': darkplans.append(plans[i].replace('\n',''))
+    sciplans = np.array(sciplans)
+    nsciplans = len(sciplans)
+    calplans = np.array(calplans)
+    ncalplans = len(calplans)
+    darkplans = np.array(darkplans)
+    ndarkplans = len(darkplans)
+
+    if makeqafits == True:
+        # Run apqa on the cal  plans
+        print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+        for i in range(ncalplans): 
+            planfile = load.filename('CalPlan', mjd=mjd)
+            planstr = plan.load(planfile, np=True)
+            mjd = calplans[i].split('-')[3].split('.')[0]
+            all_ims = planstr['APEXP']['name']
+            x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
+        print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+
+        # Run apqa on the dark  plans
+        print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        for i in range(ndarkplans): 
+            planfile = load.filename('DarkPlan', mjd=mjd)
+            planstr = plan.load(planfile, np=True)
+            mjd = darkplans[i].split('-')[3].split('.')[0]
+            all_ims = planstr['APEXP']['name']
+            x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
+        print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
     # Run apqa on the science data plans
-    print("Running APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
-    for i in range(nplans):
+    print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
+    for i in range(nsciplans):
         # Get the plate number and mjd
-        tmp = gdplans[i].split('-')
+        tmp = sciplans[i].split('-')
         plate = tmp[1]
         mjd = tmp[2].split('.')[0]
 
         # Load the plan file
-        load = apload.ApLoad(apred=apred, telescope=telescope)
         planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
         planstr = plan.load(planfile, np=True)
 
@@ -137,7 +175,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 # Add this to the list of failed plates
                 print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
                 # If last plate fails, still make the nightly and master QA pages
-                if i == nplans-1:
+                if i == nsciplans-1:
                     # Make the nightly QA page
                     if makenightqa == True:
                         q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
@@ -150,31 +188,35 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 continue
 
         # Only run makemasterqa and makenightqa after the last plate on this mjd
-        if i < nplans-1:
+        if i < nsciplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
                      makemasterqa=False, makeplots=makeplots, makespecplots=makespecplots, 
-                     makenightqa=False, makestarhtml=makestarhtml, clobber=clobber)
+                     makenightqa=False, makestarhtml=makestarhtml, makestarplots=makestarplots, 
+                     clobber=clobber)
         else:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
                      makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
-                     makenightqa=makenightqa, makestarhtml=makestarhtml, clobber=clobber)
+                     makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots, 
+                     clobber=clobber)
 
-    print("Done with APQAMJD for "+str(nplans)+" plates observed on MJD "+mjd+"\n")
+    print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
 
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True,
          makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
-         badPlates=None, clobber=True):
+         makestarplots=True, badPlates=None, clobber=True):
 
     start_time = time.time()
 
-    print("Starting APQA for plate "+plate+", MJD "+mjd+"\n")
+    print("Starting APQA for plate " + plate + ", MJD " + mjd + "\n")
 
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
     planstr = plan.load(planfile, np=True)
+
+    print(os.path.basename(planfile))
 
     # Get field name
     tmp = planfile.split(telescope+'/')
@@ -194,9 +236,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
 
     apodir =     os.environ.get('APOGEE_REDUX')+'/'
-    spectrodir = apodir+apred+'/'
-    caldir =     spectrodir+'cal/'
-    expdir =     spectrodir+'exposures/'+instrument+'/'
+    spectrodir = apodir + apred + '/'
+    caldir =     spectrodir + 'cal/'
+    expdir =     spectrodir + 'exposures/' + instrument + '/'
 
     # Get array of object exposures and find out how many are objects.
     flavor = planstr['APEXP']['flavor']
@@ -225,10 +267,10 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
 
     # For calibration plates, measure lamp brightesses and/or line widths, etc. and write to FITS file.
-    if platetype == 'cal': x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
+    #if platetype == 'cal': x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
 
     # For darks and flats, get mean and stdev of column-medianed quadrants.
-    if platetype == 'dark': x = makeDarkFits(load=load, planfile=planfile, ims=all_ims, mjd=mjd)
+    #if platetype == 'dark': x = makeDarkFits(load=load, planfile=planfile, ims=all_ims, mjd=mjd)
 
     # Normal plates:.
     if platetype == 'normal': 
@@ -267,7 +309,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the observation spectrum plots and associated pages
         q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                     makespecplots=makespecplots, makestarhtml=makestarhtml)
+                     makespecplots=makespecplots, makestarhtml=makestarhtml, makestarplots=makestarplots)
 
         # Make the nightly QA page
         if makenightqa == True:
@@ -1068,7 +1110,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     Vsum = load.apVisitSum(int(plate), mjd)
     Vsumfile = Vsum.filename()
     Vsum = Vsum[1].data
-    block = np.floor((Vsum['FIBERID'] - 1) / 30)[::-1]
+    block = np.floor((Vsum['FIBERID'] - 1) / 30) #[::-1]
 
     for i in range(2):
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
@@ -1169,7 +1211,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             med = np.nanmedian(flux[chip][1].data, axis=1)
             sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='RdBu', alpha=1, vmin=0.0, vmax=2.0)
 
-            ax.text(0.03,0.97,chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top')
+            ax.text(0.03, 0.97, chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color=chiplab[ichip])
 
             ax_divider = make_axes_locatable(ax)
             cax = ax_divider.append_axes("top", size="4%", pad="1%")
@@ -1185,7 +1227,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     #----------------------------------------------------------------------------------------------
     # PLOT 6: fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
-    block = np.floor((plSum2['FIBERID'] - 1) / 30)[::-1]
+    block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
     plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsQAplots: Making "+plotfile)
@@ -1408,7 +1450,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
                 #d = load.apPlate(int(plate), mjd) 
                 d = load.ap1D(ims[i])
-                rows = 300-platesum2['FIBERID']
+                rows = 300 - platesum2['FIBERID']
 
                 fibersky, = np.where(platesum2['OBJTYPE'] == 'SKY')
                 nsky = len(fibersky)
@@ -1547,7 +1589,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
 ''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
 def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
-              makespecplots=None, makestarhtml=None): 
+              makespecplots=None, makestarhtml=None, makestarplots=None): 
 
     print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
 
@@ -1568,7 +1610,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
-    matplotlib.use('agg')
+    #matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
@@ -1589,7 +1631,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     if os.path.exists(allVpath): allV = fits.getdata(allVpath)
 
     # Base directory where star-level plots go
-    starHTMLdir = apodir + apred + '/stars/' + telescope +'/'
+    starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
@@ -1647,7 +1689,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
         fiber = jdata['FIBERID']
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
-            cblock = str(11-np.ceil(fiber/30).astype(int))
+            cblock = str(np.ceil(fiber/30).astype(int))
 
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
@@ -1670,26 +1712,30 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 healpixgroup = str(healpix // 1000)
                 healpix = str(healpix)
 
-                # Find the associated healpix directories and make them if they don't already exist
-                healpixgroupDir = starHTMLdir + str(healpixgroup) + '/'
-                if os.path.exists(healpixgroupDir) is False: os.mkdir(healpixgroupDir)
-
-                healpixDir = healpixgroupDir + str(healpix) + '/'
-                if os.path.exists(healpixDir) is False: os.mkdir(healpixDir)
-
-                starHtmlDir = healpixDir + '/html/'
-                if os.path.exists(starHtmlDir) is False: os.mkdir(starHtmlDir)
-
+                # Find the associated healpix html directories and make them if they don't already exist
+                starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+                starHtmlDir = starDir + 'html/'
+                if os.path.exists(starHtmlDir) is False: os.makedirs(starHtmlDir)
                 starHTMLpath = starHtmlDir + objid + '.html'
-                relpath = '../../../../../../stars/' + telescope + '/'
-                starHTMLrelPath = relpath + healpixgroup + '/' + healpix + '/html/' + objid + '.html'
-                apStarPath = relpath + '/' +healpixgroup + '/' + healpix + '/'
-                tmpDir = starHTMLdir + healpixgroup + '/' + healpix + '/'
-                apStarCheck = glob.glob(tmpDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+
+                starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                starHTMLrelPath = starRelPath + 'html/' + objid + '.html'
+                apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
                 if len(apStarCheck) > 0:
-                    apStarCheck.sort();   apStarCheck = np.array(apStarCheck)
+                    # Find the newest apStar file
+                    apStarCheck.sort()
+                    apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = apStarPath + apStarNewest
+                    apStarRelPath = starRelPath + apStarNewest
+                    apStarPath = starDir + apStarNewest
+                    apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
+
+                    # Set up plot directories and plot file name
+                    starPlotDir = starDir + 'plots/'
+                    if os.path.exists(starPlotDir) is False: os.makedirs(starPlotDir)
+                    starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
+                    starPlotFilePath = starPlotDir + starPlotFile
+                    starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
                 else:
                     apStarRelPath = None
 
@@ -1837,6 +1883,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
                     starHTML.write('</TABLE>\n<BR>\n')
 
+                    # Star + best fitting model plot
+                    starHTML.write('<P>apStar versus best fit Doppler model:</P>')
+                    starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
+
                     # Star visit table
                     starHTML.write('<P>Visit info:')
                     starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
@@ -1881,7 +1931,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
             objhtml.write('<TD><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1100></A>\n')
-            if makespecplots == True:
+            if makespecplots is True:
                 print("----> makeObjQA: Making "+plotfile)
 
                 lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
@@ -1967,7 +2017,78 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
-                plt.close('all')
+                    plt.close('all')
+
+            # Make plots of apStar spectrum with best fitting model
+            if j < 5:
+                if makestarplots is True:
+                    if apStarRelPath is not None:
+                        print("\n----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
+
+                        contord = 3
+                        hdr = fits.getheader(apStarPath)
+                        flux = fits.open(apStarPath)[1].data[0]
+                        npix = len(flux)
+                        wstart = hdr['CRVAL1']
+                        wstep = hdr['CDELT1']
+                        vhbary = hdr['VHBARY']
+                        wave = 10**(wstart + wstep * np.arange(0, npix, 1))
+                        gd, = np.where(np.isnan(flux) == False)
+                        wave = wave[gd]
+                        flux = flux[gd]
+
+                        # Get model spectrum
+                        fp = open(apStarModelPath, 'rb')
+                        out = pickle.load(fp)
+                        sumstr,finalstr,bmodel,specmlist,gout = out
+                        swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
+                        sflux = bmodel[1].flux
+
+                        lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                        xmin = np.array([15125, 15845, 16455])
+                        xmax = np.array([15817, 16440, 16960])
+                        xspan = xmax - xmin
+
+                        fig=plt.figure(figsize=(28,20))
+                        ax1 = plt.subplot2grid((3,1), (0,0))
+                        ax2 = plt.subplot2grid((3,1), (1,0))
+                        ax3 = plt.subplot2grid((3,1), (2,0))
+                        axes = [ax1,ax2,ax3]
+
+                        ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+
+                        ichip = 0
+                        for ax in axes:
+                            ax.set_xlim(xmin[ichip], xmax[ichip])
+                            ax.set_ylim(0.2, 1.4)
+                            ax.tick_params(reset=True)
+                            ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
+                            ax.minorticks_on()
+                            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                            ax.tick_params(axis='both',which='major',length=axmajlen)
+                            ax.tick_params(axis='both',which='minor',length=axminlen)
+                            ax.tick_params(axis='both',which='both',width=axwidth)
+                            ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+
+                            # Flatten the continuum
+                            gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
+                            z = np.polyfit(wave[gd], flux[gd], contord)
+                            p = np.poly1d(z)
+
+                            ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k')
+                            ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r')
+                            #ax.plot(wave[gd], p(wave[gd]), color='r')
+
+                            ichip += 1
+
+                        #ax1.text(0.98, 0.90, str(contord), transform=ax1.transAxes, ha='right', va='top')
+                        #ax3.axvline(x=16723.524, color='r')
+                        #ax3.axvline(x=16755.14, color='r')
+
+                        fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
+                        plt.savefig(starPlotFilePath)
+                        plt.close('all')
+                        print('done')
 
     objhtml.close()
     #cfile.close()
@@ -2436,6 +2557,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE MJD Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
+        html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
+        html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
         #html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
         html.write( 'Yellow: APO 2.5m, Green: LCO 2.5m <BR>\n')
@@ -2584,6 +2707,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE Field Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by Field</H1>\n')
         html.write('<p><A HREF=mjd.html>MJD view</A></p>\n')
+        html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
+        html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
 
         html.write('<p>Sky coverage plots: <p>\n')
@@ -2792,12 +2917,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
 
     print("--------------------------------------------------------------------")
-    print("Running MAKECALFITS for plate "+plate+", mjd "+mjd)
+    print("Running MAKECALFITS for MJD " + mjd)
 
     n_exposures = len(ims)
 
     nlines = 2
-    chips=np.array(['a','b','c'])
+    chips = np.array(['a','b','c'])
     nchips = len(chips)
 
     tharline = np.array([[940.,1128.,1130.],[1724.,623.,1778.]])
@@ -2819,21 +2944,36 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                    ('QRTZ',    np.int32),
                    ('UNE',     np.int32),
                    ('THAR',    np.int32),
-                   ('FLUX',    np.float64,(300,nchips)),
+                   ('FLUX',    np.float64,(nchips,300)),
                    ('GAUSS',   np.float64,(4,nfibers,nchips,nlines)),
                    ('WAVE',    np.float64,(nfibers,nchips,nlines)),
                    ('FIBERS',  np.float64,(nfibers)),
-                   ('LINES',   np.float64,(nchips,nlines))])
+                   ('LINES',   np.float64,(nlines,nchips))])
 
     struct = np.zeros(n_exposures, dtype=dt)
 
     # Loop over exposures and get 1D images to fill structure.
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     for i in range(n_exposures):
+        print(ims[i])
         oneD = load.ap1D(ims[i])
         oneDhdr = oneD['a'][0].header
 
-        if type(oneD)==dict:
+        dt = np.dtype([('FLUX',   np.float64,(300,2048)),
+                       ('ERR',    np.float64,(300,2048)),
+                       ('MASK',    np.float64,(300,2048)),
+                       ('WAVE',    np.float64,(300,2048)),
+                       ('WCOEF',    np.float64,(300,2048))])
+        oneDstruct = np.zeros(nchips, dtype=dt)
+        for ichip in range(nchips):
+            chip = chips[ichip]
+            oneDstruct['FLUX'][ichip] = oneD[chip][1].data
+            oneDstruct['ERR'][ichip] =  oneD[chip][2].data
+            #oneDstruct['MASK'][ichip] =  oneD[chip][3].data
+            #oneDstruct['WAVE'][ichip] =  oneD[chip][4].data
+            #oneDstruct['WCOEF'][ichip] =  oneD[chip][5].data
+
+        if type(oneD) == dict:
             struct['NAME'][i] =    ims[i]
             struct['MJD'][i] =     mjd
             struct['JD'][i] =      oneDhdr['JD-MID']
@@ -2843,9 +2983,11 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
             struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
             struct['THAR'][i] =    oneDhdr['LAMPTHAR']
             struct['UNE'][i] =     oneDhdr['LAMPUNE']
+            struct['FIBERS'][i] = fibers
 
             # Quartz exposures.
-            if struct['QRTZ'][i]==1: struct['FLUX'][i] = np.median(oneD['a'][1].data, axis=0)
+            if struct['QRTZ'][i] == 1: 
+                    struct['FLUX'][i] = np.nanmedian(oneDstruct['FLUX'], axis=2)
 
             # Arc lamp exposures.
             if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
@@ -2855,32 +2997,47 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 struct['LINES'][i] = line
 
                 nlines = 1
-                if line.shape[0]!=1: nlines = line.shape[1]
+                if line.shape[1] != 1: nlines = line.shape[0]
 
                 for iline in range(nlines):
                     for ichip in range(nchips):
-                        print("Calling appeakfit... no, not really because it's a long IDL code.")
-                        ### NOTE:the below does not work yet... maybe use findlines instead?
-                        # https://github.com/sdss/apogee/blob/master/pro/apogeereduce/appeakfit.pro
-                        # https://github.com/sdss/apogee/blob/master/python/apogee/apred/wave.py
+                        chip = chips[ichip]
+                        oneDflux = oneDstruct['FLUX'][ichip]
+                        oneDerr = oneDstruct['ERR'][ichip]
+                        #oneDmask = oneDstruct['MASK'][ichip]
+                        #oneDwave = oneDstruct['WAVE'][ichip]
+                        #oneDwcoef = oneDstruct['WCOEF'][ichip]
+                        toterror = np.sqrt(np.nanmedian(oneDerr[:,1024-100:1024+100]**2, axis=1))
 
-#;                        APPEAKFIT,a[ichip],linestr,fibers=fibers,nsigthresh=10
 
-                        maxind, = argrelextrema(oneD[ichip], np.greater)  # maxima
+                        #maxind, = argrelextrema(oneDflux, np.greater)  # maxima
+
                         # sigma cut on the flux
-                        gd, = np.where(oneD[ichip][maxind] > 10)
-                        if len(gd) == 0:
-                            print('No peaks found')
-                            return
-                        pix0 = maxind[gd]
-                        peaks = peakfit.peakfit(oneD[ichip], sigma=toterror, pix0=pix0)
+                        #gd, = np.where(oneDflux[maxind] > 5000)
+                        #if len(gd) == 0:
+                        #    print('No peaks found')
+                        #    return
+                        #pix0 = maxind[gd]
+                        #### peaks = peakfit.peakfit(oneDflux[fibers], sigma=toterror, pix0=pix0)
 
-                        linestr = wave.findlines(oneD, rows=fibers, lines=line)
-                        linestr = wave.peakfit(oneD[chips[ichip]][1].data)
+                        #linestr = wave.findlines(oneD, rows=fibers, lines=line)
+                        #linestr = wave.peakfit(oneD[chips[ichip]][1].data)
 
                         for ifiber in range(nfibers):
-                            fibers = fibers[ifiber]
-                            j = np.where(linestr['FIBER'] == fiber)
+                            fiber = fibers[ifiber]
+                            #pix0,_ = find_peaks(oneDflux[fiber, :], height=20000)
+                            maxind, = argrelextrema(oneDflux[fiber, :], np.greater)  # maxima
+                            # sigma cut on the flux
+                            gd, = np.where(oneDflux[fiber, :][maxind] > 10000)
+                            if len(gd)==0:
+                                print('No peaks found')
+                                return
+                            pix0 = maxind[gd]
+
+                            gpeaks = peakfit.peakfit(oneDflux[fiber, :], sigma=toterror, pix0=pix0)
+                            import pdb; pdb.set_trace()
+
+                            j, = np.where(linestr['FIBER'] == fiber)
                             nj = len(j)
                             if nj > 0:
                                 junk = np.nanmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
@@ -2898,19 +3055,20 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         else:
             print("type(1D) does not equal dict. This is probably a problem.")
 
-    outfile = load.filename('QAcal', plate=int(plate), mjd=mjd) 
+    outfile = load.filename('QAcal', mjd=mjd)
+    if os.path.exists(os.path.basename(outfile)): os.makedirs(os.path.basename(outfile))
     Table(struct).write(outfile)
 
-    print("Done with MAKECALFITS for plate "+plate+", mjd "+mjd)
-    print("Made "+outfile)
+    print("Done with MAKECALFITS for MJD " + mjd)
+    print("Made " + outfile)
     print("--------------------------------------------------------------------\n")
 
 
 ''' MAKEDARKFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants) '''
-def makeDarkFits(load=None, planfile=None, ims=None, mjd=None):
+def makeDarkFits(load=None, ims=None, mjd=None):
 
     print("--------------------------------------------------------------------")
-    print("Running MAKEDARKFITS for plate "+plate+", mjd "+mjd)
+    print("Running MAKEDARKFITS for MJD "+mjd)
 
     n_exposures = len(ims)
 
@@ -2963,11 +3121,11 @@ def makeDarkFits(load=None, planfile=None, ims=None, mjd=None):
         else:
             print("type(2D) does not equal dict. This is probably a problem.")
 
-    outfile = load.filename('QAcal', plate=int(plate), mjd=mjd).replace('apQAcal','apQAdarkflat')
+    outfile = load.filename('QAcal', mjd=mjd).replace('apQAcal','apQAdarkflat')
     Table(struct).write(outfile)
 
-    print("Done with MAKEDARKFITS for plate "+plate+", mjd "+mjd)
-    print("Made "+outfile)
+    print("Done with MAKEDARKFITS for MJD " + mjd)
+    print("Made " + outfile)
     print("--------------------------------------------------------------------\n")
 
 
@@ -3010,6 +3168,11 @@ def getflux(d=None, skyline=None, rows=None):
     if skyline['TYPE'] == 0: skylineFlux /= cont
 
     return skylineFlux
+
+
+''' GFUNC: function for continuum normalization of apStar spectra '''
+def gfunc(x, a, b, c):
+    return a * np.exp(-b * x) + c
 
 
 

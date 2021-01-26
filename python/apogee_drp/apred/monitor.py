@@ -34,9 +34,13 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 # import pdb; pdb.set_trace()
 
 ''' MONITOR: Instrument monitoring plots and html '''
-def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=False):
+def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=False, makeplots=True,
+            makefiberplots=True):
 
     print("----> monitor starting")
+
+    telescope = 'apo25m'
+    if instrument == 'apogee-s': telescope = 'lco25m'
 
     chips = np.array(['blue','green','red'])
     nchips = len(chips)
@@ -53,7 +57,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     specdir5 = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     specdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
     sdir5 = specdir5 + 'monitor/' + instrument + '/'
-    sdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/apogee-n/'
+    sdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/' + instrument + '/'
     mdir = 'monitor/' + instrument + '/'
 
     if makesumfiles is False:
@@ -62,16 +66,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         alldark = fits.open(specdir + instrument + 'Cal.fits')[2].data
         allexp =  fits.open(specdir + instrument + 'Exp.fits')[1].data
         allsci =  fits.open(specdir + instrument + 'Sci.fits')[1].data
+        allepsf = fits.open(specdir + instrument + 'Trace.fits')[1].data
     else:
         ###########################################################################################
         # MAKE MASTER QACAL FILE
-        outfile = specdir5 + 'monitor/' + instrument + '_Cal.fits'
+        outfile = specdir5 + 'monitor/' + instrument + 'Cal.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
         # Append together the individual QAcal files
         files = glob.glob(specdir + '/cal/' + instrument + '/*/*QAcal*.fits')
         if len(files) < 1:
-            print("----> monitor: No files! do you have correct version set?")
+            print("----> monitor: No QAcal files!")
         else:
             files.sort()
             files = np.array(files)
@@ -118,7 +123,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     allcal = np.concatenate([allcal, struct])
 
             Table(allcal).write(outfile, overwrite=True)
-
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
 
         ###########################################################################################
@@ -128,7 +132,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # Append together the individual QAdarkflat files
         files = glob.glob(specdir + '/cal/' + instrument + '/*/*QAdarkflat*.fits')
         if len(files) < 1:
-            print("----> monitor: No files! do you have correct version set?")
+            print("----> monitor: No QAdarkflat files!")
         else:
             files.sort()
             files = np.array(files)
@@ -175,85 +179,87 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             hdulist.append(hdu1)
             hdulist.writeto(outfile, overwrite=True)
             hdulist.close()
-
             print("----> monitor: Finished adding QAdarkflat info to " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER EXP FILE
-        outfile = specdir5 + 'monitor/' + instrument + '_Exp.fits'
+        outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
         # Get long term trends from dome flats
         # Append together the individual exp files
-        files = glob.glob(specdir + '/exposures/' + instrument + '/*/5*exp.fits')
-        files.sort()
-        files = np.array(files)
-        nfiles=len(files)
-        for i in range(nfiles):
-            print("---->    monitor: reading " + files[i])
-            a = fits.open(files[i])[1].data
+        files = glob.glob(specdir + '/exposures/' + instrument + '/*/*exp.fits')
+        if len(files) < 1:
+            print("----> monitor: No exp files!")
+        else:
+            files.sort()
+            files = np.array(files)
+            nfiles=len(files)
+            for i in range(nfiles):
+                print("---->    monitor: reading " + files[i])
+                a = fits.open(files[i])[1].data
 
-            # Make output structure.
-            dt = np.dtype([('MJD',       np.int32),
-                           ('DATEOBS',   np.str, 23),
-                           ('JD',        np.float64),
-                           ('NUM',       np.int32),
-                           ('NFRAMES',   np.int32),
-                           ('IMAGETYPE', np.str, 10),
-                           ('PLATEID',   np.int32),
-                           ('CARTID',    np.int32),
-                           ('RA',        np.float64),
-                           ('DEC',       np.float64),
-                           ('SEEING',    np.float64),
-                           ('ALT',       np.float64),
-                           ('QRTZ',      np.int32),
-                           ('THAR',      np.int32),
-                           ('UNE',       np.int32),
-                           ('FFS',       np.str, 15),
-                           ('LN2LEVEL',  np.float64),
-                           ('DITHPIX',   np.float64),
-                           ('TRACEDIST', np.float64),
-                           ('MED',       np.float64,(300,nchips))])
-            struct = np.zeros(len(a['MJD']), dtype=dt)
+                # Make output structure.
+                dt = np.dtype([('MJD',       np.int32),
+                               ('DATEOBS',   np.str, 23),
+                               ('JD',        np.float64),
+                               ('NUM',       np.int32),
+                               ('NFRAMES',   np.int32),
+                               ('IMAGETYPE', np.str, 10),
+                               ('PLATEID',   np.int32),
+                               ('CARTID',    np.int32),
+                               ('RA',        np.float64),
+                               ('DEC',       np.float64),
+                               ('SEEING',    np.float64),
+                               ('ALT',       np.float64),
+                               ('QRTZ',      np.int32),
+                               ('THAR',      np.int32),
+                               ('UNE',       np.int32),
+                               ('FFS',       np.str, 15),
+                               ('LN2LEVEL',  np.float64),
+                               ('DITHPIX',   np.float64),
+                               ('TRACEDIST', np.float64),
+                               ('MED',       np.float64,(300,nchips))])
+                struct = np.zeros(len(a['MJD']), dtype=dt)
 
-            struct['MJD'] = a['MJD']
-            struct['DATEOBS'] = a['DATEOBS']
-            struct['JD'] = a['JD']
-            struct['NUM'] = a['NUM']
-            struct['NFRAMES'] = a['NFRAMES']
-            struct['IMAGETYPE'] = a['IMAGETYPE']
-            struct['PLATEID'] = a['PLATEID']
-            struct['CARTID'] = a['CARTID']
-            struct['RA'] = a['RA']
-            struct['DEC'] = a['DEC']
-            struct['SEEING'] = a['SEEING']
-            struct['ALT'] = a['ALT']
-            struct['QRTZ'] = a['QRTZ']
-            struct['THAR'] = a['THAR']
-            struct['UNE'] = a['UNE']
-            struct['FFS'] = a['FFS']
-            struct['LN2LEVEL'] = a['LN2LEVEL']
-            struct['DITHPIX'] = a['DITHPIX']
-            struct['TRACEDIST'] = a['TRACEDIST']
-            struct['MED'] = a['MED']
+                struct['MJD'] = a['MJD']
+                struct['DATEOBS'] = a['DATEOBS']
+                struct['JD'] = a['JD']
+                struct['NUM'] = a['NUM']
+                struct['NFRAMES'] = a['NFRAMES']
+                struct['IMAGETYPE'] = a['IMAGETYPE']
+                struct['PLATEID'] = a['PLATEID']
+                struct['CARTID'] = a['CARTID']
+                struct['RA'] = a['RA']
+                struct['DEC'] = a['DEC']
+                struct['SEEING'] = a['SEEING']
+                struct['ALT'] = a['ALT']
+                struct['QRTZ'] = a['QRTZ']
+                struct['THAR'] = a['THAR']
+                struct['UNE'] = a['UNE']
+                struct['FFS'] = a['FFS']
+                struct['LN2LEVEL'] = a['LN2LEVEL']
+                struct['DITHPIX'] = a['DITHPIX']
+                struct['TRACEDIST'] = a['TRACEDIST']
+                struct['MED'] = a['MED']
 
-            if i == 0:
-                allexp = struct 
-            else:
-                allexp = np.concatenate([allexp, struct])
+                if i == 0:
+                    allexp = struct 
+                else:
+                    allexp = np.concatenate([allexp, struct])
 
-        Table(allcal).write(outfile, overwrite=True)
-        print("----> monitor: Finished making " + os.path.basename(outfile))
+            Table(allcal).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
-        outfile = specdir5 + 'monitor/' + instrument + '_Sci.fits'
+        outfile = specdir5 + 'monitor/' + instrument + 'Sci.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
         # Get zeropoint info from apPlateSum files
         files = glob.glob(specdir + '/visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
         if len(files) < 1:
-            print("----> monitor: No files! do you have correct version set?")
+            print("----> monitor: No apPlateSum files!")
         else:
             files.sort()
             files = np.array(files)
@@ -294,6 +300,35 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                                ('TELLFIT',   np.float64, (3,6))])
                 struct = np.zeros(len(a['PLATE']), dtype=dt)
 
+                struct['TELESCOPE'] = a['TELESCOPE']
+                struct['PLATE'] = a['PLATE']
+                struct['NREADS'] = a['NREADS']
+                struct['DATEOBS'] = a['DATEOBS']
+                struct['EXPTIME'] = a['EXPTIME']
+                struct['SECZ'] = a['SECZ']
+                struct['HA'] = a['HA']
+                struct['DESIGN_HA'] = a['DESIGN_HA']
+                struct['SEEING'] = a['SEEING']
+                struct['FWHM'] = a['FWHM']
+                struct['GDRMS'] = a['GDRMS']
+                struct['CART'] = a['CART']
+                struct['PLUGID'] = a['PLUGID']
+                struct['DITHER'] = a['DITHER']
+                struct['MJD'] = a['MJD']
+                struct['IM'] = a['IM']
+                struct['ZERO'] = a['ZERO']
+                struct['ZERORMS'] = a['ZERORMS']
+                struct['ZERONORM'] = a['ZERONORM']
+                struct['SKY'] = a['SKY']
+                struct['SN'] = a['SN']
+                struct['SNC'] = a['SNC']
+                struct['ALTSN'] = a['ALTSN']
+                struct['NSN'] = a['NSN']
+                struct['SNRATIO'] = a['SNRATIO']
+                struct['MOONDIST'] = a['MOONDIST']
+                struct['MOONPHASE'] = a['MOONPHASE']
+                struct['TELLFIT'] = a['TELLFIT']
+
                 if i == 0:
                     allsci = struct
                 else:
@@ -302,6 +337,53 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             Table(allsci).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
+        ###########################################################################################
+        # MAKE MASTER TRACE FILE
+        outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+        print("----> monitor: Making " + os.path.basename(outfile))
+
+        # Append together the individual QAcal files
+        files = glob.glob(specdir + '/cal/psf/apEPSF-b-*.fits')
+        if len(files) < 1:
+            print("----> monitor: No apEPSF-b files!")
+        else:
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+
+            dt = np.dtype([('NUM',      np.int32),
+                           ('MJD',      np.float64),
+                           ('CENT',     np.float64),
+                           ('LN2LEVEL', np.int32)])
+            struct = np.zeros(nfiles, dtype=dt)
+
+            for i in range(nfiles):
+                print("---->    monitor: reading " + files[i])
+                a = fits.open(files[i])[1].data
+                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
+                if num > 1000:
+                    hdr = fits.getheader(files[i])
+                    for j in range(147,156):
+                        a = fits.open(files[i])[j].data
+                        if a['FIBER'] == 150:
+                            struct['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
+                            struct['CENT'][i] = a['CENT'][1000]
+                            struct['MJD'][i] = hdr['JD-MJD'] - 2400000.5
+                            struct['LN2LEVEL'][i] = hdr['LN2LEVEL']
+                            break
+
+            Table(struct).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
+
+    ###############################################################################################
+    # Find the different cals
+    thar, = np.where(allcal['THAR'] == 1)
+    une, = np.where(allcal['UNE'] == 1)
+    qrtz, = np.where(allcal['QRTZ'] == 1)
+    dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
+    dark, = np.where(alldark['EXPTYPE'] == 'DARK')
+
+    ###############################################################################################
     # MAKE THE MONITOR HTML
     outfile = specdir5 + 'monitor/' + instrument + '-monitor.html'
     print("----> monitor: Making " + os.path.basename(outfile))
@@ -316,7 +398,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#quartz> Cal channel quartz</a>\n')
-    html.write('<li> <a href=monitor/fiber/fiber.html>Individual fiber throughputs</a>\n')
+    html.write('<li> <a href=' + instrument + '/fiber/fiber.html target="_blank">Individual fiber throughputs from dome flats</a>\n')
+    html.write('<li> <a href=' + instrument + '/fiber/fiber_qrtz.html target="_blank">Individual fiber throughputs from quartz lamp</a>\n')
     html.write('<li> <a href=#tharflux> Cal channel ThAr</a>\n')
     html.write('<li> <a href=#uneflux> Cal channel UNe</a>\n')
     html.write('<li> <a href=#dome>Dome flats</a>\n')
@@ -333,39 +416,39 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<li> <a href=#trace>Trace locations</a>\n')
     html.write('<li> <a href=#detectors> Detectors\n')
     html.write('<li> <a href=#sky> Sky brightness\n')
+    html.write('<li> <a href=' + instrument + '/flatflux.html target="_blank">Flat Field Relative Flux Plots</a>\n')
     html.write('</ul>\n')
     html.write('<HR>\n')
 
-    # find the different lamp types
-    thar, = np.where(allcal['THAR'] == 1)
-    une, = np.where(allcal['UNE'] == 1)
-    qrtz, = np.where(allcal['QRTZ'] == 1)
-
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
-    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1400></A>\n')
+    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
-    html.write('<H3> <a href=fiber/fiber.html> Individual fiber throughputs from quartz </H3>\n')
+    html.write('<H3> <a href=' + instrument + '/fiber/fiber.html> Individual fiber throughputs from dome flats </A></H3>\n')
+    html.write('<HR>\n')
+
+    html.write('<H3> <a href=' + instrument + '/fiber/fiber_qrtz.html> Individual fiber throughputs from quartz lamp</A></H3>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1400>></A>\n')
+    html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
+    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
-    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tpos></a>ThArNe lamp line position</H3>\n')
-    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     for iline in range(2):
@@ -375,25 +458,151 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][iline][2],1))
         txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
         html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
-        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + '></A>\n')
+        html.write('<P> (Note: horizontal lines are the median value for each fiber.) </P>\n')
+        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a> Trace position, fiber 150, column 1000</H3>\n')
-    html.write('<A HREF=trace.png target="_blank"><IMG SRC=trace.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/trace.png target="_blank"><IMG SRC=' + instrument + '/trace.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
+    html.write('<P> (Note: the four colors indicate the four quadrants in each detector.) </P>\n')
     html.write('<H4> Dark Mean </h4>\n')
-    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=1200></A>\n')
 
     html.write('<H4> Dark Sigma </h4>\n')
-    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=1200></A>\n')
+    html.write('<HR>\n')
 
     html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=1400>></A>\n')
+    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=1300></A>\n')
+
+    html.write('<BR><BR><BR><BR>')
+    html.write('</BODY></HTML>\n')
 
     html.close()
 
+    ###############################################################################################
+    # HTML for individual fiber throughput plots (dome flats)
+    badfibers = np.array(['015','034','105','111','115','121','122','123','124','125','126','127',
+                          '128','129','130','131','132','133','134','135','136','137','138','139',
+                          '140','141','142','143','144','145','146','147','148','149','150','151',
+                          '182','202','227','245','250','277','278','284','289',])
+    deadfibers = np.array(['211','273'])
+
+    badfibersS = np.array(['031','034','039','061','067','069','083','084','091','129','136','140',
+                           '145','147','151','165','180','241','269'])
+    deadfibersS = None
+
+    if instrument == 'apogee-s':
+        badfibers = badfibersS
+        deadfibers = deadfibersS
+
+    fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
+    if os.path.exists(fibdir) is False: os.mkdir(fibdir)
+    fhtml = open(fibdir + 'fiber.html', 'w')
+    tit = 'APOGEE-N Fiber Throughput (Dome Flat)'
+    if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput (Dome Flat)'
+    fhtml.write('<HTML><HEAD><script src="../../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
+    fhtml.write('<H1>' + tit + '</H1>\n')
+    fhtml.write('<HR>\n')
+    fhtml.write('<P> The throughput plots show the median dome flat flux in each fiber divided by the maximum ')
+    fhtml.write('across all fibers in a given observation.</P>\n')
+    fhtml.write('<P><FONT color="#E53935">Red</FONT> highlighting indicates broken fibers.</P>\n')
+    fhtml.write('<P><FONT color="#FFA726">Orange</FONT> highlighting indicates fibers with long-term throughput deviations.</P>\n')
+    fhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
+    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber<BR>(MTP #) <TH>Fiber<BR>"Goodness" <TH>Median Dome Flat Flux <TH>Throughput\n')
+    for ifiber in range(300):
+        cfib = str(ifiber+1).zfill(3)
+        cblock = str(np.ceil((ifiber+1)/30).astype(int))
+        plotfile1 = 'fiber' + cfib + '.png'
+        plotfile2 = 'fiber' + cfib + '_throughput.png'
+
+        fibqual = 'normal'
+        bgcolor = '#FFFFFF'
+
+        if deadfibers is not None:
+            bd, = np.where(cfib == deadfibers)
+            if len(bd) >= 1: 
+                fibqual = 'dead'
+                bgcolor = '#E53935'
+        if badfibers is not None:
+            bd, = np.where(cfib == badfibers)
+            if len(bd) >= 1:
+                fibqual = 'problematic'
+                bgcolor = '#FFA726'
+
+        fhtml.write('<TR bgcolor="' + bgcolor + '">')
+        fhtml.write('<TD ALIGN=center>' + cfib + '<BR>(' + cblock + ') <TD ALIGN=center>' + fibqual)
+        fhtml.write('<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
+        fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=1000></A>\n')
+    fhtml.write('</TABLE></BODY></HTML>\n')
+    fhtml.close()
+
+    ###############################################################################################
+    # HTML for individual fiber throughput plots (quartz lamp)
+    fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
+    if os.path.exists(fibdir) is False: os.mkdir(fibdir)
+    fhtml = open(fibdir + 'fiber_qrtz.html', 'w')
+    tit = 'APOGEE-N Fiber Throughput (Quartz)'
+    if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput (Quartz)'
+    fhtml.write('<HTML><HEAD><script src="../../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
+    fhtml.write('<H1>' + tit + '</H1>\n')
+    fhtml.write('<HR>\n')
+    fhtml.write('<P> The throughput plots show the quartz lamp flux in each fiber divided by the maximum ')
+    fhtml.write('across all fibers in a given observation.</P>\n')
+    fhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
+    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>Fiber<BR>(MTP #) <TH>Quartz Flux <TH>Throughput\n')
+    for ifiber in range(300):
+        cfib = str(ifiber+1).zfill(3)
+        cblock = str(np.ceil((ifiber+1)/30).astype(int))
+        plotfile1 = 'fiber' + cfib + '_qrtz.png'
+        plotfile2 = 'fiber' + cfib + '_throughput_qrtz.png'
+
+        fhtml.write('<TR>')
+        fhtml.write('<TD ALIGN=center>' + cfib + '<BR>(' + cblock + ')')
+        fhtml.write('<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
+        fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=1000></A>\n')
+    fhtml.write('</TABLE></BODY></HTML>\n')
+    fhtml.close()
+
+    ###############################################################################################
+    # HTML for flat field relative flux plots
+#    fhtml = open(specdir5 + 'monitor/' + instrument + '/flatflux.html', 'w')
+#    tit = 'APOGEE-N Flat Field Relative Flux plots'
+#    if instrument != 'apogee-n': tit = 'APOGEE-S Flat Field Relative Flux plots'
+#    fhtml.write('<HTML><HEAD><script src="../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
+#    fhtml.write('<H1>' + tit + '</H1>\n')
+#    fhtml.write('<TABLE BORDER=2  CLASS="sortable">\n')
+#    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>MJD <TH>DATE <TH>FIELD <TH>PLATE <TH>GREEN CHIP PLOT\n')
+#    pfiles0 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/585*/plots/apFlux-b-*jpg'))
+#    pfiles1 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/586*/plots/apFlux-b-*jpg'))
+#    pfiles2 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/587*/plots/apFlux-b-*jpg'))
+#    pfiles3 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/588*/plots/apFlux-b-*jpg'))
+#    pfiles4 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/589*/plots/apFlux-b-*jpg'))
+#    pfiles5 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/584*/plots/apFlux-b-*jpg'))
+#    pfiles = np.concatenate([pfiles0, pfiles1, pfiles2, pfiles3, pfiles4, pfiles5])
+#    for i in range(len(pfiles)):
+#        tmp = pfiles[i].split(telescope + '/')[1].split('/')
+#        gfield = tmp[0]
+#        gplate = tmp[1]
+#        gmjd = tmp[2]
+#        t = Time(float(gmjd), format='mjd')
+#        gdate = t.fits
+#        gplot = tmp[-1]
+#        relpath = 'flatflux/' + gplot
+#        fhtml.write('<TR>')
+#        fhtml.write('<TD ALIGN=center>' + gmjd + '<TD>' + gdate + '<TD>' + gfield + '<TD>' + gplate + '<TD> <A HREF=' + relpath + ' target="_blank"><IMG SRC=' + relpath + ' WIDTH=300></A>')
+#    fhtml.write('</TABLE></BODY></HTML>\n')
+#    fhtml.close()
+
+#    for i in range(len(pfiles)):
+#        gplot = pfiles[i].split(telescope + '/')[1].split('/')[-1]
+#        check = glob.glob('flatflux/' + gplot)
+#        if len(check) < 1: subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
+
+    ###############################################################################################
     # Set up some basic plotting parameters
     matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
@@ -402,32 +611,394 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     axwidth = 1.5
     axmajlen = 7
     axminlen = 3.5
-    alpha = 0.6
+    alf = 0.6
+    markersz = 7
+    colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
+    colors1 = np.array(['k', 'salmon', 'limegreen', 'cornflowerblue'])
+    colors2 = np.array(['dodgerblue', 'seagreen', 'tomato'])
+    fibers = np.array([10, 80, 150, 220, 290])[::-1]
+    nplotfibs = len(fibers)
+    #years = np.array([2011, 2012, 2013, 2014
 
-    # qflux.png
-    plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
-    if (os.path.exists(plotfile) == False) | (clobber == True):
-        print("----> monitor: Making " + plotfile)
+    tmp = allcal[qrtz]
+    caljd = tmp['JD'] - 2.4e6
+    t = Time(tmp['JD'], format='jd')
+    years = np.unique(np.floor(t.byear)) + 1
+    cyears = years.astype(int).astype(str)
+    nyears = len(years)
+    t = Time(years, format='byear')
+    yearjd = t.jd - 2.4e6
+    minjd = np.min(caljd)
+    maxjd = np.max(caljd)
+    jdspan = maxjd - minjd
+    xmin = minjd - jdspan * 0.01
+    xmax = maxjd + jdspan * 0.10
+    xspan = xmax-xmin
 
-        fig=plt.figure(figsize=(28,14))
-        yr = [-2000,43000]
-        if instrument == 'apogee-s': yr = [-1000, 100000]
+    if makefiberplots is True:
+        ###########################################################################################
+        # Individual fiber throughput plots
 
-        qcal = allcal[qrtz]
-        qcaljd = qcal['JD']-2.4e6
+        #gd, = np.where(allcal['QRTZ'] > 0)                                                       
+        #gdcal = allcal[gd]
 
-        for ichip in range(nchips):
-            chip = chips[ichip]
+        for i in range(300):
+            gdcal = allexp[dome]
+            caljd = gdcal['JD'] - 2.4e6
+            ymax1 = 13;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
+            ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
-            minjd = np.min(qcaljd)
-            maxjd = np.max(qcaljd)
-            jdspan = maxjd - minjd
-            xmin = minjd-jdspan*0.02
-            xmax = maxjd+jdspan*0.10
+            plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
+            if (os.path.exists(plotfile) == False) | (clobber == True):
+                print("----> monitor: Making " + os.path.basename(plotfile))
 
-            ax = plt.subplot2grid((nchips,1), (ichip,0))
+                fig = plt.figure(figsize=(28,7.5))
+                ax = plt.subplot2grid((1,1), (0,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin1, ymax1)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.set_xlabel(r'JD - 2,400,000')
+                ax.text(-0.03, 0.5, r'Median Flux / 1,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    ax.text(yearjd[iyear], ymax1+yspan1*0.02, cyears[iyear], ha='center')
+
+                for ichip in range(nchips):
+                    yvals = gdcal['MED'][:, ichip, 299-i] / 1000
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                    ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
+                            fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
+
+                fig.subplots_adjust(left=0.045,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+                plt.savefig(plotfile)
+                plt.close('all')
+
+            plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '_throughput.png'
+            if (os.path.exists(plotfile) == False) | (clobber == True):
+                print("----> monitor: Making " + os.path.basename(plotfile))
+
+                fig = plt.figure(figsize=(28,7.5))
+                ax = plt.subplot2grid((1,1), (0,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin2, ymax2)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.set_xlabel(r'JD - 2,400,000')
+                ax.text(-0.03, 0.5, r'Flux / max(Flux)', rotation=90, ha='right', va='center', transform=ax.transAxes)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    ax.text(yearjd[iyear], ymax2+yspan2*0.02, cyears[iyear], ha='center')
+
+                for ichip in range(nchips):
+                    yvals = gdcal['MED'][:, ichip, 299-i] / np.nanmax(gdcal['MED'][:, ichip, :], axis=1)
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                    ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
+                            fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
+
+                fig.subplots_adjust(left=0.045,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+                plt.savefig(plotfile)
+                plt.close('all')
+
+            gd, = np.where(allcal['QRTZ'] > 0)
+            gdcal = allcal[gd]
+            caljd = gdcal['JD'] - 2.4e6
+            ymax1 = 50;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
+            #ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
+
+            plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '_qrtz.png'
+            if (os.path.exists(plotfile) == False) | (clobber == True):
+                print("----> monitor: Making " + os.path.basename(plotfile))
+
+                fig = plt.figure(figsize=(28,7.5))
+                ax = plt.subplot2grid((1,1), (0,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin1, ymax1)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.set_xlabel(r'JD - 2,400,000')
+                ax.text(-0.03, 0.5, r'Flux / 1,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    ax.text(yearjd[iyear], ymax1+yspan1*0.02, cyears[iyear], ha='center')
+
+                for ichip in range(nchips):
+                    yvals = gdcal['FLUX'][:, ichip, 299-i] / 1000
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                    ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
+                            fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
+
+                fig.subplots_adjust(left=0.045,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+                plt.savefig(plotfile)
+                plt.close('all')
+
+            plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '_throughput_qrtz.png'
+            if (os.path.exists(plotfile) == False) | (clobber == True):
+                print("----> monitor: Making " + os.path.basename(plotfile))
+
+                fig = plt.figure(figsize=(28,7.5))
+                ax = plt.subplot2grid((1,1), (0,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin2, ymax2)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.set_xlabel(r'JD - 2,400,000')
+                ax.text(-0.03, 0.5, r'Flux / max(Flux)', rotation=90, ha='right', va='center', transform=ax.transAxes)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    ax.text(yearjd[iyear], ymax2+yspan2*0.02, cyears[iyear], ha='center')
+
+                for ichip in range(nchips):
+                    yvals = gdcal['FLUX'][:, ichip, 299-i] / np.nanmax(gdcal['FLUX'][:, ichip, :], axis=1)
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                    ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
+                            fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
+
+                fig.subplots_adjust(left=0.045,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+                plt.savefig(plotfile)
+                plt.close('all')
+
+
+    if makeplots is True:
+        ###########################################################################################
+        # qflux.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 44000
+            if instrument == 'apogee-s': 
+                ymax = 125000
+            ymin = 0 - ymax * 0.05
+            yspan = ymax - ymin
+
+            gdcal = allcal[qrtz]
+            caljd = gdcal['JD'] - 2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # tharflux.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = np.array([510000, 58000, 11000]) 
+            if instrument == 'apogee-s': ymax = np.array([110000, 30000, 3000])
+            ymin = 0 - ymax * 0.05
+            yspan = ymax - ymin
+
+            gdcal = allcal[thar]
+            caljd = gdcal['JD']-2.4e6
+            flux = gdcal['GAUSS'][:,:,:,:,0] * gdcal['GAUSS'][:,:,:,:,2]**2
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin[ichip], ymax[ichip])
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Line Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # uneflux.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/uneflux.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = np.array([40000, 3000, 7700])
+            if instrument == 'apogee-s': ymax = np.array([6000, 1500, 3000])
+            ymin = 0 - ymax*0.05
+            yspan = ymax - ymin
+
+            gdcal = allcal[une]
+            caljd = gdcal['JD'] - 2.4e6
+            flux = gdcal['GAUSS'][:,:,:,:,0] * gdcal['GAUSS'][:,:,:,:,2]**2
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin[ichip], ymax[ichip])
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Line Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # dome.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/dome.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 13000
+            ymin = 0 - ymax*0.05
+            yspan = ymax - ymin
+
+            gdcal = allexp[dome]
+            caljd = gdcal['JD'] - 2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                w = np.nanmedian(gdcal['MED'][:, ichip, :])
+                ax.axhline(y=w, color='k', linewidth=3, zorder=1)
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['MED'][:, ichip, fibers[ifib]]
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]), zorder=3)
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # zero.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/zero.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,8))
+            ymax = 21
+            ymin = 10
+            yspan = ymax - ymin
+
+            ax = plt.subplot2grid((1,1), (0,0))
             ax.set_xlim(xmin, xmax)
-            ax.set_ylim(yr[0], yr[1])
+            ax.set_ylim(ymin, ymax)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -435,60 +1006,322 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-            ax.set_ylabel(r'Median Flux')
+            ax.set_ylabel(r'Zeropoint (mag.)')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 290] / qcal['NREAD']*10.0, marker='*', s=60, edgecolors='purple', color='white', alpha=alpha, label='Fiber 290')
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 150] / qcal['NREAD']*10.0, marker='^', s=30, edgecolors='darkorange', color='white', alpha=alpha, label='Fiber 150')
-            ax.scatter(qcaljd, qcal['FLUX'][:, ichip, 10]  / qcal['NREAD']*10.0, marker='o', s=30, edgecolors='green', color='white', alpha=alpha, label='Fiber 10')
+            for iyear in range(nyears):
+                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
 
-            ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
-            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
+            t = Time(allsci['DATEOBS'], format='fits')
+            jd = t.jd - 2.4e6
+            ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, c='teal', alpha=alf)
 
-        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
-        plt.savefig(plotfile)
-        plt.close('all')
+            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
 
-    # tharflux.png
-    plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
-    if (os.path.exists(plotfile) == False) | (clobber == True):
-        print("----> monitor: Making " + plotfile)
+        ###########################################################################################
+        # tpos.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/tpos.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
 
-        fig=plt.figure(figsize=(28,14))
-        ymin = np.array([-4000, -3500, -3000])
-        ymax = np.array([380000, 320000, 130000]) 
+            fig = plt.figure(figsize=(30,14))
 
-        tcal = allcal[thar]
-        tcaljd = tcal['JD']-2.4e6
+            gdcal = allcal[thar]
+            caljd = gdcal['JD']-2.4e6
 
-        flux = tcal['GAUSS'][:,:,:,:,0] * tcal['GAUSS'][:,:,:,:,2]**2
-        import pdb; pdb.set_trace()
-        for ichip in range(nchips):
-            chip = chips[ichip]
+            for ichip in range(nchips):
+                chip = chips[ichip]
 
-            ax = plt.subplot2grid((nchips,1), (ichip,0))
-            ax.set_xlim(xmin, xmax)
-            ax.set_ylim(ymin[ichip], ymax[ichip])
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-            ax.set_ylabel(r'Line Flux')
-            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Position (pixel)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-            ax.scatter(tcaljd, flux[:, ichip, 0, :] / tcal['NREAD']*10.0, marker='*', s=60, edgecolors='purple', color='white', alpha=alpha)#, label='Fiber 290')
-            ax.scatter(tcaljd, flux[:, ichip, 2, :] / tcal['NREAD']*10.0, marker='^', s=30, edgecolors='darkorange', color='white', alpha=alpha)#, label='Fiber 150')
-            ax.scatter(tcaljd, flux[:, ichip, 4, :]  / tcal['NREAD']*10.0, marker='o', s=30, edgecolors='green', color='white', alpha=alpha)#, label='Fiber 10')
+                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
+                ymin = w - 10
+                ymax = w + 10
+                yspan = ymax - ymin
+                ax.set_ylim(ymin, ymax)
 
-            ax.text(0.99,0.92,chip.capitalize() + ' Chip', transform=ax.transAxes, ha='right', va='top')
-            #ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz)
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-        fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.98,hspace=0.08,wspace=0.00)
-        plt.savefig(plotfile)
-        plt.close('all')
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # ThArNe lamp line FWHM
+            for iline in range(2):
+                plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
+                if (os.path.exists(plotfile) == False) | (clobber == True):
+                    print("----> monitor: Making " + os.path.basename(plotfile))
+
+                    fig = plt.figure(figsize=(30,14))
+
+                    gdcal = allcal[thar]
+                    caljd = gdcal['JD']-2.4e6
+
+                    for ichip in range(nchips):
+                        chip = chips[ichip]
+
+                        ax = plt.subplot2grid((nchips,1), (ichip,0))
+                        ax.set_xlim(xmin, xmax)
+                        ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                        ax.minorticks_on()
+                        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                        ax.tick_params(axis='both',which='major',length=axmajlen)
+                        ax.tick_params(axis='both',which='minor',length=axminlen)
+                        ax.tick_params(axis='both',which='both',width=axwidth)
+                        if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                        ax.set_ylabel(r'FWHM ($\rm \AA$)')
+                        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                        w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
+                        ymin = w * 0.8
+                        ymax = w * 1.25
+                        yspan = ymax - ymin
+                        ax.set_ylim(ymin, ymax)
+
+                        for iyear in range(nyears):
+                            ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                            if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                        for ifib in range(nplotfibs):
+                            w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2])
+                            ax.axhline(y=w, color=colors[ifib], linewidth=2, zorder=2)
+                            ax.axhline(y=w, color='k', linewidth=3, zorder=1)
+                            yvals = 2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
+                            ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                                       label='Fiber ' + str(fibers[ifib]), zorder=3)
+
+                        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                                ha='center', va='top', color=chip, bbox=bboxpar)
+                        if ichip == 0: 
+                            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                                      fontsize=fsz, edgecolor='k', framealpha=1)
+
+                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+                    plt.savefig(plotfile)
+                    plt.close('all')
+
+        ###########################################################################################
+        # trace.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,12))
+            ymax = np.nanmedian(allepsf['CENT']) + 1
+            ymin = np.nanmedian(allepsf['CENT']) - 1
+            yspan = ymax - ymin
+
+            caljd = Time(allepsf['MJD'], format='mjd').jd - 2.4e6
+
+            ax1 = plt.subplot2grid((2,1), (0,0))
+            ax2 = plt.subplot2grid((2,1), (1,0))
+            axes = [ax1, ax2]
+
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax1.set_xlim(xmin, xmax)
+            ax1.set_xlabel(r'JD - 2,400,000')
+            ax2.set_xlabel(r'LN2 Level')
+            for ax in axes:
+                ax.set_ylim(ymin, ymax)
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.set_ylabel(r'Trace Center')
+
+            for iyear in range(nyears):
+                ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+            ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, c='cyan', edgecolors='k', alpha=alf)
+            ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, c='cyan', edgecolors='k', alpha=alf)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # biasmean.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 1000.0
+            ymin = 0.1
+            yspan = ymax - ymin
+
+            gdcal = alldark[dark]
+            caljd = gdcal['JD'] - 2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == 1: ax.set_ylabel(r'Mean (column median)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.25, cyears[iyear], ha='center')
+
+                for ibias in range(4):
+                    ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
+                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='', label='quad '+str(ibias+1))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # biassig.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/biassig.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 1000.0
+            ymin = 0.1
+            yspan = ymax - ymin
+
+            gdcal = alldark[dark]
+            caljd = gdcal['JD'] - 2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == 1: ax.set_ylabel(r'$\sigma$ (column median)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.25, cyears[iyear], ha='center')
+
+                for ibias in range(4):
+                    ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
+                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='', label='quad '+str(ibias+1))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # moonsky.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/moonsky.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(31,12))
+            ymax = 11
+            ymin = 16.8
+            if instrument == 'apogee-s': 
+                ymax = 12
+                ymin = 19
+            yspan = ymax - ymin
+
+            ax1 = plt.subplot2grid((2,1), (0,0))
+            ax2 = plt.subplot2grid((2,1), (1,0))
+            axes = [ax1, ax2]
+
+            ax1.axes.xaxis.set_ticklabels([])
+            ax2.set_xlabel(r'Moon Phase')
+
+            for ax in axes:
+                ax.set_xlim(0, 1)
+                ax.set_ylim(ymin, ymax)
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.text(-0.03, 0.5, 'Sky Brightness', ha='right', va='center', rotation=90, transform=ax.transAxes)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
+
+            sc1 = ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], 
+                              cmap='rainbow', alpha=0.8, vmin=0, vmax=90.01)
+
+            gd, = np.where((allsci['ZERO'] != -np.inf) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
+            sc2 = ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], 
+                              cmap='rainbow', alpha=0.8, vmin=17, vmax=19)
+
+            ax_divider = make_axes_locatable(ax1)
+            cax = ax_divider.append_axes("right", size="2%", pad="1%")
+            cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+            cax.minorticks_on()
+            cax.yaxis.set_major_locator(ticker.MultipleLocator(15))
+            ax1.text(1.06, 0.5, r'Moon Distance (deg.)',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
+
+            ax_divider = make_axes_locatable(ax2)
+            cax = ax_divider.append_axes("right", size="2%", pad="1%")
+            cb1 = colorbar(sc2, cax=cax, orientation="vertical")
+            cax.minorticks_on()
+            cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            ax2.text(1.066, 0.5, r'Zeropoint (cloudiness)',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
+
+            fig.subplots_adjust(left=0.045,right=0.945,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
 
 
     print("----> monitor done")
