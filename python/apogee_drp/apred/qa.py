@@ -2060,7 +2060,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         ichip = 0
                         for ax in axes:
                             ax.set_xlim(xmin[ichip], xmax[ichip])
-                            ax.set_ylim(0.2, 1.4)
+                            ax.set_ylim(0.15, 1.4)
                             ax.tick_params(reset=True)
                             ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
                             ax.minorticks_on()
@@ -2081,8 +2081,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                             ichip += 1
 
-                        ax1.legend(loc='upper left')
-                        ax3.text(0.02, 0.05, objid+',  H = '+chmag+',  '+str(nvis)+' visits', transform=ax1.transAxes, bbox=bboxpar)
+                        ax3.legend(loc='lower right')
+                        ax3.text(0.02, 0.05, objid+',  H = '+chmag+',  '+str(nvis)+' visits', transform=ax3.transAxes, bbox=bboxpar)
 
                         fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
                         plt.savefig(starPlotFilePath)
