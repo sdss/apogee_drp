@@ -2031,9 +2031,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         wave = wave[gd]
                         flux = flux[gd]
 
-                        # Flatten the continuum
-                        popt, pcov = curve_fit(gfunc, wave, flux)
-
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                         xmin = np.array([15120, 15845, 16455])
                         xmax = np.array([15815, 16435, 16960])
@@ -2059,8 +2056,13 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ax.tick_params(axis='both',which='both',width=axwidth)
                             ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
 
-                            ax.plot(wave, flux, color='k')
-                            ax.plot(wave, gfunc(wave, *popt), color='r')
+                            # Flatten the continuum
+                            gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
+                            z = np.polyfit(wave[gd], flux[gd], 3)
+                            p = np.poly1d(z)
+
+                            ax.plot(wave[gd], flux[gd], color='k')
+                            ax.plot(wave[gd], p(wave[gd]), color='r')
 
                             ichip += 1
 
