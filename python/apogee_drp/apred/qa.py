@@ -2918,7 +2918,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         #oneDmask = oneDstruct['MASK'][ichip]
                         #oneDwave = oneDstruct['WAVE'][ichip]
                         #oneDwcoef = oneDstruct['WCOEF'][ichip]
-                        toterr = np.sqrt(np.nanmedian(oneDerr[:,1024-100:1024+100]**2, axis=1))
+                        toterror = np.sqrt(np.nanmedian(oneDerr[:,1024-100:1024+100]**2, axis=1))
 
 
                         #maxind, = argrelextrema(oneDflux, np.greater)  # maxima
