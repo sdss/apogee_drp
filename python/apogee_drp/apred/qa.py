@@ -1833,31 +1833,32 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
 
             # Star level html page
-            if (objtype != 'SKY') & (objid != '2MNone'):
-                vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
-                nvis = len(vcat)
-                cvhelio = '----';  cvscatter = '----'
-                gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
-                if len(gd) > 0:
-                    vels = vcat['vheliobary'][gd]
-                    cvhelio = str("%.2f" % round(np.mean(vels),2))
-                    cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
-
-                rvteff = '----'; rvlogg = '----'; rvfeh = '---'
-                gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
-                if len(gd) > 0:
-                    rvteff = str(int(round(vcat['rv_teff'][gd][0])))
-                    rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
-                    rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
-
-                if makestarhtml is True:
+            if makestarhtml is True:
+                if (objtype != 'SKY') & (objid != '2MNone'):
                     print("----> makeObjQA: Making star level html for " + objid)
+                    vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
+
                     # Get visit info from DB
                     cgl = str("%.5f" % round(vcat['glon'][0],5))
                     cgb = str("%.5f" % round(vcat['glat'][0],5))
                     cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                     cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                     cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
+
+                    nvis = len(vcat)
+                    cvhelio = '----';  cvscatter = '----'
+                    gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
+                    if len(gd) > 0:
+                        vels = vcat['vheliobary'][gd]
+                        cvhelio = str("%.2f" % round(np.mean(vels),2))
+                        cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
+
+                    rvteff = '----'; rvlogg = '----'; rvfeh = '---'
+                    gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
+                    if len(gd) > 0:
+                        rvteff = str(int(round(vcat['rv_teff'][gd][0])))
+                        rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
+                        rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
 
                     starHTML = open(starHTMLpath, 'w')
                     starHTML.write('<HTML>\n')
@@ -1929,6 +1930,78 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
                     starHTML.write('</TABLE>\n<BR><BR><BR>\n')
                     starHTML.close()
+
+                    # Make plots of apStar spectrum with best fitting model
+                    if apStarRelPath is not None:
+                        check = glob.glob(starPlotFilePath)
+                        if (len(check) < 1) | (clobber is True):
+                            print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
+
+                            contord = 5
+                            hdr = fits.getheader(apStarPath)
+                            flux = fits.open(apStarPath)[1].data[0]
+                            npix = len(flux)
+                            wstart = hdr['CRVAL1']
+                            wstep = hdr['CDELT1']
+                            vhbary = hdr['VHBARY']
+                            wave = 10**(wstart + wstep * np.arange(0, npix, 1))
+                            gd, = np.where(np.isnan(flux) == False)
+                            wave = wave[gd]
+                            flux = flux[gd]
+
+                            # Get model spectrum
+                            fp = open(apStarModelPath, 'rb')
+                            out = pickle.load(fp)
+                            sumstr,finalstr,bmodel,specmlist,gout = out
+                            swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
+                            sflux = bmodel[1].flux
+
+                            lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                            xmin = np.array([15125, 15845, 16455])
+                            xmax = np.array([15817, 16440, 16960])
+                            xspan = xmax - xmin
+
+                            fig=plt.figure(figsize=(28,20))
+                            ax1 = plt.subplot2grid((3,1), (0,0))
+                            ax2 = plt.subplot2grid((3,1), (1,0))
+                            ax3 = plt.subplot2grid((3,1), (2,0))
+                            axes = [ax1,ax2,ax3]
+
+                            ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+
+                            ichip = 0
+                            for ax in axes:
+                                ax.set_xlim(xmin[ichip], xmax[ichip])
+                                ax.set_ylim(0.15, 1.4)
+                                ax.tick_params(reset=True)
+                                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                                ax.minorticks_on()
+                                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                                ax.tick_params(axis='both',which='major',length=axmajlen)
+                                ax.tick_params(axis='both',which='minor',length=axminlen)
+                                ax.tick_params(axis='both',which='both',width=axwidth)
+                                ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+
+                                # Flatten the continuum
+                                gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
+                                z = np.polyfit(wave[gd], flux[gd], contord)
+                                p = np.poly1d(z)
+
+                                ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k', label='observed')
+                                ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='synthetic')
+                                #ax.plot(wave[gd], p(wave[gd]), color='r')
+
+                                ichip += 1
+
+                            txt = objid+',  H = '+chmag+',  '+str(nvis)+' visits'
+                            ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center')
+                            txt = r'$T_{\rm eff}$ = ' + rvteff + ',    log(g) = ' + rvlogg + ',    [Fe/H] = '+rvfeh
+                            ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center')
+                            ax3.legend(loc='lower center', edgecolor='k', ncol=2)
+
+                            fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
+                            plt.savefig(starPlotFilePath)
+                            plt.close('all')
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
@@ -2020,80 +2093,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
                     plt.close('all')
-
-            # Make plots of apStar spectrum with best fitting model
-            if makestarplots is True:
-                if apStarRelPath is not None:
-                    if (objtype != 'SKY') & (objid != '2MNone'):
-                        check = glob.glob(starPlotFilePath)
-                        if (len(check) < 1) | (clobber is True):
-                            print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
-
-                            contord = 5
-                            hdr = fits.getheader(apStarPath)
-                            flux = fits.open(apStarPath)[1].data[0]
-                            npix = len(flux)
-                            wstart = hdr['CRVAL1']
-                            wstep = hdr['CDELT1']
-                            vhbary = hdr['VHBARY']
-                            wave = 10**(wstart + wstep * np.arange(0, npix, 1))
-                            gd, = np.where(np.isnan(flux) == False)
-                            wave = wave[gd]
-                            flux = flux[gd]
-
-                            # Get model spectrum
-                            fp = open(apStarModelPath, 'rb')
-                            out = pickle.load(fp)
-                            sumstr,finalstr,bmodel,specmlist,gout = out
-                            swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
-                            sflux = bmodel[1].flux
-
-                            lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                            xmin = np.array([15125, 15845, 16455])
-                            xmax = np.array([15817, 16440, 16960])
-                            xspan = xmax - xmin
-
-                            fig=plt.figure(figsize=(28,20))
-                            ax1 = plt.subplot2grid((3,1), (0,0))
-                            ax2 = plt.subplot2grid((3,1), (1,0))
-                            ax3 = plt.subplot2grid((3,1), (2,0))
-                            axes = [ax1,ax2,ax3]
-
-                            ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
-
-                            ichip = 0
-                            for ax in axes:
-                                ax.set_xlim(xmin[ichip], xmax[ichip])
-                                ax.set_ylim(0.15, 1.4)
-                                ax.tick_params(reset=True)
-                                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
-                                ax.minorticks_on()
-                                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                                ax.tick_params(axis='both',which='major',length=axmajlen)
-                                ax.tick_params(axis='both',which='minor',length=axminlen)
-                                ax.tick_params(axis='both',which='both',width=axwidth)
-                                ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
-
-                                # Flatten the continuum
-                                gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
-                                z = np.polyfit(wave[gd], flux[gd], contord)
-                                p = np.poly1d(z)
-
-                                ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k', label='observed')
-                                ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='synthetic')
-                                #ax.plot(wave[gd], p(wave[gd]), color='r')
-
-                                ichip += 1
-
-                            txt = objid+',  H = '+chmag+',  '+str(nvis)+' visits'
-                            ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center')
-                            txt = r'$T_{\rm eff}$ = ' + rvteff + ',    log(g) = ' + rvlogg + ',    [Fe/H] = '+rvfeh
-                            ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center')
-                            ax3.legend(loc='lower center', edgecolor='k', ncol=2)
-
-                            fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
-                            plt.savefig(starPlotFilePath)
-                            plt.close('all')
 
     objhtml.close()
     #cfile.close()
