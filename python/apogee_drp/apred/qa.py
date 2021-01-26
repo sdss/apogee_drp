@@ -1875,7 +1875,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('</TABLE>\n<BR>\n')
 
                     # Star + best fitting model plot
-                    starHTML.write('<P>apStar versus best fit Doppler model:')
+                    starHTML.write('<P>apStar versus best fit Doppler model:</P>')
                     starHTML.write('<TD><A HREF=' + starPlotRelPath + ' target="_blank"><IMG SRC=' + starPlotRelPath + ' WIDTH=1000></A></TR>\n')
 
                     # Star visit table
