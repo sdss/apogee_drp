@@ -61,7 +61,8 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
-            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, clobber=True):
+            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True,
+            makestarplots=True, makeqafits=True, clobber=True):
 
     # Establish telescope
     telescope = observatory + '25m'
@@ -81,11 +82,13 @@ def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True
     for ii in range(nmjd):
         x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
                     makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
-                    makenightqa=makenightqa, makestarhtml=makestarhtml, clobber=clobber)
+                    makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots,
+                    makeqafits=makeqafits, clobber=clobber)
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
-            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, clobber=True):
+            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
+            makestarplots=True, makeqafits=True, clobber=True):
 
     # Establish telescope and instrument
     telescope = observatory + '25m'
@@ -117,25 +120,26 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     darkplans = np.array(darkplans)
     ndarkplans = len(darkplans)
 
-    # Run apqa on the cal  plans
-    print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
-    for i in range(ncalplans): 
-        planfile = load.filename('CalPlan', mjd=mjd)
-        planstr = plan.load(planfile, np=True)
-        mjd = calplans[i].split('-')[3].split('.')[0]
-        all_ims = planstr['APEXP']['name']
-        x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
-    print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+    if makeqafits == True:
+        # Run apqa on the cal  plans
+        print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+        for i in range(ncalplans): 
+            planfile = load.filename('CalPlan', mjd=mjd)
+            planstr = plan.load(planfile, np=True)
+            mjd = calplans[i].split('-')[3].split('.')[0]
+            all_ims = planstr['APEXP']['name']
+            x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
+        print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
 
-    # Run apqa on the dark  plans
-    print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
-    for i in range(ndarkplans): 
-        planfile = load.filename('DarkPlan', mjd=mjd)
-        planstr = plan.load(planfile, np=True)
-        mjd = darkplans[i].split('-')[3].split('.')[0]
-        all_ims = planstr['APEXP']['name']
-        x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
-    print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        # Run apqa on the dark  plans
+        print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        for i in range(ndarkplans): 
+            planfile = load.filename('DarkPlan', mjd=mjd)
+            planstr = plan.load(planfile, np=True)
+            mjd = darkplans[i].split('-')[3].split('.')[0]
+            all_ims = planstr['APEXP']['name']
+            x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
+        print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
@@ -183,11 +187,13 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         if i < nsciplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
                      makemasterqa=False, makeplots=makeplots, makespecplots=makespecplots, 
-                     makenightqa=False, makestarhtml=makestarhtml, clobber=clobber)
+                     makenightqa=False, makestarhtml=makestarhtml, makestarplots=makestarplots, 
+                     clobber=clobber)
         else:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
                      makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
-                     makenightqa=makenightqa, makestarhtml=makestarhtml, clobber=clobber)
+                     makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots, 
+                     clobber=clobber)
 
     print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
 
@@ -195,7 +201,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True,
          makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
-         badPlates=None, clobber=True):
+         makestarplots=True, badPlates=None, clobber=True):
 
     start_time = time.time()
 
@@ -257,10 +263,10 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
 
     # For calibration plates, measure lamp brightesses and/or line widths, etc. and write to FITS file.
-    if platetype == 'cal': x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
+    #if platetype == 'cal': x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
 
     # For darks and flats, get mean and stdev of column-medianed quadrants.
-    if platetype == 'dark': x = makeDarkFits(load=load, planfile=planfile, ims=all_ims, mjd=mjd)
+    #if platetype == 'dark': x = makeDarkFits(load=load, planfile=planfile, ims=all_ims, mjd=mjd)
 
     # Normal plates:.
     if platetype == 'normal': 
@@ -299,7 +305,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the observation spectrum plots and associated pages
         q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                     makespecplots=makespecplots, makestarhtml=makestarhtml)
+                     makespecplots=makespecplots, makestarhtml=makestarhtml, makestarplots=makestarplots)
 
         # Make the nightly QA page
         if makenightqa == True:
@@ -1579,7 +1585,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
 ''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
 def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
-              makespecplots=None, makestarhtml=None): 
+              makespecplots=None, makestarhtml=None, makestarplots=None): 
 
     print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
 
@@ -1702,20 +1708,14 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 healpixgroup = str(healpix // 1000)
                 healpix = str(healpix)
 
-                # Find the associated healpix directories and make them if they don't already exist
-                healpixgroupDir = starHTMLdir + str(healpixgroup) + '/'
-                if os.path.exists(healpixgroupDir) is False: os.makedirs(healpixgroupDir)
-
-                healpixDir = healpixgroupDir + str(healpix) + '/'
-                if os.path.exists(healpixDir) is False: os.makedirs(healpixDir)
-
-                starHtmlDir = healpixDir + '/html/'
+                # Find the associated healpix html directories and make them if they don't already exist
+                starHtmlDir = starHTMLdir + healpixgroup + '/' + healpix + '/' + '/html/'
                 if os.path.exists(starHtmlDir) is False: os.makedirs(starHtmlDir)
-
                 starHTMLpath = starHtmlDir + objid + '.html'
+
                 relpath = '../../../../../../stars/' + telescope + '/'
                 starHTMLrelPath = relpath + healpixgroup + '/' + healpix + '/html/' + objid + '.html'
-                apStarPath = relpath + '/' +healpixgroup + '/' + healpix + '/'
+                apStarPath = relpath + healpixgroup + '/' + healpix + '/'
                 tmpDir = starHTMLdir + healpixgroup + '/' + healpix + '/'
                 apStarCheck = glob.glob(tmpDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
                 if len(apStarCheck) > 0:
@@ -1725,7 +1725,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 else:
                     apStarRelPath = None
 
-                import pdb; pdb.set_trace()
+                starPlotDir = tmpDir + 'plots/'
+                if os.path.exists(starPlotDir) is False: os.makedirs(starPlotDir)
+                starPlotPath = starPlotDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
+                starPlotRelPath = apStarPath + 'plots/' + 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
@@ -1871,6 +1874,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
                     starHTML.write('</TABLE>\n<BR>\n')
 
+                    # Star + best fitting model plot
+                    starHTML.write('<P>apStar versus best fit Doppler model:')
+                    starHTML.write('<TD><A HREF=' + starPlotRelPath + ' target="_blank"><IMG SRC=' + starPlotRelPath + ' WIDTH=1000></A></TR>\n')
+
                     # Star visit table
                     starHTML.write('<P>Visit info:')
                     starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
@@ -2002,6 +2009,41 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
                 plt.close('all')
+
+            # Make plots of apStar spectrum with best fitting model
+            if j < 5:
+                if makestarplots == True:
+                    if apStarRelPath is not None:
+                        print("\n----> makeObjQA: Making " + os.path.basename(plotfile))
+
+                        lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                        xmin = np.array([15120, 15845, 16455])
+                        xmax = np.array([15815, 16435, 16960])
+                        xspan = xmax - xmin
+                        fig=plt.figure(figsize=(28,16))
+                        ax1 = plt.subplot2grid((3,1), (0,0))
+                        ax2 = plt.subplot2grid((3,1), (1,0))
+                        ax3 = plt.subplot2grid((3,1), (2,0))
+                        axes = [ax1,ax2,ax3]
+
+                        ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+
+                        ichip = 0
+                        for ax in axes:
+                            ax.set_xlim(xmin[ichip], xmax[ichip])
+                            ax.set_ylim(0.2, 1.2)
+                            ax.tick_params(reset=True)
+                            ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
+                            ax.minorticks_on()
+                            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                            ax.tick_params(axis='both',which='major',length=axmajlen)
+                            ax.tick_params(axis='both',which='minor',length=axminlen)
+                            ax.tick_params(axis='both',which='both',width=axwidth)
+                            ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+
+                        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.1,wspace=0.0)
+                        plt.savefig(plotsdir+plotfile)
+                    plt.close('all')
 
     objhtml.close()
     #cfile.close()
