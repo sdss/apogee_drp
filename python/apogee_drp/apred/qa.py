@@ -2027,8 +2027,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         wstep = hdr['CDELT1']
                         wave = wstart + wstep * np.arange(0, npix, 1)
                         wave = 10**wave
-                        gd, = np.where(math.isnan(flux) is False)
                         import pdb; pdb.set_trace()
+                        gd, = np.where(math.isnan(flux) is False)
                         wave = wave[gd]
                         flux = flux[gd]
 
