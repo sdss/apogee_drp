@@ -1627,7 +1627,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     if os.path.exists(allVpath): allV = fits.getdata(allVpath)
 
     # Base directory where star-level plots go
-    starHTMLdir = apodir + apred + '/stars/' + telescope +'/'
+    starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
@@ -1709,26 +1709,29 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 healpix = str(healpix)
 
                 # Find the associated healpix html directories and make them if they don't already exist
-                starHtmlDir = starHTMLdir + healpixgroup + '/' + healpix + '/' + '/html/'
+                starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+                starHtmlDir = starDir + 'html/'
                 if os.path.exists(starHtmlDir) is False: os.makedirs(starHtmlDir)
                 starHTMLpath = starHtmlDir + objid + '.html'
 
-                relpath = '../../../../../../stars/' + telescope + '/'
-                starHTMLrelPath = relpath + healpixgroup + '/' + healpix + '/html/' + objid + '.html'
-                apStarPath = relpath + healpixgroup + '/' + healpix + '/'
-                tmpDir = starHTMLdir + healpixgroup + '/' + healpix + '/'
-                apStarCheck = glob.glob(tmpDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                starRelPath = '../../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                starHTMLrelPath = starRelPath + 'html/' + objid + '.html'
+                apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '*.fits')
                 if len(apStarCheck) > 0:
-                    apStarCheck.sort();   apStarCheck = np.array(apStarCheck)
+                    # Find the newest apStar file
+                    apStarCheck.sort()
+                    apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = apStarPath + apStarNewest
+                    apStarRelPath = apStarRelDir + apStarNewest
+
+                    # Set up plot directories and plot file name
+                    starPlotDir = starDir + 'plots/'
+                    if os.path.exists(starPlotDir) is False: os.makedirs(starPlotDir)
+                    starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
+                    starPlotFilePath = starPlotDir + starPlotFile
+                    starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
                 else:
                     apStarRelPath = None
-
-                starPlotDir = tmpDir + 'plots/'
-                if os.path.exists(starPlotDir) is False: os.makedirs(starPlotDir)
-                starPlotPath = starPlotDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
-                starPlotRelPath = apStarPath + 'plots/' + 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
@@ -1876,7 +1879,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     # Star + best fitting model plot
                     starHTML.write('<P>apStar versus best fit Doppler model:</P>')
-                    starHTML.write('<TD><A HREF=' + starPlotRelPath + ' target="_blank"><IMG SRC=' + starPlotRelPath + ' WIDTH=1000></A></TR>\n')
+                    starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
 
                     # Star visit table
                     starHTML.write('<P>Visit info:')
@@ -1922,7 +1925,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
             objhtml.write('<TD><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1100></A>\n')
-            if makespecplots == True:
+            if makespecplots is True:
                 print("----> makeObjQA: Making "+plotfile)
 
                 lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
@@ -2012,7 +2015,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
             # Make plots of apStar spectrum with best fitting model
             if j < 5:
-                if makestarplots == True:
+                if makestarplots is True:
                     if apStarRelPath is not None:
                         print("\n----> makeObjQA: Making " + os.path.basename(plotfile))
 
