@@ -2879,12 +2879,11 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         oneDstruct = np.zeros(nchips, dtype=dt)
         for ichip in range(nchips):
             chip = chips[ichip]
-            import pdb; pdb.set_trace()
             oneDstruct['FLUX'][ichip] = oneD[chip][1].data
             oneDstruct['ERR'][ichip] =  oneD[chip][2].data
-            oneDstruct['MASK'][ichip] =  oneD[chip][3].data
-            oneDstruct['WAVE'][ichip] =  oneD[chip][4].data
-            oneDstruct['WCOEF'][ichip] =  oneD[chip][5].data
+            #oneDstruct['MASK'][ichip] =  oneD[chip][3].data
+            #oneDstruct['WAVE'][ichip] =  oneD[chip][4].data
+            #oneDstruct['WCOEF'][ichip] =  oneD[chip][5].data
 
         if type(oneD) == dict:
             struct['NAME'][i] =    ims[i]
@@ -2914,12 +2913,11 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 for iline in range(nlines):
                     for ichip in range(nchips):
                         chip = chips[ichip]
-                        import pdb; pdb.set_trace()
                         oneDflux = oneDstruct['FLUX'][ichip]
                         oneDerr = oneDstruct['ERR'][ichip]
-                        oneDmask = oneDstruct['MASK'][ichip]
-                        oneDwave = oneDstruct['WAVE'][ichip]
-                        oneDwcoef = oneDstruct['WCOEF'][ichip]
+                        #oneDmask = oneDstruct['MASK'][ichip]
+                        #oneDwave = oneDstruct['WAVE'][ichip]
+                        #oneDwcoef = oneDstruct['WCOEF'][ichip]
                         toterr = np.sqrt(np.nanmedian(oneDerr[:,1024-100:1024+100]**2, axis=1))
 
 
@@ -2937,10 +2935,10 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         #linestr = wave.peakfit(oneD[chips[ichip]][1].data)
 
                         for ifiber in range(nfibers):
-                            fibers = fibers[ifiber]
+                            fiber = fibers[ifiber]
                             pix0,_ = find_peaks(oneDflux[fiber, :], height=20000)
                             gpeaks = peakfit.peakfit(oneDflux[fiber, :], sigma=toterror, pix0=pix0)
-                            
+                            import pdb; pdb.set_trace()
 
                             j, = np.where(linestr['FIBER'] == fiber)
                             nj = len(j)
