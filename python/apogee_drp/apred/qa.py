@@ -1988,15 +1988,15 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                                 z = np.polyfit(wave[gd], flux[gd], contord)
                                 p = np.poly1d(z)
 
-                                ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k', label='observed')
-                                ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='synthetic')
+                                ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k', label='apStar')
+                                ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Doppler model')
                                 #ax.plot(wave[gd], p(wave[gd]), color='r')
 
                                 ichip += 1
 
                             txt = objid+',  H = '+chmag+',  '+str(nvis)+' visits'
                             ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center')
-                            txt = r'$T_{\rm eff}$ = ' + rvteff + ',    log(g) = ' + rvlogg + ',    [Fe/H] = '+rvfeh
+                            txt = r'$T_{\rm eff}$ = ' + rvteff + ' K,    log(g) = ' + rvlogg + ',    [Fe/H] = '+rvfeh
                             ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center')
                             ax3.legend(loc='lower center', edgecolor='k', ncol=2)
 
