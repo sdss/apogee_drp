@@ -1725,6 +1725,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 else:
                     apStarRelPath = None
 
+                import pdb; pdb.set_trace()
+
             # Establish html table row background color and spectrum plot color
             color = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = '#D2B4DE'
@@ -2862,7 +2864,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                    ('LINES',   np.float64,(nlines,nchips))])
 
     struct = np.zeros(n_exposures, dtype=dt)
-    struct['FIBERS'] = fibers
 
     # Loop over exposures and get 1D images to fill structure.
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
@@ -2895,6 +2896,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
             struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
             struct['THAR'][i] =    oneDhdr['LAMPTHAR']
             struct['UNE'][i] =     oneDhdr['LAMPUNE']
+            struct['FIBERS'][i] = fibers
 
             # Quartz exposures.
             if struct['QRTZ'][i] == 1: 
