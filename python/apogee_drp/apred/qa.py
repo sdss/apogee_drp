@@ -29,7 +29,7 @@ import matplotlib.ticker as ticker
 import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
-from scipy.signal import medfilt2d as ScipyMedfilt2D, 
+from scipy.signal import medfilt2d as ScipyMedfilt2D
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 from scipy.optimize import curve_fit
 
