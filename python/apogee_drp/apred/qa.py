@@ -2028,10 +2028,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         wave = wstart + wstep * np.arange(0, npix, 1)
                         wave = 10**wave
                         gd, = np.where(math.isnan(flux) is False)
+                        import pdb; pdb.set_trace()
                         wave = wave[gd]
                         flux = flux[gd]
 
-                        import pdb; pdb.set_trace()
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                         xmin = np.array([15120, 15845, 16455])
