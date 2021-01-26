@@ -2913,6 +2913,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 for iline in range(nlines):
                     for ichip in range(nchips):
                         chip = chips[ichip]
+                        import pdb; pdb.set_trace()
                         oneDflux = oneDstruct['FLUX'][ichip]
                         oneDerr = oneDstruct['ERR'][ichip]
                         oneDmask = oneDstruct['MASK'][ichip]
@@ -2938,7 +2939,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                             fibers = fibers[ifiber]
                             pix0,_ = find_peaks(oneDflux[fiber, :], height=20000)
                             gpeaks = peakfit.peakfit(oneDflux[fiber, :], sigma=toterror, pix0=pix0)
-                            import pdb; pdb.set_trace()
+                            
 
                             j, = np.where(linestr['FIBER'] == fiber)
                             nj = len(j)
