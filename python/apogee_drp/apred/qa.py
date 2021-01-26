@@ -1727,7 +1727,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     apStarCheck.sort()
                     apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = starRelPath + apStarNewest
+                    apStarRelPath = starRelPath + apStarNewest.replace('visit/', '')
                     apStarPath = starDir + apStarNewest
                     apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
