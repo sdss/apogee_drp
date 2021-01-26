@@ -1889,7 +1889,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     # Star visit table
                     starHTML.write('<H3>Visit info:</H3>')
-                    starHTML.write('<P>MJD links: QA page for the plate+MJD of the visit.<BR>Date-Obs links: apVisit file download.</P>\n')
+                    starHTML.write('<P><B>MJD links:</B> QA page for the plate+MJD of the visit.<BR><B>Date-Obs links:</B> apVisit file download.</P>\n')
                     starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
                     starHTML.write('<TR bgcolor="'+thcolor+'">')
                     starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
