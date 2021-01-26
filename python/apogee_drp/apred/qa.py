@@ -2026,7 +2026,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         wstart = hdr['CRVAL1']
                         wstep = hdr['CDELT1']
                         wave = 10**(wstart + wstep * np.arange(0, npix, 1))
-                        import pdb; pdb.set_trace()
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                         xmin = np.array([15120, 15845, 16455])
