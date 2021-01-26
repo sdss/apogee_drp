@@ -2058,7 +2058,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                             # Flatten the continuum
                             gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
-                            z = np.polyfit(wave[gd], flux[gd], 3)
+                            z = np.polyfit(wave[gd], flux[gd], 4)
                             p = np.poly1d(z)
 
                             ax.plot(wave[gd], flux[gd], color='k')
