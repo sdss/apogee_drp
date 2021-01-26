@@ -1723,6 +1723,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
                     apStarRelPath = starRelPath + apStarNewest
+                    apStarPath = starDir + apStarNewest
 
                     # Set up plot directories and plot file name
                     starPlotDir = starDir + 'plots/'
@@ -2019,6 +2020,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     if apStarRelPath is not None:
                         print("\n----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
+                        hdr = fits.getheader(apStarPath)
+                        flux = fits.open(apStarPath)[1].data
+                        wstart = hdr['CRVAL1']
+                        wstep = hdr['CDELT1']
+                        import pdb; pdb.set_trace()
+
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                         xmin = np.array([15120, 15845, 16455])
                         xmax = np.array([15815, 16435, 16960])
@@ -2034,7 +2041,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         ichip = 0
                         for ax in axes:
                             ax.set_xlim(xmin[ichip], xmax[ichip])
-                            ax.set_ylim(0.2, 1.2)
+                            #ax.set_ylim(0.2, 1.2)
                             ax.tick_params(reset=True)
                             ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
                             ax.minorticks_on()
@@ -2044,7 +2051,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ax.tick_params(axis='both',which='both',width=axwidth)
                             ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
 
-                        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.1,wspace=0.0)
+                        fig.subplots_adjust(left=0.05,right=0.99,bottom=0.09,top=0.98,hspace=0.1,wspace=0.0)
                         plt.savefig(starPlotFilePath)
                     plt.close('all')
 
