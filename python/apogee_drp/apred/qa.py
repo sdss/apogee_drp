@@ -1874,7 +1874,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     # Star metadata table
                     starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>2MASS<BR>J<BR>(mag) <TH>2MASS<BR>H<BR>(mag) <TH>2MASS<BR>J<BR>(mag) <TH>Raw J-K')
                     starHTML.write('<TH>Gaia DR2<BR>PMRA<BR>(mas) <TH>Gaia DR2<BR>PMDEC<BR>(mas) <TH>Gaia DR2<BR>G<BR>(mag) <TH>Mean<BR>Vhelio<BR>(km/s)') 
-                    starHTML.write('<TH>Min-max<BR>Vhelio<BR>(km/s) <TH>RV Teff<BR>(K) <TH>RV logg <TH>RV [Fe/H] \n')
+                    starHTML.write('<TH>Min-max<BR>Vhelio<BR>(km/s) <TH>RV Teff<BR>(K) <TH>RV log(g) <TH>RV [Fe/H] \n')
                     starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
                     starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
                     starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
@@ -2084,8 +2084,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                                 ichip += 1
 
-                            ax3.legend(loc='lower right', edgecolor='k')
-                            ax3.text(0.02, 0.05, objid+',  H = '+chmag+',  '+str(nvis)+' visits', transform=ax3.transAxes, bbox=bboxpar)
+                            txt = objid+',  H = '+chmag+',  '+str(nvis)+' visits'
+                            ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center')
+                            txt = r'$T_{\rm eff}$ = ' + rvteff + ',    log(g) = ' + rvlogg + ',    [Fe/H] = '+rvfeh
+                            ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center')
+                            ax3.legend(loc='lower middle', edgecolor='k', ncol=2)
 
                             fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
                             plt.savefig(starPlotFilePath)
