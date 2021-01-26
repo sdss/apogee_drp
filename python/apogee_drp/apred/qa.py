@@ -1722,7 +1722,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     apStarCheck.sort()
                     apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = apStarRelDir + apStarNewest
+                    apStarRelPath = starRelPath + apStarNewest
 
                     # Set up plot directories and plot file name
                     starPlotDir = starDir + 'plots/'
