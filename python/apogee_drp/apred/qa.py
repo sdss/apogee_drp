@@ -2022,8 +2022,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                         hdr = fits.getheader(apStarPath)
                         flux = fits.open(apStarPath)[1].data
+                        npix = len(flux)
                         wstart = hdr['CRVAL1']
                         wstep = hdr['CDELT1']
+                        wave = 10**(wstart + wstep * np.arange(0, npix, 1))
                         import pdb; pdb.set_trace()
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
@@ -2050,6 +2052,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ax.tick_params(axis='both',which='minor',length=axminlen)
                             ax.tick_params(axis='both',which='both',width=axwidth)
                             ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+
+                            ax.plot(wave, flux, color='k')
 
                         fig.subplots_adjust(left=0.05,right=0.99,bottom=0.09,top=0.98,hspace=0.1,wspace=0.0)
                         plt.savefig(starPlotFilePath)
