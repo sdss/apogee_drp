@@ -2038,9 +2038,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         fp = open(apStarModelPath, 'rb')
                         out = pickle.load(fp)
                         sumstr,finalstr,bmodel,specmlist,gout = out
-                        mwave = bmodel[1].wave
-                        import pdb; pdb.set_trace()
-
+                        swave = bmodel[1].wave
+                        sflux = bmodel[1].flux
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                         xmin = np.array([15125, 15845, 16455])
@@ -2074,6 +2073,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             p = np.poly1d(z)
 
                             ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k')
+                            ax.plot(mwave[:, 2-ichip], mflux[:, 2-ichip], color='r')
                             #ax.plot(wave[gd], p(wave[gd]), color='r')
 
                             ichip += 1
