@@ -2047,7 +2047,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         ichip = 0
                         for ax in axes:
                             ax.set_xlim(xmin[ichip], xmax[ichip])
-                            #ax.set_ylim(0.2, 1.2)
+                            ax.set_ylim(0.2, 1.2)
                             ax.tick_params(reset=True)
                             ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
                             ax.minorticks_on()
@@ -2062,12 +2062,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             z = np.polyfit(wave[gd], flux[gd], contord)
                             p = np.poly1d(z)
 
-                            ax.plot(wave[gd], flux[gd], color='k')
-                            ax.plot(wave[gd], p(wave[gd]), color='r')
+                            ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k')
+                            #ax.plot(wave[gd], p(wave[gd]), color='r')
 
                             ichip += 1
 
-                        ax1.text(0.98, 0.90, str(contord), transform=ax1.transAxes, ha='right', va='top')
+                        #ax1.text(0.98, 0.90, str(contord), transform=ax1.transAxes, ha='right', va='top')
 
                         fig.subplots_adjust(left=0.05,right=0.99,bottom=0.09,top=0.98,hspace=0.1,wspace=0.0)
                         plt.savefig(starPlotFilePath)
