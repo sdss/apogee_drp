@@ -2012,7 +2012,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
-                plt.close('all')
+                    plt.close('all')
 
             # Make plots of apStar spectrum with best fitting model
             if j < 5:
@@ -2025,7 +2025,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         npix = len(flux)
                         wstart = hdr['CRVAL1']
                         wstep = hdr['CDELT1']
-                        wave = 10**(wstart + wstep * np.arange(0, npix, 1))
+                        wave = wstart + wstep * np.arange(0, npix, 1)
+                        wave = 10**wave
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                         xmin = np.array([15120, 15845, 16455])
@@ -2056,7 +2057,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                         fig.subplots_adjust(left=0.05,right=0.99,bottom=0.09,top=0.98,hspace=0.1,wspace=0.0)
                         plt.savefig(starPlotFilePath)
-                    plt.close('all')
+                        plt.close('all')
 
     objhtml.close()
     #cfile.close()
