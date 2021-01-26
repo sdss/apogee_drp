@@ -1685,7 +1685,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     #cfile = open(plotsdir+htmlfile+'.csh','w')
 
     # Loop over the fibers
-    for j in range(nfiber):
+    for j in range(6):
         jdata = data[j]
         fiber = jdata['FIBERID']
         if fiber > 0:
