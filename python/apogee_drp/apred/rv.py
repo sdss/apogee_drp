@@ -621,7 +621,7 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
             gd, = np.where(~spec.mask[:,iorder])
             ax[i].plot(spec.wave[gd,iorder],spec.flux[gd,iorder],color='g')
         ax[i].plot(mod.wave,mod.flux,color='r')
-        ax[i].text(0.1,0.1,'{:d}'.format(spec.head['MJD5']),transform=ax[i].transAxes)
+        ax[i].text(0.1,0.1,'{:s}'.format(str(spec.head['PLATE'])+'-'+str(spec.head['MJD5'])),transform=ax[i].transAxes)
         for iwind,wind in enumerate(windows) :
             ax2[i,iwind].plot(spec.wave,spec.flux,color='k')
             for iorder in range(3) :
@@ -630,7 +630,7 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
             ax2[i,iwind].plot(mod.wave,mod.flux,color='r')
             ax2[i,iwind].set_xlim(wind[0],wind[1])
             ax2[i,iwind].set_ylim(0.5,1.3)
-            if iwind == 0 : ax2[i,iwind].text(0.1,0.1,'{:d}'.format(spec.head['MJD5']),transform=ax2[i,0].transAxes)
+            if iwind == 0 : ax2[i,iwind].text(0.1,0.1,'{:s}'.format(str(spec.head['PLATE'])+'-'+str(spec.head['MJD5'])),transform=ax2[i,0].transAxes)
         axc[i].plot(spec.wave,spec.flux*spec.cont,color='k')
         axc[i].plot(spec.wave,spec.cont,color='g')
         axc[i].text(0.1,0.1,'{:d}'.format(spec.head['MJD5']),transform=axc[i].transAxes)
