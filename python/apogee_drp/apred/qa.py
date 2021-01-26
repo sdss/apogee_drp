@@ -309,7 +309,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the observation spectrum plots and associated pages
         q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                     makespecplots=makespecplots, makestarhtml=makestarhtml, makestarplots=makestarplots)
+                     makespecplots=makespecplots, makestarhtml=makestarhtml, makestarplots=makestarplots,
+                     clobber=clobber)
 
         # Make the nightly QA page
         if makenightqa == True:
@@ -1589,7 +1590,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
 ''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
 def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
-              makespecplots=None, makestarhtml=None, makestarplots=None): 
+              makespecplots=None, makestarhtml=None, makestarplots=None, clobber=None): 
 
     print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
 
@@ -1684,7 +1685,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     #cfile = open(plotsdir+htmlfile+'.csh','w')
 
     # Loop over the fibers
-    for j in range(nfiber):
+    for j in range(6):
         jdata = data[j]
         fiber = jdata['FIBERID']
         if fiber > 0:
@@ -1719,14 +1720,14 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starHTMLpath = starHtmlDir + objid + '.html'
 
                 starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                starHTMLrelPath = starRelPath + 'html/' + objid + '.html'
+                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
                 apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
                 if len(apStarCheck) > 0:
                     # Find the newest apStar file
                     apStarCheck.sort()
                     apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = starRelPath + apStarNewest
+                    apStarRelPath = '../' + starRelPath + apStarNewest
                     apStarPath = starDir + apStarNewest
                     apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
@@ -1835,15 +1836,16 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if makestarhtml is True:
                 if (objtype != 'SKY') & (objid != '2MNone'):
                     print("----> makeObjQA: Making star level html for " + objid)
-                    # Get visit info from DB
                     vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
-                    nvis = len(vcat)
+
+                    # Get visit info from DB
                     cgl = str("%.5f" % round(vcat['glon'][0],5))
                     cgb = str("%.5f" % round(vcat['glat'][0],5))
                     cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                     cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                     cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
 
+                    nvis = len(vcat)
                     cvhelio = '----';  cvscatter = '----'
                     gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
                     if len(gd) > 0:
@@ -1874,7 +1876,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     # Star metadata table
                     starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>2MASS<BR>J<BR>(mag) <TH>2MASS<BR>H<BR>(mag) <TH>2MASS<BR>J<BR>(mag) <TH>Raw J-K')
                     starHTML.write('<TH>Gaia DR2<BR>PMRA<BR>(mas) <TH>Gaia DR2<BR>PMDEC<BR>(mas) <TH>Gaia DR2<BR>G<BR>(mag) <TH>Mean<BR>Vhelio<BR>(km/s)') 
-                    starHTML.write('<TH>Min-max<BR>Vhelio<BR>(km/s) <TH>RV Teff<BR>(K) <TH>RV logg <TH>RV [Fe/H] \n')
+                    starHTML.write('<TH>Min-max<BR>Vhelio<BR>(km/s) <TH>RV Teff<BR>(K) <TH>RV log(g) <TH>RV [Fe/H] \n')
                     starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
                     starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
                     starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
@@ -1889,6 +1891,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     # Star visit table
                     starHTML.write('<H3>Visit info:</H3>')
+                    starHTML.write('<P><B>MJD links:</B> QA page for the plate+MJD of the visit.<BR><B>Date-Obs links:</B> apVisit file download.</P>\n')
                     starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
                     starHTML.write('<TR bgcolor="'+thcolor+'">')
                     starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
@@ -1927,6 +1930,80 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
                     starHTML.write('</TABLE>\n<BR><BR><BR>\n')
                     starHTML.close()
+
+                    # Make plots of apStar spectrum with best fitting model
+                    if apStarRelPath is not None:
+                        check = glob.glob(starPlotFilePath)
+                        #if (len(check) < 1) | (clobber is True):
+                        if len(check) < 1:
+                            print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
+
+                            contord = 5
+                            hdr = fits.getheader(apStarPath)
+                            flux = fits.open(apStarPath)[1].data[0]
+                            npix = len(flux)
+                            wstart = hdr['CRVAL1']
+                            wstep = hdr['CDELT1']
+                            vhbary = hdr['VHBARY']
+                            wave = 10**(wstart + wstep * np.arange(0, npix, 1))
+                            gd, = np.where(np.isnan(flux) == False)
+                            wave = wave[gd]
+                            flux = flux[gd]
+
+                            # Get model spectrum
+                            fp = open(apStarModelPath, 'rb')
+                            out = pickle.load(fp)
+                            sumstr,finalstr,bmodel,specmlist,gout = out
+                            import pdb; pdb.set_trace()
+                            swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
+                            sflux = bmodel[1].flux
+
+                            lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                            xmin = np.array([15125, 15845, 16455])
+                            xmax = np.array([15817, 16440, 16960])
+                            xspan = xmax - xmin
+
+                            fig=plt.figure(figsize=(28,20))
+                            ax1 = plt.subplot2grid((3,1), (0,0))
+                            ax2 = plt.subplot2grid((3,1), (1,0))
+                            ax3 = plt.subplot2grid((3,1), (2,0))
+                            axes = [ax1,ax2,ax3]
+
+                            ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+
+                            ichip = 0
+                            for ax in axes:
+                                ax.set_xlim(xmin[ichip], xmax[ichip])
+                                ax.set_ylim(0.15, 1.4)
+                                ax.tick_params(reset=True)
+                                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                                ax.minorticks_on()
+                                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                                ax.tick_params(axis='both',which='major',length=axmajlen)
+                                ax.tick_params(axis='both',which='minor',length=axminlen)
+                                ax.tick_params(axis='both',which='both',width=axwidth)
+                                ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+
+                                # Flatten the continuum
+                                gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
+                                z = np.polyfit(wave[gd], flux[gd], contord)
+                                p = np.poly1d(z)
+
+                                ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k', label='apStar')
+                                ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Doppler model')
+                                #ax.plot(wave[gd], p(wave[gd]), color='r')
+
+                                ichip += 1
+
+                            txt = objid+',  H = '+chmag+',  '+str(nvis)+' visits'
+                            ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center')
+                            txt = r'$T_{\rm eff}$ = ' + rvteff + ' K,    log(g) = ' + rvlogg + ',    [Fe/H] = '+rvfeh
+                            ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center')
+                            ax3.legend(loc='lower center', edgecolor='k', ncol=2)
+
+                            fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
+                            plt.savefig(starPlotFilePath)
+                            plt.close('all')
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
@@ -2018,77 +2095,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
                     plt.close('all')
-
-            # Make plots of apStar spectrum with best fitting model
-            if j < 5:
-                if makestarplots is True:
-                    if apStarRelPath is not None:
-                        print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
-
-                        contord = 5
-                        hdr = fits.getheader(apStarPath)
-                        flux = fits.open(apStarPath)[1].data[0]
-                        npix = len(flux)
-                        wstart = hdr['CRVAL1']
-                        wstep = hdr['CDELT1']
-                        vhbary = hdr['VHBARY']
-                        wave = 10**(wstart + wstep * np.arange(0, npix, 1))
-                        gd, = np.where(np.isnan(flux) == False)
-                        wave = wave[gd]
-                        flux = flux[gd]
-
-                        # Get model spectrum
-                        fp = open(apStarModelPath, 'rb')
-                        out = pickle.load(fp)
-                        sumstr,finalstr,bmodel,specmlist,gout = out
-                        swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
-                        sflux = bmodel[1].flux
-
-                        lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                        xmin = np.array([15125, 15845, 16455])
-                        xmax = np.array([15817, 16440, 16960])
-                        xspan = xmax - xmin
-
-                        fig=plt.figure(figsize=(28,20))
-                        ax1 = plt.subplot2grid((3,1), (0,0))
-                        ax2 = plt.subplot2grid((3,1), (1,0))
-                        ax3 = plt.subplot2grid((3,1), (2,0))
-                        axes = [ax1,ax2,ax3]
-
-                        ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
-
-                        ichip = 0
-                        for ax in axes:
-                            ax.set_xlim(xmin[ichip], xmax[ichip])
-                            ax.set_ylim(0.2, 1.4)
-                            ax.tick_params(reset=True)
-                            ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
-                            ax.minorticks_on()
-                            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                            ax.tick_params(axis='both',which='major',length=axmajlen)
-                            ax.tick_params(axis='both',which='minor',length=axminlen)
-                            ax.tick_params(axis='both',which='both',width=axwidth)
-                            ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
-
-                            # Flatten the continuum
-                            gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
-                            z = np.polyfit(wave[gd], flux[gd], contord)
-                            p = np.poly1d(z)
-
-                            ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k')
-                            ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r')
-                            #ax.plot(wave[gd], p(wave[gd]), color='r')
-
-                            ichip += 1
-
-                        #ax1.text(0.98, 0.90, str(contord), transform=ax1.transAxes, ha='right', va='top')
-                        #ax3.axvline(x=16723.524, color='r')
-                        #ax3.axvline(x=16755.14, color='r')
-
-                        fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
-                        plt.savefig(starPlotFilePath)
-                        plt.close('all')
-                        print('done')
 
     objhtml.close()
     #cfile.close()
