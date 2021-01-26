@@ -2045,7 +2045,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
 
                         fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.1,wspace=0.0)
-                        plt.savefig(plotsdir+plotfile)
+                        plt.savefig(starPlotFilePath)
                     plt.close('all')
 
     objhtml.close()
