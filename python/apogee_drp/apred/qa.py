@@ -34,6 +34,8 @@ from scipy.signal import medfilt2d as ScipyMedfilt2D
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 from scipy.optimize import curve_fit
 
+cspeed = 299792.458e0
+
 sdss_path = path.Path()
 
 sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js'
@@ -2029,6 +2031,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         npix = len(flux)
                         wstart = hdr['CRVAL1']
                         wstep = hdr['CDELT1']
+                        vhbary = hdr['VHBARY']
                         wave = 10**(wstart + wstep * np.arange(0, npix, 1))
                         gd, = np.where(np.isnan(flux) == False)
                         wave = wave[gd]
@@ -2038,7 +2041,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         fp = open(apStarModelPath, 'rb')
                         out = pickle.load(fp)
                         sumstr,finalstr,bmodel,specmlist,gout = out
-                        swave = bmodel[1].wave
+                        swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
                         sflux = bmodel[1].flux
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
@@ -2079,8 +2082,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ichip += 1
 
                         #ax1.text(0.98, 0.90, str(contord), transform=ax1.transAxes, ha='right', va='top')
-                        ax3.axvline(x=16723.524, color='r')
-                        ax3.axvline(x=16755.14, color='r')
+                        #ax3.axvline(x=16723.524, color='r')
+                        #ax3.axvline(x=16755.14, color='r')
 
                         fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
                         plt.savefig(starPlotFilePath)
