@@ -2027,9 +2027,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         wstep = hdr['CDELT1']
                         wave = wstart + wstep * np.arange(0, npix, 1)
                         wave = 10**wave
-                        gd, = np.where(math.isnan(flux) is False)
-                        wave = wave[gd]
-                        flux = flux[gd]
+                        #gd, = np.where(math.isnan(flux) is False)
+                        #wave = wave[gd]
+                        #flux = flux[gd]
 
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
