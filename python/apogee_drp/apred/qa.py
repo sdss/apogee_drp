@@ -1714,7 +1714,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 if os.path.exists(starHtmlDir) is False: os.makedirs(starHtmlDir)
                 starHTMLpath = starHtmlDir + objid + '.html'
 
-                starRelPath = '../../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
                 starHTMLrelPath = starRelPath + 'html/' + objid + '.html'
                 apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '*.fits')
                 if len(apStarCheck) > 0:
