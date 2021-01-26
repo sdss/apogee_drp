@@ -2019,7 +2019,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
                     plt.savefig(plotsdir+plotfile)
                     plt.close('all')
-    objhtml.close()
 
             # Make plots of apStar spectrum with best fitting model
             if makestarplots is True:
@@ -2092,6 +2091,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             plt.savefig(starPlotFilePath)
                             plt.close('all')
 
+    objhtml.close()
     #cfile.close()
     print("----> makeObjQA: Done with plate "+plate+", MJD "+mjd+".\n")
 
