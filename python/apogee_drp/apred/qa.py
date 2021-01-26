@@ -1833,31 +1833,31 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
 
             # Star level html page
-            if makestarhtml is True:
-                if (objtype != 'SKY') & (objid != '2MNone'):
+            if (objtype != 'SKY') & (objid != '2MNone'):
+                vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
+                nvis = len(vcat)
+                cvhelio = '----';  cvscatter = '----'
+                gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
+                if len(gd) > 0:
+                    vels = vcat['vheliobary'][gd]
+                    cvhelio = str("%.2f" % round(np.mean(vels),2))
+                    cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
+
+                rvteff = '----'; rvlogg = '----'; rvfeh = '---'
+                gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
+                if len(gd) > 0:
+                    rvteff = str(int(round(vcat['rv_teff'][gd][0])))
+                    rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
+                    rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
+
+                if makestarhtml is True:
                     print("----> makeObjQA: Making star level html for " + objid)
                     # Get visit info from DB
-                    vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
-                    nvis = len(vcat)
                     cgl = str("%.5f" % round(vcat['glon'][0],5))
                     cgb = str("%.5f" % round(vcat['glat'][0],5))
                     cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                     cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                     cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
-
-                    cvhelio = '----';  cvscatter = '----'
-                    gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
-                    if len(gd) > 0:
-                        vels = vcat['vheliobary'][gd]
-                        cvhelio = str("%.2f" % round(np.mean(vels),2))
-                        cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
-
-                    rvteff = '----'; rvlogg = '----'; rvfeh = '---'
-                    gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
-                    if len(gd) > 0:
-                        rvteff = str(int(round(vcat['rv_teff'][gd][0])))
-                        rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
-                        rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
 
                     starHTML = open(starHTMLpath, 'w')
                     starHTML.write('<HTML>\n')
