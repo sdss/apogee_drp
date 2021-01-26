@@ -1726,6 +1726,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     apStarNewest = os.path.basename(apStarCheck[-1])
                     apStarRelPath = starRelPath + apStarNewest
                     apStarPath = starDir + apStarNewest
+                    print(apStarPath)
                     apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
                     # Set up plot directories and plot file name
