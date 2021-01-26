@@ -2022,72 +2022,72 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             # Make plots of apStar spectrum with best fitting model
             if makestarplots is True:
                 if apStarRelPath is not None:
-                    print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
-                    if objid == '2M02205146-0546119': print(starPlotFilePath)
+                    if (objtype != 'SKY') & (objid != '2MNone'):
+                        print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
-                    contord = 5
-                    hdr = fits.getheader(apStarPath)
-                    flux = fits.open(apStarPath)[1].data[0]
-                    npix = len(flux)
-                    wstart = hdr['CRVAL1']
-                    wstep = hdr['CDELT1']
-                    vhbary = hdr['VHBARY']
-                    wave = 10**(wstart + wstep * np.arange(0, npix, 1))
-                    gd, = np.where(np.isnan(flux) == False)
-                    wave = wave[gd]
-                    flux = flux[gd]
+                        contord = 5
+                        hdr = fits.getheader(apStarPath)
+                        flux = fits.open(apStarPath)[1].data[0]
+                        npix = len(flux)
+                        wstart = hdr['CRVAL1']
+                        wstep = hdr['CDELT1']
+                        vhbary = hdr['VHBARY']
+                        wave = 10**(wstart + wstep * np.arange(0, npix, 1))
+                        gd, = np.where(np.isnan(flux) == False)
+                        wave = wave[gd]
+                        flux = flux[gd]
 
-                    # Get model spectrum
-                    fp = open(apStarModelPath, 'rb')
-                    out = pickle.load(fp)
-                    sumstr,finalstr,bmodel,specmlist,gout = out
-                    swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
-                    sflux = bmodel[1].flux
+                        # Get model spectrum
+                        fp = open(apStarModelPath, 'rb')
+                        out = pickle.load(fp)
+                        sumstr,finalstr,bmodel,specmlist,gout = out
+                        swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
+                        sflux = bmodel[1].flux
 
-                    lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                    xmin = np.array([15125, 15845, 16455])
-                    xmax = np.array([15817, 16440, 16960])
-                    xspan = xmax - xmin
+                        lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                        xmin = np.array([15125, 15845, 16455])
+                        xmax = np.array([15817, 16440, 16960])
+                        xspan = xmax - xmin
 
-                    fig=plt.figure(figsize=(28,20))
-                    ax1 = plt.subplot2grid((3,1), (0,0))
-                    ax2 = plt.subplot2grid((3,1), (1,0))
-                    ax3 = plt.subplot2grid((3,1), (2,0))
-                    axes = [ax1,ax2,ax3]
+                        fig=plt.figure(figsize=(28,20))
+                        ax1 = plt.subplot2grid((3,1), (0,0))
+                        ax2 = plt.subplot2grid((3,1), (1,0))
+                        ax3 = plt.subplot2grid((3,1), (2,0))
+                        axes = [ax1,ax2,ax3]
 
-                    ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+                        ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
 
-                    ichip = 0
-                    for ax in axes:
-                        ax.set_xlim(xmin[ichip], xmax[ichip])
-                        ax.set_ylim(0.2, 1.4)
-                        ax.tick_params(reset=True)
-                        ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
-                        ax.minorticks_on()
-                        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                        ax.tick_params(axis='both',which='major',length=axmajlen)
-                        ax.tick_params(axis='both',which='minor',length=axminlen)
-                        ax.tick_params(axis='both',which='both',width=axwidth)
-                        ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+                        ichip = 0
+                        for ax in axes:
+                            ax.set_xlim(xmin[ichip], xmax[ichip])
+                            ax.set_ylim(0.2, 1.4)
+                            ax.tick_params(reset=True)
+                            ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
+                            ax.minorticks_on()
+                            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                            ax.tick_params(axis='both',which='major',length=axmajlen)
+                            ax.tick_params(axis='both',which='minor',length=axminlen)
+                            ax.tick_params(axis='both',which='both',width=axwidth)
+                            ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
 
-                        # Flatten the continuum
-                        gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
-                        z = np.polyfit(wave[gd], flux[gd], contord)
-                        p = np.poly1d(z)
+                            # Flatten the continuum
+                            gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
+                            z = np.polyfit(wave[gd], flux[gd], contord)
+                            p = np.poly1d(z)
 
-                        ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k')
-                        ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r')
-                        #ax.plot(wave[gd], p(wave[gd]), color='r')
+                            ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k')
+                            ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r')
+                            #ax.plot(wave[gd], p(wave[gd]), color='r')
 
-                        ichip += 1
+                            ichip += 1
 
-                    #ax1.text(0.98, 0.90, str(contord), transform=ax1.transAxes, ha='right', va='top')
-                    #ax3.axvline(x=16723.524, color='r')
-                    #ax3.axvline(x=16755.14, color='r')
+                        #ax1.text(0.98, 0.90, str(contord), transform=ax1.transAxes, ha='right', va='top')
+                        #ax3.axvline(x=16723.524, color='r')
+                        #ax3.axvline(x=16755.14, color='r')
 
-                    fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
-                    plt.savefig(starPlotFilePath)
-                    plt.close('all')
+                        fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
+                        plt.savefig(starPlotFilePath)
+                        plt.close('all')
 
     objhtml.close()
     #cfile.close()
