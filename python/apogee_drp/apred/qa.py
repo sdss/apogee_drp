@@ -2879,6 +2879,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         oneDstruct = np.zeros(nchips, dtype=dt)
         for ichip in range(nchips):
             chip = chips[ichip]
+            import pdb; pdb.set_trace()
             oneDstruct['FLUX'][ichip] = oneD[chip][1].data
             oneDstruct['ERR'][ichip] =  oneD[chip][2].data
             oneDstruct['MASK'][ichip] =  oneD[chip][3].data
