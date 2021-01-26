@@ -28,8 +28,124 @@ from ..apred import wave,sincint
 from . import spectra,yanny
 from .apspec import ApSpec
 
-class ApLoad :
+class ApData(object):
+    def __init__(self,filename=None,datatype=None,header=None,chip=None,flux=None,error=None,mask=None):
+        self.filename = filename
+        self.datatype = datatype
+        if header is not None:
+            self.header = header
+        if chip is not None:
+            self.chip = chip
+        if flux is not None:
+            self.flux = flux
+        if error is not None:
+            self.error = error
+        if mask is not None:
+            self.mask = mask
 
+    def __len__(self):
+        if hasattr(self,'flux') is False:
+            return None
+        return self.flux.shape
+
+    def __repr__(self):
+        """ Print out the string representation of the Spec1D object."""
+        s = repr(self.__class__)+"\n"
+        if self.filename is not None:
+            s += "File = "+self.filename+"\n"
+        if self.datatype is not None:
+            s += "Type = "+self.datatype+"\n"
+        if hasattr(self,'chip') is not False:
+            s += "Chip = "+self.chip+"\n"
+        if hasattr(self,'flux') is not False:
+            nx,ny = self.flux.shape
+            s += 'Dimensions: ['+str(nx)+','+str(ny)+']\n'
+            s += "Flux = "+str(self.flux)+"\n"
+        if hasattr(self,'error') is not False:
+            s += "Error = "+str(self.error)+"\n"
+        if hasattr(self,'mask') is not False:
+            s += "Mask = "+str(self.mask)+"\n"
+        if hasattr(self,'wave') is not False:
+            s += "Wave = "+str(self.wave)+"\n"
+        if hasattr(self,'sky') is not False:
+            s += "Sky = "+str(self.sky)+"\n"
+        if hasattr(self,'skyerr') is not False:
+            s += "Skyerr = "+str(self.skyerr)+"\n"
+        if hasattr(self,'telluric') is not False:
+            s += "Telluric = "+str(self.telluric)+"\n"
+        if hasattr(self,'telerr') is not False:
+            s += "Telerr = "+str(self.telerr)+"\n"
+        if hasattr(self,'wcoef') is not False:
+            s += "Wcoef = "+str(self.wcoef)+"\n"
+        if hasattr(self,'lsf') is not False:
+            s += "LSF = "+str(self.lsf)+"\n"
+        if hasattr(self,'wcoef') is not False:
+            s += "Wcoef = "+str(self.wcoef)+"\n"
+        if hasattr(self,'plugmap') is not False:
+            s += "Plugmap = "+str(self.plugmap[[0,-1]])+"\n"
+        if hasattr(self,'plhead') is not False:
+            s += "Plhead = "+str(self.plhead)+"\n"
+        if hasattr(self,'telstr') is not False:
+            s += "Telstr = "+str(len(self.telstr))+" elements\n"
+        if hasattr(self,'shiftstr') is not False:
+            s += "Shiftstr = "+str(len(self.shiftstr))+" elements\n"
+        if hasattr(self,'pairstr') is not False:
+            s += "Pairstr = "+str(self.pairstr)+"\n"
+        if hasattr(self,'fluxfactor') is not False:
+            s += "Fluxfactor = "+str(self.fluxfactor[[0,1,2]])+"\n"
+
+        for k in self.__dict__.keys():
+            if k not in ['filename','datatype','chip','header','flux','error','mask','wave','sky','skyerr','telluric',
+                         'telerr','wcoef','lsf','wcoef','plugmap','plhead','telstr','shiftstr','pairstr','fluxfactor']:
+                s += k+" = "+str(getattr(self,k))
+        return s
+
+class ApDataArr(object):
+    def __init__(self,datatype=None,header=None):
+        self.datatype = datatype
+        self.header = header
+        self.ndata = 0
+        self._data = []
+
+    def __repr__(self):
+        """ Print out the string representation of the Spec1D object."""
+        s = repr(self.__class__)+"\n"
+        if self.datatype is not None:
+            s += "Type = "+self.datatype+"\n"
+        s += "Ndata = "+str(self.ndata)
+        return s    
+
+    def __setitem__(self,index,data):
+        if index>self.ndata:
+            raise ValueError('index must be '+str(self.ndata)+' or '+str(self.ndata+1))
+        if index<=(self.ndata-1):
+            self._data[index] = data
+        else:
+            self._data.append(data)
+            self.ndata = len(self._data)
+
+    def __getitem__(self,index):
+        if self.ndata==0:
+            raise ValueError('no data to get')
+        if index>(self.ndata-1):
+            raise ValueError('index must be <='+str(self.ndata-1))
+        return self._data[index]
+
+    def __iter__(self):
+        self._count = 0
+        return self
+
+    def __next__(self):
+        if self._count < self.ndata:
+            self._count += 1
+            return self._data[self._count-1]
+        else:
+            raise StopIteration
+
+
+
+
+class ApLoad:
 
     def __init__(self,dr=None,apred='r8',apstar='stars',aspcap='l31c',results='l31c.2',
                  telescope='apo25m',instrument=None,verbose=False,pathfile=None) :
@@ -390,17 +506,17 @@ class ApLoad :
         else :
             try :
                 if kwargs.get('field') is None:
-                    file = self.allfile('Visit',plate=args[0],mjd=args[1],fiber=args[2])
+                    filePath = self.allfile('Visit',plate=args[0],mjd=args[1],fiber=args[2])
                 else:
-                    file = self.allfile('Visit',plate=args[0],mjd=args[1],fiber=args[2],field=kwargs['field'])
+                    filePath = self.allfile('Visit',plate=args[0],mjd=args[1],fiber=args[2],field=kwargs['field'])
                 if load : 
-                    hdulist=self._readhdu(file)
+                    hdulist=self._readhdu(filePath)
                     spec=ApSpec(hdulist[1].data,header=hdulist[0].header,
                                 err=hdulist[2].data,bitmask=hdulist[3].data,wave=hdulist[4].data,
                                 sky=hdulist[5].data,skyerr=hdulist[5].data,
                                 telluric=hdulist[7].data,telerr=hdulist[8].data)
                     return spec
-                return self._readhdu(file,**kwargs)
+                return self._readhdu(filePath,**kwargs)
             except :
                 self.printerror()
     
@@ -455,21 +571,29 @@ class ApLoad :
         RETURNS: if hdu==None : ImageHDUs (all extensions)
                  if hdu=N : returns (data, header) for specified HDU
         """
-        if len(args) != 2 :
+
+        if len(args)!=2 and len(kwargs)<2 :
             print('Usage: apStar(field,object)')
         else :
+            if len(args)>0:
+                field = args[0]
+                obj = args[1]
+            else:
+                field = kwargs.get('field')
+                obj = kwargs.get('obj')
+                healpix = kwargs.get('healpix')
             try :
-                file = self.allfile(
-                   'Star',field=args[0],obj=args[1])
+                import pdb; pdb.set_trace()
+                filePath = self.allfile('Star',field=field,obj=obj)
                 if load : 
-                    hdulist=self._readhdu(file)
+                    hdulist=self._readhdu(filePath)
                     wave=spectra.fits2vector(hdulist[1].header,1)
                     spec=ApSpec(hdulist[1].data,header=hdulist[0].header,
                                 err=hdulist[2].data,bitmask=hdulist[3].data,wave=wave,
                                 sky=hdulist[4].data,skyerr=hdulist[5].data,
                                 telluric=hdulist[6].data,telerr=hdulist[7].data)
                     return spec
-                return self._readhdu(file,**kwargs)
+                return self._readhdu(filePath,**kwargs)
             except :
                 self.printerror()
     
@@ -705,7 +829,119 @@ class ApLoad :
                                 chip=chip,prefix=prefix,instrument=self.instrument)
                   except: pdb.set_trace()
             return filePath.replace('-c','')
-   
+
+    def apread(self,root,
+                location=None,obj=None,reduction=None,plate=None,mjd=None,num=None,fiber=None,chips=False,field=None,
+                healpix=None,download=True):
+        '''
+        Similar to allfile but returns data in a more useful format (similar to apread.pro).
+        '''
+
+        fz = False
+        if root=='2Dmodel':
+            fz = True
+        if self.instrument == 'apogee-n' : prefix='ap'
+        else : prefix='as'
+        if fz : suffix = '.fz'
+        else : suffix = ''
+
+        # get the sdss_access root file name appropriate for telescope and file 
+        # usually just 'ap'+root, but not for "all" files, raw files, and 1m files, since
+        # those require different directory paths
+        if 'all' in root or 'aspcap' in root or 'cannon' in root:
+            sdssroot = root 
+        elif root == 'R':
+            if 'lco' in self.telescope: sdssroot = 'asR'
+            elif 'apo1m' in self.telescope: sdssroot = 'apR-1m'
+            else : sdssroot = 'apR'
+        elif (self.telescope == 'apo1m' and 
+           (root == 'Plan' or root == 'PlateSum' or root == 'Visit' or root == 'VisitSum' or root == 'Tellstar' or 
+            root == 'Cframe' or root == 'Plate') ) :
+            sdssroot = 'ap'+root+'-1m'
+        else :
+            sdssroot = 'ap'+root
+
+        if (plate is not None) and (field is None):
+            field = apfield(plate,telescope=self.telescope)[0]
+
+        if root=='1D' or root=='2D' or root=='2Dmodel' or root=='Cframe':
+            mjd = self.cmjd(num)
+
+        # Load the data
+        if root=='Raw':
+            pass
+        elif root=='Dark':
+            pass
+        elif root=='1D' or root=='2D' or root=='2Dmodel' or root=='Cframe' or root=='Plate':
+            # 1D or 2D: flux, error, mask
+            # 2Dmodel: flux
+            # Cframe: flux, error, mask
+            # Plate: flux, error, mask
+            chips = ['a','b','c']
+            out = ApDataArr(datatype=root)
+            # Chip loop
+            for i in range(3):
+                filePath = self.sdss_path.full(sdssroot,apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
+                                           field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
+                                           telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
+                                           healpix=healpix,chip=chips[i])+suffix
+                head = fits.getheader(filePath,0)
+                ch = ApData(filename=filePath,datatype=root,header=head,chip=chips[i])
+                flux,fhead = fits.getdata(filePath,1,header=True)
+                ch.flux = flux.T
+                if root!='2Dmodel':
+                    err,ehead = fits.getdata(filePath,2,header=True)
+                    ch.error = err.T
+                    mask,mhead = fits.getdata(filePath,3,header=True)
+                    ch.mask = mask.T
+                if root=='Cframe' or root=='Plate':
+                    wave,whead = fits.getdata(filePath,4,header=True)
+                    ch.wave = wave.T
+                    sky,shead = fits.getdata(filePath,5,header=True)
+                    ch.sky = sky.T
+                    skyerr,sehead = fits.getdata(filePath,6,header=True)
+                    ch.skyerr = skyerr.T
+                    telluric,thead = fits.getdata(filePath,7,header=True)
+                    ch.telluric = telluric.T
+                    telerr,tehead = fits.getdata(filePath,8,header=True)
+                    ch.telerr = telerr.T
+                    wcoef,whead = fits.getdata(filePath,9,header=True)
+                    ch.wcoef = wcoef.T
+                    lsf,lhead = fits.getdata(filePath,10,header=True)
+                    ch.lsf = lsf.T
+                    plugmap,plhead = fits.getdata(filePath,11,header=True)
+                    ch.plugmap = plugmap
+                    plhead = fits.getdata(filePath,12)
+                    ch.plhead = plhead
+                if root=='Cframe':
+                    telstr = fits.getdata(filePath,13)
+                    ch.telstr = telstr
+                    shiftstr = fits.getdata(filePath,14)
+                    ch.shiftstr = shiftstr
+                if root=='Plate':
+                    shiftstr = fits.getdata(filePath,13)
+                    ch.shiftstr = shiftstr
+                    phead = fits.getheader(filePath,14)
+                    if phead['naxis']>0:
+                        pairstr = fits.getdata(filePath,14)
+                        ch.pairstr = pairstr
+                    fluxfactor = fits.getdata(filePath,15)
+                    ch.fluxfactor = fluxfactor
+
+                # Add to the ApDataArr object
+                out[i] = ch
+
+        elif root=='Star':
+            # apStar, calculate HEALPix
+            healpix = obj2healpix(obj)
+            out = self.apStar(field=field,obj=obj,healpix=healpix,load=True)
+        elif root=='Visit':
+            out = self.apVisit(plate,mjd,fiber,load=True)
+        else:
+            pass
+
+        return out
+ 
 
 plans=None
 
