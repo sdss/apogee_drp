@@ -1721,6 +1721,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                 starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
                 starHTMLrelPath = starRelPath.replace('visit/', '') + 'html/' + objid + '.html'
+                print(starHTMLrelPath)
                 apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
                 if len(apStarCheck) > 0:
                     # Find the newest apStar file
