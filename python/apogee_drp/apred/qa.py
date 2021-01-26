@@ -2027,13 +2027,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         wstart = hdr['CRVAL1']
                         wstep = hdr['CDELT1']
                         wave = 10**(wstart + wstep * np.arange(0, npix, 1))
-
-                        gd, = np.where(np.isnan(flux) is False)
+                        gd, = np.where(np.isnan(flux) == False)
                         wave = wave[gd]
                         flux = flux[gd]
 
                         # Flatten the continuum
-                        import pdb; pdb.set_trace()
                         popt, pcov = curve_fit(gfunc, wave, flux)
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
