@@ -2939,7 +2939,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                             #pix0,_ = find_peaks(oneDflux[fiber, :], height=20000)
                             maxind, = argrelextrema(oneDflux[fiber, :], np.greater)  # maxima
                             # sigma cut on the flux
-                            gd, = np.where(totflux[maxind] > 10000)
+                            gd, = np.where(oneDflux[fiber, :][maxind] > 10000)
                             if len(gd)==0:
                                 print('No peaks found')
                                 return
