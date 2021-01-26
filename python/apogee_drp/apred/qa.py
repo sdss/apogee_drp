@@ -1726,6 +1726,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     apStarNewest = os.path.basename(apStarCheck[-1])
                     apStarRelPath = starRelPath + apStarNewest
                     apStarPath = starDir + apStarNewest
+                    apStarModelPath = starDir + apStarNewest.replace('.fits', '_out_doppler.pkl')
 
                     # Set up plot directories and plot file name
                     starPlotDir = starDir + 'plots/'
@@ -2032,6 +2033,14 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         gd, = np.where(np.isnan(flux) == False)
                         wave = wave[gd]
                         flux = flux[gd]
+
+                        # Get model spectrum
+                        fp = open(apStarModelPath, 'rb')
+                        out = pickle.load(fp)
+                        sumstr,finalstr,bmodel,specmlist,gout = out
+                        mwave = bmodel[1].wave
+                        import pdb; pdb.set_trace()
+
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                         xmin = np.array([15125, 15845, 16455])
