@@ -1720,7 +1720,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 starHTMLpath = starHtmlDir + objid + '.html'
 
                 starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                starHTMLrelPath = starRelPath.replace('visit/', '') + 'html/' + objid + '.html'
+                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
                 print(starHTMLrelPath)
                 apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
                 if len(apStarCheck) > 0:
@@ -1728,7 +1728,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     apStarCheck.sort()
                     apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = starRelPath.replace('visit/', '') + apStarNewest
+                    apStarRelPath = '../' + starRelPath + apStarNewest
                     apStarPath = starDir + apStarNewest
                     apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
