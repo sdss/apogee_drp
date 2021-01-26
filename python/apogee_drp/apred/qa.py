@@ -4,6 +4,7 @@ import os
 import subprocess
 import math
 import time
+import pickle
 import numpy as np
 from pathlib import Path
 from astropy.io import fits, ascii
@@ -2069,6 +2070,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ichip += 1
 
                         #ax1.text(0.98, 0.90, str(contord), transform=ax1.transAxes, ha='right', va='top')
+                        ax3.axvline(x=16723.524, color='r')
+                        ax3.axvline(x=16755.14, color='r')
 
                         fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
                         plt.savefig(starPlotFilePath)
