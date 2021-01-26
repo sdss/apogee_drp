@@ -2021,7 +2021,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         print("\n----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
                         hdr = fits.getheader(apStarPath)
-                        flux = fits.open(apStarPath)[1].data
+                        flux = fits.open(apStarPath)[1].data[0]
                         npix = len(flux)
                         wstart = hdr['CRVAL1']
                         wstep = hdr['CDELT1']
