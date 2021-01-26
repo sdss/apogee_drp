@@ -2021,6 +2021,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     if apStarRelPath is not None:
                         print("\n----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
+                        contord = 5
                         hdr = fits.getheader(apStarPath)
                         flux = fits.open(apStarPath)[1].data[0]
                         npix = len(flux)
@@ -2058,13 +2059,15 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                             # Flatten the continuum
                             gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
-                            z = np.polyfit(wave[gd], flux[gd], 4)
+                            z = np.polyfit(wave[gd], flux[gd], contord)
                             p = np.poly1d(z)
 
                             ax.plot(wave[gd], flux[gd], color='k')
                             ax.plot(wave[gd], p(wave[gd]), color='r')
 
                             ichip += 1
+
+                        ax1.text(0.98, 0.90, str(contord), transform=ax1.transAxes, ha='right', va='top')
 
                         fig.subplots_adjust(left=0.05,right=0.99,bottom=0.09,top=0.98,hspace=0.1,wspace=0.0)
                         plt.savefig(starPlotFilePath)
