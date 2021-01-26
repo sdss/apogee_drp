@@ -2019,8 +2019,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     plt.savefig(plotsdir+plotfile)
                     plt.close('all')
 
-            print('\n')
-
             # Make plots of apStar spectrum with best fitting model
             if j < 5:
                 if makestarplots is True:
