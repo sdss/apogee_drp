@@ -1862,12 +1862,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<HTML>\n')
                     starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
                     starHTML.write('<BODY>\n')
-                    starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1>\n')
+                    starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1> <HR>\n')
                     if apStarRelPath is not None:
                         starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
                     else:
                         starHTML.write('<P>' + simbadlink + '<BR>apStar File???\n')
-                    starHTML.write('<P>Star info:')
+                    starHTML.write('<H3>Star info:</H3>')
                     starHTML.write('<TABLE BORDER=2>\n')
                     starHTML.write('<TR bgcolor="' + thcolor + '">')
 
@@ -1884,11 +1884,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('</TABLE>\n<BR>\n')
 
                     # Star + best fitting model plot
-                    starHTML.write('<P>apStar versus best fit Doppler model:</P>')
+                    starHTML.write('<H3>apStar versus best fit Doppler model:</H3>')
                     starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
 
                     # Star visit table
-                    starHTML.write('<P>Visit info:')
+                    starHTML.write('<H3>Visit info:</H3>')
                     starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
                     starHTML.write('<TR bgcolor="'+thcolor+'">')
                     starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
@@ -2019,13 +2019,15 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     plt.savefig(plotsdir+plotfile)
                     plt.close('all')
 
+            print('\n')
+
             # Make plots of apStar spectrum with best fitting model
             if j < 5:
                 if makestarplots is True:
                     if apStarRelPath is not None:
-                        print("\n----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
+                        print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
-                        contord = 3
+                        contord = 5
                         hdr = fits.getheader(apStarPath)
                         flux = fits.open(apStarPath)[1].data[0]
                         npix = len(flux)
