@@ -2036,7 +2036,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         xmin = np.array([15120, 15845, 16455])
                         xmax = np.array([15815, 16435, 16960])
                         xspan = xmax - xmin
-                        fig=plt.figure(figsize=(28,16))
+
+                        fig=plt.figure(figsize=(28,20))
                         ax1 = plt.subplot2grid((3,1), (0,0))
                         ax2 = plt.subplot2grid((3,1), (1,0))
                         ax3 = plt.subplot2grid((3,1), (2,0))
@@ -2047,7 +2048,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         ichip = 0
                         for ax in axes:
                             ax.set_xlim(xmin[ichip], xmax[ichip])
-                            ax.set_ylim(0.2, 1.2)
+                            ax.set_ylim(0.2, 1.4)
                             ax.tick_params(reset=True)
                             ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
                             ax.minorticks_on()
