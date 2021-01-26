@@ -1589,7 +1589,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
 ''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
 def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
-              makespecplots=None, makestarhtml=None, makestarplots=None): 
+              makespecplots=None, makestarhtml=None, makestarplots=None, clobber=None): 
 
     print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
 
