@@ -15,7 +15,6 @@ from numpy.lib.recfunctions import append_fields, merge_arrays
 from astroplan import moon_illumination
 from astropy.coordinates import SkyCoord, get_moon
 from astropy import units as astropyUnits
-from scipy.signal import medfilt2d as ScipyMedfilt2D
 from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
 from apogee_drp.apred import wave
 from apogee_drp.database import apogeedb
@@ -30,7 +29,9 @@ import matplotlib.ticker as ticker
 import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
+from scipy.signal import medfilt2d as ScipyMedfilt2D, 
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
+from scipy.optimize import curve_fit
 
 sdss_path = path.Path()
 
@@ -2025,12 +2026,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         npix = len(flux)
                         wstart = hdr['CRVAL1']
                         wstep = hdr['CDELT1']
-                        wave = wstart + wstep * np.arange(0, npix, 1)
-                        wave = 10**wave
-                        #gd, = np.where(math.isnan(flux) is False)
-                        #wave = wave[gd]
-                        #flux = flux[gd]
+                        wave = 10**(wstart + wstep * np.arange(0, npix, 1))
 
+                        # Flatten the continuum
+                        popt, pcov = curve_fit(gfunc, wave, flux)
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                         xmin = np.array([15120, 15845, 16455])
@@ -2058,6 +2057,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
 
                             ax.plot(wave, flux, color='k')
+                            ax.plot(wave, gfunc(wave, *popt), color='r')
 
                             ichip += 1
 
@@ -3144,6 +3144,11 @@ def getflux(d=None, skyline=None, rows=None):
     if skyline['TYPE'] == 0: skylineFlux /= cont
 
     return skylineFlux
+
+
+''' GFUNC: function for continuum normalization of apStar spectra '''
+def gfunc(x, a, b, c):
+    return a * np.exp(-b * x) + c
 
 
 
