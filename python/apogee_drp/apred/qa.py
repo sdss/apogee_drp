@@ -2023,6 +2023,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if makestarplots is True:
                 if apStarRelPath is not None:
                     print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
+                    if objid == '2M02205146-0546119': print(starPlotFilePath)
 
                     contord = 5
                     hdr = fits.getheader(apStarPath)
