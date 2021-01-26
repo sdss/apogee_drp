@@ -2033,6 +2033,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         flux = flux[gd]
 
                         # Flatten the continuum
+                        import pdb; pdb.set_trace()
                         popt, pcov = curve_fit(gfunc, wave, flux)
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
