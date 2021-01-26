@@ -2017,7 +2017,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if j < 5:
                 if makestarplots is True:
                     if apStarRelPath is not None:
-                        print("\n----> makeObjQA: Making " + os.path.basename(plotfile))
+                        print("\n----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
                         lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                         xmin = np.array([15120, 15845, 16455])
