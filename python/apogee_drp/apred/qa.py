@@ -1954,6 +1954,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             fp = open(apStarModelPath, 'rb')
                             out = pickle.load(fp)
                             sumstr,finalstr,bmodel,specmlist,gout = out
+                            import pdb; pdb.set_trace()
                             swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
                             sflux = bmodel[1].flux
 
