@@ -583,7 +583,6 @@ class ApLoad:
                 obj = kwargs.get('obj')
                 healpix = kwargs.get('healpix')
             try :
-                import pdb; pdb.set_trace()
                 filePath = self.allfile('Star',field=field,obj=obj)
                 if load : 
                     hdulist=self._readhdu(filePath)
