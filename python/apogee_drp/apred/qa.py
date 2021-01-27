@@ -1958,7 +1958,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             fp = open(apStarModelPath, 'rb')
                             out = pickle.load(fp)
                             sumstr,finalstr,bmodel,specmlist,gout = out
-                            pmodels = models.prepare(specmlist[0]
+                            pmodels = models.prepare(specmlist[0])
                             bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
                             swave = bestmodel[0].wave
                             sflux = bestmodel[0].flux
