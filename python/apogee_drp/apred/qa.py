@@ -1848,6 +1848,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
             # Throughput column
             tput = throughput[j]
+            import pdb; pdb.set_trace()
             if np.isnan(tput) is False:
                 bcolor = 'white'
                 if tput < 0.8: bcolor = '#FFFFCC'
