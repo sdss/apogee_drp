@@ -1669,7 +1669,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     flux = load.apFlux(fluxid)
     medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
     throughput = medflux / np.nanmax(medflux)
-    import pdb; pdb.set_trace()
 
     # Get the HTML file name... apPlate-plate-mjd
     htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('.fits','')
