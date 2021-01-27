@@ -1292,7 +1292,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             x = (gcam['mjd'][jcam] - np.min(gcam['mjd'][jcam]))*60*24
             ax1.plot(x, gcam['gdrms'][jcam], color='k')
 
-            fig.subplots_adjust(left=0.12,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
+            fig.subplots_adjust(left=0.125,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
             plt.savefig(plotsdir+plotfile)
             plt.close('all')
 
