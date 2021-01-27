@@ -1960,10 +1960,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             sumstr,finalstr,bmodel,specmlist,gout = out
                             pmodels = models.prepare(specmlist[0])
                             bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
+                            import pdb; pdb.set_trace()
                             swave = bestmodel[0].wave
                             sflux = bestmodel[0].flux
 
-                            #import pdb; pdb.set_trace()
+
                             #swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
                             #sflux = bmodel[1].flux
 
