@@ -1667,7 +1667,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     # Read in flux file to get an idea of throughput
     fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
     flux = load.apFlux(fluxid)
-    medflux = np.nanmedian(flux['a'][1].data, axis=1)
+    medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
     throughput = medflux / np.nanmax(medflux)
     import pdb; pdb.set_trace()
 
@@ -1696,7 +1696,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     #cfile = open(plotsdir+htmlfile+'.csh','w')
 
     # Loop over the fibers
-    for j in range(5):
+    for j in range(300):
         jdata = data[j]
         fiber = jdata['FIBERID']
         if fiber > 0:
@@ -1842,10 +1842,25 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     objhtml.write('<TD align ="right" style="color:'+fcol+'">' + rvfeh)
                 else:
                     objhtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
-                    objhtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999\n')
+                    objhtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
             else:
                 objhtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
-                objhtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999\n')
+                objhtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
+
+            # Throughput column
+            tput = throughput[j]
+            if np.isnan(tput) is False:
+                bcolor = 'white'
+                if tput < 0.8: bcolor = '#FFFFCC'
+                if tput < 0.7: bcolor = '#FFFF33'
+                if tput < 0.6: bcolor = '#FF9933'
+                if tput < 0.5: bcolor = '#FF6633'
+                if tput < 0.4: bcolor = '#FF3333'
+                if tput < 0.3: bcolor = '#FF0000'
+                tput = str("%.2f" % round(tput,2))
+                objhtml.write('<TD align ="center" BGCOLOR=' + bgcolor + '>' + tput + '\n')
+            else:
+                objhtml.write('<TD align ="center">----\n')
 
             # Star level html page
             if makestarhtml is True:
