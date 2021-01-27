@@ -3073,7 +3073,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                             #    return
                             #pix0 = maxind[gd]
 
-                            gpeaks = peakfit.peakfit(oneDflux[300-fiber, :], sigma=oneDerr[300-fiber, :])#, pix0=pix0)
+                            gpeaks = peakfit.peakfit(oneDflux[fiber, :], sigma=oneDerr[fiber, :])#, pix0=pix0)
                             import pdb; pdb.set_trace()
 
                             j, = np.where(linestr['FIBER'] == fiber)
