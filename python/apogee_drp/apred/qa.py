@@ -1686,7 +1686,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     objhtml.write('<P><B>Note:</B> the "Dome Flat Throughput" column gives the median dome flat flux in each ')
     objhtml.write('fiber divided by the maximum median dome flat flux across all fibers. ')
     objhtml.write('Low numbers are generally bad, and that column is color-coded accordingly.</P>\n')
-    objhtml.write('<P>Click the column header to sort.</p>\n')
+    objhtml.write('<P>Click the column headers to sort.</p>\n')
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
     objhtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
