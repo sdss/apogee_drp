@@ -114,11 +114,12 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     ubounds = [3.0*ht0, initpar[1]+1, 5.0, initpar[3]+np.maximum(3*sigspec,0.3*np.abs(initpar[3]))]
     bounds = (lbounds,ubounds)
     # Sometimes curve_fit hits the maximum number fo function evaluations and crashes
-    #try:
-    pars,cov = curve_fit(func,xx,y,p0=initpar,sigma=yerr,bounds=bounds,maxfev=1000)            
-    perr = np.sqrt(np.diag(cov))
-    #except:
-    #    return None,None
+    try:
+        pars,cov = curve_fit(func,xx,y,p0=initpar,sigma=yerr,bounds=bounds,maxfev=1000)            
+        perr = np.sqrt(np.diag(cov))
+    except:
+        import pdb; pdb.set_trace()
+        return None,None
     
     return pars,perr
 
