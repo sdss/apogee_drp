@@ -1945,8 +1945,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             contord = 5
                             apstar = doppler.read(apStarPath)
                             apstar.normalize()
-                            wave = data.wave[:, 0]
-                            flux = data.flux[:, 0]
+                            wave = apstar.wave[:, 0]
+                            flux = apstar.flux[:, 0]
                             gd, = np.where(np.isnan(flux) == False)
                             wave = wave[gd]
                             flux = flux[gd]
