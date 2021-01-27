@@ -1943,8 +1943,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
                             contord = 5
-                            data = doppler.read(apStarPath)
-                            data.normalize()
+                            apstar = doppler.read(apStarPath)
+                            apstar.normalize()
                             wave = data.wave[:, 0]
                             flux = data.flux[:, 0]
                             gd, = np.where(np.isnan(flux) == False)
