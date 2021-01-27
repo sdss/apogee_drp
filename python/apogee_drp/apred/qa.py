@@ -5,6 +5,7 @@ import subprocess
 import math
 import time
 import pickle
+import doppler
 import numpy as np
 from pathlib import Path
 from astropy.io import fits, ascii
@@ -1597,6 +1598,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     # HTML header background color
     thcolor = '#DCDCDC'
 
+    # Setup doppler cannon models
+    models = doppler.cannon.models
+
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
     plotsdir = platedir+'/plots/'
@@ -1685,7 +1689,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     #cfile = open(plotsdir+htmlfile+'.csh','w')
 
     # Loop over the fibers
-    for j in range(6):
+    for j in range(5):
         jdata = data[j]
         fiber = jdata['FIBERID']
         if fiber > 0:
@@ -1934,8 +1938,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     # Make plots of apStar spectrum with best fitting model
                     if apStarRelPath is not None:
                         check = glob.glob(starPlotFilePath)
-                        #if (len(check) < 1) | (clobber is True):
-                        if len(check) < 1:
+                        if (len(check) < 1) | (clobber is True):
+                        #if len(check) < 1:
                             print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
                             contord = 5
@@ -1954,9 +1958,16 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             fp = open(apStarModelPath, 'rb')
                             out = pickle.load(fp)
                             sumstr,finalstr,bmodel,specmlist,gout = out
-                            import pdb; pdb.set_trace()
-                            swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
-                            sflux = bmodel[1].flux
+                            pmodels = models.prepare(specmlist[0])
+                            bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
+                            bestmodel.normalize()
+                            #import pdb; pdb.set_trace()
+                            swave = bestmodel.wave
+                            sflux = bestmodel.flux
+
+
+                            #swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
+                            #sflux = bmodel[1].flux
 
                             lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                             xmin = np.array([15125, 15845, 16455])
