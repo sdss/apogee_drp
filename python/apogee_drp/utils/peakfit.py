@@ -110,8 +110,8 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
 
     # Bounds
     initpar = [wtht2, cen0, sigma1, medspec]
-    lbounds = [0.5*ht0, initpar[1]-1, 0.2, initpar[3]-np.maximum(3*sigspec,0.3*np.abs(initpar[3]))]
-    ubounds = [3.0*ht0, initpar[1]+1, 5.0, initpar[3]+np.maximum(3*sigspec,0.3*np.abs(initpar[3]))]
+    lbounds = [0.5*np.min([ht0,wtht2]), initpar[1]-1, 0.2, initpar[3]-np.maximum(3*sigspec,0.3*np.abs(initpar[3]))]
+    ubounds = [3.0*np.max([ht0,wtht2]), initpar[1]+1, 5.0, initpar[3]+np.maximum(3*sigspec,0.3*np.abs(initpar[3]))]
     bounds = (lbounds,ubounds)
     # Sometimes curve_fit hits the maximum number fo function evaluations and crashes
     try:
