@@ -3065,15 +3065,15 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         for ifiber in range(nfibers):
                             fiber = fibers[ifiber]
                             #pix0,_ = find_peaks(oneDflux[fiber, :], height=20000)
-                            maxind, = argrelextrema(oneDflux[fiber, :], np.greater)  # maxima
+                            #maxind, = argrelextrema(oneDflux[fiber, :], np.greater)  # maxima
                             # sigma cut on the flux
-                            gd, = np.where(oneDflux[fiber, :][maxind] > 10000)
-                            if len(gd)==0:
-                                print('No peaks found')
-                                return
-                            pix0 = maxind[gd]
+                            #gd, = np.where(oneDflux[fiber, :][maxind] > 10000)
+                            #if len(gd)==0:
+                            #    print('No peaks found')
+                            #    return
+                            #pix0 = maxind[gd]
 
-                            gpeaks = peakfit.peakfit(oneDflux[fiber, :], sigma=toterror, pix0=pix0)
+                            gpeaks = peakfit.peakfit(oneDflux[fiber, :], sigma=oneDerr[fiber, :])#, pix0=pix0)
                             import pdb; pdb.set_trace()
 
                             j, = np.where(linestr['FIBER'] == fiber)
