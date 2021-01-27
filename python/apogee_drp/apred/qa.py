@@ -1850,13 +1850,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             tput = throughput[j]
             if np.isnan(tput) == False:
                 bcolor = 'white'
-                if tput < 0.8: bcolor = '#FFFFCC'
-                if tput < 0.7: bcolor = '#FFFF33'
+                if tput < 0.7: bcolor = '#FFFF66'
                 if tput < 0.6: bcolor = '#FF9933'
                 if tput < 0.5: bcolor = '#FF6633'
                 if tput < 0.4: bcolor = '#FF3333'
                 if tput < 0.3: bcolor = '#FF0000'
-                tput = str("%.2f" % round(tput,2))
+                tput = str("%.3f" % round(tput,3))
                 objhtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
             else:
                 objhtml.write('<TD align ="center">----\n')
