@@ -1917,7 +1917,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('</TABLE>\n<BR>\n')
 
                     # Star + best fitting model plot
-                    starHTML.write('<H3>apStar versus best fit Doppler model:</H3>')
+                    starHTML.write('<H3>apStar versus best fit Cannon model:</H3>')
                     starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
 
                     # Star visit table
@@ -2023,7 +2023,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                                 #p = np.poly1d(z)
 
                                 ax.plot(wave[gd], flux[gd], color='k', label='apStar')
-                                ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Doppler model')
+                                ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model')
                                 #ax.plot(wave[gd], p(wave[gd]), color='r')
 
                                 ichip += 1
