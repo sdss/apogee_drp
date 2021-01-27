@@ -1959,8 +1959,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             out = pickle.load(fp)
                             sumstr,finalstr,bmodel,specmlist,gout = out
                             pmodels = models.prepare(specmlist[0])
-                            bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0).normalize()
-                            #import pdb; pdb.set_trace()
+                            bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
+                            import pdb; pdb.set_trace()
                             swave = bestmodel.wave
                             sflux = bestmodel.flux
 
