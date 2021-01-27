@@ -182,6 +182,8 @@ def peakfit(spec,sigma=None,pix0=None):
     pix0 = np.atleast_1d(pix0)
     npeaks = len(pix0)
 
+    import pdb; pdb.set_trace()
+
     # Initialize the output table
     dtype = np.dtype([('num',int),('pix0',int),('pars',np.float64,4),('perr',np.float64,4),('success',bool)])
     out = np.zeros(npeaks,dtype=dtype)
