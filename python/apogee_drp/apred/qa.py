@@ -1857,7 +1857,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 if tput < 0.4: bcolor = '#FF3333'
                 if tput < 0.3: bcolor = '#FF0000'
                 tput = str("%.2f" % round(tput,2))
-                objhtml.write('<TD align ="center" BGCOLOR=' + bgcolor + '>' + tput + '\n')
+                objhtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
             else:
                 objhtml.write('<TD align ="center">----\n')
 
