@@ -1689,7 +1689,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     #cfile = open(plotsdir+htmlfile+'.csh','w')
 
     # Loop over the fibers
-    for j in range(6):
+    for j in range(5):
         jdata = data[j]
         fiber = jdata['FIBERID']
         if fiber > 0:
@@ -1959,7 +1959,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             out = pickle.load(fp)
                             sumstr,finalstr,bmodel,specmlist,gout = out
                             pmodels = models.prepare(specmlist[0])
-                            bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
+                            bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0).normalize()
                             #import pdb; pdb.set_trace()
                             swave = bestmodel.wave
                             sflux = bestmodel.flux
