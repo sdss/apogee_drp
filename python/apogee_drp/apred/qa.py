@@ -233,7 +233,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     survey =     planstr['survey']
 
     # Establish directories.
-    datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
+    datadir = {'apo25m':os.environ['APOGEE_DATA_N'], 'apo1m':os.environ['APOGEE_DATA_N'],
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
 
     apodir =     os.environ.get('APOGEE_REDUX')+'/'
@@ -311,7 +311,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         # Make the observation spectrum plots and associated pages
         q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
                      makespecplots=makespecplots, makestarhtml=makestarhtml, makestarplots=makestarplots,
-                     clobber=clobber)
+                     fluxid=fluxid, clobber=clobber)
 
         # Make the nightly QA page
         if makenightqa == True:
@@ -1185,7 +1185,6 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     #----------------------------------------------------------------------------------------------
     fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
     flux = load.apFlux(fluxid)
-    import pdb; pdb.set_trace()
     ypos = 300 - platesum2['FIBERID']
 
     plotfile = fluxfile.replace('.fits', '.png')
@@ -1592,7 +1591,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
 ''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
 def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
-              makespecplots=None, makestarhtml=None, makestarplots=None, clobber=None): 
+              makespecplots=None, makestarhtml=None, makestarplots=None, fluxid=None, clobber=None): 
 
     print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
 
@@ -1665,6 +1664,13 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     sky, = np.where(objtype == 'SKY')
     nsky = len(sky)
 
+    # Read in flux file to get an idea of throughput
+    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    flux = load.apFlux(fluxid)
+    medflux = np.nanmedian(flux['a'][1].data, axis=1)
+    throughput = medflux / np.nanmax(medflux)
+    import pdb; pdb.set_trace()
+
     # Get the HTML file name... apPlate-plate-mjd
     htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('.fits','')
 
@@ -1680,8 +1686,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
 
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber<BR>(block) <TH>APOGEE ID <TH>H <TH>Raw<BR>J - K <TH>S/N <TH>Target<BR>Type <TH>Target & Data Flags')
-    objhtml.write('<TH>Vhelio <TH>N<BR>comp <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Spectrum Plot\n')
+    objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
+    objhtml.write('<TH>S/N <TH>Vhelio <TH>N<BR>comp <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome<BR>Throughput <TH>Spectrum Plot\n')
 #    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
     # Start db session for getting all visit info
@@ -1797,12 +1803,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 objhtml.write('<TD align ="right">' + chmag)
                 objhtml.write('<TD align ="right">' + cjkcolor)
                 #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
-                objhtml.write('<TD align ="right">' + snratio)
             else:
                 objhtml.write('<TD align="center">-99.9')
                 objhtml.write('<TD align="center">-99.9')
                 #objhtml.write('<TD BGCOLOR='+color+'>---\n')
-                objhtml.write('<TD align="center">-99.9')
 
             if objtype == 'SKY': 
                 objhtml.write('<TD align="center">SKY')
@@ -1830,12 +1834,18 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
                     fcol = 'black'
                     if np.absolute(float(vhelio)) > 400: fcol = 'red'
-                    objhtml.write('<TD align ="right" style="color:'+fcol+'">' + vhelio + '<TD align ="center" style="color:'+fcol+'">' + ncomp + '<TD align ="right" style="color:'+fcol+'">' + rvteff)
-                    objhtml.write('<TD align ="right" style="color:'+fcol+'">' + rvlogg + '<TD align ="right" style="color:'+fcol+'">' + rvfeh)
+                    objhtml.write('<TD align ="right">' + snratio)
+                    objhtml.write('<TD align ="right" style="color:'+fcol+'">' + vhelio)
+                    objhtml.write('<TD align ="center" style="color:'+fcol+'">' + ncomp)
+                    objhtml.write('<TD align ="right" style="color:'+fcol+'">' + rvteff)
+                    objhtml.write('<TD align ="right" style="color:'+fcol+'">' + rvlogg)
+                    objhtml.write('<TD align ="right" style="color:'+fcol+'">' + rvfeh)
                 else:
-                    objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
+                    objhtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
+                    objhtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999\n')
             else:
-                objhtml.write('<TD align="center">-9999<TD align="center">-1<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
+                objhtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
+                objhtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999\n')
 
             # Star level html page
             if makestarhtml is True:
