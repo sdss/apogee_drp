@@ -1680,10 +1680,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     objhtml.write('<HEAD><script src="sorttable.js"></script><title>'+htmlfile+'</title></head>\n')
     objhtml.write('<BODY>\n')
 
-    objhtml.write('<H1>'+htmlfile+'</H1>\n')
+    objhtml.write('<H1>'+htmlfile+'</H1><HR>\n')
     #objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
     #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
-
+    objhtml.write('<P>Note: the "Dome Throughput" column gives the median dome flat flux in each')
+    objhtml.write('fiber divided by the maximum median dome flat flux across all fibers</P>')
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
     objhtml.write('<TH>S/N <TH>Vhelio <TH>N<BR>comp <TH>RV<BR>Teff <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome<BR>Throughput <TH>Spectrum Plot\n')
