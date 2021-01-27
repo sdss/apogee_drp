@@ -125,7 +125,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     darkplans = np.array(darkplans)
     ndarkplans = len(darkplans)
 
-    if makeqafits == True:
+    if makeqafits is True:
         # Run apqa on the cal  plans
         print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
         for i in range(ncalplans): 
@@ -178,11 +178,11 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 # If last plate fails, still make the nightly and master QA pages
                 if i == nsciplans-1:
                     # Make the nightly QA page
-                    if makenightqa == True:
+                    if makenightqa is True:
                         q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
 
                     # Make mjd.html and fields.html
-                    if makemasterqa == True: 
+                    if makemasterqa is True: 
                         q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                               mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                               domjd=True, dofields=True)
@@ -278,7 +278,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the apPlateSum file if it doesn't already exist.
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-        if (os.path.exists(platesum) == False) | (makeplatesum == True):
+        if (os.path.exists(platesum) is False) | (makeplatesum is True):
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
@@ -1720,7 +1720,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 # Find the associated healpix html directories and make them if they don't already exist
                 starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
                 starHtmlDir = starDir + 'html/'
-                if os.path.exists(starHtmlDir) is False: os.makedirs(starHtmlDir)
+                if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
                 starHTMLpath = starHtmlDir + objid + '.html'
 
                 starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
@@ -1737,7 +1737,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     # Set up plot directories and plot file name
                     starPlotDir = starDir + 'plots/'
-                    if os.path.exists(starPlotDir) is False: os.makedirs(starPlotDir)
+                    if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
                     starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
                     starPlotFilePath = starPlotDir + starPlotFile
                     starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
@@ -1943,13 +1943,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
                             contord = 5
-                            hdr = fits.getheader(apStarPath)
-                            flux = fits.open(apStarPath)[1].data[0]
-                            npix = len(flux)
-                            wstart = hdr['CRVAL1']
-                            wstep = hdr['CDELT1']
-                            vhbary = hdr['VHBARY']
-                            wave = 10**(wstart + wstep * np.arange(0, npix, 1))
+                            data = doppler.read(apStarPath)
+                            data.normalize()
+                            import pdb; pdb.set_trace()
+                            wave = data.wave[:, 0]
+                            flux = data.flux[:, 0]
                             gd, = np.where(np.isnan(flux) == False)
                             wave = wave[gd]
                             flux = flux[gd]
@@ -1964,8 +1962,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             #import pdb; pdb.set_trace()
                             swave = bestmodel.wave
                             sflux = bestmodel.flux
-
-
                             #swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
                             #sflux = bmodel[1].flux
 
@@ -1997,10 +1993,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                                 # Flatten the continuum
                                 gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
-                                z = np.polyfit(wave[gd], flux[gd], contord)
-                                p = np.poly1d(z)
+                                #z = np.polyfit(wave[gd], flux[gd], contord)
+                                #p = np.poly1d(z)
 
-                                ax.plot(wave[gd], flux[gd]/p(wave[gd]), color='k', label='apStar')
+                                ax.plot(wave[gd], flux[gd], color='k', label='apStar')
                                 ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Doppler model')
                                 #ax.plot(wave[gd], p(wave[gd]), color='r')
 
@@ -2541,7 +2537,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     visSumPathS = '../summary/allVisit-daily-lco25m.fits'
     starSumPathS = '../summary/allStar-daily-lco25m.fits'
 
-    if domjd == True:
+    if domjd is True:
         # Find all .log.html files, get all MJDs with data
         print("----> makeMasterQApages: Finding log files. Please wait.")
         logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
@@ -2716,7 +2712,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
     #---------------------------------------------------------------------------------------
     # Fields view
-    if dofields == True:
+    if dofields is True:
         fieldfile = qadir+fieldfilebase
         print("----> makeMasterQApages: Creating "+fieldfilebase)
         html = open(fieldfile,'w')
