@@ -1185,6 +1185,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     #----------------------------------------------------------------------------------------------
     fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
     flux = load.apFlux(fluxid)
+    import pdb; pdb.set_trace()
     ypos = 300 - platesum2['FIBERID']
 
     plotfile = fluxfile.replace('.fits', '.png')
