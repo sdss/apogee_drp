@@ -2964,7 +2964,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
-    tharline = np.array([[934.,1128.,1130.],[1724.,623.,1778.]])
+    tharline = np.array([[935.,1127.,1130.],[1723.,618.,1773.]])
     uneline =  np.array([[598.,1213.,1116.],[1763.,605.,1893.]])
 
     if instrument == 'apogee-s': tharline = np.array([[944.,1112.,1102.],[1726.,608.,1745.]])
@@ -3032,7 +3032,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         gflux = oneDflux[ichip, :, fiber]
                         gerror = oneDerror[ichip, :, fiber]
                         bad, = np.where(gerror > 100000)
-                        if len(bad) > 0: gerror[bad] = 10000.0
+                        if len(bad) > 0: gerror[bad] = 5000.0
                         
                         gpeaks = peakfit.peakfit(gflux, sigma=gerror)
                         gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
