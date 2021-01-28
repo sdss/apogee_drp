@@ -3028,13 +3028,10 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
                         print(ims[i],iline,ichip,ifiber,fiber,struct['THAR'][i],struct['UNE'][i])
-                        if ims[i] == 35970005: import pdb; pdb.set_trace()
                         gflux = oneDflux[ichip, :, fiber]
                         gerror = oneDerror[ichip, :, fiber]
-                        bad, = np.where(gerror > 100000)
-                        if len(bad) > 0: gerror[bad] = 5000.0
-                        
-                        gpeaks = peakfit.peakfit(gflux, sigma=gerror)
+                        good, = np.where(gerror < 10000)
+                        gpeaks = peakfit.peakfit(gflux[good], sigma=gerror[good])
                         gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                         gpeaks = gpeaks[gd]
                         pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
