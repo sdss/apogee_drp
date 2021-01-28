@@ -3027,6 +3027,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 for ichip in range(nchips):
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
+                        print(ifiber,fiber)
                         gpeaks = peakfit.peakfit(oneDflux[ichip, :, fiber], sigma=oneDerror[ichip, :, fiber])
                         gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                         gpeaks = gpeaks[gd]
@@ -3035,6 +3036,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         if len(gdline) > 0:
                             struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
                             struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
+                            import pdb; pdb.set_trace()
                         else:
                             print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
 
