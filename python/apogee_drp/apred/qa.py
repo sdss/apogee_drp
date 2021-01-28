@@ -2964,7 +2964,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
-    tharline = np.array([[940.,1128.,1130.],[1724.,623.,1778.]])
+    tharline = np.array([[934.,1128.,1130.],[1724.,623.,1778.]])
     uneline =  np.array([[603.,1213.,1116.],[1763.,605.,1893.]])
 
     if instrument == 'apogee-s': tharline = np.array([[944.,1112.,1102.],[1726.,608.,1745.]])
@@ -2994,11 +2994,11 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     # Loop over exposures and get 1D images to fill structure.
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     for i in range(n_exposures):
-        print(ims[i])
         oneD = load.apread('1D', num=ims[i])
         oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
         oneDerror = np.array([oneD[0].error, oneD[1].error, oneD[2].error])
         oneDhdr = oneD[0].header
+        import pdb; pdb.set_trace()
 
         struct['NAME'][i] =    ims[i]
         struct['MJD'][i] =     mjd
@@ -3029,26 +3029,20 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
                         gpeaks = peakfit.peakfit(oneDflux[ichip, :, fiber], sigma=oneDerror[ichip, :, fiber])
-                        import pdb; pdb.set_trace()
-
-                        j, = np.where(linestr['FIBER'] == fiber)
-                        nj = len(j)
-                        if nj > 0:
-                            junk = np.nanmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
-                            jline = np.argmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
-                            struct['GAUSS'][:,ifiber,ichip,iline][i] = linestr['GPAR'][j][jline]
-                            sz = a['WCOEF'][ichip].shape
-                            if sz[0] == 2:
-                                ### NOTE:the below has not been tested
-#;                                    struct['WAVE'][i][ifiber,ichip,iline] = pix2wave(linestr['GAUSSX'][j][jline],oneD['WCOEF'][ichip][fiber,:])
-                                pix = linestr['GAUSSX'][j][jline]
-                                wave0 = a['WCOEF'][ichip][fiber,:]
-                                struct['WAVE'][i][ifiber,ichip,iline] = wave.pix2wave(pix, wave0)
-
-                            struct['FLUX'][i][fiber,ichip] = linestr['SUMFLUX'][j][jline]
+                        gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
+                        gpeaks = gpeaks[gd]
+                        pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
+                        gdline, = np.where(pixdif == np.min(pixdif))
+                        if len(gdline) > 0:
+                            struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
+                            # How to calculate sumflux???
+                            import pdb; pdb.set_trace()
+                            #struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
+                        else:
+                            print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
 
     outfile = load.filename('QAcal', mjd=mjd)
-    if os.path.exists(os.path.basename(outfile)): os.makedirs(os.path.basename(outfile))
+    if os.path.exists(os.path.dirname(outfile)): os.makedirs(os.path.dirname(outfile))
     Table(struct).write(outfile)
 
     print("Done with MAKECALFITS for MJD " + mjd)
@@ -3087,6 +3081,11 @@ def makeDarkFits(load=None, ims=None, mjd=None):
     # Loop over exposures and get 2D images to fill structure.
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap2D-21180073.fits
     for i in range(n_exposures):
+        twoD = load.apread('2D', num=ims[i])
+        twoDflux = np.array([twoD[0].flux, twoD[1].flux, twoD[2].flux])
+        twoDerror = np.array([twoD[0].error, twoD[1].error, twoD[2].error])
+        twoDhdr = twoD[0].header
+
         twoD = load.ap2D(ims[i])
         twoDhdr = twoD['a'][0].header
 
@@ -3114,6 +3113,7 @@ def makeDarkFits(load=None, ims=None, mjd=None):
             print("type(2D) does not equal dict. This is probably a problem.")
 
     outfile = load.filename('QAcal', mjd=mjd).replace('apQAcal','apQAdarkflat')
+    if os.path.exists(os.path.dirname(outfile)): os.makedirs(os.path.dirname(outfile))
     Table(struct).write(outfile)
 
     print("Done with MAKEDARKFITS for MJD " + mjd)
