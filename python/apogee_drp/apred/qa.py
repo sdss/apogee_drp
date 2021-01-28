@@ -3028,6 +3028,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
                         print(ims[i],ifiber,fiber,struct['THAR'][i],struct['UNE'][i])
+                        if struct['UNE'][i] == 1: import pdb; pdb.set_trace()
                         gpeaks = peakfit.peakfit(oneDflux[ichip, :, fiber], sigma=oneDerror[ichip, :, fiber])
                         gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                         gpeaks = gpeaks[gd]
