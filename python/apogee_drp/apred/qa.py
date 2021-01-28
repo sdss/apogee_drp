@@ -3028,7 +3028,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 for ichip in range(nchips):
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
-                        gpeaks = peakfit.peakfit(oneDflux[ichip, :, fiber], sigma=oneDerr[ichip, :, fiber])#, pix0=pix0)
+                        gpeaks = peakfit.peakfit(oneDflux[ichip, :, fiber], sigma=oneDerror[ichip, :, fiber])
                         import pdb; pdb.set_trace()
 
                         j, = np.where(linestr['FIBER'] == fiber)
