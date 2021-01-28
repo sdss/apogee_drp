@@ -199,13 +199,12 @@ def peakfit(spec,sigma=None,pix0=None):
             # Sum up the flux
             xlo1 = np.maximum(0,int(pars[1]-np.maximum(2.5*pars[2],3)))
             xhi1 = np.minimum(npix,int(pars[1]+np.maximum(2.5*pars[2],3)))
-            sumflux = np.sum(np.maximum(resid[xlo1:xhi1],0))
+            sumflux = np.sum(np.maximum(resid[xlo1:xhi1]-np.median(resid[xlo1:xhi1]),0))
 
             # Get model and subtract from residuals
             xlo = np.maximum(0,int(pars[1]-5*pars[2]))
             xhi = np.minimum(npix,int(pars[1]+5*pars[2]))
             peakmodel = gaussbin(x[xlo:xhi],pars[0],pars[1],pars[2])  # leave yoffset in
-            if xlo1 > 894: import pdb; pdb.set_trace()
             resid[xlo:xhi] -= peakmodel
 
 
