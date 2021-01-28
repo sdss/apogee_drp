@@ -183,7 +183,7 @@ def peakfit(spec,sigma=None,pix0=None):
     npeaks = len(pix0)
 
     # Initialize the output table
-    dtype = np.dtype([('num',int),('pix0',int),('pars',np.float64,4),('perr',np.float64,4),('success',bool)])
+    dtype = np.dtype([('num',int),('pix0',int),('pars',np.float64,4),('perr',np.float64,4),('sumflux',np.float32),('success',bool)])
     out = np.zeros(npeaks,dtype=dtype)
     out['num'] = np.arange(npeaks)
     out['pix0'] = pix0
@@ -202,9 +202,14 @@ def peakfit(spec,sigma=None,pix0=None):
             peakmodel = gaussbin(x[xlo:xhi],pars[0],pars[1],pars[2])  # leave yoffset in
             resid[xlo:xhi] -= peakmodel
 
+            xlo2 = np.maximum(0,int(pars[1]-np.maximum(2.5*pars[2],3)))
+            xhi2 = np.minimum(npix,int(pars[1]+np.maximum(2.5*pars[2],3)))
+            sumflux = np.sum(np.maximum(resid[xlo2:xhi2],0))
+
             # Stuff results in output table
             out['pars'][i] = pars
             out['perr'][i] = perr
+            out['sumflux'][i] = sumflux
             out['success'][i] = True
         else:
             out['pars'][i] = np.nan
