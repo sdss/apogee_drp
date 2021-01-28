@@ -2998,7 +2998,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
         oneDerror = np.array([oneD[0].error, oneD[1].error, oneD[2].error])
         oneDhdr = oneD[0].header
-        import pdb; pdb.set_trace()
 
         struct['NAME'][i] =    ims[i]
         struct['MJD'][i] =     mjd
