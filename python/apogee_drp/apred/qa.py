@@ -3039,7 +3039,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         gpeaks = gpeaks[gd]
                         pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
                         gdline, = np.where(pixdif == np.min(pixdif))
-                        import pdb; pdb.set_trace()
                         if len(gdline) > 0:
                             struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
                             struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
