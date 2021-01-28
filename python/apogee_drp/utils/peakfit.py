@@ -206,6 +206,7 @@ def peakfit(spec,sigma=None,pix0=None):
             xhi = np.minimum(npix,int(pars[1]+5*pars[2]))
             peakmodel = gaussbin(x[xlo:xhi],pars[0],pars[1],pars[2])  # leave yoffset in
             resid[xlo:xhi] -= peakmodel
+            import pdb; pdb.set_trace()
 
             # Stuff results in output table
             out['pars'][i] = pars
