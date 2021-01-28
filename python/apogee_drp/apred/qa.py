@@ -137,14 +137,14 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
 
         # Run apqa on the dark  plans
-        print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
-        for i in range(ndarkplans): 
-            planfile = load.filename('DarkPlan', mjd=mjd)
-            planstr = plan.load(planfile, np=True)
-            mjd = darkplans[i].split('-')[3].split('.')[0]
-            all_ims = planstr['APEXP']['name']
-            x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
-        print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        #print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        #for i in range(ndarkplans): 
+        #    planfile = load.filename('DarkPlan', mjd=mjd)
+        #    planstr = plan.load(planfile, np=True)
+        #    mjd = darkplans[i].split('-')[3].split('.')[0]
+        #    all_ims = planstr['APEXP']['name']
+        #    x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
+        #print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
@@ -3035,7 +3035,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         if len(gdline) > 0:
                             struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
                             struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
-                            import pdb; pdb.set_trace()
                         else:
                             print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
 
