@@ -3028,12 +3028,18 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
                         print(ims[i],ifiber,fiber,struct['THAR'][i],struct['UNE'][i])
-                        if struct['UNE'][i] == 1: import pdb; pdb.set_trace()
-                        gpeaks = peakfit.peakfit(oneDflux[ichip, :, fiber], sigma=oneDerror[ichip, :, fiber])
+
+                        gflux = oneDflux[ichip, :, fiber]
+                        gerror = oneDerror[ichip, :, fiber]
+                        bad, = np.where(gerror > 100000)
+                        if len(bad) > 0: gerror[bad] = 10000.0
+                        
+                        gpeaks = peakfit.peakfit(gflux, sigma=gerror)
                         gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                         gpeaks = gpeaks[gd]
                         pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
                         gdline, = np.where(pixdif == np.min(pixdif))
+                        if struct['UNE'][i] == 1: import pdb; pdb.set_trace()
                         if len(gdline) > 0:
                             struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
                             struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
