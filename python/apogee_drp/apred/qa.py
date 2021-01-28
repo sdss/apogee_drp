@@ -2995,7 +2995,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     for i in range(n_exposures):
         print(ims[i])
-        oneD = load.apread('1D', ims[i])
+        oneD = load.apread('1D', num=ims[i])
         oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
         oneDhdr = oneD[0].header
 
