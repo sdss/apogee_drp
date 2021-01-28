@@ -2995,104 +2995,76 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     for i in range(n_exposures):
         print(ims[i])
-        oneD = load.ap1D(ims[i])
-        oneDhdr = oneD['a'][0].header
+        oneD = load.apread('1D', ims[i])
+        oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
+        oneDhdr = oneD[0].header
 
-        dt = np.dtype([('FLUX',   np.float64,(300,2048)),
-                       ('ERR',    np.float64,(300,2048)),
-                       ('MASK',    np.float64,(300,2048)),
-                       ('WAVE',    np.float64,(300,2048)),
-                       ('WCOEF',    np.float64,(300,2048))])
-        oneDstruct = np.zeros(nchips, dtype=dt)
-        for ichip in range(nchips):
-            chip = chips[ichip]
-            oneDstruct['FLUX'][ichip] = oneD[chip][1].data
-            oneDstruct['ERR'][ichip] =  oneD[chip][2].data
-            #oneDstruct['MASK'][ichip] =  oneD[chip][3].data
-            #oneDstruct['WAVE'][ichip] =  oneD[chip][4].data
-            #oneDstruct['WCOEF'][ichip] =  oneD[chip][5].data
+        struct['NAME'][i] =    ims[i]
+        struct['MJD'][i] =     mjd
+        struct['JD'][i] =      oneDhdr['JD-MID']
+        struct['NFRAMES'][i] = oneDhdr['NFRAMES']
+        struct['NREAD'][i] =   oneDhdr['NREAD']
+        struct['EXPTIME'][i] = oneDhdr['EXPTIME']
+        struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
+        struct['THAR'][i] =    oneDhdr['LAMPTHAR']
+        struct['UNE'][i] =     oneDhdr['LAMPUNE']
+        struct['FIBERS'][i] = fibers
 
-        if type(oneD) == dict:
-            struct['NAME'][i] =    ims[i]
-            struct['MJD'][i] =     mjd
-            struct['JD'][i] =      oneDhdr['JD-MID']
-            struct['NFRAMES'][i] = oneDhdr['NFRAMES']
-            struct['NREAD'][i] =   oneDhdr['NREAD']
-            struct['EXPTIME'][i] = oneDhdr['EXPTIME']
-            struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
-            struct['THAR'][i] =    oneDhdr['LAMPTHAR']
-            struct['UNE'][i] =     oneDhdr['LAMPUNE']
-            struct['FIBERS'][i] = fibers
+        # Quartz exposures.
+        if struct['QRTZ'][i] == 1: 
+                struct['FLUX'][i] = np.nanmedian(oneDflux, axis=2)
+                import pdb; pdb.set_trace()
 
-            # Quartz exposures.
-            if struct['QRTZ'][i] == 1: 
-                    struct['FLUX'][i] = np.nanmedian(oneDstruct['FLUX'], axis=2)
+        # Arc lamp exposures.
+        if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
+            if struct['THAR'][i] == 1: line = tharline
+            if struct['THAR'][i] != 1: line = uneline
 
-            # Arc lamp exposures.
-            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
-                if struct['THAR'][i] == 1: line = tharline
-                if struct['THAR'][i] != 1: line = uneline
+            struct['LINES'][i] = line
 
-                struct['LINES'][i] = line
+            nlines = 1
+            if line.shape[1] != 1: nlines = line.shape[0]
 
-                nlines = 1
-                if line.shape[1] != 1: nlines = line.shape[0]
-
-                for iline in range(nlines):
-                    for ichip in range(nchips):
-                        chip = chips[ichip]
-                        oneDflux = oneDstruct['FLUX'][ichip]
-                        oneDerr = oneDstruct['ERR'][ichip]
-                        #oneDmask = oneDstruct['MASK'][ichip]
-                        #oneDwave = oneDstruct['WAVE'][ichip]
-                        #oneDwcoef = oneDstruct['WCOEF'][ichip]
-                        toterror = np.sqrt(np.nanmedian(oneDerr[:,1024-100:1024+100]**2, axis=1))
+            for iline in range(nlines):
+                for ichip in range(nchips):
+                    chip = chips[ichip]
+                    oneDflux = oneDstruct['FLUX'][ichip]
+                    oneDerr = oneDstruct['ERR'][ichip]
+                    #oneDmask = oneDstruct['MASK'][ichip]
+                    #oneDwave = oneDstruct['WAVE'][ichip]
+                    #oneDwcoef = oneDstruct['WCOEF'][ichip]
+                    toterror = np.sqrt(np.nanmedian(oneDerr[:,1024-100:1024+100]**2, axis=1))
 
 
-                        #maxind, = argrelextrema(oneDflux, np.greater)  # maxima
-
+                    for ifiber in range(nfibers):
+                        fiber = fibers[ifiber]
+                        #pix0,_ = find_peaks(oneDflux[fiber, :], height=20000)
+                        #maxind, = argrelextrema(oneDflux[fiber, :], np.greater)  # maxima
                         # sigma cut on the flux
-                        #gd, = np.where(oneDflux[maxind] > 5000)
-                        #if len(gd) == 0:
+                        #gd, = np.where(oneDflux[fiber, :][maxind] > 10000)
+                        #if len(gd)==0:
                         #    print('No peaks found')
                         #    return
                         #pix0 = maxind[gd]
-                        #### peaks = peakfit.peakfit(oneDflux[fibers], sigma=toterror, pix0=pix0)
 
-                        #linestr = wave.findlines(oneD, rows=fibers, lines=line)
-                        #linestr = wave.peakfit(oneD[chips[ichip]][1].data)
+                        gpeaks = peakfit.peakfit(oneDflux[fiber, :], sigma=oneDerr[fiber, :])#, pix0=pix0)
+                        import pdb; pdb.set_trace()
 
-                        for ifiber in range(nfibers):
-                            fiber = fibers[ifiber]
-                            #pix0,_ = find_peaks(oneDflux[fiber, :], height=20000)
-                            #maxind, = argrelextrema(oneDflux[fiber, :], np.greater)  # maxima
-                            # sigma cut on the flux
-                            #gd, = np.where(oneDflux[fiber, :][maxind] > 10000)
-                            #if len(gd)==0:
-                            #    print('No peaks found')
-                            #    return
-                            #pix0 = maxind[gd]
-
-                            gpeaks = peakfit.peakfit(oneDflux[fiber, :], sigma=oneDerr[fiber, :])#, pix0=pix0)
-                            import pdb; pdb.set_trace()
-
-                            j, = np.where(linestr['FIBER'] == fiber)
-                            nj = len(j)
-                            if nj > 0:
-                                junk = np.nanmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
-                                jline = np.argmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
-                                struct['GAUSS'][:,ifiber,ichip,iline][i] = linestr['GPAR'][j][jline]
-                                sz = a['WCOEF'][ichip].shape
-                                if sz[0] == 2:
-                                    ### NOTE:the below has not been tested
+                        j, = np.where(linestr['FIBER'] == fiber)
+                        nj = len(j)
+                        if nj > 0:
+                            junk = np.nanmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
+                            jline = np.argmin(np.absolute(linestr['GAUSSX'][j] - line[ichip,iline]))
+                            struct['GAUSS'][:,ifiber,ichip,iline][i] = linestr['GPAR'][j][jline]
+                            sz = a['WCOEF'][ichip].shape
+                            if sz[0] == 2:
+                                ### NOTE:the below has not been tested
 #;                                    struct['WAVE'][i][ifiber,ichip,iline] = pix2wave(linestr['GAUSSX'][j][jline],oneD['WCOEF'][ichip][fiber,:])
-                                    pix = linestr['GAUSSX'][j][jline]
-                                    wave0 = a['WCOEF'][ichip][fiber,:]
-                                    struct['WAVE'][i][ifiber,ichip,iline] = wave.pix2wave(pix, wave0)
+                                pix = linestr['GAUSSX'][j][jline]
+                                wave0 = a['WCOEF'][ichip][fiber,:]
+                                struct['WAVE'][i][ifiber,ichip,iline] = wave.pix2wave(pix, wave0)
 
-                                struct['FLUX'][i][fiber,ichip] = linestr['SUMFLUX'][j][jline]
-        else:
-            print("type(1D) does not equal dict. This is probably a problem.")
+                            struct['FLUX'][i][fiber,ichip] = linestr['SUMFLUX'][j][jline]
 
     outfile = load.filename('QAcal', mjd=mjd)
     if os.path.exists(os.path.basename(outfile)): os.makedirs(os.path.basename(outfile))
@@ -3152,7 +3124,7 @@ def makeDarkFits(load=None, ims=None, mjd=None):
                 i1 = 10
                 i2 = 500
                 for iquad in range(quad):
-                    sm = np.median(twoD[chips[ichip]][1].data[10:2000, i1:i2], axis=0)
+                    sm = np.median(twoD[chips[ichip]][1].data[10:2000, i1:i2], axis=1)
                     struct['MEAN'][i,ichip,iquad] = np.mean(sm)
                     struct['SIG'][i,ichip,iquad] = np.std(sm)
                     i1 += 512
