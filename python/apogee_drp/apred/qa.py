@@ -3027,7 +3027,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 for ichip in range(nchips):
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
-                        print(ifiber,fiber,struct['THAR'][i],struct['UNE'][i])
+                        print(ims[i],ifiber,fiber,struct['THAR'][i],struct['UNE'][i])
                         gpeaks = peakfit.peakfit(oneDflux[ichip, :, fiber], sigma=oneDerror[ichip, :, fiber])
                         gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                         gpeaks = gpeaks[gd]
