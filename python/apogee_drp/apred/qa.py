@@ -3028,6 +3028,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
                         print(ims[i],iline,ichip,ifiber,fiber,struct['THAR'][i],struct['UNE'][i])
+                        import pdb; pdb.set_trace()
                         gflux = oneDflux[ichip, :, fiber]
                         gerror = oneDerror[ichip, :, fiber]
                         good, = np.where(gerror < 10000)
