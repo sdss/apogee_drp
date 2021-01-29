@@ -768,6 +768,8 @@ class ApLoad:
         if 'all' in root or 'aspcap' in root or 'cannon' in root :
             sdssroot = root 
         elif root == 'R' :
+            if mjd is None:
+                mjd = self.cmjd(num)
             if 'lco' in self.telescope: sdssroot = 'asR'
             elif 'apo1m' in self.telescope: sdssroot = 'apR-1m'
             else : sdssroot = 'apR'
@@ -863,7 +865,7 @@ class ApLoad:
         if (plate is not None) and (field is None):
             field = apfield(plate,telescope=self.telescope)[0]
 
-        if root=='1D' or root=='2D' or root=='2Dmodel' or root=='Cframe':
+        if root=='1D' or root=='2D' or root=='2Dmodel' or root=='Cframe' or root=='R':
             mjd = self.cmjd(num)
 
         # Load the data
