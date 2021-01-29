@@ -3028,7 +3028,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
                         print(ims[i],iline,ichip,ifiber,fiber,struct['THAR'][i],struct['UNE'][i])
-                        import pdb; pdb.set_trace()
                         gflux = oneDflux[ichip, :, fiber]
                         gerror = oneDerror[ichip, :, fiber]
                         if struct['UNE'][i] == 1:
@@ -3043,6 +3042,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                             struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
                         else:
                             print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
+                        import pdb; pdb.set_trace()
 
     outfile = load.filename('QAcal', mjd=mjd)
     if os.path.exists(os.path.dirname(outfile)): os.makedirs(os.path.dirname(outfile))
