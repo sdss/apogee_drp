@@ -3045,7 +3045,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                             struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
                         else:
                             print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
-                        import pdb; pdb.set_trace()
+
+    import pdb; pdb.set_trace()
 
     outfile = load.filename('QAcal', mjd=mjd)
     if os.path.exists(os.path.dirname(outfile)): os.makedirs(os.path.dirname(outfile))
