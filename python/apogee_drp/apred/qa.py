@@ -149,7 +149,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
         # Make the MJDexp fits file for this MJD
         print("Making " + mjd + "exp.fits\n")
-        x = makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=mjd)
+        x = makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=mjd, clobber=clobber)
         print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
 
@@ -3134,7 +3134,7 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
         print("--------------------------------------------------------------------\n")
 
 ''' MAKEEXPFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants) '''
-def makeExpFits(instrument=None, apodir=None, apred=None, load=None, ims=None, mjd=None, clobber=None):
+def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, clobber=None):
 
     expdir = apodir + apred + '/exposures/' + instrument + '/' + mjd + '/'
     outfile = expdir + mjd + 'exp.fits'
