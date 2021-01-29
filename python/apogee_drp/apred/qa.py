@@ -3031,10 +3031,11 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         import pdb; pdb.set_trace()
                         gflux = oneDflux[ichip, :, fiber]
                         gerror = oneDerror[ichip, :, fiber]
-                        good, = np.where(gerror < 10000)
-                        gpeaks = peakfit.peakfit(gflux[good], sigma=gerror[good])
-                        gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
-                        gpeaks = gpeaks[gd]
+                        if struct['UNE'][i] == 1:
+                            gd, = np.where(gerror < 10000)
+                            gpeaks = peakfit.peakfit(gflux[gd], sigma=gerror[good])
+                            gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
+                            gpeaks = gpeaks[gd]
                         pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
                         gdline, = np.where(pixdif == np.min(pixdif))
                         if len(gdline) > 0:
