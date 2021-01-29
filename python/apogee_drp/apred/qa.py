@@ -140,6 +140,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
         for i in range(ndarkplans): 
             planfile = load.filename('DarkPlan', mjd=mjd)
+            print(planfile)
             planstr = plan.load(planfile, np=True)
             mjd = darkplans[i].split('-')[3].split('.')[0]
             all_ims = planstr['APEXP']['name']
