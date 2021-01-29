@@ -3035,6 +3035,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                             gpeaks = peakfit.peakfit(gflux[gd], sigma=gerror[good])
                             gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                             gpeaks = gpeaks[gd]
+                        else:
+                            gpeaks = peakfit.peakfit(gflux[gd], sigma=gerror[good])
                         pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
                         gdline, = np.where(pixdif == np.min(pixdif))
                         if len(gdline) > 0:
