@@ -3026,24 +3026,22 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
             for iline in range(nlines):
                 for ichip in range(nchips):
                     for ifiber in range(nfibers):
-                        fiber = fibers[ifiber]
-                        print(ims[i],iline,ichip,ifiber,fiber,struct['THAR'][i],struct['UNE'][i])
-                        gflux = oneDflux[ichip, :, fiber]
-                        gerror = oneDerror[ichip, :, fiber]
                         if struct['UNE'][i] == 1:
-                            bd, = np.where(gerror > 10000)
-                            if len(bd) > 0: gerror[bd] = 5000
-                        gpeaks = peakfit.peakfit(gflux, sigma=gerror)
-                        gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
-                        gpeaks = gpeaks[gd]
+                            fiber = fibers[ifiber]
+                            print(ims[i],iline,ichip,ifiber,fiber,struct['THAR'][i],struct['UNE'][i])
+                            gflux = oneDflux[ichip, :, fiber]
+                            gerror = oneDerror[ichip, :, fiber]
+                            gpeaks = peakfit.peakfit(gflux, sigma=gerror)
+                            gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
+                            gpeaks = gpeaks[gd]
 
-                        pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
-                        gdline, = np.where(pixdif == np.min(pixdif))
-                        if len(gdline) > 0:
-                            struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
-                            struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
-                        else:
-                            print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
+                            pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
+                            gdline, = np.where(pixdif == np.min(pixdif))
+                            if len(gdline) > 0:
+                                struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
+                                struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
+                            else:
+                                print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
 
     import pdb; pdb.set_trace()
 
