@@ -75,10 +75,10 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     dx = 1
     x = np.arange(len(spec))
     xwid = 5
-    xlo0 = pix0-xwid
+    xlo0 = np.maximum(pix0-xwid,0)
     xhi0 = pix0+xwid+1
     xx0 = x[xlo0:xhi0]
-    
+
     # Get quantitative estimates of height, center, sigma
     flux = spec[xlo0:xhi0]-medspec
     flux -= np.median(flux)            # put the median at zero
@@ -118,7 +118,6 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
         pars,cov = curve_fit(func,xx,y,p0=initpar,sigma=yerr,bounds=bounds,maxfev=1000)            
         perr = np.sqrt(np.diag(cov))
     except:
-        import pdb; pdb.set_trace()
         return None,None
     
     return pars,perr
