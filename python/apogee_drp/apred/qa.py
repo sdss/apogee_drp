@@ -3109,6 +3109,7 @@ def makeDarkFits(load=None, ims=None, mjd=None):
                 sm = np.nanmedian(gflux[i1:i2, :], axis=1)
                 struct['MEAN'][i, iquad, ichip] = np.nanmean(sm)
                 struct['SIG'][i, iquad, ichip] = np.nanstd(sm, ddof=1)
+                import pdb; pdb.set_trace()
                 i1 += 512
                 i2 += 512
 
