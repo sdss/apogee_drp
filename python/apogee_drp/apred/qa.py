@@ -2995,7 +2995,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     # Loop over exposures and get 1D images to fill structure.
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     for i in range(n_exposures):
-        print("----> makeCalFits: running exposure " + str(ims[i]))
+        print("----> makeCalFits: running exposure " + str(ims[i]) + '(' + str(i+1) + '/' + str(n_exposures) + ')')
         oneD = load.apread('1D', num=ims[i])
         oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
         oneDerror = np.array([oneD[0].error, oneD[1].error, oneD[2].error])
