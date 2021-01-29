@@ -3038,7 +3038,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         gdline, = np.where(pixdif == np.min(pixdif))
                         if len(gdline) > 0:
                             struct['GAUSS'][iline, ichip, ifiber, :, i] = gpeaks['pars'][gdline, :][0]
-                            struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
+                            #struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
                             struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
                         else:
                             print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
