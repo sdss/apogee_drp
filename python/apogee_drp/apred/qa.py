@@ -3178,7 +3178,8 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
 
         # Loop over exposures and fill structure.
         for i in range(n_exposures):
-            print("----> makeExpFits: read " + ims[i] + " (" + str(i+1) + "/" + str(n_exposures) + ")")
+            imnum = os.path.basename(ims[i]).split('-')[-1].split('.')[0]
+            print("----> makeExpFits: reading exposure " + imnum + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
             oneD = fits.getdata(ims[i])
             hdr = fits.getheader(ims[i])
@@ -3189,7 +3190,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
             struct['MJD'][i] =       int(mjd)
             struct['DATEOBS'][i] =   dateobs
             struct['JD'][i] =        t.jd
-            struct['NUM'][i] =       ims[i]
+            struct['NUM'][i] =       int(imnum)
             struct['NFRAMES'][i] =   hdr['NFRAMES']
             struct['IMAGETYP'][i] =  hdr['IMAGETYP']
             struct['PLATEID'][i] =   hdr['PLATEID']
