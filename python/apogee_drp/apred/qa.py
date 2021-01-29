@@ -3136,6 +3136,10 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
 ''' MAKEEXPFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants) '''
 def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, clobber=None):
 
+    # Establish raw data directory
+    rawdir = os.environ['APOGEE_DATA_N'] + '/' + mjd + '/'
+    if instrument == 'apogee-s': rawdir = os.environ['APOGEE_DATA_S'] + '/' + mjd + '/'
+
     expdir = apodir + apred + '/exposures/' + instrument + '/' + mjd + '/'
     outfile = expdir + mjd + 'exp.fits'
     if (os.path.exists(outfile) is False) | (clobber is True):
@@ -3144,7 +3148,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
 
         if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
 
-        ims = glob.glob(expdir + 'ap1D-a-*fits')
+        ims = glob.glob(rawdir + 'apR-a-*')
         ims.sort()
         ims = np.array(ims)
         n_exposures = len(ims)
@@ -3181,7 +3185,8 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
             imnum = os.path.basename(ims[i]).split('-')[-1].split('.')[0]
             print("----> makeExpFits: reading exposure " + imnum + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
-            hdr = fits.getheader(ims[i])
+            raw = load.apR(int(imnum))
+            hdr = raw['a'][1].header
 
             dateobs = hdr['DATE-OBS']
             t = Time(dateobs, format='fits')
@@ -3206,7 +3211,6 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
             struct['DITHPIX'][i] =   hdr['DITHPIX']
             #struct['TRACEDIST'][i] = ?
 
-            import pdb; pdb.set_trace()
             if struct['IMAGETYP'][i] == 'DomeFlat':
                 fluxfile = load.filename('Flux', num=int(imnum), chips=True).replace('apFlux-', 'apFlux-c-')
                 if os.path.exists(fluxfile):
