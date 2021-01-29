@@ -148,9 +148,9 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         #print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
         # Make the MJDexp fits file for this MJD
-        #print("Making " + mjd + "exp.fits\n")
-        #x = makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=mjd)
-        #print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        print("Making " + mjd + "exp.fits\n")
+        x = makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=mjd)
+        print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
