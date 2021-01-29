@@ -3205,7 +3205,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, ims=None, m
             struct['DITHPIX'][i] =   hdr['DITHPIX']
             #struct['TRACEDIST'][i] = ?
 
-            if struct['IMAGETYP'][i] = 'DomeFlat':
+            if struct['IMAGETYP'][i] == 'DomeFlat':
                 fluxfile = load.filename('Flux', num=ims[i], chips=True).replace('apFlux-', 'apFlux-c-')
                 if os.path.exists(fluxfile):
                     tmp = load.apFlux(ims[i])
