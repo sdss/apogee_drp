@@ -127,24 +127,24 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
     if makeqafits is True:
         # Run apqa on the cal  plans
-        print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
-        for i in range(ncalplans): 
-            planfile = load.filename('CalPlan', mjd=mjd)
-            planstr = plan.load(planfile, np=True)
-            mjd = calplans[i].split('-')[3].split('.')[0]
-            all_ims = planstr['APEXP']['name']
-            x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
-        print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+        #print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+        #for i in range(ncalplans): 
+        #    planfile = load.filename('CalPlan', mjd=mjd)
+        #    planstr = plan.load(planfile, np=True)
+        #    mjd = calplans[i].split('-')[3].split('.')[0]
+        #    all_ims = planstr['APEXP']['name']
+        #    x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
+        #print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
 
         # Run apqa on the dark  plans
-        #print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
-        #for i in range(ndarkplans): 
-        #    planfile = load.filename('DarkPlan', mjd=mjd)
-        #    planstr = plan.load(planfile, np=True)
-        #    mjd = darkplans[i].split('-')[3].split('.')[0]
-        #    all_ims = planstr['APEXP']['name']
-        #    x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
-        #print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        for i in range(ndarkplans): 
+            planfile = load.filename('DarkPlan', mjd=mjd)
+            planstr = plan.load(planfile, np=True)
+            mjd = darkplans[i].split('-')[3].split('.')[0]
+            all_ims = planstr['APEXP']['name']
+            x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
+        print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
@@ -3012,8 +3012,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         struct['FIBERS'][i] =  fibers
 
         tp = 'quartz'
-        if struct['THAR'][i] == 1: tp = 'ThAr'
-        if struct['UNE'][i] == 1: tp = 'UNe'
+        if struct['THAR'][i] == 1: tp = 'ThAr'.ljust(6)
+        if struct['UNE'][i] == 1: tp = 'UNe'.ljust(6)
 
         print("----> makeCalFits: running " + tp + " exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
@@ -3097,28 +3097,28 @@ def makeDarkFits(load=None, ims=None, mjd=None):
         twoD = load.ap2D(ims[i])
         twoDhdr = twoD['a'][0].header
 
-        if type(twoD) == dict:
-            struct['NAME'][i] =    ims[i]
-            struct['MJD'][i] =     mjd
-            struct['JD'][i] =      twoDhdr['JD-MID']
-            struct['NFRAMES'][i] = twoDhdr['NFRAMES']
-            struct['NREAD'][i] =   twoDhdr['NREAD']
-            struct['EXPTIME'][i] = twoDhdr['EXPTIME']
-            struct['QRTZ'][i] =    twoDhdr['LAMPQRTZ']
-            struct['THAR'][i] =    twoDhdr['LAMPTHAR']
-            struct['UNE'][i] =     twoDhdr['LAMPUNE']
+        struct['NAME'][i] =    ims[i]
+        struct['MJD'][i] =     mjd
+        struct['JD'][i] =      twoDhdr['JD-MID']
+        struct['NFRAMES'][i] = twoDhdr['NFRAMES']
+        struct['NREAD'][i] =   twoDhdr['NREAD']
+        struct['EXPTIME'][i] = twoDhdr['EXPTIME']
+        struct['QRTZ'][i] =    twoDhdr['LAMPQRTZ']
+        struct['THAR'][i] =    twoDhdr['LAMPTHAR']
+        struct['UNE'][i] =     twoDhdr['LAMPUNE']
 
-            for ichip in range(nchips):
-                i1 = 10
-                i2 = 500
-                for iquad in range(quad):
-                    sm = np.median(twoD[chips[ichip]][1].data[10:2000, i1:i2], axis=1)
-                    struct['MEAN'][i,ichip,iquad] = np.mean(sm)
-                    struct['SIG'][i,ichip,iquad] = np.std(sm)
-                    i1 += 512
-                    i2 += 512
-        else:
-            print("type(2D) does not equal dict. This is probably a problem.")
+        for ichip in range(nchips):
+            i1 = 10
+            i2 = 500
+            import pdb; pdb.set_trace()
+            gflux = twoDflux[ichip, :, fiber]
+            gerror = twoDerror[ichip, :, fiber]
+            for iquad in range(quad):
+                sm = np.median(twoD[chips[ichip]][1].data[10:2000, i1:i2], axis=1)
+                struct['MEAN'][i,ichip,iquad] = np.mean(sm)
+                struct['SIG'][i,ichip,iquad] = np.std(sm)
+                i1 += 512
+                i2 += 512
 
     outfile = load.filename('QAcal', mjd=mjd).replace('apQAcal','apQAdarkflat')
     if os.path.exists(os.path.dirname(outfile)): os.makedirs(os.path.dirname(outfile))
