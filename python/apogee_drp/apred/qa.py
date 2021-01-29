@@ -2984,8 +2984,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                    ('UNE',     np.int32),
                    ('THAR',    np.int32),
                    ('FLUX',    np.float64,(nchips,300)),
-                   ('GAUSS',   np.float64,(4,nfibers,nchips,nlines)),
-                   ('WAVE',    np.float64,(nfibers,nchips,nlines)),
+                   ('GAUSS',   np.float64,(nlines,nchips,nfibers,4)),
+                   ('WAVE',    np.float64,(nlines,nchips,nfibers)),
                    ('FIBERS',  np.float64,(nfibers)),
                    ('LINES',   np.float64,(nlines,nchips))])
 
@@ -3036,6 +3036,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
                         gdline, = np.where(pixdif == np.min(pixdif))
                         if len(gdline) > 0:
+                            struct['GAUSS'][iline, ichip, ifiber, :, i] = gpeaks['pars'][gdline, :][0]
                             struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
                             struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
                         else:
