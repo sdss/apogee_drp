@@ -3119,7 +3119,7 @@ def makeDarkFits(load=None, ims=None, mjd=None):
                 i2 += 512
 
     outfile = load.filename('QAcal', mjd=mjd).replace('apQAcal','apQAdarkflat')
-    if os.path.exists(os.path.dirname(outfile)): os.makedirs(os.path.dirname(outfile))
+    if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
     Table(struct).write(outfile, overwrite=True)
 
     print("Done with MAKEDARKFITS for MJD " + mjd)
