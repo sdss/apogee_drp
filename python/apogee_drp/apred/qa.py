@@ -3211,6 +3211,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
             struct['DITHPIX'][i] =   hdr['DITHPIX']
             #struct['TRACEDIST'][i] = ?
 
+            # Get median fluxes from Dome Flats
             if struct['IMAGETYP'][i] == 'DomeFlat':
                 fluxfile = load.filename('Flux', num=int(imnum), chips=True).replace('apFlux-', 'apFlux-c-')
                 if os.path.exists(fluxfile):
@@ -3223,7 +3224,6 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
                             flux[ifiber, :] *= mask
                         med = np.nanmedian(flux,axis=1)
                         struct['MED'][i,ichip,:] = med
-                        import pdb; pdb.set_trace()
 
         Table(struct).write(outfile, overwrite=True)
 
