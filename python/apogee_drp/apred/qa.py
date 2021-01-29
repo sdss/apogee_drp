@@ -3219,11 +3219,11 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
                         chip = chips[ichip]
                         flux = tmp[chip][1].data
                         mask = tmp[chip][3].data
-                        #for ifiber in range(300): flux[ichip, ifiber, :] *= mask
-                        import pdb; pdb.set_trace()
-                        flux[ichip, :, :] *= mask
+                        for ifiber in range(300):
+                            flux[ifiber, :] *= mask
                         med = np.nanmedian(flux,axis=1)
-
+                        struct['MED'][i,ichip,:] = med
+                        import pdb; pdb.set_trace()
 
         Table(struct).write(outfile, overwrite=True)
 
