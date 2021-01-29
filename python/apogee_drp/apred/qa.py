@@ -3031,10 +3031,9 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         gflux = oneDflux[ichip, :, fiber]
                         gerror = oneDerror[ichip, :, fiber]
                         if struct['UNE'][i] == 1:
-                            gd, = np.where(gerror < 10000)
-                            gpeaks = peakfit.peakfit(gflux[gd], sigma=gerror[gd])
-                        else:
-                            gpeaks = peakfit.peakfit(gflux, sigma=gerror)
+                            bd, = np.where(gerror > 10000)
+                            if len(bd) > 0: gerror[bd] = 5000
+                        gpeaks = peakfit.peakfit(gflux, sigma=gerror)
                         gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                         gpeaks = gpeaks[gd]
 
