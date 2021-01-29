@@ -2986,7 +2986,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                    ('THAR',    np.int32),
                    ('FLUX',    np.float64,(nchips,300)),
                    ('GAUSS',   np.float64,(nlines,nchips,nfibers,4)),
-                   #('GAUSS',   np.float64,(4,nfibers,nchips,nlines)),
                    ('WAVE',    np.float64,(nlines,nchips,nfibers)),
                    ('FIBERS',  np.int32,(nfibers)),
                    ('LINES',   np.float64,(nlines,nchips))])
@@ -2994,7 +2993,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     struct = np.zeros(n_exposures, dtype=dt)
 
     # Loop over exposures and get 1D images to fill structure.
-    # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     for i in range(n_exposures):
         oneD = load.apread('1D', num=ims[i])
         oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
@@ -3035,7 +3033,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                 for ichip in range(nchips):
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
-                        #print(ims[i],iline,ichip,ifiber,fiber,struct['THAR'][i],struct['UNE'][i])
                         gflux = oneDflux[ichip, :, fiber]
                         gerror = oneDerror[ichip, :, fiber]
                         gpeaks = peakfit.peakfit(gflux, sigma=gerror)
@@ -3045,7 +3042,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                         gdline, = np.where(pixdif == np.min(pixdif))
                         if len(gdline) > 0:
                             struct['GAUSS'][i, iline, ichip, ifiber, :] = gpeaks['pars'][gdline, :][0]
-                            #struct['GAUSS'][i, :, ifiber, ichip, iline] = gpeaks['pars'][gdline, :][0]
                             struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
                         else:
                             print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
@@ -3088,7 +3084,6 @@ def makeDarkFits(load=None, ims=None, mjd=None):
     struct = np.zeros(n_exposures, dtype=dt)
 
     # Loop over exposures and get 2D images to fill structure.
-    # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap2D-21180073.fits
     for i in range(n_exposures):
         print("----> makeDarkFits: running exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
@@ -3112,9 +3107,8 @@ def makeDarkFits(load=None, ims=None, mjd=None):
             gflux = twoDflux[ichip, :, 10:2000]
             for iquad in range(nquad):
                 sm = np.nanmedian(gflux[i1:i2, :], axis=1)
-                #sm = np.median(twoD[chips[ichip]][1].data[10:2000, i1:i2], axis=1)
-                struct['MEAN'][i, iquad, ichip] = np.mean(sm)
-                struct['SIG'][i, iquad, ichip] = np.std(sm)
+                struct['MEAN'][i, iquad, ichip] = np.nanmean(sm)
+                struct['SIG'][i, iquad, ichip] = np.nanstd(sm, ddof=1)
                 i1 += 512
                 i2 += 512
 
