@@ -3178,10 +3178,10 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
 
         # Loop over exposures and fill structure.
         for i in range(n_exposures):
-            print("----> makeExpFits: running exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
+            print("----> makeExpFits: read " + ims[i] + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
-            oneD = load.apread('1D', num=ims[i])
-            hdr = oneD[0].header
+            oneD = fits.getdata(ims[i])
+            hdr = fits.getheader(ims[i])
 
             dateobs = hdr['DATE-OBS']
             t = Time(dateobs, format='fits')
