@@ -127,14 +127,14 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
     if makeqafits is True:
         # Run apqa on the cal  plans
-        #print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
-        #for i in range(ncalplans): 
-        #    planfile = load.filename('CalPlan', mjd=mjd)
-        #    planstr = plan.load(planfile, np=True)
-        #    mjd = calplans[i].split('-')[3].split('.')[0]
-        #    all_ims = planstr['APEXP']['name']
-        #    x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
-        #print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+        print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+        for i in range(ncalplans): 
+            planfile = load.filename('CalPlan', mjd=mjd)
+            planstr = plan.load(planfile, np=True)
+            mjd = calplans[i].split('-')[3].split('.')[0]
+            all_ims = planstr['APEXP']['name']
+            x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
+        print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
 
         # Run apqa on the dark  plans
         print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
@@ -2954,170 +2954,178 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
 
 ''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.) '''
-def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
-
-    print("--------------------------------------------------------------------")
-    print("Running MAKECALFITS for MJD " + mjd)
-
-    n_exposures = len(ims)
-
-    nlines = 2
-    chips = np.array(['a','b','c'])
-    nchips = len(chips)
-
-    tharline = np.array([[935.,1127.,1130.],[1723.,618.,1773.]])
-    uneline =  np.array([[598.,1213.,1116.],[1763.,605.,1893.]])
-
-    if instrument == 'apogee-s': tharline = np.array([[944.,1112.,1102.],[1726.,608.,1745.]])
-    if instrument == 'apogee-s':  uneline = np.array([[607.,1229.,1088.],[1765.,620.,1860.]])
-
-    fibers = np.array([10,80,150,220,290])
-    nfibers = len(fibers)
-
-    # Make output structure.
-    dt = np.dtype([('NAME',    np.str,30),
-                   ('MJD',     np.str,30),
-                   ('JD',      np.float64),
-                   ('NFRAMES', np.int32),
-                   ('NREAD',   np.int32),
-                   ('EXPTIME', np.float64),
-                   ('QRTZ',    np.int32),
-                   ('UNE',     np.int32),
-                   ('THAR',    np.int32),
-                   ('FLUX',    np.float64,(nchips,300)),
-                   ('GAUSS',   np.float64,(nlines,nchips,nfibers,4)),
-                   ('WAVE',    np.float64,(nlines,nchips,nfibers)),
-                   ('FIBERS',  np.int32,(nfibers)),
-                   ('LINES',   np.float64,(nlines,nchips))])
-
-    struct = np.zeros(n_exposures, dtype=dt)
-
-    # Loop over exposures and get 1D images to fill structure.
-    for i in range(n_exposures):
-        oneD = load.apread('1D', num=ims[i])
-        oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
-        oneDerror = np.array([oneD[0].error, oneD[1].error, oneD[2].error])
-        oneDhdr = oneD[0].header
-
-        struct['NAME'][i] =    ims[i]
-        struct['MJD'][i] =     mjd
-        struct['JD'][i] =      oneDhdr['JD-MID']
-        struct['NFRAMES'][i] = oneDhdr['NFRAMES']
-        struct['NREAD'][i] =   oneDhdr['NREAD']
-        struct['EXPTIME'][i] = oneDhdr['EXPTIME']
-        struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
-        struct['THAR'][i] =    oneDhdr['LAMPTHAR']
-        struct['UNE'][i] =     oneDhdr['LAMPUNE']
-        struct['FIBERS'][i] =  fibers
-
-        tp = 'quartz'
-        if struct['THAR'][i] == 1: tp = 'ThAr'.ljust(6)
-        if struct['UNE'][i] == 1: tp = 'UNe'.ljust(6)
-
-        print("----> makeCalFits: running " + tp + " exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
-
-        # Quartz exposures.
-        if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
-
-        # Arc lamp exposures.
-        if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
-            if struct['THAR'][i] == 1: line = tharline
-            if struct['THAR'][i] != 1: line = uneline
-
-            struct['LINES'][i] = line
-
-            nlines = 1
-            if line.shape[1] != 1: nlines = line.shape[0]
-
-            for iline in range(nlines):
-                for ichip in range(nchips):
-                    for ifiber in range(nfibers):
-                        fiber = fibers[ifiber]
-                        gflux = oneDflux[ichip, :, fiber]
-                        gerror = oneDerror[ichip, :, fiber]
-                        gpeaks = peakfit.peakfit(gflux, sigma=gerror)
-                        gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
-                        gpeaks = gpeaks[gd]
-                        pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
-                        gdline, = np.where(pixdif == np.min(pixdif))
-                        if len(gdline) > 0:
-                            struct['GAUSS'][i, iline, ichip, ifiber, :] = gpeaks['pars'][gdline, :][0]
-                            struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
-                        else:
-                            print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
+def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
 
     outfile = load.filename('QAcal', mjd=mjd)
-    if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
-    Table(struct).write(outfile, overwrite=True)
+    if (os.path.exists(outfile) is False) | (clobber is True):
+        print("--------------------------------------------------------------------")
+        print("Running MAKECALFITS for MJD " + mjd)
 
-    print("Done with MAKECALFITS for MJD " + mjd)
-    print("Made " + outfile)
-    print("--------------------------------------------------------------------\n")
+        # Make directory if it doesn't exist
+        if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
+
+        n_exposures = len(ims)
+
+        nlines = 2
+        chips = np.array(['a','b','c'])
+        nchips = len(chips)
+
+        tharline = np.array([[935.,1127.,1130.],[1723.,618.,1773.]])
+        uneline =  np.array([[598.,1213.,1116.],[1763.,605.,1893.]])
+
+        if instrument == 'apogee-s': tharline = np.array([[944.,1112.,1102.],[1726.,608.,1745.]])
+        if instrument == 'apogee-s':  uneline = np.array([[607.,1229.,1088.],[1765.,620.,1860.]])
+
+        fibers = np.array([10,80,150,220,290])
+        nfibers = len(fibers)
+
+        # Make output structure.
+        dt = np.dtype([('NAME',    np.str,30),
+                       ('MJD',     np.str,30),
+                       ('JD',      np.float64),
+                       ('NFRAMES', np.int32),
+                       ('NREAD',   np.int32),
+                       ('EXPTIME', np.float64),
+                       ('QRTZ',    np.int32),
+                       ('UNE',     np.int32),
+                       ('THAR',    np.int32),
+                       ('FLUX',    np.float64,(nchips,300)),
+                       ('GAUSS',   np.float64,(nlines,nchips,nfibers,4)),
+                       ('WAVE',    np.float64,(nlines,nchips,nfibers)),
+                       ('FIBERS',  np.int32,(nfibers)),
+                       ('LINES',   np.float64,(nlines,nchips))])
+
+        struct = np.zeros(n_exposures, dtype=dt)
+
+        # Loop over exposures and get 1D images to fill structure.
+        for i in range(n_exposures):
+            oneD = load.apread('1D', num=ims[i])
+            oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
+            oneDerror = np.array([oneD[0].error, oneD[1].error, oneD[2].error])
+            oneDhdr = oneD[0].header
+
+            struct['NAME'][i] =    ims[i]
+            struct['MJD'][i] =     mjd
+            struct['JD'][i] =      oneDhdr['JD-MID']
+            struct['NFRAMES'][i] = oneDhdr['NFRAMES']
+            struct['NREAD'][i] =   oneDhdr['NREAD']
+            struct['EXPTIME'][i] = oneDhdr['EXPTIME']
+            struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
+            struct['THAR'][i] =    oneDhdr['LAMPTHAR']
+            struct['UNE'][i] =     oneDhdr['LAMPUNE']
+            struct['FIBERS'][i] =  fibers
+
+            tp = 'quartz'
+            if struct['THAR'][i] == 1: tp = 'ThAr'.ljust(6)
+            if struct['UNE'][i] == 1: tp = 'UNe'.ljust(6)
+
+            print("----> makeCalFits: running " + tp + " exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
+
+            # Quartz exposures.
+            if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
+
+            # Arc lamp exposures.
+            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
+                if struct['THAR'][i] == 1: line = tharline
+                if struct['THAR'][i] != 1: line = uneline
+
+                struct['LINES'][i] = line
+
+                nlines = 1
+                if line.shape[1] != 1: nlines = line.shape[0]
+
+                for iline in range(nlines):
+                    for ichip in range(nchips):
+                        for ifiber in range(nfibers):
+                            fiber = fibers[ifiber]
+                            gflux = oneDflux[ichip, :, fiber]
+                            gerror = oneDerror[ichip, :, fiber]
+                            # Fit Gaussians to the lamps lines
+                            gpeaks = peakfit.peakfit(gflux, sigma=gerror)
+                            gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
+                            gpeaks = gpeaks[gd]
+                            # Find the desired peak and load struct
+                            pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
+                            gdline, = np.where(pixdif == np.min(pixdif))
+                            if len(gdline) > 0:
+                                struct['GAUSS'][i, iline, ichip, ifiber, :] = gpeaks['pars'][gdline, :][0]
+                                struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
+                            else:
+                                print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
+
+        Table(struct).write(outfile, overwrite=True)
+
+        print("Done with MAKECALFITS for MJD " + mjd)
+        print("Made " + outfile)
+        print("--------------------------------------------------------------------\n")
 
 
 ''' MAKEDARKFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants) '''
-def makeDarkFits(load=None, ims=None, mjd=None):
-
-    print("--------------------------------------------------------------------")
-    print("Running MAKEDARKFITS for MJD "+mjd)
-
-    n_exposures = len(ims)
-
-    chips=np.array(['a','b','c'])
-    nchips = len(chips)
-    nquad = 4
-
-    # Make output structure.
-    dt = np.dtype([('NAME',    np.str, 30),
-                   ('MJD',     np.str, 30),
-                   ('JD',      np.float64),
-                   ('NFRAMES', np.int32),
-                   ('NREAD',   np.int32),
-                   ('EXPTIME', np.float64),
-                   ('QRTZ',    np.int32),
-                   ('UNE',     np.int32),
-                   ('THAR',    np.int32),
-                   ('EXPTYPE', np.str, 30),
-                   ('MEAN',    np.float64, (nquad,nchips)),
-                   ('SIG',     np.float64, (nquad,nchips))])
-
-    struct = np.zeros(n_exposures, dtype=dt)
-
-    # Loop over exposures and get 2D images to fill structure.
-    for i in range(n_exposures):
-        print("----> makeDarkFits: running exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
-
-        twoD = load.apread('2D', num=ims[i])
-        twoDflux = np.array([twoD[0].flux, twoD[1].flux, twoD[2].flux])
-        twoDhdr = twoD[0].header
-
-        struct['NAME'][i] =    ims[i]
-        struct['MJD'][i] =     mjd
-        struct['JD'][i] =      twoDhdr['JD-MID']
-        struct['NFRAMES'][i] = twoDhdr['NFRAMES']
-        struct['NREAD'][i] =   twoDhdr['NREAD']
-        struct['EXPTIME'][i] = twoDhdr['EXPTIME']
-        struct['QRTZ'][i] =    twoDhdr['LAMPQRTZ']
-        struct['THAR'][i] =    twoDhdr['LAMPTHAR']
-        struct['UNE'][i] =     twoDhdr['LAMPUNE']
-
-        for ichip in range(nchips):
-            i1 = 10
-            i2 = 500
-            for iquad in range(nquad):
-                sm = np.nanmedian(twoDflux[ichip, i1:i2, 10:2000], axis=1)
-                struct['MEAN'][i, iquad, ichip] = np.nanmean(sm)
-                struct['SIG'][i, iquad, ichip] = np.nanstd(sm)
-                i1 += 512
-                i2 += 512
+def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
 
     outfile = load.filename('QAcal', mjd=mjd).replace('apQAcal','apQAdarkflat')
-    if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
-    Table(struct).write(outfile, overwrite=True)
+    if (os.path.exists(outfile) is False) | (clobber is True):
+        print("--------------------------------------------------------------------")
+        print("Running MAKEDARKFITS for MJD "+mjd)
 
-    print("Done with MAKEDARKFITS for MJD " + mjd)
-    print("Made " + outfile)
-    print("--------------------------------------------------------------------\n")
+        if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
+
+        n_exposures = len(ims)
+
+        chips=np.array(['a','b','c'])
+        nchips = len(chips)
+        nquad = 4
+
+        # Make output structure.
+        dt = np.dtype([('NAME',    np.str, 30),
+                       ('MJD',     np.str, 30),
+                       ('JD',      np.float64),
+                       ('NFRAMES', np.int32),
+                       ('NREAD',   np.int32),
+                       ('EXPTIME', np.float64),
+                       ('QRTZ',    np.int32),
+                       ('UNE',     np.int32),
+                       ('THAR',    np.int32),
+                       ('EXPTYPE', np.str, 30),
+                       ('MEAN',    np.float64, (nquad,nchips)),
+                       ('SIG',     np.float64, (nquad,nchips))])
+
+        struct = np.zeros(n_exposures, dtype=dt)
+
+        # Loop over exposures and get 2D images to fill structure.
+        for i in range(n_exposures):
+            print("----> makeDarkFits: running exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
+
+            twoD = load.apread('2D', num=ims[i])
+            twoDflux = np.array([twoD[0].flux, twoD[1].flux, twoD[2].flux])
+            twoDhdr = twoD[0].header
+
+            struct['NAME'][i] =    ims[i]
+            struct['MJD'][i] =     mjd
+            struct['JD'][i] =      twoDhdr['JD-MID']
+            struct['NFRAMES'][i] = twoDhdr['NFRAMES']
+            struct['NREAD'][i] =   twoDhdr['NREAD']
+            struct['EXPTIME'][i] = twoDhdr['EXPTIME']
+            struct['QRTZ'][i] =    twoDhdr['LAMPQRTZ']
+            struct['THAR'][i] =    twoDhdr['LAMPTHAR']
+            struct['UNE'][i] =     twoDhdr['LAMPUNE']
+
+            # Get the mean and stddev of flux in each quadrant of each detector
+            for ichip in range(nchips):
+                i1 = 10
+                i2 = 500
+                for iquad in range(nquad):
+                    sm = np.nanmedian(twoDflux[ichip, i1:i2, 10:2000], axis=1)
+                    struct['MEAN'][i, iquad, ichip] = np.nanmean(sm)
+                    struct['SIG'][i, iquad, ichip] = np.nanstd(sm)
+                    i1 += 512
+                    i2 += 512
+
+        Table(struct).write(outfile, overwrite=True)
+
+        print("Done with MAKEDARKFITS for MJD " + mjd)
+        print("Made " + outfile)
+        print("--------------------------------------------------------------------\n")
 
 
 ''' GETFLUX: Translation of getflux.pro '''
