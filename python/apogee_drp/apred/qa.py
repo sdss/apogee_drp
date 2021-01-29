@@ -3012,9 +3012,10 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         struct['FIBERS'][i] =  fibers
 
         tp = 'quartz'
-        if struct['QRTZ'][i] == 1:
+        if struct['THAR'][i] == 1: tp = 'ThAr'
+        if struct['UNE'][i] == 1: tp = 'UNe'
 
-        print("----> makeCalFits: running exposure " + str(ims[i]) + ' (' + str(i+1) + '/' + str(n_exposures) + ')')
+        print("----> makeCalFits: running " + tp + " exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
         # Quartz exposures.
         if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
