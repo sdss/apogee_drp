@@ -2987,7 +2987,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
                    ('GAUSS',   np.float64,(nlines,nchips,nfibers,4)),
                    #('GAUSS',   np.float64,(4,nfibers,nchips,nlines)),
                    ('WAVE',    np.float64,(nlines,nchips,nfibers)),
-                   ('FIBERS',  np.float64,(nfibers)),
+                   ('FIBERS',  np.int32,(nfibers)),
                    ('LINES',   np.float64,(nlines,nchips))])
 
     struct = np.zeros(n_exposures, dtype=dt)
@@ -2995,7 +2995,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
     # Loop over exposures and get 1D images to fill structure.
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap1D-21180073.fits
     for i in range(n_exposures):
-        print("----> makeCalFits: running exposure " + str(ims[i]) + ' (' + str(i+1) + '/' + str(n_exposures) + ')')
         oneD = load.apread('1D', num=ims[i])
         oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
         oneDerror = np.array([oneD[0].error, oneD[1].error, oneD[2].error])
@@ -3011,6 +3010,11 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None):
         struct['THAR'][i] =    oneDhdr['LAMPTHAR']
         struct['UNE'][i] =     oneDhdr['LAMPUNE']
         struct['FIBERS'][i] =  fibers
+
+        tp = 'quartz'
+        if struct['QRTZ'][i] == 1:
+
+        print("----> makeCalFits: running exposure " + str(ims[i]) + ' (' + str(i+1) + '/' + str(n_exposures) + ')')
 
         # Quartz exposures.
         if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
