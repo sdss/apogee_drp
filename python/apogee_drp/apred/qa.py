@@ -3094,6 +3094,7 @@ def makeDarkFits(load=None, ims=None, mjd=None):
 
         twoD = load.apread('2D', num=ims[i])
         twoDflux = np.array([twoD[0].flux, twoD[1].flux, twoD[2].flux])
+        twoDhdr = twoD[0].header
 
         struct['NAME'][i] =    ims[i]
         struct['MJD'][i] =     mjd
