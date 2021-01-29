@@ -3082,21 +3082,18 @@ def makeDarkFits(load=None, ims=None, mjd=None):
                    ('UNE',     np.int32),
                    ('THAR',    np.int32),
                    ('EXPTYPE', np.str, 30),
-                   ('MEAN',    np.float64, (nchips,nquad)),
-                   ('SIG',     np.float64, (nchips,nquad))])
+                   ('MEAN',    np.float64, (nquad,nchips)),
+                   ('SIG',     np.float64, (nquad,nchips))])
 
     struct = np.zeros(n_exposures, dtype=dt)
 
     # Loop over exposures and get 2D images to fill structure.
     # /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/t14/exposures/apogee-n/57680/ap2D-21180073.fits
     for i in range(n_exposures):
+        print("----> makeDarkFits: running exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
+
         twoD = load.apread('2D', num=ims[i])
         twoDflux = np.array([twoD[0].flux, twoD[1].flux, twoD[2].flux])
-        twoDerror = np.array([twoD[0].error, twoD[1].error, twoD[2].error])
-        twoDhdr = twoD[0].header
-
-        twoD = load.ap2D(ims[i])
-        twoDhdr = twoD['a'][0].header
 
         struct['NAME'][i] =    ims[i]
         struct['MJD'][i] =     mjd
@@ -3111,13 +3108,12 @@ def makeDarkFits(load=None, ims=None, mjd=None):
         for ichip in range(nchips):
             i1 = 10
             i2 = 500
-            import pdb; pdb.set_trace()
-            gflux = twoDflux[ichip, :, fiber]
-            gerror = twoDerror[ichip, :, fiber]
+            gflux = twoDflux[ichip, :, 10:2000]
             for iquad in range(quad):
-                sm = np.median(twoD[chips[ichip]][1].data[10:2000, i1:i2], axis=1)
-                struct['MEAN'][i,ichip,iquad] = np.mean(sm)
-                struct['SIG'][i,ichip,iquad] = np.std(sm)
+                sm = np.nanmedian(glux[i1:i2, :], axis=1)
+                #sm = np.median(twoD[chips[ichip]][1].data[10:2000, i1:i2], axis=1)
+                struct['MEAN'][i, iquad, ichip] = np.mean(sm)
+                struct['SIG'][i, iquad, ichip] = np.std(sm)
                 i1 += 512
                 i2 += 512
 
