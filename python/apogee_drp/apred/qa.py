@@ -3105,7 +3105,7 @@ def makeDarkFits(load=None, ims=None, mjd=None):
             i1 = 10
             i2 = 500
             for iquad in range(nquad):
-                sm = np.nanmedian(twoDflux[ichip, 9:2000, i1:i2], axis=1)
+                sm = np.nanmedian(twoDflux[ichip, i1:i2, 9:2000], axis=1)
                 struct['MEAN'][i, iquad, ichip] = np.nanmean(sm)
                 struct['SIG'][i, iquad, ichip] = np.nanstd(sm, ddof=1)
                 import pdb; pdb.set_trace()
