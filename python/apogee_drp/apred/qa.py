@@ -3110,8 +3110,8 @@ def makeDarkFits(load=None, ims=None, mjd=None):
             i1 = 10
             i2 = 500
             gflux = twoDflux[ichip, :, 10:2000]
-            for iquad in range(quad):
-                sm = np.nanmedian(glux[i1:i2, :], axis=1)
+            for iquad in range(nquad):
+                sm = np.nanmedian(gflux[i1:i2, :], axis=1)
                 #sm = np.median(twoD[chips[ichip]][1].data[10:2000, i1:i2], axis=1)
                 struct['MEAN'][i, iquad, ichip] = np.mean(sm)
                 struct['SIG'][i, iquad, ichip] = np.std(sm)
