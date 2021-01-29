@@ -3181,7 +3181,6 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
             imnum = os.path.basename(ims[i]).split('-')[-1].split('.')[0]
             print("----> makeExpFits: reading exposure " + imnum + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
-            oneD = fits.getdata(ims[i])
             hdr = fits.getheader(ims[i])
 
             dateobs = hdr['DATE-OBS']
@@ -3208,14 +3207,15 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
             #struct['TRACEDIST'][i] = ?
 
             if struct['IMAGETYP'][i] == 'DomeFlat':
-                fluxfile = load.filename('Flux', num=ims[i], chips=True).replace('apFlux-', 'apFlux-c-')
+                fluxfile = load.filename('Flux', num=int(imnum), chips=True).replace('apFlux-', 'apFlux-c-')
                 if os.path.exists(fluxfile):
-                    tmp = load.apFlux(ims[i])
+                    tmp = load.apFlux(int(imnum))
                     for ichip in range(nchips):
                         chip = chips[ichip]
                         flux = tmp[chip][1].data
                         mask = tmp[chip][3].data
-                        for ifiber in range(300): flux[ichip, ifiber, :] *= mask
+                        #for ifiber in range(300): flux[ichip, ifiber, :] *= mask
+                        flux[ichip, :, :] *= mask
                         med = np.nanmedian(flux,axis=1)
                         import pdb; pdb.set_trace()
 
