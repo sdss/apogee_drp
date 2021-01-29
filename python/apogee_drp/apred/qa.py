@@ -147,6 +147,11 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
         print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
+        # Make the MJDexp fits file for this MJD
+        print("Making " + mjd + "exp.fits\n")
+        x = makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=mjd)
+        print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
     for i in range(nsciplans):
@@ -3124,6 +3129,97 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
         Table(struct).write(outfile, overwrite=True)
 
         print("Done with MAKEDARKFITS for MJD " + mjd)
+        print("Made " + outfile)
+        print("--------------------------------------------------------------------\n")
+
+''' MAKEEXPFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants) '''
+def makeExpFits(instrument=None, apodir=None, apred=None, load=None, ims=None, mjd=None, clobber=None):
+
+    expdir = apodir + apred + '/exposures/' + instrument + '/' + mjd + '/'
+    outfile = expdir + mjd + 'exp.fits'
+    if (os.path.exists(outfile) is False) | (clobber is True):
+        print("--------------------------------------------------------------------")
+        print("Running MAKEEXPFITS for MJD "+mjd)
+
+        if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
+
+        ims = glob.glob(expdir + 'ap1D-a-*fits')
+        ims.sort()
+        ims = np.array(ims)
+        n_exposures = len(ims)
+
+        chips=np.array(['a','b','c'])
+        nchips = len(chips)
+
+        # Make output structure.
+        dt = np.dtype([('MJD',       np.int32),
+                       ('DATEOBS',   np.str, 30),
+                       ('JD',        np.float64),
+                       ('NUM',       np.int32),
+                       ('NFRAMES',   np.int32),
+                       ('IMAGETYP',  np.str, 30),
+                       ('PLATEID',   np.int32),
+                       ('CARTID',    np.int32),
+                       ('RA',        np.float64),
+                       ('DEC',       np.float64),
+                       ('SEEING',    np.float64),
+                       ('ALT',       np.float64),
+                       ('QRTZ',      np.int32),
+                       ('THAR',      np.int32),
+                       ('UNE',       np.int32),
+                       ('FFS',       np.str, 30),
+                       ('LN2LEVEL',  np.float64),
+                       ('DITHPIX',   np.float64),
+                       ('TRACEDIST', np.float64),
+                       ('MED',       np.float64, (nchips,300))])
+
+        struct = np.zeros(n_exposures, dtype=dt)
+
+        # Loop over exposures and fill structure.
+        for i in range(n_exposures):
+            print("----> makeExpFits: running exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
+
+            oneD = load.apread('1D', num=ims[i])
+            hdr = oneD[0].header
+
+            dateobs = hdr['DATE-OBS']
+            t = Time(dateobs, format='fits')
+
+            struct['MJD'][i] =       int(mjd)
+            struct['DATEOBS'][i] =   dateobs
+            struct['JD'][i] =        t.jd
+            struct['NUM'][i] =       ims[i]
+            struct['NFRAMES'][i] =   hdr['NFRAMES']
+            struct['IMAGETYP'][i] =  hdr['IMAGETYP']
+            struct['PLATEID'][i] =   hdr['PLATEID']
+            struct['CARTID'][i] =    hdr['CARTID']
+            struct['RA'][i] =        hdr['RA']
+            struct['DEC'][i] =       hdr['DEC']
+            struct['SEEING'][i] =    hdr['SEEING']
+            struct['ALT'][i] =       hdr['ALT']
+            struct['QRTZ'][i] =      hdr['LAMPQRTZ']
+            struct['THAR'][i] =      hdr['LAMPTHAR']
+            struct['UNE'][i] =       hdr['LAMPUNE']
+            struct['FFS'][i] =       hdr['FFS']
+            struct['LN2LEVEL'][i] =  hdr['LN2LEVEL']
+            struct['DITHPIX'][i] =   hdr['DITHPIX']
+            #struct['TRACEDIST'][i] = ?
+
+            if struct['IMAGETYP'][i] = 'DomeFlat':
+                fluxfile = load.filename('Flux', num=ims[i], chips=True).replace('apFlux-', 'apFlux-c-')
+                if os.path.exists(fluxfile):
+                    tmp = load.apFlux(ims[i])
+                    for ichip in range(nchips):
+                        chip = chips[ichip]
+                        flux = tmp[chip][1].data
+                        mask = tmp[chip][3].data
+                        for ifiber in range(300): flux[ichip, ifiber, :] *= mask
+                        med = np.nanmedian(flux,axis=1)
+                        import pdb; pdb.set_trace()
+
+        Table(struct).write(outfile, overwrite=True)
+
+        print("Done with MAKEEXPFITS for MJD " + mjd)
         print("Made " + outfile)
         print("--------------------------------------------------------------------\n")
 
