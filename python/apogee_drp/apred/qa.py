@@ -3201,7 +3201,11 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
             struct['CARTID'][i] =    hdr['CARTID']
             struct['RA'][i] =        hdr['RA']
             struct['DEC'][i] =       hdr['DEC']
-            struct['SEEING'][i] =    hdr['SEEING']
+            if np.isnan(hdr['SEEING']) == False:
+                struct['SEEING'][i] = hdr['SEEING']
+            else:
+                print("----> makeExpFits: 'seeing' is NaN for exposure " + imnum)
+                struct['SEEING'][i] = -9.999
             struct['ALT'][i] =       hdr['ALT']
             struct['QRTZ'][i] =      hdr['LAMPQRTZ']
             struct['THAR'][i] =      hdr['LAMPTHAR']
