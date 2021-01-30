@@ -44,12 +44,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     chips = np.array(['blue','green','red'])
     nchips = len(chips)
-
     fibers = np.array([10,80,150,220,290])
     nfibers = len(fibers)
-
     nlines = 2
-
     nquad = 4
 
     # Establish  directories... hardcode sdss4/apogee2 for now
@@ -1111,6 +1108,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 ''' GETQACALSTRUCT: put SDSS-IV and SDSS-V QAcal files in structure '''
 def getQAcalStruct(data=None):
 
+    chips = np.array(['blue','green','red'])
+    nchips = len(chips)
+    fibers = np.array([10,80,150,220,290])
+    nfibers = len(fibers)
+    nlines = 2
+    nquad = 4
+
     dt = np.dtype([('NAME',    np.str,30),
                    ('MJD',     np.str,30),
                    ('JD',      np.float64),
@@ -1126,7 +1130,7 @@ def getQAcalStruct(data=None):
                    ('FIBERS',  np.int16,(nfibers)),
                    ('LINES',   np.float32,(nlines,nchips))])
 
-    outstr = np.zeros(len(data), dtype=dt)
+    outstr = np.zeros(len(data['NAME']), dtype=dt)
 
     outstr['NAME'] =    data['NAME']
     outstr['MJD'] =     data['MJD']
