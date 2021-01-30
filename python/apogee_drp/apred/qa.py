@@ -127,25 +127,25 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
     if makeqafits is True:
         # Run apqa on the cal  plans
-        #print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
-        #for i in range(ncalplans): 
-        #    planfile = load.filename('CalPlan', mjd=mjd)
-        #    planstr = plan.load(planfile, np=True)
-        #    mjd = calplans[i].split('-')[3].split('.')[0]
-        #    all_ims = planstr['APEXP']['name']
-        #    x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
-        #print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+        print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+        for i in range(ncalplans): 
+            planfile = load.filename('CalPlan', mjd=mjd)
+            planstr = plan.load(planfile, np=True)
+            mjd = calplans[i].split('-')[3].split('.')[0]
+            all_ims = planstr['APEXP']['name']
+            x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument, clobber=clobber)
+        print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
 
         # Run apqa on the dark  plans
-        #print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
-        #for i in range(ndarkplans): 
-        #    planfile = load.filename('DarkPlan', mjd=mjd)
-        #    print(planfile)
-        #    planstr = plan.load(planfile, np=True)
-        #    mjd = darkplans[i].split('-')[3].split('.')[0]
-        #    all_ims = planstr['APEXP']['name']
-        #    x = makeDarkFits(load=load, ims=all_ims, mjd=mjd)
-        #print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        for i in range(ndarkplans): 
+            planfile = load.filename('DarkPlan', mjd=mjd)
+            print(planfile)
+            planstr = plan.load(planfile, np=True)
+            mjd = darkplans[i].split('-')[3].split('.')[0]
+            all_ims = planstr['APEXP']['name']
+            x = makeDarkFits(load=load, ims=all_ims, mjd=mjd, clobber=clobber)
+        print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
         # Make the MJDexp fits file for this MJD
         print("Making " + mjd + "exp.fits\n")
@@ -3275,11 +3275,6 @@ def getflux(d=None, skyline=None, rows=None):
     if skyline['TYPE'] == 0: skylineFlux /= cont
 
     return skylineFlux
-
-
-''' GFUNC: function for continuum normalization of apStar spectra '''
-def gfunc(x, a, b, c):
-    return a * np.exp(-b * x) + c
 
 
 
