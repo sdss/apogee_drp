@@ -79,37 +79,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             print("----> monitor: Making " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
-            dt = np.dtype([('NAME',    np.str,30),
-                           ('MJD',     np.str,30),
-                           ('JD',      np.float64),
-                           ('NFRAMES', np.int16),
-                           ('NREAD',   np.int16),
-                           ('EXPTIME', np.float32),
-                           ('QRTZ',    np.int16),
-                           ('UNE',     np.int16),
-                           ('THAR',    np.int16),
-                           ('FLUX',    np.float32,(nchips,300)),
-                           ('GAUSS',   np.float32,(nlines,nchips,nfibers,4)),
-                           ('WAVE',    np.float64,(nlines,nchips,nfibers)),
-                           ('FIBERS',  np.int16,(nfibers)),
-                           ('LINES',   np.float32,(nlines,nchips))])
-
-            outstr = np.zeros(len(allcal['NAME']), dtype=dt)
-
-            outstr['NAME'] =    allcal['NAME']
-            outstr['MJD'] =     allcal['MJD']
-            outstr['JD'] =      allcal['JD']
-            outstr['NFRAMES'] = allcal['NFRAMES']
-            outstr['NREAD'] =   allcal['NREAD']
-            outstr['EXPTIME'] = allcal['EXPTIME']
-            outstr['QRTZ'] =    allcal['QRTZ']
-            outstr['UNE'] =     allcal['UNE']
-            outstr['THAR'] =    allcal['THAR']
-            outstr['FLUX'] =    allcal['FLUX']
-            outstr['GAUSS'] =   allcal['GAUSS']
-            outstr['WAVE'] =    allcal['WAVE']
-            outstr['FIBERS'] =  allcal['FIBERS']
-            outstr['LINES'] =   allcal['LINES']
+            outstr = getQAcalStruct(allcal)
 
             files.sort()
             files = np.array(files)
@@ -119,223 +89,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                outstr = np.concatenate([outstr, data])
+                newstr = getQAcalStruct(data)
+                outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
 
-        ###########################################################################################
-        # APPEND QADARKFLAT INFO TO MASTER QACAL FILE
-        # Append together the individual QAdarkflat files
 
-        files = glob.glob(specdir5 + '/cal/' + instrument + '/qa/*/*QAdarkflat*.fits')
-        if len(files) < 1:
-            print("----> monitor: No QAdarkflat files!")
-        else:
-            print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            dt = np.dtype([('NAME',    np.str, 30),
-                           ('MJD',     np.str, 30),
-                           ('JD',      np.float64),
-                           ('NFRAMES', np.int16),
-                           ('NREAD',   np.int16),
-                           ('EXPTIME', np.float32),
-                           ('QRTZ',    np.int16),
-                           ('UNE',     np.int16),
-                           ('THAR',    np.int16),
-                           ('EXPTYPE', np.str, 30),
-                           ('MEAN',    np.float32, (nquad,nchips)),
-                           ('SIG',     np.float32, (nquad,nchips))])
-
-            outstr = np.zeros(len(alldark['NAME']), dtype=dt)
-
-            outstr['NAME'] =    alldark['NAME']
-            outstr['MJD'] =     alldark['MJD']
-            outstr['JD'] =      alldark['JD']
-            outstr['NFRAMES'] = alldark['NFRAMES']
-            outstr['NREAD'] =   alldark['NREAD']
-            outstr['EXPTIME'] = alldark['EXPTIME']
-            outstr['QRTZ'] =    alldark['QRTZ']
-            outstr['UNE'] =     alldark['UNE']
-            outstr['THAR'] =    alldark['THAR']
-            outstr['EXPTYPE'] = alldark['EXPTYPE']
-            outstr['MEAN'] =    alldark['MEAN']
-            outstr['SIG'] =     alldark['SIG']
-
-            files.sort()
-            files = np.array(files)
-            nfiles = len(files)
-
-            # Loop over SDSS-V files and add them to output structure
-            for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
-                data = fits.open(files[i])[1].data
-                outstr = np.concatenate([outstr, data])
-
-            hdulist = fits.open(outfile)
-            hdu1 = fits.table_to_hdu(Table(outstr))
-            hdulist.append(hdu1)
-            hdulist.writeto(outfile, overwrite=True)
-            hdulist.close()
-            print("----> monitor: Finished adding QAdarkflat info to " + os.path.basename(outfile))
-
-        ###########################################################################################
-        # MAKE MASTER EXP FILE
-        # Get long term trends from dome flats
-        # Append together the individual exp files
-
-        files = glob.glob(specdir5 + '/exposures/' + instrument + '/*/*exp.fits')
-        if len(files) < 1:
-            print("----> monitor: No exp files!")
-        else:
-            outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
-            print("----> monitor: Making " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            dt = np.dtype([('MJD',       np.int32),
-                           ('DATEOBS',   np.str, 30),
-                           ('JD',        np.float64),
-                           ('NUM',       np.int32),
-                           ('NFRAMES',   np.int16),
-                           ('IMAGETYP',  np.str, 30),
-                           ('PLATEID',   np.int16),
-                           ('CARTID',    np.int16),
-                           ('RA',        np.float64),
-                           ('DEC',       np.float64),
-                           ('SEEING',    np.float32),
-                           ('ALT',       np.float32),
-                           ('QRTZ',      np.int16),
-                           ('THAR',      np.int16),
-                           ('UNE',       np.int16),
-                           ('FFS',       np.str, 30),
-                           ('LN2LEVEL',  np.float32),
-                           ('DITHPIX',   np.float32),
-                           ('TRACEDIST', np.float32),
-                           ('MED',       np.float32, (nchips,300))])
-
-            outstr = np.zeros(len(allexp['MJD']), dtype=dt)
-
-            outstr['MJD'] =       allexp['MJD']
-            outstr['DATEOBS'] =   allexp['DATEOBS']
-            outstr['JD'] =        allexp['JD']
-            outstr['NUM'] =       allexp['NUM']
-            outstr['NFRAMES'] =   allexp['NFRAMES']
-            outstr['IMAGETYP'] =  allexp['IMAGETYP']
-            outstr['PLATEID'] =   allexp['PLATEID']
-            outstr['CARTID'] =    allexp['CARTID']
-            outstr['RA'] =        allexp['RA']
-            outstr['DEC'] =       allexp['DEC']
-            outstr['SEEING'] =    allexp['SEEING']
-            outstr['ALT'] =       allexp['ALT']
-            outstr['QRTZ'] =      allexp['QRTZ']
-            outstr['THAR'] =      allexp['THAR']
-            outstr['UNE'] =       allexp['UNE']
-            outstr['FFS'] =       allexp['FFS']
-            outstr['LN2LEVEL'] =  allexp['LN2LEVEL']
-            outstr['DITHPIX'] =   allexp['DITHPIX']
-            outstr['TRACEDIST'] = allexp['TRACEDIST']
-            outstr['MED'] =       allexp['MED']
-
-            files.sort()
-            files = np.array(files)
-            nfiles=len(files)
-
-            # Loop over SDSS-V files and add them to output structure
-            for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
-                data = fits.open(files[i])[1].data
-                outstr = np.concatenate([outstr, data])
-
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
-
-        ###########################################################################################
-        # MAKE MASTER apPlateSum FILE
-        # Get zeropoint info from apPlateSum files
-        # Append together the individual apPlateSum files
-
-        files = glob.glob(specdir5 + '/visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
-        if len(files) < 1:
-            print("----> monitor: No apPlateSum files!")
-        else:
-            outfile = specdir5 + 'monitor/' + instrument + 'Sci.fits'
-            print("----> monitor: Making " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            dt = np.dtype([('TELESCOPE', np.str, 6),
-                           ('PLATE',     np.int32),
-                           ('NREADS',    np.int32),
-                           ('DATEOBS',   np.str, 30),
-                           ('EXPTIME',   np.int32),
-                           ('SECZ',      np.float64),
-                           ('HA',        np.float64),
-                           ('DESIGN_HA', np.float64, 3),
-                           ('SEEING',    np.float64),
-                           ('FWHM',      np.float64),
-                           ('GDRMS',     np.float64),
-                           ('CART',      np.int32),
-                           ('PLUGID',    np.str, 30),
-                           ('DITHER',    np.float64),
-                           ('MJD',       np.int32),
-                           ('IM',        np.int32),
-                           ('ZERO',      np.float64),
-                           ('ZERORMS',   np.float64),
-                           ('ZERONORM',  np.float64),
-                           ('SKY',       np.float64, 3),
-                           ('SN',        np.float64, 3),
-                           ('SNC',       np.float64, 3),
-                           #('SNT',       np.float64, 3),
-                           ('ALTSN',     np.float64, 3),
-                           ('NSN',       np.int32),
-                           ('SNRATIO',   np.float64),
-                           ('MOONDIST',  np.float64),
-                           ('MOONPHASE', np.float64),
-                           ('TELLFIT',   np.float64, (3,6))])
-
-            outstr = np.zeros(len(allsci['PLATE']), dtype=dt)
-
-            outstr['TELESCOPE'] = allsci['TELESCOPE']
-            outstr['PLATE'] =     allsci['PLATE']
-            outstr['NREADS'] =    allsci['NREADS']
-            outstr['DATEOBS'] =   allsci['DATEOBS']
-            #outstr['EXPTIME'] =   allsci['EXPTIME']
-            outstr['SECZ'] =      allsci['SECZ']
-            outstr['HA'] =        allsci['HA']
-            outstr['DESIGN_HA'] = allsci['DESIGN_HA']
-            outstr['SEEING'] =    allsci['SEEING']
-            outstr['FWHM'] =      allsci['FWHM']
-            outstr['GDRMS'] =     allsci['GDRMS']
-            outstr['CART'] =      allsci['CART']
-            outstr['PLUGID'] =    allsci['PLUGID']
-            outstr['DITHER'] =    allsci['DITHER']
-            outstr['MJD'] =       allsci['MJD']
-            outstr['IM'] =        allsci['IM']
-            outstr['ZERO'] =      allsci['ZERO']
-            outstr['ZERORMS'] =   allsci['ZERORMS']
-            outstr['ZERONORM'] =  allsci['ZERONORM']
-            outstr['SKY'] =       allsci['SKY']
-            outstr['SN'] =        allsci['SN']
-            outstr['SNC'] =       allsci['SNC']
-            outstr['ALTSN'] =     allsci['ALTSN']
-            outstr['NSN'] =       allsci['NSN']
-            outstr['SNRATIO'] =   allsci['SNRATIO']
-            outstr['MOONDIST'] =  allsci['MOONDIST']
-            outstr['MOONPHASE'] = allsci['MOONPHASE']
-            outstr['TELLFIT'] =   allsci['TELLFIT']
-
-            files.sort()
-            files = np.array(files)
-            nfiles=len(files)
-
-            # Loop over SDSS-V files and add them to output structure
-            for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
-                data = fits.open(files[i])[1].data
-                outstr = np.concatenate([outstr, data])
-
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER TRACE FILE
@@ -1345,12 +1105,45 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             plt.savefig(plotfile)
             plt.close('all')
 
-
-
     print("----> monitor done")
 
 
+''' GETQACALSTRUCT: put SDSS-IV and SDSS-V QAcal files in structure '''
+def getQAcalStruct(data=None):
 
+    dt = np.dtype([('NAME',    np.str,30),
+                   ('MJD',     np.str,30),
+                   ('JD',      np.float64),
+                   ('NFRAMES', np.int16),
+                   ('NREAD',   np.int16),
+                   ('EXPTIME', np.float32),
+                   ('QRTZ',    np.int16),
+                   ('UNE',     np.int16),
+                   ('THAR',    np.int16),
+                   ('FLUX',    np.float32,(nchips,300)),
+                   ('GAUSS',   np.float32,(nlines,nchips,nfibers,4)),
+                   ('WAVE',    np.float64,(nlines,nchips,nfibers)),
+                   ('FIBERS',  np.int16,(nfibers)),
+                   ('LINES',   np.float32,(nlines,nchips))])
+
+    outstr = np.zeros(len(data), dtype=dt)
+
+    outstr['NAME'] =    data['NAME']
+    outstr['MJD'] =     data['MJD']
+    outstr['JD'] =      data['JD']
+    outstr['NFRAMES'] = data['NFRAMES']
+    outstr['NREAD'] =   data['NREAD']
+    outstr['EXPTIME'] = data['EXPTIME']
+    outstr['QRTZ'] =    data['QRTZ']
+    outstr['UNE'] =     data['UNE']
+    outstr['THAR'] =    data['THAR']
+    outstr['FLUX'] =    data['FLUX']
+    outstr['GAUSS'] =   data['GAUSS']
+    outstr['WAVE'] =    data['WAVE']
+    outstr['FIBERS'] =  data['FIBERS']
+    outstr['LINES'] =   data['LINES']
+
+    return outstr
 
 
 
