@@ -53,28 +53,27 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     nquad = 4
 
     # Establish  directories... hardcode sdss4/apogee2 for now
+    specdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
+    sdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/' + instrument + '/'
 
     specdir5 = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
-    specdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
     sdir5 = specdir5 + 'monitor/' + instrument + '/'
-    sdir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/' + instrument + '/'
-    mdir = 'monitor/' + instrument + '/'
 
-    if makesumfiles is False:
-        # NOTE: we probably don't want the below files in the redux/daily directory.
-        allcal =  fits.open(specdir + instrument + 'Cal.fits')[1].data
-        alldark = fits.open(specdir + instrument + 'Cal.fits')[2].data
-        allexp =  fits.open(specdir + instrument + 'Exp.fits')[1].data
-        allsci =  fits.open(specdir + instrument + 'Sci.fits')[1].data
-        allepsf = fits.open(specdir + instrument + 'Trace.fits')[1].data
-    else:
+    # Read in the SDSS-IV/APOGEE2 summary files
+    allcal =  fits.open(specdir4 + instrument + 'Cal.fits')[1].data
+    alldark = fits.open(specdir4 + instrument + 'Cal.fits')[2].data
+    allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
+    allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+    allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
+
+    if makesumfiles is True:
         ###########################################################################################
         # MAKE MASTER QACAL FILE
         outfile = specdir5 + 'monitor/' + instrument + 'Cal.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
         # Append together the individual QAcal files
-        files = glob.glob(specdir + '/cal/' + instrument + '/*/*QAcal*.fits')
+        files = glob.glob(specdir5 + '/cal/' + instrument + '/qa/*/*QAcal*.fits')
         if len(files) < 1:
             print("----> monitor: No QAcal files!")
         else:
@@ -84,6 +83,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
+                import pdb; pdb.set_trace()
 
                 # Make output structure and write to fits file
                 dt = np.dtype([('NAME',    np.str,30),
@@ -130,7 +130,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
 
         # Append together the individual QAdarkflat files
-        files = glob.glob(specdir + '/cal/' + instrument + '/*/*QAdarkflat*.fits')
+        files = glob.glob(specdir4 + '/cal/' + instrument + '/*/*QAdarkflat*.fits')
         if len(files) < 1:
             print("----> monitor: No QAdarkflat files!")
         else:
@@ -188,7 +188,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         # Get long term trends from dome flats
         # Append together the individual exp files
-        files = glob.glob(specdir + '/exposures/' + instrument + '/*/*exp.fits')
+        files = glob.glob(specdir4 + '/exposures/' + instrument + '/*/*exp.fits')
         if len(files) < 1:
             print("----> monitor: No exp files!")
         else:
@@ -257,7 +257,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + os.path.basename(outfile))
 
         # Get zeropoint info from apPlateSum files
-        files = glob.glob(specdir + '/visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
+        files = glob.glob(specdir4 + '/visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
         if len(files) < 1:
             print("----> monitor: No apPlateSum files!")
         else:
@@ -343,7 +343,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Making " + os.path.basename(outfile))
 
         # Append together the individual QAcal files
-        files = glob.glob(specdir + '/cal/psf/apEPSF-b-*.fits')
+        files = glob.glob(specdir4 + '/cal/psf/apEPSF-b-*.fits')
         if len(files) < 1:
             print("----> monitor: No apEPSF-b files!")
         else:
@@ -576,12 +576,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 #    fhtml.write('<H1>' + tit + '</H1>\n')
 #    fhtml.write('<TABLE BORDER=2  CLASS="sortable">\n')
 #    fhtml.write('<TR bgcolor="#DCDCDC"> <TH>MJD <TH>DATE <TH>FIELD <TH>PLATE <TH>GREEN CHIP PLOT\n')
-#    pfiles0 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/585*/plots/apFlux-b-*jpg'))
-#    pfiles1 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/586*/plots/apFlux-b-*jpg'))
-#    pfiles2 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/587*/plots/apFlux-b-*jpg'))
-#    pfiles3 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/588*/plots/apFlux-b-*jpg'))
-#    pfiles4 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/589*/plots/apFlux-b-*jpg'))
-#    pfiles5 = np.array(glob.glob(specdir + 'visit/' + telescope + '/*/*/584*/plots/apFlux-b-*jpg'))
+#    pfiles0 = np.array(glob.glob(specdir4 + 'visit/' + telescope + '/*/*/585*/plots/apFlux-b-*jpg'))
+#    pfiles1 = np.array(glob.glob(specdir4 + 'visit/' + telescope + '/*/*/586*/plots/apFlux-b-*jpg'))
+#    pfiles2 = np.array(glob.glob(specdir4 + 'visit/' + telescope + '/*/*/587*/plots/apFlux-b-*jpg'))
+#    pfiles3 = np.array(glob.glob(specdir4 + 'visit/' + telescope + '/*/*/588*/plots/apFlux-b-*jpg'))
+#    pfiles4 = np.array(glob.glob(specdir4 + 'visit/' + telescope + '/*/*/589*/plots/apFlux-b-*jpg'))
+#    pfiles5 = np.array(glob.glob(specdir4 + 'visit/' + telescope + '/*/*/584*/plots/apFlux-b-*jpg'))
 #    pfiles = np.concatenate([pfiles0, pfiles1, pfiles2, pfiles3, pfiles4, pfiles5])
 #    for i in range(len(pfiles)):
 #        tmp = pfiles[i].split(telescope + '/')[1].split('/')
