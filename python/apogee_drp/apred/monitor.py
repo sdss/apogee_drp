@@ -94,22 +94,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                            ('FIBERS',  np.int16,(nfibers)),
                            ('LINES',   np.float32,(nlines,nchips))])
 
-            struct0 = np.zeros(len(allcal['NAME']), dtype=dt)
+            outstr = np.zeros(len(allcal['NAME']), dtype=dt)
 
-            struct0['NAME'] =    allcal['NAME']
-            struct0['MJD'] =     allcal['MJD']
-            struct0['JD'] =      allcal['JD']
-            struct0['NFRAMES'] = allcal['NFRAMES']
-            struct0['NREAD'] =   allcal['NREAD']
-            struct0['EXPTIME'] = allcal['EXPTIME']
-            struct0['QRTZ'] =    allcal['QRTZ']
-            struct0['UNE'] =     allcal['UNE']
-            struct0['THAR'] =    allcal['THAR']
-            struct0['FLUX'] =    allcal['FLUX']
-            struct0['GAUSS'] =   allcal['GAUSS']
-            struct0['WAVE'] =    allcal['WAVE']
-            struct0['FIBERS'] =  allcal['FIBERS']
-            struct0['LINES'] =   allcal['LINES']
+            outstr['NAME'] =    allcal['NAME']
+            outstr['MJD'] =     allcal['MJD']
+            outstr['JD'] =      allcal['JD']
+            outstr['NFRAMES'] = allcal['NFRAMES']
+            outstr['NREAD'] =   allcal['NREAD']
+            outstr['EXPTIME'] = allcal['EXPTIME']
+            outstr['QRTZ'] =    allcal['QRTZ']
+            outstr['UNE'] =     allcal['UNE']
+            outstr['THAR'] =    allcal['THAR']
+            outstr['FLUX'] =    allcal['FLUX']
+            outstr['GAUSS'] =   allcal['GAUSS']
+            outstr['WAVE'] =    allcal['WAVE']
+            outstr['FIBERS'] =  allcal['FIBERS']
+            outstr['LINES'] =   allcal['LINES']
 
             files.sort()
             files = np.array(files)
@@ -119,13 +119,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
-                struct1 = np.zeros(len(a['NAME']), dtype=dt)
-                if i == 0:
-                    outstr = np.concatenate([struct0, struct1])
-                else:
-                    outstr = np.concatenate([outstr, struct1])
+                struct = np.zeros(len(a['NAME']), dtype=dt)
+                outstr = np.concatenate([outstr, struct])
 
-            import pdb; pdb.set_trace()
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
 
@@ -153,20 +149,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                            ('MEAN',    np.float32, (nquad,nchips)),
                            ('SIG',     np.float32, (nquad,nchips))])
 
-            struct0 = np.zeros(len(alldark['NAME']), dtype=dt)
+            outstr = np.zeros(len(alldark['NAME']), dtype=dt)
 
-            struct0['NAME'] =    alldark['NAME']
-            struct0['MJD'] =     alldark['MJD']
-            struct0['JD'] =      alldark['JD']
-            struct0['NFRAMES'] = alldark['NFRAMES']
-            struct0['NREAD'] =   alldark['NREAD']
-            struct0['EXPTIME'] = alldark['EXPTIME']
-            struct0['QRTZ'] =    alldark['QRTZ']
-            struct0['UNE'] =     alldark['UNE']
-            struct0['THAR'] =    alldark['THAR']
-            struct0['EXPTYPE'] = alldark['EXPTYPE']
-            struct0['MEAN'] =    alldark['MEAN']
-            struct0['SIG'] =     alldark['SIG']
+            outstr['NAME'] =    alldark['NAME']
+            outstr['MJD'] =     alldark['MJD']
+            outstr['JD'] =      alldark['JD']
+            outstr['NFRAMES'] = alldark['NFRAMES']
+            outstr['NREAD'] =   alldark['NREAD']
+            outstr['EXPTIME'] = alldark['EXPTIME']
+            outstr['QRTZ'] =    alldark['QRTZ']
+            outstr['UNE'] =     alldark['UNE']
+            outstr['THAR'] =    alldark['THAR']
+            outstr['EXPTYPE'] = alldark['EXPTYPE']
+            outstr['MEAN'] =    alldark['MEAN']
+            outstr['SIG'] =     alldark['SIG']
 
             files.sort()
             files = np.array(files)
@@ -176,11 +172,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
-                struct1 = np.zeros(len(a['NAME']), dtype=dt)
-                if i == 0:
-                    outstr = np.concatenate([struct0, struct1])
-                else:
-                    outstr = np.concatenate([outstr, struct1])
+                struct = np.zeros(len(a['NAME']), dtype=dt)
+                outstr = np.concatenate([outstr, struct])
 
             hdulist = fits.open(outfile)
             hdu1 = fits.table_to_hdu(Table(outstr))
@@ -223,28 +216,28 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                            ('TRACEDIST', np.float32),
                            ('MED',       np.float32, (nchips,300))])
 
-            struct0 = np.zeros(len(allexp['MJD']), dtype=dt)
+            outstr = np.zeros(len(allexp['MJD']), dtype=dt)
 
-            struct0['MJD'] =       allexp['MJD']
-            struct0['DATEOBS'] =   allexp['DATEOBS']
-            struct0['JD'] =        allexp['JD']
-            struct0['NUM'] =       allexp['NUM']
-            struct0['NFRAMES'] =   allexp['NFRAMES']
-            struct0['IMAGETYP'] =  allexp['IMAGETYP']
-            struct0['PLATEID'] =   allexp['PLATEID']
-            struct0['CARTID'] =    allexp['CARTID']
-            struct0['RA'] =        allexp['RA']
-            struct0['DEC'] =       allexp['DEC']
-            struct0['SEEING'] =    allexp['SEEING']
-            struct0['ALT'] =       allexp['ALT']
-            struct0['QRTZ'] =      allexp['QRTZ']
-            struct0['THAR'] =      allexp['THAR']
-            struct0['UNE'] =       allexp['UNE']
-            struct0['FFS'] =       allexp['FFS']
-            struct0['LN2LEVEL'] =  allexp['LN2LEVEL']
-            struct0['DITHPIX'] =   allexp['DITHPIX']
-            struct0['TRACEDIST'] = allexp['TRACEDIST']
-            struct0['MED'] =       allexp['MED']
+            outstr['MJD'] =       allexp['MJD']
+            outstr['DATEOBS'] =   allexp['DATEOBS']
+            outstr['JD'] =        allexp['JD']
+            outstr['NUM'] =       allexp['NUM']
+            outstr['NFRAMES'] =   allexp['NFRAMES']
+            outstr['IMAGETYP'] =  allexp['IMAGETYP']
+            outstr['PLATEID'] =   allexp['PLATEID']
+            outstr['CARTID'] =    allexp['CARTID']
+            outstr['RA'] =        allexp['RA']
+            outstr['DEC'] =       allexp['DEC']
+            outstr['SEEING'] =    allexp['SEEING']
+            outstr['ALT'] =       allexp['ALT']
+            outstr['QRTZ'] =      allexp['QRTZ']
+            outstr['THAR'] =      allexp['THAR']
+            outstr['UNE'] =       allexp['UNE']
+            outstr['FFS'] =       allexp['FFS']
+            outstr['LN2LEVEL'] =  allexp['LN2LEVEL']
+            outstr['DITHPIX'] =   allexp['DITHPIX']
+            outstr['TRACEDIST'] = allexp['TRACEDIST']
+            outstr['MED'] =       allexp['MED']
 
             files.sort()
             files = np.array(files)
@@ -254,11 +247,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
-                struct1 = np.zeros(len(a['MJD']), dtype=dt)
-                if i == 0:
-                    outstr = np.concatenate([struct0, struct1])
-                else:
-                    outstr = np.concatenate([outstr, struct1])
+                struct = np.zeros(len(a['MJD']), dtype=dt)
+                outstr = np.concatenate([outstr, struct])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
@@ -306,36 +296,36 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                            ('MOONPHASE', np.float64),
                            ('TELLFIT',   np.float64, (3,6))])
 
-            struct0 = np.zeros(len(allsci['PLATE']), dtype=dt)
+            outstr = np.zeros(len(allsci['PLATE']), dtype=dt)
 
-            struct0['TELESCOPE'] = allsci['TELESCOPE']
-            struct0['PLATE'] =     allsci['PLATE']
-            struct0['NREADS'] =    allsci['NREADS']
-            struct0['DATEOBS'] =   allsci['DATEOBS']
-            #struct0['EXPTIME'] =   allsci['EXPTIME']
-            struct0['SECZ'] =      allsci['SECZ']
-            struct0['HA'] =        allsci['HA']
-            struct0['DESIGN_HA'] = allsci['DESIGN_HA']
-            struct0['SEEING'] =    allsci['SEEING']
-            struct0['FWHM'] =      allsci['FWHM']
-            struct0['GDRMS'] =     allsci['GDRMS']
-            struct0['CART'] =      allsci['CART']
-            struct0['PLUGID'] =    allsci['PLUGID']
-            struct0['DITHER'] =    allsci['DITHER']
-            struct0['MJD'] =       allsci['MJD']
-            struct0['IM'] =        allsci['IM']
-            struct0['ZERO'] =      allsci['ZERO']
-            struct0['ZERORMS'] =   allsci['ZERORMS']
-            struct0['ZERONORM'] =  allsci['ZERONORM']
-            struct0['SKY'] =       allsci['SKY']
-            struct0['SN'] =        allsci['SN']
-            struct0['SNC'] =       allsci['SNC']
-            struct0['ALTSN'] =     allsci['ALTSN']
-            struct0['NSN'] =       allsci['NSN']
-            struct0['SNRATIO'] =   allsci['SNRATIO']
-            struct0['MOONDIST'] =  allsci['MOONDIST']
-            struct0['MOONPHASE'] = allsci['MOONPHASE']
-            struct0['TELLFIT'] =   allsci['TELLFIT']
+            outstr['TELESCOPE'] = allsci['TELESCOPE']
+            outstr['PLATE'] =     allsci['PLATE']
+            outstr['NREADS'] =    allsci['NREADS']
+            outstr['DATEOBS'] =   allsci['DATEOBS']
+            #outstr['EXPTIME'] =   allsci['EXPTIME']
+            outstr['SECZ'] =      allsci['SECZ']
+            outstr['HA'] =        allsci['HA']
+            outstr['DESIGN_HA'] = allsci['DESIGN_HA']
+            outstr['SEEING'] =    allsci['SEEING']
+            outstr['FWHM'] =      allsci['FWHM']
+            outstr['GDRMS'] =     allsci['GDRMS']
+            outstr['CART'] =      allsci['CART']
+            outstr['PLUGID'] =    allsci['PLUGID']
+            outstr['DITHER'] =    allsci['DITHER']
+            outstr['MJD'] =       allsci['MJD']
+            outstr['IM'] =        allsci['IM']
+            outstr['ZERO'] =      allsci['ZERO']
+            outstr['ZERORMS'] =   allsci['ZERORMS']
+            outstr['ZERONORM'] =  allsci['ZERONORM']
+            outstr['SKY'] =       allsci['SKY']
+            outstr['SN'] =        allsci['SN']
+            outstr['SNC'] =       allsci['SNC']
+            outstr['ALTSN'] =     allsci['ALTSN']
+            outstr['NSN'] =       allsci['NSN']
+            outstr['SNRATIO'] =   allsci['SNRATIO']
+            outstr['MOONDIST'] =  allsci['MOONDIST']
+            outstr['MOONPHASE'] = allsci['MOONPHASE']
+            outstr['TELLFIT'] =   allsci['TELLFIT']
 
             files.sort()
             files = np.array(files)
@@ -345,11 +335,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
-                struct1 = np.zeros(len(a['MJD']), dtype=dt)
-                if i == 0:
-                    outstr = np.concatenate([struct0, struct1])
-                else:
-                    outstr = np.concatenate([outstr, struct1])
+                struct = np.zeros(len(a['MJD']), dtype=dt)
+                outstr = np.concatenate([outstr, struct])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
@@ -371,12 +358,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 #                           ('CENT',     np.float64),
 #                           ('LN2LEVEL', np.int32)])
 
-#            struct0 = np.zeros(len(allepsf['NUM']), dtype=dt)
+#            outstr = np.zeros(len(allepsf['NUM']), dtype=dt)
 
-#            struct0['NUM'] =      allepsf['NUM']
-#            struct0['MJD'] =      allepsf['MJD']
-#            struct0['CENT'] =     allepsf['CENT']
-#            struct0['LN2LEVEL'] = allepsf['LN2LEVEL']
+#            outstr['NUM'] =      allepsf['NUM']
+#            outstr['MJD'] =      allepsf['MJD']
+#            outstr['CENT'] =     allepsf['CENT']
+#            outstr['LN2LEVEL'] = allepsf['LN2LEVEL']
 
 #            files.sort()
 #            files = np.array(files)
@@ -398,7 +385,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 #                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
 #                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
 #                            break
-#                if i == 0: outstr = np.concatenate([struct0, struct1])
+#                if i == 0: outstr = np.concatenate([outstr, struct1])
 #                else:      outstr = np.concatenate([outstr, struct1])
 
 #            Table(outstr).write(outfile, overwrite=True)
