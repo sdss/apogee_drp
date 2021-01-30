@@ -305,7 +305,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             struct0['PLATE'] =     allsci['PLATE']
             struct0['NREADS'] =    allsci['NREADS']
             struct0['DATEOBS'] =   allsci['DATEOBS']
-            struct0['EXPTIME'] =   allsci['EXPTIME']
+            #struct0['EXPTIME'] =   allsci['EXPTIME']
             struct0['SECZ'] =      allsci['SECZ']
             struct0['HA'] =        allsci['HA']
             struct0['DESIGN_HA'] = allsci['DESIGN_HA']
