@@ -69,14 +69,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     if makesumfiles is True:
         ###########################################################################################
         # MAKE MASTER QACAL FILE
-        outfile = specdir5 + 'monitor/' + instrument + 'Cal.fits'
-        print("----> monitor: Making " + os.path.basename(outfile))
-
         # Append together the individual QAcal files
+
         files = glob.glob(specdir5 + '/cal/' + instrument + '/qa/*/*QAcal*.fits')
         if len(files) < 1:
             print("----> monitor: No QAcal files!")
         else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Cal.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
+
             # Make output structure and fill with APOGEE2 summary file values
             dt = np.dtype([('NAME',    np.str,30),
                            ('MJD',     np.str,30),
@@ -95,20 +96,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             struct0 = np.zeros(len(allcal['NAME']), dtype=dt)
 
-            struct0['NAME'] = allcal['NAME']
-            struct0['MJD'] = allcal['MJD']
-            struct0['JD'] = allcal['JD']
+            struct0['NAME'] =    allcal['NAME']
+            struct0['MJD'] =     allcal['MJD']
+            struct0['JD'] =      allcal['JD']
             struct0['NFRAMES'] = allcal['NFRAMES']
-            struct0['NREAD'] = allcal['NREAD']
+            struct0['NREAD'] =   allcal['NREAD']
             struct0['EXPTIME'] = allcal['EXPTIME']
-            struct0['QRTZ'] = allcal['QRTZ']
-            struct0['UNE'] = allcal['UNE']
-            struct0['THAR'] = allcal['THAR']
-            struct0['FLUX'] = allcal['FLUX']
-            struct0['GAUSS'] = allcal['GAUSS']
-            struct0['WAVE'] = allcal['WAVE']
-            struct0['FIBERS'] = allcal['FIBERS']
-            struct0['LINES'] = allcal['LINES']
+            struct0['QRTZ'] =    allcal['QRTZ']
+            struct0['UNE'] =     allcal['UNE']
+            struct0['THAR'] =    allcal['THAR']
+            struct0['FLUX'] =    allcal['FLUX']
+            struct0['GAUSS'] =   allcal['GAUSS']
+            struct0['WAVE'] =    allcal['WAVE']
+            struct0['FIBERS'] =  allcal['FIBERS']
+            struct0['LINES'] =   allcal['LINES']
 
             files.sort()
             files = np.array(files)
@@ -119,25 +120,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['NAME']), dtype=dt)
-
-                if i == 0:
-                    outstr = np.concatenate([struct0, struct1])
-                else:
-                    outstr = np.concatenate([outstr, struct1])
-                import pdb; pdb.set_trace()
+                if i == 0: outstr = np.concatenate([struct0, struct1])
+                else:      outstr = np.concatenate([outstr, struct1])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
 
         ###########################################################################################
         # APPEND QADARKFLAT INFO TO MASTER QACAL FILE
-        print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
-
         # Append together the individual QAdarkflat files
-        files = glob.glob(specdir5 + '/cal/' + instrument + '/qa/*/*QAcal*.fits')
+
+        files = glob.glob(specdir5 + '/cal/' + instrument + '/qa/*/*QAdarkflat*.fits')
         if len(files) < 1:
             print("----> monitor: No QAdarkflat files!")
         else:
+            print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
+
             # Make output structure and fill with APOGEE2 summary file values
             dt = np.dtype([('NAME',    np.str, 30),
                            ('MJD',     np.str, 30),
@@ -154,18 +152,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             struct0 = np.zeros(len(alldark['NAME']), dtype=dt)
 
-            struct['NAME'] = a['NAME']
-            struct['MJD'] = a['MJD']
-            struct['JD'] = a['JD']
-            struct['NFRAMES'] = a['NFRAMES']
-            struct['NREAD'] = a['NREAD']
-            struct['EXPTIME'] = a['EXPTIME']
-            struct['QRTZ'] = a['QRTZ']
-            struct['UNE'] = a['UNE']
-            struct['THAR'] = a['THAR']
-            struct['EXPTYPE'] = a['EXPTYPE']
-            struct['MEAN'] = a['MEAN']
-            struct['SIG'] = a['SIG']
+            struct0['NAME'] =    alldark['NAME']
+            struct0['MJD'] =     alldark['MJD']
+            struct0['JD'] =      alldark['JD']
+            struct0['NFRAMES'] = alldark['NFRAMES']
+            struct0['NREAD'] =   alldark['NREAD']
+            struct0['EXPTIME'] = alldark['EXPTIME']
+            struct0['QRTZ'] =    alldark['QRTZ']
+            struct0['UNE'] =     alldark['UNE']
+            struct0['THAR'] =    alldark['THAR']
+            struct0['EXPTYPE'] = alldark['EXPTYPE']
+            struct0['MEAN'] =    alldark['MEAN']
+            struct0['SIG'] =     alldark['SIG']
 
             files.sort()
             files = np.array(files)
@@ -176,15 +174,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['NAME']), dtype=dt)
-
-                if i == 0:
-                    outstr = np.concatenate([struct0, struct1])
-                else:
-                    outstr = np.concatenate([outstr, struct1])
-                import pdb; pdb.set_trace()
+                if i == 0: outstr = np.concatenate([struct0, struct1])
+                else:      outstr = np.concatenate([outstr, struct1])
 
             hdulist = fits.open(outfile)
-            hdu1 = fits.table_to_hdu(Table(struct))
+            hdu1 = fits.table_to_hdu(Table(outstr))
             hdulist.append(hdu1)
             hdulist.writeto(outfile, overwrite=True)
             hdulist.close()
@@ -192,197 +186,221 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         ###########################################################################################
         # MAKE MASTER EXP FILE
-        outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
-        print("----> monitor: Making " + os.path.basename(outfile))
-
         # Get long term trends from dome flats
         # Append together the individual exp files
-        files = glob.glob(specdir4 + '/exposures/' + instrument + '/*/*exp.fits')
+
+        files = glob.glob(specdir5 + '/exposures/' + instrument + '/*/*exp.fits')
         if len(files) < 1:
             print("----> monitor: No exp files!")
         else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+            dt = np.dtype([('MJD',       np.int32),
+                           ('DATEOBS',   np.str, 30),
+                           ('JD',        np.float64),
+                           ('NUM',       np.int32),
+                           ('NFRAMES',   np.int16),
+                           ('IMAGETYP',  np.str, 30),
+                           ('PLATEID',   np.int16),
+                           ('CARTID',    np.int16),
+                           ('RA',        np.float64),
+                           ('DEC',       np.float64),
+                           ('SEEING',    np.float32),
+                           ('ALT',       np.float32),
+                           ('QRTZ',      np.int16),
+                           ('THAR',      np.int16),
+                           ('UNE',       np.int16),
+                           ('FFS',       np.str, 30),
+                           ('LN2LEVEL',  np.float32),
+                           ('DITHPIX',   np.float32),
+                           ('TRACEDIST', np.float32),
+                           ('MED',       np.float32, (nchips,300))])
+
+            struct0 = np.zeros(len(allexp['MJD']), dtype=dt)
+
+            struct0['MJD'] =       allexp['MJD']
+            struct0['DATEOBS'] =   allexp['DATEOBS']
+            struct0['JD'] =        allexp['JD']
+            struct0['NUM'] =       allexp['NUM']
+            struct0['NFRAMES'] =   allexp['NFRAMES']
+            struct0['IMAGETYPE'] = allexp['IMAGETYPE']
+            struct0['PLATEID'] =   allexp['PLATEID']
+            struct0['CARTID'] =    allexp['CARTID']
+            struct0['RA'] =        allexp['RA']
+            struct0['DEC'] =       allexp['DEC']
+            struct0['SEEING'] =    allexp['SEEING']
+            struct0['ALT'] =       allexp['ALT']
+            struct0['QRTZ'] =      allexp['QRTZ']
+            struct0['THAR'] =      allexp['THAR']
+            struct0['UNE'] =       allexp['UNE']
+            struct0['FFS'] =       allexp['FFS']
+            struct0['LN2LEVEL'] =  allexp['LN2LEVEL']
+            struct0['DITHPIX'] =   allexp['DITHPIX']
+            struct0['TRACEDIST'] = allexp['TRACEDIST']
+            struct0['MED'] =       allexp['MED']
+
             files.sort()
             files = np.array(files)
             nfiles=len(files)
+
+            # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
+                struct1 = np.zeros(len(a['MJD']), dtype=dt)
+                if i == 0: outstr = np.concatenate([struct0, struct1])
+                else:      outstr = np.concatenate([outstr, struct1])
 
-                # Make output structure.
-                dt = np.dtype([('MJD',       np.int32),
-                               ('DATEOBS',   np.str, 23),
-                               ('JD',        np.float64),
-                               ('NUM',       np.int32),
-                               ('NFRAMES',   np.int32),
-                               ('IMAGETYPE', np.str, 10),
-                               ('PLATEID',   np.int32),
-                               ('CARTID',    np.int32),
-                               ('RA',        np.float64),
-                               ('DEC',       np.float64),
-                               ('SEEING',    np.float64),
-                               ('ALT',       np.float64),
-                               ('QRTZ',      np.int32),
-                               ('THAR',      np.int32),
-                               ('UNE',       np.int32),
-                               ('FFS',       np.str, 15),
-                               ('LN2LEVEL',  np.float64),
-                               ('DITHPIX',   np.float64),
-                               ('TRACEDIST', np.float64),
-                               ('MED',       np.float64,(300,nchips))])
-                struct = np.zeros(len(a['MJD']), dtype=dt)
-
-                struct['MJD'] = a['MJD']
-                struct['DATEOBS'] = a['DATEOBS']
-                struct['JD'] = a['JD']
-                struct['NUM'] = a['NUM']
-                struct['NFRAMES'] = a['NFRAMES']
-                struct['IMAGETYPE'] = a['IMAGETYPE']
-                struct['PLATEID'] = a['PLATEID']
-                struct['CARTID'] = a['CARTID']
-                struct['RA'] = a['RA']
-                struct['DEC'] = a['DEC']
-                struct['SEEING'] = a['SEEING']
-                struct['ALT'] = a['ALT']
-                struct['QRTZ'] = a['QRTZ']
-                struct['THAR'] = a['THAR']
-                struct['UNE'] = a['UNE']
-                struct['FFS'] = a['FFS']
-                struct['LN2LEVEL'] = a['LN2LEVEL']
-                struct['DITHPIX'] = a['DITHPIX']
-                struct['TRACEDIST'] = a['TRACEDIST']
-                struct['MED'] = a['MED']
-
-                if i == 0:
-                    allexp = struct 
-                else:
-                    allexp = np.concatenate([allexp, struct])
-
-            Table(allcal).write(outfile, overwrite=True)
+            Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
-        outfile = specdir5 + 'monitor/' + instrument + 'Sci.fits'
-        print("----> monitor: Making " + os.path.basename(outfile))
-
         # Get zeropoint info from apPlateSum files
-        files = glob.glob(specdir4 + '/visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
+        # Append together the individual apPlateSum files
+
+        files = glob.glob(specdir5 + '/visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
         if len(files) < 1:
             print("----> monitor: No apPlateSum files!")
         else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Sci.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+            dt = np.dtype([('TELESCOPE', np.str, 6),
+                           ('PLATE',     np.int32),
+                           ('NREADS',    np.int32),
+                           ('DATEOBS',   np.str, 30),
+                           ('EXPTIME',   np.int32),
+                           ('SECZ',      np.float64),
+                           ('HA',        np.float64),
+                           ('DESIGN_HA', np.float64, 3),
+                           ('SEEING',    np.float64),
+                           ('FWHM',      np.float64),
+                           ('GDRMS',     np.float64),
+                           ('CART',      np.int32),
+                           ('PLUGID',    np.str, 30),
+                           ('DITHER',    np.float64),
+                           ('MJD',       np.int32),
+                           ('IM',        np.int32),
+                           ('ZERO',      np.float64),
+                           ('ZERORMS',   np.float64),
+                           ('ZERONORM',  np.float64),
+                           ('SKY',       np.float64, 3),
+                           ('SN',        np.float64, 3),
+                           ('SNC',       np.float64, 3),
+                           #('SNT',       np.float64, 3),
+                           ('ALTSN',     np.float64, 3),
+                           ('NSN',       np.int32),
+                           ('SNRATIO',   np.float64),
+                           ('MOONDIST',  np.float64),
+                           ('MOONPHASE', np.float64),
+                           ('TELLFIT',   np.float64, (3,6))])
+
+            struct0 = np.zeros(len(allsci['PLATE']), dtype=dt)
+
+            struct0['TELESCOPE'] = allsci['TELESCOPE']
+            struct0['PLATE'] =     allsci['PLATE']
+            struct0['NREADS'] =    allsci['NREADS']
+            struct0['DATEOBS'] =   allsci['DATEOBS']
+            struct0['EXPTIME'] =   allsci['EXPTIME']
+            struct0['SECZ'] =      allsci['SECZ']
+            struct0['HA'] =        allsci['HA']
+            struct0['DESIGN_HA'] = allsci['DESIGN_HA']
+            struct0['SEEING'] =    allsci['SEEING']
+            struct0['FWHM'] =      allsci['FWHM']
+            struct0['GDRMS'] =     allsci['GDRMS']
+            struct0['CART'] =      allsci['CART']
+            struct0['PLUGID'] =    allsci['PLUGID']
+            struct0['DITHER'] =    allsci['DITHER']
+            struct0['MJD'] =       allsci['MJD']
+            struct0['IM'] =        allsci['IM']
+            struct0['ZERO'] =      allsci['ZERO']
+            struct0['ZERORMS'] =   allsci['ZERORMS']
+            struct0['ZERONORM'] =  allsci['ZERONORM']
+            struct0['SKY'] =       allsci['SKY']
+            struct0['SN'] =        allsci['SN']
+            struct0['SNC'] =       allsci['SNC']
+            struct0['ALTSN'] =     allsci['ALTSN']
+            struct0['NSN'] =       allsci['NSN']
+            struct0['SNRATIO'] =   allsci['SNRATIO']
+            struct0['MOONDIST'] =  allsci['MOONDIST']
+            struct0['MOONPHASE'] = allsci['MOONPHASE']
+            struct0['TELLFIT'] =   allsci['TELLFIT']
+
             files.sort()
             files = np.array(files)
-            nfiles = len(files)
+            nfiles=len(files)
+
+            # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
+                struct1 = np.zeros(len(a['MJD']), dtype=dt)
+                if i == 0: outstr = np.concatenate([struct0, struct1])
+                else:      outstr = np.concatenate([outstr, struct1])
 
-                # Make output structure.
-                dt = np.dtype([('TELESCOPE', np.str, 6),
-                               ('PLATE',     np.int32),
-                               ('NREADS',    np.int32),
-                               ('DATEOBS',   np.str, 30),
-                               ('EXPTIME',   np.int32),
-                               ('SECZ',      np.float64),
-                               ('HA',        np.float64),
-                               ('DESIGN_HA', np.float64, 3),
-                               ('SEEING',    np.float64),
-                               ('FWHM',      np.float64),
-                               ('GDRMS',     np.float64),
-                               ('CART',      np.int32),
-                               ('PLUGID',    np.str, 30),
-                               ('DITHER',    np.float64),
-                               ('MJD',       np.int32),
-                               ('IM',        np.int32),
-                               ('ZERO',      np.float64),
-                               ('ZERORMS',   np.float64),
-                               ('ZERONORM',  np.float64),
-                               ('SKY',       np.float64, 3),
-                               ('SN',        np.float64, 3),
-                               ('SNC',       np.float64, 3),
-                               #('SNT',       np.float64, 3),
-                               ('ALTSN',     np.float64, 3),
-                               ('NSN',       np.int32),
-                               ('SNRATIO',   np.float64),
-                               ('MOONDIST',  np.float64),
-                               ('MOONPHASE', np.float64),
-                               ('TELLFIT',   np.float64, (3,6))])
-                struct = np.zeros(len(a['PLATE']), dtype=dt)
-
-                struct['TELESCOPE'] = a['TELESCOPE']
-                struct['PLATE'] = a['PLATE']
-                struct['NREADS'] = a['NREADS']
-                struct['DATEOBS'] = a['DATEOBS']
-                struct['EXPTIME'] = a['EXPTIME']
-                struct['SECZ'] = a['SECZ']
-                struct['HA'] = a['HA']
-                struct['DESIGN_HA'] = a['DESIGN_HA']
-                struct['SEEING'] = a['SEEING']
-                struct['FWHM'] = a['FWHM']
-                struct['GDRMS'] = a['GDRMS']
-                struct['CART'] = a['CART']
-                struct['PLUGID'] = a['PLUGID']
-                struct['DITHER'] = a['DITHER']
-                struct['MJD'] = a['MJD']
-                struct['IM'] = a['IM']
-                struct['ZERO'] = a['ZERO']
-                struct['ZERORMS'] = a['ZERORMS']
-                struct['ZERONORM'] = a['ZERONORM']
-                struct['SKY'] = a['SKY']
-                struct['SN'] = a['SN']
-                struct['SNC'] = a['SNC']
-                struct['ALTSN'] = a['ALTSN']
-                struct['NSN'] = a['NSN']
-                struct['SNRATIO'] = a['SNRATIO']
-                struct['MOONDIST'] = a['MOONDIST']
-                struct['MOONPHASE'] = a['MOONPHASE']
-                struct['TELLFIT'] = a['TELLFIT']
-
-                if i == 0:
-                    allsci = struct
-                else:
-                    allsci = np.concatenate([allsci, struct])
-
-            Table(allsci).write(outfile, overwrite=True)
+            Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER TRACE FILE
-        outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
-        print("----> monitor: Making " + os.path.basename(outfile))
-
         # Append together the individual QAcal files
-        files = glob.glob(specdir4 + '/cal/psf/apEPSF-b-*.fits')
+
+        files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
         if len(files) < 1:
             print("----> monitor: No apEPSF-b files!")
         else:
-            files.sort()
-            files = np.array(files)
-            nfiles = len(files)
+            outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
 
+            # Make output structure and fill with APOGEE2 summary file values
             dt = np.dtype([('NUM',      np.int32),
                            ('MJD',      np.float64),
                            ('CENT',     np.float64),
                            ('LN2LEVEL', np.int32)])
-            struct = np.zeros(nfiles, dtype=dt)
+
+            struct0 = np.zeros(len(allepsf['NUM']), dtype=dt)
+
+            struct0['NUM'] =      allepsf['NUM']
+            struct0['MJD'] =      allepsf['MJD']
+            struct0['CENT'] =     allepsf['CENT']
+            struct0['LN2LEVEL'] = allepsf['LN2LEVEL']
+
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
 
             for i in range(nfiles):
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
+                struct1 = np.zeros(len(a['NUM']), dtype=dt)
                 num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
                 if num > 1000:
                     hdr = fits.getheader(files[i])
                     for j in range(147,156):
                         a = fits.open(files[i])[j].data
                         if a['FIBER'] == 150:
-                            struct['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
-                            struct['CENT'][i] = a['CENT'][1000]
-                            struct['MJD'][i] = hdr['JD-MJD'] - 2400000.5
-                            struct['LN2LEVEL'][i] = hdr['LN2LEVEL']
+                            struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
+                            struct1['CENT'][i] = a['CENT'][1000]
+                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
+                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
                             break
+                if i == 0: outstr = np.concatenate([struct0, struct1])
+                else:      outstr = np.concatenate([outstr, struct1])
 
-            Table(struct).write(outfile, overwrite=True)
+            Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
+
+    ###############################################################################################
+    # Read in the SDSS-V summary files
+    allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
+    alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
+    allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
+    allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
+    allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
 
     ###############################################################################################
     # Find the different cals
