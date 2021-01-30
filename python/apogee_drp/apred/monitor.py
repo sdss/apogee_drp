@@ -120,9 +120,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['NAME']), dtype=dt)
-                if i == 0: outstr = np.concatenate([struct0, struct1])
-                else:      outstr = np.concatenate([outstr, struct1])
+                if i == 0:
+                    outstr = np.concatenate([struct0, struct1])
+                else:
+                    outstr = np.concatenate([outstr, struct1])
 
+            import pdb; pdb.set_trace()
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
 
@@ -174,8 +177,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['NAME']), dtype=dt)
-                if i == 0: outstr = np.concatenate([struct0, struct1])
-                else:      outstr = np.concatenate([outstr, struct1])
+                if i == 0:
+                    outstr = np.concatenate([struct0, struct1])
+                else:
+                    outstr = np.concatenate([outstr, struct1])
 
             hdulist = fits.open(outfile)
             hdu1 = fits.table_to_hdu(Table(outstr))
@@ -250,8 +255,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['MJD']), dtype=dt)
-                if i == 0: outstr = np.concatenate([struct0, struct1])
-                else:      outstr = np.concatenate([outstr, struct1])
+                if i == 0:
+                    outstr = np.concatenate([struct0, struct1])
+                else:
+                    outstr = np.concatenate([outstr, struct1])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
@@ -339,8 +346,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['MJD']), dtype=dt)
-                if i == 0: outstr = np.concatenate([struct0, struct1])
-                else:      outstr = np.concatenate([outstr, struct1])
+                if i == 0:
+                    outstr = np.concatenate([struct0, struct1])
+                else:
+                    outstr = np.concatenate([outstr, struct1])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
