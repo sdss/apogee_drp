@@ -80,15 +80,49 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             files.sort()
             files = np.array(files)
             nfiles = len(files)
+
+            # Make output structure and write to fits file
+            dt = np.dtype([('NAME',    np.str,30),
+                           ('MJD',     np.str,30),
+                           ('JD',      np.float64),
+                           ('NFRAMES', np.int32),
+                           ('NREAD',   np.int32),
+                           ('EXPTIME', np.float64),
+                           ('QRTZ',    np.int32),
+                           ('UNE',     np.int32),
+                           ('THAR',    np.int32),
+                           ('FLUX',    np.float64,(300,nchips)),
+                           ('GAUSS',   np.float64,(4,nfibers,nchips,nlines)),
+                           ('WAVE',    np.float64,(nfibers,nchips,nlines)),
+                           ('FIBERS',  np.float64,(nfibers)),
+                           ('LINES',   np.float64,(nchips,nlines))])
+            struct0 = np.zeros(len(allcal['NAME']), dtype=dt)
+
+            struct0['NAME'] = allcal['NAME']
+            struct0['MJD'] = allcal['MJD']
+            struct0['JD'] = allcal['JD']
+            struct0['NFRAMES'] = allcal['NFRAMES']
+            struct0['NREAD'] = allcal['NREAD']
+            struct0['EXPTIME'] = allcal['EXPTIME']
+            struct0['QRTZ'] = allcal['QRTZ']
+            struct0['UNE'] = allcal['UNE']
+            struct0['THAR'] = allcal['THAR']
+            struct0['FLUX'] = allcal['FLUX']
+            struct0['GAUSS'] = allcal['GAUSS']
+            struct0['WAVE'] = allcal['WAVE']
+            struct0['FIBERS'] = allcal['FIBERS']
+            struct0['LINES'] = allcal['LINES']
+
             for i in range(nfiles):
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
-                import pdb; pdb.set_trace()
+                struct1 = np.zeros(len(a['NAME']), dtype=dt)
 
                 if i == 0:
-                    outstr = np.concatenate([allcal, a])
+                    outstr = np.concatenate([struct0, struct1])
                 else:
-                    outstr = np.concatenate([outstr, a])
+                    outstr = np.concatenate([outstr, struct1])
+                import pdb; pdb.set_trace()
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
