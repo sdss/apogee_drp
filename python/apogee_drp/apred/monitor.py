@@ -117,11 +117,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                if '59146' not in files[i]:
-                    print("---->    monitor: reading " + os.path.basename(files[i]))
-                    data = fits.open(files[i])[1].data
-                    struct = np.zeros(len(data['NAME']), dtype=dt)
-                    outstr = np.concatenate([outstr, struct])
+                print("---->    monitor: reading " + os.path.basename(files[i]))
+                data = fits.open(files[i])[1].data
+                outstr = np.concatenate([outstr, data])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
@@ -171,11 +169,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                if '59146' not in files[i]:
-                    print("---->    monitor: reading " + os.path.basename(files[i]))
-                    data = fits.open(files[i])[1].data
-                    struct = np.zeros(len(data['NAME']), dtype=dt)
-                    outstr = np.concatenate([outstr, struct])
+                print("---->    monitor: reading " + os.path.basename(files[i]))
+                data = fits.open(files[i])[1].data
+                outstr = np.concatenate([outstr, data])
 
             hdulist = fits.open(outfile)
             hdu1 = fits.table_to_hdu(Table(outstr))
@@ -247,11 +243,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                if '59146' not in files[i]:
-                    print("---->    monitor: reading " + os.path.basename(files[i]))
-                    data = fits.open(files[i])[1].data
-                    struct = np.zeros(len(data['MJD']), dtype=dt)
-                    outstr = np.concatenate([outstr, struct])
+                print("---->    monitor: reading " + os.path.basename(files[i]))
+                data = fits.open(files[i])[1].data
+                outstr = np.concatenate([outstr, data])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
@@ -338,8 +332,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                struct = np.zeros(len(data['MJD']), dtype=dt)
-                outstr = np.concatenate([outstr, struct])
+                outstr = np.concatenate([outstr, data])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
