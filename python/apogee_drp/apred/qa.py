@@ -3051,6 +3051,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                             gerror = oneDerror[ichip, :, fiber]
                             # Fit Gaussians to the lamps lines
                             gpeaks = peakfit.peakfit(gflux, sigma=gerror)
+                            if ims[i] == 36370006: import pdb; pdb.set_trace()
                             gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                             gpeaks = gpeaks[gd]
                             # Find the desired peak and load struct
