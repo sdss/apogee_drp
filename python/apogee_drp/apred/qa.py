@@ -126,13 +126,30 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     ndarkplans = len(darkplans)
 
     if makeqafits is True:
+        # Run apqa on the cal  plans
+        print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
+        for i in range(ncalplans): 
+            planfile = load.filename('CalPlan', mjd=mjd)
+            planstr = plan.load(planfile, np=True)
+            mjd = calplans[i].split('-')[3].split('.')[0]
+            all_ims = planstr['APEXP']['name']
+            x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument, clobber=clobber)
+        print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
 
+        # Run apqa on the dark  plans
+        print("Running APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
+        for i in range(ndarkplans): 
+            planfile = load.filename('DarkPlan', mjd=mjd)
+            print(planfile)
+            planstr = plan.load(planfile, np=True)
+            mjd = darkplans[i].split('-')[3].split('.')[0]
+            all_ims = planstr['APEXP']['name']
+            x = makeDarkFits(load=load, ims=all_ims, mjd=mjd, clobber=clobber)
+        print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
         # Make the MJDexp fits file for this MJD
         print("Making " + mjd + "exp.fits\n")
         x = makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=mjd, clobber=clobber)
-        #print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
-
 
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
@@ -2986,7 +3003,10 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
 
         # Loop over exposures and get 1D images to fill structure.
         for i in range(n_exposures):
-            oneD = load.apread('1D', num=ims[i])
+            try:
+                oneD = load.apread('1D', num=ims[i])
+            except:
+                print('----> makeCalFits: ap1D not found for exposure ' + str(ims[i]))
             oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
             oneDerror = np.array([oneD[0].error, oneD[1].error, oneD[2].error])
             oneDhdr = oneD[0].header
@@ -3081,6 +3101,11 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
 
         # Loop over exposures and get 2D images to fill structure.
         for i in range(n_exposures):
+            try:
+                twoD = load.apread('2D', num=ims[i])
+            except:
+                print('----> makeDarkFits: ap2D not found for exposure ' + str(ims[i]))
+
             print("----> makeDarkFits: running exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
             twoD = load.apread('2D', num=ims[i])
