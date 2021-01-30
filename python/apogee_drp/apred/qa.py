@@ -3107,6 +3107,7 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
                 twoD = load.apread('2D', num=ims[i])
             except:
                 print('----> makeDarkFits: ap2D not found for exposure ' + str(ims[i]))
+                continue
 
             print("----> makeDarkFits: running exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
