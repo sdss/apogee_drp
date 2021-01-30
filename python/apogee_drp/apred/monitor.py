@@ -1043,6 +1043,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                 ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
 
+            import pdb; pdb.set_trace()
             t = Time(allsci['DATEOBS'], format='fits')
             jd = t.jd - 2.4e6
             ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, c='teal', alpha=alf)
