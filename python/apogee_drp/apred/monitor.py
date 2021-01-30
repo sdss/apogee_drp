@@ -173,7 +173,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-            for i in range(nfiles):
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['NAME']), dtype=dt)
