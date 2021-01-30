@@ -349,51 +349,51 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # MAKE MASTER TRACE FILE
         # Append together the individual QAcal files
 
-        files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
-        if len(files) < 1:
-            print("----> monitor: No apEPSF-b files!")
-        else:
-            outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
-            print("----> monitor: Making " + os.path.basename(outfile))
+#        files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
+#        if len(files) < 1:
+#            print("----> monitor: No apEPSF-b files!")
+#        else:
+#            outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+#            print("----> monitor: Making " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
-            dt = np.dtype([('NUM',      np.int32),
-                           ('MJD',      np.float64),
-                           ('CENT',     np.float64),
-                           ('LN2LEVEL', np.int32)])
+#            dt = np.dtype([('NUM',      np.int32),
+#                           ('MJD',      np.float64),
+#                           ('CENT',     np.float64),
+#                           ('LN2LEVEL', np.int32)])
 
-            struct0 = np.zeros(len(allepsf['NUM']), dtype=dt)
+#            struct0 = np.zeros(len(allepsf['NUM']), dtype=dt)
 
-            struct0['NUM'] =      allepsf['NUM']
-            struct0['MJD'] =      allepsf['MJD']
-            struct0['CENT'] =     allepsf['CENT']
-            struct0['LN2LEVEL'] = allepsf['LN2LEVEL']
+#            struct0['NUM'] =      allepsf['NUM']
+#            struct0['MJD'] =      allepsf['MJD']
+#            struct0['CENT'] =     allepsf['CENT']
+#            struct0['LN2LEVEL'] = allepsf['LN2LEVEL']
 
-            files.sort()
-            files = np.array(files)
-            nfiles = len(files)
+#            files.sort()
+#            files = np.array(files)
+#            nfiles = len(files)
 
-            for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
-                a = fits.open(files[i])[1].data
-                import pdb; pdb.set_trace()
-                struct1 = np.zeros(len(a['NUM']), dtype=dt)
-                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
-                if num > 1000:
-                    hdr = fits.getheader(files[i])
-                    for j in range(147,156):
-                        a = fits.open(files[i])[j].data
-                        if a['FIBER'] == 150:
-                            struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
-                            struct1['CENT'][i] = a['CENT'][1000]
-                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
-                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
-                            break
-                if i == 0: outstr = np.concatenate([struct0, struct1])
-                else:      outstr = np.concatenate([outstr, struct1])
+#            for i in range(nfiles):
+#                print("---->    monitor: reading " + os.path.basename(files[i]))
+#                a = fits.open(files[i])[1].data
+#                import pdb; pdb.set_trace()
+#                struct1 = np.zeros(len(a['NUM']), dtype=dt)
+#                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
+#                if num > 1000:
+#                    hdr = fits.getheader(files[i])
+#                    for j in range(147,156):
+#                        a = fits.open(files[i])[j].data
+#                        if a['FIBER'] == 150:
+#                            struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
+#                            struct1['CENT'][i] = a['CENT'][1000]
+#                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
+#                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
+#                            break
+#                if i == 0: outstr = np.concatenate([struct0, struct1])
+#                else:      outstr = np.concatenate([outstr, struct1])
 
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
+#            Table(outstr).write(outfile, overwrite=True)
+#            print("----> monitor: Finished making " + os.path.basename(outfile))
 
     ###############################################################################################
     # Read in the SDSS-V summary files
@@ -401,7 +401,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
     allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
-    allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
+    #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
+    # Read in the APOGEE2 Trace.fits file since the columns don't match between APOGEE2 and SDSS-V
+    allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
     ###############################################################################################
     # Find the different cals
