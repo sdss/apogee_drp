@@ -175,7 +175,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                newstr = getExpStruct(data)
+                newstr = getSciStruct(data)
                 outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
