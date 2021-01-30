@@ -225,7 +225,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             struct0['JD'] =        allexp['JD']
             struct0['NUM'] =       allexp['NUM']
             struct0['NFRAMES'] =   allexp['NFRAMES']
-            struct0['IMAGETYPE'] = allexp['IMAGETYPE']
+            struct0['IMAGETYP'] =  allexp['IMAGETYP']
             struct0['PLATEID'] =   allexp['PLATEID']
             struct0['CARTID'] =    allexp['CARTID']
             struct0['RA'] =        allexp['RA']
