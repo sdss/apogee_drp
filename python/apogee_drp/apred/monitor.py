@@ -83,46 +83,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
-                import pdb; pdb.set_trace()
 
-                # Make output structure and write to fits file
-                dt = np.dtype([('NAME',    np.str,30),
-                               ('MJD',     np.str,30),
-                               ('JD',      np.float64),
-                               ('NFRAMES', np.int32),
-                               ('NREAD',   np.int32),
-                               ('EXPTIME', np.float64),
-                               ('QRTZ',    np.int32),
-                               ('UNE',     np.int32),
-                               ('THAR',    np.int32),
-                               ('FLUX',    np.float64,(300,nchips)),
-                               ('GAUSS',   np.float64,(4,nfibers,nchips,nlines)),
-                               ('WAVE',    np.float64,(nfibers,nchips,nlines)),
-                               ('FIBERS',  np.float64,(nfibers)),
-                               ('LINES',   np.float64,(nchips,nlines))])
-                struct = np.zeros(len(a['NAME']), dtype=dt)
+                outstr = np.concatenate([allcal, a])
 
-                struct['NAME'] = a['NAME']
-                struct['MJD'] = a['MJD']
-                struct['JD'] = a['JD']
-                struct['NFRAMES'] = a['NFRAMES']
-                struct['NREAD'] = a['NREAD']
-                struct['EXPTIME'] = a['EXPTIME']
-                struct['QRTZ'] = a['QRTZ']
-                struct['UNE'] = a['UNE']
-                struct['THAR'] = a['THAR']
-                struct['FLUX'] = a['FLUX']
-                struct['GAUSS'] = a['GAUSS']
-                struct['WAVE'] = a['WAVE']
-                struct['FIBERS'] = a['FIBERS']
-                struct['LINES'] = a['LINES']
-
-                if i == 0:
-                    allcal = struct
-                else:
-                    allcal = np.concatenate([allcal, struct])
-
-            Table(allcal).write(outfile, overwrite=True)
+            import pdb; pdb.set_trace()
+            Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
 
         ###########################################################################################
