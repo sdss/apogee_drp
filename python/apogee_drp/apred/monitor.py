@@ -117,7 +117,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + files[i])
+                print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['NAME']), dtype=dt)
                 if i == 0: outstr = np.concatenate([struct0, struct1])
@@ -171,7 +171,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + files[i])
+                print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['NAME']), dtype=dt)
                 if i == 0: outstr = np.concatenate([struct0, struct1])
@@ -247,7 +247,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + files[i])
+                print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['MJD']), dtype=dt)
                 if i == 0: outstr = np.concatenate([struct0, struct1])
@@ -336,7 +336,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + files[i])
+                print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
                 struct1 = np.zeros(len(a['MJD']), dtype=dt)
                 if i == 0: outstr = np.concatenate([struct0, struct1])
@@ -374,8 +374,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             nfiles = len(files)
 
             for i in range(nfiles):
-                print("---->    monitor: reading " + files[i])
+                print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
+                import pdb; pdb.set_trace()
                 struct1 = np.zeros(len(a['NUM']), dtype=dt)
                 num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
                 if num > 1000:
