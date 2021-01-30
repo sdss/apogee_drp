@@ -2989,17 +2989,17 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
         dt = np.dtype([('NAME',    np.str,30),
                        ('MJD',     np.str,30),
                        ('JD',      np.float64),
-                       ('NFRAMES', np.int32),
-                       ('NREAD',   np.int32),
-                       ('EXPTIME', np.float64),
-                       ('QRTZ',    np.int32),
-                       ('UNE',     np.int32),
-                       ('THAR',    np.int32),
-                       ('FLUX',    np.float64,(nchips,300)),
-                       ('GAUSS',   np.float64,(nlines,nchips,nfibers,4)),
+                       ('NFRAMES', np.int16),
+                       ('NREAD',   np.int16),
+                       ('EXPTIME', np.float32),
+                       ('QRTZ',    np.int16),
+                       ('UNE',     np.int16),
+                       ('THAR',    np.int16),
+                       ('FLUX',    np.float32,(nchips,300)),
+                       ('GAUSS',   np.float32,(nlines,nchips,nfibers,4)),
                        ('WAVE',    np.float64,(nlines,nchips,nfibers)),
-                       ('FIBERS',  np.int32,(nfibers)),
-                       ('LINES',   np.float64,(nlines,nchips))])
+                       ('FIBERS',  np.int16,(nfibers)),
+                       ('LINES',   np.float32,(nlines,nchips))])
 
         struct = np.zeros(n_exposures, dtype=dt)
 
@@ -3086,15 +3086,15 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
         dt = np.dtype([('NAME',    np.str, 30),
                        ('MJD',     np.str, 30),
                        ('JD',      np.float64),
-                       ('NFRAMES', np.int32),
-                       ('NREAD',   np.int32),
-                       ('EXPTIME', np.float64),
-                       ('QRTZ',    np.int32),
-                       ('UNE',     np.int32),
-                       ('THAR',    np.int32),
+                       ('NFRAMES', np.int16),
+                       ('NREAD',   np.int16),
+                       ('EXPTIME', np.float32),
+                       ('QRTZ',    np.int16),
+                       ('UNE',     np.int16),
+                       ('THAR',    np.int16),
                        ('EXPTYPE', np.str, 30),
-                       ('MEAN',    np.float64, (nquad,nchips)),
-                       ('SIG',     np.float64, (nquad,nchips))])
+                       ('MEAN',    np.float32, (nquad,nchips)),
+                       ('SIG',     np.float32, (nquad,nchips))])
 
         struct = np.zeros(n_exposures, dtype=dt)
 
@@ -3113,8 +3113,9 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
             struct['NREAD'][i] =   twoDhdr['NREAD']
             struct['EXPTIME'][i] = twoDhdr['EXPTIME']
             struct['QRTZ'][i] =    twoDhdr['LAMPQRTZ']
-            struct['THAR'][i] =    twoDhdr['LAMPTHAR']
             struct['UNE'][i] =     twoDhdr['LAMPUNE']
+            struct['THAR'][i] =    twoDhdr['LAMPTHAR']
+            struct['EXPTYPE'][i] = twoDhdr['EXPTYPE']
 
             # Get the mean and stddev of flux in each quadrant of each detector
             for ichip in range(nchips):
