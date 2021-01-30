@@ -44,7 +44,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     chips = np.array(['blue','green','red'])
     nchips = len(chips)
-    fibers = np.array([10,80,150,220,290])
+    fibers = np.array([10,80,150,220,290])[::-1]
     nfibers = len(fibers)
     nlines = 2
     nquad = 4
@@ -483,7 +483,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     markersz = 7
     colors = np.array(['crimson', 'limegreen', 'orange', 'violet', 'royalblue'])
     colors1 = np.array(['k', 'salmon', 'limegreen', 'cornflowerblue'])
-    colors2 = np.array(['dodgerblue', 'seagreen', 'tomato'])
+    colors2 = np.array(['dodgerblue', 'seagreen', 'orange'])
     fibers = np.array([10, 80, 150, 220, 290])[::-1]
     nplotfibs = len(fibers)
     #years = np.array([2011, 2012, 2013, 2014
@@ -522,7 +522,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 fig = plt.figure(figsize=(28,7.5))
                 ax = plt.subplot2grid((1,1), (0,0))
-                ax.set_xlim(xmin, xmax)
+                ax.set_xlim(xmin, xmax - xspan*0.05)
                 ax.set_ylim(ymin1, ymax1)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
@@ -532,6 +532,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.set_xlabel(r'JD - 2,400,000')
                 ax.text(-0.03, 0.5, r'Median Flux / 1,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -553,7 +554,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
                 fig = plt.figure(figsize=(28,7.5))
                 ax = plt.subplot2grid((1,1), (0,0))
-                ax.set_xlim(xmin, xmax)
+                ax.set_xlim(xmin, xmax - xspan*0.05)
                 ax.set_ylim(ymin2, ymax2)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
@@ -563,6 +564,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.set_xlabel(r'JD - 2,400,000')
                 ax.text(-0.03, 0.5, r'Flux / max(Flux)', rotation=90, ha='right', va='center', transform=ax.transAxes)
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -600,6 +602,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.set_xlabel(r'JD - 2,400,000')
                 ax.text(-0.03, 0.5, r'Flux / 1,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -631,6 +634,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.set_xlabel(r'JD - 2,400,000')
                 ax.text(-0.03, 0.5, r'Flux / max(Flux)', rotation=90, ha='right', va='center', transform=ax.transAxes)
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -679,6 +683,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -730,6 +735,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Line Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -781,6 +787,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Line Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -830,6 +837,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -876,12 +884,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
             ax.set_ylabel(r'Zeropoint (mag.)')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            ax.axvline(x=59146, color='r', linewidth=2)
 
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                 ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
 
-            import pdb; pdb.set_trace()
             t = Time(allsci['DATEOBS'], format='fits')
             jd = t.jd - 2.4e6
             ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, c='teal', alpha=alf)
@@ -915,6 +923,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Position (pixel)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
                 ymin = w - 10
@@ -966,6 +975,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                         if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                         ax.set_ylabel(r'FWHM ($\rm \AA$)')
                         if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                        ax.axvline(x=59146, color='r', linewidth=2)
 
                         w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
                         ymin = w * 0.8
@@ -1016,6 +1026,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             ax1.set_xlim(xmin, xmax)
             ax1.set_xlabel(r'JD - 2,400,000')
             ax2.set_xlabel(r'LN2 Level')
+            ax1.axvline(x=59146, color='r', linewidth=2)
             for ax in axes:
                 ax.set_ylim(ymin, ymax)
                 ax.minorticks_on()
@@ -1065,6 +1076,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 if ichip == 1: ax.set_ylabel(r'Mean (column median)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1114,6 +1126,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 if ichip == 1: ax.set_ylabel(r'$\sigma$ (column median)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
