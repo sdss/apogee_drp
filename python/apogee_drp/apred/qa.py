@@ -3050,18 +3050,23 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                             gflux = oneDflux[ichip, :, fiber]
                             gerror = oneDerror[ichip, :, fiber]
                             # Fit Gaussians to the lamps lines
-                            gpeaks = peakfit.peakfit(gflux, sigma=gerror)
-                            if ims[i] == 36370006: import pdb; pdb.set_trace()
-                            gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
-                            gpeaks = gpeaks[gd]
-                            # Find the desired peak and load struct
-                            pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
-                            gdline, = np.where(pixdif == np.min(pixdif))
+                            try:
+                                gpeaks = peakfit.peakfit(gflux, sigma=gerror)
+                                if ims[i] == 36370006: import pdb; pdb.set_trace()
+                                gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
+                                gpeaks = gpeaks[gd]
+                                # Find the desired peak and load struct
+                                pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
+                                gdline, = np.where(pixdif == np.min(pixdif))
+                            except:
+                                print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
+                                continue
+
                             if len(gdline) > 0:
                                 struct['GAUSS'][i, iline, ichip, ifiber, :] = gpeaks['pars'][gdline, :][0]
                                 struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
                             else:
-                                print("----> makeCalFits: Error! ThAr/UNE line not found in exposure " + str(ims[i]) + "\n")
+                                print("----> makeCalFits: ERROR!!! Desired line not found for " + tp + " exposure " + str(ims[i]))
 
         Table(struct).write(outfile, overwrite=True)
 
