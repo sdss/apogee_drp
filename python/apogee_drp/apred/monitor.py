@@ -118,9 +118,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
-                a = fits.open(files[i])[1].data
+                data = fits.open(files[i])[1].data
                 import pdb; pdb.set_trace()
-                struct = np.zeros(len(a['NAME']), dtype=dt)
+                struct = np.zeros(len(data['NAME']), dtype=dt)
                 outstr = np.concatenate([outstr, struct])
 
             Table(outstr).write(outfile, overwrite=True)
@@ -172,8 +172,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
-                a = fits.open(files[i])[1].data
-                struct = np.zeros(len(a['NAME']), dtype=dt)
+                data = fits.open(files[i])[1].data
+                struct = np.zeros(len(data['NAME']), dtype=dt)
                 outstr = np.concatenate([outstr, struct])
 
             hdulist = fits.open(outfile)
@@ -247,8 +247,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
-                a = fits.open(files[i])[1].data
-                struct = np.zeros(len(a['MJD']), dtype=dt)
+                data = fits.open(files[i])[1].data
+                struct = np.zeros(len(data['MJD']), dtype=dt)
                 outstr = np.concatenate([outstr, struct])
 
             Table(outstr).write(outfile, overwrite=True)
@@ -335,8 +335,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
-                a = fits.open(files[i])[1].data
-                struct = np.zeros(len(a['MJD']), dtype=dt)
+                data = fits.open(files[i])[1].data
+                struct = np.zeros(len(data['MJD']), dtype=dt)
                 outstr = np.concatenate([outstr, struct])
 
             Table(outstr).write(outfile, overwrite=True)
@@ -372,17 +372,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
 #            for i in range(nfiles):
 #                print("---->    monitor: reading " + os.path.basename(files[i]))
-#                a = fits.open(files[i])[1].data
+#                data = fits.open(files[i])[1].data
 #                import pdb; pdb.set_trace()
-#                struct1 = np.zeros(len(a['NUM']), dtype=dt)
+#                struct1 = np.zeros(len(data['NUM']), dtype=dt)
 #                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
 #                if num > 1000:
 #                    hdr = fits.getheader(files[i])
 #                    for j in range(147,156):
-#                        a = fits.open(files[i])[j].data
+#                        data = fits.open(files[i])[j].data
 #                        if a['FIBER'] == 150:
 #                            struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
-#                            struct1['CENT'][i] = a['CENT'][1000]
+#                            struct1['CENT'][i] = data['CENT'][1000]
 #                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
 #                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
 #                            break
@@ -405,7 +405,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     ###############################################################################################
     # Find the different cals
     thar, = np.where(allcal['THAR'] == 1)
-    une, = np.where(allcal['UNE'] == 1)
+    une, =  np.where(allcal['UNE'] == 1)
     qrtz, = np.where(allcal['QRTZ'] == 1)
     dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
     dark, = np.where(alldark['EXPTYPE'] == 'DARK')
