@@ -119,6 +119,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 a = fits.open(files[i])[1].data
+                import pdb; pdb.set_trace()
                 struct = np.zeros(len(a['NAME']), dtype=dt)
                 outstr = np.concatenate([outstr, struct])
 
