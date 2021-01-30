@@ -83,10 +83,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             for i in range(nfiles):
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
-
+                import pdb; pdb.set_trace()
                 outstr = np.concatenate([allcal, a])
 
-            import pdb; pdb.set_trace()
+
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
 
