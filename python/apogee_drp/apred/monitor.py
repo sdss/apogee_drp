@@ -77,25 +77,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         if len(files) < 1:
             print("----> monitor: No QAcal files!")
         else:
-            files.sort()
-            files = np.array(files)
-            nfiles = len(files)
-
-            # Make output structure and write to fits file
+            # Make output structure and fill with APOGEE2 summary file values
             dt = np.dtype([('NAME',    np.str,30),
                            ('MJD',     np.str,30),
                            ('JD',      np.float64),
-                           ('NFRAMES', np.int32),
-                           ('NREAD',   np.int32),
-                           ('EXPTIME', np.float64),
-                           ('QRTZ',    np.int32),
-                           ('UNE',     np.int32),
-                           ('THAR',    np.int32),
-                           ('FLUX',    np.float64,(300,nchips)),
-                           ('GAUSS',   np.float64,(4,nfibers,nchips,nlines)),
-                           ('WAVE',    np.float64,(nfibers,nchips,nlines)),
-                           ('FIBERS',  np.float64,(nfibers)),
-                           ('LINES',   np.float64,(nchips,nlines))])
+                           ('NFRAMES', np.int16),
+                           ('NREAD',   np.int16),
+                           ('EXPTIME', np.float32),
+                           ('QRTZ',    np.int16),
+                           ('UNE',     np.int16),
+                           ('THAR',    np.int16),
+                           ('FLUX',    np.float32,(nchips,300)),
+                           ('GAUSS',   np.float32,(nlines,nchips,nfibers,4)),
+                           ('WAVE',    np.float64,(nlines,nchips,nfibers)),
+                           ('FIBERS',  np.int16,(nfibers)),
+                           ('LINES',   np.float32,(nlines,nchips))])
+
             struct0 = np.zeros(len(allcal['NAME']), dtype=dt)
 
             struct0['NAME'] = allcal['NAME']
@@ -113,6 +110,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
             struct0['FIBERS'] = allcal['FIBERS']
             struct0['LINES'] = allcal['LINES']
 
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+
+            # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
@@ -132,49 +134,55 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
 
         # Append together the individual QAdarkflat files
-        files = glob.glob(specdir4 + '/cal/' + instrument + '/*/*QAdarkflat*.fits')
+        files = glob.glob(specdir5 + '/cal/' + instrument + '/qa/*/*QAcal*.fits')
         if len(files) < 1:
             print("----> monitor: No QAdarkflat files!")
         else:
+            # Make output structure and fill with APOGEE2 summary file values
+            dt = np.dtype([('NAME',    np.str, 30),
+                           ('MJD',     np.str, 30),
+                           ('JD',      np.float64),
+                           ('NFRAMES', np.int16),
+                           ('NREAD',   np.int16),
+                           ('EXPTIME', np.float32),
+                           ('QRTZ',    np.int16),
+                           ('UNE',     np.int16),
+                           ('THAR',    np.int16),
+                           ('EXPTYPE', np.str, 30),
+                           ('MEAN',    np.float32, (nquad,nchips)),
+                           ('SIG',     np.float32, (nquad,nchips))])
+
+            struct0 = np.zeros(len(alldark['NAME']), dtype=dt)
+
+            struct['NAME'] = a['NAME']
+            struct['MJD'] = a['MJD']
+            struct['JD'] = a['JD']
+            struct['NFRAMES'] = a['NFRAMES']
+            struct['NREAD'] = a['NREAD']
+            struct['EXPTIME'] = a['EXPTIME']
+            struct['QRTZ'] = a['QRTZ']
+            struct['UNE'] = a['UNE']
+            struct['THAR'] = a['THAR']
+            struct['EXPTYPE'] = a['EXPTYPE']
+            struct['MEAN'] = a['MEAN']
+            struct['SIG'] = a['SIG']
+
             files.sort()
             files = np.array(files)
             nfiles = len(files)
+
+            # Loop over SDSS-V files and add them to output structure
+            for i in range(nfiles):
             for i in range(nfiles):
                 print("---->    monitor: reading " + files[i])
                 a = fits.open(files[i])[1].data
-
-                # Make output structure.
-                dt = np.dtype([('NAME',    np.str, 30),
-                               ('MJD',     np.str, 30),
-                               ('JD',      np.float64),
-                               ('NFRAMES', np.int32),
-                               ('NREAD',   np.int32),
-                               ('EXPTIME', np.float64),
-                               ('QRTZ',    np.int32),
-                               ('UNE',     np.int32),
-                               ('THAR',    np.int32),
-                               ('EXPTYPE', np.str, 30),
-                               ('MEAN',    np.float64, (nchips,nquad)),
-                               ('SIG',     np.float64, (nchips,nquad))])
-                struct = np.zeros(len(a['NAME']), dtype=dt)
-
-                struct['NAME'] = a['NAME']
-                struct['MJD'] = a['MJD']
-                struct['JD'] = a['JD']
-                struct['NFRAMES'] = a['NFRAMES']
-                struct['NREAD'] = a['NREAD']
-                struct['EXPTIME'] = a['EXPTIME']
-                struct['QRTZ'] = a['QRTZ']
-                struct['UNE'] = a['UNE']
-                struct['THAR'] = a['THAR']
-                struct['EXPTYPE'] = a['EXPTYPE']
-                struct['MEAN'] = a['MEAN']
-                struct['SIG'] = a['SIG']
+                struct1 = np.zeros(len(a['NAME']), dtype=dt)
 
                 if i == 0:
-                    alldark = struct
+                    outstr = np.concatenate([struct0, struct1])
                 else:
-                    alldark = np.concatenate([alldark, struct])
+                    outstr = np.concatenate([outstr, struct1])
+                import pdb; pdb.set_trace()
 
             hdulist = fits.open(outfile)
             hdu1 = fits.table_to_hdu(Table(struct))
