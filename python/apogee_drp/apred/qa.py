@@ -1995,70 +1995,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 if apStarRelPath is not None:
                     if (objtype != 'SKY') & (objid != '2MNone'):
                         print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
-
-                        # Read the apStar file
-                        apstar = doppler.read(apStarPath)
-                        apstar.normalize()
-                        if apstar.wave.shape[1] == 1: 
-                            wave = apstar.wave
-                            flux = apstar.flux
-                        else: 
-                            wave = apstar.wave[:, 0]
-                            flux = apstar.flux[:, 0]
-                        gd, = np.where((np.isnan(flux) == False) & (flux > 0))
-                        wave = wave[gd]
-                        flux = flux[gd]
-
-                        # Get model spectrum
-                        openModel = open(apStarModelPath, 'rb')
-                        modelVals = pickle.load(openModel)
-                        try:
-                            sumstr, finalstr, bmodel, specmlist, gout = modelVals
-                        except:
-                            print("----> makeObjQA:    BAD! pickle.load returned None for " + objid)
-                            continue
-                        pmodels = models.prepare(specmlist[0])
-                        bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
-                        bestmodel.normalize()
-                        swave = bestmodel.wave
-                        sflux = bestmodel.flux
-
-
-                        fig=plt.figure(figsize=(28,20))
-                        ax1 = plt.subplot2grid((3,1), (0,0))
-                        ax2 = plt.subplot2grid((3,1), (1,0))
-                        ax3 = plt.subplot2grid((3,1), (2,0))
-                        axes = [ax1,ax2,ax3]
-
-                        ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
-
-                        ichip = 0
-                        for ax in axes:
-                            ax.set_xlim(starxmin[ichip], starxmax[ichip])
-                            ax.set_ylim(0.1, 1.3)
-                            ax.tick_params(reset=True)
-                            ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
-                            ax.minorticks_on()
-                            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                            ax.tick_params(axis='both',which='major',length=axmajlen)
-                            ax.tick_params(axis='both',which='minor',length=axminlen)
-                            ax.tick_params(axis='both',which='both',width=axwidth)
-                            ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
-
-                            ax.plot(wave, flux, color='k', label='apStar')
-                            ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model', alpha=0.75)
-
-                            ichip += 1
-
-                        txt = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits'
-                        ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
-                        txt = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
-                        ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
-                        ax3.legend(loc='lower center', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
-
-                        fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
-                        plt.savefig(starPlotFilePath)
-                        plt.close('all')
+                        nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
+                                              starPlotFilePath=starPlotFilePath): 
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
@@ -2150,6 +2088,89 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     objhtml.close()
     print("----> makeObjQA: Done with plate "+plate+", MJD "+mjd+".\n")
+
+
+''' APSTARPLOTS: plots of the apStar spectra + best fitting Cannon model '''
+def apStarPlots(objid=None, hmag=None, apStarPath=None, apStarModelPath=None, starPlotFilePath=None): 
+
+    # Basic plotting parameters
+    fontsize = 24;   fsz = fontsize * 0.75
+    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
+    axwidth=1.5
+    axmajlen=7
+    axminlen=3.5
+    lwidth = 1.5
+    xmin = np.array([15130, 15845, 16460])
+    xmax = np.array([15817, 16440, 16960])
+
+    # Read the apStar file
+    apstar = doppler.read(apStarPath)
+    apstar.normalize()
+    nvis = apstar.wave.shape[1] - 2
+    if nvis < 1: nvis = 1
+    if nvis == 1: 
+        wave = apstar.wave
+        flux = apstar.flux
+    else: 
+        wave = apstar.wave[:, 0]
+        flux = apstar.flux[:, 0]
+    gd, = np.where((np.isnan(flux) == False) & (flux > 0))
+    wave = wave[gd]
+    flux = flux[gd]
+
+    # Get model spectrum
+    openModel = open(apStarModelPath, 'rb')
+    modelVals = pickle.load(openModel)
+    try:
+        sumstr, finalstr, bmodel, specmlist, gout = modelVals
+    except:
+        print("----> makeObjQA:    BAD! pickle.load returned None for " + objid)
+        continue
+    pmodels = models.prepare(specmlist[0])
+    bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
+    bestmodel.normalize()
+    swave = bestmodel.wave
+    sflux = bestmodel.flux
+    rvteff = str(int(round(sumstr['teff'])))
+    rvlogg = str("%.3f" % round(sumstr['logg'],3))
+    rvfeh = str("%.3f" % round(sumstr['feh'],3))
+
+    fig=plt.figure(figsize=(28,20))
+    ax1 = plt.subplot2grid((3,1), (0,0))
+    ax2 = plt.subplot2grid((3,1), (1,0))
+    ax3 = plt.subplot2grid((3,1), (2,0))
+    axes = [ax1,ax2,ax3]
+
+    ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+
+    ichip = 0
+    for ax in axes:
+        ax.set_xlim(xmin[ichip], xmax[ichip])
+        ax.set_ylim(0.1, 1.3)
+        ax.tick_params(reset=True)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+
+        ax.plot(wave, flux, color='k', label='apStar')
+        ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model', alpha=0.75)
+
+        ichip += 1
+
+    txt = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits'
+    ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
+    txt = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
+    ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
+    ax3.legend(loc='lower center', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
+
+    fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
+    plt.savefig(starPlotFilePath)
+    plt.close('all')
 
 
 '''  MAKENIGHTQA: makes nightly QA pages '''
