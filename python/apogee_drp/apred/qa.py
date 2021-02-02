@@ -1804,7 +1804,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     objhtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
                 else:
                     objhtml.write('<BR>apStar file??\n')
-                objhtml.write('<BR><A HREF=' + starHTMLrelPath + '>Star Summary Page</A>\n')
+                objhtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
 
             if objtype != 'SKY':
                 objhtml.write('<TD align ="right">' + chmag)
@@ -1905,6 +1905,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
                     else:
                         starHTML.write('<P>' + simbadlink + '<BR>apStar File???\n')
+                    starHTML.write('<HR>\n')
                     starHTML.write('<H3>Star info:</H3>')
                     starHTML.write('<TABLE BORDER=2>\n')
                     starHTML.write('<TR bgcolor="' + thcolor + '">')
@@ -1920,10 +1921,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<TD ALIGN=right>' + cvscatter)
                     starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
                     starHTML.write('</TABLE>\n<BR>\n')
+                    starHTML.write('<HR>\n')
 
                     # Star + best fitting model plot
                     starHTML.write('<H3>apStar versus best fit Cannon model:</H3>')
                     starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
+                    starHTML.write('<HR>\n')
 
                     # Star visit table
                     starHTML.write('<H3>Visit info:</H3>')
@@ -1964,7 +1967,16 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         starHTML.write('<TD ALIGN=right>' + csnr + '\n')
                         starHTML.write('<TD ALIGN=right>' + cvhelio + '\n')
                         starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
-                    starHTML.write('</TABLE>\n<BR><BR><BR>\n')
+                    starHTML.write('</TABLE>\n<BR>\n')
+                    starHTML.write('<HR>\n')
+
+                    # Insert Doppler output plots
+                    starHTML.write('<H3>Doppler Output Plots</H3>')
+                    ccfplot = '../plots/' + apStarNewest.replace('.fits', '_ccf.png')
+                    spec2plot = ccfplot.replace('ccf', 'spec2')
+                    starHTML.write('<A HREF=' + ccfplot + ' target="_blank"><IMG SRC=' + ccfplot + ' WIDTH=600></A>\n')
+                    starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
+                    starHTML.write('<BR><BR><BR><BR>\n')
                     starHTML.close()
 
                     # Make plots of apStar spectrum with best fitting model
@@ -1978,7 +1990,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             apstar = doppler.read(apStarPath)
                             apstar.normalize()
                             wave = apstar.wave[:, 0]
-                            flux = apstar.flux[:, 0]
+                            if wave.shape[1] == 1: flux = apstar.flux
+                            else: flux = apstar.flux[:, 0]
                             gd, = np.where(np.isnan(flux) == False)
                             wave = wave[gd]
                             flux = flux[gd]
@@ -1990,11 +2003,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             pmodels = models.prepare(specmlist[0])
                             bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
                             bestmodel.normalize()
-                            #import pdb; pdb.set_trace()
                             swave = bestmodel.wave
                             sflux = bestmodel.flux
-                            #swave = bmodel[1].wave - ((vhbary / cspeed) * bmodel[1].wave)
-                            #sflux = bmodel[1].flux
 
                             lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
                             xmin = np.array([15125, 15845, 16455])
