@@ -2047,7 +2047,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                                 #p = np.poly1d(z)
 
                                 ax.plot(wave[gd], flux[gd], color='k', label='apStar')
-                                ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model')
+                                ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model', alpha=0.5)
                                 #ax.plot(wave[gd], p(wave[gd]), color='r')
 
                                 ichip += 1
