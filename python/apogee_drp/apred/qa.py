@@ -2129,13 +2129,12 @@ def apStarPlots(objid=None, hmag=None, apStarPath=None, apStarModelPath=None, st
         return
     pmodels = models.prepare(specmlist[0])
     bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
-    import pdb; pdb.set_trace()
     bestmodel.normalize()
     swave = bestmodel.wave
     sflux = bestmodel.flux
-    rvteff = str(int(round(sumstr['teff'])))
-    rvlogg = str("%.3f" % round(sumstr['logg'],3))
-    rvfeh = str("%.3f" % round(sumstr['feh'],3))
+    rvteff = str(int(round(sumstr['teff'][0])))
+    rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
+    rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
 
     fig=plt.figure(figsize=(28,20))
     ax1 = plt.subplot2grid((3,1), (0,0))
