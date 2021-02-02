@@ -1964,9 +1964,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         starHTML.write('<TD ALIGN=center>' + cfib + '\n')
                         starHTML.write('<TD ALIGN=center>' + cblock + '\n')
                         starHTML.write('<TD ALIGN=center>' + ccart + '\n')
-                        fcol='black';  if float(csnr) < 20: fcol='red'
+                        fcol='black'  
+                        if float(csnr) < 20: fcol='red'
                         starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' csnr + '</FONT>\n')
-                        fcol='black';  if np.absolute(float(cvhelio)) > 300: fcol='red'
+                        fcol='black'  
+                        if np.absolute(float(cvhelio)) > 300: fcol='red'
                         starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + cvhelio + '</FONT>\n')
                         starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
                     starHTML.write('</TABLE>\n<BR>\n')
