@@ -2001,10 +2001,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             else: 
                                 wave = apstar.wave[:, 0]
                                 flux = apstar.flux[:, 0]
-                            gd, = np.where(np.isnan(flux) == False)
+                            gd, = np.where((np.isnan(flux) == False) & (flux > 0))
                             wave = wave[gd]
                             flux = flux[gd]
-                            import pdb; pdb.set_trace()
 
                             # Get model spectrum
                             fp = open(apStarModelPath, 'rb')
