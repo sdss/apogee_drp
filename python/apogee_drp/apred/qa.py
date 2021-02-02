@@ -1996,7 +1996,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     if (objtype != 'SKY') & (objid != '2MNone'):
                         print("----> makeObjQA: Running apStarPlots for " + os.path.basename(starPlotFilePath))
                         nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
-                                              starPlotFilePath=starPlotFilePath)
+                                              starPlotFilePath=starPlotFilePath, models=models)
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
@@ -2091,7 +2091,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
 
 ''' APSTARPLOTS: plots of the apStar spectra + best fitting Cannon model '''
-def apStarPlots(objid=None, hmag=None, apStarPath=None, apStarModelPath=None, starPlotFilePath=None): 
+def apStarPlots(objid=None, hmag=None, apStarPath=None, apStarModelPath=None, starPlotFilePath=None, models=None): 
 
     # Basic plotting parameters
     fontsize = 24;   fsz = fontsize * 0.75
