@@ -1702,8 +1702,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     #cfile = open(plotsdir+htmlfile+'.csh','w')
 
+    starsDone = ['2M02201618-0554030', '2M02205146-0546119']
     # Loop over the fibers
-    for j in range(5):
+    for j in range(300):
         jdata = data[j]
         fiber = jdata['FIBERID']
         if fiber > 0:
@@ -1989,78 +1990,81 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     if apStarRelPath is not None:
                         check = glob.glob(starPlotFilePath)
                         if (len(check) < 1) | (clobber is True):
-                        #if len(check) < 1:
-                            print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
+                            bla, = np.where(objid == np.array(starsDone))
+                            if len(bla) < 1:
+                                print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
-                            # Read the apStar file
-                            apstar = doppler.read(apStarPath)
-                            apstar.normalize()
-                            if apstar.wave.shape[1] == 1: 
-                                wave = apstar.wave
-                                flux = apstar.flux
-                            else: 
-                                wave = apstar.wave[:, 0]
-                                flux = apstar.flux[:, 0]
-                            gd, = np.where((np.isnan(flux) == False) & (flux > 0))
-                            wave = wave[gd]
-                            flux = flux[gd]
+                                # Read the apStar file
+                                apstar = doppler.read(apStarPath)
+                                apstar.normalize()
+                                if apstar.wave.shape[1] == 1: 
+                                    wave = apstar.wave
+                                    flux = apstar.flux
+                                else: 
+                                    wave = apstar.wave[:, 0]
+                                    flux = apstar.flux[:, 0]
+                                gd, = np.where((np.isnan(flux) == False) & (flux > 0))
+                                wave = wave[gd]
+                                flux = flux[gd]
 
-                            # Get model spectrum
-                            fp = open(apStarModelPath, 'rb')
-                            out = pickle.load(fp)
-                            sumstr,finalstr,bmodel,specmlist,gout = out
-                            pmodels = models.prepare(specmlist[0])
-                            bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
-                            bestmodel.normalize()
-                            swave = bestmodel.wave
-                            sflux = bestmodel.flux
+                                # Get model spectrum
+                                fp = open(apStarModelPath, 'rb')
+                                out = pickle.load(fp)
+                                sumstr,finalstr,bmodel,specmlist,gout = out
+                                pmodels = models.prepare(specmlist[0])
+                                bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
+                                bestmodel.normalize()
+                                swave = bestmodel.wave
+                                sflux = bestmodel.flux
 
-                            lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                            xmin = np.array([15130, 15845, 16460])
-                            xmax = np.array([15817, 16440, 16960])
-                            xspan = xmax - xmin
+                                lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
+                                xmin = np.array([15130, 15845, 16460])
+                                xmax = np.array([15817, 16440, 16960])
+                                xspan = xmax - xmin
 
-                            fig=plt.figure(figsize=(28,20))
-                            ax1 = plt.subplot2grid((3,1), (0,0))
-                            ax2 = plt.subplot2grid((3,1), (1,0))
-                            ax3 = plt.subplot2grid((3,1), (2,0))
-                            axes = [ax1,ax2,ax3]
+                                fig=plt.figure(figsize=(28,20))
+                                ax1 = plt.subplot2grid((3,1), (0,0))
+                                ax2 = plt.subplot2grid((3,1), (1,0))
+                                ax3 = plt.subplot2grid((3,1), (2,0))
+                                axes = [ax1,ax2,ax3]
 
-                            ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+                                ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
 
-                            ichip = 0
-                            for ax in axes:
-                                ax.set_xlim(xmin[ichip], xmax[ichip])
-                                ax.set_ylim(0.1, 1.3)
-                                ax.tick_params(reset=True)
-                                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
-                                ax.minorticks_on()
-                                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                                ax.tick_params(axis='both',which='major',length=axmajlen)
-                                ax.tick_params(axis='both',which='minor',length=axminlen)
-                                ax.tick_params(axis='both',which='both',width=axwidth)
-                                ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+                                ichip = 0
+                                for ax in axes:
+                                    ax.set_xlim(xmin[ichip], xmax[ichip])
+                                    ax.set_ylim(0.1, 1.3)
+                                    ax.tick_params(reset=True)
+                                    ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                                    ax.minorticks_on()
+                                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                                    ax.tick_params(axis='both',which='major',length=axmajlen)
+                                    ax.tick_params(axis='both',which='minor',length=axminlen)
+                                    ax.tick_params(axis='both',which='both',width=axwidth)
+                                    ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
 
-                                # Flatten the continuum
-                                gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
-                                #z = np.polyfit(wave[gd], flux[gd], contord)
-                                #p = np.poly1d(z)
+                                    # Flatten the continuum
+                                    gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
+                                    #z = np.polyfit(wave[gd], flux[gd], contord)
+                                    #p = np.poly1d(z)
 
-                                ax.plot(wave[gd], flux[gd], color='k', label='apStar')
-                                ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model', alpha=0.75)
-                                #ax.plot(wave[gd], p(wave[gd]), color='r')
+                                    ax.plot(wave[gd], flux[gd], color='k', label='apStar')
+                                    ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model', alpha=0.75)
+                                    #ax.plot(wave[gd], p(wave[gd]), color='r')
 
-                                ichip += 1
+                                    ichip += 1
 
-                            txt = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits'
-                            ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
-                            txt = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
-                            ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
-                            ax3.legend(loc='lower center', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
+                                txt = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits'
+                                ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
+                                txt = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
+                                ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
+                                ax3.legend(loc='lower center', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
 
-                            fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
-                            plt.savefig(starPlotFilePath)
-                            plt.close('all')
+                                fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
+                                plt.savefig(starPlotFilePath)
+                                plt.close('all')
+                            
+                                starsDone.append(objid)
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
