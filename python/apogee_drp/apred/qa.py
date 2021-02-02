@@ -2012,7 +2012,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         # Get model spectrum
                         openModel = open(apStarModelPath, 'rb')
                         modelVals = pickle.load(openModel)
-                        sumstr, finalstr, bmodel, specmlist, gout = modelVals
+                        try:
+                            sumstr, finalstr, bmodel, specmlist, gout = modelVals
+                        except:
+                            print("----> makeObjQA:    BAD! pickle.load returned None for " + objid)
+                            continue
                         pmodels = models.prepare(specmlist[0])
                         bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
                         bestmodel.normalize()
@@ -2055,7 +2059,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
                         plt.savefig(starPlotFilePath)
                         plt.close('all')
-                            
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
@@ -2146,7 +2149,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     plt.close('all')
 
     objhtml.close()
-    #cfile.close()
     print("----> makeObjQA: Done with plate "+plate+", MJD "+mjd+".\n")
 
 
