@@ -2053,9 +2053,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                                 ichip += 1
 
                             txt = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits'
-                            ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25)
+                            ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
                             txt = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
-                            ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25)
+                            ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
                             ax3.legend(loc='lower center', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
 
                             fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
