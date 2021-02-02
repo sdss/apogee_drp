@@ -2031,7 +2031,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ichip = 0
                             for ax in axes:
                                 ax.set_xlim(xmin[ichip], xmax[ichip])
-                                ax.set_ylim(0.15, 1.4)
+                                ax.set_ylim(0.1, 1.3)
                                 ax.tick_params(reset=True)
                                 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
                                 ax.minorticks_on()
