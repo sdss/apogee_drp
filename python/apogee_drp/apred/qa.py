@@ -1627,12 +1627,16 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     axwidth=1.5
     axmajlen=7
     axminlen=3.5
+    lwidth = 1.5
     hlines = np.array([16811.111,16411.692,16113.732,15884.897,15704.970,15560.718,15443.157,15345.999,15264.725,15196.016,15137.357])
     ce3lines = np.array([15851.880,15961.157,15964.928,16133.170,16292.642])
     mn2lines = np.array([15387.220,15412.667,15586.57,15600.576,15620.314])
     hcolor = 'grey'
     ce3color = 'r'
     mn2color = 'b'
+    visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
+    starxmin = np.array([15130, 15845, 16460])
+    starxmax = np.array([15817, 16440, 16960])
 
     # Load in the allVisitMJD file
     apodir = os.environ.get('APOGEE_REDUX') + '/'
@@ -2008,11 +2012,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                                 flux = flux[gd]
 
                                 # Get model spectrum
-                                fp = open(apStarModelPath, 'rb')
-                                out = pickle.load(fp)
+                                openModel = open(apStarModelPath, 'rb')
+                                modelVals = pickle.load(openModel)
                                 #if objid == '2M02174441-0535041': import pdb; pdb.set_trace()
                                 try:
-                                    sumstr, finalstr, bmodel, specmlist, gout = out
+                                    sumstr, finalstr, bmodel, specmlist, gout = modelVals
                                 except:
                                     import pdb; pdb.set_trace()
                                 pmodels = models.prepare(specmlist[0])
@@ -2020,11 +2024,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                                 bestmodel.normalize()
                                 swave = bestmodel.wave
                                 sflux = bestmodel.flux
-
-                                lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                                xmin = np.array([15130, 15845, 16460])
-                                xmax = np.array([15817, 16440, 16960])
-                                xspan = xmax - xmin
 
                                 fig=plt.figure(figsize=(28,20))
                                 ax1 = plt.subplot2grid((3,1), (0,0))
@@ -2047,14 +2046,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                                     ax.tick_params(axis='both',which='both',width=axwidth)
                                     ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
 
-                                    # Flatten the continuum
-                                    gd, = np.where((wave > xmin[ichip]) & (wave < xmax[ichip]))
-                                    #z = np.polyfit(wave[gd], flux[gd], contord)
-                                    #p = np.poly1d(z)
-
-                                    ax.plot(wave[gd], flux[gd], color='k', label='apStar')
+                                    ax.plot(wave, flux, color='k', label='apStar')
                                     ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model', alpha=0.75)
-                                    #ax.plot(wave[gd], p(wave[gd]), color='r')
 
                                     ichip += 1
 
@@ -2075,9 +2068,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             objhtml.write('<TD><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1100></A>\n')
             if makespecplots is True:
                 print("----> makeObjQA: Making "+plotfile)
-
-                lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                xmin = 15120;   xmax = 16960;    xspan = xmax - xmin
 
                 FluxB = apPlate['a'][1].data[300-fiber,:]
                 FluxG = apPlate['b'][1].data[300-fiber,:]
@@ -2124,7 +2114,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     fig=plt.figure(figsize=(28,8))
                     ax1 = plt.subplot2grid((1,1), (0,0))
                     ax1.tick_params(reset=True)
-                    ax1.set_xlim(xmin,xmax)
+                    ax1.set_xlim(visitxmin,visitxmax)
                     ax1.set_ylim(ymin,ymax)
                     ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
                     ax1.minorticks_on()
