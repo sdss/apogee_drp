@@ -2025,6 +2025,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                                 swave = bestmodel.wave
                                 sflux = bestmodel.flux
 
+
                                 fig=plt.figure(figsize=(28,20))
                                 ax1 = plt.subplot2grid((3,1), (0,0))
                                 ax2 = plt.subplot2grid((3,1), (1,0))
