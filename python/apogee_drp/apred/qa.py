@@ -1989,7 +1989,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     # Make plots of apStar spectrum with best fitting model
                     if apStarRelPath is not None:
                         check = glob.glob(starPlotFilePath)
-                        if (len(check) < 1) | (clobber is True):
+                        if makestarplots is True:
                             bla, = np.where(objid == np.array(starsDone))
                             if len(bla) < 1:
                                 print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
