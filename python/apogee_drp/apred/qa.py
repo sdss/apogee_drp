@@ -2125,7 +2125,7 @@ def apStarPlots(objid=None, hmag=None, apStarPath=None, apStarModelPath=None, st
     try:
         sumstr, finalstr, bmodel, specmlist, gout = modelVals
     except:
-        print("----> makeObjQA:    BAD! pickle.load returned None for " + objid)
+        print("----> apStarPlots:    BAD! pickle.load returned None for " + objid)
         continue
     pmodels = models.prepare(specmlist[0])
     bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
