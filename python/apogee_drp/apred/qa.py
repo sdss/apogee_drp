@@ -2010,7 +2010,11 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                                 # Get model spectrum
                                 fp = open(apStarModelPath, 'rb')
                                 out = pickle.load(fp)
-                                sumstr, finalstr, bmodel, specmlist, gout = out
+                                #if objid == '2M02174441-0535041': import pdb; pdb.set_trace()
+                                try:
+                                    sumstr, finalstr, bmodel, specmlist, gout = out
+                                except:
+                                    import pdb; pdb.set_trace()
                                 pmodels = models.prepare(specmlist[0])
                                 bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
                                 bestmodel.normalize()
