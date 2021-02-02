@@ -1994,7 +1994,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if makestarplots is True:
                 if apStarRelPath is not None:
                     if (objtype != 'SKY') & (objid != '2MNone'):
-                        print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
+                        print("----> makeObjQA: Running apStarPlots for " + os.path.basename(starPlotFilePath))
                         nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
                                               starPlotFilePath=starPlotFilePath): 
 
