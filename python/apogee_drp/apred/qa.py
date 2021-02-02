@@ -1996,7 +1996,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     if (objtype != 'SKY') & (objid != '2MNone'):
                         print("----> makeObjQA: Running apStarPlots for " + os.path.basename(starPlotFilePath))
                         nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
-                                              starPlotFilePath=starPlotFilePath): 
+                                              starPlotFilePath=starPlotFilePath)
 
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
