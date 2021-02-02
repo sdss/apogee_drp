@@ -1964,17 +1964,21 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         starHTML.write('<TD ALIGN=center>' + cfib + '\n')
                         starHTML.write('<TD ALIGN=center>' + cblock + '\n')
                         starHTML.write('<TD ALIGN=center>' + ccart + '\n')
-                        starHTML.write('<TD ALIGN=right>' + csnr + '\n')
-                        starHTML.write('<TD ALIGN=right>' + cvhelio + '\n')
+                        fcol='black';  if float(csnr) < 20: fcol='red'
+                        starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' csnr + '</FONT>\n')
+                        fcol='black';  if np.absolute(float(cvhelio)) > 300: fcol='red'
+                        starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + cvhelio + '</FONT>\n')
                         starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
                     starHTML.write('</TABLE>\n<BR>\n')
                     starHTML.write('<HR>\n')
 
                     # Insert Doppler output plots
-                    starHTML.write('<H3>Doppler Output Plots</H3>')
+                    starHTML.write('<H3>Doppler Cross-Correlation Plots:</H3>')
                     ccfplot = '../plots/' + apStarNewest.replace('.fits', '_ccf.png')
                     spec2plot = ccfplot.replace('ccf', 'spec2')
                     starHTML.write('<A HREF=' + ccfplot + ' target="_blank"><IMG SRC=' + ccfplot + ' WIDTH=600></A>\n')
+                    starHTML.write('<HR>\n')
+                    starHTML.write('<H3>Doppler Visit+Model Plots:</H3>')
                     starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
                     starHTML.write('<BR><BR><BR><BR>\n')
                     starHTML.close()
