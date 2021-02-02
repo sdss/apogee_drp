@@ -2016,8 +2016,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             sflux = bestmodel.flux
 
                             lwidth = 1.5;   axthick = 1.5;   axmajlen = 6;   axminlen = 3.5
-                            xmin = np.array([15130, 15845, 16455])
-                            xmax = np.array([15817, 16450, 16960])
+                            xmin = np.array([15130, 15845, 16465])
+                            xmax = np.array([15817, 16440, 16960])
                             xspan = xmax - xmin
 
                             fig=plt.figure(figsize=(28,20))
