@@ -1994,10 +1994,15 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if makestarplots is True:
                 if apStarRelPath is not None:
                     if (objtype != 'SKY') & (objid != '2MNone'):
-                        print("----> makeObjQA: Running apStarPlots for " + os.path.basename(starPlotFilePath))
-                        nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
-                                              starPlotFilePath=starPlotFilePath, models=models)
-
+                        check, = np.where(objid == np.array(starsDone))
+                        if len(check) < 1:
+                            print("----> makeObjQA: Running apStarPlots for " + os.path.basename(starPlotFilePath))
+                            nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
+                                                  starPlotFilePath=starPlotFilePath, models=models)
+                            starsDone.append(objid)
+                        else:
+                            print("----> makeObjQA: Skipping apStarPlots for " + os.path.basename(starPlotFilePath))
+                            
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
             objhtml.write('<TD><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1100></A>\n')
