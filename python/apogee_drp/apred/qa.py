@@ -1986,14 +1986,14 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         #if len(check) < 1:
                             print("----> makeObjQA: Making " + os.path.basename(starPlotFilePath))
 
-                            contord = 5
+                            # Read the apStar file
                             apstar = doppler.read(apStarPath)
                             apstar.normalize()
-                            wave = apstar.wave[:, 0]
-                            import pdb; pdb.set_trace()
-                            if wave.shape[1] == 1: 
+                            if apstar.wave.shape[1] == 1: 
+                                wave = apstar.wave
                                 flux = apstar.flux
                             else: 
+                                wave = apstar.wave[:, 0]
                                 flux = apstar.flux[:, 0]
                             gd, = np.where(np.isnan(flux) == False)
                             wave = wave[gd]
