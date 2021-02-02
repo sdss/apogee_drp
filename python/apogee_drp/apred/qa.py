@@ -1990,6 +1990,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             apstar = doppler.read(apStarPath)
                             apstar.normalize()
                             wave = apstar.wave[:, 0]
+                            import pdb; pdb.set_trace()
                             if wave.shape[1] == 1: 
                                 flux = apstar.flux
                             else: 
