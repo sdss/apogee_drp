@@ -2129,6 +2129,7 @@ def apStarPlots(objid=None, hmag=None, apStarPath=None, apStarModelPath=None, st
         return
     pmodels = models.prepare(specmlist[0])
     bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
+    import pdb; pdb.set_trace()
     bestmodel.normalize()
     swave = bestmodel.wave
     sflux = bestmodel.flux
