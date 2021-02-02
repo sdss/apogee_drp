@@ -2058,7 +2058,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                             ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25)
                             ax3.legend(loc='lower center', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
 
-                            fig.subplots_adjust(left=0.045,right=0.99,bottom=0.05,top=0.98,hspace=0.1,wspace=0.0)
+                            fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
                             plt.savefig(starPlotFilePath)
                             plt.close('all')
 
