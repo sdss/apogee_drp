@@ -1703,7 +1703,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     #cfile = open(plotsdir+htmlfile+'.csh','w')
 
     # Loop over the fibers
-    for j in range(300):
+    for j in range(5):
         jdata = data[j]
         fiber = jdata['FIBERID']
         if fiber > 0:
@@ -1978,7 +1978,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
                     starHTML.write('<BR><BR><BR><BR>\n')
                     starHTML.close()
-
+ 
                     # Make plots of apStar spectrum with best fitting model
                     if apStarRelPath is not None:
                         check = glob.glob(starPlotFilePath)
