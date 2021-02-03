@@ -283,7 +283,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the apPlateSum file if it doesn't already exist.
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-        if (os.path.exists(platesum) is False) | (makeplatesum is True):
+        if makeplatesum == True:
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
@@ -350,420 +350,416 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
 
-    print("----> makePlateSum: Running plate "+plate+", MJD "+mjd)
+    print("----> makePlateSum: Making "+platesumbase)
 
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
 
-    # Only make the file is doesn't exist or if clobber is True
-    if (os.path.exists(platesumfile) == False) | (clobber == True):
-        print("----> makePlateSum: Making "+platesumbase)
+    chips = np.array(['a','b','c'])
+    nchips = len(chips)
 
-        chips = np.array(['a','b','c'])
-        nchips = len(chips)
+    # Get the fiber association for this plate. Also get some other values
+    if ims[0] == 0:
+        n_exposures = 1
+        onedfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
+    else:
+        gdims, = np.where(imsReduced == 1)
+        ims = ims[gdims]
+        n_exposures = len(ims)
+        onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
 
-        # Get the fiber association for this plate. Also get some other values
-        if ims[0] == 0:
-            n_exposures = 1
-            onedfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
+    tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
+    ra = tothdr['RADEG']
+    dec = tothdr['DECDEG']
+    DateObs = tothdr['DATE-OBS']
+
+    if ims[0] == 0: 
+        tot = load.apPlate(int(plate), mjd)
+    else:
+        tot = load.ap1D(ims[0])
+
+    if type(tot) != dict:
+    #    html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
+    #    htmlsum.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
+    #    html.close()
+    #    htmlsum.close()
+        print("----> makePlateSum: Error!")
+
+    plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
+
+    #nplug = len(plug['fiberdata']['fiberid'])
+    #for k in range(nplug): 
+    #    fib = str(plug['fiberdata']['fiberid'][k]).rjust(3)
+    #    nm = plug['fiberdata']['twomass_designation'][k].rjust(16)
+    #    hm = str(plug['fiberdata']['hmag'][k]).rjust(6)
+    #    ot = plug['fiberdata']['objtype'][k]
+    #    ra = str("%.6f" % round(plug['fiberdata']['ra'][k],6)).rjust(10)
+    #    de = str("%.6f" % round(plug['fiberdata']['dec'][k],6)).rjust(10)
+    #    print(fib+'  '+nm+'  '+hm+'  '+ot+'  '+ra+'  '+de)
+
+    #import pdb; pdb.set_trace()
+
+    gd, = np.where(plug['fiberdata']['fiberid'] > 0)
+    fiber = plug['fiberdata'][gd]
+    nfiber = len(fiber)
+    rows = 300 - fiber['fiberid']
+    guide = plug['guidedata']
+
+    # Add sn and obsmag columns to fiber structure
+    dtype =        np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
+    snColumn =     np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
+    obsmagColumn = np.zeros(nfiber, dtype=[('obsmag', 'float32', (n_exposures, nchips))])
+    fiber =        merge_arrays([fiber, snColumn, obsmagColumn], flatten=True)
+
+    unplugged, = np.where(fiber['fiberid'] < 0)
+    nunplugged = len(unplugged)
+    if flat is not None:
+        fiber['hmag'] = 12
+        fiber['object'] = 'FLAT'
+
+    # Find telluric, object, sky, and non-sky fibers.
+    fibtype = fiber['objtype']
+    fibertelluric, = np.where((fibtype == 'SPECTROPHOTO_STD') | (fibtype == 'HOT_STD'))
+    ntelluric = len(fibertelluric)
+    telluric = rows[fibertelluric]
+    if ntelluric < 1: print("----> makePlateSum: PROBLEM!!! No tellurics found.")
+
+    fiberobj, = np.where((fibtype == 'STAR_BHB') | (fibtype == 'STAR') | (fibtype == 'EXTOBJ') | (fibtype == 'OBJECT'))
+    nobj = len(fiberobj)
+    obj = rows[fiberobj]
+    if nobj < 1: print("----> makePlateSum: PROBLEM!!! No science objects found.")
+
+    fibersky, = np.where(fibtype == 'SKY')
+    nsky = len(fibersky)
+    sky = rows[fibersky]
+    if nsky < 1: print("----> makePlateSum: PROBLEM!!! No skies found.")
+
+    fiberstar = np.concatenate([fiberobj,fibertelluric])
+    nstar = len(fiberstar)
+    star = rows[fiberstar]
+
+    # Loop through all the images for this plate, and make the plots.
+    # Load up and save information for this plate in a FITS table.
+    allsky =     np.zeros((n_exposures,3), dtype=np.float64)
+    allzero =    np.zeros((n_exposures,3), dtype=np.float64)
+    allzerorms = np.zeros((n_exposures,3), dtype=np.float64)
+
+    # Get guider information.
+    if onem is None:
+        gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
+        if os.path.exists(gcamdir) == False: subprocess.call(['mkdir',gcamdir])
+        gcamfile = gcamdir+'gcam-'+mjd+'.fits'
+        if os.path.exists(gcamfile) == False:
+            print("----> makePlateSum: Attempting to make "+os.path.basename(gcamfile)+".")
+            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--output', gcamfile], shell=False)
+            if os.path.exists(gcamfile):
+                print("----> makePlateSum: Successfully made "+os.path.basename(gcamfile))
+            else:
+                print("----> makePlateSum: Failed to make "+os.path.basename(gcamfile))
         else:
-            gdims, = np.where(imsReduced == 1)
-            ims = ims[gdims]
-            n_exposures = len(ims)
-            onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
+            gcam = fits.getdata(gcamfile)
 
-        tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
-        ra = tothdr['RADEG']
-        dec = tothdr['DECDEG']
-        DateObs = tothdr['DATE-OBS']
+    mjd0 = 99999
+    mjd1 = 0.
 
+    # FITS table structure.
+    dt = np.dtype([('TELESCOPE', np.str, 6),
+                   ('PLATE',     np.int32),
+                   ('NREADS',    np.int32),
+                   ('DATEOBS',   np.str, 30),
+                   ('EXPTIME',   np.int32),
+                   ('SECZ',      np.float64),
+                   ('HA',        np.float64),
+                   ('DESIGN_HA', np.float64, 3),
+                   ('SEEING',    np.float64),
+                   ('FWHM',      np.float64),
+                   ('GDRMS',     np.float64),
+                   ('CART',      np.int32),
+                   ('PLUGID',    np.str, 30),
+                   ('DITHER',    np.float64),
+                   ('MJD',       np.int32),
+                   ('IM',        np.int32),
+                   ('ZERO',      np.float64),
+                   ('ZERORMS',   np.float64),
+                   ('ZERONORM',  np.float64),
+                   ('SKY',       np.float64, 3),
+                   ('SN',        np.float64, 3),
+                   ('SNC',       np.float64, 3),
+                   #('SNT',       np.float64, 3),
+                   ('ALTSN',     np.float64, 3),
+                   ('NSN',       np.int32),
+                   ('SNRATIO',   np.float64),
+                   ('MOONDIST',  np.float64),
+                   ('MOONPHASE', np.float64),
+                   ('TELLFIT',   np.float64, (3,6))])
+
+    platetab = np.zeros(n_exposures,dtype=dt)
+
+    platetab['PLATE'] =     int(plate)
+    platetab['TELESCOPE'] = telescope
+    platetab['HA'] =        0.0
+    platetab['DESIGN_HA'] = -99.0
+    platetab['PLUGID'] =    plugmap
+    platetab['MJD'] =       mjd
+    #platetab['MOONDIST'] =  moondist
+    #platetab['MOONPHASE'] = moonphase
+
+    # Loop over the exposures.
+    for i in range(n_exposures):
         if ims[0] == 0: 
-            tot = load.apPlate(int(plate), mjd)
+            pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
+            dfile = load.filename('Plate',  plate=int(plate), mjd=mjd, chips=True)
+            d = load.apPlate(int(plate), mjd) 
+            cframe = load.apPlate(int(plate), mjd)
+            if type(d)!=dict: print("----> makePlateSum: Problem with apPlate!")
+            dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
         else:
-            tot = load.ap1D(ims[0])
+            pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[i], mjd=mjd, chips=True))
+            dfile = load.filename('1D',  plate=int(plate), num=ims[i], mjd=mjd, chips=True)
+            d = load.ap1D(ims[i])
+            cframe = load.apCframe(field, int(plate), mjd, ims[i])
+            if type(d)!=dict: print("----> makePlateSum: Problem with ap1D!")
+            dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
 
-        if type(tot) != dict:
-        #    html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
-        #    htmlsum.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
-        #    html.close()
-        #    htmlsum.close()
-            print("----> makePlateSum: Error!")
+        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[1], chips='c')
+        cframehdr = fits.getheader(cframefile.replace('Cframe-','Cframe-a-'))
+        pfile = pfile.replace('.fits','')
 
-        plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
+        # Get moon distance and phase.
+        dateobs = dhdr['DATE-OBS']
+        tt = Time(dateobs, format='fits')
+        moonpos = get_moon(tt)
+        moonra = moonpos.ra.deg
+        moondec = moonpos.dec.deg
+        c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
+        c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
+        sep = c1.separation(c2)
+        moondist = sep.deg
+        moonphase = moon_illumination(tt)
 
-        #nplug = len(plug['fiberdata']['fiberid'])
-        #for k in range(nplug): 
-        #    fib = str(plug['fiberdata']['fiberid'][k]).rjust(3)
-        #    nm = plug['fiberdata']['twomass_designation'][k].rjust(16)
-        #    hm = str(plug['fiberdata']['hmag'][k]).rjust(6)
-        #    ot = plug['fiberdata']['objtype'][k]
-        #    ra = str("%.6f" % round(plug['fiberdata']['ra'][k],6)).rjust(10)
-        #    de = str("%.6f" % round(plug['fiberdata']['dec'][k],6)).rjust(10)
-        #    print(fib+'  '+nm+'  '+hm+'  '+ot+'  '+ra+'  '+de)
+        obs = np.zeros((nfiber,nchips), dtype=np.float64)
+        sn  = np.zeros((nfiber,nchips), dtype=np.float64)
+        snc = np.zeros((nfiber,nchips), dtype=np.float64)
+        snt = np.zeros((nfiber,nchips), dtype=np.float64)
 
-        #import pdb; pdb.set_trace()
+        # For each fiber, get an observed mag from a median value.
+        for j in range(nfiber):
+            for ichip in range(nchips): 
+                obs[j, ichip] = np.median(d[chips[ichip]][1].data[rows[j], :])
 
-        gd, = np.where(plug['fiberdata']['fiberid'] > 0)
-        fiber = plug['fiberdata'][gd]
-        nfiber = len(fiber)
-        rows = 300 - fiber['fiberid']
-        guide = plug['guidedata']
+        # Get a "magnitude" for each fiber from a median on each chip.
+        # Do a crude sky subtraction, calculate S/N.
+        for ichip in range(nchips):
+            chip = chips[ichip]
 
-        # Add sn and obsmag columns to fiber structure
-        dtype =        np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
-        snColumn =     np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
-        obsmagColumn = np.zeros(nfiber, dtype=[('obsmag', 'float32', (n_exposures, nchips))])
-        fiber =        merge_arrays([fiber, snColumn, obsmagColumn], flatten=True)
+            fluxarr = d[chip][1].data
+            errarr = d[chip][2].data
+            cfluxarr = cframe[chip][1].data
+            cerrarr = cframe[chip][2].data
 
-        unplugged, = np.where(fiber['fiberid'] < 0)
-        nunplugged = len(unplugged)
-        if flat is not None:
-            fiber['hmag'] = 12
-            fiber['object'] = 'FLAT'
+            if ims[0] == 0: medsky = 0.
+            if ims[0] != 0: medsky = np.median(obs[fibersky, ichip])
 
-        # Find telluric, object, sky, and non-sky fibers.
-        fibtype = fiber['objtype']
-        fibertelluric, = np.where((fibtype == 'SPECTROPHOTO_STD') | (fibtype == 'HOT_STD'))
-        ntelluric = len(fibertelluric)
-        telluric = rows[fibertelluric]
-        if ntelluric < 1: print("----> makePlateSum: PROBLEM!!! No tellurics found.")
+            ### NOTE: using axis=0 caused error, so trying axis=0
+            if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
 
-        fiberobj, = np.where((fibtype == 'STAR_BHB') | (fibtype == 'STAR') | (fibtype == 'EXTOBJ') | (fibtype == 'OBJECT'))
-        nobj = len(fiberobj)
-        obj = rows[fiberobj]
-        if nobj < 1: print("----> makePlateSum: PROBLEM!!! No science objects found.")
+            if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
 
-        fibersky, = np.where(fibtype == 'SKY')
-        nsky = len(fibersky)
-        sky = rows[fibersky]
-        if nsky < 1: print("----> makePlateSum: PROBLEM!!! No skies found.")
+            if nobj > 0:
+                sn[fiberobj, ichip] = np.median((fluxarr[obj, :] - medsky) / errarr[obj, :], axis=1)
+                if len(cframe) > 1:
+                    snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=1)
 
-        fiberstar = np.concatenate([fiberobj,fibertelluric])
-        nstar = len(fiberstar)
-        star = rows[fiberstar]
+            if ntelluric > 0:
+                sn[fibertelluric, ichip] = np.median((fluxarr[telluric,:] - medsky) / errarr[telluric, :], axis=1)
+                if len(cframe) > 1:
+                    snc[fibertelluric, ichip] = np.median(cfluxarr[telluric, :] / cerrarr[telluric, :], axis=1)
+                    medfilt = ScipyMedfilt2D(cfluxarr[telluric, :], kernel_size=(1,49))
+                    sz = cfluxarr.shape
+                    i1 = int(np.floor((900 * sz[1]) / 2048))
+                    i2 = int(np.floor((1000 * sz[1]) / 2048))
+                    for itell in range(ntelluric):
+                        p1 = np.mean(cfluxarr[telluric[itell], i1:i2])
+                        p2 = np.std(cfluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
+                        snt[fibertelluric[itell], ichip] = p1 / p2
 
-        # Loop through all the images for this plate, and make the plots.
-        # Load up and save information for this plate in a FITS table.
-        allsky =     np.zeros((n_exposures,3), dtype=np.float64)
-        allzero =    np.zeros((n_exposures,3), dtype=np.float64)
-        allzerorms = np.zeros((n_exposures,3), dtype=np.float64)
-
-        # Get guider information.
-        if onem is None:
-            gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
-            if os.path.exists(gcamdir) == False: subprocess.call(['mkdir',gcamdir])
-            gcamfile = gcamdir+'gcam-'+mjd+'.fits'
-            if os.path.exists(gcamfile) == False:
-                print("----> makePlateSum: Attempting to make "+os.path.basename(gcamfile)+".")
-                subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--output', gcamfile], shell=False)
-                if os.path.exists(gcamfile):
-                    print("----> makePlateSum: Successfully made "+os.path.basename(gcamfile))
                 else:
-                    print("----> makePlateSum: Failed to make "+os.path.basename(gcamfile))
-            else:
-                gcam = fits.getdata(gcamfile)
+                    snc[fibertelluric,ichip] = sn[fibertelluric,ichip]
+                    medfilt = ScipyMedfilt2D(fluxarr[telluric, :], kernel_size=(1,49))
+                    sz = fluxarr.shape
+                    i1 = int(np.floor((900 * sz[1]) / 2048))
+                    i2 = int(np.floor((1000 * sz[1]) / 2048))
+                    for itell in range(ntelluric):
+                        p1 = np.mean(fluxarr[telluric[itell], i1:i2 * (int(np.floor(sz[1] / 2048)))])
+                        p2 = np.std(fluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
+                        snt[fibertelluric[itell], ichip] = p1 / p2
 
-        mjd0 = 99999
-        mjd1 = 0.
+        # Calculate zeropoints from known H band mags.
+        # Use a static zeropoint to calculate sky brightness.
+        nreads = 0
+        if "NFRAMES" in dhdr: nreads = dhdr['NFRAMES']
+        exptime = dhdr['EXPTIME']
+        skyzero = 14.75 + (2.5 * np.log10(nreads))
+        zero = 0
+        zerorms = 0.
+        faint = -1
+        nfaint = 0
+        achievedsn = np.zeros(nchips)
+        achievedsnc = np.zeros(nchips)
+        #achievedsnt = np.zeros(nchips)
+        altsn = np.zeros(nchips)
+        nsn = 0
 
-        # FITS table structure.
-        dt = np.dtype([('TELESCOPE', np.str, 6),
-                       ('PLATE',     np.int32),
-                       ('NREADS',    np.int32),
-                       ('DATEOBS',   np.str, 30),
-                       ('EXPTIME',   np.int32),
-                       ('SECZ',      np.float64),
-                       ('HA',        np.float64),
-                       ('DESIGN_HA', np.float64, 3),
-                       ('SEEING',    np.float64),
-                       ('FWHM',      np.float64),
-                       ('GDRMS',     np.float64),
-                       ('CART',      np.int32),
-                       ('PLUGID',    np.str, 30),
-                       ('DITHER',    np.float64),
-                       ('MJD',       np.int32),
-                       ('IM',        np.int32),
-                       ('ZERO',      np.float64),
-                       ('ZERORMS',   np.float64),
-                       ('ZERONORM',  np.float64),
-                       ('SKY',       np.float64, 3),
-                       ('SN',        np.float64, 3),
-                       ('SNC',       np.float64, 3),
-                       #('SNT',       np.float64, 3),
-                       ('ALTSN',     np.float64, 3),
-                       ('NSN',       np.int32),
-                       ('SNRATIO',   np.float64),
-                       ('MOONDIST',  np.float64),
-                       ('MOONPHASE', np.float64),
-                       ('TELLFIT',   np.float64, (3,6))])
+        tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
+        zero = np.nanmedian(tmp)
+        zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
+        faint, = np.where((tmp - zero) < -0.5)
+        nfaint = len(faint)
+        zeronorm = zero - (2.5 * np.log10(nreads))
 
-        platetab = np.zeros(n_exposures,dtype=dt)
+        if (flat is None) & (onem is None):
+            # Target line that has S/N=100 for 3 hour exposure at H=12.2
+            sntarget = 100 * np.sqrt(exptime / (3.0 * 3600))
+            sntargetmag = 12.2
 
-        platetab['PLATE'] =     int(plate)
-        platetab['TELESCOPE'] = telescope
-        platetab['HA'] =        0.0
-        platetab['DESIGN_HA'] = -99.0
-        platetab['PLUGID'] =    plugmap
-        platetab['MJD'] =       mjd
-        #platetab['MOONDIST'] =  moondist
-        #platetab['MOONPHASE'] = moonphase
-
-        # Loop over the exposures.
-        for i in range(n_exposures):
-            if ims[0] == 0: 
-                pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-                dfile = load.filename('Plate',  plate=int(plate), mjd=mjd, chips=True)
-                d = load.apPlate(int(plate), mjd) 
-                cframe = load.apPlate(int(plate), mjd)
-                if type(d)!=dict: print("----> makePlateSum: Problem with apPlate!")
-                dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
-            else:
-                pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[i], mjd=mjd, chips=True))
-                dfile = load.filename('1D',  plate=int(plate), num=ims[i], mjd=mjd, chips=True)
-                d = load.ap1D(ims[i])
-                cframe = load.apCframe(field, int(plate), mjd, ims[i])
-                if type(d)!=dict: print("----> makePlateSum: Problem with ap1D!")
-                dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
-
-            cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[1], chips='c')
-            cframehdr = fits.getheader(cframefile.replace('Cframe-','Cframe-a-'))
-            pfile = pfile.replace('.fits','')
-
-            # Get moon distance and phase.
-            dateobs = dhdr['DATE-OBS']
-            tt = Time(dateobs, format='fits')
-            moonpos = get_moon(tt)
-            moonra = moonpos.ra.deg
-            moondec = moonpos.dec.deg
-            c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
-            c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
-            sep = c1.separation(c2)
-            moondist = sep.deg
-            moonphase = moon_illumination(tt)
-
-            obs = np.zeros((nfiber,nchips), dtype=np.float64)
-            sn  = np.zeros((nfiber,nchips), dtype=np.float64)
-            snc = np.zeros((nfiber,nchips), dtype=np.float64)
-            snt = np.zeros((nfiber,nchips), dtype=np.float64)
-
-            # For each fiber, get an observed mag from a median value.
-            for j in range(nfiber):
-                for ichip in range(nchips): 
-                    obs[j, ichip] = np.median(d[chips[ichip]][1].data[rows[j], :])
-
-            # Get a "magnitude" for each fiber from a median on each chip.
-            # Do a crude sky subtraction, calculate S/N.
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                fluxarr = d[chip][1].data
-                errarr = d[chip][2].data
-                cfluxarr = cframe[chip][1].data
-                cerrarr = cframe[chip][2].data
-
-                if ims[0] == 0: medsky = 0.
-                if ims[0] != 0: medsky = np.median(obs[fibersky, ichip])
-
-                ### NOTE: using axis=0 caused error, so trying axis=0
-                if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
-
-                if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
-
-                if nobj > 0:
-                    sn[fiberobj, ichip] = np.median((fluxarr[obj, :] - medsky) / errarr[obj, :], axis=1)
-                    if len(cframe) > 1:
-                        snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=1)
-
-                if ntelluric > 0:
-                    sn[fibertelluric, ichip] = np.median((fluxarr[telluric,:] - medsky) / errarr[telluric, :], axis=1)
-                    if len(cframe) > 1:
-                        snc[fibertelluric, ichip] = np.median(cfluxarr[telluric, :] / cerrarr[telluric, :], axis=1)
-                        medfilt = ScipyMedfilt2D(cfluxarr[telluric, :], kernel_size=(1,49))
-                        sz = cfluxarr.shape
-                        i1 = int(np.floor((900 * sz[1]) / 2048))
-                        i2 = int(np.floor((1000 * sz[1]) / 2048))
-                        for itell in range(ntelluric):
-                            p1 = np.mean(cfluxarr[telluric[itell], i1:i2])
-                            p2 = np.std(cfluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
-                            snt[fibertelluric[itell], ichip] = p1 / p2
-
-                    else:
-                        snc[fibertelluric,ichip] = sn[fibertelluric,ichip]
-                        medfilt = ScipyMedfilt2D(fluxarr[telluric, :], kernel_size=(1,49))
-                        sz = fluxarr.shape
-                        i1 = int(np.floor((900 * sz[1]) / 2048))
-                        i2 = int(np.floor((1000 * sz[1]) / 2048))
-                        for itell in range(ntelluric):
-                            p1 = np.mean(fluxarr[telluric[itell], i1:i2 * (int(np.floor(sz[1] / 2048)))])
-                            p2 = np.std(fluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
-                            snt[fibertelluric[itell], ichip] = p1 / p2
-
-            # Calculate zeropoints from known H band mags.
-            # Use a static zeropoint to calculate sky brightness.
-            nreads = 0
-            if "NFRAMES" in dhdr: nreads = dhdr['NFRAMES']
-            exptime = dhdr['EXPTIME']
-            skyzero = 14.75 + (2.5 * np.log10(nreads))
-            zero = 0
-            zerorms = 0.
-            faint = -1
-            nfaint = 0
-            achievedsn = np.zeros(nchips)
-            achievedsnc = np.zeros(nchips)
-            #achievedsnt = np.zeros(nchips)
-            altsn = np.zeros(nchips)
-            nsn = 0
-
-            tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
-            zero = np.nanmedian(tmp)
-            zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
-            faint, = np.where((tmp - zero) < -0.5)
-            nfaint = len(faint)
-            zeronorm = zero - (2.5 * np.log10(nreads))
-
-            if (flat is None) & (onem is None):
-                # Target line that has S/N=100 for 3 hour exposure at H=12.2
-                sntarget = 100 * np.sqrt(exptime / (3.0 * 3600))
-                sntargetmag = 12.2
-
-                # Get typical S/N for this plate
-                snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2))
+            # Get typical S/N for this plate
+            snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2))
+            nsn = len(snstars)
+            scale = 1
+            if nsn < 3:
+                bright, = np.where(fiber['hmag'] < 12)
+                hmax = np.nanmax(fiber['hmag'][bright])
+                snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
                 nsn = len(snstars)
-                scale = 1
-                if nsn < 3:
-                    bright, = np.where(fiber['hmag'] < 12)
-                    hmax = np.nanmax(fiber['hmag'][bright])
-                    snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
-                    nsn = len(snstars)
-                    scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
+                scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
 
-                achievedsn = np.nanmedian(sn[snstars,:], axis=0) * scale
-                #gd, = np.where(snt > 0)
-                #achievedsnt = np.nanmedian(snt[:], axis=0) * scale
+            achievedsn = np.nanmedian(sn[snstars,:], axis=0) * scale
+            #gd, = np.where(snt > 0)
+            #achievedsnt = np.nanmedian(snt[:], axis=0) * scale
 
-                # Alternative S/N as computed from median of all stars with H<12.2, scaled
-                snstars, = np.where(fiber['hmag'] < 12.2)
-                scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
-                altsn = achievedsn * 0.
-                for ichip in range(nchips): 
-                    altsn[ichip] = np.nanmedian(sn[snstars,ichip] * scale)
-                    achievedsnc[ichip] = np.nanmedian(snc[snstars,ichip] * scale)
+            # Alternative S/N as computed from median of all stars with H<12.2, scaled
+            snstars, = np.where(fiber['hmag'] < 12.2)
+            scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
+            altsn = achievedsn * 0.
+            for ichip in range(nchips): 
+                altsn[ichip] = np.nanmedian(sn[snstars,ichip] * scale)
+                achievedsnc[ichip] = np.nanmedian(snc[snstars,ichip] * scale)
+        else:
+            if onem is not None:
+                achievedsn = np.nanmedian([sn[obj,:]], axis=0)
+
+        medsky = np.zeros(3, dtype=np.float64)
+        for ichip in range(nchips):
+            if np.nanmedian(obs[fibersky,ichip]) > 0:
+                medsky[ichip] = -2.5 * np.log10(np.nanmedian(obs[fibersky,ichip])) + skyzero
+            else: 
+                medsky[ichip] = 99.999
+
+        # Get guider info.
+        if onem is None:
+            dateobs = dhdr['DATE-OBS']
+            exptime = dhdr['EXPTIME']
+            tt = Time(dateobs)
+            mjdstart = tt.mjd
+            mjdend = mjdstart + (exptime/86400.)
+            mjd0 = min([mjd0,mjdstart])
+            mjd1 = max([mjd1,mjdend])
+            nj = 0
+            if os.path.exists(gcamfile):
+                gcam = fits.getdata(gcamfile)
+                jcam, = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
+                nj = len(jcam)
+            if nj > 1: 
+                fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
+                gdrms = np.median(gcam['GDRMS'][jcam])
             else:
-                if onem is not None:
-                    achievedsn = np.nanmedian([sn[obj,:]], axis=0)
+                fwhm = -1.
+                gdrms = -1.
+                if i == 0: print("----> makePlateSum: Problem! No matching mjd range in gcam.")
+        else:
+            fwhm = -1
+            gdrms = -1
+            exptime=-9.999
 
-            medsky = np.zeros(3, dtype=np.float64)
-            for ichip in range(nchips):
-                if np.nanmedian(obs[fibersky,ichip]) > 0:
-                    medsky[ichip] = -2.5 * np.log10(np.nanmedian(obs[fibersky,ichip])) + skyzero
-                else: 
-                    medsky[ichip] = 99.999
+        secz = 0
+        seeing = 0
+        if ims[0] != 0: 
+            secz = 1. / np.cos((90. - dhdr['ALT']) * (math.pi/180.))
+            seeing = dhdr['SEEING']
+            if str(seeing).lower().find('nan') != -1: seeing=np.nan
+        ### NOTE:'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
+#        design_ha = plug['ha']
+        design_ha = [0,0,0]
+        dither = -99.
+        if len(cframe) > 1: dither = cframehdr['DITHSH']
 
-            # Get guider info.
-            if onem is None:
-                dateobs = dhdr['DATE-OBS']
-                exptime = dhdr['EXPTIME']
-                tt = Time(dateobs)
-                mjdstart = tt.mjd
-                mjdend = mjdstart + (exptime/86400.)
-                mjd0 = min([mjd0,mjdstart])
-                mjd1 = max([mjd1,mjdend])
-                nj = 0
-                if os.path.exists(gcamfile):
-                    gcam = fits.getdata(gcamfile)
-                    jcam, = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
-                    nj = len(jcam)
-                if nj > 1: 
-                    fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
-                    gdrms = np.median(gcam['GDRMS'][jcam])
-                else:
-                    fwhm = -1.
-                    gdrms = -1.
-                    if i == 0: print("----> makePlateSum: Problem! No matching mjd range in gcam.")
-            else:
-                fwhm = -1
-                gdrms = -1
-                exptime=-9.999
-
-            secz = 0
-            seeing = 0
-            if ims[0] != 0: 
-                secz = 1. / np.cos((90. - dhdr['ALT']) * (math.pi/180.))
-                seeing = dhdr['SEEING']
-                if str(seeing).lower().find('nan') != -1: seeing=np.nan
-            ### NOTE:'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
-    #        design_ha = plug['ha']
-            design_ha = [0,0,0]
-            dither = -99.
-            if len(cframe) > 1: dither = cframehdr['DITHSH']
-
-            allsky[i,:] = medsky
-            allzero[i,:] = zero
-            allzerorms[i,:] = zerorms
+        allsky[i,:] = medsky
+        allzero[i,:] = zero
+        allzerorms[i,:] = zerorms
 
 
-            # Summary information in apPlateSum FITS file.
-            if ims[0] != 0:
-                tellfile = load.filename('Tellstar', plate=int(plate), mjd=mjd)
-                if os.path.exists(tellfile):
-                    try:
-                        telstr = fits.getdata(tellfile)
-                    except:
-                        if i == 0: print("----> makePlateSum: PROBLEM!!! Error reading apTellstar file: "+os.path.basename(tellfile))
-                    else:
-                        telstr = fits.getdata(tellfile)
-                        jtell, = np.where(telstr['IM'] == ims[i])
-                        ntell = len(jtell)
-                        if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
-                else:
-                    print("----> makePlateSum: PROBLEM!!! "+os.path.basename(tellfile)+" does not exist.")
-
-            platetab['IM'][i] =        ims[i]
-            platetab['NREADS'][i] =    nreads
-            platetab['SECZ'][i] =      secz
-            if dhdr.get('HA') is not None: platetab['HA'][i] = dhdr['HA']
-            platetab['DESIGN_HA'][i] = design_ha
-            platetab['SEEING'][i] =    seeing
-            platetab['FWHM'][i] =      fwhm
-            platetab['GDRMS'][i] =     gdrms
-            cart=0
-            if 'CARTID' in dhdr: cart = dhdr['CARTID']
-            platetab['CART'][i] =      cart
-            platetab['DATEOBS'][i] =   dateobs
-            platetab['EXPTIME'][i] =   exptime
-            platetab['DITHER'][i] =    dither
-            platetab['ZERO'][i] =      zero
-            platetab['ZERORMS'][i] =   zerorms
-            platetab['ZERONORM'][i] =  zeronorm
-            platetab['SKY'][i] =       medsky
-            platetab['SN'][i] =        achievedsn
-            platetab['ALTSN'][i] =     altsn
-            platetab['NSN'][i] =       nsn
-            platetab['SNC'][i] =       achievedsnc
-            #platetab['SNT'][i] =       achievedsnt
-            if ntelluric > 0: platetab['SNRATIO'][i] = np.nanmedian(snt[fibertelluric,1] / snc[fibertelluric,1])
-            platetab['MOONDIST'][i] =  moondist
-            platetab['MOONPHASE'][i] = moonphase
-
-            for j in range(len(fiber)):
-                fiber['sn'][j][i,:] = sn[j,:]
-                fiber['obsmag'][j][i,:] = (-2.5 * np.log10(obs[j,:])) + zero
-
-        # Write out the FITS table.
-        platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+        # Summary information in apPlateSum FITS file.
         if ims[0] != 0:
-            Table(platetab).write(platesum, overwrite=True)
-            hdulist = fits.open(platesum)
-            hdu = fits.table_to_hdu(Table(fiber))
-            hdulist.append(hdu)
-            hdulist.writeto(platesum, overwrite=True)
-            hdulist.close()
-        if ims[0] == 0:
-            hdulist = fits.open(platesum)
-            hdu1 = fits.table_to_hdu(Table(platetab))
-            hdulist.append(hdu1)
-            hdulist.writeto(platesum, overwrite=True)
-            hdulist.close()
+            tellfile = load.filename('Tellstar', plate=int(plate), mjd=mjd)
+            if os.path.exists(tellfile):
+                try:
+                    telstr = fits.getdata(tellfile)
+                except:
+                    if i == 0: print("----> makePlateSum: PROBLEM!!! Error reading apTellstar file: "+os.path.basename(tellfile))
+                else:
+                    telstr = fits.getdata(tellfile)
+                    jtell, = np.where(telstr['IM'] == ims[i])
+                    ntell = len(jtell)
+                    if ntell > 0: platetab['TELLFIT'][i] = telstr['FITPARS'][jtell]
+            else:
+                print("----> makePlateSum: PROBLEM!!! "+os.path.basename(tellfile)+" does not exist.")
+
+        platetab['IM'][i] =        ims[i]
+        platetab['NREADS'][i] =    nreads
+        platetab['SECZ'][i] =      secz
+        if dhdr.get('HA') is not None: platetab['HA'][i] = dhdr['HA']
+        platetab['DESIGN_HA'][i] = design_ha
+        platetab['SEEING'][i] =    seeing
+        platetab['FWHM'][i] =      fwhm
+        platetab['GDRMS'][i] =     gdrms
+        cart=0
+        if 'CARTID' in dhdr: cart = dhdr['CARTID']
+        platetab['CART'][i] =      cart
+        platetab['DATEOBS'][i] =   dateobs
+        platetab['EXPTIME'][i] =   exptime
+        platetab['DITHER'][i] =    dither
+        platetab['ZERO'][i] =      zero
+        platetab['ZERORMS'][i] =   zerorms
+        platetab['ZERONORM'][i] =  zeronorm
+        platetab['SKY'][i] =       medsky
+        platetab['SN'][i] =        achievedsn
+        platetab['ALTSN'][i] =     altsn
+        platetab['NSN'][i] =       nsn
+        platetab['SNC'][i] =       achievedsnc
+        #platetab['SNT'][i] =       achievedsnt
+        if ntelluric > 0: platetab['SNRATIO'][i] = np.nanmedian(snt[fibertelluric,1] / snc[fibertelluric,1])
+        platetab['MOONDIST'][i] =  moondist
+        platetab['MOONPHASE'][i] = moonphase
+
+        for j in range(len(fiber)):
+            fiber['sn'][j][i,:] = sn[j,:]
+            fiber['obsmag'][j][i,:] = (-2.5 * np.log10(obs[j,:])) + zero
+
+    # Write out the FITS table.
+    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+    if ims[0] != 0:
+        Table(platetab).write(platesum, overwrite=True)
+        hdulist = fits.open(platesum)
+        hdu = fits.table_to_hdu(Table(fiber))
+        hdulist.append(hdu)
+        hdulist.writeto(platesum, overwrite=True)
+        hdulist.close()
+    if ims[0] == 0:
+        hdulist = fits.open(platesum)
+        hdu1 = fits.table_to_hdu(Table(platetab))
+        hdulist.append(hdu1)
+        hdulist.writeto(platesum, overwrite=True)
+        hdulist.close()
 
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
 
@@ -1706,7 +1702,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     #cfile = open(plotsdir+htmlfile+'.csh','w')
 
-    starsDone = ['2M02201618-0554030', '2M02205146-0546119']
     # Loop over the fibers
     for j in range(300):
         jdata = data[j]
@@ -1998,14 +1993,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if makestarplots is True:
                 if apStarRelPath is not None:
                     if (objtype != 'SKY') & (objid != '2MNone'):
-                        check, = np.where(objid == np.array(starsDone))
-                        if len(check) < 1:
-                            print("----> makeObjQA: Running apStarPlots for " + os.path.basename(starPlotFilePath))
-                            nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
-                                                  starPlotFilePath=starPlotFilePath, models=models)
-                            starsDone.append(objid)
-                        else:
-                            print("----> makeObjQA: Skipping apStarPlots for " + os.path.basename(starPlotFilePath))
+                        print("----> makeObjQA: Running apStarPlots for " + os.path.basename(starPlotFilePath))
+                        nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
+                                              starPlotFilePath=starPlotFilePath, models=models)
                             
             # Spectrum Plots
             plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
@@ -2880,7 +2870,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         for i in range(nplates):
             tmp = fits.open(plates[i])
-            platetab = tmp[3].data
+            try:
+                platetab = tmp[3].data
+            except:
+                print("----> makeMasterQApages: no 3rd extension in apPlateSum for plate " + iplate[i] + ', MJD ' + imjd[i])
+                continue
 
             color = '#ffb3b3'
             if iprogram[i] == 'RM': color = '#B3E5FC' 
