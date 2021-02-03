@@ -1933,7 +1933,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     if apStarRelPath is not None:
                         starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
                     else:
-                        starHTML.write('<P>No apStar file for this object.</P>\n')
+                        starHTML.write('<P>No apStar file for this object!</P>\n')
                     starHTML.write('<HR>\n')
 
                     # Star visit table
@@ -1983,13 +1983,14 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.write('<HR>\n')
 
                     # Insert Doppler output plots
-                    starHTML.write('<H3>Doppler Cross-Correlation Plots:</H3>')
-                    ccfplot = '../plots/' + apStarNewest.replace('.fits', '_ccf.png')
-                    spec2plot = ccfplot.replace('ccf', 'spec2')
-                    starHTML.write('<A HREF=' + ccfplot + ' target="_blank"><IMG SRC=' + ccfplot + ' WIDTH=600></A>\n')
-                    starHTML.write('<HR>\n')
-                    starHTML.write('<H3>Doppler Visit+Model Plots:</H3>')
-                    starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
+                    if apStarRelPath is not None:
+                        starHTML.write('<H3>Doppler Cross-Correlation Plots:</H3>')
+                        ccfplot = '../plots/' + apStarNewest.replace('.fits', '_ccf.png')
+                        spec2plot = ccfplot.replace('ccf', 'spec2')
+                        starHTML.write('<A HREF=' + ccfplot + ' target="_blank"><IMG SRC=' + ccfplot + ' WIDTH=600></A>\n')
+                        starHTML.write('<HR>\n')
+                        starHTML.write('<H3>Doppler Visit+Model Plots:</H3>')
+                        starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
                     starHTML.write('<BR><BR><BR><BR>\n')
                     starHTML.close()
  
