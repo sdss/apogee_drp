@@ -2877,12 +2877,14 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 continue
 
             color = '#ffb3b3'
-            if iprogram[i] == 'RM': color = '#B3E5FC' 
-            if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
-            if iprogram[i] == 'AQMES-Medium': color = '#AED581'
-            if len(iprogram[i]) < 3: import pdb; pdb.set_trace()
-            if iprogram[i][0:3] == 'MWM': color = '#D39FE4'
-            if iprogram[i][0:5] == 'eFEDS': color='#FFF9C4'
+            if len(iprogram[i]) < 3:
+                if iprogram[i] == 'RM': 
+                    color = '#B3E5FC'
+            else:
+                if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
+                if iprogram[i] == 'AQMES-Medium': color = '#AED581'
+                if iprogram[i][0:3] == 'MWM': color = '#D39FE4'
+                if iprogram[i][0:5] == 'eFEDS': color='#FFF9C4'
 
             html.write('<TR bgcolor=' + color + '><TD>' + iname[i]) 
             html.write('<TD>' + str(iprogram[i])) 
