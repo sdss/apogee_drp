@@ -2880,6 +2880,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if iprogram[i] == 'RM': color = '#B3E5FC' 
             if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
             if iprogram[i] == 'AQMES-Medium': color = '#AED581'
+            if len(iprogram[i]) < 3: import pdb; pdb.set_trace()
             if iprogram[i][0:3] == 'MWM': color = '#D39FE4'
             if iprogram[i][0:5] == 'eFEDS': color='#FFF9C4'
 
