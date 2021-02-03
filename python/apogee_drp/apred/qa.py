@@ -1930,7 +1930,10 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
                     # Star + best fitting model plot
                     starHTML.write('<H3>apStar versus best fit Cannon model:</H3>')
-                    starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
+                    if apStarRelPath is not None:
+                        starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
+                    else:
+                        starHTML.write('<P>No apStar file for this object.</P>\n')
                     starHTML.write('<HR>\n')
 
                     # Star visit table
