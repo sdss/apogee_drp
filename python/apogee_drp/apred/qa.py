@@ -350,10 +350,10 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
 
-    print("----> makePlateSum: Making "+platesumbase)
-
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
+    
+    print("----> makePlateSum: Making "+platesumbase)
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
