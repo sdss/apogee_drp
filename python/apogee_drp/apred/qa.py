@@ -2170,9 +2170,11 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
         jdata = data[j]
         fiber = jdata['FIBERID']
         objtype = jdata['OBJTYPE']
+        objid = jdata['OBJECT']
+        chmag = str("%.3f" % round(jdata['HMAG'], 3))
+
+        # Only run it for valid stars
         if (fiber > 0) & (objtype != 'SKY') & (objid != '2MNone'):
-            objid = jdata['OBJECT']
-            chmag = str("%.3f" % round(jdata['HMAG'], 3))
 
             # Find which healpix this star is in
             healpix = apload.obj2healpix(objid)
@@ -2182,6 +2184,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
             # Find the associated healpix html directories and make them if they don't already exist
             starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
             starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+
+            # Make sure an apStar file exists
             apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
             if len(apStarCheck) < 1: 
                 print("----> apStarPlots:    apStar file not found for " + objid)
