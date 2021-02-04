@@ -1723,8 +1723,6 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             color = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = '#D2B4DE'
             if objtype == 'SKY': color = '#D6EAF8'
-            pcolor = 'k'
-            if objtype == 'SKY': pcolor = 'firebrick'
 
             # Get target flag strings
             if 'apogee' in survey:
@@ -2007,6 +2005,10 @@ def apVisitPlots(load=None, plate=None, mjd=None):
             hmag = jdata['HMAG']
             chmag = str("%.3f" % round(jdata['HMAG'], 3))
             jkcolor = jdata['JMAG'] - jdata['KMAG']
+
+            # Red color for sky fibers
+            pcolor = 'k'
+            if objtype == 'SKY': pcolor = 'firebrick'
 
             plotfile = 'apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
 
