@@ -1864,7 +1864,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                     apStarCheck.sort()
                     apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = '../' + starRelPath + apStarNewest
+                    apStarRelPath = starRelPath + apStarNewest
                     apStarPath = starDir + apStarNewest
                     apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
@@ -2025,6 +2025,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
     data = apPlate['a'][11].data[::-1]
     objtype = data['OBJTYPE']
     nfiber = len(data)
+    cnfiber = str(nfiber)
 
     # Make plot and html directories if they don't already exist.
     plotsdir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)) + '/plots/'
@@ -2068,7 +2069,8 @@ def apVisitPlots(load=None, plate=None, mjd=None):
             if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0) | (len(ymxsec4) == 0) | (len(ymxsec5) == 0): 
                 print("----> apVisitPlots: Problem with fiber " + str(fiber).zfill(3) + ". Not Plotting.")
             else:
-                print("----> apVisitPlots:    making " + plotfile + " (" + objid + ")")
+                print("----> apVisitPlots:    making " + plotfile + " (" + objid + ", " + str(j+1) + "/" + cnfiber + ")")
+                 + " (" + str(j+1) + "/" + cnfiber + ")"
                 tmpF = convolve(Flux, Box1DKernel(11))
                 ymx1 = np.nanmax(tmpF[ymxsec1])
                 ymx2 = np.nanmax(tmpF[ymxsec2])
@@ -2161,6 +2163,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
     data = apPlate['a'][11].data[::-1]
     objtype = data['OBJTYPE']
     nfiber = len(data)
+    cnfiber = str(nfiber)
     
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
@@ -2190,7 +2193,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
             if len(apStarCheck) < 1: 
                 print("----> apStarPlots:    apStar file not found for " + objid)
             else:
-                print("----> apStarPlots:    making plot for " + objid)
+                print("----> apStarPlots:    making plot for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
                 # Find the newest apStar file
                 apStarCheck.sort()
                 apStarCheck = np.array(apStarCheck)
@@ -2272,6 +2275,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
                 plt.savefig(starPlotFilePath)
                 plt.close('all')
+
+    print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
 
 '''  MAKENIGHTQA: makes nightly QA pages '''
