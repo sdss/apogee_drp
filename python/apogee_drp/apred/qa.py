@@ -1869,8 +1869,8 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 objhtml.write('<TD align ="center">----\n')
 
             # Star level html page
-            if makestarhtml is True:
-                if (objtype != 'SKY') & (objid != '2MNone'):
+            if (objtype != 'SKY') & (objid != '2MNone'):
+                if makestarhtml is True:
                     print("----> makeObjQA: Making star level html for " + objid)
                     vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
 
@@ -1990,9 +1990,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     starHTML.close()
  
             # Make plots of apStar spectrum with best fitting model
-            if makestarplots is True:
-                if apStarRelPath is not None:
-                    if (objtype != 'SKY') & (objid != '2MNone'):
+            if (objtype != 'SKY') & (objid != '2MNone'):
+                if makestarplots is True:
+                    if apStarRelPath is not None:
                         print("----> makeObjQA: Running apStarPlots for " + os.path.basename(starPlotFilePath))
                         nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
                                               starPlotFilePath=starPlotFilePath, models=models)
