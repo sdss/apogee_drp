@@ -320,7 +320,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make mjd.html and fields.html
         if makemasterqa == True: 
-            q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True
+            q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True,
                                   mjdfilebase='mjd.html',fieldfilebase='fields.html')
 
     runtime = str("%.2f" % (time.time() - start_time))
