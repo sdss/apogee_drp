@@ -2006,6 +2006,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
             objtype = jdata['OBJTYPE']
             hmag = jdata['HMAG']
             chmag = str("%.3f" % round(jdata['HMAG'], 3))
+            jkcolor = jdata['JMAG'] - jdata['KMAG']
 
             plotfile = 'apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
 
