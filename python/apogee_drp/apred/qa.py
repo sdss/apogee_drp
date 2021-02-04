@@ -65,9 +65,9 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #--------------------------------------------------------------------------------------------------
 
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
-def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeqaplots=True,
-            makevisitplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True,
-            makeobjhtml=True, makestarplots=True, makeqafits=True, clobber=True):
+def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
+            makeobsplots=True, makeobjhtml=True, makestarhtml=True, makevisitplots=True, makestarplots=True,
+            makenightqa=True, makemasterqa=True, makeqafits=True, clobber=True):
 
     # Establish telescope
     telescope = observatory + '25m'
@@ -86,14 +86,14 @@ def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True
 
     for ii in range(nmjd):
         x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
-                    makemasterqa=makemasterqa, makeqaplots=makeqaplots, makevisitplots=makevisitplots,
-                    makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots,
-                    makeobjhtml=makeobjhtml, makeqafits=makeqafits, clobber=clobber)
+                    makeobshtml=makeobshtml, makeobsplots=makeobsplots, makeobjhtml=makeobjhtml, 
+                    makestarhtml=makestarhtml, makevisitplots=makevisitplots,makestarplots=makestarplots,
+                    makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, clobber=clobber)
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
-def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeqaplots=True,
-            makevisitplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
-            makeobjhtml=True, makestarplots=True, makeqafits=True, clobber=True):
+def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
+            makeobsplots=True, makeobjhtml=True, makestarhtml=True, makevisitplots=True, 
+            makestarplots=True, makemasterqa=True, makenightqa=True, makeqafits=True, clobber=True):
 
     # Establish telescope and instrument
     telescope = observatory + '25m'
@@ -195,23 +195,23 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
         # Only run makemasterqa and makenightqa after the last plate on this mjd
         if i < nsciplans-1:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobjhtml=makeobjhtml,
-                     makemasterqa=False, makeqaplots=makeqaplots, makevisitplots=makevisitplots, 
-                     makenightqa=False, makestarhtml=makestarhtml, makestarplots=makestarplots, 
-                     clobber=clobber)
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
+                     makeobsplots=makeobsplots, makeobjhtml=makeobjhtml, makestarhtml=makestarhtml,
+                     makevisitplots=makevisitplots, makestarplots=makestarplots, makemasterqa=False, 
+                     makenightqa=False, clobber=clobber)
         else:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobjhtml=makeobjhtml,
-                     makemasterqa=makemasterqa, makeqaplots=makeqaplots, makevisitplots=makevisitplots,
-                     makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots, 
-                     clobber=clobber)
-
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
+                     makeobsplots=makeobsplots, makeobjhtml=makeobjhtml, makestarhtml=makestarhtml,
+                     makevisitplots=makevisitplots, makestarplots=makestarplots, makemasterqa=makemasterqa, 
+                     makenightqa=makenightqa, clobber=clobber)
+        
     print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
 
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
-def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeqaplots=True,
-         makeobjhtml=True, makevisitplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
-         makestarplots=True, badPlates=None, clobber=True):
+def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
+         makeobsplots=True, makeobjhtml=True, makestarhtml=True, makevisitplots=True, makestarplots=True, 
+         makemasterqa=True, makenightqa=True, clobber=True):
 
     start_time = time.time()
 
@@ -272,12 +272,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
 
-    # For calibration plates, measure lamp brightesses and/or line widths, etc. and write to FITS file.
-    #if platetype == 'cal': x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument)
-
-    # For darks and flats, get mean and stdev of column-medianed quadrants.
-    #if platetype == 'dark': x = makeDarkFits(load=load, planfile=planfile, ims=all_ims, mjd=mjd)
-
     # Normal plates:.
     if platetype == 'normal': 
 
@@ -301,12 +295,13 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              clobber=clobber)
 
         # Make the observation QA page
-        q = makeObsQApages(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
-                           fluxid=fluxid, telescope=telescope)
+        if makeobshtml == True:
+            q = makeObsHTML(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
+                               fluxid=fluxid, telescope=telescope)
 
         # Make plots for the observation QA pages
         if makeqaplots == True:
-            q = makeObsQAplots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
+            q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
                                survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
         # Make the visit and star level html pages
@@ -325,18 +320,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make mjd.html and fields.html
         if makemasterqa == True: 
-            q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
-                                  mjdfilebase='mjd.html',fieldfilebase='fields.html',
-                                  domjd=True, dofields=True, badPlates=badPlates)
-
-    # ASDAF and NMSU 1m observations:
-#    if platetype == 'single':
-#        single = [planstr['APEXP'][i]['single'].astype(int) for i in range(n_ims)]
-#        sname = [planstr['APEXP'][i]['singlename'] for i in range(n_ims)]
-#        smag = planstr['hmag']
-#        x = makeqaplotsHtml(load=load, telescope=telescope, onem=True, ims=ims, starnames=sname, 
-#                          starfiber=single, starmag=smag, fixfiberid=fixfiberid, clobber=True, 
-#                          plugmap=plugmap, makeqaplots=makeqaplots, badfiberid=badfiberid, survey=survey, apred=apred)
+            q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True
+                                  mjdfilebase='mjd.html',fieldfilebase='fields.html')
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.\n")
@@ -804,11 +789,11 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
-''' MAKEOBSQAPAGES: mkhtmlplate translation '''
-def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
+''' MAKEOBSHTML: mkhtmlplate translation '''
+def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
                    fluxid=None, telescope=None):
 
-    print("----> makeObsQApages: Running plate "+plate+", MJD "+mjd)
+    print("----> makeObsHTML: Running plate "+plate+", MJD "+mjd)
 
     # HTML header background color
     thcolor = '#DCDCDC'
@@ -827,8 +812,8 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, f
     platedir = os.path.dirname(platesum)+'/'
 
     if os.path.exists(platesum) == False:
-        err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
-        err2 = "You need to run MAKEPLATESUM first to make the file."
+        err1 = "----> makeObsHTML: PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
+        err2 = "----> makeObsHTML: You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
 
     # Read the plateSum file
@@ -840,7 +825,7 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, f
     # Make the html directory if it doesn't already exist
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
     qafiledir = os.path.dirname(qafile)
-    print("----> makeObsQApages:Creating "+os.path.basename(qafile))
+    print("----> makeObsHTML: Creating "+os.path.basename(qafile))
     if os.path.exists(qafiledir) == False: subprocess.call(['mkdir',qafiledir])
 
     html = open(qafile, 'w')
@@ -1055,14 +1040,14 @@ def makeObsQApages(load=None, ims=None, imsReduced=None, plate=None, mjd=None, f
     html.write('</BODY></HTML>\n')
     html.close()
 
-    print("----> makeObsQApages: Done with plate "+plate+", MJD "+mjd+"\n")
+    print("----> makeObsHTML: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
-''' MAKEOBSQAPLOTS: plots for the master QA page '''
-def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, instrument=None,
+''' MAKEOBSPLOTS: plots for the plate QA page '''
+def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, instrument=None,
                    apred=None, flat=None, fluxid=None, survey=None, clobber=None): 
 
-    print("----> makeObsQAplots: Running plate "+plate+", MJD "+mjd)
+    print("----> makeObsPlots: Running plate "+plate+", MJD "+mjd)
 
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
@@ -1088,8 +1073,8 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
     if os.path.exists(platesum) == False:
-        err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
-        err2 = "You need to run MAKEPLATESUM first to make the file."
+        err1 = "----> makeObsPlots: PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
+        err2 = "----> makeObsPlots: You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
 
     # Read the plateSum file
@@ -1112,7 +1097,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
         if i == 1: plotfile = plotfile.replace('SNR','SNRblocks')
         if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
-            print("----> makeObsQAplots: Making "+plotfile)
+            print("----> makeObsPlots: Making "+plotfile)
 
             fig=plt.figure(figsize=(19,10))
             ax = plt.subplot2grid((1,1), (0,0))
@@ -1183,7 +1168,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
     plotfile = fluxfile.replace('.fits', '.png')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
-        print("----> makeObsQAplots: Making "+plotfile)
+        print("----> makeObsPlots: Making "+plotfile)
 
         fig=plt.figure(figsize=(28,10))
         plotrad = 1.6
@@ -1226,7 +1211,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
     plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
-        print("----> makeObsQAplots: Making "+plotfile)
+        print("----> makeObsPlots: Making "+plotfile)
 
         fig=plt.figure(figsize=(10,10))
         ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1270,7 +1255,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
         plotfile = 'guider-'+plate+'-'+mjd+'.png'
         if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
-            print("----> makeObsQAplots: Making "+plotfile)
+            print("----> makeObsPlots: Making "+plotfile)
 
             fig=plt.figure(figsize=(10,10))
             ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1300,7 +1285,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             #----------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_magplots.png'
             if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
-                print("----> makeObsQAplots: Making "+plotfile)
+                print("----> makeObsPlots: Making "+plotfile)
 
                 telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
                 ntelluric = len(telluric)
@@ -1391,7 +1376,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             #----------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_spatialresid.png'
             if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
-                print("----> makeObsQAplots: Making "+plotfile)
+                print("----> makeObsPlots: Making "+plotfile)
 
                 fig=plt.figure(figsize=(14,15))
                 ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1421,7 +1406,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
                 #    c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
                 #    psky = ax1.scatter(x, y, marker='s', s=140, c='white', edgecolors='k', alpha=1, label='Sky')
                 #except:
-                #    print("----> makeObsQAplots: Problem!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
+                #    print("----> makeObsPlots: Problem!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
 
                 ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
@@ -1442,7 +1427,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             #------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][gd][0])+'_skyemission.png'
             if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
-                print("----> makeObsQAplots: Making "+plotfile)
+                print("----> makeObsPlots: Making "+plotfile)
 
                 #d = load.apPlate(int(plate), mjd) 
                 d = load.ap1D(ims[i])
@@ -1533,7 +1518,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             #------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_skycontinuum.png'
             if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
-                print("----> makeObsQAplots: Making "+plotfile)
+                print("----> makeObsPlots: Making "+plotfile)
 
                 fig=plt.figure(figsize=(14,15))
                 ax1 = plt.subplot2grid((1,1), (0,0))
@@ -1580,7 +1565,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
             #print("PLOTS 8: Zeropoints plots will be made here.")
 
     #plt.ion()
-    print("----> makeObsQAplots: Done with plate "+plate+", MJD "+mjd+"\n")
+    print("----> makeObsPlots: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
 ''' makeObjHTML: make the visit and star level html '''
@@ -2583,9 +2568,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
 def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fieldfilebase=None,
-                      domjd=True, dofields=True, badPlates=None):
-
-    #plt.ioff()
+                      domjd=True, dofields=True):
 
     # Establish data directories.
     datadirN = os.environ['APOGEE_DATA_N']
