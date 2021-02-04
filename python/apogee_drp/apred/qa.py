@@ -67,7 +67,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeqaplots=True,
             makevisitplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True,
-            makestarplots=True, makeqafits=True, clobber=True):
+            makeobjhtml=True, makestarplots=True, makeqafits=True, clobber=True):
 
     # Establish telescope
     telescope = observatory + '25m'
@@ -88,12 +88,12 @@ def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True
         x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
                     makemasterqa=makemasterqa, makeqaplots=makeqaplots, makevisitplots=makevisitplots,
                     makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots,
-                    makeqafits=makeqafits, clobber=clobber)
+                    makeobjhtml=makeobjhtml, makeqafits=makeqafits, clobber=clobber)
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeqaplots=True,
             makevisitplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
-            makestarplots=True, makeqafits=True, clobber=True):
+            makeobjhtml=True, makestarplots=True, makeqafits=True, clobber=True):
 
     # Establish telescope and instrument
     telescope = observatory + '25m'
@@ -195,12 +195,12 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
         # Only run makemasterqa and makenightqa after the last plate on this mjd
         if i < nsciplans-1:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobjhtml=makeobjhtml
                      makemasterqa=False, makeqaplots=makeqaplots, makevisitplots=makevisitplots, 
                      makenightqa=False, makestarhtml=makestarhtml, makestarplots=makestarplots, 
                      clobber=clobber)
         else:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobjhtml=makeobjhtml
                      makemasterqa=makemasterqa, makeqaplots=makeqaplots, makevisitplots=makevisitplots,
                      makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots, 
                      clobber=clobber)
@@ -209,8 +209,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
-def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True,
-         makeqaplots=True, makevisitplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
+def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeqaplots=True,
+         makeobjhtml=True, makevisitplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
          makestarplots=True, badPlates=None, clobber=True):
 
     start_time = time.time()
@@ -313,10 +313,15 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             q = makeObsQAplots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
                                survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
-        # Make the observation spectrum plots and associated pages
-        q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                     makevisitplots=makevisitplots, makestarhtml=makestarhtml, makestarplots=makestarplots,
-                     fluxid=fluxid, clobber=clobber)
+        # Make the visit and star level html pages
+        if makeobjhtml == True:
+            q = makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
+                         makestarhtml=makestarhtml, makestarplots=makestarplots,
+                         fluxid=fluxid, clobber=clobber)
+
+        # Make the visit plots
+        if makevisitplots == True:
+            q = apVisitPlots(load=load, plate=plate, mjd=mjd)
 
         # Make the nightly QA page
         if makenightqa == True:
@@ -1590,9 +1595,9 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     print("----> makeObsQAplots: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
-''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
+''' MAKEOBJQA: make the visit and star level html '''
 def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
-              makevisitplots=None, makestarhtml=None, makestarplots=None, fluxid=None, clobber=None): 
+              makestarhtml=None, makestarplots=None, fluxid=None, clobber=None): 
 
     print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
 
@@ -1601,47 +1606,28 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
 
     # Setup doppler cannon models
     models = doppler.cannon.models
+    
+    apodir = os.environ.get('APOGEE_REDUX') + '/'
 
-    # Make plot and html directories if they don't already exist.
-    platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-    plotsdir = platedir+'/plots/'
-    htmldir = platedir+'/html/'
-    if os.path.exists(plotsdir) == False: subprocess.call(['mkdir',plotsdir])
-    if os.path.exists(htmldir) == False: subprocess.call(['mkdir',htmldir])
+    # Make html directory if it doesn't already exist.
+    htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)) + '/html/'
+    if os.path.exists(htmldir) == False: os.makedirs(htmldir)
 
-    if os.path.exists(htmldir+'sorttable.js') == False:
+    if os.path.exists(htmldir + 'sorttable.js') == False:
         print("----> makeObjQA: getting sorttable.js...")
         subprocess.call(['wget', '-q', sort_table_link])
         subprocess.call(['mv', 'sorttable.js', htmldir])
 
-    # Set up some basic plotting parameters, starting by turning off interactive plotting.
-    #plt.ioff()
-    #matplotlib.use('agg')
-    fontsize = 24;   fsz = fontsize * 0.75
-    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-    bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
-    axwidth=1.5
-    axmajlen=7
-    axminlen=3.5
-    lwidth = 1.5
-    hlines = np.array([16811.111,16411.692,16113.732,15884.897,15704.970,15560.718,15443.157,15345.999,15264.725,15196.016,15137.357])
-    ce3lines = np.array([15851.880,15961.157,15964.928,16133.170,16292.642])
-    mn2lines = np.array([15387.220,15412.667,15586.57,15600.576,15620.314])
-    hcolor = 'grey'
-    ce3color = 'r'
-    mn2color = 'b'
-    visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
-    starxmin = np.array([15130, 15845, 16460])
-    starxmax = np.array([15817, 16440, 16960])
+    # Get the HTML file name... apPlate-plate-mjd
+    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('.fits','')
+    
+    # Base directory where star-level stuff goes
+    starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
     # Load in the allVisitMJD file
-    apodir = os.environ.get('APOGEE_REDUX') + '/'
     allVpath = apodir + apred + '/summary/' + mjd + '/allVisitMJD-' + apred + '-' + telescope + '-' + mjd + '.fits'
     allV = None
     if os.path.exists(allVpath): allV = fits.getdata(allVpath)
-
-    # Base directory where star-level plots go
-    starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
@@ -1649,43 +1635,20 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     objtype = data['OBJTYPE']
     nfiber = len(data)
 
-    # Check for existence of plateSum file
-    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
-    if os.path.exists(platesum) == False:
-        err1 = "PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
-        err2 = "You need to run MAKEPLATESUM first to make the file."
-        sys.exit(err1 + err2)
-
-    # Read the plateSum file
-    tmp = fits.open(platesum)
-    plSum1 = tmp[1].data
-    plSum2 = tmp[2].data
-
-    # Establish fiber types
-    telluric, = np.where((objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'))
-    ntelluric = len(telluric)
-    science, = np.where((objtype != 'SPECTROPHOTO_STD') & (objtype != 'HOT_STD') & (objtype != 'SKY'))
-    nscience = len(science)
-    sky, = np.where(objtype == 'SKY')
-    nsky = len(sky)
-
     # Read in flux file to get an idea of throughput
     fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
     flux = load.apFlux(fluxid)
     medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
     throughput = medflux / np.nanmax(medflux)
 
-    # Get the HTML file name... apPlate-plate-mjd
-    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('.fits','')
-
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
-    objhtml = open(htmldir+htmlfile+'.html','w')
+    objhtml = open(htmldir + htmlfile + '.html', 'w')
     objhtml.write('<HTML>\n')
 #    objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
-    objhtml.write('<HEAD><script src="sorttable.js"></script><title>'+htmlfile+'</title></head>\n')
+    objhtml.write('<HEAD><script src="sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
     objhtml.write('<BODY>\n')
 
-    objhtml.write('<H1>'+htmlfile+'</H1><HR>\n')
+    objhtml.write('<H1>' + htmlfile + '</H1><HR>\n')
     #objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
     #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
     objhtml.write('<P><B>Note:</B> the "Dome Flat Throughput" column gives the median dome flat flux in each ')
@@ -1693,14 +1656,12 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     objhtml.write('<BR>Low numbers are generally bad, and that column is color-coded accordingly.</P>\n')
     objhtml.write('<P>Click the column headers to sort.</p>\n')
     objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    objhtml.write('<TR bgcolor="'+thcolor+'"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
+    objhtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
     objhtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
 #    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
-
-    #cfile = open(plotsdir+htmlfile+'.csh','w')
 
     # Loop over the fibers
     for j in range(300):
@@ -1708,19 +1669,19 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
         fiber = jdata['FIBERID']
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
-            cblock = str(np.ceil(fiber/30).astype(int))
+            cblock = str(np.ceil(fiber / 30).astype(int))
 
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
             hmag = jdata['HMAG']
-            cjmag = str("%.3f" % round(jdata['JMAG'],3))
-            chmag = str("%.3f" % round(jdata['HMAG'],3))
-            ckmag = str("%.3f" % round(jdata['KMAG'],3))
+            cjmag = str("%.3f" % round(jdata['JMAG'], 3))
+            chmag = str("%.3f" % round(jdata['HMAG'], 3))
+            ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
             jkcolor = jdata['JMAG'] - jdata['KMAG']
-            cjkcolor = str("%.3f" % round(jkcolor,3))
+            cjkcolor = str("%.3f" % round(jkcolor, 3))
     #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
-            cra = str("%.5f" % round(jdata['RA'],5))
-            cdec = str("%.5f" % round(jdata['DEC'],5))
+            cra = str("%.5f" % round(jdata['RA'], 5))
+            cdec = str("%.5f" % round(jdata['DEC'], 5))
             txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
             txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
             simbadlink = txt1 + txt2
@@ -1997,103 +1958,142 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
                                               starPlotFilePath=starPlotFilePath, models=models)
                             
-            # Spectrum Plots
-            plotfile = 'apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             objhtml.write('<TD><A HREF=../plots/' + plotfile + ' target="_blank"><IMG SRC=../plots/' + plotfile + ' WIDTH=1100></A>\n')
-            if makevisitplots is True:
-                print("----> makeObjQA: Running apVisitPlots for " + plotfile)
-                nothing = apVisitPlots(apPlate=apPlate, fiber=fiber)
-
-
     objhtml.close()
-    print("----> makeObjQA: Done with plate "+plate+", MJD "+mjd+".\n")
+    
+    print("----> makeObjQA: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
 ''' APVISITPLOTS: plots of the apVisit spectra '''
-def apVisitPlots(apPlate=None, fiber=None, apStarPath=None, apStarModelPath=None, starPlotFilePath=None, models=None): 
+def apVisitPlots(load=None, plate=None, mjd=None):
 
-    import pdb; pdb.set_trace()
-    # Get wavelength and flux arrays
-    FluxB = apPlate['a'][1].data[300-fiber,:]
-    FluxG = apPlate['b'][1].data[300-fiber,:]
-    FluxR = apPlate['c'][1].data[300-fiber,:]
-    WaveB = apPlate['a'][4].data[300-fiber,:]
-    WaveG = apPlate['b'][4].data[300-fiber,:]
-    WaveR = apPlate['c'][4].data[300-fiber,:]
+    print("----> apVisitPlots: Running plate "+plate+", MJD "+mjd)
 
-    Flux = np.concatenate([FluxB, FluxG, FluxR])
-    Wave = np.concatenate([WaveB, WaveG, WaveR])
+    # Set up some basic plotting parameters
+    #plt.ioff()
+    #matplotlib.use('agg')
+    fontsize = 24;   fsz = fontsize * 0.75
+    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
+    axwidth=1.5
+    axmajlen=7
+    axminlen=3.5
+    lwidth = 1.5
+    hlines = np.array([16811.111,16411.692,16113.732,15884.897,15704.970,15560.718,15443.157,15345.999,15264.725,15196.016,15137.357])
+    ce3lines = np.array([15851.880,15961.157,15964.928,16133.170,16292.642])
+    mn2lines = np.array([15387.220,15412.667,15586.57,15600.576,15620.314])
+    hcolor = 'grey'
+    ce3color = 'r'
+    mn2color = 'b'
+    visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
 
-    # Establish Ymax
-    ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
-    ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
-    ymxsec3, = np.where((Wave > 16925) & (Wave < 16935))
-    ymxsec4, = np.where((Wave > 16800) & (Wave < 16822))
-    ymxsec5, = np.where((Wave > 15186) & (Wave < 15206))
-    if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0) | (len(ymxsec4) == 0) | (len(ymxsec5) == 0): 
-        print("----> makeObjQA: Problem with fiber " + str(fiber).zfill(3) + ". Not Plotting.")
-    else:
-        tmpF = convolve(Flux, Box1DKernel(11))
-        ymx1 = np.nanmax(tmpF[ymxsec1])
-        ymx2 = np.nanmax(tmpF[ymxsec2])
-        ymx3 = np.nanmax(tmpF[ymxsec3])
-        ymx4 = np.nanmax(tmpF[ymxsec4])
-        ymx5 = np.nanmax(tmpF[ymxsec5])
-        ymx = np.nanmax([ymx1,ymx2,ymx3,ymx4,ymx5])
-        if objtype != 'SKY':
-            ymin = 0
-            yspn = ymx - ymin
-            ymax = ymx + (yspn * 0.15)
-            # Establish Ymin
-            ymn = np.nanmin(tmpF)
-            if ymn > 0: 
-                yspn = ymx - ymn
-                ymin = ymn - (yspn * 0.10)
-                ymax = ymx + (yspn * 0.15)
-        else:
-            med = np.nanmedian(Flux)
-            ymin = med - 50
-            ymax = med + 50
-        yspan = ymax-ymin
+    # Load in the apPlate file
+    apPlate = load.apPlate(int(plate), mjd)
+    data = apPlate['a'][11].data[::-1]
+    objtype = data['OBJTYPE']
+    nfiber = len(data)
 
-        fig=plt.figure(figsize=(28,8))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.tick_params(reset=True)
-        ax1.set_xlim(visitxmin,visitxmax)
-        ax1.set_ylim(ymin,ymax)
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both', which='both', direction='in', bottom=True, top=True, left=True, right=True)
-        ax1.tick_params(axis='both', which='major', length=axmajlen)
-        ax1.tick_params(axis='both', which='minor', length=axminlen)
-        ax1.tick_params(axis='both', which='both', width=axwidth)
-        ax1.set_xlabel(r'Wavelength ($\rm \AA$)')
-        ax1.set_ylabel(r'Flux')
+    # Make plot and html directories if they don't already exist.
+    plotsdir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)) + '/plots/'
+    if os.path.exists(plotsdir) == False: os.makedirs(plotsdir)
 
-        if objtype == 'SKY':
-            ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
-            ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
-            ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
-        else:
-            for ll in hlines: ax1.axvline(x=ll, color=hcolor, alpha=0.6)
-            ax1.text(16811.111, ymin+yspan*0.03, 'H I', color=hcolor, bbox=bboxpar, fontsize=fsz, ha='center')
-            if jkcolor < 0.3:
-                for ll in ce3lines: ax1.axvline(x=ll, color=ce3color, alpha=0.6)
-                for ll in mn2lines: ax1.axvline(x=ll, color=mn2color, alpha=0.6)
-                ax1.text(15412.667, ymin+yspan*0.03, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
-                ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
+    # Loop over the fibers
+    for j in range(300):
+        jdata = data[j]
+        fiber = jdata['FIBERID']
+        if fiber > 0:
+            cfiber = str(fiber).zfill(3)
+            objid = jdata['OBJECT']
+            objtype = jdata['OBJTYPE']
+            hmag = jdata['HMAG']
+            chmag = str("%.3f" % round(jdata['HMAG'], 3))
 
-            ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color='white', linewidth=10)
-            ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color='white', linewidth=10)
-            ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color='white', linewidth=10)
-            ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
-            ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
-            ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
+            plotfile = 'apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
 
-            ax1.text(0.02, 0.05, objid+',  H = '+chmag, transform=ax1.transAxes, bbox=bboxpar)
+            # Get wavelength and flux arrays
+            FluxB = apPlate['a'][1].data[300-fiber,:]
+            FluxG = apPlate['b'][1].data[300-fiber,:]
+            FluxR = apPlate['c'][1].data[300-fiber,:]
+            WaveB = apPlate['a'][4].data[300-fiber,:]
+            WaveG = apPlate['b'][4].data[300-fiber,:]
+            WaveR = apPlate['c'][4].data[300-fiber,:]
 
-        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir+plotfile)
-        plt.close('all')
+            Flux = np.concatenate([FluxB, FluxG, FluxR])
+            Wave = np.concatenate([WaveB, WaveG, WaveR])
+
+            # Establish Ymax
+            ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
+            ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
+            ymxsec3, = np.where((Wave > 16925) & (Wave < 16935))
+            ymxsec4, = np.where((Wave > 16800) & (Wave < 16822))
+            ymxsec5, = np.where((Wave > 15186) & (Wave < 15206))
+            if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0) | (len(ymxsec4) == 0) | (len(ymxsec5) == 0): 
+                print("----> apVisitPlots: Problem with fiber " + str(fiber).zfill(3) + ". Not Plotting.")
+            else:
+                print("----> apVisitPlots:    making " + plotfile + " (" + objid + ")")
+                tmpF = convolve(Flux, Box1DKernel(11))
+                ymx1 = np.nanmax(tmpF[ymxsec1])
+                ymx2 = np.nanmax(tmpF[ymxsec2])
+                ymx3 = np.nanmax(tmpF[ymxsec3])
+                ymx4 = np.nanmax(tmpF[ymxsec4])
+                ymx5 = np.nanmax(tmpF[ymxsec5])
+                ymx = np.nanmax([ymx1,ymx2,ymx3,ymx4,ymx5])
+                if objtype != 'SKY':
+                    ymin = 0
+                    yspn = ymx - ymin
+                    ymax = ymx + (yspn * 0.15)
+                    # Establish Ymin
+                    ymn = np.nanmin(tmpF)
+                    if ymn > 0: 
+                        yspn = ymx - ymn
+                        ymin = ymn - (yspn * 0.10)
+                        ymax = ymx + (yspn * 0.15)
+                else:
+                    med = np.nanmedian(Flux)
+                    ymin = med - 50
+                    ymax = med + 50
+                yspan = ymax-ymin
+
+                fig=plt.figure(figsize=(28,8))
+                ax1 = plt.subplot2grid((1,1), (0,0))
+                ax1.tick_params(reset=True)
+                ax1.set_xlim(visitxmin, visitxmax)
+                ax1.set_ylim(ymin, ymax)
+                ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
+                ax1.minorticks_on()
+                ax1.tick_params(axis='both', which='both', direction='in', bottom=True, top=True, left=True, right=True)
+                ax1.tick_params(axis='both', which='major', length=axmajlen)
+                ax1.tick_params(axis='both', which='minor', length=axminlen)
+                ax1.tick_params(axis='both', which='both', width=axwidth)
+                ax1.set_xlabel(r'Wavelength ($\rm \AA$)')
+                ax1.set_ylabel(r'Flux')
+
+                if objtype == 'SKY':
+                    ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
+                    ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
+                    ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
+                else:
+                    for ll in hlines: ax1.axvline(x=ll, color=hcolor, alpha=0.6)
+                    ax1.text(16811.111, ymin+yspan*0.03, 'H I', color=hcolor, bbox=bboxpar, fontsize=fsz, ha='center')
+                    if jkcolor < 0.3:
+                        for ll in ce3lines: ax1.axvline(x=ll, color=ce3color, alpha=0.6)
+                        for ll in mn2lines: ax1.axvline(x=ll, color=mn2color, alpha=0.6)
+                        ax1.text(15412.667, ymin+yspan*0.03, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
+                        ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
+
+                    ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color='white', linewidth=10)
+                    ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color='white', linewidth=10)
+                    ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color='white', linewidth=10)
+                    ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
+                    ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
+                    ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
+
+                    ax1.text(0.02, 0.05, objid + ',  H = ' + chmag, transform=ax1.transAxes, bbox=bboxpar)
+
+                fig.subplots_adjust(left=0.06, right=0.995, bottom=0.12, top=0.98, hspace=0.2, wspace=0.0)
+                plt.savefig(plotsdir + plotfile)
+                plt.close('all')
+                
+    print("----> apVisitPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
 ''' APSTARPLOTS: plots of the apStar spectra + best fitting Cannon model '''
 def apStarPlots(objid=None, hmag=None, apStarPath=None, apStarModelPath=None, starPlotFilePath=None, models=None): 
