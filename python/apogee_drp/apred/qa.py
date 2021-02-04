@@ -300,10 +300,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-        # Make the sn*dat and altsn*dat files.
-        sntabdir = apodir + apred + '/visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/'
-        q = makeSNtab(platesum=platesum, plate=plate, mjd=mjd, ims=ims, plugmap=plugmap, sntabdir=sntabdir)
-
         # Make the observation QA page
         q = makeObsQApages(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
                            fluxid=fluxid, telescope=telescope)
@@ -332,9 +328,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                   mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                   domjd=True, dofields=True, badPlates=badPlates)
-
-        ### NOTE:No python translation for sntab.
-#;        sntab,tabs=platefile,outfile=platefile+'.dat'
 
     # ASDAF and NMSU 1m observations:
 #    if platetype == 'single':
