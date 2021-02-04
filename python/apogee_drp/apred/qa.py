@@ -765,42 +765,42 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 
-    # Make the sn*dat and altsn*dat files
-    outfile1 = sntabdir + 'sn-' + plate + '-' + mjd + '.dat'
-    outfile2 = sntabdir + 'altsn-' + plate + '-' + mjd + '.dat'
-    outfiles = np.array([outfile1, outfile2])
-    nout = len(outfiles)
-    
-    txt = "making " + os.path.basename(outfile1) + " and " + os.path.basename(outfile2)
-    print("----> makePlateSum: " + txt)
+        # Make the sn*dat and altsn*dat files
+        outfile1 = sntabdir + 'sn-' + plate + '-' + mjd + '.dat'
+        outfile2 = sntabdir + 'altsn-' + plate + '-' + mjd + '.dat'
+        outfiles = np.array([outfile1, outfile2])
+        nout = len(outfiles)
+        
+        txt = "making " + os.path.basename(outfile1) + " and " + os.path.basename(outfile2)
+        print("----> makePlateSum: " + txt)
 
-    tab1 = fits.open(platesum)[1].data
-    for j in range(nout):
-        out = open(outfiles[j], 'w')
-        for i in range(n_exposures):
-            gd, = np.where(ims[i] == tab1['IM'])
-            if len(gd) == 1:
-                gd = gd[0]
-                # Image number
-                im = str(ims[i])
-                # SN or ALTSN
-                if j == 0:
-                    sn = str("%.2f" % round(tab1['SN'][gd][1], 2)).rjust(5)
-                else:
-                    sn = str("%.2f" % round(tab1['ALTSN'][gd][1], 2))
-                # APRRED VERSION ?
-                vers = '1'
-                # MJD when plate was plugged
-                plugmjd = plugmap.split('-')[1]
-                # Observation MJD in seconds
-                t = Time(tab1['DATEOBS'][gd], format='fits')
-                tsec = str("%.5f" % round(t.mjd * 86400, 5))
-                # Exposure time
-                exptime=str(tab1['EXPTIME'][gd])
-                # Write to file
-                out.write(im+'  '+sn+'  '+vers+'  '+plugmjd+'  '+plate+'  '+mjd+'  '+tsec+'  '+exptime+'  Object\n')
-        out.close()
-    print("----> makePlateSum: done " + txt)
+        tab1 = fits.open(platesum)[1].data
+        for j in range(nout):
+            out = open(outfiles[j], 'w')
+            for i in range(n_exposures):
+                gd, = np.where(ims[i] == tab1['IM'])
+                if len(gd) == 1:
+                    gd = gd[0]
+                    # Image number
+                    im = str(ims[i])
+                    # SN or ALTSN
+                    if j == 0:
+                        sn = str("%.2f" % round(tab1['SN'][gd][1], 2)).rjust(5)
+                    else:
+                        sn = str("%.2f" % round(tab1['ALTSN'][gd][1], 2))
+                    # APRRED VERSION ?
+                    vers = '1'
+                    # MJD when plate was plugged
+                    plugmjd = plugmap.split('-')[1]
+                    # Observation MJD in seconds
+                    t = Time(tab1['DATEOBS'][gd], format='fits')
+                    tsec = str("%.5f" % round(t.mjd * 86400, 5))
+                    # Exposure time
+                    exptime=str(tab1['EXPTIME'][gd])
+                    # Write to file
+                    out.write(im+'  '+sn+'  '+vers+'  '+plugmjd+'  '+plate+'  '+mjd+'  '+tsec+'  '+exptime+'  Object\n')
+            out.close()
+        print("----> makePlateSum: done " + txt)
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
