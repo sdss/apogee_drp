@@ -355,13 +355,17 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
 
+    chips = np.array(['a','b','c'])
+    nchips = len(chips)
+
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
     
     print("----> makePlateSum: Making "+platesumbase)
 
-    chips = np.array(['a','b','c'])
-    nchips = len(chips)
+    # Directory where sn*dat and altsn*dat files are stored.
+    sntabdir = apodir + apred + '/visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/'
+    if os.path.exists(sntabdir) == False: os.makedirs(sntabdir)
 
     # Get the fiber association for this plate. Also get some other values
     if ims[0] == 0:
@@ -766,27 +770,16 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 
-    print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
-
-
-''' MAKESNTAB: make sn*dat and altsn*dat files'''
-def makeSNtab(platesum=None, plate=None, mjd=None, ims=None, plugmap=None, sntabdir=None): 
-
-    print("----> makeSNtab: Running plate "+plate+", MJD "+mjd)
-
-    n_exposures = len(ims)
-
-    if os.path.exists(sntabdir) == False:
-        subprocess.call(['mkdir', sntabdir])
-
+    # Make the sn*dat and altsn*dat files
     outfile1 = sntabdir + 'sn-' + plate + '-' + mjd + '.dat'
     outfile2 = sntabdir + 'altsn-' + plate + '-' + mjd + '.dat'
     outfiles = np.array([outfile1, outfile2])
     nout = len(outfiles)
+    
+    txt = "making " + os.path.basename(outfile1) + " and " + os.path.basename(outfile2)
+    print("----> makePlateSum: " + txt)
 
-    tmp = fits.open(platesum)
-    tab1 = tmp[1].data
-
+    tab1 = fits.open(platesum)[1].data
     for j in range(nout):
         out = open(outfiles[j], 'w')
         for i in range(n_exposures):
@@ -812,8 +805,8 @@ def makeSNtab(platesum=None, plate=None, mjd=None, ims=None, plugmap=None, sntab
                 # Write to file
                 out.write(im+'  '+sn+'  '+vers+'  '+plugmjd+'  '+plate+'  '+mjd+'  '+tsec+'  '+exptime+'  Object\n')
         out.close()
-
-    print("----> makeSNtab: Done with plate "+plate+", MJD "+mjd+"\n")
+    print("----> makePlateSum: done " + txt)
+    print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
 ''' MAKEOBSQAPAGES: mkhtmlplate translation '''
