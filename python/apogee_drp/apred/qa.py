@@ -1668,9 +1668,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 healpixgroup = str(healpix // 1000)
                 healpix = str(healpix)
 
-                # Find the associated healpix html directories and make them if they don't already exist
+                # Find the associated healpix html directories
                 starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
                 starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
                 apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
                 if len(apStarCheck) > 0:
                     # Find the newest apStar file
