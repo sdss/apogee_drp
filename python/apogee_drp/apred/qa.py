@@ -2174,10 +2174,6 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
             objid = jdata['OBJECT']
             chmag = str("%.3f" % round(jdata['HMAG'], 3))
 
-                    rvteff = str(int(round(vcat['rv_teff'][gd][0])))
-                    rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
-                    rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
-
             # Find which healpix this star is in
             healpix = apload.obj2healpix(objid)
             healpixgroup = str(healpix // 1000)
@@ -2263,7 +2259,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
 
                     ichip += 1
 
-                txt = objid + r'          $H$ = ' + hmag + '          ' + str(nvis) + ' visits'
+                txt = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits'
                 ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
                 txt = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
                 ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
