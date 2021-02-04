@@ -276,8 +276,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     if platetype == 'normal': 
 
         # Make the apPlateSum file if it doesn't already exist.
-        platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
         if makeplatesum == True:
+            platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+            
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
@@ -300,9 +301,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                                fluxid=fluxid, telescope=telescope)
 
         # Make plots for the observation QA pages
-        if makeqaplots == True:
+        if makeobsplots == True:
             q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
-                               survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
+                             survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
         # Make the visit and star level html pages
         if makeobjhtml == True:
