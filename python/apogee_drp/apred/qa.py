@@ -66,7 +66,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
-            makeobsplots=True, makeobjhtml=True, makestarhtml=True, makevisitplots=True, makestarplots=True,
+            makeobsplots=True, makevishtml=True, makestarhtml=True, makevisitplots=True, makestarplots=True,
             makenightqa=True, makemasterqa=True, makeqafits=True, clobber=True):
 
     # Establish telescope
@@ -86,13 +86,13 @@ def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True
 
     for ii in range(nmjd):
         x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
-                    makeobshtml=makeobshtml, makeobsplots=makeobsplots, makeobjhtml=makeobjhtml, 
+                    makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
                     makestarhtml=makestarhtml, makevisitplots=makevisitplots,makestarplots=makestarplots,
                     makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, clobber=clobber)
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
-            makeobsplots=True, makeobjhtml=True, makestarhtml=True, makevisitplots=True, 
+            makeobsplots=True, makevishtml=True, makestarhtml=True, makevisitplots=True, 
             makestarplots=True, makemasterqa=True, makenightqa=True, makeqafits=True, clobber=True):
 
     # Establish telescope and instrument
@@ -196,12 +196,12 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         # Only run makemasterqa and makenightqa after the last plate on this mjd
         if i < nsciplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
-                     makeobsplots=makeobsplots, makeobjhtml=makeobjhtml, makestarhtml=makestarhtml,
+                     makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
                      makevisitplots=makevisitplots, makestarplots=makestarplots, makemasterqa=False, 
                      makenightqa=False, clobber=clobber)
         else:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
-                     makeobsplots=makeobsplots, makeobjhtml=makeobjhtml, makestarhtml=makestarhtml,
+                     makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
                      makevisitplots=makevisitplots, makestarplots=makestarplots, makemasterqa=makemasterqa, 
                      makenightqa=makenightqa, clobber=clobber)
         
@@ -210,7 +210,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
-         makeobsplots=True, makeobjhtml=True, makestarhtml=True, makevisitplots=True, makestarplots=True, 
+         makeobsplots=True, makevishtml=True, makestarhtml=True, makevisitplots=True, makestarplots=True, 
          makemasterqa=True, makenightqa=True, clobber=True):
 
     start_time = time.time()
@@ -305,11 +305,14 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
                              survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
-        # Make the visit and star level html pages
-        if makeobjhtml == True:
-            q = makeObjHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                            makestarhtml=makestarhtml, makestarplots=makestarplots,
+        # Make the visit level pages
+        if makevishtml == True:
+            q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
                             fluxid=fluxid, clobber=clobber)
+                            
+        # Make the star level html pages
+        if makestarhtml == True:
+            q = makeStarHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope)
 
         # Make the visit plots
         if makevisitplots == True:
@@ -1569,11 +1572,11 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     print("----> makeObsPlots: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
-''' makeObjHTML: make the visit and star level html '''
-def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
-              makestarhtml=None, makestarplots=None, fluxid=None, clobber=None): 
+''' makeVisHTML: make the visit and star level html '''
+def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
+                makestarplots=None, fluxid=None, clobber=None): 
 
-    print("----> makeObjHTML: Running plate "+plate+", MJD "+mjd)
+    print("----> makeVisHTML: Running plate "+plate+", MJD "+mjd)
 
     # HTML header background color
     thcolor = '#DCDCDC'
@@ -1588,7 +1591,7 @@ def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     if os.path.exists(htmldir) == False: os.makedirs(htmldir)
 
     if os.path.exists(htmldir + 'sorttable.js') == False:
-        print("----> makeObjHTML: getting sorttable.js...")
+        print("----> makeVisHTML: getting sorttable.js...")
         subprocess.call(['wget', '-q', sort_table_link])
         subprocess.call(['mv', 'sorttable.js', htmldir])
 
@@ -1606,7 +1609,6 @@ def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
     data = apPlate['a'][11].data[::-1]
-    objtype = data['OBJTYPE']
     nfiber = len(data)
 
     # Read in flux file to get an idea of throughput
@@ -1618,7 +1620,6 @@ def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
     vishtml.write('<HTML>\n')
-#    vishtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
     vishtml.write('<HEAD><script src="sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
     vishtml.write('<BODY>\n')
 
@@ -1660,6 +1661,7 @@ def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
             simbadlink = txt1 + txt2
 
+            apStarRelPath = None
             if (objtype != 'SKY') & (objid != '2MNone'):
                 # Find which healpix this star is in
                 healpix = apload.obj2healpix(objid)
@@ -1668,12 +1670,7 @@ def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
                 # Find the associated healpix html directories and make them if they don't already exist
                 starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-                starHtmlDir = starDir + 'html/'
-                if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
-                starHTMLpath = starHtmlDir + objid + '.html'
-
                 starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
                 apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
                 if len(apStarCheck) > 0:
                     # Find the newest apStar file
@@ -1681,17 +1678,6 @@ def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
                     apStarRelPath = '../' + starRelPath + apStarNewest
-                    apStarPath = starDir + apStarNewest
-                    apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
-
-                    # Set up plot directories and plot file name
-                    starPlotDir = starDir + 'plots/'
-                    if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
-                    starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
-                    starPlotFilePath = starPlotDir + starPlotFile
-                    starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
-                else:
-                    apStarRelPath = None
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
@@ -1723,7 +1709,7 @@ def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 if type(visithdr['SNR']) != str:
                     snratio = str("%.2f" % round(visithdr['SNR'],2))
                 else:
-                    print("----> makeObjHTML: Problem with " + visitfilebase + "... SNR = NaN.")
+                    print("----> makeVisHTML: Problem with " + visitfilebase + "... SNR = NaN.")
 
             # column 1
             vishtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
@@ -1801,132 +1787,12 @@ def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             else:
                 vishtml.write('<TD align ="center">----\n')
 
-            # Star level html page
-            if (objtype != 'SKY') & (objid != '2MNone'):
-                if makestarhtml is True:
-                    print("----> makeObjHTML: Making star level html for " + objid)
-                    vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
-
-                    # Get visit info from DB
-                    cgl = str("%.5f" % round(vcat['glon'][0],5))
-                    cgb = str("%.5f" % round(vcat['glat'][0],5))
-                    cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
-                    cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
-                    cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
-
-                    nvis = len(vcat)
-                    cvhelio = '----';  cvscatter = '----'
-                    gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
-                    if len(gd) > 0:
-                        vels = vcat['vheliobary'][gd]
-                        cvhelio = str("%.2f" % round(np.mean(vels),2))
-                        cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
-
-                    rvteff = '----'; rvlogg = '----'; rvfeh = '---'
-                    gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
-                    if len(gd) > 0:
-                        rvteff = str(int(round(vcat['rv_teff'][gd][0])))
-                        rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
-                        rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
-
-                    starHTML = open(starHTMLpath, 'w')
-                    starHTML.write('<HTML>\n')
-                    starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
-                    starHTML.write('<BODY>\n')
-                    starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1> <HR>\n')
-                    if apStarRelPath is not None:
-                        starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
-                    else:
-                        starHTML.write('<P>' + simbadlink + '<BR>apStar File???\n')
-                    starHTML.write('<HR>\n')
-                    starHTML.write('<H3>Star info:</H3>')
-                    starHTML.write('<TABLE BORDER=2>\n')
-                    starHTML.write('<TR bgcolor="' + thcolor + '">')
-
-                    # Star metadata table
-                    starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>2MASS<BR>J<BR>(mag) <TH>2MASS<BR>H<BR>(mag) <TH>2MASS<BR>J<BR>(mag) <TH>Raw J-K')
-                    starHTML.write('<TH>Gaia DR2<BR>PMRA<BR>(mas) <TH>Gaia DR2<BR>PMDEC<BR>(mas) <TH>Gaia DR2<BR>G<BR>(mag) <TH>Mean<BR>Vhelio<BR>(km/s)') 
-                    starHTML.write('<TH>Min-max<BR>Vhelio<BR>(km/s) <TH>RV Teff<BR>(K) <TH>RV log(g) <TH>RV [Fe/H] \n')
-                    starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
-                    starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
-                    starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
-                    starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag + '<TD ALIGN=right>' + cvhelio)
-                    starHTML.write('<TD ALIGN=right>' + cvscatter)
-                    starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
-                    starHTML.write('</TABLE>\n<BR>\n')
-                    starHTML.write('<HR>\n')
-
-                    # Star + best fitting model plot
-                    starHTML.write('<H3>apStar versus best fit Cannon model:</H3>')
-                    if apStarRelPath is not None:
-                        starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
-                    else:
-                        starHTML.write('<P>No apStar file for this object!</P>\n')
-                    starHTML.write('<HR>\n')
-
-                    # Star visit table
-                    starHTML.write('<H3>Visit info:</H3>')
-                    starHTML.write('<P><B>MJD links:</B> QA page for the plate+MJD of the visit.<BR><B>Date-Obs links:</B> apVisit file download.</P>\n')
-                    starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
-                    starHTML.write('<TR bgcolor="'+thcolor+'">')
-                    starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
-                    for k in range(nvis):
-                        cmjd = str(vcat['mjd'][k])
-                        dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
-                        cplate = vcat['plate'][k]
-                        cfield = vcat['field'][k]
-                        cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
-                        cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
-                        ccart = '?'
-                        platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd)
-                        if os.path.exists(platefile):
-                            platehdus = fits.open(platefile)
-                            platetab = platehdus[1].data
-                            ccart = str(platetab['CART'][0])
-                        csnr = str("%.1f" % round(vcat['snr'][k],1))
-                        cvhelio = str("%.2f" % round(vcat['vheliobary'][k],2))
-                        visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
-                        visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
-                        visplot = visplotpath + visplotname
-                        apvispath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
-                        apqahtml = apvispath + '/html/apQA-' + cplate + '-' + cmjd + '.html'
-                        apvisfile = 'apVisit-' + apred + '-' + telescope + '-' + cplate + '-' + cmjd + '-' + cfib + '.fits'
-                        apvis = apvispath + apvisfile
-
-                        starHTML.write('<TR><TD ALIGN=center><A HREF="' + apqahtml + '">' + cmjd + '</A>\n')
-                        starHTML.write('<TD ALIGN=center><A HREF="' + apvis + '">' + dateobs + '</A>\n')
-                        starHTML.write('<TD ALIGN=center>' + cfield + '\n')
-                        starHTML.write('<TD ALIGN=center>' + cplate + '\n')
-                        starHTML.write('<TD ALIGN=center>' + cfib + '\n')
-                        starHTML.write('<TD ALIGN=center>' + cblock + '\n')
-                        starHTML.write('<TD ALIGN=center>' + ccart + '\n')
-                        fcol='black'  
-                        if float(csnr) < 20: fcol='red'
-                        starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + csnr + '</FONT>\n')
-                        fcol='black'  
-                        if np.absolute(float(cvhelio)) > 300: fcol='red'
-                        starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + cvhelio + '</FONT>\n')
-                        starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
-                    starHTML.write('</TABLE>\n<BR>\n')
-                    starHTML.write('<HR>\n')
-
-                    # Insert Doppler output plots
-                    if apStarRelPath is not None:
-                        starHTML.write('<H3>Doppler Cross-Correlation Plots:</H3>')
-                        ccfplot = '../plots/' + apStarNewest.replace('.fits', '_ccf.png')
-                        spec2plot = ccfplot.replace('ccf', 'spec2')
-                        starHTML.write('<A HREF=' + ccfplot + ' target="_blank"><IMG SRC=' + ccfplot + ' WIDTH=600></A>\n')
-                        starHTML.write('<HR>\n')
-                        starHTML.write('<H3>Doppler Visit+Model Plots:</H3>')
-                        starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
-                    starHTML.write('<BR><BR><BR><BR>\n')
-                    starHTML.close()
  
             # Make plots of apStar spectrum with best fitting model
             if (objtype != 'SKY') & (objid != '2MNone'):
                 if makestarplots is True:
                     if apStarRelPath is not None:
-                        print("----> makeObjHTML: Running apStarPlots for " + os.path.basename(starPlotFilePath))
+                        print("----> makeVisHTML: Running apStarPlots for " + os.path.basename(starPlotFilePath))
                         nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
                                               starPlotFilePath=starPlotFilePath, models=models)
 
@@ -1934,7 +1800,208 @@ def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
     vishtml.close()
     
-    print("----> makeObjHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    print("----> makeVisHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
+
+
+''' makeStarHTML: make the visit and star level html '''
+def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, clobber=None): 
+
+    print("----> makeStarHTML: Running plate "+plate+", MJD "+mjd)
+
+    # HTML header background color
+    thcolor = '#DCDCDC'
+
+    # Setup doppler cannon models
+    models = doppler.cannon.models
+    
+    apodir = os.environ.get('APOGEE_REDUX') + '/'
+
+    # Base directory where star-level stuff goes
+    starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
+
+    # Load in the apPlate file
+    apPlate = load.apPlate(int(plate), mjd)
+    data = apPlate['a'][11].data[::-1]
+    nfiber = len(data)
+
+    # Start db session for getting all visit info
+    db = apogeedb.DBSession()
+
+    # Loop over the fibers
+    for j in range(300):
+        jdata = data[j]
+        fiber = jdata['FIBERID']
+        if fiber > 0:
+            objtype = jdata['OBJTYPE']
+            objid = jdata['OBJECT']
+            if (objtype != 'SKY') & (objid != '2MNone'):
+                print("----> makeStarHTML:   making html for " + objid)
+
+                cfiber = str(fiber).zfill(3)
+                cblock = str(np.ceil(fiber / 30).astype(int))
+                hmag = jdata['HMAG']
+                cjmag = str("%.3f" % round(jdata['JMAG'], 3))
+                chmag = str("%.3f" % round(jdata['HMAG'], 3))
+                ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
+                jkcolor = jdata['JMAG'] - jdata['KMAG']
+                cjkcolor = str("%.3f" % round(jkcolor, 3))
+                cra = str("%.5f" % round(jdata['RA'], 5))
+                cdec = str("%.5f" % round(jdata['DEC'], 5))
+                txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
+                txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
+                simbadlink = txt1 + txt2
+
+                # Find which healpix this star is in
+                healpix = apload.obj2healpix(objid)
+                healpixgroup = str(healpix // 1000)
+                healpix = str(healpix)
+
+                # Find the associated healpix html directories and make them if they don't already exist
+                starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+                starHtmlDir = starDir + 'html/'
+                if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
+                starHTMLpath = starHtmlDir + objid + '.html'
+
+                starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
+                apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                if len(apStarCheck) > 0:
+                    # Find the newest apStar file
+                    apStarCheck.sort()
+                    apStarCheck = np.array(apStarCheck)
+                    apStarNewest = os.path.basename(apStarCheck[-1])
+                    apStarRelPath = '../' + starRelPath + apStarNewest
+                    apStarPath = starDir + apStarNewest
+                    apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
+
+                    # Set up plot directories and plot file name
+                    starPlotDir = starDir + 'plots/'
+                    if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
+                    starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
+                    starPlotFilePath = starPlotDir + starPlotFile
+                    starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
+                else:
+                    apStarRelPath = None
+
+                # DB query to get visit info
+                vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
+
+                # Get visit info from DB
+                cgl = str("%.5f" % round(vcat['glon'][0],5))
+                cgb = str("%.5f" % round(vcat['glat'][0],5))
+                cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
+                cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
+                cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
+
+                nvis = len(vcat)
+                cvhelio = '----';  cvscatter = '----'
+                gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
+                if len(gd) > 0:
+                    vels = vcat['vheliobary'][gd]
+                    cvhelio = str("%.2f" % round(np.mean(vels),2))
+                    cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
+
+                rvteff = '----'; rvlogg = '----'; rvfeh = '---'
+                gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
+                if len(gd) > 0:
+                    rvteff = str(int(round(vcat['rv_teff'][gd][0])))
+                    rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
+                    rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
+
+                starHTML = open(starHTMLpath, 'w')
+                starHTML.write('<HTML>\n')
+                starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
+                starHTML.write('<BODY>\n')
+                starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1> <HR>\n')
+                if apStarRelPath is not None:
+                    starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
+                else:
+                    starHTML.write('<P>' + simbadlink + '<BR>apStar File???\n')
+                starHTML.write('<HR>\n')
+                starHTML.write('<H3>Star info:</H3>')
+                starHTML.write('<TABLE BORDER=2>\n')
+                starHTML.write('<TR bgcolor="' + thcolor + '">')
+
+                # Star metadata table
+                starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>2MASS<BR>J<BR>(mag) <TH>2MASS<BR>H<BR>(mag) <TH>2MASS<BR>J<BR>(mag) <TH>Raw J-K')
+                starHTML.write('<TH>Gaia DR2<BR>PMRA<BR>(mas) <TH>Gaia DR2<BR>PMDEC<BR>(mas) <TH>Gaia DR2<BR>G<BR>(mag) <TH>Mean<BR>Vhelio<BR>(km/s)') 
+                starHTML.write('<TH>Min-max<BR>Vhelio<BR>(km/s) <TH>RV Teff<BR>(K) <TH>RV log(g) <TH>RV [Fe/H] \n')
+                starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
+                starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
+                starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
+                starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag + '<TD ALIGN=right>' + cvhelio)
+                starHTML.write('<TD ALIGN=right>' + cvscatter)
+                starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
+                starHTML.write('</TABLE>\n<BR>\n')
+                starHTML.write('<HR>\n')
+
+                # Star + best fitting model plot
+                starHTML.write('<H3>apStar versus best fit Cannon model:</H3>')
+                if apStarRelPath is not None:
+                    starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
+                else:
+                    starHTML.write('<P>No apStar file for this object!</P>\n')
+                starHTML.write('<HR>\n')
+
+                # Star visit table
+                starHTML.write('<H3>Visit info:</H3>')
+                starHTML.write('<P><B>MJD links:</B> QA page for the plate+MJD of the visit.<BR><B>Date-Obs links:</B> apVisit file download.</P>\n')
+                starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
+                starHTML.write('<TR bgcolor="'+thcolor+'">')
+                starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
+                for k in range(nvis):
+                    cmjd = str(vcat['mjd'][k])
+                    dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
+                    cplate = vcat['plate'][k]
+                    cfield = vcat['field'][k]
+                    cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
+                    cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
+                    ccart = '?'
+                    platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd)
+                    if os.path.exists(platefile):
+                        platehdus = fits.open(platefile)
+                        platetab = platehdus[1].data
+                        ccart = str(platetab['CART'][0])
+                    csnr = str("%.1f" % round(vcat['snr'][k],1))
+                    cvhelio = str("%.2f" % round(vcat['vheliobary'][k],2))
+                    visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
+                    visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
+                    visplot = visplotpath + visplotname
+                    apvispath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
+                    apqahtml = apvispath + '/html/apQA-' + cplate + '-' + cmjd + '.html'
+                    apvisfile = 'apVisit-' + apred + '-' + telescope + '-' + cplate + '-' + cmjd + '-' + cfib + '.fits'
+                    apvis = apvispath + apvisfile
+
+                    starHTML.write('<TR><TD ALIGN=center><A HREF="' + apqahtml + '">' + cmjd + '</A>\n')
+                    starHTML.write('<TD ALIGN=center><A HREF="' + apvis + '">' + dateobs + '</A>\n')
+                    starHTML.write('<TD ALIGN=center>' + cfield + '\n')
+                    starHTML.write('<TD ALIGN=center>' + cplate + '\n')
+                    starHTML.write('<TD ALIGN=center>' + cfib + '\n')
+                    starHTML.write('<TD ALIGN=center>' + cblock + '\n')
+                    starHTML.write('<TD ALIGN=center>' + ccart + '\n')
+                    fcol='black'  
+                    if float(csnr) < 20: fcol='red'
+                    starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + csnr + '</FONT>\n')
+                    fcol='black'  
+                    if np.absolute(float(cvhelio)) > 300: fcol='red'
+                    starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + cvhelio + '</FONT>\n')
+                    starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
+                starHTML.write('</TABLE>\n<BR>\n')
+                starHTML.write('<HR>\n')
+
+                # Insert Doppler output plots
+                if apStarRelPath is not None:
+                    starHTML.write('<H3>Doppler Cross-Correlation Plots:</H3>')
+                    ccfplot = '../plots/' + apStarNewest.replace('.fits', '_ccf.png')
+                    spec1plot = ccfplot.replace('ccf', 'spec')
+                    spec2plot = ccfplot.replace('ccf', 'spec2')
+                    starHTML.write('<A HREF=' + ccfplot + ' target="_blank"><IMG SRC=' + ccfplot + ' WIDTH=600></A>\n')
+                    starHTML.write('<HR>\n')
+                    starHTML.write('<H3>Doppler Visit+Model Plots:</H3>')
+                    starHTML.write('<A HREF=' + spec1plot + ' target="_blank"><IMG SRC=' + spec1plot + ' WIDTH=600></A>\n')
+                    starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
+                starHTML.write('<BR><BR><BR><BR>\n')
+                starHTML.close()
 
 ''' APVISITPLOTS: plots of the apVisit spectra '''
 def apVisitPlots(load=None, plate=None, mjd=None):
