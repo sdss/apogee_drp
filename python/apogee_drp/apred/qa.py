@@ -1955,8 +1955,9 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                         print("----> makeObjQA: Running apStarPlots for " + os.path.basename(starPlotFilePath))
                         nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
                                               starPlotFilePath=starPlotFilePath, models=models)
-                            
-            objhtml.write('<TD><A HREF=../plots/' + plotfile + ' target="_blank"><IMG SRC=../plots/' + plotfile + ' WIDTH=1100></A>\n')
+
+            visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
+            objhtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
     objhtml.close()
     
     print("----> makeObjQA: Done with plate " + plate + ", MJD " + mjd + ".\n")
