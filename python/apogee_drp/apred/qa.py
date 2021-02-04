@@ -64,6 +64,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #    with some summary information about the calibration data
 #--------------------------------------------------------------------------------------------------
 
+###################################################################################################
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=True, makevisitplots=True, makestarplots=True,
@@ -90,6 +91,7 @@ def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True
                     makestarhtml=makestarhtml, makevisitplots=makevisitplots,makestarplots=makestarplots,
                     makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, clobber=clobber)
 
+###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=True, makevisitplots=True, 
@@ -207,7 +209,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         
     print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
 
-
+###################################################################################################
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
          makeobsplots=True, makevishtml=True, makestarhtml=True, makevisitplots=True, makestarplots=True, 
@@ -334,7 +336,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     runtime = str("%.2f" % (time.time() - start_time))
     print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.\n")
 
-
+###################################################################################################
 ''' MAKEPLATESUM: Plotmag translation '''
 def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
                  instrument=None, clobber=True, makeqaplots=None, plugmap=None, survey=None,
@@ -796,7 +798,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         print("----> makePlateSum: done " + txt)
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
 
-
+###################################################################################################
 ''' MAKEOBSHTML: mkhtmlplate translation '''
 def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
                    fluxid=None, telescope=None):
@@ -1050,7 +1052,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
     print("----> makeObsHTML: Done with plate "+plate+", MJD "+mjd+"\n")
 
-
+###################################################################################################
 ''' MAKEOBSPLOTS: plots for the plate QA page '''
 def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, instrument=None,
                    apred=None, flat=None, fluxid=None, survey=None, clobber=None): 
@@ -1575,7 +1577,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     #plt.ion()
     print("----> makeObsPlots: Done with plate "+plate+", MJD "+mjd+"\n")
 
-
+###################################################################################################
 ''' makeVisHTML: make the visit and star level html '''
 def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
                 makestarplots=None, fluxid=None, clobber=None): 
@@ -1795,7 +1797,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     
     print("----> makeVisHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
-
+###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
 def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, clobber=None): 
 
@@ -1997,6 +1999,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 starHTML.write('<BR><BR><BR><BR>\n')
                 starHTML.close()
 
+###################################################################################################
 ''' APVISITPLOTS: plots of the apVisit spectra '''
 def apVisitPlots(load=None, plate=None, mjd=None):
 
@@ -2070,7 +2073,6 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                 print("----> apVisitPlots: Problem with fiber " + str(fiber).zfill(3) + ". Not Plotting.")
             else:
                 print("----> apVisitPlots:    making " + plotfile + " (" + objid + ", " + str(j+1) + "/" + cnfiber + ")")
-                 + " (" + str(j+1) + "/" + cnfiber + ")"
                 tmpF = convolve(Flux, Box1DKernel(11))
                 ymx1 = np.nanmax(tmpF[ymxsec1])
                 ymx2 = np.nanmax(tmpF[ymxsec2])
@@ -2136,7 +2138,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                 
     print("----> apVisitPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
-
+###################################################################################################
 ''' APSTARPLOTS: plots of the apStar spectra + best fitting Cannon model '''
 def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
 
@@ -2278,7 +2280,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
 
     print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
-
+###################################################################################################
 '''  MAKENIGHTQA: makes nightly QA pages '''
 def makeNightQA(load=None, mjd=None, telescope=None, apred=None): 
 
@@ -2689,7 +2691,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     #plt.ion()
     print("----> makeNightQA: Done with MJD "+mjd+"\n")
 
-
+###################################################################################################
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
 def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fieldfilebase=None,
                       domjd=True, dofields=True):
@@ -3101,7 +3103,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     #plt.ion()
     print("----> makeMasterQApages: Done.\n")
 
-
+###################################################################################################
 ''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.) '''
 def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
 
@@ -3218,7 +3220,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
         print("Made " + outfile)
         print("--------------------------------------------------------------------\n")
 
-
+###################################################################################################
 ''' MAKEDARKFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants) '''
 def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
 
@@ -3293,6 +3295,7 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
         print("Made " + outfile)
         print("--------------------------------------------------------------------\n")
 
+###################################################################################################
 ''' MAKEEXPFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants) '''
 def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, clobber=None):
 
@@ -3395,7 +3398,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
         print("Made " + outfile)
         print("--------------------------------------------------------------------\n")
 
-
+###################################################################################################
 ''' GETFLUX: Translation of getflux.pro '''
 def getflux(d=None, skyline=None, rows=None):
 
