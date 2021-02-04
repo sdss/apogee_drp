@@ -315,9 +315,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the visit and star level html pages
         if makeobjhtml == True:
-            q = makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                         makestarhtml=makestarhtml, makestarplots=makestarplots,
-                         fluxid=fluxid, clobber=clobber)
+            q = makeObjHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
+                            makestarhtml=makestarhtml, makestarplots=makestarplots,
+                            fluxid=fluxid, clobber=clobber)
 
         # Make the visit plots
         if makevisitplots == True:
@@ -1595,11 +1595,11 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
     print("----> makeObsQAplots: Done with plate "+plate+", MJD "+mjd+"\n")
 
 
-''' MAKEOBJQA: make the visit and star level html '''
-def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
+''' makeObjHTML: make the visit and star level html '''
+def makeObjHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
               makestarhtml=None, makestarplots=None, fluxid=None, clobber=None): 
 
-    print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
+    print("----> makeObjHTML: Running plate "+plate+", MJD "+mjd)
 
     # HTML header background color
     thcolor = '#DCDCDC'
@@ -1614,7 +1614,7 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     if os.path.exists(htmldir) == False: os.makedirs(htmldir)
 
     if os.path.exists(htmldir + 'sorttable.js') == False:
-        print("----> makeObjQA: getting sorttable.js...")
+        print("----> makeObjHTML: getting sorttable.js...")
         subprocess.call(['wget', '-q', sort_table_link])
         subprocess.call(['mv', 'sorttable.js', htmldir])
 
@@ -1642,23 +1642,23 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
     throughput = medflux / np.nanmax(medflux)
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
-    objhtml = open(htmldir + htmlfile + '.html', 'w')
-    objhtml.write('<HTML>\n')
-#    objhtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
-    objhtml.write('<HEAD><script src="sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
-    objhtml.write('<BODY>\n')
+    vishtml = open(htmldir + htmlfile + '.html', 'w')
+    vishtml.write('<HTML>\n')
+#    vishtml.write('<HEAD><script src="sorttable.js"></script></head>\n')
+    vishtml.write('<HEAD><script src="sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
+    vishtml.write('<BODY>\n')
 
-    objhtml.write('<H1>' + htmlfile + '</H1><HR>\n')
-    #objhtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
-    #objhtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
-    objhtml.write('<P><B>Note:</B> the "Dome Flat Throughput" column gives the median dome flat flux in each ')
-    objhtml.write('fiber divided by the maximum median dome flat flux across all fibers. ')
-    objhtml.write('<BR>Low numbers are generally bad, and that column is color-coded accordingly.</P>\n')
-    objhtml.write('<P>Click the column headers to sort.</p>\n')
-    objhtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    objhtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
-    objhtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
-#    objhtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
+    vishtml.write('<H1>' + htmlfile + '</H1><HR>\n')
+    #vishtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
+    #vishtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
+    vishtml.write('<P><B>Note:</B> the "Dome Flat Throughput" column gives the median dome flat flux in each ')
+    vishtml.write('fiber divided by the maximum median dome flat flux across all fibers. ')
+    vishtml.write('<BR>Low numbers are generally bad, and that column is color-coded accordingly.</P>\n')
+    vishtml.write('<P>Click the column headers to sort.</p>\n')
+    vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
+    vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
+    vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
+#    vishtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
@@ -1749,41 +1749,41 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 if type(visithdr['SNR']) != str:
                     snratio = str("%.2f" % round(visithdr['SNR'],2))
                 else:
-                    print("----> makeObjQA: Problem with " + visitfilebase + "... SNR = NaN.")
+                    print("----> makeObjHTML: Problem with " + visitfilebase + "... SNR = NaN.")
 
             # column 1
-            objhtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
+            vishtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
 
             # column 2
-            objhtml.write('<TD>' + objid + '\n')
+            vishtml.write('<TD>' + objid + '\n')
             if objtype != 'SKY':
-                objhtml.write('<BR>' + simbadlink + '\n')
-                objhtml.write('<BR><A HREF=../' + visitfilebase + '>apVisit file</A>\n')
+                vishtml.write('<BR>' + simbadlink + '\n')
+                vishtml.write('<BR><A HREF=../' + visitfilebase + '>apVisit file</A>\n')
                 if apStarRelPath is not None:
-                    objhtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
+                    vishtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
                 else:
-                    objhtml.write('<BR>apStar file??\n')
-                objhtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
+                    vishtml.write('<BR>apStar file??\n')
+                vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
 
             if objtype != 'SKY':
-                objhtml.write('<TD align ="right">' + chmag)
-                objhtml.write('<TD align ="right">' + cjkcolor)
-                #objhtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
+                vishtml.write('<TD align ="right">' + chmag)
+                vishtml.write('<TD align ="right">' + cjkcolor)
+                #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
             else:
-                objhtml.write('<TD align="center">-99.9')
-                objhtml.write('<TD align="center">-99.9')
-                #objhtml.write('<TD BGCOLOR='+color+'>---\n')
+                vishtml.write('<TD align="center">-99.9')
+                vishtml.write('<TD align="center">-99.9')
+                #vishtml.write('<TD BGCOLOR='+color+'>---\n')
 
             if objtype == 'SKY': 
-                objhtml.write('<TD align="center">SKY')
+                vishtml.write('<TD align="center">SKY')
             else:
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
-                    objhtml.write('<TD align="center">TEL')
+                    vishtml.write('<TD align="center">TEL')
                 else:
-                    objhtml.write('<TD align="center">SCI')
+                    vishtml.write('<TD align="center">SCI')
 
-            objhtml.write('<TD align="left">' + targflagtxt)
-            objhtml.write('<BR><BR>' + starflagtxt)
+            vishtml.write('<TD align="left">' + targflagtxt)
+            vishtml.write('<BR><BR>' + starflagtxt)
 
             # Vhelio, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
             if os.path.exists(allVpath):
@@ -1800,18 +1800,18 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                     if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
                     fcol = 'black'
                     if np.absolute(float(vhelio)) > 400: fcol = 'red'
-                    objhtml.write('<TD align ="right">' + snratio)
-                    objhtml.write('<TD align ="right" style="color:'+fcol+'">' + vhelio)
-                    objhtml.write('<TD align ="center" style="color:'+fcol+'">' + ncomp)
-                    objhtml.write('<TD align ="right" style="color:'+fcol+'">' + rvteff)
-                    objhtml.write('<TD align ="right" style="color:'+fcol+'">' + rvlogg)
-                    objhtml.write('<TD align ="right" style="color:'+fcol+'">' + rvfeh)
+                    vishtml.write('<TD align ="right">' + snratio)
+                    vishtml.write('<TD align ="right" style="color:'+fcol+'">' + vhelio)
+                    vishtml.write('<TD align ="center" style="color:'+fcol+'">' + ncomp)
+                    vishtml.write('<TD align ="right" style="color:'+fcol+'">' + rvteff)
+                    vishtml.write('<TD align ="right" style="color:'+fcol+'">' + rvlogg)
+                    vishtml.write('<TD align ="right" style="color:'+fcol+'">' + rvfeh)
                 else:
-                    objhtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
-                    objhtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
+                    vishtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
+                    vishtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
             else:
-                objhtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
-                objhtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
+                vishtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
+                vishtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
 
             # Throughput column
             tput = throughput[j]
@@ -1823,14 +1823,14 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                 if tput < 0.4: bcolor = '#FF3333'
                 if tput < 0.3: bcolor = '#FF0000'
                 tput = str("%.3f" % round(tput,3))
-                objhtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
+                vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
             else:
-                objhtml.write('<TD align ="center">----\n')
+                vishtml.write('<TD align ="center">----\n')
 
             # Star level html page
             if (objtype != 'SKY') & (objid != '2MNone'):
                 if makestarhtml is True:
-                    print("----> makeObjQA: Making star level html for " + objid)
+                    print("----> makeObjHTML: Making star level html for " + objid)
                     vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
 
                     # Get visit info from DB
@@ -1952,15 +1952,15 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
             if (objtype != 'SKY') & (objid != '2MNone'):
                 if makestarplots is True:
                     if apStarRelPath is not None:
-                        print("----> makeObjQA: Running apStarPlots for " + os.path.basename(starPlotFilePath))
+                        print("----> makeObjHTML: Running apStarPlots for " + os.path.basename(starPlotFilePath))
                         nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
                                               starPlotFilePath=starPlotFilePath, models=models)
 
             visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
-            objhtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
+            vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
     objhtml.close()
     
-    print("----> makeObjQA: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    print("----> makeObjHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
 ''' APVISITPLOTS: plots of the apVisit spectra '''
 def apVisitPlots(load=None, plate=None, mjd=None):
