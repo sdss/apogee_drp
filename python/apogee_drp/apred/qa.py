@@ -357,6 +357,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
+    
+    apodir = os.environ.get('APOGEE_REDUX')+'/'
 
     platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
     platesumbase = os.path.basename(platesumfile)
