@@ -65,8 +65,8 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #--------------------------------------------------------------------------------------------------
 
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
-def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
-            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True,
+def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeqaplots=True,
+            makevisitplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True,
             makestarplots=True, makeqafits=True, clobber=True):
 
     # Establish telescope
@@ -86,13 +86,13 @@ def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True
 
     for ii in range(nmjd):
         x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
-                    makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
+                    makemasterqa=makemasterqa, makeqaplots=makeqaplots, makevisitplots=makevisitplots,
                     makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots,
                     makeqafits=makeqafits, clobber=clobber)
 
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
-def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeplots=True,
-            makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
+def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeqaplots=True,
+            makevisitplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
             makestarplots=True, makeqafits=True, clobber=True):
 
     # Establish telescope and instrument
@@ -196,12 +196,12 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         # Only run makemasterqa and makenightqa after the last plate on this mjd
         if i < nsciplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
-                     makemasterqa=False, makeplots=makeplots, makespecplots=makespecplots, 
+                     makemasterqa=False, makeqaplots=makeqaplots, makevisitplots=makevisitplots, 
                      makenightqa=False, makestarhtml=makestarhtml, makestarplots=makestarplots, 
                      clobber=clobber)
         else:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, 
-                     makemasterqa=makemasterqa, makeplots=makeplots, makespecplots=makespecplots,
+                     makemasterqa=makemasterqa, makeqaplots=makeqaplots, makevisitplots=makevisitplots,
                      makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots, 
                      clobber=clobber)
 
@@ -210,7 +210,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True,
-         makeplots=True, makespecplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
+         makeqaplots=True, makevisitplots=True, makemasterqa=True, makenightqa=True, makestarhtml=True, 
          makestarplots=True, badPlates=None, clobber=True):
 
     start_time = time.time()
@@ -309,13 +309,13 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                            fluxid=fluxid, telescope=telescope)
 
         # Make plots for the observation QA pages
-        if makeplots == True:
+        if makeqaplots == True:
             q = makeObsQAplots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
                                survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
         # Make the observation spectrum plots and associated pages
         q= makeObjQA(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                     makespecplots=makespecplots, makestarhtml=makestarhtml, makestarplots=makestarplots,
+                     makevisitplots=makevisitplots, makestarhtml=makestarhtml, makestarplots=makestarplots,
                      fluxid=fluxid, clobber=clobber)
 
         # Make the nightly QA page
@@ -336,9 +336,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 #        single = [planstr['APEXP'][i]['single'].astype(int) for i in range(n_ims)]
 #        sname = [planstr['APEXP'][i]['singlename'] for i in range(n_ims)]
 #        smag = planstr['hmag']
-#        x = makePlotsHtml(load=load, telescope=telescope, onem=True, ims=ims, starnames=sname, 
+#        x = makeqaplotsHtml(load=load, telescope=telescope, onem=True, ims=ims, starnames=sname, 
 #                          starfiber=single, starmag=smag, fixfiberid=fixfiberid, clobber=True, 
-#                          plugmap=plugmap, makeplots=makeplots, badfiberid=badfiberid, survey=survey, apred=apred)
+#                          plugmap=plugmap, makeqaplots=makeqaplots, badfiberid=badfiberid, survey=survey, apred=apred)
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.\n")
@@ -346,7 +346,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
 ''' MAKEPLATESUM: Plotmag translation '''
 def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
-                 instrument=None, clobber=True, makeplots=None, plugmap=None, survey=None,
+                 instrument=None, clobber=True, makeqaplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
 
@@ -1592,7 +1592,7 @@ def makeObsQAplots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, i
 
 ''' MAKEOBJQA: make the pages with spectrum plots   $$$ '''
 def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
-              makespecplots=None, makestarhtml=None, makestarplots=None, fluxid=None, clobber=None): 
+              makevisitplots=None, makestarhtml=None, makestarplots=None, fluxid=None, clobber=None): 
 
     print("----> makeObjQA: Running plate "+plate+", MJD "+mjd)
 
@@ -1998,96 +1998,102 @@ def makeObjQA(load=None, plate=None, mjd=None, survey=None, apred=None, telescop
                                               starPlotFilePath=starPlotFilePath, models=models)
                             
             # Spectrum Plots
-            plotfile = 'apPlate-'+plate+'-'+mjd+'-'+cfiber+'.png'
-            objhtml.write('<TD><A HREF=../plots/'+plotfile+' target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=1100></A>\n')
-            if makespecplots is True:
-                print("----> makeObjQA: Making "+plotfile)
+            plotfile = 'apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
+            objhtml.write('<TD><A HREF=../plots/' + plotfile + ' target="_blank"><IMG SRC=../plots/' + plotfile + ' WIDTH=1100></A>\n')
+            if makevisitplots is True:
+                print("----> makeObjQA: Running apVisitPlots for " + plotfile)
+                nothing = apVisitPlots(apPlate=apPlate, fiber=fiber)
 
-                FluxB = apPlate['a'][1].data[300-fiber,:]
-                FluxG = apPlate['b'][1].data[300-fiber,:]
-                FluxR = apPlate['c'][1].data[300-fiber,:]
-                WaveB = apPlate['a'][4].data[300-fiber,:]
-                WaveG = apPlate['b'][4].data[300-fiber,:]
-                WaveR = apPlate['c'][4].data[300-fiber,:]
-
-                Flux = np.concatenate([FluxB, FluxG, FluxR])
-                Wave = np.concatenate([WaveB, WaveG, WaveR])
-
-                # Establish Ymax
-                ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
-                ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
-                ymxsec3, = np.where((Wave > 16925) & (Wave < 16935))
-                ymxsec4, = np.where((Wave > 16800) & (Wave < 16822))
-                ymxsec5, = np.where((Wave > 15186) & (Wave < 15206))
-                if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0) | (len(ymxsec4) == 0) | (len(ymxsec5) == 0): 
-                    print("----> makeObjQA: Problem with fiber "+cfib+". Not Plotting.")
-                else:
-                    tmpF = convolve(Flux,Box1DKernel(11))
-                    ymx1 = np.nanmax(tmpF[ymxsec1])
-                    ymx2 = np.nanmax(tmpF[ymxsec2])
-                    ymx3 = np.nanmax(tmpF[ymxsec3])
-                    ymx4 = np.nanmax(tmpF[ymxsec4])
-                    ymx5 = np.nanmax(tmpF[ymxsec5])
-                    ymx = np.nanmax([ymx1,ymx2,ymx3,ymx4,ymx5])
-                    if objtype != 'SKY':
-                        ymin = 0
-                        yspn = ymx-ymin
-                        ymax = ymx + (yspn * 0.15)
-                        # Establish Ymin
-                        ymn = np.nanmin(tmpF)
-                        if ymn > 0: 
-                            yspn = ymx - ymn
-                            ymin = ymn - (yspn * 0.10)
-                            ymax = ymx + (yspn * 0.15)
-                    else:
-                        med = np.nanmedian(Flux)
-                        ymin = med-50
-                        ymax = med+50
-                    yspan = ymax-ymin
-
-                    fig=plt.figure(figsize=(28,8))
-                    ax1 = plt.subplot2grid((1,1), (0,0))
-                    ax1.tick_params(reset=True)
-                    ax1.set_xlim(visitxmin,visitxmax)
-                    ax1.set_ylim(ymin,ymax)
-                    ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
-                    ax1.minorticks_on()
-                    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                    ax1.tick_params(axis='both',which='major',length=axmajlen)
-                    ax1.tick_params(axis='both',which='minor',length=axminlen)
-                    ax1.tick_params(axis='both',which='both',width=axwidth)
-                    ax1.set_xlabel(r'Wavelength [$\rm \AA$]')
-                    ax1.set_ylabel(r'Flux')
-
-                    if objtype == 'SKY':
-                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
-                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
-                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
-                    else:
-                        for ll in hlines: ax1.axvline(x=ll, color=hcolor, alpha=0.6)
-                        ax1.text(16811.111, ymin+yspan*0.03, 'H I', color=hcolor, bbox=bboxpar, fontsize=fsz, ha='center')
-                        if jkcolor < 0.3:
-                            for ll in ce3lines: ax1.axvline(x=ll, color=ce3color, alpha=0.6)
-                            for ll in mn2lines: ax1.axvline(x=ll, color=mn2color, alpha=0.6)
-                            ax1.text(15412.667, ymin+yspan*0.03, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
-                            ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
-
-                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color='white', linewidth=10)
-                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color='white', linewidth=10)
-                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color='white', linewidth=10)
-                        ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
-                        ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
-                        ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
-
-                        ax1.text(0.02, 0.05, objid+',  H = '+chmag, transform=ax1.transAxes, bbox=bboxpar)
-
-                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
-                    plt.savefig(plotsdir+plotfile)
-                    plt.close('all')
 
     objhtml.close()
     print("----> makeObjQA: Done with plate "+plate+", MJD "+mjd+".\n")
 
+''' APVISITPLOTS: plots of the apVisit spectra '''
+def apVisitPlots(apPlate=None, fiber=None, apStarPath=None, apStarModelPath=None, starPlotFilePath=None, models=None): 
+
+    import pdb; pdb.set_trace()
+    # Get wavelength and flux arrays
+    FluxB = apPlate['a'][1].data[300-fiber,:]
+    FluxG = apPlate['b'][1].data[300-fiber,:]
+    FluxR = apPlate['c'][1].data[300-fiber,:]
+    WaveB = apPlate['a'][4].data[300-fiber,:]
+    WaveG = apPlate['b'][4].data[300-fiber,:]
+    WaveR = apPlate['c'][4].data[300-fiber,:]
+
+    Flux = np.concatenate([FluxB, FluxG, FluxR])
+    Wave = np.concatenate([WaveB, WaveG, WaveR])
+
+    # Establish Ymax
+    ymxsec1, = np.where((Wave > 15150) & (Wave < 15180))
+    ymxsec2, = np.where((Wave > 15900) & (Wave < 15950))
+    ymxsec3, = np.where((Wave > 16925) & (Wave < 16935))
+    ymxsec4, = np.where((Wave > 16800) & (Wave < 16822))
+    ymxsec5, = np.where((Wave > 15186) & (Wave < 15206))
+    if (len(ymxsec1) == 0) | (len(ymxsec2) == 0) | (len(ymxsec3) == 0) | (len(ymxsec4) == 0) | (len(ymxsec5) == 0): 
+        print("----> makeObjQA: Problem with fiber " + str(fiber).zfill(3) + ". Not Plotting.")
+    else:
+        tmpF = convolve(Flux, Box1DKernel(11))
+        ymx1 = np.nanmax(tmpF[ymxsec1])
+        ymx2 = np.nanmax(tmpF[ymxsec2])
+        ymx3 = np.nanmax(tmpF[ymxsec3])
+        ymx4 = np.nanmax(tmpF[ymxsec4])
+        ymx5 = np.nanmax(tmpF[ymxsec5])
+        ymx = np.nanmax([ymx1,ymx2,ymx3,ymx4,ymx5])
+        if objtype != 'SKY':
+            ymin = 0
+            yspn = ymx - ymin
+            ymax = ymx + (yspn * 0.15)
+            # Establish Ymin
+            ymn = np.nanmin(tmpF)
+            if ymn > 0: 
+                yspn = ymx - ymn
+                ymin = ymn - (yspn * 0.10)
+                ymax = ymx + (yspn * 0.15)
+        else:
+            med = np.nanmedian(Flux)
+            ymin = med - 50
+            ymax = med + 50
+        yspan = ymax-ymin
+
+        fig=plt.figure(figsize=(28,8))
+        ax1 = plt.subplot2grid((1,1), (0,0))
+        ax1.tick_params(reset=True)
+        ax1.set_xlim(visitxmin,visitxmax)
+        ax1.set_ylim(ymin,ymax)
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(200))
+        ax1.minorticks_on()
+        ax1.tick_params(axis='both', which='both', direction='in', bottom=True, top=True, left=True, right=True)
+        ax1.tick_params(axis='both', which='major', length=axmajlen)
+        ax1.tick_params(axis='both', which='minor', length=axminlen)
+        ax1.tick_params(axis='both', which='both', width=axwidth)
+        ax1.set_xlabel(r'Wavelength ($\rm \AA$)')
+        ax1.set_ylabel(r'Flux')
+
+        if objtype == 'SKY':
+            ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
+            ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
+            ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
+        else:
+            for ll in hlines: ax1.axvline(x=ll, color=hcolor, alpha=0.6)
+            ax1.text(16811.111, ymin+yspan*0.03, 'H I', color=hcolor, bbox=bboxpar, fontsize=fsz, ha='center')
+            if jkcolor < 0.3:
+                for ll in ce3lines: ax1.axvline(x=ll, color=ce3color, alpha=0.6)
+                for ll in mn2lines: ax1.axvline(x=ll, color=mn2color, alpha=0.6)
+                ax1.text(15412.667, ymin+yspan*0.03, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
+                ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
+
+            ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color='white', linewidth=10)
+            ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color='white', linewidth=10)
+            ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color='white', linewidth=10)
+            ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color=pcolor)
+            ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color=pcolor)
+            ax1.plot(WaveR[np.argsort(WaveR)], FluxR[np.argsort(WaveR)], color=pcolor)
+
+            ax1.text(0.02, 0.05, objid+',  H = '+chmag, transform=ax1.transAxes, bbox=bboxpar)
+
+        fig.subplots_adjust(left=0.06,right=0.995,bottom=0.12,top=0.98,hspace=0.2,wspace=0.0)
+        plt.savefig(plotsdir+plotfile)
+        plt.close('all')
 
 ''' APSTARPLOTS: plots of the apStar spectra + best fitting Cannon model '''
 def apStarPlots(objid=None, hmag=None, apStarPath=None, apStarModelPath=None, starPlotFilePath=None, models=None): 
