@@ -318,6 +318,10 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         if makevisitplots == True:
             q = apVisitPlots(load=load, plate=plate, mjd=mjd)
 
+        # Make the star plots
+        if makestarplots == True:
+            q = apStarPlots(load=load, plate=plate, mjd=mjd, apred=apred, telescope=telescope)
+
         # Make the nightly QA page
         if makenightqa == True:
             q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
@@ -1581,9 +1585,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # HTML header background color
     thcolor = '#DCDCDC'
 
-    # Setup doppler cannon models
-    models = doppler.cannon.models
-    
     apodir = os.environ.get('APOGEE_REDUX') + '/'
 
     # Make html directory if it doesn't already exist.
@@ -1788,15 +1789,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             else:
                 vishtml.write('<TD align ="center">----\n')
 
- 
-            # Make plots of apStar spectrum with best fitting model
-            if (objtype != 'SKY') & (objid != '2MNone'):
-                if makestarplots is True:
-                    if apStarRelPath is not None:
-                        print("----> makeVisHTML: Running apStarPlots for " + os.path.basename(starPlotFilePath))
-                        nothing = apStarPlots(objid=objid, hmag=chmag, apStarPath=apStarPath, apStarModelPath=apStarModelPath,
-                                              starPlotFilePath=starPlotFilePath, models=models)
-
             visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
     vishtml.close()
@@ -1824,6 +1816,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
     apPlate = load.apPlate(int(plate), mjd)
     data = apPlate['a'][11].data[::-1]
     nfiber = len(data)
+    cnfiber = str(nfiber)
 
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
@@ -1836,7 +1829,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
             objtype = jdata['OBJTYPE']
             objid = jdata['OBJECT']
             if (objtype != 'SKY') & (objid != '2MNone'):
-                print("----> makeStarHTML:   making html for " + objid)
+                print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
 
                 cfiber = str(fiber).zfill(3)
                 cblock = str(np.ceil(fiber / 30).astype(int))
@@ -2141,8 +2134,16 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                 
     print("----> apVisitPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
+
 ''' APSTARPLOTS: plots of the apStar spectra + best fitting Cannon model '''
-def apStarPlots(objid=None, hmag=None, apStarPath=None, apStarModelPath=None, starPlotFilePath=None, models=None): 
+def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
+
+    print("----> apStarPlots: Running plate "+plate+", MJD "+mjd)
+
+    apodir = os.environ.get('APOGEE_REDUX') + '/'
+
+    # Setup doppler cannon models
+    models = doppler.cannon.models
 
     # Basic plotting parameters
     fontsize = 24;   fsz = fontsize * 0.75
@@ -2155,73 +2156,122 @@ def apStarPlots(objid=None, hmag=None, apStarPath=None, apStarModelPath=None, st
     xmin = np.array([15130, 15845, 16460])
     xmax = np.array([15817, 16440, 16960])
 
-    # Read the apStar file
-    apstar = doppler.read(apStarPath)
-    apstar.normalize()
-    nvis = apstar.wave.shape[1] - 2
-    if nvis < 1: nvis = 1
-    if nvis == 1: 
-        wave = apstar.wave
-        flux = apstar.flux
-    else: 
-        wave = apstar.wave[:, 0]
-        flux = apstar.flux[:, 0]
-    gd, = np.where((np.isnan(flux) == False) & (flux > 0))
-    wave = wave[gd]
-    flux = flux[gd]
+    # Load in the apPlate file
+    apPlate = load.apPlate(int(plate), mjd)
+    data = apPlate['a'][11].data[::-1]
+    objtype = data['OBJTYPE']
+    nfiber = len(data)
+    
+    # Base directory where star-level stuff goes
+    starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
 
-    # Get model spectrum
-    openModel = open(apStarModelPath, 'rb')
-    modelVals = pickle.load(openModel)
-    try:
-        sumstr, finalstr, bmodel, specmlist, gout = modelVals
-    except:
-        print("----> apStarPlots:    BAD! pickle.load returned None for " + objid)
-        return
-    pmodels = models.prepare(specmlist[0])
-    bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
-    bestmodel.normalize()
-    swave = bestmodel.wave
-    sflux = bestmodel.flux
-    rvteff = str(int(round(sumstr['teff'][0])))
-    rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
-    rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
+    # Loop over the fibers
+    for j in range(300):
+        jdata = data[j]
+        fiber = jdata['FIBERID']
+        objtype = jdata['OBJTYPE']
+        if (fiber > 0) & (objtype != 'SKY') & (objid != '2MNone'):
+            objid = jdata['OBJECT']
+            chmag = str("%.3f" % round(jdata['HMAG'], 3))
 
-    fig=plt.figure(figsize=(28,20))
-    ax1 = plt.subplot2grid((3,1), (0,0))
-    ax2 = plt.subplot2grid((3,1), (1,0))
-    ax3 = plt.subplot2grid((3,1), (2,0))
-    axes = [ax1,ax2,ax3]
+                    rvteff = str(int(round(vcat['rv_teff'][gd][0])))
+                    rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
+                    rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
 
-    ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+            # Find which healpix this star is in
+            healpix = apload.obj2healpix(objid)
+            healpixgroup = str(healpix // 1000)
+            healpix = str(healpix)
 
-    ichip = 0
-    for ax in axes:
-        ax.set_xlim(xmin[ichip], xmax[ichip])
-        ax.set_ylim(0.1, 1.3)
-        ax.tick_params(reset=True)
-        ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
-        ax.minorticks_on()
-        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax.tick_params(axis='both',which='major',length=axmajlen)
-        ax.tick_params(axis='both',which='minor',length=axminlen)
-        ax.tick_params(axis='both',which='both',width=axwidth)
-        ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+            # Find the associated healpix html directories and make them if they don't already exist
+            starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+            starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+            apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+            if len(apStarCheck) < 1: 
+                print("----> apStarPlots:    apStar file not found for " + objid)
+            else:
+                print("----> apStarPlots:    making plot for " + objid)
+                # Find the newest apStar file
+                apStarCheck.sort()
+                apStarCheck = np.array(apStarCheck)
+                apStarNewest = os.path.basename(apStarCheck[-1])
+                apStarPath = starDir + apStarNewest
+                apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
-        ax.plot(wave, flux, color='k', label='apStar')
-        ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model', alpha=0.75)
+                # Set up plot directories and plot file name
+                starPlotDir = starDir + 'plots/'
+                if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
+                starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
+                starPlotFilePath = starPlotDir + starPlotFile
+                starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
-        ichip += 1
+                # Read the apStar file
+                apstar = doppler.read(apStarPath)
+                apstar.normalize()
+                nvis = apstar.wave.shape[1] - 2
+                if nvis < 1: nvis = 1
+                if nvis == 1: 
+                    wave = apstar.wave
+                    flux = apstar.flux
+                else: 
+                    wave = apstar.wave[:, 0]
+                    flux = apstar.flux[:, 0]
+                gd, = np.where((np.isnan(flux) == False) & (flux > 0))
+                wave = wave[gd]
+                flux = flux[gd]
 
-    txt = objid + r'          $H$ = ' + hmag + '          ' + str(nvis) + ' visits'
-    ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
-    txt = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
-    ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
-    ax3.legend(loc='lower center', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
+                # Get model spectrum
+                openModel = open(apStarModelPath, 'rb')
+                modelVals = pickle.load(openModel)
+                try:
+                    sumstr, finalstr, bmodel, specmlist, gout = modelVals
+                except:
+                    print("----> apStarPlots:    BAD! pickle.load returned None for " + objid)
+                    return
+                pmodels = models.prepare(specmlist[0])
+                bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
+                bestmodel.normalize()
+                swave = bestmodel.wave
+                sflux = bestmodel.flux
+                rvteff = str(int(round(sumstr['teff'][0])))
+                rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
+                rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
 
-    fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
-    plt.savefig(starPlotFilePath)
-    plt.close('all')
+                fig=plt.figure(figsize=(28,20))
+                ax1 = plt.subplot2grid((3,1), (0,0))
+                ax2 = plt.subplot2grid((3,1), (1,0))
+                ax3 = plt.subplot2grid((3,1), (2,0))
+                axes = [ax1,ax2,ax3]
+
+                ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+
+                ichip = 0
+                for ax in axes:
+                    ax.set_xlim(xmin[ichip], xmax[ichip])
+                    ax.set_ylim(0.1, 1.3)
+                    ax.tick_params(reset=True)
+                    ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                    ax.minorticks_on()
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                    ax.tick_params(axis='both',which='major',length=axmajlen)
+                    ax.tick_params(axis='both',which='minor',length=axminlen)
+                    ax.tick_params(axis='both',which='both',width=axwidth)
+                    ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+
+                    ax.plot(wave, flux, color='k', label='apStar')
+                    ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model', alpha=0.75)
+
+                    ichip += 1
+
+                txt = objid + r'          $H$ = ' + hmag + '          ' + str(nvis) + ' visits'
+                ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
+                txt = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
+                ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
+                ax3.legend(loc='lower center', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
+
+                fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
+                plt.savefig(starPlotFilePath)
+                plt.close('all')
 
 
 '''  MAKENIGHTQA: makes nightly QA pages '''
