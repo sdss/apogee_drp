@@ -195,12 +195,12 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
         # Only run makemasterqa and makenightqa after the last plate on this mjd
         if i < nsciplans-1:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobjhtml=makeobjhtml
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobjhtml=makeobjhtml,
                      makemasterqa=False, makeqaplots=makeqaplots, makevisitplots=makevisitplots, 
                      makenightqa=False, makestarhtml=makestarhtml, makestarplots=makestarplots, 
                      clobber=clobber)
         else:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobjhtml=makeobjhtml
+            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobjhtml=makeobjhtml,
                      makemasterqa=makemasterqa, makeqaplots=makeqaplots, makevisitplots=makevisitplots,
                      makenightqa=makenightqa, makestarhtml=makestarhtml, makestarplots=makestarplots, 
                      clobber=clobber)
