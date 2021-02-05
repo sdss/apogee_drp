@@ -980,7 +980,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     if fluxid is not None:
         html.write('<H3>Flat field, fiber block, and guider plots:</H3>\n')
         html.write('<TABLE BORDER=2><TR bgcolor="'+thcolor+'">\n')
-        html.write('<TH>Flat field relative flux <TH>Fiber Blocks <TH>Guider RMS\n')
+        html.write('<TH>Median dome flat flux divided by max. median dome flat flux<TH>Fiber Blocks <TH>Guider RMS\n')
         html.write('<TR>\n')
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
         html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1100></A>\n')
@@ -1212,7 +1212,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             cb = colorbar(sc, cax=cax, orientation="horizontal")
             cax.xaxis.set_ticks_position("top")
             cax.minorticks_on()
-            ax.text(0.5, 1.12, r'Median Flat Field Flux',ha='center', transform=ax.transAxes)
+            ax.text(0.5, 1.12, r'Dome Flat Throughput',ha='center', transform=ax.transAxes)
 
         fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.09)
         plt.savefig(plotsdir+plotfile)
