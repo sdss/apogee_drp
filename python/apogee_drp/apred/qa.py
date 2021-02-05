@@ -869,7 +869,9 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     # Link to combined spectra page.
     html.write('<H3> Plots of apVisit spectra ---> <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html>apPlate-'+plate+'-'+mjd+'</a></H3>\n')
     html.write('<HR>\n')
-    html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
+
+    # SNR plots
+    html.write('<H2>apVisit Hmag versus S/N: </H2>\n')
     snrplot1 = 'apVisitSNR-'+plate+'-'+mjd+'.png'
     snrplot2 = 'apVisitSNRblocks-'+plate+'-'+mjd+'.png'
     html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=750></A>')
@@ -879,7 +881,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     # Flat field plots.
     if fluxid is not None:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-        html.write('<H3>Fiber Throughput:</H3>\n')
+        html.write('<H2>Fiber Throughput:</H2>\n')
         html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1600></A>')
         html.write('<HR>\n')
@@ -889,7 +891,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         html.write('<H2>Individual Exposures:</H2>\n')
     else:
         html.write('<H2>Individual Exposures (undithered):</H2>\n')
-    html.write('<p><b>Note:</b> design HA values are currently missing.<BR> \n')
+    html.write('<p><b>Note:</b> Design HA values are currently missing.<BR> \n')
     html.write('<b>Note:</b> Dither and Pixshift values will be "---" if exposures not dithered.<BR>\n')
     html.write('<b>Note:</b> S/N columns give S/N for blue, green, and red chips separately. </p>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
