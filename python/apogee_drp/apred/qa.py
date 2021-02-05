@@ -948,28 +948,29 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
             html.write('<TD align="right">'+str(int(round(ims[i])))+'\n')
             html.write('<TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD>\n')
 
-    Msecz = str("%.3f" % round(np.nanmean(tab1['SECZ']),3))
-    Mseeing = str("%.3f" % round(np.nanmean(tab1['SEEING']),3))
-    Mfwhm = str("%.3f" % round(tab3['FWHM'][0],3))
-    Mgdrms = str("%.3f" % round(tab3['GDRMS'][0],3))
-    Mzero = str("%.3f" % round(tab3['ZERO'][0],3))
-    Mzerorms = str("%.3f" % round(tab3['ZERORMS'][0],3))
-    Mmoonphase = str("%.3f" % round(tab3['MOONPHASE'][0],3))
-    Mmoondist = str("%.3f" % round(tab3['MOONDIST'][0],3))
-    #q = tab3['SKY'][0]
-    #sky = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
-    q = tab3['SN'][0]
-    sn = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
-    q = tab3['SNC'][0]
-    snc = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
-    html.write('<TR><TD><B>VISIT<TD><TD><TD><TD align="right"><B>'+Msecz+'<TD><TD><TD align="right"><B>'+Mseeing)
-    html.write('<TD align="right"><B>'+Mfwhm+'<TD align="right"><B>'+Mgdrms+'<TD><TD><TD><TD align="right"><B>'+Mzero)
+    #Msecz = str("%.3f" % round(np.nanmean(tab1['SECZ']),3))
+    #Mseeing = str("%.3f" % round(np.nanmean(tab1['SEEING']),3))
+    #Mfwhm = str("%.3f" % round(tab3['FWHM'][0],3))
+    #Mgdrms = str("%.3f" % round(tab3['GDRMS'][0],3))
+    #Mzero = str("%.3f" % round(tab3['ZERO'][0],3))
+    #Mzerorms = str("%.3f" % round(tab3['ZERORMS'][0],3))
+    #Mmoonphase = str("%.3f" % round(tab3['MOONPHASE'][0],3))
+    #Mmoondist = str("%.3f" % round(tab3['MOONDIST'][0],3))
+    ##q = tab3['SKY'][0]
+    ##sky = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
+    #q = tab3['SN'][0]
+    #sn = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
+    #q = tab3['SNC'][0]
+    #snc = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
+    #html.write('<TR><TD><B>VISIT<TD><TD><TD><TD align="right"><B>'+Msecz+'<TD><TD><TD align="right"><B>'+Mseeing)
+    #html.write('<TD align="right"><B>'+Mfwhm+'<TD align="right"><B>'+Mgdrms+'<TD><TD><TD><TD align="right"><B>'+Mzero)
 
-#    html.write('<TD align="center">['+sky+']')
-    html.write('<TD align="right"><B>'+Mzerorms+'<TD>')
-    html.write('<TD align="center"><B>['+sn+']')
-    html.write('<TD align="center"><B>['+snc+']')
-    html.write('<TD align="right"><B>'+Mmoonphase+'<TD align="right"><B>'+Mmoondist+'</b>\n')
+    ##html.write('<TD align="center">['+sky+']')
+    #html.write('<TD align="right"><B>'+Mzerorms+'<TD>')
+    #html.write('<TD align="center"><B>['+sn+']')
+    #html.write('<TD align="center"><B>['+snc+']')
+    #html.write('<TD align="right"><B>'+Mmoonphase+'<TD align="right"><B>'+Mmoondist+'</b>\n')
+
     html.write('</TABLE>\n')
     html.write('<HR>\n')
 
