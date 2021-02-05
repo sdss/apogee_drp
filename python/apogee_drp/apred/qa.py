@@ -1234,7 +1234,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.text(0.5, 1.13, r'MTP #', ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.045,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.11)
+        fig.subplots_adjust(left=0.045,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.08)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
         
