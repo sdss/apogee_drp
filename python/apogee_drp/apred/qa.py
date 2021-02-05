@@ -1201,7 +1201,6 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             med = np.nanmedian(flux[chip][1].data, axis=1)
             tput = med[ypos] / np.nanmax(med[ypos])
             gd, = np.where((ypos > 60) & (ypos < 90))
-            print(np.nanmean(tput[gd]))
             sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=tput, edgecolors='k', cmap='afmhot', alpha=1, vmin=0.01, vmax=0.99)
 
             ax.text(0.03, 0.97, chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color=chiplab[ichip])
@@ -1234,7 +1233,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.text(0.5, 1.13, r'MTP #', ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.045,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.08)
+        fig.subplots_adjust(left=0.045,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.06)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
         
