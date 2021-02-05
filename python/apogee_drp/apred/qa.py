@@ -871,8 +871,8 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
     snrplot1 = 'apVisitSNR-'+plate+'-'+mjd+'.png'
     snrplot2 = 'apVisitSNRblocks-'+plate+'-'+mjd+'.png'
-    html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=850></A>')
-    html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=850></A>\n')
+    html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=750></A>')
+    html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=750></A>\n')
     html.write('<HR>\n')
 
     # Table of individual exposures.
