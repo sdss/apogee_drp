@@ -879,8 +879,8 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     if fluxid is not None:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
         html.write('<H3>Fiber Throughput:</H3>\n')
-        html.write('(Median dome flat flux divided by the maximum median dome flat flux across all 300 fibers)<BR><BR>\n')
-        html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
+        html.write('(coloring is median dome flat flux divided by the maximum median dome flat flux)<BR><BR>\n')
+        html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1400></A>')
         html.write('<HR>\n')
 
     # Table of individual exposures.
@@ -1179,7 +1179,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(32,9))
+        fig=plt.figure(figsize=(32,10))
         plotrad = 1.6
 
         for ichip in range(nchips):
@@ -1234,7 +1234,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.text(0.5, 1.12, r'MTP #', ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.040,right=0.99,bottom=0.085,top=0.90,hspace=0.09,wspace=0.11)
+        fig.subplots_adjust(left=0.045,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.11)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
         
