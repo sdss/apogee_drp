@@ -67,7 +67,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 ###################################################################################################
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
-            makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True,
+            makeobsplots=True, makevishtml=True, makestarhtml=True, makevisitplots=True, makestarplots=True,
             makenightqa=True, makemasterqa=True, makeqafits=True, clobber=True):
 
     # Establish telescope
@@ -88,13 +88,13 @@ def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True
     for ii in range(nmjd):
         x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
                     makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
-                    makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
+                    makestarhtml=makestarhtml, makevisitplots=makevisitplots,makestarplots=makestarplots,
                     makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, clobber=clobber)
 
 ###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
-            makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, 
+            makeobsplots=True, makevishtml=True, makestarhtml=True, makevisitplots=True, 
             makestarplots=True, makemasterqa=True, makenightqa=True, makeqafits=True, clobber=True):
 
     # Establish telescope and instrument
@@ -199,12 +199,12 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         if i < nsciplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
                      makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
-                     makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=False, 
+                     makevisitplots=makevisitplots, makestarplots=makestarplots, makemasterqa=False, 
                      makenightqa=False, clobber=clobber)
         else:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
                      makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
-                     makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=makemasterqa, 
+                     makevisitplots=makevisitplots, makestarplots=makestarplots, makemasterqa=makemasterqa, 
                      makenightqa=makenightqa, clobber=clobber)
         
     print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
@@ -212,7 +212,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 ###################################################################################################
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
-         makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True, 
+         makeobsplots=True, makevishtml=True, makestarhtml=True, makevisitplots=True, makestarplots=True, 
          makemasterqa=True, makenightqa=True, clobber=True):
 
     start_time = time.time()
@@ -317,7 +317,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             q = makeStarHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope)
 
         # Make the visit plots
-        if makevisplots == True:
+        if makevisitplots == True:
             q = apVisitPlots(load=load, plate=plate, mjd=mjd)
 
         # Make the star plots
