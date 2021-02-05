@@ -880,7 +880,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     if fluxid is not None:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
         html.write('<H3>Fiber Throughput:</H3>\n')
-        html.write('<b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.<BR>\n')
+        html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1600></A>')
         html.write('<HR>\n')
 
