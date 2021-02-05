@@ -877,18 +877,9 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
     # Flat field plots.
     if fluxid is not None:
-        html.write('<H2>Flat field, fiber block, and guider plots:</H2>\n')
-        html.write('<TABLE BORDER=2><TR bgcolor="'+thcolor+'">\n')
-        html.write('<TH>Median dome flat flux divided by the maximum median dome flat flux across all 300 fibers <TH>Fiber Blocks <TH>Guider RMS\n')
-        html.write('<TR>\n')
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1100></A>\n')
-        tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
-        blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
-        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png target="_blank"><IMG SRC=../plots/'+blockfile+'.png WIDTH=390></A>\n')
-        gfile = 'guider-'+plate+'-'+mjd+'.png'
-        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390 target="_blank"></A>\n')
-        html.write('</TABLE>\n')
+        html.write('<H2>Median dome flat flux divided by the maximum median dome flat flux across all 300 fibers </H2>\n')
+        html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
         html.write('<HR>\n')
 
     # Table of individual exposures.
@@ -1046,7 +1037,12 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         else:
             html.write('<TR><TD bgcolor="'+thcolor+'">'+str(int(round(ims[i])))+'\n')
             html.write('<TD><TD><TD><TD><TD><TD><TD><TD>\n')
-    html.write('</table>\n')
+    html.write('</table><HR>\n')
+    
+    gfile = 'guider-'+plate+'-'+mjd+'.png'
+    html.write('<H2>Guider RMS: </H2>\n')
+    html.write('<A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390 target="_blank"></A>\n')
+    
     html.write('<BR><BR>\n')
     html.write('</BODY></HTML>\n')
     html.close()
@@ -1171,23 +1167,24 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             plt.close('all')
 
     #----------------------------------------------------------------------------------------------
-    # PLOTS 3-5: flat field flux and fiber blocks... previously done by plotflux.pro
+    # PLOTS 3-6: flat field flux and fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
     fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
     flux = load.apFlux(fluxid)
     ypos = 300 - platesum2['FIBERID']
+    block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
 
     plotfile = fluxfile.replace('.fits', '.png')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(28.5,10))
+        fig=plt.figure(figsize=(32,9))
         plotrad = 1.6
 
         for ichip in range(nchips):
             chip = chips[ichip]
 
-            ax = plt.subplot2grid((1,nchips), (0,ichip))
+            ax = plt.subplot2grid((1,nchips+1), (0,ichip))
             ax.set_xlim(-plotrad, plotrad)
             ax.set_ylim(-plotrad, plotrad)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
@@ -1215,20 +1212,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             cax.minorticks_on()
             ax.text(0.5, 1.12, r'Dome Flat Throughput',ha='center', transform=ax.transAxes)
 
-        fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.11)
-        plt.savefig(plotsdir+plotfile)
-        plt.close('all')
-
-    #----------------------------------------------------------------------------------------------
-    # PLOT 6: fiber blocks... previously done by plotflux.pro
-    #----------------------------------------------------------------------------------------------
-    block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
-    plotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
-    if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
-        print("----> makeObsPlots: Making "+plotfile)
-
-        fig=plt.figure(figsize=(10,10))
-        ax1 = plt.subplot2grid((1,1), (0,0))
+        ax1 = plt.subplot2grid((1,nchips+1), (0,nchips))
         ax1.set_xlim(-1.6,1.6)
         ax1.set_ylim(-1.6,1.6)
         ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
@@ -1248,9 +1232,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.text(0.5, 1.12, r'MTP #', ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.91,hspace=0.2,wspace=0.0)
+        fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.11)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
+        
+    oldplotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
+    if os.path.exists(plotsdir + oldplotfile): os.remove(plotsdir + oldplotfile)
 
     #----------------------------------------------------------------------------------------------
     # PLOT 7: guider rms plot
