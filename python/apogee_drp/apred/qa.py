@@ -1765,17 +1765,17 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if np.absolute(float(vhelio)) > 400: vcol = 'red'
                     pcol = 'blue'
                     vishtml.write('<TD align ="right">' + snratio)
-                    vishtml.write('<TD align ="right" style="color:' + vcol + '">' + vhelio)
-                    vishtml.write('<TD align ="center" style="color:' + vcol + '">' + ncomp)
-                    vishtml.write('<TD align ="right" style="color:' + pcol + '">' + rvteff)
-                    vishtml.write('<TD align ="right" style="color:' + pcol + '">' + rvlogg)
-                    vishtml.write('<TD align ="right" style="color:' + pcol + '">' + rvfeh)
+                    vishtml.write('<TD align ="right"><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
+                    vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">' + rvteff + '</FONT>')
+                    vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">' + rvlogg + '</FONT>')
+                    vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">' + rvfeh + '</FONT>')
                 else:
-                    vishtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
-                    vishtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-99.9<TD align="center">-9999<TD align="center">-1</FONT>')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999<TD align="center">-9.999<TD align="center">-9.999</FONT>')
             else:
-                vishtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
-                vishtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-99.9<TD align="center">-9999<TD align="center">-1</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-9999<TD align="center">-9.999<TD align="center">-9.999</FONT>')
 
             # Throughput column
             tput = throughput[j]
