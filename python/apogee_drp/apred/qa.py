@@ -875,11 +875,27 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=750></A>\n')
     html.write('<HR>\n')
 
+    # Flat field plots.
+    if fluxid is not None:
+        html.write('<H3>Flat field, fiber block, and guider plots:</H3>\n')
+        html.write('<TABLE BORDER=2><TR bgcolor="'+thcolor+'">\n')
+        html.write('<TH>Median dome flat flux divided by the maximum median dome flat flux across all 300 fibers <TH>Fiber Blocks <TH>Guider RMS\n')
+        html.write('<TR>\n')
+        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
+        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1100></A>\n')
+        tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
+        blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
+        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png target="_blank"><IMG SRC=../plots/'+blockfile+'.png WIDTH=390></A>\n')
+        gfile = 'guider-'+plate+'-'+mjd+'.png'
+        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390 target="_blank"></A>\n')
+        html.write('</TABLE>\n')
+        html.write('<HR>\n')
+
     # Table of individual exposures.
     if pairstr is not None:
-        html.write('<H3>Individual Exposure Stats:</H3>\n')
+        html.write('<H3>Individual Exposures:</H3>\n')
     else:
-        html.write('<H3>Individual Exposure Stats (undithered):</H3>\n')
+        html.write('<H3>Individual Exposures (undithered):</H3>\n')
     html.write('<p><b>Note:</b> design HA values are currently missing.<BR> \n')
     html.write('<b>Note:</b> Dither and Pixshift values will be "---" if exposures not dithered.<BR>\n')
     html.write('<b>Note:</b> S/N columns give S/N for blue, green, and red chips separately. </p>\n')
@@ -976,21 +992,6 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
             html.write('</TABLE>\n')
         html.write('<HR>\n')
 
-    # Flat field plots.
-    if fluxid is not None:
-        html.write('<H3>Flat field, fiber block, and guider plots:</H3>\n')
-        html.write('<TABLE BORDER=2><TR bgcolor="'+thcolor+'">\n')
-        html.write('<TH>Median dome flat flux divided by the maximum median dome flat flux across all 300 fibers <TH>Fiber Blocks <TH>Guider RMS\n')
-        html.write('<TR>\n')
-        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-        html.write('<TD> <A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1100></A>\n')
-        tmp = load.filename('Flux', num=fluxid, chips=True).replace('apFlux-','apFlux-'+chips[0]+'-')
-        blockfile = os.path.basename(tmp).replace('.fits','').replace('-a-','-block-')
-        html.write('<TD> <A HREF='+'../plots/'+blockfile+'.png target="_blank"><IMG SRC=../plots/'+blockfile+'.png WIDTH=390></A>\n')
-        gfile = 'guider-'+plate+'-'+mjd+'.png'
-        html.write('<TD> <A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390 target="_blank"></A>\n')
-        html.write('</TABLE>\n')
-        html.write('<HR>\n')
 #    else:
 #        # Table of combination parameters.
 #        html.write('<H3>Combination Parameters (undithered):</H3>\n')
