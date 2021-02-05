@@ -1211,7 +1211,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             cb = colorbar(sc, cax=cax, orientation="horizontal")
             cax.xaxis.set_ticks_position("top")
             cax.minorticks_on()
-            ax.text(0.5, 1.12, r'Dome Flat Throughput',ha='center', transform=ax.transAxes)
+            ax.text(0.5, 1.13, r'Dome Flat Throughput',ha='center', transform=ax.transAxes)
 
         ax1 = plt.subplot2grid((1,nchips+1), (0,nchips))
         ax1.set_xlim(-1.6,1.6)
@@ -1232,7 +1232,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         cb = colorbar(sc, cax=cax1, orientation="horizontal")
         cax1.xaxis.set_ticks_position("top")
         cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
-        ax1.text(0.5, 1.12, r'MTP #', ha='center', transform=ax1.transAxes)
+        ax1.text(0.5, 1.13, r'MTP #', ha='center', transform=ax1.transAxes)
 
         fig.subplots_adjust(left=0.045,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.11)
         plt.savefig(plotsdir+plotfile)
