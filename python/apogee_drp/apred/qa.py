@@ -1201,7 +1201,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
             med = np.nanmedian(flux[chip][1].data, axis=1)
             tput = med[ypos] / np.nanmax(med[ypos])
-            sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med, edgecolors='k', cmap='Reds', alpha=1, vmin=0.0, vmax=1.0)
+            sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=tput, edgecolors='k', cmap='Reds', alpha=1, vmin=0.0, vmax=1.0)
 
             ax.text(0.03, 0.97, chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color=chiplab[ichip])
 
