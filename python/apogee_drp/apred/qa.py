@@ -866,9 +866,9 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         return
 
     # Link to combined spectra page.
-    html.write('<H2> Plots of apVisit spectra ---> <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html>apPlate-'+plate+'-'+mjd+'</a></H2>\n')
+    html.write('<H3> Plots of apVisit spectra ---> <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html>apPlate-'+plate+'-'+mjd+'</a></H3>\n')
     html.write('<HR>\n')
-    html.write('<H2>apVisit Hmag versus S/N: </H2>\n')
+    html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
     snrplot1 = 'apVisitSNR-'+plate+'-'+mjd+'.png'
     snrplot2 = 'apVisitSNRblocks-'+plate+'-'+mjd+'.png'
     html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=750></A>')
@@ -878,7 +878,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     # Flat field plots.
     if fluxid is not None:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-        html.write('<H2>Median dome flat flux divided by the maximum median dome flat flux across all 300 fibers </H2>\n')
+        html.write('<H3>Median dome flat flux divided by the maximum median dome flat flux across all 300 fibers. </H3>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
         html.write('<HR>\n')
 
@@ -1215,13 +1215,14 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         ax1 = plt.subplot2grid((1,nchips+1), (0,nchips))
         ax1.set_xlim(-1.6,1.6)
         ax1.set_ylim(-1.6,1.6)
+        ax1.axes.yaxis.set_ticklabels([])
         ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
         ax1.minorticks_on()
         ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
         ax1.tick_params(axis='both',which='major',length=axmajlen)
         ax1.tick_params(axis='both',which='minor',length=axminlen)
         ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
+        ax1.set_xlabel(r'Zeta')
 
         sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=block+0.5, edgecolors='white', cmap='tab10', alpha=0.9, vmin=0.5, vmax=10.5)
 
@@ -1232,7 +1233,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.text(0.5, 1.12, r'MTP #', ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.11)
+        fig.subplots_adjust(left=0.040,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.11)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
         
