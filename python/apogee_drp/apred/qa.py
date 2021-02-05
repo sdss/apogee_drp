@@ -902,7 +902,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor="'+thcolor+'">\n')
     txt1 = '<TH>#<TH>FRAME <TH>EXPTIME <TH>CART <TH>SEC Z <TH>HA<TH>DESIGN HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>NREADS <TH>DITHER'
-    txt2 = '<TH>PIXSHIFT <TH>ZERO <TH>ZERO RMS <TH>SKY CONTINUUM <TH>S/N <TH>S/N(CFRAME) <TH>MOON PHASE Phase <TH>MOON DIST.'
+    txt2 = '<TH>PIXSHIFT <TH>ZERO <TH>ZERO<BR>RMS <TH>SKY<BR>CONTINUUM <TH>S/N <TH>S/N (CFRAME) <TH>MOON<BR>PHASE <TH>MOON<BR>DIST.'
     html.write(txt1 + txt2 +'\n')
 
     for i in range(n_exposures):
@@ -1008,13 +1008,13 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<H3>Individual Exposure QA Plots:</H3>\n')
     html.write('<p><b>Note:</b> in the Mag plots, the solid line is the target line for getting S/N=100 for an H=12.2 star in 3 hours of exposure time.<BR>\n')
     html.write('<b>Note:</b> in the Spatial mag deviation plots, color gives deviation of observed mag from expected 2MASS mag using the median zeropoint.</p>\n')
-    html.write('<TR bgcolor="'+thcolor+'"><TH>Frame<TH>Zeropoints<TH>Mag plots (green chip)\n')
-    html.write('<TH>Spatial mag deviation\n')
-    html.write('<TH>Spatial sky 16325 &#8491; emission deviation\n')
-    html.write('<TH>Spatial sky continuum emission\n')
-    html.write('<TH>Spatial sky telluric CH4\n')
-    html.write('<TH>Spatial sky telluric CO2\n')
-    html.write('<TH>Spatial sky telluric H2O\n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>FRAME <TH>ZEROPOINTS <TH>MAG PLOTS (GREEN CHIP)\n')
+    html.write('<TH>SPATIAL MAG DEVIATION\n')
+    html.write('<TH>SPATIAL SKY 16325 &#8491; EMISSION DEVIATION\n')
+    html.write('<TH>SPATIAL SKY CONTINUUM EMISSION\n')
+    html.write('<TH>SPATIAL SKY TELLURIC CH4\n')
+    html.write('<TH>SPATIAL SKY TELLURIC CO2\n')
+    html.write('<TH>SPATIAL SKY TELLURIC H2O\n')
 
     for i in range(n_exposures):
         gd, = np.where(ims[i] == tab1['IM'])
@@ -1022,15 +1022,15 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
             oneDfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
             #html.write('<TR><TD bgcolor="'+thcolor+'"><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
             html.write('<TR><TD bgcolor="'+thcolor+'">'+str(int(round(ims[i])))+'\n')
-            html.write('<TD><TABLE BORDER=1><TD><TD bgcolor="'+thcolor+'">Red<TD bgcolor="'+thcolor+'">Green<TD bgcolor="'+thcolor+'">Blue\n')
-            html.write('<TR><TD bgcolor="'+thcolor+'">z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][gd][0],2))+'\n')
-            html.write('<TR><TD bgcolor="'+thcolor+'">znorm<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][gd][0],2))+'\n')
+            html.write('<TD><TABLE BORDER=1><TD><TD bgcolor="'+thcolor+'">RED<TD bgcolor="'+thcolor+'">GREEN<TD bgcolor="'+thcolor+'">BLUE\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">Z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][gd][0],2))+'\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">ZNORM<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][gd][0],2))+'\n')
             txt='<TD>'+str("%.1f" % round(tab1['SKY'][gd][0][0],1))+'<TD>'+str("%.1f" % round(tab1['SKY'][gd][0][1],1))+'<TD>'+str("%.1f" % round(tab1['SKY'][gd][0][2],1))
-            html.write('<TR><TD bgcolor="'+thcolor+'">sky'+txt+'\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">SKY'+txt+'\n')
             txt='<TD>'+str("%.1f" % round(tab1['SN'][gd][0][0],1))+'<TD>'+str("%.1f" % round(tab1['SN'][gd][0][1],1))+'<TD>'+str("%.1f" % round(tab1['SN'][gd][0][2],1))
             html.write('<TR><TD bgcolor="'+thcolor+'">S/N'+txt+'\n')
             txt='<TD>'+str("%.1f" % round(tab1['SNC'][gd][0][0],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][gd][0][1],1))+'<TD>'+str("%.1f" % round(tab1['SNC'][gd][0][2],1))
-            html.write('<TR><TD bgcolor="'+thcolor+'">S/N(c)'+txt+'\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">S/N(C)'+txt+'\n')
     #        if tag_exist(tab1[i],'snratio'):
             html.write('<TR><TD bgcolor="'+thcolor+'">SN(E/C)<TD>'+str(np.round(tab1['SNRATIO'][gd][0],2))+'\n')
             html.write('</TABLE>\n')
