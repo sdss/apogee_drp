@@ -1238,7 +1238,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         ax1.tick_params(axis='both',which='both',width=axwidth)
         ax1.set_xlabel(r'Zeta');  ax1.set_ylabel(r'Eta')
 
-        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=block, edgecolors='white', cmap='tab10', alpha=0.9, vmin=0, vmax=10)
+        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=block-0.5, edgecolors='white', cmap='tab10', alpha=0.9, vmin=0, vmax=10)
 
         ax1_divider = make_axes_locatable(ax1)
         cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
