@@ -310,7 +310,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         # Make the visit level pages
         if makevishtml == True:
             q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                            fluxid=fluxid, clobber=clobber)
+                            fluxid=fluxid)
                             
         # Make the star level html pages
         if makestarhtml == True:
@@ -1200,7 +1200,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             if ichip != 0: ax.axes.yaxis.set_ticklabels([])
 
             med = np.nanmedian(flux[chip][1].data, axis=1)
-            sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos], edgecolors='k', cmap='RdBu', alpha=1, vmin=0.0, vmax=2.0)
+            sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos]/np.max(med), edgecolors='k', cmap='Reds', alpha=1, vmin=0.0, vmax=2.0)
 
             ax.text(0.03, 0.97, chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color=chiplab[ichip])
 
@@ -1578,11 +1578,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     print("----> makeObsPlots: Done with plate "+plate+", MJD "+mjd+"\n")
 
 ###################################################################################################
-''' makeVisHTML: make the visit and star level html '''
-def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, 
-                makestarplots=None, fluxid=None, clobber=None): 
+''' makeVisHTML: make the plate/visit level html '''
+def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, fluxid=None): 
 
-    print("----> makeVisHTML: Running plate "+plate+", MJD "+mjd)
+    print("----> makeVisHTML: Running plate " + plate + ", MJD " + mjd)
 
     # HTML header background color
     thcolor = '#DCDCDC'
@@ -1762,14 +1761,15 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if type(rvlogg) != str: rvlogg = str("%.3f" % round(rvlogg,3))
                     rvfeh = allV['RV_FEH'][gd][0]
                     if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
-                    fcol = 'black'
-                    if np.absolute(float(vhelio)) > 400: fcol = 'red'
+                    vcol = 'black'
+                    if np.absolute(float(vhelio)) > 400: vcol = 'red'
+                    pcol = 'blue
                     vishtml.write('<TD align ="right">' + snratio)
-                    vishtml.write('<TD align ="right" style="color:'+fcol+'">' + vhelio)
-                    vishtml.write('<TD align ="center" style="color:'+fcol+'">' + ncomp)
-                    vishtml.write('<TD align ="right" style="color:'+fcol+'">' + rvteff)
-                    vishtml.write('<TD align ="right" style="color:'+fcol+'">' + rvlogg)
-                    vishtml.write('<TD align ="right" style="color:'+fcol+'">' + rvfeh)
+                    vishtml.write('<TD align ="right" style="color:' + vcol + '">' + vhelio)
+                    vishtml.write('<TD align ="center" style="color:' + vcol + '">' + ncomp)
+                    vishtml.write('<TD align ="right" style="color:' + pcol + '">' + rvteff)
+                    vishtml.write('<TD align ="right" style="color:' + pcol + '">' + rvlogg)
+                    vishtml.write('<TD align ="right" style="color:' + pcol + '">' + rvfeh)
                 else:
                     vishtml.write('<TD align="center">-99.9<TD align="center">-9999<TD align="center">-1')
                     vishtml.write('<TD align="center">-9999<TD align="center">-9.999<TD align="center">-9.999')
@@ -1799,9 +1799,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
-def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, clobber=None): 
+def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None): 
 
-    print("----> makeStarHTML: Running plate "+plate+", MJD "+mjd)
+    print("----> makeStarHTML: Running plate " + plate + ", MJD " + mjd)
 
     # HTML header background color
     thcolor = '#DCDCDC'
@@ -1998,6 +1998,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                     starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
                 starHTML.write('<BR><BR><BR><BR>\n')
                 starHTML.close()
+    print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
 ###################################################################################################
 ''' APVISITPLOTS: plots of the apVisit spectra '''
@@ -2284,7 +2285,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
 '''  MAKENIGHTQA: makes nightly QA pages '''
 def makeNightQA(load=None, mjd=None, telescope=None, apred=None): 
 
-    print("----> makeNightQA: Running MJD "+mjd)
+    print("----> makeNightQA: Running MJD " + mjd)
 
     # HTML header background color
     thcolor = '#DCDCDC'
@@ -2689,7 +2690,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     html.write('<BR><BR>\n')
     html.close()
     #plt.ion()
-    print("----> makeNightQA: Done with MJD "+mjd+"\n")
+    print("----> makeNightQA: Done with MJD " + mjd + "\n")
 
 ###################################################################################################
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
