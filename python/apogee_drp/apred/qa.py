@@ -1180,7 +1180,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(28,10))
+        fig=plt.figure(figsize=(28.5,10))
         plotrad = 1.6
 
         for ichip in range(nchips):
@@ -1214,7 +1214,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             cax.minorticks_on()
             ax.text(0.5, 1.12, r'Dome Flat Throughput',ha='center', transform=ax.transAxes)
 
-        fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.09)
+        fig.subplots_adjust(left=0.050,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.11)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
 
