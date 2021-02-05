@@ -878,7 +878,8 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     # Flat field plots.
     if fluxid is not None:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-        html.write('<H3>Median dome flat flux divided by the maximum median dome flat flux across all 300 fibers. </H3>\n')
+        html.write('<H3>Fiber Throughput</H3>\n')
+        html.write('<P> (Median dome flat flux divided by the maximum median dome flat flux across all 300 fibers) <P>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
         html.write('<HR>\n')
 
