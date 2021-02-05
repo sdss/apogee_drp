@@ -1763,7 +1763,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
                     vcol = 'black'
                     if np.absolute(float(vhelio)) > 400: vcol = 'red'
-                    pcol = 'blue
+                    pcol = 'blue'
                     vishtml.write('<TD align ="right">' + snratio)
                     vishtml.write('<TD align ="right" style="color:' + vcol + '">' + vhelio)
                     vishtml.write('<TD align ="center" style="color:' + vcol + '">' + ncomp)
