@@ -873,14 +873,14 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     snrplot2 = 'apVisitSNRblocks-'+plate+'-'+mjd+'.png'
     html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=750></A>')
     html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=750></A>\n')
-    #html.write('<HR>\n')
+    html.write('<HR>\n')
 
     # Flat field plots.
     if fluxid is not None:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
         html.write('<H3>Fiber Throughput:</H3>\n')
         html.write('(coloring is median dome flat flux divided by the maximum median dome flat flux)<BR><BR>\n')
-        html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1400></A>')
+        html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1600></A>')
         html.write('<HR>\n')
 
     # Table of individual exposures.
