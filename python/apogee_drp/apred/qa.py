@@ -1004,9 +1004,8 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 #    html.write('</TABLE>\n')
 
     # Table of exposure plots.
-    html.write('<TABLE BORDER=2>\n')
-    html.write('<BR>\n')
     html.write('<H3>Individual Exposure QA Plots:</H3>\n')
+    html.write('<TABLE BORDER=2>\n')
     html.write('<p><b>Note:</b> in the Mag plots, the solid line is the target line for getting S/N=100 for an H=12.2 star in 3 hours of exposure time.<BR>\n')
     html.write('<b>Note:</b> in the Spatial mag deviation plots, color gives deviation of observed mag from expected 2MASS mag using the median zeropoint.</p>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>FRAME <TH>ZEROPOINTS <TH>MAG PLOTS (GREEN CHIP)\n')
