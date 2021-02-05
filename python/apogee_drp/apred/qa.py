@@ -1193,8 +1193,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_xlabel(r'Zeta')
-            if ichip == 0: ax.set_ylabel(r'Eta')
+            ax.set_xlabel(r'Zeta (deg.)')
+            if ichip == 0: ax.set_ylabel(r'Eta (deg.)')
             if ichip != 0: ax.axes.yaxis.set_ticklabels([])
 
             med = np.nanmedian(flux[chip][1].data, axis=1)
@@ -1222,7 +1222,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         ax1.tick_params(axis='both',which='major',length=axmajlen)
         ax1.tick_params(axis='both',which='minor',length=axminlen)
         ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Zeta')
+        ax1.set_xlabel(r'Zeta (deg.)')
 
         sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=block+0.5, edgecolors='white', cmap='tab10', alpha=0.9, vmin=0.5, vmax=10.5)
 
@@ -1233,7 +1233,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.text(0.5, 1.12, r'MTP #', ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.040,right=0.99,bottom=0.08,top=0.90,hspace=0.09,wspace=0.11)
+        fig.subplots_adjust(left=0.040,right=0.99,bottom=0.085,top=0.90,hspace=0.09,wspace=0.11)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
         
