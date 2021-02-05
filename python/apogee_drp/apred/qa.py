@@ -901,8 +901,8 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<b>Note:</b> S/N columns give S/N for blue, green, and red chips separately. </p>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor="'+thcolor+'">\n')
-    txt1 = '<TH>#<TH>Frame<TH>Exptime<TH>Cart<TH>sec z<TH>HA<TH>DESIGN HA<TH>Seeing<TH>FWHM<TH>GDRMS<TH>Nreads<TH>Dither'
-    txt2 = '<TH>Pixshift<TH>Zero<TH>Zero RMS<TH>Sky Continuum<TH>S/N<TH>S/N(cframe)<TH>Moon Phase<TH>Moon Dist.'
+    txt1 = '<TH>#<TH>FRAME <TH>EXPTIME <TH>CART <TH>SEC Z <TH>HA<TH>DESIGN HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>NREADS <TH>DITHER'
+    txt2 = '<TH>PIXSHIFT <TH>ZERO <TH>ZERO RMS <TH>SKY CONTINUUM <TH>S/N <TH>S/N(CFRAME) <TH>MOON PHASE Phase <TH>MOON DIST.'
     html.write(txt1 + txt2 +'\n')
 
     for i in range(n_exposures):
