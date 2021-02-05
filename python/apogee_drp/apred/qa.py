@@ -1202,6 +1202,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             med = np.nanmedian(flux[chip][1].data, axis=1)
             gd, = np.where(np.isnan(flux[chip][1].data) == False)
             tput = flux[chip][1].data[ypos] / np.max(flux[chip][1].data)
+            import pdb; pdb.set_trace()
             sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=tput, edgecolors='k', cmap='Reds', alpha=1, vmin=0.0, vmax=1.0)
             #sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=med[ypos]/np.max(med), edgecolors='k', cmap='Reds', alpha=1, vmin=0.0, vmax=1.0)
 
