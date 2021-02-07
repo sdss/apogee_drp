@@ -50,32 +50,43 @@ def nextmjd5(observatory,apred='t14'):
     return lastnightmjd5()
 
 
-def getNextMJD(observatory,apred='t14'):
-        ''' Returns the next MJD to reduce.  Either a list or one. '''
+def getNextMJD(observatory,apred='daily',mjdrange=None):
+    ''' Returns the next MJD to reduce.  Either a list or one. '''
 
-        # Grab the MJD from the currentmjd file
-        nextfile = os.path.join(os.getenv('APOGEE_REDUX'), 'daily', 'log', observatory, 'currentmjd')
-        f = open(nextfile, 'r')
-        mjd = f.read()
-        f.close()
+    # Grab the MJD from the currentmjd file
+    nextfile = os.path.join(os.getenv('APOGEE_REDUX'), apred, 'log', observatory, 'currentmjd')
+    f = open(nextfile, 'r')
+    mjd = f.read()
+    f.close()
 
-        # Increment MJD from file by 1
-        nextmjd = str(int(mjd) + 1)
+    # Increment MJD from file by 1
+    nextmjd = str(int(mjd) + 1)
 
-        # Check if multiple new MJDs
-        datadir = {'apo':os.getenv['APOGEE_DATA_N'],'lco':os.getenv['APOGEE_DATA_S']}[observatory]
-        mjdlist = os.listdir(datadir)
-        newmjds = [mjd for mjd in mjdlist if mjd >= nextmjd and mjd.isdigit()]
+    # Check if multiple new MJDs
+    datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
+    mjdlist = os.listdir(datadir)
+    newmjds = [mjd for mjd in mjdlist if mjd >= nextmjd and mjd.isdigit()]
 
-        # Set next mjd or list of next mjds
-        finalmjd = [nextmjd] if newmjds == [] else newmjds
+    # Set next mjd or list of next mjds
+    finalmjd = [nextmjd] if newmjds == [] else newmjds
 
-        # Filter out list based on any MJD range
-        if self.mjdrange:
-            start, end = self.mjdrange.split('-')
-            finalmjd = [m for m in finalmjd if m >= start and m <= end]
+    # Filter out list based on any MJD range
+    if mjdrange is not None:
+        start, end = mjdrange.split('-')
+        finalmjd = [m for m in finalmjd if m >= start and m <= end]
 
-        return finalmjd
+    return finalmjd
+
+
+def writeNewMJD(observatory,mjd,apred='daily'):
+    ''' Write the new MJD into the currentMJD file. '''
+
+    # write the currentMJD file
+    nextfile = os.path.join(os.getenv('APOGEE_REDUX'), apred, 'log', observatory, 'currentmjd')
+    f = open(nextfile, 'w')
+    f.write(str(mjd))
+    f.close()
+
 
 def queue_wait(queue,sleeptime=60,verbose=True,logger=None):
     """ Wait for the pbs queue to finish."""
@@ -552,7 +563,26 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     if mjd5 is None:
         # Could get information on which MJDs were processed from database
         # or from $APOGEE_REDUX/daily/log/apo/MJD5.done
-        mjd5 = nextmjd5()
+        mjd5 = getNextMJD(observatory)
+        if len(mjd5)==0:
+            print('No more MJDs to reduce')
+            return
+        else:
+            mjd5 = mjd5[0]
+
+    # Make sure the data is there
+    mjddatadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory] + '/'+str(mjd5)
+    if os.path.exists(mjddatadir):
+        mjdfiles = os.listdir(mjddatadir)
+    else:
+        mjdfiles = []
+    if len(mjdfiles)==0:
+        print('No data for MJD5='+str(mjd5))
+        return
+
+    # Update the currentmjd file
+    writeNewMJD(observatory,mjd5,apred=apred)
+
 
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
