@@ -568,7 +568,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
             print('No more MJDs to reduce')
             return
         else:
-            mjd5 = mjd5[0]
+            mjd5 = int(mjd5[0])
 
     # Make sure the data is there
     mjddatadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory] + '/'+str(mjd5)
