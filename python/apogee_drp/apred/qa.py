@@ -2894,8 +2894,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         fieldfile = qadir+fieldfilebase
         print("----> makeMasterQApages: Creating "+fieldfilebase)
 
-        now = Datetime.now()
-        today = Date.today()
+        now = datetime.datetime.now()
+        today = datetime.date.today()
         current_time = now.strftime("%H:%M:%S")
         current_date = today.strftime("%B %d, %Y")
 
