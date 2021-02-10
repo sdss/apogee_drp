@@ -76,7 +76,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # MAKE MASTER QACAL FILE
         # Append together the individual QAcal files
 
-        files = glob.glob(specdir5 + '/cal/' + instrument + '/qa/*/*QAcal*.fits')
+        files = glob.glob(specdir5 + 'cal/' + instrument + '/qa/*/*QAcal*.fits')
         if len(files) < 1:
             print("----> monitor: No QAcal files!")
         else:
@@ -92,11 +92,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                import pdb; pdb.set_trace() 
-                print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                newstr = getQAcalStruct(data)
-                outstr = np.concatenate([outstr, newstr])
+                check, = np.where(data['NAME'][0] == outstr['NAME'])
+                if len(check) > 0:
+                    print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getQAcalStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
@@ -105,7 +109,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # APPEND QADARKFLAT INFO TO MASTER QACAL FILE
         # Append together the individual QAdarkflat files
 
-        files = glob.glob(specdir5 + '/cal/' + instrument + '/qa/*/*QAdarkflat*.fits')
+        files = glob.glob(specdir5 + 'cal/' + instrument + '/qa/*/*QAdarkflat*.fits')
         if len(files) < 1:
             print("----> monitor: No QAdarkflat files!")
         else:
@@ -120,11 +124,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                newstr = getQAdarkflatStruct(data)
-                outstr = np.concatenate([outstr, newstr])
-
+                check, = np.where(data['NAME'][0] == outstr['NAME'])
+                if len(check) > 0:
+                    print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getQAdarkflatStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
+                    
             hdulist = fits.open(outfile)
             hdu1 = fits.table_to_hdu(Table(outstr))
             hdulist.append(hdu1)
@@ -137,7 +146,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # Get long term trends from dome flats
         # Append together the individual exp files
 
-        files = glob.glob(specdir5 + '/exposures/' + instrument + '/*/*exp.fits')
+        files = glob.glob(specdir5 + 'exposures/' + instrument + '/*/*exp.fits')
         if len(files) < 1:
             print("----> monitor: No exp files!")
         else:
@@ -153,10 +162,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                newstr = getExpStruct(data)
-                outstr = np.concatenate([outstr, newstr])
+                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
+                if len(check) > 0:
+                    print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getExpStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
@@ -166,7 +180,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # Get zeropoint info from apPlateSum files
         # Append together the individual apPlateSum files
 
-        files = glob.glob(specdir5 + '/visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
+        files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
         if len(files) < 1:
             print("----> monitor: No apPlateSum files!")
         else:
@@ -182,14 +196,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                newstr = getSciStruct(data)
-                outstr = np.concatenate([outstr, newstr])
+                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
+                if len(check) > 0:
+                    print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getSciStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
-
 
 
         ###########################################################################################
