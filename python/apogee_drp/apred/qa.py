@@ -34,6 +34,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 from scipy.signal import medfilt2d as ScipyMedfilt2D
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 from scipy.optimize import curve_fit
+from datetime import date,datetime
 
 cspeed = 299792.458e0
 
@@ -2734,10 +2735,18 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Open the mjd file html
         mjdfile = qadir+mjdfilebase
         print("----> makeMasterQApages: Creating "+mjdfilebase)
+
+        now = datetime.now()
+        today = date.today()
+        current_time = now.strftime("%H:%M:%S")
+        current_date = today.strftime("%B %d, %Y")
+
         html = open(mjdfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE MJD Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
+        html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
+        html.write('<HR>\n')
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
@@ -2884,10 +2893,18 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     if dofields is True:
         fieldfile = qadir+fieldfilebase
         print("----> makeMasterQApages: Creating "+fieldfilebase)
+
+        now = datetime.now()
+        today = date.today()
+        current_time = now.strftime("%H:%M:%S")
+        current_date = today.strftime("%B %d, %Y")
+
         html = open(fieldfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE Field Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by Field</H1>\n')
+        html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
+        html.write('<HR>\n')
         html.write('<p><A HREF=mjd.html>MJD view</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
