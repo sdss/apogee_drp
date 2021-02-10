@@ -34,7 +34,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 from scipy.signal import medfilt2d as ScipyMedfilt2D
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 from scipy.optimize import curve_fit
-from datetime import date,datetime
+from datetime import Date,Datetime
 
 cspeed = 299792.458e0
 
@@ -2736,8 +2736,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         mjdfile = qadir+mjdfilebase
         print("----> makeMasterQApages: Creating "+mjdfilebase)
 
-        now = datetime.now()
-        today = date.today()
+        now = Datetime.now()
+        today = Date.today()
         current_time = now.strftime("%H:%M:%S")
         current_date = today.strftime("%B %d, %Y")
 
@@ -2894,8 +2894,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         fieldfile = qadir+fieldfilebase
         print("----> makeMasterQApages: Creating "+fieldfilebase)
 
-        now = datetime.now()
-        today = date.today()
+        now = Datetime.now()
+        today = Date.today()
         current_time = now.strftime("%H:%M:%S")
         current_date = today.strftime("%B %d, %Y")
 
