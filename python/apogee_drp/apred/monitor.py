@@ -294,7 +294,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     if instrument != 'apogee-n': tit = 'APOGEE-S Instrument Monitor'
     html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
     html.write('<H1>' + tit + '</H1>\n')
-    html.write('<P>last updated ' + current_date + ', ' + current_time + '</P>')
+    html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
     html.write('<HR>\n')
     html.write('<ul>\n')
     html.write('<li> Throughput / lamp monitors\n')
