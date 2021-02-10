@@ -2910,9 +2910,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
 
-        html.write('<p>Sky coverage plots: <p>\n')
-        html.write('<A HREF="aitoff_galactic.png" target="_blank"><IMG SRC=aitoff_galactic.png WIDTH=800></A>\n')
-        html.write('<A HREF="aitoff_equatorial.png" target="_blank"><IMG SRC=aitoff_equatorial.png WIDTH=800></A>\n')
+        html.write('<H3>Sky coverage plots: </H3>\n')
+        html.write('<A HREF="aitoff_galactic.png" target="_blank"><IMG SRC=aitoff_galactic.png WIDTH=600></A>\n')
+        html.write('<A HREF="aitoff_equatorial.png" target="_blank"><IMG SRC=aitoff_equatorial.png WIDTH=600></A>\n')
 #        html.write('<img src=aitoff.png width=45%>\n')
 #        html.write('<img src=galactic.gif width=45%>\n')
 
