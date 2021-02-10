@@ -34,7 +34,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 # import pdb; pdb.set_trace()
 
 ''' MONITOR: Instrument monitoring plots and html '''
-def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=False, makeplots=True,
+def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True, makeplots=True,
             makefiberplots=True):
 
     print("----> monitor starting")
