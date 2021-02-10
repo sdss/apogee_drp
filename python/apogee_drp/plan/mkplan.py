@@ -669,7 +669,7 @@ def getexpinfo(observatory=None,mjd5=None,files=None):
         files = np.array(files)
         nfiles = len(files)
         if nfiles==0:
-            return None
+            return []
         files = files[np.argsort(files)]  # sort        
 
     nfiles = len(files)

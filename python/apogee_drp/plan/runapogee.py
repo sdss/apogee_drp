@@ -573,6 +573,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     # Make sure the data is there
     mjddatadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory] + '/'+str(mjd5)
     if os.path.exists(mjddatadir):
+        #mjdfiles = glob(mjddatadir+'/*.apz')
         mjdfiles = os.listdir(mjddatadir)
     else:
         mjdfiles = []
