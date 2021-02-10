@@ -30,6 +30,7 @@ import matplotlib.ticker as ticker
 import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
+from datetime import date,datetime
 
 # import pdb; pdb.set_trace()
 
@@ -283,11 +284,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     outfile = specdir5 + 'monitor/' + instrument + '-monitor.html'
     print("----> monitor: Making " + os.path.basename(outfile))
 
+    now = datetime.now()
+    today = date.today()
+    current_time = now.strftime("%H:%M:%S")
+    current_date = today.strftime("%B %d, %Y")
+    
     html = open(outfile, 'w')
     tit = 'APOGEE-N Instrument Monitor'
     if instrument != 'apogee-n': tit = 'APOGEE-S Instrument Monitor'
     html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
     html.write('<H1>' + tit + '</H1>\n')
+    html.write('<P>last updated ' + current_date + ', ' + current_time + '</P>')
     html.write('<HR>\n')
     html.write('<ul>\n')
     html.write('<li> Throughput / lamp monitors\n')
