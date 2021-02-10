@@ -57,11 +57,19 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     sdir5 = specdir5 + 'monitor/' + instrument + '/'
 
     # Read in the SDSS-IV/APOGEE2 summary files
-    allcal =  fits.open(specdir4 + instrument + 'Cal.fits')[1].data
-    alldark = fits.open(specdir4 + instrument + 'Cal.fits')[2].data
-    allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
-    allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
-    allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
+    #allcal =  fits.open(specdir4 + instrument + 'Cal.fits')[1].data
+    #alldark = fits.open(specdir4 + instrument + 'Cal.fits')[2].data
+    #allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
+    #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+    #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
+
+    # Read in the master summary files
+    allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
+    alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
+    allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
+    allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
+    allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
+
 
     if makesumfiles is True:
         ###########################################################################################
@@ -84,6 +92,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
+                import pdb; pdb.set_trace() 
                 print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
                 newstr = getQAcalStruct(data)
