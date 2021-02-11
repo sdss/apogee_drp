@@ -80,16 +80,15 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
     allplate = np.empty(ndirs).astype(str)
     allfield = np.empty(ndirs).astype(str)
     for i in range(ndirs): 
-        import pdb; pdb.set_trace()
         tmp = mjdDirs[i].split(telescope + '/')
-        allmjd[i] = tmp.split('/')[2]
-        allplate[i] = tmp.split('/')[1]
-        allfield[i] = tmp.split('/')[0]
+        allfield[i] = tmp[1].split('/')[0]
+        allplate[i] = tmp[1].split('/')[1]
+        allmjd[i] = tmp[1].split('/')[2]
     if mjdstart is not None:
         gd, = np.where(allmjd.astype(int) > mjdstart)
-        allmjd = allmjd[gd]
-        allplate = allplate[gd]
         allfield = allfield[gd]
+        allplate = allplate[gd]
+        allmjd = allmjd[gd]
     ufield, ufieldind = np.unique(allfield, return_index=True)
     umjd = allmjd[ufieldind]
     uplate = allplate[ufieldind]
@@ -97,7 +96,6 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
     print("Running dostars on " + str(nfields) + " unique fields...")
 
     for i in range(nfields):
-        import pdb; pdb.set_trace()
         q = apqa(plate=uplate[i], mjd=umjd[i], telescope=telescope, apred=apred, makeplatesum=False,
                  makeobshtml=False, makeobsplots=False, makevishtml=False, makevisplots=False,
                  makestarhtml=dohtml, makestarplots=doplots, makenightqa=False, makemasterqa=False,
