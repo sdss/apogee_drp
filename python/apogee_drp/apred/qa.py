@@ -1916,8 +1916,9 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 starHTML.write('<TR bgcolor="' + thcolor + '">')
 
                 # Star metadata table
-                starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>2MASS<BR>J<BR>(mag) <TH>2MASS<BR>H<BR>(mag) <TH>2MASS<BR>J<BR>(mag) <TH>Raw J-K')
-                starHTML.write('<TH>Gaia DR2<BR>PMRA<BR>(mas) <TH>Gaia DR2<BR>PMDEC<BR>(mas) <TH>Gaia DR2<BR>G<BR>(mag) <TH>Mean<BR>Vhelio<BR>(km/s)') 
+                starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT')
+                starHTML.write('<TH bgcolor="#E6FFE6">2MASS<BR>J<BR>(mag) <TH bgcolor="#E6FFE6">2MASS<BR>H<BR>(mag) <TH bgcolor="#E6FFE6">2MASS<BR>K<BR>(mag) <TH bgcolor="#E6FFE6">Raw J-K')
+                starHTML.write('<TH bgcolor="#FFFB3">Gaia DR2<BR>PMRA<BR>(mas) <TH bgcolor="#FFFB3">Gaia DR2<BR>PMDEC<BR>(mas) <TH bgcolor="#FFFB3">Gaia DR2<BR>G<BR>(mag) <TH bgcolor="#FFFB3">Mean<BR>Vhelio<BR>(km/s)') 
                 starHTML.write('<TH>Min-max<BR>Vhelio<BR>(km/s) <TH>RV Teff<BR>(K) <TH>RV log(g) <TH>RV [Fe/H] \n')
                 starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
                 starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
