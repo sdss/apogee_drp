@@ -67,13 +67,13 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 
 ###################################################################################################
 '''DOSTARS: Wrapper for running makeStarHTML and apStar plots on unique fields only '''
-def dostars(mjdstart=None,observatory='apo', apred='daily'):
+def dostars(mjdstart=None, observatory='apo', apred='daily', html=True, plots=True, clobber=clobber):
 
-    # Establish telescope
+    # Establish telescope and load
     telescope = observatory + '25m'
 
     # Find unique fields and star stuff on them
-    apodir = os.environ.get('APOGEE_REDUX')+'/'
+    apodir = os.environ.get('APOGEE_REDUX') + '/'
     mjdDirs = np.array(glob.glob(apodir + apred + '/visit/' + telescope + '/*/*/*'))
     ndirs = len(mjdDirs)
     allmjd = np.empty(ndirs).astype(str)
@@ -91,18 +91,27 @@ def dostars(mjdstart=None,observatory='apo', apred='daily'):
     ufield, ufieldind = np.unique(allfield, return_index=True)
     umjd = allmjd[ufieldind]
     uplate = allplate[ufieldind]
-    import pdb; pdb.set_trace()
+    nfields = len(ufield)
+    print("Running dostars on " + str(nfields) + " unique fields...")
+
+    for i in range(nfields):
+        q = apqa(plate=uplate[i], mjd=umjd[i], telescope=telescope, apred=apred, makeplatesum=False,
+                 makeobshtml=False, makeobsplots=False, makevishtml=False, makevisplots=False,
+                 makestarhtml=html, makestarplots=plots, makenightqa=False, makemasterqa=False,
+                 clobber=clobber)
+
+    print("Done with dostars for " + str(nfields) + " unique fields...")
 
 ###################################################################################################
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
-def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
+def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True,
             makenightqa=True, makemasterqa=True, makeqafits=True, clobber=True):
 
     # Establish telescope
     telescope = observatory + '25m'
 
-    apodir = os.environ.get('APOGEE_REDUX')+'/'
+    apodir = os.environ.get('APOGEE_REDUX') + '/'
     mjdDirs = np.array(glob.glob(apodir + apred + '/visit/' + telescope + '/*/*/*'))
     ndirs = len(mjdDirs)
     allmjd = np.empty(ndirs).astype(str)
