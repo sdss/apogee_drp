@@ -875,8 +875,8 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<H2>apVisit Hmag versus S/N: </H2>\n')
     snrplot1 = 'apVisitSNR-'+plate+'-'+mjd+'.png'
     snrplot2 = 'apVisitSNRblocks-'+plate+'-'+mjd+'.png'
-    html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=750></A>')
-    html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=750></A>\n')
+    html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=600></A>')
+    html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=600></A>\n')
     html.write('<HR>\n')
 
     # Flat field plots.
@@ -884,7 +884,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
         html.write('<H2>Fiber Throughput:</H2>\n')
         html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
-        html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1600></A>')
+        html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
         html.write('<HR>\n')
 
     # Table of individual exposures.
@@ -2920,10 +2920,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     #    html.write('<a href=../../aspcap/'+apred_vers+'/'+aspcap_vers+'/allStar'+suffix+'> allStar'+suffix+' file </a>\n')
     #    html.write(' and <a href=../../aspcap/'+apred_vers+'/'+aspcap_vers+'/allVisit'+suffix+'> allVisit'+suffix+' file </a>\n')
 
-        html.write('<br><br>Links on field name are to combined spectra plots and info\n')
-        html.write('<br>Links on plate name are to visit spectra plots and info\n')
-        html.write('<br>Links on MJD are to QA and summary plots for the visit\n')
-        html.write('<br>Click on column headings to sort<br><br>\n')
+        html.write('<br><br>Links on field name are to combined spectra plots and info (coming soon)\n')
+        html.write('<br>Links on plate name are to visit spectra plots and info.\n')
+        html.write('<br>Links on MJD are to QA and summary plots for the visit.\n')
+        html.write('<br><br>Click on column headings to sort<br>\n')
 
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASPCAP <TH>PLATE <TH>MJD <TH>LOC <TH>RA <TH>DEC <TH>S/N(red) <TH>S/N(green) <TH>S/N(blue)')
