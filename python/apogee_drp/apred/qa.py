@@ -819,11 +819,10 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
-    platesumfile = os.path.basename(platesum)
     platedir = os.path.dirname(platesum)+'/'
 
     if os.path.exists(platesum) == False:
-        err1 = "----> makeObsHTML: PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
+        err1 = "----> makeObsHTML: PROBLEM!!! " + os.path.basename(platesum) + " does not exist. Halting execution.\n"
         err2 = "----> makeObsHTML: You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
 
@@ -1085,7 +1084,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
     if os.path.exists(platesum) == False:
-        err1 = "----> makeObsPlots: PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
+        err1 = "----> makeObsPlots: PROBLEM!!! " + os.path.basename(platesum) + " does not exist. Halting execution.\n"
         err2 = "----> makeObsPlots: You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
 
