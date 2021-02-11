@@ -66,6 +66,29 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #--------------------------------------------------------------------------------------------------
 
 ###################################################################################################
+'''DOSTARS: Wrapper for running makeStarHTML and apStar plots on unique fields only '''
+def dostars(mjdstart='59146',observatory='apo', apred='daily'):
+
+    # Establish telescope
+    telescope = observatory + '25m'
+
+    # Find unique fields
+    apodir = os.environ.get('APOGEE_REDUX')+'/'
+    mjdDirs = np.array(glob.glob(apodir + apred + '/visit/' + telescope + '/*/*/*'))
+    ndirs = len(mjdDirs)
+    allmjd = np.empty(ndirs).astype(str)
+    allplate = np.empty(ndirs).astype(str)
+    allfield = np.empty(ndirs).astype(str)
+    for i in range(ndirs): 
+        allmjd[i] = mjdDirs[i].split('/')[-1]
+        allplate[i] = mjdDirs[i].split('/')[-2]
+        allfield[i] = mjdDirs[i].split('/')[-3]
+    ufield, ufieldind = np.unique(allfield, return_index=True)
+    umjd = allmjd[ufieldind]
+    uplate = allplate[ufieldind]
+    import pdb; pdb.set_trace()
+
+###################################################################################################
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True,
