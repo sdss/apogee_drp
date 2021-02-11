@@ -279,9 +279,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     if platetype == 'normal': 
 
         # Make the apPlateSum file if it doesn't already exist.
+        platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
         if makeplatesum == True:
-            platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-            
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
@@ -298,32 +297,33 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-        # Make the observation QA page
-        if makeobshtml == True:
-            q = makeObsHTML(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
-                               fluxid=fluxid, telescope=telescope)
+        if os.path.exists(platesum):
+            # Make the observation QA page
+            if makeobshtml == True:
+                q = makeObsHTML(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
+                                   fluxid=fluxid, telescope=telescope)
 
-        # Make plots for the observation QA pages
-        if makeobsplots == True:
-            q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
-                             survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
+            # Make plots for the observation QA pages
+            if makeobsplots == True:
+                q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
+                                 survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
-        # Make the visit level pages
-        if makevishtml == True:
-            q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                            fluxid=fluxid)
+            # Make the visit level pages
+            if makevishtml == True:
+                q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
+                                fluxid=fluxid)
+
+            # Make the visit plots
+            if makevisplots == True:
+                q = apVisitPlots(load=load, plate=plate, mjd=mjd)
                             
-        # Make the star level html pages
-        if makestarhtml == True:
-            q = makeStarHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope)
+            # Make the star level html pages
+            if makestarhtml == True:
+                q = makeStarHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope)
 
-        # Make the visit plots
-        if makevisplots == True:
-            q = apVisitPlots(load=load, plate=plate, mjd=mjd)
-
-        # Make the star plots
-        if makestarplots == True:
-            q = apStarPlots(load=load, plate=plate, mjd=mjd, apred=apred, telescope=telescope)
+            # Make the star plots
+            if makestarplots == True:
+                q = apStarPlots(load=load, plate=plate, mjd=mjd, apred=apred, telescope=telescope)
 
         # Make the nightly QA page
         if makenightqa == True:
