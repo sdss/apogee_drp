@@ -872,7 +872,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<HR>\n')
 
     # SNR plots
-    html.write('<H2>apVisit Hmag versus S/N: </H2>\n')
+    html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
     snrplot1 = 'apVisitSNR-'+plate+'-'+mjd+'.png'
     snrplot2 = 'apVisitSNRblocks-'+plate+'-'+mjd+'.png'
     html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=600></A>')
@@ -889,9 +889,9 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
     # Table of individual exposures.
     if pairstr is not None:
-        html.write('<H2>Individual Exposures:</H2>\n')
+        html.write('<H3>Individual Exposures:</H3>\n')
     else:
-        html.write('<H2>Individual Exposures (undithered):</H2>\n')
+        html.write('<H3>Individual Exposures (undithered):</H3>\n')
     html.write('<p><b>Note:</b> Design HA values are currently missing.<BR> \n')
     html.write('<b>Note:</b> Dither and Pixshift values will be "---" if exposures not dithered.<BR>\n')
     html.write('<b>Note:</b> S/N columns give S/N for blue, green, and red chips separately. </p>\n')
@@ -975,7 +975,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         npairs = len(pairstr)
         if npairs > 0:
             # Pair table.
-            html.write('<H2>Dither Pair Stats:</H2>\n')
+            html.write('<H3>Dither Pair Stats:</H3>\n')
             html.write('<TABLE BORDER=2 CLASS="sortable">\n')
             html.write('<TR bgcolor="'+thcolor+'"><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
             html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
@@ -1000,7 +1000,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 #    html.write('</TABLE>\n')
 
     # Table of exposure plots.
-    html.write('<H2>Individual Exposure QA Plots:</H2>\n')
+    html.write('<H3>Individual Exposure QA Plots:</H3>\n')
     html.write('<TABLE BORDER=2>\n')
     html.write('<p><b>Note:</b> in the Mag plots, the solid line is the target line for getting S/N=100 for an H=12.2 star in 3 hours of exposure time.<BR>\n')
     html.write('<b>Note:</b> in the Spatial mag deviation plots, color gives deviation of observed mag from expected 2MASS mag using the median zeropoint.</p>\n')
@@ -1045,7 +1045,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('</table><HR>\n')
     
     gfile = 'guider-'+plate+'-'+mjd+'.png'
-    html.write('<H2>Guider RMS: </H2>\n')
+    html.write('<H3>Guider RMS: </H3>\n')
     html.write('<A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390 target="_blank"></A>\n')
     
     html.write('<BR><BR>\n')
