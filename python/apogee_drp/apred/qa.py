@@ -95,6 +95,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', html=True, plots=Tr
     print("Running dostars on " + str(nfields) + " unique fields...")
 
     for i in range(nfields):
+        import pdb; pdb.set_trace()
         q = apqa(plate=uplate[i], mjd=umjd[i], telescope=telescope, apred=apred, makeplatesum=False,
                  makeobshtml=False, makeobsplots=False, makevishtml=False, makevisplots=False,
                  makestarhtml=html, makestarplots=plots, makenightqa=False, makemasterqa=False,
