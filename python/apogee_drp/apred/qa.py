@@ -67,7 +67,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 
 ###################################################################################################
 '''DOSTARS: Wrapper for running makeStarHTML and apStar plots on unique fields only '''
-def dostars(mjdstart=None, observatory='apo', apred='daily', html=True, plots=True, clobber=True):
+def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplots=True, clobber=True):
 
     # Establish telescope and load
     telescope = observatory + '25m'
@@ -98,7 +98,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', html=True, plots=Tr
         import pdb; pdb.set_trace()
         q = apqa(plate=uplate[i], mjd=umjd[i], telescope=telescope, apred=apred, makeplatesum=False,
                  makeobshtml=False, makeobsplots=False, makevishtml=False, makevisplots=False,
-                 makestarhtml=html, makestarplots=plots, makenightqa=False, makemasterqa=False,
+                 makestarhtml=dohtml, makestarplots=doplots, makenightqa=False, makemasterqa=False,
                  clobber=clobber)
 
     print("Done with dostars for " + str(nfields) + " unique fields...")
