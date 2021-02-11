@@ -97,7 +97,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
     umjd = allmjd[ufieldind]
     uplate = allplate[ufieldind]
     nfields = len(ufield)
-    print("Running dostars on " + str(nfields) + " unique fields...")
+    print("Running dostars on " + str(nfields) + " unique fields...\n")
 
     for i in range(nfields):
         q = apqa(plate=uplate[i], mjd=umjd[i], telescope=telescope, apred=apred, makeplatesum=False,
@@ -105,7 +105,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
                  makestarhtml=dohtml, makestarplots=doplots, makenightqa=False, makemasterqa=False,
                  clobber=clobber)
 
-    print("Done with dostars for " + str(nfields) + " unique fields...")
+    print("\nDone with dostars for " + str(nfields) + " unique fields...")
 
 ###################################################################################################
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
