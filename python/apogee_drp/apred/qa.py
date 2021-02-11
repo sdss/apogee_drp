@@ -80,6 +80,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
     allplate = np.empty(ndirs).astype(str)
     allfield = np.empty(ndirs).astype(str)
     for i in range(ndirs): 
+        import pdb; pdb.set_trace()
         tmp = mjdDirs[i].split(telescope + '/')
         allmjd[i] = tmp.split('/')[2]
         allplate[i] = tmp.split('/')[1]
