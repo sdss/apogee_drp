@@ -67,7 +67,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 
 ###################################################################################################
 '''DOSTARS: Wrapper for running makeStarHTML and apStar plots on unique fields only '''
-def dostars(mjdstart=None, observatory='apo', apred='daily', html=True, plots=True, clobber=clobber):
+def dostars(mjdstart=None, observatory='apo', apred='daily', html=True, plots=True, clobber=True):
 
     # Establish telescope and load
     telescope = observatory + '25m'
