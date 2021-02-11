@@ -67,12 +67,12 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 
 ###################################################################################################
 '''DOSTARS: Wrapper for running makeStarHTML and apStar plots on unique fields only '''
-def dostars(mjdstart='59146',observatory='apo', apred='daily'):
+def dostars(mjdstart=None,observatory='apo', apred='daily'):
 
     # Establish telescope
     telescope = observatory + '25m'
 
-    # Find unique fields
+    # Find unique fields and star stuff on them
     apodir = os.environ.get('APOGEE_REDUX')+'/'
     mjdDirs = np.array(glob.glob(apodir + apred + '/visit/' + telescope + '/*/*/*'))
     ndirs = len(mjdDirs)
@@ -83,6 +83,11 @@ def dostars(mjdstart='59146',observatory='apo', apred='daily'):
         allmjd[i] = mjdDirs[i].split('/')[-1]
         allplate[i] = mjdDirs[i].split('/')[-2]
         allfield[i] = mjdDirs[i].split('/')[-3]
+    if mjdstart is not None:
+        gd, = np.where(allmjd.astype(int) > mjdstart)
+        allmjd = allmjd[gd]
+        allplate = allplate[gd]
+        allfield = allfield[gd]
     ufield, ufieldind = np.unique(allfield, return_index=True)
     umjd = allmjd[ufieldind]
     uplate = allplate[ufieldind]
