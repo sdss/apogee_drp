@@ -74,7 +74,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', html=True, plots=Tr
 
     # Find unique fields and star stuff on them
     apodir = os.environ.get('APOGEE_REDUX') + '/'
-    mjdDirs = np.array(glob.glob(apodir + apred + '/visit/' + telescope + '/*/*/*/'))
+    mjdDirs = np.array(glob.glob(apodir + apred + '/visit/' + telescope + '/*/*/*'))
     ndirs = len(mjdDirs)
     allmjd = np.empty(ndirs).astype(str)
     allplate = np.empty(ndirs).astype(str)
