@@ -80,9 +80,9 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
     allplate = np.empty(ndirs).astype(str)
     allfield = np.empty(ndirs).astype(str)
     for i in range(ndirs): 
-        allmjd[i] = mjdDirs[i].split('/')[-2]
-        allplate[i] = mjdDirs[i].split('/')[-3]
-        allfield[i] = mjdDirs[i].split('/')[-4]
+        allmjd[i] = mjdDirs[i].split('/')[-1]
+        allplate[i] = mjdDirs[i].split('/')[-2]
+        allfield[i] = mjdDirs[i].split('/')[-3]
     if mjdstart is not None:
         gd, = np.where(allmjd.astype(int) > mjdstart)
         allmjd = allmjd[gd]
