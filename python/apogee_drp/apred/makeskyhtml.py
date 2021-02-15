@@ -96,5 +96,5 @@ def makeSkyHTML(mjdstart='59146', observatory='apo', apred='daily'):
                 visplot = '../visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/plots/apPlate-' + pmf + '.png'
                 html.write('<TR><TD>' + field + '<TD>' + pmf + '<TD ALIGN="RIGHT">' + cra + '<TD ALIGN="RIGHT">' + cdec)
                 html.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=500></A>\n')
-        html.close()
+    html.close()
     
