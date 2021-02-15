@@ -1829,7 +1829,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 tput = str("%.3f" % round(tput,3))
                 vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
             else:
-                vishtml.write('<TD align ="center">----\n')
+                vishtml.write('<TD align ="center BGCOLOR="white">----\n')
 
             visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
