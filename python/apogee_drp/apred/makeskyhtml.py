@@ -77,22 +77,24 @@ def makeSkyHTML(mjdstart='59146', observatory='apo', apred='daily'):
         plate = allplate[iplate]
         mjd = allmjd[iplate]
         field = allfield[iplate]
-        print("Doing " + field + ", plate " + plate + ", mjd " + mjd) 
 
         # Load in the apPlate file and restrict to sky fibers
-        apPlate = load.apPlate(int(plate), mjd)
-        data = apPlate['a'][11].data[::-1]
-        sky, = np.where((data['FIBERID'] > 0) & (data['OBJTYPE'] == 'SKY'))
-        data = data[sky]
-        nsky = len(sky)
-        # Loop over the fibers
-        for j in range(nsky):
-            cfiber = str(data['FIBERID'][j]).zfill(3)
-            cra = str("%.5f" % round(data['RA'][j], 5))
-            cdec = str("%.5f" % round(data['DEC'][j], 5))
-            pmf = plate + '-' + mjd + '-' + cfiber
-            visplot = '../visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/plots/apPlate-' + pmf + '.png'
-            html.write('<TR><TD>' + field + '<TD>' + pmf + '<TD ALIGN="RIGHT">' + cra + '<TD ALIGN="RIGHT">' + cdec)
-            html.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=500></A>\n')
-    html.close()
+        apPlateFile = load.filename(plate=int(plate), mjd=mjd)
+        if os.path.exists(apPlateFile):
+            print("Doing " + field + ", plate " + plate + ", mjd " + mjd) 
+            apPlate = load.apPlate(int(plate), mjd)
+            data = apPlate['a'][11].data[::-1]
+            sky, = np.where((data['FIBERID'] > 0) & (data['OBJTYPE'] == 'SKY'))
+            data = data[sky]
+            nsky = len(sky)
+            # Loop over the fibers
+            for j in range(nsky):
+                cfiber = str(data['FIBERID'][j]).zfill(3)
+                cra = str("%.5f" % round(data['RA'][j], 5))
+                cdec = str("%.5f" % round(data['DEC'][j], 5))
+                pmf = plate + '-' + mjd + '-' + cfiber
+                visplot = '../visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/plots/apPlate-' + pmf + '.png'
+                html.write('<TR><TD>' + field + '<TD>' + pmf + '<TD ALIGN="RIGHT">' + cra + '<TD ALIGN="RIGHT">' + cdec)
+                html.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=500></A>\n')
+        html.close()
     
