@@ -79,8 +79,6 @@ def makeSkyHTML(mjdstart='59146', observatory='apo', apred='daily'):
         field = allfield[iplate]
 
         # Load in the apPlate file and restrict to sky fibers
-        apPlate = load.apPlate(int(plate), mjd)
-        import pdb; pdb.set_trace()
         apPlateFile = load.filename(plate=int(plate), mjd=mjd, chips=True)
         if os.path.exists(apPlateFile):
             print("Doing " + field + ", plate " + plate + ", mjd " + mjd) 
