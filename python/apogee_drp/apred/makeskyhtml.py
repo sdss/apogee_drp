@@ -74,10 +74,10 @@ def makeSkyHTML(mjdstart='59146', observatory='apo', apred='daily'):
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor="' + thcolor + '"><TH>FIELD <TH>PLATE-MJD-FIBER <TH>RA <TH>DEC <TH>apVisit Plot\n')
     for iplate in range(nplates):
-        print("Doing " + field + ", plate " + plate + ", mjd " + mjd) 
         plate = allplate[iplate]
         mjd = allmjd[iplate]
         field = allfield[iplate]
+        print("Doing " + field + ", plate " + plate + ", mjd " + mjd) 
 
         # Load in the apPlate file and restrict to sky fibers
         apPlate = load.apPlate(int(plate), mjd)
