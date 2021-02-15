@@ -297,7 +297,7 @@ CASE suboption of
             if nadj eq 0 or plugmap.fiberdata[iplus].mag[1] gt skymax then pskyplugind=[pskyplugind,skyplugind[sgood[isky]]]
           endif
          endfor
-         pskyplugind = uniq(pskyplugind)
+         pskyplugind = pskyplugind[uniq(pskyplugind)]
          skymax-=0.25
         endwhile
         if skymax le 5 then begin
