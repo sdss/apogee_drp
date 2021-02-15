@@ -330,8 +330,8 @@ CASE suboption of
         skydist = dist[bestind]
 
         ; print indices of selected sky fibers
-        if j eq 0 then print,'fiber index: ', i, 'sky fibers: ', best_skyplugindex,skydist
-        if objtype eq 'SKY' and i gt 289 then stop 
+        ;if j eq 0 then print,'fiber index: ', i, 'sky fibers: ', best_skyplugindex,skydist
+        ;if objtype eq 'SKY' and i gt 289 then stop 
         ; Get object fiber data
         fiber = frame.(j).flux[*,i]
         fibererr = frame.(j).err[*,i]
