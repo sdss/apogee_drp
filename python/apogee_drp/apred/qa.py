@@ -1694,6 +1694,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             chmag = str("%.3f" % round(jdata['HMAG'], 3))
             ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
             jkcolor = jdata['JMAG'] - jdata['KMAG']
+            if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
             cjkcolor = str("%.3f" % round(jkcolor, 3))
     #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
             cra = str("%.5f" % round(jdata['RA'], 5))
@@ -1879,6 +1880,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 chmag = str("%.3f" % round(jdata['HMAG'], 3))
                 ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
                 jkcolor = jdata['JMAG'] - jdata['KMAG']
+                if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
                 cjkcolor = str("%.3f" % round(jkcolor, 3))
                 cra = str("%.5f" % round(jdata['RA'], 5))
                 cdec = str("%.5f" % round(jdata['DEC'], 5))
