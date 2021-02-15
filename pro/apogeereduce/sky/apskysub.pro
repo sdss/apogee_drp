@@ -306,13 +306,13 @@ CASE suboption of
         endif
 
         ;if blue chip, consider persisnce
-        if j eq 2 then begin
+;        if j eq 2 then begin
           ; only use "matching" persistence sky fibers
           ;sgood=where(persist[skyindex] eq persist[i],ngood)
           ; only use non-persistence sky fibers
-          sgood=where(persist[skyindex] eq 0,ngood)
-          if ngood gt 0 then pskyplugind=skyplugind[sgood] 
-        endif 
+;          sgood=where(persist[skyindex] eq 0,ngood)
+;          if ngood gt 0 then pskyplugind=skyplugind[sgood] 
+;        endif 
         npsky=n_elements(pskyplugind)
         
         dist = sphdist(plugmap.fiberdata[pskyplugind].ra,plugmap.fiberdata[pskyplugind].dec,ira,idec,/deg)
