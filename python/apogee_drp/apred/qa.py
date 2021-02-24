@@ -1681,7 +1681,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
     tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True).replace('apPlate', 'throughput').replace('fits', 'dat')
     tputdat = open(tputfile, 'w')
-    import pdb; pdb.set_trace()
+
     # Loop over the fibers
     for j in range(300):
         jdata = data[j]
