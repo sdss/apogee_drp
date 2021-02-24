@@ -72,7 +72,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
     # Establish telescope and load
     telescope = observatory + '25m'
 
-    # Find unique fields and star stuff on them
+    # Find unique fields and run star stuff on them
     apodir = os.environ.get('APOGEE_REDUX') + '/'
     mjdDirs = np.array(glob.glob(apodir + apred + '/visit/' + telescope + '/*/*/*'))
     ndirs = len(mjdDirs)
@@ -1679,6 +1679,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
 
+    tputfile = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('apPlate', 'throughput').replace('fits', 'dat')
+    import pdb; pdb.set_trace()
     # Loop over the fibers
     for j in range(300):
         jdata = data[j]
