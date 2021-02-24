@@ -1679,7 +1679,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
 
-    tputfile = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('apPlate', 'throughput').replace('fits', 'dat')
+    tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True).replace('apPlate', 'throughput').replace('fits', 'dat')
     import pdb; pdb.set_trace()
     # Loop over the fibers
     for j in range(300):
