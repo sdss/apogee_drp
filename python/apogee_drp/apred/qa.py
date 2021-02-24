@@ -1680,6 +1680,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     db = apogeedb.DBSession()
 
     tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True).replace('apPlate', 'throughput').replace('fits', 'dat')
+    tputdat = open(tputfile, 'w')
     import pdb; pdb.set_trace()
     # Loop over the fibers
     for j in range(300):
@@ -1829,6 +1830,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 if tput < 0.4: bcolor = '#FF3333'
                 if tput < 0.3: bcolor = '#FF0000'
                 tput = str("%.3f" % round(tput,3))
+                tputdat.write(plate+'   '+mjd+'   '+cfiber+'   '+objid+'   '+tput+'\n')
                 vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
             else:
                 vishtml.write('<TD align ="center BGCOLOR="white">----\n')
@@ -1836,7 +1838,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
     vishtml.close()
-    
+    tputdat.close()
+
     print("----> makeVisHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
 ###################################################################################################
