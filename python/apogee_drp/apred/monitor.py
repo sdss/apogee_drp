@@ -300,11 +300,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#quartz> Cal channel quartz</a>\n')
+    html.write('<li> <a href=#dome>Dome flats</a>\n')
     html.write('<li> <a href=' + instrument + '/fiber/fiber.html target="_blank">Individual fiber throughputs from dome flats</a>\n')
     html.write('<li> <a href=' + instrument + '/fiber/fiber_qrtz.html target="_blank">Individual fiber throughputs from quartz lamp</a>\n')
     html.write('<li> <a href=#tharflux> Cal channel ThAr</a>\n')
     html.write('<li> <a href=#uneflux> Cal channel UNe</a>\n')
-    html.write('<li> <a href=#dome>Dome flats</a>\n')
     html.write('<li> <a href=#zero>Plate zeropoints</a>\n')
     html.write('</ul>\n')
     html.write('<li> Positions\n')
@@ -326,6 +326,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
+    html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
+    html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
+    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200></A>\n')
+    html.write('<HR>\n')
+
     html.write('<H3> <a href=' + instrument + '/fiber/fiber.html> Individual fiber throughputs from dome flats </A></H3>\n')
     html.write('<HR>\n')
 
@@ -338,11 +343,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
     html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=1200></A>\n')
-    html.write('<HR>\n')
-
-    html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
-    html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
-    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
