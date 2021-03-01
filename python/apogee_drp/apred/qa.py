@@ -18,7 +18,7 @@ from astroplan import moon_illumination
 from astropy.coordinates import SkyCoord, get_moon
 from astropy import units as astropyUnits
 from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
-from apogee_drp.apred import wave
+from apogee_drp.apred import wave,monitor
 from apogee_drp.database import apogeedb
 from dlnpyutils import utils as dln
 from sdss_access.path import path
@@ -111,7 +111,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True,
-            makenightqa=True, makemasterqa=True, makeqafits=True, clobber=True):
+            makenightqa=True, makemasterqa=True, makeqafits=True, makemonitor=True, clobber=True):
 
     # Establish telescope
     telescope = observatory + '25m'
@@ -132,13 +132,15 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
         x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
                     makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
                     makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
-                    makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, clobber=clobber)
+                    makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
+                    makemonitor=makemonitor, clobber=clobber)
 
 ###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, 
-            makestarplots=True, makemasterqa=True, makenightqa=True, makeqafits=True, clobber=True):
+            makestarplots=True, makemasterqa=True, makenightqa=True, makeqafits=True, 
+            makemonitor=True, clobber=True):
 
     # Establish telescope and instrument
     telescope = observatory + '25m'
@@ -238,17 +240,17 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                                               domjd=True, dofields=True)
                 continue
 
-        # Only run makemasterqa and makenightqa after the last plate on this mjd
+        # Only run makemasterqa, makenightqa, and monitor after the last plate on this mjd
         if i < nsciplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
                      makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
                      makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=False, 
-                     makenightqa=False, clobber=clobber)
+                     makenightqa=False, makemonitor=False, clobber=clobber)
         else:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
                      makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
                      makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=makemasterqa, 
-                     makenightqa=makenightqa, clobber=clobber)
+                     makenightqa=makenightqa, makemonitor=makemonitor, clobber=clobber)
         
     print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
 
@@ -256,7 +258,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
          makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True, 
-         makemasterqa=True, makenightqa=True, clobber=True):
+         makemasterqa=True, makenightqa=True, makemonitor=True, clobber=True):
 
     start_time = time.time()
 
@@ -375,6 +377,10 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         if makemasterqa == True: 
             q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True,
                                   mjdfilebase='mjd.html',fieldfilebase='fields.html')
+
+        # Make the monitor page
+        if makemonitor == True:
+            q = monitor.monitor()
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.\n")
