@@ -569,6 +569,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             if type(d)!=dict: print("----> makePlateSum: Problem with ap1D!")
             dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
 
+        if plate == '15017': import pdb; pdb.set_trace()
         cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[1], chips='c')
         cframehdr = fits.getheader(cframefile.replace('Cframe-','Cframe-a-'))
         pfile = pfile.replace('.fits','')
