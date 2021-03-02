@@ -414,6 +414,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         gdims, = np.where(imsReduced == 1)
         ims = ims[gdims]
         n_exposures = len(ims)
+        import pdb; pdb.set_trace()
         onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
 
     tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
