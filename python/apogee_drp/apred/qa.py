@@ -299,6 +299,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
     gd,= np.where(flavor == 'object')
     n_ims = len(gd)
+    import pdb; pdb.set_trace()
 
     if n_ims > 0:
         ims = all_ims[gd]
@@ -390,7 +391,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
                  instrument=None, clobber=True, makeqaplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
-                 starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
+                 starmag=None, flat=None, fixfiberid=None, badfiberid=None):
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
