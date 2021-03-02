@@ -308,6 +308,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             cframe = load.filename('Cframe', field=field, plate=int(plate), mjd=mjd, num=ims[i], chips=True)
             if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
+        import pdb; pdb.set_trace()
         if len(good) < 1:
             print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
             return
