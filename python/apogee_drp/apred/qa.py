@@ -299,7 +299,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
     gd,= np.where(flavor == 'object')
     n_ims = len(gd)
-    import pdb; pdb.set_trace()
 
     if n_ims > 0:
         ims = all_ims[gd]
@@ -316,6 +315,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         sys.exit("No object images. You are hosed. Give up hope.")
         ims = None
         imsReduced = None
+    import pdb; pdb.set_trace()
 
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
