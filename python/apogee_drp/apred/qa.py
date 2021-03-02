@@ -392,6 +392,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None):
 
+    if plate == '15017': import pdb; pdb.set_trace()
     if len(ims) < 2:
         print("----> makePlateSum: only 1 exposure found for plate " + plate + ", MJD " + mjd)
         print("                    This is not enough. Skipping")
