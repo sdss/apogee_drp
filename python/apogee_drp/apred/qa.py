@@ -310,12 +310,11 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
         if len(good) < 1:
-            print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
+            sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
     else:
         sys.exit("No object images. You are hosed. Give up hope.")
         ims = None
         imsReduced = None
-    import pdb; pdb.set_trace()
 
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
@@ -415,7 +414,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         gdims, = np.where(imsReduced == 1)
         ims = ims[gdims]
         n_exposures = len(ims)
-        import pdb; pdb.set_trace()
         onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
 
     tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
@@ -570,8 +568,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             cframe = load.apCframe(field, int(plate), mjd, ims[i])
             if type(d)!=dict: print("----> makePlateSum: Problem with ap1D!")
             dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
-
-        import pdb; pdb.set_trace()
 
         cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[1], chips='c')
         cframehdr = fits.getheader(cframefile.replace('Cframe-','Cframe-a-'))
