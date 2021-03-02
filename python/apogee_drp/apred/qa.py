@@ -309,7 +309,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
         if len(good) < 1:
-            sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
+            print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
+            return
     else:
         sys.exit("No object images. You are hosed. Give up hope.")
         ims = None
