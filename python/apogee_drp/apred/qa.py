@@ -225,8 +225,6 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[j] = 1
             good, = np.where(imsReduced == 1)
             if len(good) < 1:
-                # Add this to the list of failed plates
-                print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
                 # If last plate fails, still make the nightly and master QA pages
                 if i == nsciplans-1:
                     # Make the nightly QA page
@@ -238,7 +236,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                         q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                               mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                               domjd=True, dofields=True)
-                continue
+                    sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
 
         # Only run makemasterqa, makenightqa, and monitor after the last plate on this mjd
         if i < nsciplans-1:
