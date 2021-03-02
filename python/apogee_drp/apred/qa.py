@@ -836,7 +836,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                     # Exposure time
                     exptime=str(tab1['EXPTIME'][gd])
                     # Write to file
-                    import pdb; pdb.set_trace()
                     out.write(im+'  '+sn+'  '+vers+'  '+plugmjd+'  '+plate+'  '+mjd+'  '+tsec+'  '+exptime+'  Object\n')
             out.close()
         print("----> makePlateSum: done " + txt)
