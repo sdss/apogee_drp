@@ -308,14 +308,14 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             cframe = load.filename('Cframe', field=field, plate=int(plate), mjd=mjd, num=ims[i], chips=True)
             if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
-        import pdb; pdb.set_trace()
-        if len(good) < 1:
+        if len(good) > 0:
+            ims = ims[good]
+        else:
             print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
             return
     else:
-        sys.exit("No object images. You are hosed. Give up hope.")
-        ims = None
-        imsReduced = None
+        print("PROBLEM!!! no object images found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
+        return
 
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
@@ -392,12 +392,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                  instrument=None, clobber=True, makeqaplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None):
-
-    if plate == '15017': import pdb; pdb.set_trace()
-    if len(ims) < 2:
-        print("----> makePlateSum: only 1 exposure found for plate " + plate + ", MJD " + mjd)
-        print("                    This is not enough. Skipping")
-        return
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
