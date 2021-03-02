@@ -802,12 +802,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         hdulist.append(hdu)
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
-    if ims[0] == 0:
-        hdulist = fits.open(platesum)
-        hdu1 = fits.table_to_hdu(Table(platetab))
-        hdulist.append(hdu1)
-        hdulist.writeto(platesum, overwrite=True)
-        hdulist.close()
 
         # Make the sn*dat and altsn*dat files
         outfile1 = sntabdir + 'sn-' + plate + '-' + mjd + '.dat'
@@ -842,9 +836,17 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                     # Exposure time
                     exptime=str(tab1['EXPTIME'][gd])
                     # Write to file
+                    import pdb; pdb.set_trace()
                     out.write(im+'  '+sn+'  '+vers+'  '+plugmjd+'  '+plate+'  '+mjd+'  '+tsec+'  '+exptime+'  Object\n')
             out.close()
         print("----> makePlateSum: done " + txt)
+    else:
+        hdulist = fits.open(platesum)
+        hdu1 = fits.table_to_hdu(Table(platetab))
+        hdulist.append(hdu1)
+        hdulist.writeto(platesum, overwrite=True)
+        hdulist.close()
+
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
 
 ###################################################################################################
