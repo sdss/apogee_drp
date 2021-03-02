@@ -393,7 +393,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None):
 
     if len(ims) < 2:
-        print("----> makePlateSum: only 1 exposure found for plate " + plate + ", MJD " + mjd + ")
+        print("----> makePlateSum: only 1 exposure found for plate " + plate + ", MJD " + mjd)
         print("                    This is not enough. Skipping")
         return
 
