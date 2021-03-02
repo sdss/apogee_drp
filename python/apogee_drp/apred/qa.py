@@ -383,7 +383,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             q = monitor.monitor()
 
     runtime = str("%.2f" % (time.time() - start_time))
-    print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.\n")
+    print("Done with APQA for plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
 
 ###################################################################################################
 ''' MAKEPLATESUM: Plotmag translation '''
@@ -391,6 +391,11 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                  instrument=None, clobber=True, makeqaplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None):
+
+    if len(ims) < 2:
+        print("----> makePlateSum: only 1 exposure found for plate " + plate + ", MJD " + mjd + ")
+        print("                    This is not enough. Skipping")
+        return
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
