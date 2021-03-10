@@ -333,7 +333,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-            tmpims = np.array([0,ims[0])
+            tmpims = np.array([0,ims[0]])
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=tmpims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
