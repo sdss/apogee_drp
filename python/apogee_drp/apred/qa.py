@@ -317,8 +317,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         print("PROBLEM!!! no object images found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
         return
 
-    import pdb; pdb.set_trace()
-
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
 
@@ -414,8 +412,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         n_exposures = 1
         onedfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
     else:
-        gdims, = np.where(imsReduced == 1)
-        ims = ims[gdims]
         n_exposures = len(ims)
         onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
 
