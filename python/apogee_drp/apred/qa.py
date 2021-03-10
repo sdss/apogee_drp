@@ -1638,10 +1638,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)) + '/html/'
     if os.path.exists(htmldir) == False: os.makedirs(htmldir)
 
-    if os.path.exists(htmldir + 'sorttable.js') == False:
-        print("----> makeVisHTML: getting sorttable.js...")
-        subprocess.call(['wget', '-q', sort_table_link])
-        subprocess.call(['mv', 'sorttable.js', htmldir])
+    #if os.path.exists(htmldir + 'sorttable.js') == False:
+    #    print("----> makeVisHTML: getting sorttable.js...")
+    #    subprocess.call(['wget', '-q', sort_table_link])
+    #    subprocess.call(['mv', 'sorttable.js', htmldir])
 
     # Get the HTML file name... apPlate-plate-mjd
     htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('.fits','')
@@ -1668,7 +1668,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
     vishtml.write('<HTML>\n')
-    vishtml.write('<HEAD><script src="sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
+    vishtml.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
     vishtml.write('<BODY>\n')
 
     vishtml.write('<H1>' + htmlfile + '</H1><HR>\n')
