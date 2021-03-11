@@ -450,6 +450,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     nfiber = len(fiber)
     rows = 300 - fiber['fiberid']
     guide = plug['guidedata']
+    import pdb; pdb.set_trace()
 
     # Add sn and obsmag columns to fiber structure
     dtype =        np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
