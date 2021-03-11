@@ -299,6 +299,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     gd,= np.where(flavor == 'object')
     n_ims = len(gd)
 
+    plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
+    import pdb; pdb.set_trace()
+
     if n_ims > 0:
         ims = all_ims[gd]
         # Make an array indicating which exposures made it to apCframe
@@ -316,9 +319,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     else:
         print("PROBLEM!!! no object images found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
         return
-
-    plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
-    import pdb; pdb.set_trace()
 
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
