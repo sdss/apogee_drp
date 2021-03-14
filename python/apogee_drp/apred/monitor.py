@@ -612,14 +612,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 1:
                         tmin = np.min(caljd)
                         tmax = np.max(caljd) + fiberdaysbin
-                        x = np.arange(np.min(caljd), np.max(caljd), fiberdaysbin)
-                        nbins = len(x)
+                        xx = np.arange(np.min(caljd), np.max(caljd), fiberdaysbin)
+                        nbins = len(xx)
                         binx = []
                         biny = []
                         for k in range(nbins-1):
-                            gd, = np.where((caljd >= x[k]) & (caljd <= x[k+1]))
+                            gd, = np.where((caljd >= xx[k]) & (caljd <= xx[k+1]))
                             if len(gd) > 0:
-                                binx.append(np.mean([x[k], x[k+1]]))
+                                binx.append(np.mean([xx[k], xx[k+1]]))
                                 biny.append(np.mean(yvals[gd]))
                         ax.scatter(binx, biny, marker='s', s=markersz*10, color='k', zorder=10)
 
