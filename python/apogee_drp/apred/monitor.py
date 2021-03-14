@@ -36,7 +36,7 @@ from datetime import date,datetime
 
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True, makeplots=True,
-            makefiberplots=True, fiberdaysbin=10):
+            makefiberplots=True, fiberdaysbin=20):
 
     print("----> monitor starting")
 
