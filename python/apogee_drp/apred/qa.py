@@ -299,8 +299,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     gd,= np.where(flavor == 'object')
     n_ims = len(gd)
 
-    plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
-
     if n_ims > 0:
         ims = all_ims[gd]
         # Make an array indicating which exposures made it to apCframe
@@ -452,7 +450,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     nfiber = len(fiber)
     rows = 300 - fiber['fiberid']
     guide = plug['guidedata']
-    import pdb; pdb.set_trace()
 
     # Add sn and obsmag columns to fiber structure
     dtype =        np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
