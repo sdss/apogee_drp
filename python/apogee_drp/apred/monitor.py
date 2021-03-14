@@ -612,7 +612,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 1:
                         tmin = np.min(caljd)
                         tmax = np.max(caljd) + fiberdaysbin
-                        xx = np.arange(np.min(caljd), np.max(caljd), fiberdaysbin)
+                        xx = np.arange(tmin, tmax, fiberdaysbin)
                         nbins = len(xx)
                         binx = []
                         biny = []
