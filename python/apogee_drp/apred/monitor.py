@@ -36,7 +36,7 @@ from datetime import date,datetime
 
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True, makeplots=True,
-            makefiberplots=True, fiberdaysbin=20):
+            makedomeplots=True, makeqrtzplots=True, fiberdaysbin=20):
 
     print("----> monitor starting")
 
@@ -537,7 +537,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     xmax = maxjd + jdspan * 0.10
     xspan = xmax-xmin
 
-    if makefiberplots is True:
+    if makedomeplots is True:
         ###########################################################################################
         # Individual fiber throughput plots
 
@@ -627,6 +627,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.savefig(plotfile)
                 plt.close('all')
 
+    if makeqrtzplots is True:
+        for i in range(300):
             gd, = np.where(allcal['QRTZ'] > 0)
             gdcal = allcal[gd]
             caljd = gdcal['JD'] - 2.4e6
