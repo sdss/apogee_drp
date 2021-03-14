@@ -300,7 +300,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     n_ims = len(gd)
 
     plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
-    import pdb; pdb.set_trace()
 
     if n_ims > 0:
         ims = all_ims[gd]
