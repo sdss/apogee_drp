@@ -36,7 +36,7 @@ from datetime import date,datetime
 
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True, makeplots=True,
-            makefiberplots=True):
+            makefiberplots=True, fiberdaysbin=10):
 
     print("----> monitor starting")
 
@@ -609,6 +609,19 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
+                    if ichip == 1:
+                        tmin = np.min(caljd)
+                        tmax = np.max(caljd) + fiberdaysbin
+                        x = np.arange(np.min(caljd), np.max(caljd), fiberdaysbin)
+                        nbins = len(x)
+                        binx = []
+                        biny = []
+                        for k in range(nbins-1):
+                            gd, = np.where((caljd >= x[k]) & (caljd <= x[k+1]))
+                            if len(gd) > 0:
+                                binx.append(np.mean([x[k], x[k+1]]))
+                                biny.append(np.mean(yvals[gd]))
+                        ax.scatter(binx, biny, marker='s', s=markersz*10, color='k')
 
                 fig.subplots_adjust(left=0.045,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
