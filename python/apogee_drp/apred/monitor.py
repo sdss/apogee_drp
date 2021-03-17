@@ -30,12 +30,13 @@ import matplotlib.ticker as ticker
 import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
+from datetime import date,datetime
 
 # import pdb; pdb.set_trace()
 
 ''' MONITOR: Instrument monitoring plots and html '''
-def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=False, makeplots=True,
-            makefiberplots=True):
+def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True, makeplots=True,
+            makedomeplots=True, makeqrtzplots=True, fiberdaysbin=10):
 
     print("----> monitor starting")
 
@@ -57,18 +58,26 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     sdir5 = specdir5 + 'monitor/' + instrument + '/'
 
     # Read in the SDSS-IV/APOGEE2 summary files
-    allcal =  fits.open(specdir4 + instrument + 'Cal.fits')[1].data
-    alldark = fits.open(specdir4 + instrument + 'Cal.fits')[2].data
-    allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
-    allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
-    allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
+    #allcal =  fits.open(specdir4 + instrument + 'Cal.fits')[1].data
+    #alldark = fits.open(specdir4 + instrument + 'Cal.fits')[2].data
+    #allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
+    #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+    #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
+
+    # Read in the master summary files
+    allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
+    alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
+    allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
+    allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
+    #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
+
 
     if makesumfiles is True:
         ###########################################################################################
         # MAKE MASTER QACAL FILE
         # Append together the individual QAcal files
 
-        files = glob.glob(specdir5 + '/cal/' + instrument + '/qa/*/*QAcal*.fits')
+        files = glob.glob(specdir5 + 'cal/' + instrument + '/qa/*/*QAcal*.fits')
         if len(files) < 1:
             print("----> monitor: No QAcal files!")
         else:
@@ -84,10 +93,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                newstr = getQAcalStruct(data)
-                outstr = np.concatenate([outstr, newstr])
+                check, = np.where(data['NAME'][0] == outstr['NAME'])
+                if len(check) > 0:
+                    print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getQAcalStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
@@ -96,7 +110,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # APPEND QADARKFLAT INFO TO MASTER QACAL FILE
         # Append together the individual QAdarkflat files
 
-        files = glob.glob(specdir5 + '/cal/' + instrument + '/qa/*/*QAdarkflat*.fits')
+        files = glob.glob(specdir5 + 'cal/' + instrument + '/qa/*/*QAdarkflat*.fits')
         if len(files) < 1:
             print("----> monitor: No QAdarkflat files!")
         else:
@@ -111,11 +125,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                newstr = getQAdarkflatStruct(data)
-                outstr = np.concatenate([outstr, newstr])
-
+                check, = np.where(data['NAME'][0] == outstr['NAME'])
+                if len(check) > 0:
+                    print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getQAdarkflatStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
+                    
             hdulist = fits.open(outfile)
             hdu1 = fits.table_to_hdu(Table(outstr))
             hdulist.append(hdu1)
@@ -128,7 +147,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # Get long term trends from dome flats
         # Append together the individual exp files
 
-        files = glob.glob(specdir5 + '/exposures/' + instrument + '/*/*exp.fits')
+        files = glob.glob(specdir5 + 'exposures/' + instrument + '/*/*exp.fits')
         if len(files) < 1:
             print("----> monitor: No exp files!")
         else:
@@ -144,10 +163,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                newstr = getExpStruct(data)
-                outstr = np.concatenate([outstr, newstr])
+                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
+                if len(check) > 0:
+                    print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getExpStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
@@ -157,7 +181,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
         # Get zeropoint info from apPlateSum files
         # Append together the individual apPlateSum files
 
-        files = glob.glob(specdir5 + '/visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
+        files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
         if len(files) < 1:
             print("----> monitor: No apPlateSum files!")
         else:
@@ -173,14 +197,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
                 data = fits.open(files[i])[1].data
-                newstr = getSciStruct(data)
-                outstr = np.concatenate([outstr, newstr])
+                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
+                if len(check) > 0:
+                    print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getSciStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
-
 
 
         ###########################################################################################
@@ -256,21 +284,27 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     outfile = specdir5 + 'monitor/' + instrument + '-monitor.html'
     print("----> monitor: Making " + os.path.basename(outfile))
 
+    now = datetime.now()
+    today = date.today()
+    current_time = now.strftime("%H:%M:%S")
+    current_date = today.strftime("%B %d, %Y")
+    
     html = open(outfile, 'w')
     tit = 'APOGEE-N Instrument Monitor'
     if instrument != 'apogee-n': tit = 'APOGEE-S Instrument Monitor'
     html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
     html.write('<H1>' + tit + '</H1>\n')
+    html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
     html.write('<HR>\n')
     html.write('<ul>\n')
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#quartz> Cal channel quartz</a>\n')
+    html.write('<li> <a href=#dome>Dome flats</a>\n')
     html.write('<li> <a href=' + instrument + '/fiber/fiber.html target="_blank">Individual fiber throughputs from dome flats</a>\n')
     html.write('<li> <a href=' + instrument + '/fiber/fiber_qrtz.html target="_blank">Individual fiber throughputs from quartz lamp</a>\n')
     html.write('<li> <a href=#tharflux> Cal channel ThAr</a>\n')
     html.write('<li> <a href=#uneflux> Cal channel UNe</a>\n')
-    html.write('<li> <a href=#dome>Dome flats</a>\n')
     html.write('<li> <a href=#zero>Plate zeropoints</a>\n')
     html.write('</ul>\n')
     html.write('<li> Positions\n')
@@ -292,6 +326,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
+    html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
+    html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
+    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200></A>\n')
+    html.write('<HR>\n')
+
     html.write('<H3> <a href=' + instrument + '/fiber/fiber.html> Individual fiber throughputs from dome flats </A></H3>\n')
     html.write('<HR>\n')
 
@@ -304,11 +343,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
     html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
     html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=1200></A>\n')
-    html.write('<HR>\n')
-
-    html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
-    html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
-    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
@@ -403,8 +437,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
         fhtml.write('<TD ALIGN=center>' + cfib + '<BR>(' + cblock + ') <TD ALIGN=center>' + fibqual)
-        fhtml.write('<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
-        fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=1000></A>\n')
+        fhtml.write('<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=700></A>')
+        fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=700></A>\n')
     fhtml.write('</TABLE></BODY></HTML>\n')
     fhtml.close()
 
@@ -430,8 +464,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
 
         fhtml.write('<TR>')
         fhtml.write('<TD ALIGN=center>' + cfib + '<BR>(' + cblock + ')')
-        fhtml.write('<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=1000></A>')
-        fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=1000></A>\n')
+        fhtml.write('<TD> <A HREF=' + plotfile1 + ' target="_blank"><IMG SRC=' + plotfile1 + ' WIDTH=700></A>')
+        fhtml.write('<TD ALIGN=center><A HREF=' + plotfile2 + ' target="_blank"><IMG SRC=' + plotfile2 + ' WIDTH=700></A>\n')
     fhtml.write('</TABLE></BODY></HTML>\n')
     fhtml.close()
 
@@ -503,7 +537,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
     xmax = maxjd + jdspan * 0.10
     xspan = xmax-xmin
 
-    if makefiberplots is True:
+    if makedomeplots is True:
         ###########################################################################################
         # Individual fiber throughput plots
 
@@ -575,11 +609,26 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Fal
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
+                    if ichip == 1:
+                        tmin = np.min(caljd)
+                        tmax = np.max(caljd) + fiberdaysbin
+                        xx = np.arange(tmin, tmax, fiberdaysbin)
+                        nbins = len(xx)
+                        binx = []
+                        biny = []
+                        for k in range(nbins-1):
+                            gd, = np.where((caljd >= xx[k]) & (caljd <= xx[k+1]))
+                            if len(gd) > 0:
+                                binx.append(np.mean([xx[k], xx[k+1]]))
+                                biny.append(np.mean(yvals[gd]))
+                        ax.scatter(binx, biny, marker='s', s=markersz*8, color='k', zorder=10)
 
                 fig.subplots_adjust(left=0.045,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
                 plt.close('all')
 
+    if makeqrtzplots is True:
+        for i in range(300):
             gd, = np.where(allcal['QRTZ'] > 0)
             gdcal = allcal[gd]
             caljd = gdcal['JD'] - 2.4e6

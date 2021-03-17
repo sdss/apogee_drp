@@ -18,7 +18,7 @@ from astroplan import moon_illumination
 from astropy.coordinates import SkyCoord, get_moon
 from astropy import units as astropyUnits
 from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
-from apogee_drp.apred import wave
+from apogee_drp.apred import wave,monitor
 from apogee_drp.database import apogeedb
 from dlnpyutils import utils as dln
 from sdss_access.path import path
@@ -34,6 +34,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 from scipy.signal import medfilt2d as ScipyMedfilt2D
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 from scipy.optimize import curve_fit
+import datetime
 
 cspeed = 299792.458e0
 
@@ -65,15 +66,57 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 #--------------------------------------------------------------------------------------------------
 
 ###################################################################################################
+'''DOSTARS: Wrapper for running makeStarHTML and apStar plots on unique fields only '''
+def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplots=True, clobber=True):
+
+    # Establish telescope and load
+    telescope = observatory + '25m'
+
+    # Find unique fields and run star stuff on them
+    apodir = os.environ.get('APOGEE_REDUX') + '/'
+    mjdDirs = np.array(glob.glob(apodir + apred + '/visit/' + telescope + '/*/*/*'))
+    ndirs = len(mjdDirs)
+    allmjd = np.empty(ndirs).astype(str)
+    allplate = np.empty(ndirs).astype(str)
+    allfield = np.empty(ndirs).astype(str)
+    for i in range(ndirs): 
+        tmp = mjdDirs[i].split(telescope + '/')
+        allfield[i] = tmp[1].split('/')[0]
+        allplate[i] = tmp[1].split('/')[1]
+        allmjd[i] = tmp[1].split('/')[2]
+    gd, = np.where(allmjd != 'plots')
+    allfield = allfield[gd]
+    allplate = allplate[gd]
+    allmjd = allmjd[gd]
+    if mjdstart is not None:
+        gd, = np.where(allmjd.astype(int) > mjdstart)
+        allfield = allfield[gd]
+        allplate = allplate[gd]
+        allmjd = allmjd[gd]
+    ufield, ufieldind = np.unique(allfield, return_index=True)
+    umjd = allmjd[ufieldind]
+    uplate = allplate[ufieldind]
+    nfields = len(ufield)
+    print("Running dostars on " + str(nfields) + " unique fields...\n")
+
+    for i in range(nfields):
+        q = apqa(plate=uplate[i], mjd=umjd[i], telescope=telescope, apred=apred, makeplatesum=False,
+                 makeobshtml=False, makeobsplots=False, makevishtml=False, makevisplots=False,
+                 makestarhtml=dohtml, makestarplots=doplots, makenightqa=False, makemasterqa=False,
+                 clobber=clobber)
+
+    print("\nDone with dostars for " + str(nfields) + " unique fields...")
+
+###################################################################################################
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
-def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
+def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True,
-            makenightqa=True, makemasterqa=True, makeqafits=True, clobber=True):
+            makenightqa=True, makemasterqa=True, makeqafits=True, makemonitor=True, clobber=True):
 
     # Establish telescope
     telescope = observatory + '25m'
 
-    apodir = os.environ.get('APOGEE_REDUX')+'/'
+    apodir = os.environ.get('APOGEE_REDUX') + '/'
     mjdDirs = np.array(glob.glob(apodir + apred + '/visit/' + telescope + '/*/*/*'))
     ndirs = len(mjdDirs)
     allmjd = np.empty(ndirs).astype(str)
@@ -89,13 +132,15 @@ def apqaALL(mjdstart='59146',observatory='apo', apred='daily', makeplatesum=True
         x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
                     makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
                     makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
-                    makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, clobber=clobber)
+                    makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
+                    makemonitor=makemonitor, clobber=clobber)
 
 ###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, 
-            makestarplots=True, makemasterqa=True, makenightqa=True, makeqafits=True, clobber=True):
+            makestarplots=True, makemasterqa=True, makenightqa=True, makeqafits=True, 
+            makemonitor=True, clobber=True):
 
     # Establish telescope and instrument
     telescope = observatory + '25m'
@@ -180,8 +225,6 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[j] = 1
             good, = np.where(imsReduced == 1)
             if len(good) < 1:
-                # Add this to the list of failed plates
-                print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
                 # If last plate fails, still make the nightly and master QA pages
                 if i == nsciplans-1:
                     # Make the nightly QA page
@@ -193,19 +236,20 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                         q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                               mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                               domjd=True, dofields=True)
-                continue
+                    continue
+                    #sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
 
-        # Only run makemasterqa and makenightqa after the last plate on this mjd
+        # Only run makemasterqa, makenightqa, and monitor after the last plate on this mjd
         if i < nsciplans-1:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
                      makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
                      makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=False, 
-                     makenightqa=False, clobber=clobber)
+                     makenightqa=False, makemonitor=False, clobber=clobber)
         else:
             x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
                      makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
                      makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=makemasterqa, 
-                     makenightqa=makenightqa, clobber=clobber)
+                     makenightqa=makenightqa, makemonitor=makemonitor, clobber=clobber)
         
     print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
 
@@ -213,7 +257,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
          makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True, 
-         makemasterqa=True, makenightqa=True, clobber=True):
+         makemasterqa=True, makenightqa=True, makemonitor=True, clobber=True):
 
     start_time = time.time()
 
@@ -264,12 +308,14 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             cframe = load.filename('Cframe', field=field, plate=int(plate), mjd=mjd, num=ims[i], chips=True)
             if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
-        if len(good) < 1:
-            print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
+        if len(good) > 0:
+            ims = ims[good]
+        else:
+            print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
+            return
     else:
-        sys.exit("No object images. You are hosed. Give up hope.")
-        ims = None
-        imsReduced = None
+        print("PROBLEM!!! no object images found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
+        return
 
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
@@ -278,9 +324,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     if platetype == 'normal': 
 
         # Make the apPlateSum file if it doesn't already exist.
+        platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
         if makeplatesum == True:
-            platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-            
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
@@ -288,8 +333,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-            gd, = np.where(imsReduced == 1)
-            tmpims = np.array([0,ims[gd][0]])
+            tmpims = np.array([0,ims[0]])
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=tmpims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
@@ -297,32 +341,33 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-        # Make the observation QA page
-        if makeobshtml == True:
-            q = makeObsHTML(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
-                               fluxid=fluxid, telescope=telescope)
+        if os.path.exists(platesum):
+            # Make the observation QA page
+            if makeobshtml == True:
+                q = makeObsHTML(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
+                                   fluxid=fluxid, telescope=telescope)
 
-        # Make plots for the observation QA pages
-        if makeobsplots == True:
-            q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
-                             survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
+            # Make plots for the observation QA pages
+            if makeobsplots == True:
+                q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
+                                 survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
-        # Make the visit level pages
-        if makevishtml == True:
-            q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                            fluxid=fluxid)
+            # Make the visit level pages
+            if makevishtml == True:
+                q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
+                                fluxid=fluxid)
+
+            # Make the visit plots
+            if makevisplots == True:
+                q = apVisitPlots(load=load, plate=plate, mjd=mjd)
                             
-        # Make the star level html pages
-        if makestarhtml == True:
-            q = makeStarHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope)
+            # Make the star level html pages
+            if makestarhtml == True:
+                q = makeStarHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope)
 
-        # Make the visit plots
-        if makevisplots == True:
-            q = apVisitPlots(load=load, plate=plate, mjd=mjd)
-
-        # Make the star plots
-        if makestarplots == True:
-            q = apStarPlots(load=load, plate=plate, mjd=mjd, apred=apred, telescope=telescope)
+            # Make the star plots
+            if makestarplots == True:
+                q = apStarPlots(load=load, plate=plate, mjd=mjd, apred=apred, telescope=telescope)
 
         # Make the nightly QA page
         if makenightqa == True:
@@ -333,15 +378,19 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True,
                                   mjdfilebase='mjd.html',fieldfilebase='fields.html')
 
+        # Make the monitor page
+        if makemonitor == True:
+            q = monitor.monitor()
+
     runtime = str("%.2f" % (time.time() - start_time))
-    print("Done with APQA for plate "+plate+", MJD "+mjd+" in "+runtime+" seconds.\n")
+    print("Done with APQA for plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
 
 ###################################################################################################
 ''' MAKEPLATESUM: Plotmag translation '''
 def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
                  instrument=None, clobber=True, makeqaplots=None, plugmap=None, survey=None,
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
-                 starmag=None, flat=None, fixfiberid=None, badfiberid=None): 
+                 starmag=None, flat=None, fixfiberid=None, badfiberid=None):
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -362,8 +411,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         n_exposures = 1
         onedfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
     else:
-        gdims, = np.where(imsReduced == 1)
-        ims = ims[gdims]
         n_exposures = len(ims)
         onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
 
@@ -520,7 +567,9 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             if type(d)!=dict: print("----> makePlateSum: Problem with ap1D!")
             dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
 
-        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[1], chips='c')
+        ind = 1
+        if len(ims) < 2: ind = 0
+        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[ind], chips='c')
         cframehdr = fits.getheader(cframefile.replace('Cframe-','Cframe-a-'))
         pfile = pfile.replace('.fits','')
 
@@ -753,12 +802,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         hdulist.append(hdu)
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
-    if ims[0] == 0:
-        hdulist = fits.open(platesum)
-        hdu1 = fits.table_to_hdu(Table(platetab))
-        hdulist.append(hdu1)
-        hdulist.writeto(platesum, overwrite=True)
-        hdulist.close()
 
         # Make the sn*dat and altsn*dat files
         outfile1 = sntabdir + 'sn-' + plate + '-' + mjd + '.dat'
@@ -796,6 +839,13 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                     out.write(im+'  '+sn+'  '+vers+'  '+plugmjd+'  '+plate+'  '+mjd+'  '+tsec+'  '+exptime+'  Object\n')
             out.close()
         print("----> makePlateSum: done " + txt)
+    else:
+        hdulist = fits.open(platesum)
+        hdu1 = fits.table_to_hdu(Table(platetab))
+        hdulist.append(hdu1)
+        hdulist.writeto(platesum, overwrite=True)
+        hdulist.close()
+
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
 
 ###################################################################################################
@@ -818,11 +868,10 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
-    platesumfile = os.path.basename(platesum)
     platedir = os.path.dirname(platesum)+'/'
 
     if os.path.exists(platesum) == False:
-        err1 = "----> makeObsHTML: PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
+        err1 = "----> makeObsHTML: PROBLEM!!! " + os.path.basename(platesum) + " does not exist. Halting execution.\n"
         err2 = "----> makeObsHTML: You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
 
@@ -841,8 +890,8 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html = open(qafile, 'w')
     tmp = os.path.basename(qafile).replace('.html','')
     html.write('<HTML><HEAD><script src="sorttable.js"></script><title>'+tmp+'</title></head><BODY>\n')
-    html.write('<H1>Field: <FONT COLOR="blue">' + field + '</FONT><BR>Plate: <FONT COLOR="blue">' + plate)
-    html.write('</FONT><BR>MJD: <FONT COLOR="blue">' + mjd + '</FONT></H1>\n')
+    html.write('<H1>Field: <FONT COLOR="green">' + field + '</FONT><BR>Plate: <FONT COLOR="green">' + plate)
+    html.write('</FONT><BR>MJD: <FONT COLOR="green">' + mjd + '</FONT></H1>\n')
     html.write('<p><a href="../../../../../../qa/mjd.html">back to MJD page</a><BR>\n')
     html.write('<a href="../../../../../../qa/fields.html">back to Fields page</a></p>\n')
     html.write('<HR>\n')
@@ -871,26 +920,26 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<HR>\n')
 
     # SNR plots
-    html.write('<H2>apVisit Hmag versus S/N: </H2>\n')
+    html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
     snrplot1 = 'apVisitSNR-'+plate+'-'+mjd+'.png'
     snrplot2 = 'apVisitSNRblocks-'+plate+'-'+mjd+'.png'
-    html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=750></A>')
-    html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=750></A>\n')
+    html.write('<A HREF=../plots/'+snrplot1+' target="_blank"><IMG SRC=../plots/'+snrplot1+' WIDTH=600></A>')
+    html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=600></A>\n')
     html.write('<HR>\n')
 
     # Flat field plots.
     if fluxid is not None:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-        html.write('<H2>Fiber Throughput:</H2>\n')
+        html.write('<H3>Fiber Throughput:</H3>\n')
         html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
-        html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1600></A>')
+        html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
         html.write('<HR>\n')
 
     # Table of individual exposures.
     if pairstr is not None:
-        html.write('<H2>Individual Exposures:</H2>\n')
+        html.write('<H3>Individual Exposures:</H3>\n')
     else:
-        html.write('<H2>Individual Exposures (undithered):</H2>\n')
+        html.write('<H3>Individual Exposures (undithered):</H3>\n')
     html.write('<p><b>Note:</b> Design HA values are currently missing.<BR> \n')
     html.write('<b>Note:</b> Dither and Pixshift values will be "---" if exposures not dithered.<BR>\n')
     html.write('<b>Note:</b> S/N columns give S/N for blue, green, and red chips separately. </p>\n')
@@ -974,7 +1023,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         npairs = len(pairstr)
         if npairs > 0:
             # Pair table.
-            html.write('<H2>Dither Pair Stats:</H2>\n')
+            html.write('<H3>Dither Pair Stats:</H3>\n')
             html.write('<TABLE BORDER=2 CLASS="sortable">\n')
             html.write('<TR bgcolor="'+thcolor+'"><TH>IPAIR<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
             html.write('<TH>NAME<TH>SHIFT<TH>NEWSHIFT<TH>S/N\n')
@@ -999,7 +1048,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 #    html.write('</TABLE>\n')
 
     # Table of exposure plots.
-    html.write('<H2>Individual Exposure QA Plots:</H2>\n')
+    html.write('<H3>Individual Exposure QA Plots:</H3>\n')
     html.write('<TABLE BORDER=2>\n')
     html.write('<p><b>Note:</b> in the Mag plots, the solid line is the target line for getting S/N=100 for an H=12.2 star in 3 hours of exposure time.<BR>\n')
     html.write('<b>Note:</b> in the Spatial mag deviation plots, color gives deviation of observed mag from expected 2MASS mag using the median zeropoint.</p>\n')
@@ -1030,21 +1079,21 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
             html.write('<TR><TD bgcolor="'+thcolor+'">SN(E/C)<TD>'+str(np.round(tab1['SNRATIO'][gd][0],2))+'\n')
             html.write('</TABLE>\n')
 
-            html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=301></A>\n')
-            html.write('<TD><A HREF=../plots/'+oneDfile+'_spatialresid.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_spatialresid.png WIDTH=344></A>\n')
-            html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skyemission.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skyemission.png WIDTH=344>\n')
-            html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skycontinuum.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skycontinuum.png WIDTH=344>\n')
+            html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=210></A>\n')
+            html.write('<TD><A HREF=../plots/'+oneDfile+'_spatialresid.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_spatialresid.png WIDTH=250></A>\n')
+            html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skyemission.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skyemission.png WIDTH=250>\n')
+            html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skycontinuum.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skycontinuum.png WIDTH=250>\n')
             cim = str(ims[i])
-            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg WIDTH=344></a>\n')
-            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg WIDTH=344></a>\n')
-            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg WIDTH=344></a>\n')
+            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg WIDTH=250></a>\n')
+            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg WIDTH=250></a>\n')
+            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg WIDTH=250></a>\n')
         else:
             html.write('<TR><TD bgcolor="'+thcolor+'">'+str(int(round(ims[i])))+'\n')
             html.write('<TD><TD><TD><TD><TD><TD><TD><TD>\n')
     html.write('</table><HR>\n')
     
     gfile = 'guider-'+plate+'-'+mjd+'.png'
-    html.write('<H2>Guider RMS: </H2>\n')
+    html.write('<H3>Guider RMS: </H3>\n')
     html.write('<A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390 target="_blank"></A>\n')
     
     html.write('<BR><BR>\n')
@@ -1084,7 +1133,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
     if os.path.exists(platesum) == False:
-        err1 = "----> makeObsPlots: PROBLEM!!! "+platesumfile+" does not exist. Halting execution.\n"
+        err1 = "----> makeObsPlots: PROBLEM!!! " + os.path.basename(platesum) + " does not exist. Halting execution.\n"
         err2 = "----> makeObsPlots: You need to run MAKEPLATESUM first to make the file."
         sys.exit(err1 + err2)
 
@@ -1589,10 +1638,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)) + '/html/'
     if os.path.exists(htmldir) == False: os.makedirs(htmldir)
 
-    if os.path.exists(htmldir + 'sorttable.js') == False:
-        print("----> makeVisHTML: getting sorttable.js...")
-        subprocess.call(['wget', '-q', sort_table_link])
-        subprocess.call(['mv', 'sorttable.js', htmldir])
+    #if os.path.exists(htmldir + 'sorttable.js') == False:
+    #    print("----> makeVisHTML: getting sorttable.js...")
+    #    subprocess.call(['wget', '-q', sort_table_link])
+    #    subprocess.call(['mv', 'sorttable.js', htmldir])
 
     # Get the HTML file name... apPlate-plate-mjd
     htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('.fits','')
@@ -1619,7 +1668,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
     vishtml.write('<HTML>\n')
-    vishtml.write('<HEAD><script src="sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
+    vishtml.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
     vishtml.write('<BODY>\n')
 
     vishtml.write('<H1>' + htmlfile + '</H1><HR>\n')
@@ -1637,6 +1686,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
 
+    tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True).replace('apPlate', 'throughput').replace('fits', 'dat')
+    tputdat = open(tputfile, 'w')
+
     # Loop over the fibers
     for j in range(300):
         jdata = data[j]
@@ -1652,6 +1704,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             chmag = str("%.3f" % round(jdata['HMAG'], 3))
             ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
             jkcolor = jdata['JMAG'] - jdata['KMAG']
+            if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
             cjkcolor = str("%.3f" % round(jkcolor, 3))
     #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
             cra = str("%.5f" % round(jdata['RA'], 5))
@@ -1730,8 +1783,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align ="right">' + cjkcolor)
                 #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
             else:
-                vishtml.write('<TD align="center">-99.9')
-                vishtml.write('<TD align="center">-99.9')
+                vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
+                vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
                 #vishtml.write('<TD BGCOLOR='+color+'>---\n')
 
             if objtype == 'SKY': 
@@ -1768,11 +1821,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">' + rvlogg + '</FONT>')
                     vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">' + rvfeh + '</FONT>')
                 else:
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-99.9<TD align="center">-9999<TD align="center">-1</FONT>')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999<TD align="center">-9.999<TD align="center">-9.999</FONT>')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-99.9<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-1')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-9.999<TD align="center"><FONT COLOR="red">-9.999')
             else:
-                vishtml.write('<TD align="center"><FONT COLOR="red">-99.9<TD align="center">-9999<TD align="center">-1</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-9999<TD align="center">-9.999<TD align="center">-9.999</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-99.9<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-1')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-9.999<TD align="center"><FONT COLOR="red">-9.999')
 
             # Throughput column
             tput = throughput[j]
@@ -1784,14 +1837,16 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 if tput < 0.4: bcolor = '#FF3333'
                 if tput < 0.3: bcolor = '#FF0000'
                 tput = str("%.3f" % round(tput,3))
+                tputdat.write(plate+'   '+mjd+'   '+cfiber+'   '+objid+'   '+tput+'\n')
                 vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
             else:
-                vishtml.write('<TD align ="center">----\n')
+                vishtml.write('<TD align ="center BGCOLOR="white">----\n')
 
             visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
     vishtml.close()
-    
+    tputdat.close()
+
     print("----> makeVisHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
 ###################################################################################################
@@ -1837,6 +1892,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 chmag = str("%.3f" % round(jdata['HMAG'], 3))
                 ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
                 jkcolor = jdata['JMAG'] - jdata['KMAG']
+                if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
                 cjkcolor = str("%.3f" % round(jkcolor, 3))
                 cra = str("%.5f" % round(jdata['RA'], 5))
                 cdec = str("%.5f" % round(jdata['DEC'], 5))
@@ -1916,9 +1972,11 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 starHTML.write('<TR bgcolor="' + thcolor + '">')
 
                 # Star metadata table
-                starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>2MASS<BR>J<BR>(mag) <TH>2MASS<BR>H<BR>(mag) <TH>2MASS<BR>J<BR>(mag) <TH>Raw J-K')
-                starHTML.write('<TH>Gaia DR2<BR>PMRA<BR>(mas) <TH>Gaia DR2<BR>PMDEC<BR>(mas) <TH>Gaia DR2<BR>G<BR>(mag) <TH>Mean<BR>Vhelio<BR>(km/s)') 
-                starHTML.write('<TH>Min-max<BR>Vhelio<BR>(km/s) <TH>RV Teff<BR>(K) <TH>RV log(g) <TH>RV [Fe/H] \n')
+                starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT')
+                starHTML.write('<TH bgcolor="#E6FFE6">2MASS<BR>J<BR>(mag) <TH bgcolor="#E6FFE6">2MASS<BR>H<BR>(mag) <TH bgcolor="#E6FFE6">2MASS<BR>K<BR>(mag) <TH bgcolor="#E6FFE6">Raw J-K')
+                starHTML.write('<TH bgcolor="#FFFFE6">Gaia DR2<BR>PMRA<BR>(mas) <TH bgcolor="#FFFFE6">Gaia DR2<BR>PMDEC<BR>(mas) <TH bgcolor="#FFFFE6">Gaia DR2<BR>G<BR>(mag)') 
+                starHTML.write('<TH bgcolor="#E6F2FF">Mean<BR>Vhelio<BR>(km/s) <TH bgcolor="#E6F2FF">Min-max<BR>Vhelio<BR>(km/s) <TH bgcolor="#E6F2FF">RV Teff<BR>(K)')
+                starHTML.write('<TH bgcolor="#E6F2FF">RV logg <TH bgcolor="#E6F2FF">RV [Fe/H] \n')
                 starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
                 starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
                 starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
@@ -2734,10 +2792,18 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Open the mjd file html
         mjdfile = qadir+mjdfilebase
         print("----> makeMasterQApages: Creating "+mjdfilebase)
+
+        now = datetime.datetime.now()
+        today = datetime.date.today()
+        current_time = now.strftime("%H:%M:%S")
+        current_date = today.strftime("%B %d, %Y")
+
         html = open(mjdfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE MJD Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
+        html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
+        html.write('<HR>\n')
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
@@ -2884,18 +2950,26 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     if dofields is True:
         fieldfile = qadir+fieldfilebase
         print("----> makeMasterQApages: Creating "+fieldfilebase)
+
+        now = datetime.datetime.now()
+        today = datetime.date.today()
+        current_time = now.strftime("%H:%M:%S")
+        current_date = today.strftime("%B %d, %Y")
+
         html = open(fieldfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE Field Summary</title></head>\n')
         html.write('<H1>APOGEE Observation Summary by Field</H1>\n')
+        html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
+        html.write('<HR>\n')
         html.write('<p><A HREF=mjd.html>MJD view</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
         html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
 
-        html.write('<p>Sky coverage plots: <p>\n')
-        html.write('<A HREF="aitoff_galactic.png" target="_blank"><IMG SRC=aitoff_galactic.png WIDTH=800></A>\n')
-        html.write('<A HREF="aitoff_equatorial.png" target="_blank"><IMG SRC=aitoff_equatorial.png WIDTH=800></A>\n')
+        html.write('<H3>Sky coverage plots: </H3>\n')
+        html.write('<A HREF="aitoff_galactic.png" target="_blank"><IMG SRC=aitoff_galactic.png WIDTH=600></A>\n')
+        html.write('<A HREF="aitoff_equatorial.png" target="_blank"><IMG SRC=aitoff_equatorial.png WIDTH=600></A>\n')
 #        html.write('<img src=aitoff.png width=45%>\n')
 #        html.write('<img src=galactic.gif width=45%>\n')
 
@@ -2903,10 +2977,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     #    html.write('<a href=../../aspcap/'+apred_vers+'/'+aspcap_vers+'/allStar'+suffix+'> allStar'+suffix+' file </a>\n')
     #    html.write(' and <a href=../../aspcap/'+apred_vers+'/'+aspcap_vers+'/allVisit'+suffix+'> allVisit'+suffix+' file </a>\n')
 
-        html.write('<br><br>Links on field name are to combined spectra plots and info\n')
-        html.write('<br>Links on plate name are to visit spectra plots and info\n')
-        html.write('<br>Links on MJD are to QA and summary plots for the visit\n')
-        html.write('<br>Click on column headings to sort<br><br>\n')
+        html.write('<br><br>Links on field name are to combined spectra plots and info (coming soon)\n')
+        html.write('<br>Links on plate name are to visit spectra plots and info.\n')
+        html.write('<br>Links on MJD are to QA and summary plots for the visit.\n')
+        html.write('<br><br>Click on column headings to sort<br>\n')
 
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASPCAP <TH>PLATE <TH>MJD <TH>LOC <TH>RA <TH>DEC <TH>S/N(red) <TH>S/N(green) <TH>S/N(blue)')
@@ -2986,8 +3060,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 if iprogram[i] == 'RM': 
                     color = '#B3E5FC'
             else:
+                if iprogram[i][0:2] == 'RM': color = '#B3E5FC'
                 if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
                 if iprogram[i] == 'AQMES-Medium': color = '#AED581'
+                if iprogram[i] == 'halo_dsph': color = '#D39FE4'
                 if iprogram[i][0:3] == 'MWM': color = '#D39FE4'
                 if iprogram[i][0:5] == 'eFEDS': color='#FFF9C4'
 
@@ -3037,7 +3113,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         axwidth = 1.5
         axmajlen = 7
         axminlen = 3.5
-        msz = 100
+        msz = 50
         lonlabs = ['210','240','270','300','330','0','30','60','90','120','150']
         nlon = len(lonlabs);  lonstart = 0.085;  lonsep = 0.083
         nplots = 2
@@ -3080,15 +3156,20 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 x = ra * (math.pi/180)
                 y = dec * (math.pi/180)
 
-            p, = np.where(iprogram == 'RM')
+            p, = np.where((iprogram == 'RM') | (iprogram == 'RMv2'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#B3E5FC', label='RM ('+str(len(p))+')')
+
             p, = np.where(iprogram == 'AQMES-Wide')
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='AQMES-Wide ('+str(len(p))+')')
+
             p, = np.where(iprogram == 'AQMES-Medium')
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#AED581', label='AQMES-Medium ('+str(len(p))+')')
-            p, = np.where((iprogram == 'MWM') | (iprogram == 'MWM_30min'))
+
+            p, = np.where((iprogram == 'MWM') | (iprogram == 'MWM_30min') | (iprogram == 'halo_dsph') | (iprogram == 'MWM2') | (iprogram == 'MWM2_sky')
+                                              | (iprogram == 'MWM3') | (iprogram == 'MWM_30min2') | (iprogram == 'MWM_30min3'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='*', s=msz*2, edgecolors='k', alpha=alf, c='#E5ADF7', label='MWM ('+str(len(p))+')')
-            p, = np.where((iprogram == 'eFEDS1') | (iprogram == 'eFEDS2'))
+
+            p, = np.where((iprogram == 'eFEDS1') | (iprogram == 'eFEDS2') | (iprogram == 'eFEDS3'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='s', s=msz, edgecolors='k', alpha=alf, c='#FFF9C4', label='eFEDS ('+str(len(p))+')')
 
             ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')

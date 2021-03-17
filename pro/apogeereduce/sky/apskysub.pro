@@ -297,6 +297,7 @@ CASE suboption of
             if nadj eq 0 or plugmap.fiberdata[iplus].mag[1] gt skymax then pskyplugind=[pskyplugind,skyplugind[sgood[isky]]]
           endif
          endfor
+         pskyplugind = pskyplugind[uniq(pskyplugind)]
          skymax-=0.25
         endwhile
         if skymax le 5 then begin
@@ -305,13 +306,13 @@ CASE suboption of
         endif
 
         ;if blue chip, consider persisnce
-        if j eq 2 then begin
+;        if j eq 2 then begin
           ; only use "matching" persistence sky fibers
           ;sgood=where(persist[skyindex] eq persist[i],ngood)
           ; only use non-persistence sky fibers
-          sgood=where(persist[skyindex] eq 0,ngood)
-          if ngood gt 0 then pskyplugind=skyplugind[sgood] 
-        endif 
+;          sgood=where(persist[skyindex] eq 0,ngood)
+;          if ngood gt 0 then pskyplugind=skyplugind[sgood] 
+;        endif 
         npsky=n_elements(pskyplugind)
         
         dist = sphdist(plugmap.fiberdata[pskyplugind].ra,plugmap.fiberdata[pskyplugind].dec,ira,idec,/deg)
@@ -330,7 +331,7 @@ CASE suboption of
 
         ; print indices of selected sky fibers
         ;if j eq 0 then print,'fiber index: ', i, 'sky fibers: ', best_skyplugindex,skydist
-
+        ;if objtype eq 'SKY' and i gt 289 then stop 
         ; Get object fiber data
         fiber = frame.(j).flux[*,i]
         fibererr = frame.(j).err[*,i]
