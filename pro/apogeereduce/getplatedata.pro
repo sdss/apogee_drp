@@ -457,14 +457,16 @@ if platenum ge 15000 then begin
            cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where q3c_radial_query(ra,dec,"+$
                          strtrim(fiber[istar].ra,2)+","+strtrim(fiber[istar].dec,2)+",0.0002)")
       endelse
+      ncat = n_elements(cat)
+      if ncat eq 1 and size(cat,/type) ne 8 then ncat=0
       ;; If there are multiple results, pick the closest
-      if n_elements(cat) gt 1 then begin
+      if ncat gt 1 then begin
          dist = sphdist(fiber[istar].ra,fiber[istar].dec,cat.ra,cat.dec,/deg)*3600
          minind = first_el(minloc(dist))
          cat = cat[minind]
       endif
       ;; Add to catalogdb
-      if n_elements(cat) gt 0 then begin
+      if ncat gt 0 then begin
          addcat = catalogdb[0]
          struct_assign,{dum:''},addcat
          for k=0,n_tags(addcat)-1 do begin
