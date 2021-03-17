@@ -3111,7 +3111,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         axwidth = 1.5
         axmajlen = 7
         axminlen = 3.5
-        msz = 100
+        msz = 50
         lonlabs = ['210','240','270','300','330','0','30','60','90','120','150']
         nlon = len(lonlabs);  lonstart = 0.085;  lonsep = 0.083
         nplots = 2
@@ -3154,13 +3154,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 x = ra * (math.pi/180)
                 y = dec * (math.pi/180)
 
-            p, = np.where(iprogram == 'RM')
+            p, = np.where((iprogram == 'RM') | (iprogram == 'RMv2'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#B3E5FC', label='RM ('+str(len(p))+')')
             p, = np.where(iprogram == 'AQMES-Wide')
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='AQMES-Wide ('+str(len(p))+')')
             p, = np.where(iprogram == 'AQMES-Medium')
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#AED581', label='AQMES-Medium ('+str(len(p))+')')
-            p, = np.where((iprogram == 'MWM') | (iprogram == 'MWM_30min'))
+            p, = np.where((iprogram == 'MWM') | (iprogram == 'MWM_30min') | (iprogram == 'halo_dsph'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='*', s=msz*2, edgecolors='k', alpha=alf, c='#E5ADF7', label='MWM ('+str(len(p))+')')
             p, = np.where((iprogram == 'eFEDS1') | (iprogram == 'eFEDS2'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='s', s=msz, edgecolors='k', alpha=alf, c='#FFF9C4', label='eFEDS ('+str(len(p))+')')
