@@ -3060,8 +3060,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 if iprogram[i] == 'RM': 
                     color = '#B3E5FC'
             else:
+                if iprogram[i][0:2] == 'RM': color = '#B3E5FC'
                 if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
                 if iprogram[i] == 'AQMES-Medium': color = '#AED581'
+                if iprogram[i] == 'halo_dsph': color = '#D39FE4'
                 if iprogram[i][0:3] == 'MWM': color = '#D39FE4'
                 if iprogram[i][0:5] == 'eFEDS': color='#FFF9C4'
 
@@ -3154,15 +3156,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 x = ra * (math.pi/180)
                 y = dec * (math.pi/180)
 
-            p, = np.where((iprogram == 'RM') | (iprogram == 'RMv2'))
+            p, = np.where(iprogram[0:2] == 'RM')
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#B3E5FC', label='RM ('+str(len(p))+')')
             p, = np.where(iprogram == 'AQMES-Wide')
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='AQMES-Wide ('+str(len(p))+')')
             p, = np.where(iprogram == 'AQMES-Medium')
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#AED581', label='AQMES-Medium ('+str(len(p))+')')
-            p, = np.where((iprogram == 'MWM') | (iprogram == 'MWM_30min') | (iprogram == 'halo_dsph'))
+            p, = np.where((iprogram[0:3] == 'MWM') | (iprogram == 'halo_dsph'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='*', s=msz*2, edgecolors='k', alpha=alf, c='#E5ADF7', label='MWM ('+str(len(p))+')')
-            p, = np.where((iprogram == 'eFEDS1') | (iprogram == 'eFEDS2'))
+            p, = np.where((iprogram == 'eFEDS1') | (iprogram == 'eFEDS2') | (iprogram == 'eFEDS3'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='s', s=msz, edgecolors='k', alpha=alf, c='#FFF9C4', label='eFEDS ('+str(len(p))+')')
 
             ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
