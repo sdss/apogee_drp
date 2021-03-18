@@ -448,17 +448,27 @@ if platenum ge 15000 then begin
     if nmatch eq 0 then begin
       ;; We have catalogid 
       if fiber[istar].catalogid gt 0 then begin
-         cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where catalogid="+strtrim(fiber[istar].catalogid,2))
+         cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where catalogid="+strtrim(fiber[istar].catalogid,2),count=ncat)
       ;; Use coordinates instead
       endif else begin
          cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where q3c_radial_query(ra,dec,"+$
-                       strtrim(fiber[istar].ra,2)+","+strtrim(fiber[istar].dec,2)+",0.0001)")
+                       strtrim(fiber[istar].ra,2)+","+strtrim(fiber[istar].dec,2)+",0.0001)",count=ncat)
          if size(cat,/type) ne 8 then $
            cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where q3c_radial_query(ra,dec,"+$
-                         strtrim(fiber[istar].ra,2)+","+strtrim(fiber[istar].dec,2)+",0.0002)")
+                         strtrim(fiber[istar].ra,2)+","+strtrim(fiber[istar].dec,2)+",0.0002)",count=ncat)
       endelse
-      ncat = n_elements(cat)
-      if ncat eq 1 and size(cat,/type) ne 8 then ncat=0
+      ;; Still no match, try using 2MASS ID in TIC
+      if ncat eq 0 then begin
+        tmass = strmid(fiber[istar].tmass_style,2)
+        sql = "select c2t.* from catalog_to_tic_v8 c2t join tic_v8 t on t.id=c2t.target_id join twomass_psc tm on "+$
+              "tm.designation = t.twomass_psc join catalogdb.version v on v.id = c2t.version_id where tm.designation = '"+tmass+"'"+$
+              " and v.plan = '0.1.0' and c2t.best is true"
+        cat = dbquery(sql,count=ncat)
+        if ncat gt 0 then begin
+          catalogid = cat[0].catalogid
+          cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where catalogid="+strtrim(catalogid,2),count=ncat)
+        endif
+      endif
       ;; If there are multiple results, pick the closest
       if ncat gt 1 then begin
          dist = sphdist(fiber[istar].ra,fiber[istar].dec,cat.ra,cat.dec,/deg)*3600

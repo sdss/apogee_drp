@@ -15,7 +15,7 @@
 ;
 ; By D.Nidever, Oct 2020
 ;-
-function dbquery,sql
+function dbquery,sql,count=count
 
 undefine,out
 
@@ -48,6 +48,7 @@ endif
 
 ;; Load the catalog
 if file_test(tempfile) eq 1 then out = MRDFITS(tempfile,1,/silent) else out=-1
+if size(out,/type) ne 8 then count=0 else count=n_elements(out)
 
 FILE_DELETE,[tbase,tbase+'.fits',tbase+'.py'],/allow
 
