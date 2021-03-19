@@ -2337,6 +2337,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
                     f = interpolate.interp1d(swave, sflux)
                     swaveg = np.linspace(wmin, wmax, nwave)
+                    if j+1 == 5:
+                        import pdb; pdb.set_trace()
                     sfluxg = f(wave[g])
                     
                     if ii % 2 == 0: 
