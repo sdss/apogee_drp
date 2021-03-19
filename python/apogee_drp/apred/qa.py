@@ -2302,7 +2302,6 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 Worder = np.argsort(swave)
                 swave = swave[Worder]
                 sflux = sflux[Worder]
-                sfluxg = f(wave[g])
                 f = interpolate.interp1d(swave, sflux)
                 swaveg = np.linspace(wmin, wmax, nwave)
                 sfluxg = f(wave[g])
