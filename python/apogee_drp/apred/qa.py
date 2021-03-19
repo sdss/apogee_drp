@@ -2335,7 +2335,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
 
                     g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
                     wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
-                    gg, = np.where((swave > wmin) & (swave < wmax))
+                    gg, = np.where((swave > wmin-1) & (swave < wmax+1))
                     f = interpolate.interp1d(swave[gg], sflux[gg])
                     swaveg = np.linspace(wmin, wmax, nwave)
                     sfluxg = f(wave[g])
