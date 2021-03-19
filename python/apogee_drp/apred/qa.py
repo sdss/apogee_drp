@@ -2304,8 +2304,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 sflux = sflux[Worder]
                 f = interpolate.interp1d(swave, sflux)
                 swaveg = np.linspace(wmin, wmax, nwave)
-                sfluxg = f(wave[g])
-                resid = sfluxg - flux[g]
+                sfluxg = f(wave)
+                resid = sfluxg - flux
 
                 rvteff = str(int(round(sumstr['teff'][0])))
                 rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
