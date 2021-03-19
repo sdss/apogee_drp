@@ -2341,6 +2341,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
                     if ii % 2 == 0: ax.axes.xaxis.set_ticklabels([])
 
+                    if j+1 == 30:
+                        import pdb; pdb.set_trace()
                     g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
                     wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
                     gg, = np.where((swave >= wmin) & (swave <= wmax))
