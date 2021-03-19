@@ -2330,7 +2330,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     f = interpolate.interp1d(wave[g], flux[g])
                     swaveg = np.linspace(wmin, wmax, nwave)
                     sfluxg = f(swaveg)
-                    resid = flux[g] - sfluxg
+                    resid = sfluxg - flux[g]
 
                     ax.plot(wave[g], flux[g], color='k', label='apStar')
                     ax.plot(swave, sflux, color='r', label='Cannon model', alpha=0.75)
