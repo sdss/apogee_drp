@@ -2281,8 +2281,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 gd, = np.where((np.isnan(flux) == False) & (flux > 0))
                 wave = wave[gd]
                 flux = flux[gd]
-                wmin = np.min(wave)+1; wmax = np.max(wave)-1
-                nwave = len(wave)-2
+                wmin = np.min(wave); wmax = np.max(wave)
+                nwave = len(wave)
 
                 # Get model spectrum
                 openModel = open(apStarModelPath, 'rb')
@@ -2302,7 +2302,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 Worder = np.argsort(swave)
                 swave = swave[Worder]
                 sflux = sflux[Worder]
-                f = interpolate.interp1d(swave, sflux)
+                f = interpolate.interp1d(swave, sflux, fill_value="extrapolate")
                 swaveg = np.linspace(wmin, wmax, nwave)
                 sfluxg = f(swaveg)
                 resid = sfluxg - flux
