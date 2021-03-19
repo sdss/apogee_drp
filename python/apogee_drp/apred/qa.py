@@ -2351,6 +2351,9 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 plt.savefig(starPlotFilePath)
                 plt.close('all')
 
+                if j == 0: 
+                    import pdb; pdb.set_trace()
+
     print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
 ###################################################################################################
