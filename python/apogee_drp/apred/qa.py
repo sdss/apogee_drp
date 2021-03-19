@@ -34,6 +34,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 from scipy.signal import medfilt2d as ScipyMedfilt2D
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 from scipy.optimize import curve_fit
+from scipy import interpolate
 import datetime
 
 cspeed = 299792.458e0
@@ -2280,6 +2281,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 gd, = np.where((np.isnan(flux) == False) & (flux > 0))
                 wave = wave[gd]
                 flux = flux[gd]
+                wmin = np.min(wave); wmax = np.max(wave)
+                nwave = len(wave)
 
                 # Get model spectrum
                 openModel = open(apStarModelPath, 'rb')
@@ -2292,11 +2295,17 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 pmodels = models.prepare(specmlist[0])
                 bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
                 bestmodel.normalize()
-                swave = bestmodel.wave
-                sflux = bestmodel.flux
+                swave = np.concatenate([bestmodel.wave[:, 0], bestmodel.wave[:,1], bestmodel.wave[:,2]])
+                sflux = np.concatenate([bestmodel.flux[:, 0], bestmodel.flux[:,1], bestmodel.flux[:,2]])
                 rvteff = str(int(round(sumstr['teff'][0])))
                 rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
                 rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
+
+                g, = np.where((swave >= wmin) & (swave <= wmax))
+                f = interpolate.interp1d(wave, flux)
+                swaveg = np.linspace(wmin, wmax, nwave)
+                sfluxg = f(swaveg)
+                import pdb; pdb.set_trace()
 
                 fig=plt.figure(figsize=(28,20))
                 ax1 = plt.subplot2grid((3,1), (0,0))
@@ -2319,9 +2328,15 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     ax.tick_params(axis='both',which='both',width=axwidth)
                     ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
 
+                    g, = np.where((swave >= wmin) & (swave <= wmax))
+                    smin = np.min(swave[:, 2-ichip])
+                    smax = np.max(swave[:, 2-ichip])
+                    f = interpolate.interp1d(wave, flux)
+                    swaveg = np.linspace(wmin, wmax, nwave)
+                    sfluxg = f(swaveg)
+
                     ax.plot(wave, flux, color='k', label='apStar')
-                    ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model', alpha=0.75)
-                    import pdb; pdb.set_trace()
+                    ax.plot(swaveg, sfluxg, color='r', label='Cannon model', alpha=0.75)
 
                     ichip += 1
 
