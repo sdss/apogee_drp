@@ -2305,9 +2305,9 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 f = interpolate.interp1d(wave, flux)
                 swaveg = np.linspace(wmin, wmax, nwave)
                 sfluxg = f(swaveg)
-                import pdb; pdb.set_trace()
+                resid = flux - sfluxg
 
-                fig=plt.figure(figsize=(28,20))
+                fig=plt.figure(figsize=(28,25))
                 ax1 = plt.subplot2grid((3,1), (0,0))
                 ax2 = plt.subplot2grid((3,1), (1,0))
                 ax3 = plt.subplot2grid((3,1), (2,0))
@@ -2318,7 +2318,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 ichip = 0
                 for ax in axes:
                     ax.set_xlim(xmin[ichip], xmax[ichip])
-                    ax.set_ylim(0.1, 1.3)
+                    ax.set_ylim(-0.1, 1.3)
                     ax.tick_params(reset=True)
                     ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
                     ax.minorticks_on()
@@ -2327,6 +2327,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axwidth)
                     ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+                    ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
 
                     g, = np.where((swave >= wmin) & (swave <= wmax))
                     smin = np.min(swave[:, 2-ichip])
@@ -2337,16 +2338,16 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
 
                     ax.plot(wave, flux, color='k', label='apStar')
                     ax.plot(swaveg, sfluxg, color='r', label='Cannon model', alpha=0.75)
+                    ax.plot(swaveg, resid, color='r', alpha=0.75)
 
                     ichip += 1
 
-                txt = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits'
-                ax1.text(0.5, 0.05, txt, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
-                txt = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
-                ax2.text(0.5, 0.05, txt, transform=ax2.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='mediumblue')
-                ax3.legend(loc='lower center', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
+                txt1 = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits          '
+                txt2 = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
+                ax1.text(0.5, 1.02, txt1 + txt2, transform=ax1.transAxes, bbox=bboxpar, ha='center', fontsize=fontsize*1.25, color='k')
+                #ax2.legend(loc='upper left', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
 
-                fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.99,hspace=0.11,wspace=0.0)
+                fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.96,hspace=0.11,wspace=0.0)
                 plt.savefig(starPlotFilePath)
                 plt.close('all')
 
