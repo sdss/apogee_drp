@@ -2329,7 +2329,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axwidth)
                     #if ii % 2 == 0: ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
-                    if ii % 2 == 0: ax.text(-0.10, 0.50, r'$F_{\lambda}$ / $F_{\rm cont.}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                    if ii % 2 == 0: ax.text(-0.05, 0.50, r'$F_{\lambda}$ / $F_{\rm cont.}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
                     if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
                     if ii % 2 == 0: ax.axes.xaxis.set_ticklabels([])
 
