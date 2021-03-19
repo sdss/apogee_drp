@@ -2328,7 +2328,6 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axwidth)
-                    #if ii % 2 == 0: ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
                     if ii % 2 == 0: ax.text(-0.04, 0.50, r'$F_{\lambda}$ / $F_{\rm cont.}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
                     if ii % 2 == 1: ax.text(-0.04, 0.50, r'Resid.', transform=ax.transAxes, rotation=90, ha='right', va='center')
                     if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
@@ -2340,8 +2339,6 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     swaveg = np.linspace(wmin, wmax, nwave)
                     sfluxg = f(wave[g])
                     
-                    #import pdb; pdb.set_trace()
-
                     if ii % 2 == 0: 
                         ax.plot(wave[g], flux[g], color='k', label='apStar')
                         ax.plot(wave[g], sfluxg, color='r', label='Cannon model', alpha=0.75)
@@ -2360,9 +2357,6 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 fig.subplots_adjust(left=0.06,right=0.99,bottom=0.04,top=0.96,hspace=0.01,wspace=0.0)
                 plt.savefig(starPlotFilePath)
                 plt.close('all')
-
-                if j == 0: 
-                    import pdb; pdb.set_trace()
 
     print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
