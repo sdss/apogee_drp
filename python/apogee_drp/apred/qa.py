@@ -2321,6 +2321,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
 
                     ax.plot(wave, flux, color='k', label='apStar')
                     ax.plot(swave[:, 2-ichip], sflux[:, 2-ichip], color='r', label='Cannon model', alpha=0.75)
+                    import pdb; pdb.set_trace()
 
                     ichip += 1
 
