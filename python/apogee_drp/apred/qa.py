@@ -2329,13 +2329,6 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
                     ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
 
-                    g, = np.where((swave >= wmin) & (swave <= wmax))
-                    smin = np.min(swave[:, 2-ichip])
-                    smax = np.max(swave[:, 2-ichip])
-                    f = interpolate.interp1d(wave, flux)
-                    swaveg = np.linspace(wmin, wmax, nwave)
-                    sfluxg = f(swaveg)
-
                     ax.plot(wave, flux, color='k', label='apStar')
                     ax.plot(swaveg, sfluxg, color='r', label='Cannon model', alpha=0.75)
                     ax.plot(swaveg, resid, color='r', alpha=0.75)
