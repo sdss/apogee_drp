@@ -2299,6 +2299,9 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 #sflux = bestmodel.flux
                 swave = np.concatenate([bestmodel.wave[:, 0], bestmodel.wave[:,1], bestmodel.wave[:,2]])
                 sflux = np.concatenate([bestmodel.flux[:, 0], bestmodel.flux[:,1], bestmodel.flux[:,2]])
+                Word = np.argsort(swave)
+                swave = swave[Word]
+                sflux = sflux[Word]
                 rvteff = str(int(round(sumstr['teff'][0])))
                 rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
                 rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
