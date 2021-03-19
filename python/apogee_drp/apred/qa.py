@@ -2302,6 +2302,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 Word = np.argsort(swave)
                 swave = swave[Word]
                 sflux = sflux[Word]
+                import pdb; pdb.set_trace()
                 rvteff = str(int(round(sumstr['teff'][0])))
                 rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
                 rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
