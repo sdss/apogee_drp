@@ -2343,13 +2343,14 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
 
                     g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
                     wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
-                    f = interpolate.interp1d(swave, sflux, fill_value="extrapolate")
+                    gg, = np.where((swave >= wmin) & (swave <= wmax))
+                    f = interpolate.interp1d(swave[gg], sflux[gg], fill_value="extrapolate")
                     swaveg = np.linspace(wmin, wmax, nwave)
                     sfluxg = f(wave[g])
                     
                     if ii % 2 == 0: 
-                        ax.plot(wave, flux, color='k', label='apStar')
-                        ax.plot(wave, sfluxg, color='r', label='Cannon model', alpha=0.75)
+                        ax.plot(wave[g], flux[g], color='k', label='apStar')
+                        ax.plot(wave[g], sfluxg, color='r', label='Cannon model', alpha=0.75)
                     else:
                         resid = sfluxg - flux[g]
                         ax.plot(swaveg, resid, color='b', alpha=0.75)
