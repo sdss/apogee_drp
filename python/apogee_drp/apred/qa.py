@@ -2328,7 +2328,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axwidth)
-                    if ii % 2 == 0: ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+                    #if ii % 2 == 0: ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+                    if ii % 2 == 0: ax.text(-0.10, 0.50, r'$F_{\lambda}$ / $F_{\rm cont.}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
                     if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
                     if ii % 2 == 0: ax.axes.xaxis.set_ticklabels([])
 
@@ -2343,7 +2344,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                         ax.plot(swaveg, sfluxg, color='r', label='Cannon model', alpha=0.75)
                     else:
                         resid = sfluxg - flux[g]
-                        ax.plot(swaveg, resid, color='r', alpha=0.75)
+                        ax.plot(swaveg, resid, color='b', alpha=0.75)
 
                     if ii % 2 == 1: ichip += 1
                     ii += 1
@@ -2353,7 +2354,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 ax1.text(0.5, 1.05, txt1 + txt2, transform=ax1.transAxes, ha='center', fontsize=fontsize*1.25, color='k')#, bbox=bboxpar)
                 #ax2.legend(loc='upper left', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
 
-                fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.96,hspace=0.01,wspace=0.0)
+                fig.subplots_adjust(left=0.06,right=0.99,bottom=0.04,top=0.96,hspace=0.01,wspace=0.0)
                 plt.savefig(starPlotFilePath)
                 plt.close('all')
 
