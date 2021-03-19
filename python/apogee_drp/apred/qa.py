@@ -2304,17 +2304,22 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
 
                 fig=plt.figure(figsize=(28,25))
-                ax1 = plt.subplot2grid((3,1), (0,0))
-                ax2 = plt.subplot2grid((3,1), (1,0))
-                ax3 = plt.subplot2grid((3,1), (2,0))
-                axes = [ax1,ax2,ax3]
+                ax1 = plt.subplot2grid((12,1), (0,0), rowspan=3)
+                ax11 = plt.subplot2grid((12,1), (3,0))
+                ax2 = plt.subplot2grid((12,1), (4,0), rowspan=3)
+                ax22 = plt.subplot2grid((12,1), (7,0))
+                ax3 = plt.subplot2grid((12,1), (8,0), rowspan=3)
+                ax33 = plt.subplot2grid((12,1), (11,0))
+                axes = [ax1, ax11, ax2, ax22, ax3, ax33]
 
-                ax3.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+                ax33.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
 
+                ii = 0
                 ichip = 0
                 for ax in axes:
                     ax.set_xlim(xmin[ichip], xmax[ichip])
-                    ax.set_ylim(-0.1, 1.3)
+                    if ii % 2 == 0: ax.set_ylim(0.2, 1.3)
+                    if ii % 2 == 1: ax.set_ylim(-0.2, 0.2)
                     ax.tick_params(reset=True)
                     ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
                     ax.minorticks_on()
@@ -2322,21 +2327,25 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axwidth)
-                    ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
-                    ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
+                    if ii % 2 == 0: ax.set_ylabel(r'$F_{\lambda}$ / $F_{\rm cont.}$')
+                    if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
+                    if ii % 2 == 0: ax.axes.xaxis.set_ticklabels([])
 
                     g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
                     wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
                     f = interpolate.interp1d(swave, sflux)
                     swaveg = np.linspace(wmin, wmax, nwave)
                     sfluxg = f(swaveg)
-                    resid = sfluxg - flux[g]
 
-                    ax.plot(wave[g], flux[g], color='k', label='apStar')
-                    ax.plot(swaveg, sfluxg, color='r', label='Cannon model', alpha=0.75)
-                    ax.plot(swaveg, resid, color='r', alpha=0.75)
+                    if ii % 2 == 0: 
+                        ax.plot(wave[g], flux[g], color='k', label='apStar')
+                        ax.plot(swaveg, sfluxg, color='r', label='Cannon model', alpha=0.75)
+                    else:
+                        resid = sfluxg - flux[g]
+                        ax.plot(swaveg, resid, color='r', alpha=0.75)
 
-                    ichip += 1
+                    if ii % 2 == 1: ichip += 1
+                    ii += 1
 
                 txt1 = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits          '
                 txt2 = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
