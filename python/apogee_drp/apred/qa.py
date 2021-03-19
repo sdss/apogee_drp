@@ -2320,6 +2320,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     ax.set_xlim(xmin[ichip], xmax[ichip])
                     if ii % 2 == 0: ax.set_ylim(0.1, 1.3)
                     if ii % 2 == 1: ax.set_ylim(-0.3, 0.3)
+                    if ii % 2 == 1: ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
                     ax.tick_params(reset=True)
                     ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
                     ax.minorticks_on()
