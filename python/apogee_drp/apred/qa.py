@@ -2338,9 +2338,9 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
                     f = interpolate.interp1d(swave, sflux)
                     swaveg = np.linspace(wmin, wmax, nwave)
-                    sfluxg = f(swaveg)
+                    sfluxg = f(wave[g])
                     
-                    import pdb; pdb.set_trace()
+                    #import pdb; pdb.set_trace()
 
                     if ii % 2 == 0: 
                         ax.plot(wave[g], flux[g], color='k', label='apStar')
