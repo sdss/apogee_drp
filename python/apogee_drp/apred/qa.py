@@ -2330,7 +2330,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
 
                     ax.plot(wave, flux, color='k', label='apStar')
-                    ax.plot(swaveg, sfluxg, color='r', label='Cannon model', alpha=0.75)
+                    ax.plot(swave, sflux, color='r', label='Cannon model', alpha=0.75)
                     ax.plot(swaveg, resid, color='r', alpha=0.75)
 
                     ichip += 1
