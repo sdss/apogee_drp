@@ -2302,10 +2302,10 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 Worder = np.argsort(swave)
                 swave = swave[Worder]
                 sflux = sflux[Worder]
-                f = interpolate.interp1d(swave, sflux, fill_value="extrapolate")
-                swaveg = np.linspace(wmin, wmax, nwave)
-                sfluxg = f(swaveg)
-                resid = sfluxg - flux
+                #f = interpolate.interp1d(swave, sflux, fill_value="extrapolate")
+                #swaveg = np.linspace(wmin, wmax, nwave)
+                #sfluxg = f(swaveg)
+                #resid = sfluxg - flux
 
                 rvteff = str(int(round(sumstr['teff'][0])))
                 rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
@@ -2341,19 +2341,17 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
                     if ii % 2 == 0: ax.axes.xaxis.set_ticklabels([])
 
-                    #g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
-                    #wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
-                    #f = interpolate.interp1d(swave, sflux)
-                    #swaveg = np.linspace(wmin, wmax, nwave)
-                    #if j+1 == 5:
-                    #    import pdb; pdb.set_trace()
-                    #sfluxg = f(wave[g])
+                    g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
+                    wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
+                    f = interpolate.interp1d(swave, sflux, fill_value="extrapolate")
+                    swaveg = np.linspace(wmin, wmax, nwave)
+                    sfluxg = f(wave[g])
                     
                     if ii % 2 == 0: 
                         ax.plot(wave, flux, color='k', label='apStar')
                         ax.plot(wave, sfluxg, color='r', label='Cannon model', alpha=0.75)
                     else:
-                        #resid = sfluxg - flux[g]
+                        resid = sfluxg - flux[g]
                         ax.plot(swaveg, resid, color='b', alpha=0.75)
 
                     if ii % 2 == 1: ichip += 1
