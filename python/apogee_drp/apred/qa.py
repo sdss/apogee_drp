@@ -2304,12 +2304,12 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
 
                 fig=plt.figure(figsize=(28,25))
-                ax1 = plt.subplot2grid((14,1), (0,0), rowspan=3)
-                ax11 = plt.subplot2grid((14,1), (3,0))
-                ax2 = plt.subplot2grid((14,1), (5,0), rowspan=3)
-                ax22 = plt.subplot2grid((14,1), (8,0))
-                ax3 = plt.subplot2grid((14,1), (10,0), rowspan=3)
-                ax33 = plt.subplot2grid((14,1), (13,0))
+                ax1 = plt.subplot2grid((23,1), (0,0), rowspan=5)
+                ax11 = plt.subplot2grid((23,1), (5,0), rowspan=2)
+                ax2 = plt.subplot2grid((23,1), (8,0), rowspan=5)
+                ax22 = plt.subplot2grid((23,1), (13,0), rowspan=2)
+                ax3 = plt.subplot2grid((23,1), (16,0), rowspan=5)
+                ax33 = plt.subplot2grid((23,1), (21,0), rowspan=2)
                 axes = [ax1, ax11, ax2, ax22, ax3, ax33]
 
                 ax33.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
