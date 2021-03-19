@@ -2281,8 +2281,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 gd, = np.where((np.isnan(flux) == False) & (flux > 0))
                 wave = wave[gd]
                 flux = flux[gd]
-                wmin = np.min(wave); wmax = np.max(wave)
-                nwave = len(wave)
+                wmin = np.min(wave)+1; wmax = np.max(wave)-1
+                nwave = len(wave)-2
 
                 # Get model spectrum
                 openModel = open(apStarModelPath, 'rb')
