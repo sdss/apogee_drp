@@ -2343,8 +2343,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
 
                     if nvis == 1:
                         if wave.shape[1] == 1:
-                            wave = wave[:,0].shape
-                            flux = flux[:,0].shape
+                            wave = wave[:,0]
+                            flux = flux[:,0]
                     g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
                     wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
                     gg, = np.where((swave >= wmin) & (swave <= wmax))
