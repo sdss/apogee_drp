@@ -2272,12 +2272,14 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 apstar.normalize()
                 nvis = apstar.wave.shape[1] - 2
                 if nvis < 1: nvis = 1
-                if nvis == 1: 
-                    wave = apstar.wave
-                    flux = apstar.flux
-                else: 
-                    wave = apstar.wave[:, 0]
-                    flux = apstar.flux[:, 0]
+                wave = apstar.wave[:, 0]
+                flux = apstar.flux[:, 0]
+                #if nvis == 1: 
+                #    wave = apstar.wave
+                #    flux = apstar.flux
+                #else: 
+                #    wave = apstar.wave[:, 0]
+                #    flux = apstar.flux[:, 0]
                 gd, = np.where((np.isnan(flux) == False) & (flux > 0))
                 wave = wave[gd]
                 flux = flux[gd]
