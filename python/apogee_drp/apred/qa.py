@@ -2349,7 +2349,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
 
                 txt1 = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits          '
                 txt2 = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
-                ax1.text(0.5, 1.03, txt1 + txt2, transform=ax1.transAxes, ha='center', fontsize=fontsize*1.25, color='k')#, bbox=bboxpar)
+                ax1.text(0.5, 1.05, txt1 + txt2, transform=ax1.transAxes, ha='center', fontsize=fontsize*1.25, color='k')#, bbox=bboxpar)
                 #ax2.legend(loc='upper left', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
 
                 fig.subplots_adjust(left=0.043,right=0.99,bottom=0.05,top=0.96,hspace=0.01,wspace=0.0)
