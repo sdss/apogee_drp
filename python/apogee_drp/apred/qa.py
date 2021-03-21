@@ -2273,7 +2273,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 nvis = apstar.wave.shape[1] - 2
                 if nvis < 1: nvis = 1
                 if nvis == 1: 
-                    wave = apstar.wave
+                    wave = apstar.wave[:,0]
                     flux = apstar.flux
                 else: 
                     wave = apstar.wave[:, 0]
@@ -2283,8 +2283,6 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 flux = flux[gd]
                 wmin = np.min(wave); wmax = np.max(wave)
                 nwave = len(wave)
-                if j+1 == 30:
-                    import pdb; pdb.set_trace()
 
                 # Get model spectrum
                 openModel = open(apStarModelPath, 'rb')
