@@ -2215,7 +2215,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
     axminlen=3.5
     lwidth = 1.5
     xmin = np.array([15130, 15845, 16460])
-    xmax = np.array([15817, 16440, 16960])
+    xmax = np.array([15825, 16448, 16968])
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
@@ -2353,7 +2353,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                         ax.plot(wave[g], sfluxg, color='r', label='Cannon model', alpha=0.75)
                     else:
                         resid = sfluxg - flux[g]
-                        ax.plot(swaveg, resid, color='b', alpha=0.75)
+                        ax.plot(wave[g], resid, color='b', alpha=0.75)
 
                     if ii % 2 == 1: ichip += 1
                     ii += 1
