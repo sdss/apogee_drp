@@ -28,18 +28,19 @@ nframes = n_elements(ims)
 dirs = getdir()
 caldir = dirs.caldir
 
-;; Is another process already creating file
 adarkfile = apogee_filename('Dark',num=i1,chip='a')
 darkdir = file_dirname(adarkfile)
 prefix = strmid(file_basename(adarkfile),0,2)
 darkfile = darkdir+'/'+prefix+string(format='("Dark-",i8.8)',i1) +'.tab'
-while file_test(darkfile+'.lock') do apwait,darkfile,10
 
 ;; Does file already exist?
 if file_test(darkfile) and ~keyword_set(clobber) then begin
   print,' Dark file: ', darkfile, ' already made'
   return
 endif
+
+;; Is another process already creating file
+while file_test(darkfile+'.lock') do apwait,darkfile,10
 
 ;; Open lock file
 openw,lock,/get_lun,darkfile+'.lock'
