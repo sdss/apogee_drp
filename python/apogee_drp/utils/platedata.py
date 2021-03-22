@@ -433,6 +433,16 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 else:
                     cat = db.query(sql="select catalogid,ra,dec,version_id from catalogdb.catalog where q3c_radial_query(ra,dec,%f,%f,0.0001)" % 
                                    (fiber['ra'][istar],fiber['dec'][istar]))
+                # Still no match, try using 2MASS ID in TIC
+                if len(cat)==0:
+                    tmass = fiber['tmass_style'][istar][2:]
+                    sql =  "select c2t.* from catalog_to_tic_v8 c2t join tic_v8 t on t.id=c2t.target_id join twomass_psc tm on "
+                    sql += "tm.designation = t.twomass_psc join catalogdb.version v on v.id = c2t.version_id where tm.designation = '"+tmass+"'"
+                    sql += " and v.plan = '0.1.0' and c2t.best is true"
+                    cat = db.query(sql=sql)
+                    if len(cat)>0:
+                        catalogid = cat['catalogid'][0]
+                        cat = db.query(sql="select catalogid,ra,dec,version_id from catalogdb.catalog where catalogid="+str(catalogid))
                 db.close()
                 # If there are multiple results, pick the closest
                 if len(cat)>1:
