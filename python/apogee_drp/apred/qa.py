@@ -1780,8 +1780,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
 
             if objtype != 'SKY':
-                vishtml.write('<TD align ="right">H mag.<BR>' + chmag)
-                vishtml.write('<TD align ="right">J - K <BR>' + cjkcolor)
+                vishtml.write('<TD align ="center">H mag.<BR><BR>' + chmag)
+                vishtml.write('<TD align ="center">J - K <BR><BR>' + cjkcolor)
                 #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
             else:
                 vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
@@ -1815,12 +1815,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     vcol = 'black'
                     if np.absolute(float(vhelio)) > 400: vcol = 'red'
                     pcol = 'blue'
-                    vishtml.write('<TD align ="right">S/N<BR>' + snratio)
-                    vishtml.write('<TD align ="right"><FONT COLOR="' + vcol + '">Vhelio<BR>' + vhelio + '</FONT>')
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">Ncomp<BR>' + ncomp + '</FONT>')
-                    vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">Teff<BR>' + rvteff + '</FONT>')
-                    vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">log(g)<BR>' + rvlogg + '</FONT>')
-                    vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">[Fe/H]<BR>' + rvfeh + '</FONT>')
+                    vishtml.write('<TD align ="right">S/N<BR><BR>' + snratio)
+                    vishtml.write('<TD align ="right">Vhelio<BR><BR><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
+                    vishtml.write('<TD align ="center">Ncomp<BR><BR><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
+                    vishtml.write('<TD align ="right">Teff<BR><BR><FONT COLOR="' + pcol + '">' + rvteff + '</FONT>')
+                    vishtml.write('<TD align ="right">log(g)<BR><BR><FONT COLOR="' + pcol + '">' + rvlogg + '</FONT>')
+                    vishtml.write('<TD align ="right">[Fe/H]<BR><BR><FONT COLOR="' + pcol + '">' + rvfeh + '</FONT>')
                 else:
                     vishtml.write('<TD align="center"><FONT COLOR="red">-99.9<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-1')
                     vishtml.write('<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-9.999<TD align="center"><FONT COLOR="red">-9.999')
