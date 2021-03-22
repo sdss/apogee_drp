@@ -1988,7 +1988,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 starHTML.write('<HR>\n')
 
                 # Star + best fitting model plot
-                starHTML.write('<H3>apStar versus best fit Cannon model:</H3>')
+                starHTML.write('<H3>apStar (black), best Doppler Cannon model fit (red), and model-apStar residuals (blue):</H3>')
                 if apStarRelPath is not None:
                     starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
                 else:
