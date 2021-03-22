@@ -230,6 +230,18 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         loc = pdata['locationId']
         platedata['locationid'] = loc
 
+        # Fix telluric catalogIDs
+        # There is a problem with some of the telluric catalogIDs due to
+        # overflow.  We need to add 2**32 to them.
+        # Use the minimum catalogid in the v0 cross-match
+        # (version_id=21). That number is 4204681993.
+        bdcatid, = np.where((np.char.array(ph['holetype']).astype(str).find('APOGEE') > -1) & 
+                            (ph['catalogid']>0) & (ph['catalogid']<4204681993))
+        if len(bdcatid)>0:
+            print('KLUDGE!!!  Fixing overflow catalogIDs for '+str(len(bdcatid))+' telluric stars')
+            print(ph['catalogid'][bdcatid])
+            ph['catalogid'][bdcatid] += 2**32
+
         # Read flag correction data
         have_flag_changes = 0
         print(platedir+'/flagModifications-'+platestr+'.txt')
