@@ -890,7 +890,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
     html = open(qafile, 'w')
     tmp = os.path.basename(qafile).replace('.html','')
-    html.write('<HTML><HEAD><script src="../../../../../../sorttable.js"></script><title>'+tmp+'</title></head><BODY>\n')
+    html.write('<HTML><HEAD><script src="../../../../../../../sorttable.js"></script><title>'+tmp+'</title></head><BODY>\n')
     html.write('<H1>Field: <FONT COLOR="green">' + field + '</FONT><BR>Plate: <FONT COLOR="green">' + plate)
     html.write('</FONT><BR>MJD: <FONT COLOR="green">' + mjd + '</FONT></H1>\n')
     html.write('<p><a href="../../../../../../qa/mjd.html">back to MJD page</a><BR>\n')
@@ -1669,7 +1669,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
     vishtml.write('<HTML>\n')
-    vishtml.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
+    vishtml.write('<HEAD><script src="../../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
     vishtml.write('<BODY>\n')
 
     vishtml.write('<H1>' + htmlfile + '</H1><HR>\n')
