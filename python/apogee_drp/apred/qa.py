@@ -890,7 +890,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
     html = open(qafile, 'w')
     tmp = os.path.basename(qafile).replace('.html','')
-    html.write('<HTML><HEAD><script src="sorttable.js"></script><title>'+tmp+'</title></head><BODY>\n')
+    html.write('<HTML><HEAD><script src="../../../../../../../sorttable.js"></script><title>'+tmp+'</title></head><BODY>\n')
     html.write('<H1>Field: <FONT COLOR="green">' + field + '</FONT><BR>Plate: <FONT COLOR="green">' + plate)
     html.write('</FONT><BR>MJD: <FONT COLOR="green">' + mjd + '</FONT></H1>\n')
     html.write('<p><a href="../../../../../../qa/mjd.html">back to MJD page</a><BR>\n')
@@ -1669,7 +1669,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
     vishtml.write('<HTML>\n')
-    vishtml.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
+    vishtml.write('<HEAD><script src="../../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
     vishtml.write('<BODY>\n')
 
     vishtml.write('<H1>' + htmlfile + '</H1><HR>\n')
@@ -1780,8 +1780,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
 
             if objtype != 'SKY':
-                vishtml.write('<TD align ="right">' + chmag)
-                vishtml.write('<TD align ="right">' + cjkcolor)
+                vishtml.write('<TD align ="center"><B>H</B><BR><BR>' + chmag)
+                vishtml.write('<TD align ="center"><B>J - K</B><BR><BR>' + cjkcolor)
                 #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
             else:
                 vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
@@ -1789,12 +1789,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 #vishtml.write('<TD BGCOLOR='+color+'>---\n')
 
             if objtype == 'SKY': 
-                vishtml.write('<TD align="center">SKY')
+                vishtml.write('<TD align="center"><B>Type</B><BR><BR>SKY')
             else:
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
-                    vishtml.write('<TD align="center">TEL')
+                    vishtml.write('<TD align="center"><B>Type</B><BR><BR>TEL')
                 else:
-                    vishtml.write('<TD align="center">SCI')
+                    vishtml.write('<TD align="center"><B>Type</B><BR><BR>SCI')
 
             vishtml.write('<TD align="left">' + targflagtxt)
             vishtml.write('<BR><BR>' + starflagtxt)
@@ -1814,13 +1814,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
                     vcol = 'black'
                     if np.absolute(float(vhelio)) > 400: vcol = 'red'
-                    pcol = 'blue'
-                    vishtml.write('<TD align ="right">' + snratio)
-                    vishtml.write('<TD align ="right"><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
-                    vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">' + rvteff + '</FONT>')
-                    vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">' + rvlogg + '</FONT>')
-                    vishtml.write('<TD align ="right"><FONT COLOR="' + pcol + '">' + rvfeh + '</FONT>')
+                    vishtml.write('<TD align ="center"><B>S/N</B><BR><BR>' + snratio)
+                    vishtml.write('<TD align ="center"><B>Vhelio</B><BR><BR><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
+                    vishtml.write('<TD align ="center"><B>Ncomp</B><BR><BR><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
+                    vishtml.write('<TD align ="center"><B>Teff</B><BR><BR><FONT COLOR="' + vcol + '">' + rvteff + '</FONT>')
+                    vishtml.write('<TD align ="center"><B>log(g)</B><BR><BR><FONT COLOR="' + vcol + '">' + rvlogg + '</FONT>')
+                    vishtml.write('<TD align ="center"><B>[Fe/H]</B><BR><BR><FONT COLOR="' + vcol + '">' + rvfeh + '</FONT>')
                 else:
                     vishtml.write('<TD align="center"><FONT COLOR="red">-99.9<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-1')
                     vishtml.write('<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-9.999<TD align="center"><FONT COLOR="red">-9.999')
@@ -1988,7 +1987,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 starHTML.write('<HR>\n')
 
                 # Star + best fitting model plot
-                starHTML.write('<H3>apStar versus best fit Cannon model:</H3>')
+                starHTML.write('<H3>apStar (black), best Doppler Cannon model fit (red), and model-apStar residuals (blue):</H3>')
                 if apStarRelPath is not None:
                     starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
                 else:
