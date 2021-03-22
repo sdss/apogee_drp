@@ -2215,7 +2215,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
     axminlen=3.5
     lwidth = 1.5
     xmin = np.array([15130, 15845, 16460])
-    xmax = np.array([15817, 16440, 16960])
+    xmax = np.array([15825, 16448, 16968])
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
@@ -2272,14 +2272,12 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 apstar.normalize()
                 nvis = apstar.wave.shape[1] - 2
                 if nvis < 1: nvis = 1
-                wave = apstar.wave[:, 0]
-                flux = apstar.flux[:, 0]
-                #if nvis == 1: 
-                #    wave = apstar.wave
-                #    flux = apstar.flux
-                #else: 
-                #    wave = apstar.wave[:, 0]
-                #    flux = apstar.flux[:, 0]
+                if nvis == 1: 
+                    wave = apstar.wave[:,0]
+                    flux = apstar.flux
+                else: 
+                    wave = apstar.wave[:, 0]
+                    flux = apstar.flux[:, 0]
                 gd, = np.where((np.isnan(flux) == False) & (flux > 0))
                 wave = wave[gd]
                 flux = flux[gd]
@@ -2343,10 +2341,6 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                     if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
                     if ii % 2 == 0: ax.axes.xaxis.set_ticklabels([])
 
-                    if nvis == 1:
-                        if wave.shape[1] == 1:
-                            wave = wave[:,0]
-                            flux = flux[:,0]
                     g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
                     wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
                     gg, = np.where((swave >= wmin) & (swave <= wmax))
@@ -2359,7 +2353,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                         ax.plot(wave[g], sfluxg, color='r', label='Cannon model', alpha=0.75)
                     else:
                         resid = sfluxg - flux[g]
-                        ax.plot(swaveg, resid, color='b', alpha=0.75)
+                        ax.plot(wave[g], resid, color='b', alpha=0.75)
 
                     if ii % 2 == 1: ichip += 1
                     ii += 1
