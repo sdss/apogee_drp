@@ -1789,7 +1789,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 #vishtml.write('<TD BGCOLOR='+color+'>---\n')
 
             if objtype == 'SKY': 
-                vishtml.write('<TD align="center"><B>Type</B><BR><BR>SKY')
+                vishtml.write('<TD align="center">SKY')
             else:
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
                     vishtml.write('<TD align="center">TEL')
