@@ -1780,21 +1780,21 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
 
             if objtype != 'SKY':
-                vishtml.write('<TD align ="center"><B>H</B><BR><BR>' + chmag)
-                vishtml.write('<TD align ="center"><B>J - K</B><BR><BR>' + cjkcolor)
+                vishtml.write('<TD align ="center">' + chmag)
+                vishtml.write('<TD align ="center">' + cjkcolor)
                 #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
             else:
-                vishtml.write('<TD align="right"><B>H</B><BR><BR><FONT COLOR="red">-99.9</FONT>')
-                vishtml.write('<TD align="right"><B>J - K</B><BR><BR><FONT COLOR="red">-99.9</FONT>')
+                vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
+                vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
                 #vishtml.write('<TD BGCOLOR='+color+'>---\n')
 
             if objtype == 'SKY': 
                 vishtml.write('<TD align="center"><B>Type</B><BR><BR>SKY')
             else:
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
-                    vishtml.write('<TD align="center"><B>Type</B><BR><BR>TEL')
+                    vishtml.write('<TD align="center">TEL')
                 else:
-                    vishtml.write('<TD align="center"><B>Type</B><BR><BR>SCI')
+                    vishtml.write('<TD align="center">SCI')
 
             vishtml.write('<TD align="left">' + targflagtxt)
             vishtml.write('<BR><BR>' + starflagtxt)
