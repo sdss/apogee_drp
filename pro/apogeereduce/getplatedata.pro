@@ -239,6 +239,19 @@ if not keyword_set(mapa) then begin
   reads,tmp[1],loc
   platedata.locationid = loc
 
+  ;; Fix telluric catalogIDs
+  ;; There is a problem with some of the telluric catalogIDs due to
+  ;; overflow.  We need to add 2^32 to them.
+  ;; Use the minimum catalogid in the v0 cross-match
+  ;; (version_id=21). That number is 4204681993.
+  bdcatid = where(stregex(p.holetype,'APOGEE',/boolean,/fold_case) eq 1 and $
+                  p.catalogid gt 0 and p.catalogid lt 4204681993LL,nbdcatid)
+  if nbdcatid gt 0 then begin
+    print,'KLUDGE!!!  Fixing overflow catalogIDs for ',strtrim(nbdcatid,2),' telluric stars'
+    print,p[bdcatid].catalogid
+    p[bdcatid].catalogid += 2LL^32
+  endif
+
   ;; Read flag correction data
   have_flag_changes = 0
   print,platedir+'/flagModifications-'+platestr+'.txt'
@@ -400,13 +413,13 @@ for i=0,299 do begin
   endelse
 endfor
 
-
 ;; SDSS-V, get catalogdb information
 ;;----------------------------------
 if platenum ge 15000 then begin
   print,'Getting catalogdb information'
   objind = where(fiber.objtype eq 'OBJECT' or fiber.objtype eq 'HOT_STD',nobjind)
   objdata = fiber[objind]
+  add_tag,objdata,'dbresults',0,objdata
   gdid = where(objdata.catalogid gt 0,ngdid,comp=bdid,ncomp=nbdid)
   ;; Get catalogdb information using catalogID
   undefine,catalogdb
@@ -417,10 +430,13 @@ if platenum ge 15000 then begin
     if size(catalogdb1,/type) eq 8 then begin
       print,'Got results for ',strtrim(n_elements(catalogdb1),2),' stars'
       push,catalogdb,catalogdb1
+      match,catalogdb1.catalogid,objdata.catalogid,ind1,ind2,/sort,count=nmatch
+      if nmatch gt 0 then objdata[ind2].dbresults=1
     endif else begin
       print,'No results'
     endelse
   endif
+
   ;; Get catalogdb information using coordinates (tellurics don't have IDs)    
   if nbdid gt 0 then begin
     print,'Querying catalogdb using coordinates for ',strtrim(nbdid,2),' stars'
@@ -434,6 +450,7 @@ if platenum ge 15000 then begin
       print,'No results'
     endelse
   endif
+
   ;; Add catalogdb information
   for i=0,nobjind-1 do begin
     istar = objind[i]
@@ -446,6 +463,7 @@ if platenum ge 15000 then begin
     endif
     ;; Still no match, just get catalogdb.catalog information 
     if nmatch eq 0 then begin
+      print,'no match for ',fiber[istar].catalogid
       ;; We have catalogid 
       if fiber[istar].catalogid gt 0 then begin
          cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where catalogid="+strtrim(fiber[istar].catalogid,2),count=ncat)
