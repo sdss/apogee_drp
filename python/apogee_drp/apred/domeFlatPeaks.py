@@ -127,6 +127,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         psfid = planstr['psfid']
         twod = load.ap2D(int(psfid))
         header = twod['a'][0].header
+        import pdb; pdb.set_trace()
         t = Time(header['DATE-OBS'], format='fits')
         outstr['PSFID'][i] = psfid
         outstr['MJD'][i] = t.mjd
