@@ -116,7 +116,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
                    ('CENT',    np.float64, (nchips, nfiber)),
                    ('HEIGHT',  np.float64, (nchips, nfiber)),
                    ('FLUX',    np.float64, (nchips, nfiber)),
-                   ('SUCCESS', np.int,     (nchips, nfiber))])
+                   ('SUCCESS', np.int16,   (nchips, nfiber))])
 
     outstr = np.zeros(nplans,dtype=dt)
 
