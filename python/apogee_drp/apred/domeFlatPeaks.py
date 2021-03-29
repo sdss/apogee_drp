@@ -84,39 +84,54 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
 
 ###################################################################################################
 def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
-    load = apload.ApLoad(apred=apred, telescope=telescope)
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
     nfiber = 300
     npix = 2048
 
+    instrument = 'apogee-n'
     refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixN.dat')
-    if telescope == 'lco25m': refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
+    
+    if telescope == 'lco25m':
+        instrument = 'apogee-s'
+        refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
 
-    visitDir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/visit/'+telescope+'/'
-    planfiles = glob.glob(visitDir+'*/*/*/apPlan*yaml')
+    apodir = os.environ.get('APOGEE_REDUX')
+
+    outfile = apodir + apred + '/monitor/' + instrument + 'DomeFlatTrace.fits'
+
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+
+    visitDir = apodir + '/' + apred + '/visit/' + telescope + '/'
+    planfiles = glob.glob(visitDir + '*/*/*/apPlan*yaml')
     planfiles.sort()
     planfiles = np.array(planfiles)
     nplans = len(planfiles)
     print(str(nplans) + ' planfiles found')
 
-    # FITS table structure.
-    dt = np.dtype([('PSFID',  np.str, 9),
-                   ('MJD',    np.float64),
-                   ('CENT',   np.float64, (nchips, nfiber)),
-                   ('HEIGHT', np.float64, (nchips, nfiber))])
-    peakstruct = np.zeros(nplans,dtype=dt)
+    # Lookup table structure.
+    dt = np.dtype([('PSFID',   np.str, 9),
+                   ('MJD',     np.float64),
+                   ('CENT',    np.float64, (nchips, nfiber)),
+                   ('HEIGHT',  np.float64, (nchips, nfiber)),
+                   ('FLUX',    np.float64, (nchips, nfiber)),
+                   ('SUCCESS', np.bool,    (nchips, nfiber))])
 
-    for i in range(nplans):
+    outstr = np.zeros(nplans,dtype=dt)
+
+    # Loop over the plan files
+    #for i in range(nplans):
+    for i in range(5):
         planstr = plan.load(planfiles[i], np=True)
         psfid = planstr['psfid']
         twod = load.ap2D(int(psfid))
         header = twod['a'][0].header
         t = Time(header['DATE-OBS'], format='fits')
-        peakstruct['PSFID'][i] = psfid
-        peakstruct['MJD'][i] = t.mjd
+        outstr['PSFID'][i] = psfid
+        outstr['MJD'][i] = t.mjd
 
+        # Loop over the chips
         for ichip in range(nchips):
             flux = twod[chips[ichip]][1].data
             error = twod[chips[ichip]][2].data
@@ -126,9 +141,12 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             pix0 = np.array(refpix[chips[ichip]])
             gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
-            import pdb; pdb.set_trace()
+            outstr['CENT'][ichip, :] =    gpeaks['pars'][:, 1]
+            outstr['HEIGHT'][ichip, :] =  gpeaks['pars'][:, 0]
+            outstr['FLUX'][ichip, :] =    gpeaks['sumflux']
+            outstr['SUCCESS'][ichip, :] = gpeaks['success']
 
-
+    Table(outstr).write(outfile, overwrite=True)
 
             #plt.plot(totflux)
             #plt.xlim(20,70)
