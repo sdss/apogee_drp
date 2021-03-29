@@ -144,6 +144,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             outstr['SUCCESS'][ichip, :] = 1
             failed, = np.where(gpeaks['success'] == False)
             nfailed = len(failed)
+            import pdb; pdb.set_trace()
             if nfailed > 0: outstr['SUCCESS'][ichip, failed] = 0
 
             print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(300 - nfailed) + ' successful Gaussian fits')
@@ -158,7 +159,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             #plt.xlim(20,70)
             
 
-            #import pdb; pdb.set_trace()
+            #
 
         #for j in range(nfiber):
         #    if j == 0: 
