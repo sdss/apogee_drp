@@ -141,7 +141,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             pix0 = np.array(refpix[chips[ichip]])
             gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
-            outstr['SUCESS'][ichip, :] = 1
+            outstr['SUCCESS'][ichip, :] = 1
             failed, = np.where(gpeaks['success'] == False)
             nfailed = len(failed)
             if nfailed > 0: outstr['SUCCESS'][ichip, failed] = 0
