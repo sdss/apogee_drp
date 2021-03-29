@@ -122,8 +122,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             flux = twod[chips[ichip]][1].data
             error = twod[chips[ichip]][2].data
 
-            totflux = np.nanmedian(flux[:, (npix//2)-100:(npix//2)+100], axis=1)
-            toterror = np.sqrt(np.nanmedian(error[:, (npix//2)-100:(npix//2)+100]**2, axis=1))
+            totflux = np.nanmedian(flux[:, (npix//2) - 200:(npix//2) + 200], axis=1)
+            toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - 200:(npix//2) + 200]**2, axis=1))
             
             peaks,_ = find_peaks(totflux, height=50, distance=5)
 
@@ -142,7 +142,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             #plt.xlim(20,70)
             
 
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
 
         peaks,_ = find_peaks(tot, height=80)
         outfile = '/uufs/chpc.utah.edu/common/home/u0955897/dflat/'+str(psfid)+'_'+str("%.3f" % round(t.mjd,3))+'.dat'
