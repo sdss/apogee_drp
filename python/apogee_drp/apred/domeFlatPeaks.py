@@ -67,12 +67,11 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
                    ('CENT',     np.float64, (nchips, nfiber)),
                    ('HEIGHT',   np.float64, (nchips, nfiber)),
                    ('FLUX',     np.float64, (nchips, nfiber)),
-                   ('SUCCESS',  np.int16,   (nchips, nfiber))])
 
     outstr = np.zeros(nplans,dtype=dt)
 
     # Loop over the plan files
-    #for i in range(nplans):
+    # for i in range(nplans):
     for i in range(5):
         planstr = plan.load(planfiles[i], np=True)
         psfid = planstr['psfid']
@@ -97,16 +96,13 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             pix0 = np.array(refpix[chips[ichip]])
             gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
-            outstr['SUCCESS'][ichip, :] = 1
             failed, = np.where(gpeaks['success'] == False)
-            nfailed = len(failed)
-            if nfailed > 0: outstr['SUCCESS'][i, ichip, failed] = 0
-
-            print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(300 - nfailed) + ' successful Gaussian fits')
 
             outstr['CENT'][i, ichip, :] =    gpeaks['pars'][:, 1]
             outstr['HEIGHT'][i, ichip, :] =  gpeaks['pars'][:, 0]
             outstr['FLUX'][i, ichip, :] =    gpeaks['sumflux']
+
+            print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(300 - len(failed)) + ' successful Gaussian fits')
 
     Table(outstr).write(outfile, overwrite=True)
 
