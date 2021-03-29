@@ -107,9 +107,9 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         planstr = plan.load(planfiles[i], np=True)
         psfid = planstr['psfid']
         twod = load.ap2D(int(psfid))
-        flux = twod['b'][1].data
-        error = twod['b'][2].data
-        header = twod['b'][0].header
+        flux = twod['a'][1].data
+        error = twod['a'][2].data
+        header = twod['a'][0].header
         t = Time(header['DATE-OBS'], format='fits')
         peakstruct['PSFID'][i] = psfid
         peakstruct['MJD'][i] = t.mjd
