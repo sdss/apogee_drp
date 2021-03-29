@@ -90,10 +90,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
     nfiber = 300
     npix = 2048
 
-    refPixN = np.array([[22, 1032, 2030], [29, 1031, 2024], [29, 1030, 2022]])
-    #refPixS = np.array([22, 1032, 2030], [29, 1031, 2024], [29, 1030, 2022])
-    refFib = np.array([ 1,  150, 300])
-
+    refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixN.dat')
+    if telescope == 'lco25m': refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
 
     visitDir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/visit/'+telescope+'/'
     planfiles = glob.glob(visitDir+'*/*/*/apPlan*yaml')
@@ -125,7 +123,9 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             totflux = np.nanmedian(flux[:, (npix//2) - 200:(npix//2) + 200], axis=1)
             toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - 200:(npix//2) + 200]**2, axis=1))
             
-            peaks,_ = find_peaks(totflux, height=50, distance=5)
+            peaks,_ = find_peaks(totflux, height=100, distance=5)
+            gd, = np.where((peaks >= min(refpix[chips[ichip]]) - 2) & (peaks <= max(refpix[chips[ichip]]) + 2))
+            peaks = peaks[gd]
 
             import pdb; pdb.set_trace()
 
