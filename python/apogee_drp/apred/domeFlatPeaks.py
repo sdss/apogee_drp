@@ -97,7 +97,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         instrument = 'apogee-s'
         refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
 
-    apodir = os.environ.get('APOGEE_REDUX')
+    apodir = os.environ.get('APOGEE_REDUX') + '/'
 
     outfile = apodir + apred + '/monitor/' + instrument + 'DomeFlatTrace.fits'
 
