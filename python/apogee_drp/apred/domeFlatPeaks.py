@@ -125,7 +125,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             totflux = np.nanmedian(flux[:, (npix//2)-100:(npix//2)+100], axis=1)
             toterror = np.sqrt(np.nanmedian(error[:, (npix//2)-100:(npix//2)+100]**2, axis=1))
             
-            peaks,_ = find_peaks(totflux, height=80, distance=4)
+            peaks,_ = find_peaks(totflux, height=50, distance=5)
 
             import pdb; pdb.set_trace()
 
