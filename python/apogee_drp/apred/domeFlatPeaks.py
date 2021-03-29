@@ -70,7 +70,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m'):
                    ('CENT',     np.float64, (nchips, nfiber)),
                    ('HEIGHT',   np.float64, (nchips, nfiber)),
                    ('FLUX',     np.float64, (nchips, nfiber))])
-    outstr = np.zeros(nplans,dtype=dt)
+    outstr = np.zeros(nplans, dtype=dt)
 
     # Loop over the plan files
     for i in range(5):
