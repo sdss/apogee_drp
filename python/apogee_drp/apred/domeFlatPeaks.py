@@ -80,11 +80,12 @@ def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
         twod = load.ap2D(int(psfid))
         header = twod['a'][0].header
 
-        outstr['PSFID'][i] = psfid
+        outstr['PSFID'][i] =   psfid
         outstr['PLATEID'][i] = header['PLATEID']
-        outstr['CARTID'][i] = header['CARTID']
-        outstr['NAME'][i] = header['NAME']
-        outstr['DATE-OBS'][i] = header['DATE-OBS']
+        outstr['CARTID'][i] =  header['CARTID']
+        outstr['NAME'][i] =    header['NAME']
+        outstr['DATEOBS'][i] = header['DATE-OBS']
+
         t = Time(header['DATE-OBS'], format='fits')
         outstr['MJD'][i] = t.mjd
 
