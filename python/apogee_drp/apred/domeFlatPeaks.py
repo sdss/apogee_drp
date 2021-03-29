@@ -85,9 +85,15 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
 def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
+    chips = np.array(['a','b','c'])
+    nchips = len(chips)
     nfiber = 300
-    mediansep = 6.65
-    pixstart = 28
+    npix = 2048
+
+    refPixN = np.array([22, 1032, 2030], [29, 1031, 2024], [29, 1030 2022])
+    #refPixS = np.array([22, 1032, 2030], [29, 1031, 2024], [29, 1030 2022])
+    refFib = np.array([ 1,  150, 300])
+
 
     visitDir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/visit/'+telescope+'/'
     planfiles = glob.glob(visitDir+'*/*/*/apPlan*yaml')
@@ -99,23 +105,29 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
     # FITS table structure.
     dt = np.dtype([('PSFID',  np.str, 9),
                    ('MJD',    np.float64),
-                   ('XPEAK',  np.float64, nfiber),
-                   ('YPEAK',  np.float64, nfiber)])
+                   ('CENT',   np.float64, (nchips, nfiber)),
+                   ('HEIGHT', np.float64, (nchips, nfiber))])
     peakstruct = np.zeros(nplans,dtype=dt)
 
     for i in range(nplans):
         planstr = plan.load(planfiles[i], np=True)
         psfid = planstr['psfid']
         twod = load.ap2D(int(psfid))
-        flux = twod['a'][1].data
-        error = twod['a'][2].data
         header = twod['a'][0].header
         t = Time(header['DATE-OBS'], format='fits')
         peakstruct['PSFID'][i] = psfid
         peakstruct['MJD'][i] = t.mjd
 
-        totflux = np.nanmedian(flux[:,1024-100:1024+100], axis=1)
-        toterror = np.sqrt(np.nanmedian(error[:,1024-100:1024+100]**2, axis=1))
+        for ichip in range(nchips):
+            flux = twod[chips[ichip]][1].data
+            error = twod[chips[ichip]][2].data
+
+        totflux = np.nanmedian(flux[:, (npix/2)-100:(npix/2)+100], axis=1)
+        toterror = np.sqrt(np.nanmedian(error[:, (npix/2)-100:(npix/2)+100]**2, axis=1))
+        
+        peaks,_ = find_peaks(totflux, height=80, distance=4)
+
+        import pdb; pdb.set_trace()
 
         maxind, = argrelextrema(totflux, np.greater)  # maxima
         # sigma cut on the flux
