@@ -73,7 +73,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m'):
     outstr = np.zeros(nplans,dtype=dt)
 
     # Loop over the plan files
-    for i in range(nplans):
+    for i in range(5):
         print('(' + str(i+1) + '/' + nplanstr + '):')
         planstr = plan.load(planfiles[i], np=True)
         psfid = planstr['psfid']
