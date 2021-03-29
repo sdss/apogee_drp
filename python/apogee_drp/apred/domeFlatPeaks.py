@@ -31,6 +31,7 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 
 ###################################################################################################
 def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
+    start_time = time.time()
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -108,6 +109,9 @@ def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
             print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(300 - len(failed)) + ' successful Gaussian fits')
 
     Table(outstr).write(outfile, overwrite=True)
+
+    runtime = str("%.2f" % (time.time() - start_time))
+    print("\nDone in " + runtime + " seconds.\n")
 
     return
 
