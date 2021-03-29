@@ -140,6 +140,9 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - 200:(npix//2) + 200]**2, axis=1))
             pix0 = np.array(refpix[chips[ichip]])
             gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+            gd, = np.where(gpeaks['success'] == True)
+
+            print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(len(gd)) + 'successful Gaussian fits')
 
             outstr['CENT'][ichip, :] =    gpeaks['pars'][:, 1]
             outstr['HEIGHT'][ichip, :] =  gpeaks['pars'][:, 0]
