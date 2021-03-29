@@ -54,6 +54,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m'):
     planfiles.sort()
     planfiles = np.array(planfiles)
     nplans = len(planfiles)
+    nplanstr = str(nplans)
     print(str(nplans) + ' planfiles found')
 
     # Output file name
@@ -73,6 +74,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m'):
 
     # Loop over the plan files
     for i in range(nplans):
+        print('(' + str(i+1) + '/' + nplanstr + '):')
         planstr = plan.load(planfiles[i], np=True)
         psfid = planstr['psfid']
         twod = load.ap2D(int(psfid))
