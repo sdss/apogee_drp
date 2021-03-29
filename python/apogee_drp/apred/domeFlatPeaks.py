@@ -144,14 +144,13 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
             outstr['SUCCESS'][ichip, :] = 1
             failed, = np.where(gpeaks['success'] == False)
             nfailed = len(failed)
-            import pdb; pdb.set_trace()
-            if nfailed > 0: outstr['SUCCESS'][ichip, failed] = 0
+            if nfailed > 0: outstr['SUCCESS'][i, ichip, failed] = 0
 
             print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(300 - nfailed) + ' successful Gaussian fits')
 
-            outstr['CENT'][ichip, :] =    gpeaks['pars'][:, 1]
-            outstr['HEIGHT'][ichip, :] =  gpeaks['pars'][:, 0]
-            outstr['FLUX'][ichip, :] =    gpeaks['sumflux']
+            outstr['CENT'][i, ichip, :] =    gpeaks['pars'][:, 1]
+            outstr['HEIGHT'][i, ichip, :] =  gpeaks['pars'][:, 0]
+            outstr['FLUX'][i, ichip, :] =    gpeaks['sumflux']
 
     Table(outstr).write(outfile, overwrite=True)
 
