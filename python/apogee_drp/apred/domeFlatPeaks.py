@@ -82,6 +82,7 @@ def PlotFlats(apred='daily', telescope='apo25m',sep=50):
 
     return planstr
 
+###################################################################################################
 def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
@@ -122,32 +123,18 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
 
             totflux = np.nanmedian(flux[:, (npix//2) - 200:(npix//2) + 200], axis=1)
             toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - 200:(npix//2) + 200]**2, axis=1))
-            
-            peaks,_ = find_peaks(totflux, height=100, distance=5)
-            gd, = np.where((peaks >= min(refpix[chips[ichip]]) - 2) & (peaks <= max(refpix[chips[ichip]]) + 2))
-            peaks = peaks[gd]
+            pix0 = np.array(refpix[chips[ichip]])
+            gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
             import pdb; pdb.set_trace()
 
-            maxind, = argrelextrema(totflux, np.greater)  # maxima
-            # sigma cut on the flux
-            gd, = np.where(totflux[maxind] > 100)
-            if len(gd)==0:
-                print('No peaks found')
-                return
-            pix0 = maxind[gd]
-            peaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+
 
             #plt.plot(totflux)
             #plt.xlim(20,70)
             
 
             #import pdb; pdb.set_trace()
-
-        peaks,_ = find_peaks(tot, height=80)
-        outfile = '/uufs/chpc.utah.edu/common/home/u0955897/dflat/'+str(psfid)+'_'+str("%.3f" % round(t.mjd,3))+'.dat'
-        ascii.write([peaks, tot[peaks]], outfile, names=['x', 'y'], overwrite=True)
-        print(len(peaks))
 
         #for j in range(nfiber):
         #    if j == 0: 
@@ -163,8 +150,9 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
         #    if len(peaks) != 0:
         #        peakstruct['YPEAK'][i,j] = ptot[peaks][0]
 
-    return tot
+    return
 
+###################################################################################################
 def FindAllPeaks2(apred='daily', telescope='apo25m'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
@@ -203,4 +191,92 @@ def FindAllPeaks2(apred='daily', telescope='apo25m'):
             if len(gd) > 0: peakstruct['YPEAK'][i,j] = y[gd]
 
     return peakstruct
+
+###################################################################################################
+def old_FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+
+    chips = np.array(['a','b','c'])
+    nchips = len(chips)
+    nfiber = 300
+    npix = 2048
+
+    refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixN.dat')
+    if telescope == 'lco25m': refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
+
+    visitDir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/visit/'+telescope+'/'
+    planfiles = glob.glob(visitDir+'*/*/*/apPlan*yaml')
+    planfiles.sort()
+    planfiles = np.array(planfiles)
+    nplans = len(planfiles)
+    print(str(nplans) + ' planfiles found')
+
+    # FITS table structure.
+    dt = np.dtype([('PSFID',  np.str, 9),
+                   ('MJD',    np.float64),
+                   ('CENT',   np.float64, (nchips, nfiber)),
+                   ('HEIGHT', np.float64, (nchips, nfiber))])
+    peakstruct = np.zeros(nplans,dtype=dt)
+
+    for i in range(nplans):
+        planstr = plan.load(planfiles[i], np=True)
+        psfid = planstr['psfid']
+        twod = load.ap2D(int(psfid))
+        header = twod['a'][0].header
+        t = Time(header['DATE-OBS'], format='fits')
+        peakstruct['PSFID'][i] = psfid
+        peakstruct['MJD'][i] = t.mjd
+
+        for ichip in range(nchips):
+            flux = twod[chips[ichip]][1].data
+            error = twod[chips[ichip]][2].data
+
+            totflux = np.nanmedian(flux[:, (npix//2) - 200:(npix//2) + 200], axis=1)
+            toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - 200:(npix//2) + 200]**2, axis=1))
+            
+            #pix0,_ = find_peaks(totflux, height=100, distance=5)
+            #gd, = np.where((pix0 >= min(refpix[chips[ichip]]) - 2) & (pix0 <= max(refpix[chips[ichip]]) + 2))
+            #pix0 = pix0[gd]
+
+            gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=np.array(refpix[chips[ichip]]))
+
+            import pdb; pdb.set_trace()
+
+            #maxind, = argrelextrema(totflux, np.greater)  # maxima
+            # sigma cut on the flux
+            #gd, = np.where(totflux[maxind] > 100)
+            #if len(gd)==0:
+            #    print('No peaks found')
+            #    return
+            pix0 = maxind[gd]
+
+
+            #plt.plot(totflux)
+            #plt.xlim(20,70)
+            
+
+            #import pdb; pdb.set_trace()
+
+        peaks,_ = find_peaks(tot, height=80)
+        outfile = '/uufs/chpc.utah.edu/common/home/u0955897/dflat/'+str(psfid)+'_'+str("%.3f" % round(t.mjd,3))+'.dat'
+        ascii.write([peaks, tot[peaks]], outfile, names=['x', 'y'], overwrite=True)
+        print(len(peaks))
+
+        #for j in range(nfiber):
+        #    if j == 0: 
+        #        cent = pixstart
+        #    else:
+        #        cent = peakstruct['XPEAK'][i,j-1] + mediansep
+        #    pstart = int(round(np.floor(cent - (mediansep/2.) + 1)))
+        #    pstop = int(round(np.ceil(cent + (mediansep/2.) - 1)))
+        #    ptot = tot[pstart:pstop]
+        #    peaks,_ = find_peaks(ptot, height=80)
+        #    peakstruct['XPEAK'][i,j] = cent
+        #    peakstruct['YPEAK'][i,j] = 0.0
+        #    if len(peaks) != 0:
+        #        peakstruct['YPEAK'][i,j] = ptot[peaks][0]
+
+    return tot
+
+
 
