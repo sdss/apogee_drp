@@ -30,7 +30,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 
 ###################################################################################################
-def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
+def FindAllPeaks(apred='daily', telescope='apo25m'):
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -46,16 +46,18 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
 
     apodir = os.environ.get('APOGEE_REDUX') + '/'
 
-    outfile = apodir + apred + '/monitor/' + instrument + 'DomeFlatTrace.fits'
-
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
+    # Find all the plan files
     visitDir = apodir + '/' + apred + '/visit/' + telescope + '/'
     planfiles = glob.glob(visitDir + '*/*/*/apPlan*yaml')
     planfiles.sort()
     planfiles = np.array(planfiles)
     nplans = len(planfiles)
     print(str(nplans) + ' planfiles found')
+
+    # Output file name
+    outfile = apodir + apred + '/monitor/' + instrument + 'DomeFlatTrace.fits'
 
     # Lookup table structure.
     dt = np.dtype([('PSFID',    np.str, 9),
@@ -67,12 +69,10 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
                    ('CENT',     np.float64, (nchips, nfiber)),
                    ('HEIGHT',   np.float64, (nchips, nfiber)),
                    ('FLUX',     np.float64, (nchips, nfiber)),
-
     outstr = np.zeros(nplans,dtype=dt)
 
     # Loop over the plan files
-    # for i in range(nplans):
-    for i in range(5):
+    for i in range(nplans):
         planstr = plan.load(planfiles[i], np=True)
         psfid = planstr['psfid']
         twod = load.ap2D(int(psfid))
