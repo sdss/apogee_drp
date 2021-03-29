@@ -90,8 +90,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m',sep=50):
     nfiber = 300
     npix = 2048
 
-    refPixN = np.array([[22, 1032, 2030], [29, 1031, 2024], [29, 1030 2022]])
-    #refPixS = np.array([[22, 1032, 2030], [29, 1031, 2024], [29, 1030 2022]])
+    refPixN = np.array([22, 1032, 2030], [29, 1031, 2024], [29, 1030, 2022])
+    #refPixS = np.array([22, 1032, 2030], [29, 1031, 2024], [29, 1030, 2022])
     refFib = np.array([ 1,  150, 300])
 
 
