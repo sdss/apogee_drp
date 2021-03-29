@@ -65,7 +65,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
                    ('PLATEID',  np.int32),
                    ('CARTID',   np.int16),
                    ('NAME',     np.str, 14),
-                   ('DATE-OBS', np.str, 23),
+                   ('DATEOBS',  np.str, 23),
                    ('MJD',      np.float64),
                    ('CENT',     np.float64, (nchips, nfiber)),
                    ('HEIGHT',   np.float64, (nchips, nfiber)),
