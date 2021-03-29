@@ -30,7 +30,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 
 ###################################################################################################
-def FindAllPeaks(apred='daily', telescope='apo25m'):
+def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -53,7 +53,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m'):
     planfiles = glob.glob(visitDir + '*/*/*/apPlan*yaml')
     planfiles.sort()
     planfiles = np.array(planfiles)
-    nplans = len(planfiles)
+    if nplans is None: nplans = len(planfiles)
     nplanstr = str(nplans)
     print(str(nplans) + ' planfiles found')
 
@@ -73,7 +73,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m'):
     outstr = np.zeros(nplans, dtype=dt)
 
     # Loop over the plan files
-    for i in range(5):
+    for i in range(nplans):
         print('(' + str(i+1) + '/' + nplanstr + '):')
         planstr = plan.load(planfiles[i], np=True)
         psfid = planstr['psfid']
