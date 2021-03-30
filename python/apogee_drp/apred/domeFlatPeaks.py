@@ -254,7 +254,7 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=200, ndomes=None)
             gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
             failed, = np.where(gpeaks['success'] == False)
-            sucess, = np.where(gpeaks['success'] == True)
+            success, = np.where(gpeaks['success'] == True)
 
             outstr['CENT'][i, ichip, :] =    gpeaks['pars'][:, 1]
             outstr['HEIGHT'][i, ichip, :] =  gpeaks['pars'][:, 0]
