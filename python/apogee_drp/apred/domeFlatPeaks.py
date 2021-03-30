@@ -193,6 +193,7 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=200, ndomes=None)
 
     exp = fits.getdata(mdir + instrument + 'Exp.fits')
     gd, = np.where(exp['IMAGETYP'] == 'DomeFlat')
+    gd, = np.where((exp['IMAGETYP'] == 'DomeFlat') & (exp['MJD'] > 57000))
     exp = exp[gd]
     if ndomes is None: ndomes = len(gd)
     ndomestr = str(ndomes)
