@@ -46,17 +46,31 @@ def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
         refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
 
     apodir = os.environ.get('APOGEE_REDUX') + '/'
+    ap2dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/dr17/'
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
-    # Find all the plan files
-    visitDir = apodir + '/' + apred + '/visit/' + telescope + '/'
-    planfiles = glob.glob(visitDir + '*/*/*/apPlan*yaml')
-    planfiles.sort()
-    planfiles = np.array(planfiles)
-    if nplans is None: nplans = len(planfiles)
-    nplanstr = str(nplans)
-    print(str(nplans) + ' planfiles found')
+    # Find all the SDSS-III and SDSS-IV plan files
+    visitDir4 = ap2dir + '/visit/' + telescope + '/'
+    planfiles4 = glob.glob(visitDir4 + '*/*/*/apPlan*par')
+    planfiles4.sort()
+    planfiles4 = np.array(planfiles4)
+    nplans4 = len(planfiles4)
+    nplanstr4 = str(nplans4)
+    print(str(nplans4) + ' pre-SDSS-V planfiles found')
+
+    # Find all the SDSS-V plan files
+    visitDir5 = apodir + '/' + apred + '/visit/' + telescope + '/'
+    planfiles5 = glob.glob(visitDir5 + '*/*/*/apPlan*yaml')
+    planfiles5.sort()
+    planfiles5 = np.array(planfiles5)
+    nplans5 = len(planfiles5)
+    nplanstr5 = str(nplans5)
+    print(str(nplans5) + ' SDSS-V planfiles found')
+
+    nplans = len(planfiles)
+    print('Running code on ' + str(nplans) + ' planfiles')
+    print('Estimated runtime: ' + str(int(round(3.86*nplans))) + ' seconds\n')
 
     # Output file name
     outfile = apodir + apred + '/monitor/' + instrument + 'DomeFlatTrace.fits'
@@ -71,24 +85,25 @@ def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
                    ('CENT',     np.float64, (nchips, nfiber)),
                    ('HEIGHT',   np.float64, (nchips, nfiber)),
                    ('FLUX',     np.float64, (nchips, nfiber))])
-    outstr = np.zeros(nplans, dtype=dt)
 
-    # Loop over the plan files
-    for i in range(nplans):
-        print('(' + str(i+1) + '/' + nplanstr + '):')
-        planstr = plan.load(planfiles[i], np=True)
+    # Loop over the pre-SDSS-V plan files
+    outstr4 = np.zeros(nplans4, dtype=dt)
+    for i in range(nplans4):
+        print('\n(' + str(i+1) + '/' + nplanstr5 + '):')
+        planstr = yanny.yanny(planfiles4[i])
         psfid = planstr['psfid']
+        import pdb; pdb.set_trace()
         twod = load.ap2D(int(psfid))
         header = twod['a'][0].header
 
-        outstr['PSFID'][i] =   psfid
-        outstr['PLATEID'][i] = header['PLATEID']
-        outstr['CARTID'][i] =  header['CARTID']
-        outstr['NAME'][i] =    header['NAME']
-        outstr['DATEOBS'][i] = header['DATE-OBS']
+        outstr4['PSFID'][i] =   psfid
+        outstr4['PLATEID'][i] = header['PLATEID']
+        outstr4['CARTID'][i] =  header['CARTID']
+        outstr4['NAME'][i] =    header['NAME']
+        outstr4['DATEOBS'][i] = header['DATE-OBS']
 
         t = Time(header['DATE-OBS'], format='fits')
-        outstr['MJD'][i] = t.mjd
+        outstr4['MJD'][i] = t.mjd
 
         # Loop over the chips
         for ichip in range(nchips):
@@ -102,11 +117,48 @@ def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
 
             failed, = np.where(gpeaks['success'] == False)
 
-            outstr['CENT'][i, ichip, :] =    gpeaks['pars'][:, 1]
-            outstr['HEIGHT'][i, ichip, :] =  gpeaks['pars'][:, 0]
-            outstr['FLUX'][i, ichip, :] =    gpeaks['sumflux']
+            outstr4['CENT'][i, ichip, :] =    gpeaks['pars'][:, 1]
+            outstr4['HEIGHT'][i, ichip, :] =  gpeaks['pars'][:, 0]
+            outstr4['FLUX'][i, ichip, :] =    gpeaks['sumflux']
 
             print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(300 - len(failed)) + ' successful Gaussian fits')
+
+    # Loop over the SDSS-V plan files
+    outstr5 = np.zeros(nplans5, dtype=dt)
+    for i in range(nplans5):
+        print('\n(' + str(i+1) + '/' + nplanstr5 + '):')
+        planstr = plan.load(planfiles5[i], np=True)
+        psfid = planstr['psfid']
+        twod = load.ap2D(int(psfid))
+        header = twod['a'][0].header
+
+        outstr5['PSFID'][i] =   psfid
+        outstr5['PLATEID'][i] = header['PLATEID']
+        outstr5['CARTID'][i] =  header['CARTID']
+        outstr5['NAME'][i] =    header['NAME']
+        outstr5['DATEOBS'][i] = header['DATE-OBS']
+
+        t = Time(header['DATE-OBS'], format='fits')
+        outstr5['MJD'][i] = t.mjd
+
+        # Loop over the chips
+        for ichip in range(nchips):
+            flux = twod[chips[ichip]][1].data
+            error = twod[chips[ichip]][2].data
+
+            totflux = np.nanmedian(flux[:, (npix//2) - 200:(npix//2) + 200], axis=1)
+            toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - 200:(npix//2) + 200]**2, axis=1))
+            pix0 = np.array(refpix[chips[ichip]])
+            gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+
+            failed, = np.where(gpeaks['success'] == False)
+
+            outstr5['CENT'][i, ichip, :] =    gpeaks['pars'][:, 1]
+            outstr5['HEIGHT'][i, ichip, :] =  gpeaks['pars'][:, 0]
+            outstr5['FLUX'][i, ichip, :] =    gpeaks['sumflux']
+
+            print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(300 - len(failed)) + ' successful Gaussian fits')
+
 
     Table(outstr).write(outfile, overwrite=True)
 
