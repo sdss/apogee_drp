@@ -212,7 +212,7 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=200, ndomes=None)
                    ('CENT',     np.float64, (nchips, nfiber)),
                    ('HEIGHT',   np.float64, (nchips, nfiber)),
                    ('FLUX',     np.float64, (nchips, nfiber)),
-                   ('NPEAKS',   np.int16, nchips])
+                   ('NPEAKS',   np.int16, nchips)])
 
     outstr = np.zeros(ndomes, dtype=dt)
 
