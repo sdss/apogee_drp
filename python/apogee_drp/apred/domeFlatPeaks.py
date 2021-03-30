@@ -47,6 +47,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
 
     apodir = os.environ.get('APOGEE_REDUX') + '/'
     ap2dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/dr17/'
+    mdir = apodir + apred + '/monitor/'
+    exp = fits.getdata(mdir + instrument + 'Exp.fits')
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
@@ -60,7 +62,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
     print(str(nplans4) + ' pre-SDSS-V planfiles found')
 
     # Find all the SDSS-V plan files
-    visitDir5 = apodir + '/' + apred + '/visit/' + telescope + '/'
+    visitDir5 = apodir + apred + '/visit/' + telescope + '/'
     planfiles5 = glob.glob(visitDir5 + '*/*/*/apPlan*yaml')
     planfiles5.sort()
     planfiles5 = np.array(planfiles5)
@@ -89,7 +91,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
     # Loop over the pre-SDSS-V plan files
     outstr4 = np.zeros(nplans4, dtype=dt)
     for i in range(nplans4):
-        print('\n(' + str(i+1) + '/' + nplanstr5 + '):')
+        print('\n(' + str(i+1) + '/' + nplanstr4 + '):')
         planstr = yanny.yanny(planfiles4[i])
         psfid = planstr['psfid']
         import pdb; pdb.set_trace()
@@ -159,6 +161,104 @@ def FindAllPeaks(apred='daily', telescope='apo25m', nplans=None):
 
             print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(300 - len(failed)) + ' successful Gaussian fits')
 
+    import pdb; pdb.set_trace()
+    Table(outstr).write(outfile, overwrite=True)
+
+    runtime = str("%.2f" % (time.time() - start_time))
+    print("\nDone in " + runtime + " seconds.\n")
+
+    return
+
+###################################################################################################
+def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=200, ndomes=None):
+    start_time = time.time()
+
+    chips = np.array(['a','b','c'])
+    nchips = len(chips)
+    nfiber = 300
+    npix = 2048
+
+    instrument = 'apogee-n'
+    refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixN.dat')
+    
+    if telescope == 'lco25m':
+        instrument = 'apogee-s'
+        refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
+
+    apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
+    mdir = apodir + '/monitor/'
+
+    expdir5 = apodir + 'exposures/' + instrument + '/'
+    expdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/dr17/exposures/' + instrument + '/'
+
+    exp = fits.getdata(mdir + instrument + 'Exp.fits')
+    gd, = np.where(exp['IMAGETYP'] == 'DomeFlat')
+    exp = exp[gd]
+    if ndomes is None: ndomes = len(gd)
+    ndomestr = str(ndomes)
+    
+    print('Running code on ' + ndomestr + ' dome flats')
+    print('Estimated runtime: ' + str(int(round(3.86*ndomes))) + ' seconds\n')
+
+    # Output file name
+    outfile = mdir + instrument + 'DomeFlatTrace.fits'
+
+    # Lookup table structure.
+    dt = np.dtype([('PSFID',    np.int32),
+                   ('PLATEID',  np.int32),
+                   ('CARTID',   np.int16),
+                   ('DATEOBS',  np.str, 23),
+                   ('MJD',      np.int32),
+                   ('CENT',     np.float64, (nchips, nfiber)),
+                   ('HEIGHT',   np.float64, (nchips, nfiber)),
+                   ('FLUX',     np.float64, (nchips, nfiber))])
+
+    outstr = np.zeros(ndomes, dtype=dt)
+
+    # Loop over the dome flats
+    for i in range(ndomes):
+        print('\n(' + str(i+1) + '/' + ndomestr + '):')
+
+        twodFiles = glob.glob(expdir4 + str(exp['MJD'][i]) + '/ap2D*' + str(exp['NUM'][i]) + '.fits')
+        if len(twodFiles) < 1:
+            twodFiles = glob.glob(expdir5 + str(exp['MJD'][i]) + '/ap2D*' + str(exp['NUM'][i]) + '.fits')
+            if len(twodFiles) < 1:
+                print('PROBLEM: ap2D files not found for exposure ' + str(exp['MJD'][i]) + ', MJD ' + str(exp['MJD'][i]))
+                continue
+
+        twodFiles.sort()
+        twodFiles = np.array(twodFiles)
+
+        if len(twodFiles) < 3:
+            print('PROBLEM: less then 3 ap2D files found for exposure ' + str(exp['MJD'][i]) + ', MJD ' + str(exp['MJD'][i]))
+            continue
+        else:
+            print('ap2D files found for exposure ' + str(exp['MJD'][i]) + ', MJD ' + str(exp['MJD'][i]))
+
+        outstr['PSFID'][i] =   exp['NUM'][i]
+        outstr['PLATEID'][i] = exp['PLATEID'][i]
+        outstr['CARTID'][i] =  exp['CARTID'][i]
+        outstr['DATEOBS'][i] = exp['DATEOBS'][i]
+        outstr['MJD'][i] =     exp['MJD'][i]
+
+        # Loop over the chips
+        for ichip in range(nchips):
+            flux = fits.open(twodFiles[ichip])[1].data
+            error = fits.open(twodFiles[ichip])[2].data
+            npix = flux.shape[0]
+
+            totflux = np.nanmedian(flux[:, (npix//2) - medianrad:(npix//2) + medianrad], axis=1)
+            toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
+            pix0 = np.array(refpix[chips[ichip]])
+            gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+
+            failed, = np.where(gpeaks['success'] == False)
+
+            outstr['CENT'][i, ichip, :] =    gpeaks['pars'][:, 1]
+            outstr['HEIGHT'][i, ichip, :] =  gpeaks['pars'][:, 0]
+            outstr['FLUX'][i, ichip, :] =    gpeaks['sumflux']
+
+            print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(300 - len(failed)) + ' successful Gaussian fits')
 
     Table(outstr).write(outfile, overwrite=True)
 
