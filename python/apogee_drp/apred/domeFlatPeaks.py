@@ -261,7 +261,7 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=200, ndomes=None)
             outstr['FLUX'][i, ichip, :] =    gpeaks['sumflux']
             outstr['NPEAKS'][ichip] =        len(success)
 
-            print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(len(success)) + ' successful Gaussian fits')
+            print(twodFiles[ichip] + ': str(len(success)) + ' successful Gaussian fits')
 
     Table(outstr).write(outfile, overwrite=True)
 
