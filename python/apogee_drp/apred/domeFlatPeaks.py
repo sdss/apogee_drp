@@ -211,7 +211,8 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=200, ndomes=None)
                    ('MJD',      np.int32),
                    ('CENT',     np.float64, (nchips, nfiber)),
                    ('HEIGHT',   np.float64, (nchips, nfiber)),
-                   ('FLUX',     np.float64, (nchips, nfiber))])
+                   ('FLUX',     np.float64, (nchips, nfiber)),
+                   ('NPEAKS',   np.int16, nchips])
 
     outstr = np.zeros(ndomes, dtype=dt)
 
@@ -223,17 +224,17 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=200, ndomes=None)
         if len(twodFiles) < 1:
             twodFiles = glob.glob(expdir5 + str(exp['MJD'][i]) + '/ap2D*' + str(exp['NUM'][i]) + '.fits')
             if len(twodFiles) < 1:
-                print('PROBLEM: ap2D files not found for exposure ' + str(exp['MJD'][i]) + ', MJD ' + str(exp['MJD'][i]))
+                print('PROBLEM: ap2D files not found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
                 continue
 
         twodFiles.sort()
         twodFiles = np.array(twodFiles)
 
         if len(twodFiles) < 3:
-            print('PROBLEM: less then 3 ap2D files found for exposure ' + str(exp['MJD'][i]) + ', MJD ' + str(exp['MJD'][i]))
+            print('PROBLEM: less then 3 ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
             continue
         else:
-            print('ap2D files found for exposure ' + str(exp['MJD'][i]) + ', MJD ' + str(exp['MJD'][i]))
+            print('ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
 
         outstr['PSFID'][i] =   exp['NUM'][i]
         outstr['PLATEID'][i] = exp['PLATEID'][i]
@@ -253,12 +254,14 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=200, ndomes=None)
             gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
             failed, = np.where(gpeaks['success'] == False)
+            sucess, = np.where(gpeaks['success'] == True)
 
             outstr['CENT'][i, ichip, :] =    gpeaks['pars'][:, 1]
             outstr['HEIGHT'][i, ichip, :] =  gpeaks['pars'][:, 0]
             outstr['FLUX'][i, ichip, :] =    gpeaks['sumflux']
+            outstr['NPEAKS'][ichip] =        len(success)
 
-            print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(300 - len(failed)) + ' successful Gaussian fits')
+            print('   ' + str(len(gpeaks)) + ' elements in gpeaks; ' + str(len(sucess)) + ' successful Gaussian fits')
 
     Table(outstr).write(outfile, overwrite=True)
 
