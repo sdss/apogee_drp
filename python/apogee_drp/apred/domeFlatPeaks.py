@@ -321,7 +321,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         if len(gd) < 20:
             gd, = np.where(gpeaks['sumflux'] > 5000)
             if len(gd) < 20:
-                order = np.argsort(gpeaks['sumflux']
+                order = np.argsort(gpeaks['sumflux'])[::-1]
         import pdb; pdb.set_trace()
 
 
