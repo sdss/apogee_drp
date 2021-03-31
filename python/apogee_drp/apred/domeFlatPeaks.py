@@ -334,10 +334,9 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
             if len(gd) < 5: continue
             diff = diff[gd]
             ndiff = len(diff)
-            rms[ichip, idome] = np.sqrt(np.sum(diff**2)/ndiff)
+            rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
 
     import pdb; pdb.set_trace()
-        
         
         #for i in range(len(dome)):
         #gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
