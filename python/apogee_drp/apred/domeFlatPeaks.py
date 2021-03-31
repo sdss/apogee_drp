@@ -315,6 +315,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
         pix0 = np.array(refpix[chips[ichip]])
         gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+        import pdb; pdb.set_trace()
 
         # Remove failed peakfits
         gd, = np.where(gpeaks['success'] == True)
