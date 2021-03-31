@@ -329,7 +329,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
             import pdb; pdb.set_trace()
         
         
-        for i in range(len(dome)):
+        #for i in range(len(dome)):
         import pdb; pdb.set_trace()
         #gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
         #gdome = dome[gd]
