@@ -298,7 +298,6 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
 
     if len(twodFiles) < 3:
         print('PROBLEM: less then 3 ap2D files found for exposure ' + str(expnum))
-        continue
     else:
         print('ap2D files found for exposure ' + str(expnum))
 
