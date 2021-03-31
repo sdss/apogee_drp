@@ -304,7 +304,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         print('ap2D files found for exposure ' + str(expnum))
 
     domematch = np.empty([minmatches, nchips, 3])
-    rms = np.full([nchips, ndomes], 50)
+    rms = np.full([nchips, ndomes], 50).astype(float)
     # Loop over the chips
     for ichip in range(nchips):
         flux = fits.open(twodFiles[ichip])[1].data
@@ -334,7 +334,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
             if len(gd) < 5: continue
             diff = diff[gd]
             ndiff = len(diff)
-            rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
+            rms[ichip, idome] = np.sqrt(np.sum(diff**2)/ndiff)
             if dome['PSFID'][idome] == 13400022: import pdb; pdb.set_trace()
 
     import pdb; pdb.set_trace()
