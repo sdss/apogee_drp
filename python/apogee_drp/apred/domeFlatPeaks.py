@@ -312,6 +312,16 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         pix0 = np.array(refpix[chips[ichip]])
         gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
+        # Remove failed peakfits
+        gd, = np.where(gpeaks['success'] == True)
+        gpeaks = gpeaks[gd]
+        import pdb; pdb.set_trace()
+
+        gd, = np.where(gpeaks['sumflux'] > 10000)
+        if len(gd) < 20:
+            gd, = np.where(gpeaks['sumflux'] > 5000)
+            if len(gd) < 20:
+                order = np.argsort(gpeaks['sumflux']
         import pdb; pdb.set_trace()
 
 
