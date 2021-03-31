@@ -297,10 +297,10 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
     twodFiles = np.array(twodFiles)
 
     if len(twodFiles) < 3:
-        print('PROBLEM: less then 3 ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
+        print('PROBLEM: less then 3 ap2D files found for exposure ' + str(expnum))
         continue
     else:
-        print('ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
+        print('ap2D files found for exposure ' + str(expnum))
 
     # Loop over the chips
     for ichip in range(nchips):
