@@ -332,7 +332,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
             diff = np.absolute(gpeaks['pars'][i, 1] - dcent)
             order = np.argsort(diff)
             gdome = gdome[order]
-            domematch[i, ichip, :] = gdome['NUM'][0:3]
+            domematch[i, ichip, :] = gdome['PSFID'][0:3]
 
     import pdb; pdb.set_trace()
 
