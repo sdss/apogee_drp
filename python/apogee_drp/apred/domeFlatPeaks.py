@@ -303,6 +303,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         print('ap2D files found for exposure ' + str(expnum))
 
     domematch = np.empty([minmatches, nchips, 3])
+    domematch = np.empty([minmatches, nchips, 3])
     # Loop over the chips
     for ichip in range(nchips):
         flux = fits.open(twodFiles[ichip])[1].data
@@ -319,6 +320,13 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         if len(gd) < minmatches:
             sys.exit('Fail!!! Less than ' + str(minmatches) + ' peaks found. Try changing minmatches.')
         gpeaks = gpeaks[gd]
+
+        dcent = dome['CENT'][:, ichip, gpeaks['num']]
+        gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
+        gdome = dome[gd]
+        dcent = dcent[gd]
+        diff = np.absolute(gpeaks['pars'][:, 1] - dcent)
+        import pdb; pdb.set_trace()
 
         # Sort by height of Gaussian peak
         order = np.argsort(gpeaks['pars'][:,0])[::-1]
