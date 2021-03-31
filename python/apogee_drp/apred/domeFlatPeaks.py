@@ -335,7 +335,6 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
             diff = diff[gd]
             ndiff = len(diff)
             rms[ichip, idome] = np.sqrt(np.sum(diff**2)/ndiff)
-            if dome['PSFID'][idome] == 13400022: import pdb; pdb.set_trace()
 
     import pdb; pdb.set_trace()
         
