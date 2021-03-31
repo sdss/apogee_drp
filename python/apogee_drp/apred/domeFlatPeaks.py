@@ -270,4 +270,64 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=100, ndomes=None)
     print("\nDone in " + runtime + " seconds.\n")
 
     return
+    
+###################################################################################################
+def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, expnum=36760022):
+
+    chips = np.array(['a','b','c'])
+    nchips = len(chips)
+    nfiber = 300
+    npix = 2048
+
+    instrument = 'apogee-n'
+    refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixN.dat')
+    
+    if telescope == 'lco25m':
+        instrument = 'apogee-s'
+        refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
+
+    apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
+    mdir = apodir + '/monitor/'
+    expdir = apodir + 'exposures/' + instrument + '/'
+
+    dome = fits.getdata(mdir + instrument + 'DomeFlatTrace.fits')
+
+    twodFiles = glob.glob(expdir + '*/ap2D*' + str(expnum) + '.fits')
+    twodFiles.sort()
+    twodFiles = np.array(twodFiles)
+
+    if len(twodFiles) < 3:
+        print('PROBLEM: less then 3 ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
+        continue
+    else:
+        print('ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
+
+    # Loop over the chips
+    for ichip in range(nchips):
+        flux = fits.open(twodFiles[ichip])[1].data
+        error = fits.open(twodFiles[ichip])[2].data
+        npix = flux.shape[0]
+
+        totflux = np.nanmedian(flux[:, (npix//2) - medianrad:(npix//2) + medianrad], axis=1)
+        toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
+        pix0 = np.array(refpix[chips[ichip]])
+        gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+
+        import pdb; pdb.set_trace()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
