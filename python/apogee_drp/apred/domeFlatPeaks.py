@@ -321,16 +321,9 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
 
         # Sort by height of Gaussian peak
         order = np.argsort(gpeaks['pars'][:,0])[::-1]
-        gpeaks = gpeaks[order]
+        gpeaks = gpeaks[order][0:minmatches]
 
-        # Find high S/N fibers
-        gd, = np.where(gpeaks['pars'][:, 0] > 10000)
-        if len(gd) < minmatches:
-            gd, = np.where(gpeaks['pars'][:, 0] > 5000)
-            if len(gd) < minmatches:
-                # Just take the top 20 peaks
-                gd = np.arange(0,20,1)
-        gpeaks = gpeaks[gd]
+
 
         import pdb; pdb.set_trace()
 
