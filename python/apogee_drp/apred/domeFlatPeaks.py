@@ -328,6 +328,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         print(str(ngpeaks) + ' good peakfits.')
 
         dcent = dome['CENT'][:, ichip, gpeaks['num']]
+        dname = dome['PSFID'][:, ichip, gpeaks['num']]
         for idome in range(ndomes):
             diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
             gd, = np.where((np.isnan(diff) == False) & (diff < 1))
@@ -335,6 +336,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
             diff = diff[gd]
             ndiff = len(diff)
             rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
+            if dome['PSFID'][idome] == 13400022: import pdb; pdb.set_trace()
 
     import pdb; pdb.set_trace()
         
