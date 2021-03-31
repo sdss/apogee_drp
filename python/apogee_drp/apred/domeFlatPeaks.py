@@ -331,7 +331,6 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         for idome in range(ndomes):
             diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
             gd, = np.where((np.isnan(diff) == False) & (diff < 1))
-            import pdb; pdb.set_trace()
             if len(gd) < 5: continue
             diff = diff[gd]
             ndiff = len(diff)
