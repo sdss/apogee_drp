@@ -292,7 +292,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
 
     dome = fits.getdata(mdir + instrument + 'DomeFlatTrace.fits')
 
-    twodFiles = glob.glob(expdir + '*/ap2D*' + str(expnum) + '.fits')
+    twodFiles = glob.glob(expdir + '*/ap2D-*' + str(expnum) + '.fits')
     twodFiles.sort()
     twodFiles = np.array(twodFiles)
 
