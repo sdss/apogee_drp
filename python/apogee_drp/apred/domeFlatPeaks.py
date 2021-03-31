@@ -319,44 +319,44 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         # Remove failed and discrepant peakfits
         gd, = np.where(gpeaks['success'] == True)
         gpeaks = gpeaks[gd]
-        import pdb; pdb.set_trace()
 
-        # Remove failed and discrepant peakfits
-        gd, = np.where((gpeaks['success'] == True) & (gpeaks['perr'][:, 1] < 0.1))
+        # Remove discrepant peakfits
+        medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
+        gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
         gpeaks = gpeaks[gd]
         ngpeaks = len(gd)
-        #if len(gd) < minmatches:
-        #    sys.exit('Fail!!! Less than ' + str(minmatches) + ' peaks found. Try changing minmatches.')
+        print(str(ngpeaks) + ' good peakfits.')
 
         dcent = dome['CENT'][:, ichip, gpeaks['num']]
-        for i in range(ndomes):
-            diff = np.absolute(dcent[i] - gpeaks['pars'][:, 1])
+        for idome in range(ndomes):
+            diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
+            gd, = np.where((np.isnan(diff) == False) & (diff < 1))
+            diff = diff[gd]
+            ndiff = len(diff)
+            rms[ichip, idome] = np.sqrt(np.sum(diff**2)/ndiff)
             import pdb; pdb.set_trace()
         
         
         #for i in range(len(dome)):
-        import pdb; pdb.set_trace()
         #gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
         #gdome = dome[gd]
         #dcent = dcent[gd]
-        diff = np.absolute(gpeaks['pars'][:, 1] - dcent)
-        import pdb; pdb.set_trace()
+#        diff = np.absolute(gpeaks['pars'][:, 1] - dcent)
 
         # Sort by height of Gaussian peak
-        order = np.argsort(gpeaks['pars'][:,0])[::-1]
-        gpeaks = gpeaks[order][0:minmatches]
+#        order = np.argsort(gpeaks['pars'][:,0])[::-1]
+#        gpeaks = gpeaks[order][0:minmatches]
 
-        for i in range(minmatches):
-            dcent = dome['CENT'][:, ichip, gpeaks['num'][i]]
-            gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
-            gdome = dome[gd]
-            dcent = dcent[gd]
-            diff = np.absolute(gpeaks['pars'][i, 1] - dcent)
-            order = np.argsort(diff)
-            gdome = gdome[order]
-            domematch[i, ichip, :] = gdome['PSFID'][0:3]
+#        for i in range(minmatches):
+#            dcent = dome['CENT'][:, ichip, gpeaks['num'][i]]
+#            gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
+#            gdome = dome[gd]
+#            dcent = dcent[gd]
+#            diff = np.absolute(gpeaks['pars'][i, 1] - dcent)
+#            order = np.argsort(diff)
+#            gdome = gdome[order]
+#            domematch[i, ichip, :] = gdome['PSFID'][0:3]
 
-    import pdb; pdb.set_trace()
 
 
 
