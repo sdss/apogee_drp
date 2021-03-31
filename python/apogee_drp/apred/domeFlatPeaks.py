@@ -272,7 +272,7 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=100, ndomes=None)
     return
     
 ###################################################################################################
-def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, expnum=36760022
+def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, expnum=36760022,
                minmatches=20):
 
     chips = np.array(['a','b','c'])
