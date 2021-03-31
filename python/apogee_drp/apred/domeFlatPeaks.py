@@ -302,6 +302,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
     else:
         print('ap2D files found for exposure ' + str(expnum))
 
+    domematch = np.empty([minmatches, nchips, 3])
     # Loop over the chips
     for ichip in range(nchips):
         flux = fits.open(twodFiles[ichip])[1].data
@@ -323,16 +324,17 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         order = np.argsort(gpeaks['pars'][:,0])[::-1]
         gpeaks = gpeaks[order][0:minmatches]
 
-        domematch = np.empty(minmatches*3)
         for i in range(minmatches):
             dcent = dome['CENT'][:, ichip, gpeaks['num'][i]]
             gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
             gdome = dome[gd]
             dcent = dcent[gd]
             diff = np.absolute(gpeaks['pars'][i, 1] - dcent)
-            import pdb; pdb.set_trace()
+            order = np.argsort(diff)
+            gdome = gdome[order]
+            domematch[i, ichip, :] = gdome['NUM'][0:3]
 
-        import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
 
 
 
