@@ -323,7 +323,10 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         order = np.argsort(gpeaks['pars'][:,0])[::-1]
         gpeaks = gpeaks[order][0:minmatches]
 
-
+        domematch = np.empty(minmatches*3)
+        for i in range(minmatches):
+            diff = np.absolute(gpeaks['pars'][i, 1] - dome['CENT'][ichip, i])
+            import pdb; pdb.set_trace()
 
         import pdb; pdb.set_trace()
 
