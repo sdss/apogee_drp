@@ -321,7 +321,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
             sys.exit('Fail!!! Less than ' + str(minmatches) + ' peaks found. Try changing minmatches.')
         gpeaks = gpeaks[gd]
 
-        dcent = dome['CENT'][:, ichip, gpeaks['num']]
+        dcent = dome['CENT'][:, ichip, :]
         gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
         gdome = dome[gd]
         dcent = dcent[gd]
