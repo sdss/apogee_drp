@@ -272,7 +272,8 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=100, ndomes=None)
     return
     
 ###################################################################################################
-def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, expnum=36760022):
+def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, expnum=36760022
+               minmatches=20):
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -314,15 +315,25 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
 
         # Remove failed peakfits
         gd, = np.where(gpeaks['success'] == True)
+        if len(gd) < minmatches:
+            sys.exit('Fail!!! Less than ' + str(minmatches) + ' peaks found. Try changing minmatches.')
         gpeaks = gpeaks[gd]
+
+        # Sort by height of Gaussian peak
+        order = np.argsort(gpeaks['pars'][:,0])[::-1]
+        gpeaks = gpeaks[order]
+
+        # Find high S/N fibers
+        gd, = np.where(gpeaks['pars'][:, 0] > 10000)
+        if len(gd) < minmatches:
+            gd, = np.where(gpeaks['pars'][:, 0] > 5000)
+            if len(gd) < minmatches:
+                # Just take the top 20 peaks
+                gd = np.arange(0,20,1)
+        gpeaks = gpeaks[gd]
+
         import pdb; pdb.set_trace()
 
-        gd, = np.where(gpeaks['sumflux'] > 10000)
-        if len(gd) < 20:
-            gd, = np.where(gpeaks['sumflux'] > 5000)
-            if len(gd) < 20:
-                order = np.argsort(gpeaks['sumflux'])[::-1]
-        import pdb; pdb.set_trace()
 
 
 
