@@ -304,7 +304,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         print('ap2D files found for exposure ' + str(expnum))
 
     domematch = np.empty([minmatches, nchips, 3])
-    rms = np.empty([nchips, ndomes])
+    rms = np.full([nchips, ndomes], 50)
     # Loop over the chips
     for ichip in range(nchips):
         flux = fits.open(twodFiles[ichip])[1].data
