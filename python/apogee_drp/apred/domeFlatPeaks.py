@@ -325,7 +325,11 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
 
         domematch = np.empty(minmatches*3)
         for i in range(minmatches):
-            diff = np.absolute(gpeaks['pars'][i, 1] - dome['CENT'][ichip, i])
+            dcent = dome['CENT'][:, ichip, gpeaks['num'][i]]
+            gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
+            gdome = dome[gd]
+            dcent = dcent[gd]
+            diff = np.absolute(gpeaks['pars'][i, 1] - dcent)
             import pdb; pdb.set_trace()
 
         import pdb; pdb.set_trace()
