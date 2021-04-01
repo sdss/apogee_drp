@@ -427,7 +427,7 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022,
         gd, = np.where(np.isnan(diff) == False)
         num = gpeaks['num'][gd]
         gdiff = diff[gd]
-        rms = np.sqrt(np.sum(diff[gdd]**2)/ngpeaks)
+        rms = np.sqrt(np.nansum(diff[gdd]**2)/ngpeaks)
         ax.scatter(num, gdiff, marker=markers[ichip], color='white', edgecolors=colors[ichip], linewidth=1.5, alpha=0.5)
         ax.scatter(gnum, diff[gdd], marker=markers[ichip], color=colors[ichip], linewidth=1.5, alpha=1)
         ax.text(0.03, 0.95-0.05*ichip, str("%.3f" % round(rms,3)), transform=ax.transAxes, color=colors[ichip])
