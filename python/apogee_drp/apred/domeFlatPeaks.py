@@ -358,7 +358,7 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
     mdir = apodir + 'monitor/'
     expdir = apodir + 'exposures/' + instrument + '/'
 
-    twodFiles = glob.glob(expdir + '*/ap2D-*' + str(psfid) + '.fits')
+    twodFiles = glob.glob(expdir + '*/ap2D-*' + str(expnum) + '.fits')
     twodFiles.sort()
     twodFiles = np.array(twodFiles)
 
