@@ -425,7 +425,7 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
         num = gpeaks['num'][gd]
         gdiff = diff[gd]
         ax.scatter(num, gdiff, marker='o', color='white', edgecolors=colors[ichip], linewidth=1.5, alpha=0.5)
-        ax.scatter(gnum, diff[gdd], marker='o', color=colors[ichip], alpha=0.5)
+        ax.scatter(gnum, diff[gdd], marker='o', color=colors[ichip], linewidth=1.5, alpha=1)
 
     fig.subplots_adjust(left=0.06,right=0.99,bottom=0.09,top=0.98,hspace=0.09,wspace=0.04)
     plt.savefig(mdir + plotfile)
