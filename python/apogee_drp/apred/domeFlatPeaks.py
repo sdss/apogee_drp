@@ -425,7 +425,6 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
         gd, = np.where(np.isnan(diff) == False)
         num = gpeaks['num'][gd]
         diff = diff[gd]
-        import pdb; pdb.set_trace()
         ax.scatter(num, diff, marker='o', color='white', edgecolors=colors[ichip], linewidth=1.5, alpha=0.5)
 
     fig.subplots_adjust(left=0.06,right=0.99,bottom=0.09,top=0.98,hspace=0.09,wspace=0.04)
