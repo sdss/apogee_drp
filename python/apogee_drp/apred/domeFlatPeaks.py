@@ -374,7 +374,7 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
     import pdb; pdb.set_trace()
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
-    #plt.ioff()
+    plt.ioff()
     matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
@@ -423,7 +423,7 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
         diff = np.absolute(dcent - gpeaks['pars'][:, 1])
         gd, = np.where(np.isnan(diff) == False)
         diff = diff[gd]
-        ax.scatter(
+        #ax.scatter(
 
 
 
