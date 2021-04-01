@@ -383,6 +383,7 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
     axminlen=3.5
     colors = np.array(['red','green','blue'])
 
+    plotfile = 'dflatTrace_sci' + str(expnum) + '_dome' + str(psfid) + '.png'
     fig=plt.figure(figsize=(19,10))
     ax = plt.subplot2grid((1,1), (0,0))
     ax.tick_params(reset=True)
@@ -426,7 +427,7 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
         ax.scatter(num, diff, marker='o', color=colors[ichip])
 
     fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
-    plt.savefig(plotsdir+plotfile)
+    plt.savefig(mdir + plotfile)
     plt.close('all')
     plt.ion()
 
