@@ -332,7 +332,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022
             if len(gd) < 5: continue
             diff = diff[gd]
             ndiff = len(diff)
-            rms[ichip, idome] = np.sqrt(np.sum(diff**2)/ndiff)
+            rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
 
     rmsSum = np.nansum(rms, axis=0)
     gd, = np.where(rmsSum == np.nanmin(rmsSum))
