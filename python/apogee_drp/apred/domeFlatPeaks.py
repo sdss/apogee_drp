@@ -340,7 +340,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022
     return dome['PSFID'][gd]
 
 ###################################################################################################
-def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022):
+def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022, psfid=None):
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -368,7 +368,7 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
         print('ap2D files found for exposure ' + str(expnum))
 
     dome = fits.getdata(mdir + instrument + 'DomeFlatTrace.fits')
-    psfid = matchtrace(apred=apred, telescope=telescope, medianrad=medianrad, expnum=expnum)
+    if psfid is None: psfid = matchtrace(apred=apred, telescope=telescope, medianrad=medianrad, expnum=expnum)
     domeind, = np.where(dome['PSFID'] == psfid)
     dome = dome[domeind]
 
