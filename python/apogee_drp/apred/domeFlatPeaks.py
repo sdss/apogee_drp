@@ -272,8 +272,7 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=100, ndomes=None)
     return
     
 ###################################################################################################
-def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, expnum=36760022,
-               minmatches=20):
+def matchtrace(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022):
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -288,7 +287,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
         refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
 
     apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
-    mdir = apodir + '/monitor/'
+    mdir = apodir + 'monitor/'
     expdir = apodir + 'exposures/' + instrument + '/'
 
     dome = fits.getdata(mdir + instrument + 'DomeFlatTrace.fits')
@@ -303,9 +302,8 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
     else:
         print('ap2D files found for exposure ' + str(expnum))
 
-    domematch = np.empty([minmatches, nchips, 3])
-    rms = np.full([nchips, ndomes], 50).astype(float)
     # Loop over the chips
+    rms = np.full([nchips, ndomes], 50).astype(float)
     for ichip in range(nchips):
         flux = fits.open(twodFiles[ichip])[1].data
         error = fits.open(twodFiles[ichip])[2].data
@@ -336,27 +334,105 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, ex
             ndiff = len(diff)
             rms[ichip, idome] = np.sqrt(np.sum(diff**2)/ndiff)
 
-    import pdb; pdb.set_trace()
+    rmsSum = np.sum(rms, axis=0)
+    gd, = np.where(rmsSum == np.min(rmsSum))
         
-        #for i in range(len(dome)):
-        #gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
-        #gdome = dome[gd]
-        #dcent = dcent[gd]
-#        diff = np.absolute(gpeaks['pars'][:, 1] - dcent)
+    return dome['PSFID'][gd]
 
-        # Sort by height of Gaussian peak
-#        order = np.argsort(gpeaks['pars'][:,0])[::-1]
-#        gpeaks = gpeaks[order][0:minmatches]
+###################################################################################################
+def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022):
 
-#        for i in range(minmatches):
-#            dcent = dome['CENT'][:, ichip, gpeaks['num'][i]]
-#            gd, = np.where((dcent > 0) & (np.isnan(dcent) == False))
-#            gdome = dome[gd]
-#            dcent = dcent[gd]
-#            diff = np.absolute(gpeaks['pars'][i, 1] - dcent)
-#            order = np.argsort(diff)
-#            gdome = gdome[order]
-#            domematch[i, ichip, :] = gdome['PSFID'][0:3]
+    chips = np.array(['a','b','c'])
+    nchips = len(chips)
+    nfiber = 300
+    npix = 2048
+
+    instrument = 'apogee-n'
+    refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixN.dat')
+    
+    if telescope == 'lco25m':
+        instrument = 'apogee-s'
+        refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
+
+    apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
+    mdir = apodir + 'monitor/'
+    expdir = apodir + 'exposures/' + instrument + '/'
+
+    twodFiles = glob.glob(expdir + '*/ap2D-*' + str(psfid) + '.fits')
+    twodFiles.sort()
+    twodFiles = np.array(twodFiles)
+
+    if len(twodFiles) < 3:
+        print('PROBLEM: less then 3 ap2D files found for exposure ' + str(expnum))
+    else:
+        print('ap2D files found for exposure ' + str(expnum))
+
+    dome = fits.getdata(mdir + instrument + 'DomeFlatTrace.fits')
+    psfid = matchtrace(apred=apred, telescope=telescope, medianrad=medianrad, expnum=expnum)
+    domeind, = np.where(dome['PSFID'] == psfid)
+    dome = dome[domeind]
+    import pdb; pdb.set_trace()
+
+    # Set up some basic plotting parameters, starting by turning off interactive plotting.
+    #plt.ioff()
+    matplotlib.use('agg')
+    fontsize = 24;   fsz = fontsize * 0.75
+    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    alpha = 0.6
+    axwidth=1.5
+    axmajlen=7
+    axminlen=3.5
+    colors = np.array(['red','green','blue'])
+
+    fig=plt.figure(figsize=(19,10))
+    ax = plt.subplot2grid((1,1), (0,0))
+    ax.tick_params(reset=True)
+    ax.minorticks_on()
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.set_xlabel(r'Fiber Index')
+    ax.set_ylabel(r'Dome - Science Residuals')
+    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax.tick_params(axis='both',which='major',length=axmajlen)
+    ax.tick_params(axis='both',which='minor',length=axminlen)
+    ax.tick_params(axis='both',which='both',width=axwidth)
+    ax.set_xlim(-2, 302)
+
+    # Loop over the chips
+    for ichip in range(nchips):
+        flux = fits.open(twodFiles[ichip])[1].data
+        error = fits.open(twodFiles[ichip])[2].data
+        npix = flux.shape[0]
+
+        totflux = np.nanmedian(flux[:, (npix//2) - medianrad:(npix//2) + medianrad], axis=1)
+        toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
+        pix0 = np.array(refpix[chips[ichip]])
+        gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+
+        # Remove failed and discrepant peakfits
+        gd, = np.where(gpeaks['success'] == True)
+        gpeaks = gpeaks[gd]
+
+        # Remove discrepant peakfits
+        medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
+        gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
+        gpeaks = gpeaks[gd]
+        ngpeaks = len(gd)
+        print(str(ngpeaks) + ' good peakfits.')
+
+        dcent = dome['CENT'][domeind, ichip, gpeaks['num']]
+        diff = np.absolute(dcent - gpeaks['pars'][:, 1])
+        gd, = np.where(np.isnan(diff) == False)
+        diff = diff[gd]
+        ax.scatter(
+
+
+
+
+
+
+
+
+
 
 
 
