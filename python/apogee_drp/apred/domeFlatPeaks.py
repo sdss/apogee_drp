@@ -273,6 +273,7 @@ def FindAllPeaks2(apred='daily', telescope='apo25m', medianrad=100, ndomes=None)
     
 ###################################################################################################
 def matchtrace(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022):
+    start_time = time.time()
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
@@ -338,6 +339,9 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022
     gd, = np.where(rmsSum == np.nanmin(rmsSum))
 
     print(' Best dome flat for exposure ' + str(expnum) + ': ' + str(dome['PSFID'][gd]))
+    runtime = str("%.2f" % (time.time() - start_time))
+    print("\nDone in " + runtime + " seconds.\n")
+    
     return dome['PSFID'][gd]
 
 ###################################################################################################
@@ -431,9 +435,9 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022,
         ax.scatter(num, gdiff, marker=markers[ichip], color='white', edgecolors=colors[ichip], linewidth=1.5, alpha=0.5)
         ax.scatter(gnum, diff[gdd], marker=markers[ichip], color=colors[ichip], linewidth=1.5, alpha=1)
         rms = np.sqrt(np.nansum(diff[gdd]**2)/ngpeaks)
-        ax.text(0.03, 0.95-0.05*ichip, str("%.3f" % round(rms,3)), transform=ax.transAxes, color=colors[ichip])
+        ax.text(0.03, 0.95-0.05*ichip, str("%.4f" % round(rms,3)), transform=ax.transAxes, color=colors[ichip])
         med = np.nanmedian(diff[gdd])
-        ax.text(0.97, 0.95-0.05*ichip, str("%.3f" % round(med,3)), transform=ax.transAxes, color=colors[ichip], ha='right')
+        ax.text(0.97, 0.95-0.05*ichip, str("%.4f" % round(med,3)), transform=ax.transAxes, color=colors[ichip], ha='right')
 
     fig.subplots_adjust(left=0.08,right=0.99,bottom=0.095,top=0.98,hspace=0.09,wspace=0.04)
     plt.savefig(mdir + plotfile)
