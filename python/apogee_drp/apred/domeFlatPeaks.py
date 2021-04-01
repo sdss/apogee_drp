@@ -415,10 +415,10 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
 
         # Remove discrepant peakfits
         medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
-        #gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
-        #gpeaks = gpeaks[gd]
-        #ngpeaks = len(gd)
-        #print(str(ngpeaks) + ' good peakfits.')
+        gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
+        gnum = gpeaks['num'][gd]
+        ngpeaks = len(gd)
+        for j in range(ngpeaks): ax.axvline(x=gnum[j], linestyle='dashed', color=colors[ichip])
 
         dcent = dome['CENT'][0, ichip, gpeaks['num']]
         diff = dcent - gpeaks['pars'][:, 1]
