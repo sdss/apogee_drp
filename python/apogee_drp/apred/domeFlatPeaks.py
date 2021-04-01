@@ -371,7 +371,6 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
     psfid = matchtrace(apred=apred, telescope=telescope, medianrad=medianrad, expnum=expnum)
     domeind, = np.where(dome['PSFID'] == psfid)
     dome = dome[domeind]
-    import pdb; pdb.set_trace()
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     plt.ioff()
@@ -419,14 +418,17 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
         ngpeaks = len(gd)
         print(str(ngpeaks) + ' good peakfits.')
 
-        dcent = dome['CENT'][domeind, ichip, gpeaks['num']]
-        diff = np.absolute(dcent - gpeaks['pars'][:, 1])
+        dcent = dome['CENT'][:, ichip, gpeaks['num']]
+        diff = dcent - gpeaks['pars'][:, 1]
         gd, = np.where(np.isnan(diff) == False)
+        num = gpeaks['num'][gd]
         diff = diff[gd]
-        #ax.scatter(
+        ax.scatter(num, diff, marker='o', color=colors[i])
 
-
-
+    fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
+    plt.savefig(plotsdir+plotfile)
+    plt.close('all')
+    plt.ion()
 
 
 
