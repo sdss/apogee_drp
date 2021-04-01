@@ -418,7 +418,7 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022)
         ngpeaks = len(gd)
         print(str(ngpeaks) + ' good peakfits.')
 
-        dcent = dome['CENT'][:, ichip, gpeaks['num']]
+        dcent = dome['CENT'][0, ichip, gpeaks['num']]
         diff = dcent - gpeaks['pars'][:, 1]
         gd, = np.where(np.isnan(diff) == False)
         num = gpeaks['num'][gd]
