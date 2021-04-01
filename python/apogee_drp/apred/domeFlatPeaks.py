@@ -400,6 +400,7 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022,
     ax.tick_params(axis='both',which='both',width=axwidth)
     ax.set_xlim(-2, 302)
     ax.set_ylim(-0.5, 0.5)
+    ax.axhline(y=0, linestyle='dashed', color='k')
 
     # Loop over the chips
     for ichip in range(nchips):
