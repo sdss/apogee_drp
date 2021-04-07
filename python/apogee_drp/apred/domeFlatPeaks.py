@@ -42,7 +42,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
 
     fil = os.path.abspath(__file__)
     codedir = os.path.dirname(fil)
-    datadir = codedir+‘../../data/’
+    datadir = codedir + '../../data/'
     instrument = 'apogee-n'
     # put this in apogee_drp/data/domeflat/
     refpix = ascii.read(datadir + 'refpixN.dat')
