@@ -201,10 +201,13 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022
             ndiff = len(diff)
             rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
 
+
+
     rmsSum = np.nansum(rms, axis=0)
     gd, = np.where(rmsSum == np.nanmin(rmsSum))
+    print(rms[ichip, idome[gd][0]])
 
-    print(' Best dome flat for exposure ' + str(expnum) + ': ' + str(dome['PSFID'][gd]) + ' (rmsSum = ' + str(rmsSum[gd]) + ')')
+    print(' Best dome flat for exposure ' + str(expnum) + ': ' + str(dome['PSFID'][gd][0]) + ' (rmsSum = ' + str(rmsSum[gd][0]) + ')')
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.\n")
     
