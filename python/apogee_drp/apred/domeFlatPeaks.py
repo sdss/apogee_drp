@@ -203,7 +203,7 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022
 
     rmsSum = np.nanmean(rms, axis=0)
     gd, = np.where(rmsSum == np.nanmin(rmsSum))
-    print(rms[:, idome[gd]])
+    print(rms[:, gd])
 
     print(' Best dome flat for exposure ' + str(expnum) + ': ' + str(dome['PSFID'][gd][0]) + ' (rmsSum = ' + str(rmsSum[gd][0]) + ')')
     runtime = str("%.2f" % (time.time() - start_time))
