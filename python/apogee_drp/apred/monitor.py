@@ -620,6 +620,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 binx = []
                 biny = []
                 for k in range(nbins-1):
+                    import pdb; pdb.set_trace()
                     gd, = np.where((caljd >= xx[k]) & (caljd < xx[k+1]))
                     if len(gd) > 0:
                         binx.append(np.mean([xx[k], xx[k+1]]))
