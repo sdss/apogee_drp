@@ -572,11 +572,27 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     ax.text(yearjd[iyear], ymax1+yspan1*0.02, cyears[iyear], ha='center')
 
+                yvals = np.empty((len(caljd), nchips))
                 for ichip in range(nchips):
-                    yvals = gdcal['MED'][:, ichip, 299-i] / 1000
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors2[ichip], alpha=alf)
+                    yvals[:, ichip] = gdcal['MED'][:, ichip, 299-i] / 1000
+                    ax.scatter(caljd, yvals[:, ichip], marker='o', s=markersz, c=colors2[ichip], alpha=alf)
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
+                            
+                # Bin up the data points and plot black squares
+                meanyvals = np.nanmean(yvals, axis=1)
+                tmin = np.min(caljd)
+                tmax = np.max(caljd) + fiberdaysbin
+                xx = np.arange(tmin, tmax, fiberdaysbin)
+                nbins = len(xx)
+                binx = []
+                biny = []
+                for k in range(nbins-1):
+                    gd, = np.where((caljd >= xx[k]) & (caljd < xx[k+1]))
+                    if len(gd) > 0:
+                        binx.append(np.nanmean([xx[k], xx[k+1]]))
+                        biny.append(np.nanmean(meanyvals[gd]))
+                ax.scatter(binx, biny, marker='D', s=markersz*4, color='k', zorder=10)
 
                 fig.subplots_adjust(left=0.045,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
