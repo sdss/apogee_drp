@@ -624,7 +624,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if len(gd) > 0:
                         binx.append(np.nanmean([xx[k], xx[k+1]]))
                         biny.append(np.nanmean(meanyvals[gd]))
-                ax.scatter(binx, biny, marker='s', s=markersz*8, color='k', zorder=10)
+                ax.scatter(binx, biny, marker='D', s=markersz*5, color='k', zorder=10)
 
                 fig.subplots_adjust(left=0.045,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
