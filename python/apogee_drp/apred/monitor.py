@@ -611,11 +611,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.text(0.995, 0.75-(0.25*ichip), chips[ichip].capitalize()+'\n'+'Chip', c=colors2[ichip], 
                             fontsize=fsz, va='center', ha='right', transform=ax.transAxes, bbox=bboxpar)
 
+                import pdb; pdb.set_trace()
                 # Bin up the data points and plot black squares
                 meanyvals = np.nanmean(yvals, axis=1)
                 tmin = np.min(caljd)
-                tmax = np.max(caljd) + fiberdaysbin/365.
-                xx = np.arange(tmin, tmax, fiberdaysbin/365.)
+                tmax = np.max(caljd) + fiberdaysbin
+                xx = np.arange(tmin, tmax, fiberdaysbin)
                 nbins = len(xx)
                 binx = []
                 biny = []
