@@ -420,7 +420,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     dec = tothdr['DECDEG']
     DateObs = tothdr['DATE-OBS']
 
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
 
     if ims[0] == 0: 
         tot = load.apPlate(int(plate), mjd)
