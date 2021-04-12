@@ -2287,6 +2287,9 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 else: 
                     wave = apstar.wave[:, 0]
                     flux = apstar.flux[:, 0]
+                if np.max(flux) < 0.1:
+                    print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
+                    continue
                 gd, = np.where((np.isnan(flux) == False) & (flux > 0))
                 wave = wave[gd]
                 flux = flux[gd]
