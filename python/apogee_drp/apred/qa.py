@@ -420,6 +420,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     dec = tothdr['DECDEG']
     DateObs = tothdr['DATE-OBS']
 
+    import pdb; pdb.set_trace()
+
     if ims[0] == 0: 
         tot = load.apPlate(int(plate), mjd)
     else:
@@ -2274,7 +2276,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 starPlotFilePath = starPlotDir + starPlotFile
                 starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
-                if objid == '2M09210737+0242172': import pdb; pdb.set_trace()
+                #if objid == '2M09210737+0242172': import pdb; pdb.set_trace()
 
                 # Read the apStar file
                 apstar = doppler.read(apStarPath)
