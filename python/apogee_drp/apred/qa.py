@@ -580,7 +580,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         moonpos = get_moon(tt)
         moonra = moonpos.ra.deg
         moondec = moonpos.dec.deg
-        import pdb; pdb.set_trace()
         c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
         c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
         sep = c1.separation(c2)
@@ -2275,7 +2274,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 starPlotFilePath = starPlotDir + starPlotFile
                 starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
-                #if objid == '2M09280147+0044494': import pdb; pdb.set_trace()
+                if objid == '2M09210737+0242172': import pdb; pdb.set_trace()
 
                 # Read the apStar file
                 apstar = doppler.read(apStarPath)
