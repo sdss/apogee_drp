@@ -30,7 +30,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 
 ###################################################################################################
-def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
+def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, mjdstart=None):
     start_time = time.time()
 
     chips = np.array(['a','b','c'])
@@ -58,6 +58,11 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
     gd, = np.where(exp['IMAGETYP'] == 'DomeFlat')
     gd, = np.where((exp['IMAGETYP'] == 'DomeFlat') & (exp['MJD'] > 56880))
     exp = exp[gd]
+
+    # Option to start at a certain MJD
+    if mjdstart is not None: 
+        gd, = np.where(exp['MJD'] > mjdstart)
+        exp = exp[gd]
     if ndomes is None: ndomes = len(gd)
     ndomestr = str(ndomes)
     
@@ -121,7 +126,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
     outstr = np.zeros(ndomes, dtype=dt)
 
     # Loop over the dome flats
-    for i in range(50):
+    for i in range(10):
         print('\n(' + str(i+1) + '/' + ndomestr + '):')
 
         # Make sure there's a valid MJD
