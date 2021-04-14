@@ -29,8 +29,6 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 
-
-
 ###################################################################################################
 def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
     start_time = time.time()
@@ -70,48 +68,55 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
     outfile = mdir + instrument + 'DomeFlatTrace.fits'
 
     # Lookup table structure.
-    dt = np.dtype([('PSFID',    np.int32),
-                   ('PLATEID',  np.int32),
-                   ('CARTID',   np.int16),
-                   ('DATEOBS',  np.str, 23),
-                   ('MJD',      np.int32),
-                   ('EXPTIME',  np.float64),
-                   ('NREAD',    np.int16),
-                   ('ROTPOS',   np.float64),
-                   ('SEEING',   np.float64),
-                   ('AZ',       np.float64),
-                   ('ALT',      np.float64),
-                   ('IPA',      np.float64),
-                   ('FOCUS',    np.float64),
-                   ('DITHPIX',  np.float64),
-                   ('LN2LEVEL', np.float64),
-                   ('RELHUM',   np.float64),
-                   ('MKSVAC',   np.float64),
-                   ('TDETTOP',  np.float64),
-                   ('TDETBASE', np.float64),
-                   ('TTENTTOP', np.float64),
-                   ('TCLDPMID', np.float64),
-                   ('TGETTER',  np.float64),
-                   ('TTLMBRD',  np.float64),
-                   ('TLSOUTH',  np.float64),
-                   ('TLNORTH',  np.float64),
-                   ('TLSCAM2',  np.float64),
-                   ('TLSCAM1',  np.float64),
-                   ('TLSDETC',  np.float64),
-                   ('TLSDETB',  np.float64),
-                   ('TPGVAC',   np.float64),
-                   ('TCAMAFT',   np.float64),
-                   ('TCAMMID',   np.float64),
-                   ('TCAMFWD',   np.float64),
-                   ('TEMPVPH',   np.float64),
-                   ('TRADSHLD',   np.float64),
-                   ('TCOLLIM',   np.float64),
-                   ('TCPCORN',   np.float64),
-                   ('TCLDPHNG',   np.float64),
-                   ('CENT',     np.float64, (nchips, nfiber)),
-                   ('HEIGHT',   np.float64, (nchips, nfiber)),
-                   ('FLUX',     np.float64, (nchips, nfiber)),
-                   ('NPEAKS',   np.int16, nchips)])
+    dt = np.dtype([('PSFID',           np.int32),
+                   ('PLATEID',         np.int32),
+                   ('CARTID',          np.int16),
+                   ('DATEOBS',         np.str, 23),
+                   ('MJD',             np.int32),
+                   ('EXPTIME',         np.float64),
+                   ('NREAD',           np.int16),
+                   ('ROTPOS',          np.float64),
+                   ('SEEING',          np.float64),
+                   ('AZ',              np.float64),
+                   ('ALT',             np.float64),
+                   ('IPA',             np.float64),
+                   ('FOCUS',           np.float64),
+                   ('DITHPIX',         np.float64),
+                   ('LN2LEVEL',        np.float64),
+                   ('RELHUM',          np.float64),
+                   ('MKSVAC',          np.float64),
+                   ('TDETTOP',         np.float64),
+                   ('TDETBASE',        np.float64),
+                   ('TTENTTOP',        np.float64),
+                   ('TCLDPMID',        np.float64),
+                   ('TGETTER',         np.float64),
+                   ('TTLMBRD',         np.float64),
+                   ('TLSOUTH',         np.float64),
+                   ('TLNORTH',         np.float64),
+                   ('TLSCAM2',         np.float64),
+                   ('TLSCAM1',         np.float64),
+                   ('TLSDETC',         np.float64),
+                   ('TLSDETB',         np.float64),
+                   ('TPGVAC',          np.float64),
+                   ('TCAMAFT',         np.float64),
+                   ('TCAMMID',         np.float64),
+                   ('TCAMFWD',         np.float64),
+                   ('TEMPVPH',         np.float64),
+                   ('TRADSHLD',        np.float64),
+                   ('TCOLLIM',         np.float64),
+                   ('TCPCORN',         np.float64),
+                   ('TCLDPHNG',        np.float64),
+                   ('PIX0',            np.int16), (nchips, nfiber)),
+                   ('GAUSS_HEIGHT',    np.float64, (nchips, nfiber)),
+                   ('E_GAUSS_HEIGHT',  np.float64, (nchips, nfiber)),
+                   ('GAUSS_CENT',      np.float64, (nchips, nfiber)),
+                   ('E_GAUSS_CENT',    np.float64, (nchips, nfiber)),
+                   ('GAUSS_SIGMA',     np.float64, (nchips, nfiber)),
+                   ('E_GAUSS_SIGMA',   np.float64, (nchips, nfiber)),
+                   ('GAUSS_YOFFSET',   np.float64, (nchips, nfiber)),
+                   ('E_GAUSS_YOFFSET', np.float64, (nchips, nfiber)),
+                   ('GAUSS_FLUX',      np.float64, (nchips, nfiber)),
+                   ('GAUSS_NPEAKS',    np.int16, nchips)])
 
     outstr = np.zeros(ndomes, dtype=dt)
 
@@ -147,38 +152,38 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
         outstr['MJD'][i] =     exp['MJD'][i]
 
         hdr = fits.getheader(twodFiles[0])
-        outstr['EXPTIME'][i] = hdr['EXPTIME']
-        outstr['NREAD'][i] = hdr['NREAD']
-        outstr['ROTPOS'][i] = hdr['ROTPOS']
-        outstr['SEEING'][i] = hdr['SEEING']
-        outstr['AZ'][i] = hdr['AZ']
-        outstr['ALT'][i] = hdr['ALT']
-        outstr['IPA'][i] = hdr['IPA']
-        outstr['FOCUS'][i] = hdr['FOCUS']
-        outstr['DITHPIX'][i] = hdr['DITHPIX']
+        outstr['EXPTIME'][i] =  hdr['EXPTIME']
+        outstr['NREAD'][i] =    hdr['NREAD']
+        outstr['ROTPOS'][i] =   hdr['ROTPOS']
+        outstr['SEEING'][i] =   hdr['SEEING']
+        outstr['AZ'][i] =       hdr['AZ']
+        outstr['ALT'][i] =      hdr['ALT']
+        outstr['IPA'][i] =      hdr['IPA']
+        outstr['FOCUS'][i] =    hdr['FOCUS']
+        outstr['DITHPIX'][i] =  hdr['DITHPIX']
         outstr['LN2LEVEL'][i] = hdr['LN2LEVEL']
-        outstr['RELHUM'][i] = hdr['RELHUM']
-        outstr['MKSVAC'][i] = hdr['MKSVAC']
-        outstr['TDETTOP'][i] = hdr['TDETTOP']
+        outstr['RELHUM'][i] =   hdr['RELHUM']
+        outstr['MKSVAC'][i] =   hdr['MKSVAC']
+        outstr['TDETTOP'][i] =  hdr['TDETTOP']
         outstr['TDETBASE'][i] = hdr['TDETBASE']
         outstr['TTENTTOP'][i] = hdr['TTENTTOP']
         outstr['TCLDPMID'][i] = hdr['TCLDPMID']
-        outstr['TGETTER'][i] = hdr['TGETTER']
-        outstr['TTLMBRD'][i] = hdr['TTLMBRD']
-        outstr['TLSOUTH'][i] = hdr['TLSOUTH']
-        outstr['TLNORTH'][i] = hdr['TLNORTH']
-        outstr['TLSCAM2'][i] = hdr['TLSCAM2']
-        outstr['TLSCAM1'][i] = hdr['TLSCAM1']
-        outstr['TLSDETC'][i] = hdr['TLSDETC']
-        outstr['TLSDETB'][i] = hdr['TLSDETB']
-        outstr['TPGVAC'][i] = hdr['TPGVAC']
-        outstr['TCAMAFT'][i] = hdr['TCAMAFT']
-        outstr['TCAMMID'][i] = hdr['TCAMMID']
-        outstr['TCAMFWD'][i] = hdr['TCAMFWD']
-        outstr['TEMPVPH'][i] = hdr['TEMPVPH']
+        outstr['TGETTER'][i] =  hdr['TGETTER']
+        outstr['TTLMBRD'][i] =  hdr['TTLMBRD']
+        outstr['TLSOUTH'][i] =  hdr['TLSOUTH']
+        outstr['TLNORTH'][i] =  hdr['TLNORTH']
+        outstr['TLSCAM2'][i] =  hdr['TLSCAM2']
+        outstr['TLSCAM1'][i] =  hdr['TLSCAM1']
+        outstr['TLSDETC'][i] =  hdr['TLSDETC']
+        outstr['TLSDETB'][i] =  hdr['TLSDETB']
+        outstr['TPGVAC'][i] =   hdr['TPGVAC']
+        outstr['TCAMAFT'][i] =  hdr['TCAMAFT']
+        outstr['TCAMMID'][i] =  hdr['TCAMMID']
+        outstr['TCAMFWD'][i] =  hdr['TCAMFWD']
+        outstr['TEMPVPH'][i] =  hdr['TEMPVPH']
         outstr['TRADSHLD'][i] = hdr['TRADSHLD']
-        outstr['TCOLLIM'][i] = hdr['TCOLLIM']
-        outstr['TCPCORN'][i] = hdr['TCPCORN']
+        outstr['TCOLLIM'][i] =  hdr['TCOLLIM']
+        outstr['TCPCORN'][i] =  hdr['TCPCORN']
         outstr['TCLDPHNG'][i] = hdr['TCLDPHNG']
 
         # Loop over the chips
@@ -192,15 +197,20 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
             pix0 = np.array(refpix[chips[ichip]])
             gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
-            import pdb; pdb.set_trace()
-
             failed, = np.where(gpeaks['success'] == False)
             success, = np.where(gpeaks['success'] == True)
 
-            outstr['CENT'][i, ichip, :] =    gpeaks['pars'][:, 1]
-            outstr['HEIGHT'][i, ichip, :] =  gpeaks['pars'][:, 0]
-            outstr['FLUX'][i, ichip, :] =    gpeaks['sumflux']
-            outstr['NPEAKS'][i, ichip] =     len(success)
+            outstr['PIX0'][i, ichip, :] =            pix0
+            outstr['GAUSS_HEIGHT'][i, ichip, :] =    gpeaks['pars'][:, 0]
+            outstr['E_GAUSS_HEIGHT'][i, ichip, :] =  gpeaks['perr'][:, 0]
+            outstr['GAUSS_CENT'][i, ichip, :] =      gpeaks['pars'][:, 1]
+            outstr['E_GAUSS_CENT'][i, ichip, :] =    gpeaks['perr'][:, 1]
+            outstr['GAUSS_SIGMA'][i, ichip, :] =     gpeaks['pars'][:, 2]
+            outstr['E_GAUSS_SIGMA'][i, ichip, :] =   gpeaks['perr'][:, 2]
+            outstr['GAUSS_YOFFSET'][i, ichip, :] =   gpeaks['pars'][:, 3]
+            outstr['E_GAUSS_YOFFSET'][i, ichip, :] = gpeaks['perr'][:, 3]
+            outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
+            outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
             print(twodFiles[ichip] + ': ' + str(len(success)) + ' successful Gaussian fits')
 
