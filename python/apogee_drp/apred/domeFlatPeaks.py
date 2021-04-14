@@ -76,6 +76,39 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
                    ('CARTID',   np.int16),
                    ('DATEOBS',  np.str, 23),
                    ('MJD',      np.int32),
+                   ('EXPTIME',  np.float64),
+                   ('NREAD',    np.int16),
+                   ('ROTPOS',   np.float64),
+                   ('SEEING',   np.float64),
+                   ('AZ',       np.float64),
+                   ('ALT',      np.float64),
+                   ('IPA',      np.float64),
+                   ('FOCUS',    np.float64),
+                   ('DITHPIX',  np.float64),
+                   ('LN2LEVEL', np.float64),
+                   ('RELHUM',   np.float64),
+                   ('MKSVAC',   np.float64),
+                   ('TDETTOP',  np.float64),
+                   ('TDETBASE', np.float64),
+                   ('TTENTTOP', np.float64),
+                   ('TCLDPMID', np.float64),
+                   ('TGETTER',  np.float64),
+                   ('TTLMBRD',  np.float64),
+                   ('TLSOUTH',  np.float64),
+                   ('TLNORTH',  np.float64),
+                   ('TLSCAM2',  np.float64),
+                   ('TLSCAM1',  np.float64),
+                   ('TLSDETC',  np.float64),
+                   ('TLSDETB',  np.float64),
+                   ('TPGVAC',   np.float64),
+                   ('TCAMAFT',   np.float64),
+                   ('TCAMMID',   np.float64),
+                   ('TCAMFWD',   np.float64),
+                   ('TEMPVPH',   np.float64),
+                   ('TRADSHLD',   np.float64),
+                   ('TCOLLIM',   np.float64),
+                   ('TCPCORN',   np.float64),
+                   ('TCLDPHNG',   np.float64),
                    ('CENT',     np.float64, (nchips, nfiber)),
                    ('HEIGHT',   np.float64, (nchips, nfiber)),
                    ('FLUX',     np.float64, (nchips, nfiber)),
@@ -109,6 +142,41 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
         outstr['DATEOBS'][i] = exp['DATEOBS'][i]
         outstr['MJD'][i] =     exp['MJD'][i]
 
+        hdr = fits.getheader(twodFiles[0])
+        outstr['EXPTIME'][i] = hdr['EXPTIME']
+        outstr['NREAD'][i] = hdr['NREAD']
+        outstr['ROTPOS'][i] = hdr['ROTPOS']
+        outstr['SEEING'][i] = hdr['SEEING']
+        outstr['AZ'][i] = hdr['AZ']
+        outstr['ALT'][i] = hdr['ALT']
+        outstr['IPA'][i] = hdr['IPA']
+        outstr['FOCUS'][i] = hdr['FOCUS']
+        outstr['DITHPIX'][i] = hdr['DITHPIX']
+        outstr['LN2LEVEL'][i] = hdr['LN2LEVEL']
+        outstr['RELHUM'][i] = hdr['RELHUM']
+        outstr['MKSVAC'][i] = hdr['MKSVAC']
+        outstr['TDETTOP'][i] = hdr['TDETTOP']
+        outstr['TDETBASE'][i] = hdr['TDETBASE']
+        outstr['TTENTTOP'][i] = hdr['TTENTTOP']
+        outstr['TCLDPMID'][i] = hdr['TCLDPMID']
+        outstr['TGETTER'][i] = hdr['TGETTER']
+        outstr['TTLMBRD'][i] = hdr['TTLMBRD']
+        outstr['TLSOUTH'][i] = hdr['TLSOUTH']
+        outstr['TLNORTH'][i] = hdr['TLNORTH']
+        outstr['TLSCAM2'][i] = hdr['TLSCAM2']
+        outstr['TLSCAM1'][i] = hdr['TLSCAM1']
+        outstr['TLSDETC'][i] = hdr['TLSDETC']
+        outstr['TLSDETB'][i] = hdr['TLSDETB']
+        outstr['TPGVAC'][i] = hdr['TPGVAC']
+        outstr['TCAMAFT'][i] = hdr['TCAMAFT']
+        outstr['TCAMMID'][i] = hdr['TCAMMID']
+        outstr['TCAMFWD'][i] = hdr['TCAMFWD']
+        outstr['TEMPVPH'][i] = hdr['TEMPVPH']
+        outstr['TRADSHLD'][i] = hdr['TRADSHLD']
+        outstr['TCOLLIM'][i] = hdr['TCOLLIM']
+        outstr['TCPCORN'][i] = hdr['TCPCORN']
+        outstr['TCLDPHNG'][i] = hdr['TCLDPHNG']
+
         # Loop over the chips
         for ichip in range(nchips):
             flux = fits.open(twodFiles[ichip])[1].data
@@ -119,6 +187,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
             toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
             pix0 = np.array(refpix[chips[ichip]])
             gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+
+            import pdb; pdb.set_trace()
 
             failed, = np.where(gpeaks['success'] == False)
             success, = np.where(gpeaks['success'] == True)
