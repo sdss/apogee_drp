@@ -86,31 +86,31 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, 
                    ('ALT',             np.float64),
                    ('IPA',             np.float64),
                    ('FOCUS',           np.float64),
-                   ('DITHPIX',         np.float64),
-                   ('LN2LEVEL',        np.float64),
-                   ('RELHUM',          np.float64),
-                   ('MKSVAC',          np.float64),
-                   ('TDETTOP',         np.float64),
-                   ('TDETBASE',        np.float64),
-                   ('TTENTTOP',        np.float64),
-                   ('TCLDPMID',        np.float64),
-                   ('TGETTER',         np.float64),
-                   ('TTLMBRD',         np.float64),
-                   ('TLSOUTH',         np.float64),
-                   ('TLNORTH',         np.float64),
-                   ('TLSCAM2',         np.float64),
-                   ('TLSCAM1',         np.float64),
-                   ('TLSDETC',         np.float64),
-                   ('TLSDETB',         np.float64),
-                   ('TPGVAC',          np.float64),
-                   ('TCAMAFT',         np.float64),
-                   ('TCAMMID',         np.float64),
-                   ('TCAMFWD',         np.float64),
-                   ('TEMPVPH',         np.float64),
-                   ('TRADSHLD',        np.float64),
-                   ('TCOLLIM',         np.float64),
-                   ('TCPCORN',         np.float64),
-                   ('TCLDPHNG',        np.float64),
+                   ('DITHPIX',         np.float32),
+                   ('LN2LEVEL',        np.float32),
+                   ('RELHUM',          np.float32),
+                   ('MKSVAC',          np.float32),
+                   ('TDETTOP',         np.float32),
+                   ('TDETBASE',        np.float32),
+                   ('TTENTTOP',        np.float32),
+                   ('TCLDPMID',        np.float32),
+                   ('TGETTER',         np.float32),
+                   ('TTLMBRD',         np.float32),
+                   ('TLSOUTH',         np.float32),
+                   ('TLNORTH',         np.float32),
+                   ('TLSCAM2',         np.float32),
+                   ('TLSCAM1',         np.float32),
+                   ('TLSDETC',         np.float32),
+                   ('TLSDETB',         np.float32),
+                   ('TPGVAC',          np.float32),
+                   ('TCAMAFT',         np.float32),
+                   ('TCAMMID',         np.float32),
+                   ('TCAMFWD',         np.float32),
+                   ('TEMPVPH',         np.float32),
+                   ('TRADSHLD',        np.float32),
+                   ('TCOLLIM',         np.float32),
+                   ('TCPCORN',         np.float32),
+                   ('TCLDPHNG',        np.float32),
                    ('PIX0',            np.int16,   (nchips, nfiber)),
                    ('GAUSS_HEIGHT',    np.float64, (nchips, nfiber)),
                    ('E_GAUSS_HEIGHT',  np.float64, (nchips, nfiber)),
@@ -127,11 +127,11 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, 
 
     # Loop over the dome flats
     for i in range(10):
-        print('\n(' + str(i+1) + '/' + ndomestr + '):')
+        ttxt = '\n(' + str(i+1) + '/' + ndomestr + '): '
 
         # Make sure there's a valid MJD
         if exp['MJD'][i] < 100: 
-            print('PROBLEM: MJD < 100 for ' + str(exp['NUM'][i]))
+            print(ttxt + 'PROBLEM: MJD < 100 for ' + str(exp['NUM'][i]))
             continue
 
         # Find the ap2D files for all 3 chips
@@ -139,16 +139,16 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, 
         if len(twodFiles) < 1:
             twodFiles = glob.glob(expdir5 + str(exp['MJD'][i]) + '/ap2D*' + str(exp['NUM'][i]) + '.fits')
             if len(twodFiles) < 1:
-                print('PROBLEM: ap2D files not found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
+                print(ttxt + 'PROBLEM: ap2D files not found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
                 continue
         twodFiles.sort()
         twodFiles = np.array(twodFiles)
 
         if len(twodFiles) < 3:
-            print('PROBLEM: less then 3 ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
+            print(ttxt + 'PROBLEM: <3 ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
             continue
         else:
-            print('ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
+            print(ttxt + 'ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
 
         outstr['PSFID'][i] =   exp['NUM'][i]
         outstr['PLATEID'][i] = exp['PLATEID'][i]
@@ -193,17 +193,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, 
 
         # Loop over the chips
         for ichip in range(nchips):
-            flux = fits.open(twodFiles[ichip])[1].data
-            error = fits.open(twodFiles[ichip])[2].data
-            npix = flux.shape[0]
-
-            totflux = np.nanmedian(flux[:, (npix//2) - medianrad:(npix//2) + medianrad], axis=1)
-            toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
             pix0 = np.array(refpix[chips[ichip]])
-            gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
-
-            failed, = np.where(gpeaks['success'] == False)
-            success, = np.where(gpeaks['success'] == True)
+            gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
 
             outstr['PIX0'][i, ichip, :] =            pix0
             outstr['GAUSS_HEIGHT'][i, ichip, :] =    gpeaks['pars'][:, 0]
@@ -217,7 +208,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, 
             outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
             outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
-            print(twodFiles[ichip] + ': ' + str(len(success)) + ' successful Gaussian fits')
+            success, = np.where(gpeaks['success'] == True)
+            print('  ' + twodFiles[ichip] + ': ' + str(len(success)) + ' successful Gaussian fits')
 
     Table(outstr).write(outfile, overwrite=True)
 
@@ -401,7 +393,17 @@ def plotresid(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022,
     plt.close('all')
     plt.ion()
 
+###################################################################################################
+def gaussFitAll(infile=None, medianrad=None, pix0=None):
+    flux = fits.open(infile)[1].data
+    error = fits.open(infile)[2].data
+    npix = flux.shape[0]
 
+    totflux = np.nanmedian(flux[:, (npix//2) - medianrad:(npix//2) + medianrad], axis=1)
+    toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
+    gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+
+    return gpeaks
 
 
 
