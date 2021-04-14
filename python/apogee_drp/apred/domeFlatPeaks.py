@@ -117,16 +117,21 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
     outstr = np.zeros(ndomes, dtype=dt)
 
     # Loop over the dome flats
-    for i in range(ndomes):
+    for i in range(50):
         print('\n(' + str(i+1) + '/' + ndomestr + '):')
 
+        # Make sure there's a valid MJD
+        if exp['MJD'][i] < 100: 
+            print('PROBLEM: MJD < 100 for ' + str(exp['NUM'][i]))
+            continue
+
+        # Find the ap2D files for all 3 chips
         twodFiles = glob.glob(expdir4 + str(exp['MJD'][i]) + '/ap2D*' + str(exp['NUM'][i]) + '.fits')
         if len(twodFiles) < 1:
             twodFiles = glob.glob(expdir5 + str(exp['MJD'][i]) + '/ap2D*' + str(exp['NUM'][i]) + '.fits')
             if len(twodFiles) < 1:
                 print('PROBLEM: ap2D files not found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
                 continue
-
         twodFiles.sort()
         twodFiles = np.array(twodFiles)
 
