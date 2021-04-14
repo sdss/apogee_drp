@@ -80,7 +80,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
                    ('EXPTIME',         np.float64),
                    ('NREAD',           np.int16),
                    ('ROTPOS',          np.float64),
-                   ('SEEING',          np.float64),
+                   #('SEEING',          np.float64),
                    ('AZ',              np.float64),
                    ('ALT',             np.float64),
                    ('IPA',             np.float64),
@@ -159,7 +159,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
         outstr['EXPTIME'][i] =  hdr['EXPTIME']
         outstr['NREAD'][i] =    hdr['NREAD']
         outstr['ROTPOS'][i] =   hdr['ROTPOS']
-        outstr['SEEING'][i] =   hdr['SEEING']
+        #doutstr['SEEING'][i] =   hdr['SEEING']
         outstr['AZ'][i] =       hdr['AZ']
         outstr['ALT'][i] =      hdr['ALT']
         outstr['IPA'][i] =      hdr['IPA']
