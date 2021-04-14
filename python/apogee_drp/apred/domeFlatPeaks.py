@@ -149,12 +149,14 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
         else:
             print(ttxt + 'ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
 
+        # Get values from master exposure table
         outstr['PSFID'][i] =   exp['NUM'][i]
         outstr['PLATEID'][i] = exp['PLATEID'][i]
         outstr['CARTID'][i] =  exp['CARTID'][i]
         outstr['DATEOBS'][i] = exp['DATEOBS'][i]
         outstr['MJD'][i] =     exp['MJD'][i]
 
+        # Get ap2D header values
         hdr = fits.getheader(twodFiles[0])
         outstr['EXPTIME'][i] =  hdr['EXPTIME']
         outstr['NREAD'][i] =    hdr['NREAD']
