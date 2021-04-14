@@ -162,7 +162,10 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
             outstr['ROTPOS'][i] = hdr['ROTPOS']
         except:
             outstr['ROTPOS'][i] = -9999.999
-        #doutstr['SEEING'][i] =   hdr['SEEING']
+        try:
+            doutstr['SEEING'][i] =   hdr['SEEING']
+        except:
+            outstr['SEEING'][i] = -9999.999
         outstr['AZ'][i] =       hdr['AZ']
         outstr['ALT'][i] =      hdr['ALT']
         outstr['IPA'][i] =      hdr['IPA']
