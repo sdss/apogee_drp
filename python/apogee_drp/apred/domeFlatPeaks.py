@@ -158,7 +158,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
         hdr = fits.getheader(twodFiles[0])
         outstr['EXPTIME'][i] =  hdr['EXPTIME']
         outstr['NREAD'][i] =    hdr['NREAD']
-        outstr['ROTPOS'][i] =   hdr['ROTPOS']
+        try:
+            outstr['ROTPOS'][i] = hdr['ROTPOS']
         #doutstr['SEEING'][i] =   hdr['SEEING']
         outstr['AZ'][i] =       hdr['AZ']
         outstr['ALT'][i] =      hdr['ALT']
