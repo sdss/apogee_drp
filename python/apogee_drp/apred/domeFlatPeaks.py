@@ -106,7 +106,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
                    ('TCOLLIM',         np.float64),
                    ('TCPCORN',         np.float64),
                    ('TCLDPHNG',        np.float64),
-                   ('PIX0',            np.int16), (nchips, nfiber)),
+                   ('PIX0',            np.int16,   (nchips, nfiber)),
                    ('GAUSS_HEIGHT',    np.float64, (nchips, nfiber)),
                    ('E_GAUSS_HEIGHT',  np.float64, (nchips, nfiber)),
                    ('GAUSS_CENT',      np.float64, (nchips, nfiber)),
