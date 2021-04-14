@@ -42,10 +42,8 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None):
 
     fil = os.path.abspath(__file__)
     codedir = os.path.dirname(fil)
-    datadir = codedir + '../../data/'
+    datadir = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/'
     instrument = 'apogee-n'
-    # put this in apogee_drp/data/domeflat/
-    import pdb; pdb.set_trace()
     refpix = ascii.read(datadir + 'refpixN.dat')
     
     if telescope == 'lco25m':
