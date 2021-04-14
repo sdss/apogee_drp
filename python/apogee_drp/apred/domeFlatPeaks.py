@@ -30,7 +30,7 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 
 ###################################################################################################
-def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, mjdstart=None):
+def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None):
     start_time = time.time()
 
     chips = np.array(['a','b','c'])
@@ -63,7 +63,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, ndomes=None, 
     if mjdstart is not None: 
         gd, = np.where(exp['MJD'] > mjdstart)
         exp = exp[gd]
-    if ndomes is None: ndomes = len(gd)
+    ndomes = len(gd)
     ndomestr = str(ndomes)
     
     print('Running code on ' + ndomestr + ' dome flats')
