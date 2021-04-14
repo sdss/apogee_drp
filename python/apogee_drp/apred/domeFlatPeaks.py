@@ -197,7 +197,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
 
             success, = np.where(gpeaks['success'] == True)
-            print('  ' + twodFiles[ichip] + ': ' + str(len(success)) + ' successful Gaussian fits')
+            print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
 
             outstr['PIX0'][i, ichip, :] =            pix0
             outstr['GAUSS_HEIGHT'][i, ichip, :] =    gpeaks['pars'][:, 0]
