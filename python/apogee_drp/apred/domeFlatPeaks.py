@@ -196,6 +196,9 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
             pix0 = np.array(refpix[chips[ichip]])
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
 
+            success, = np.where(gpeaks['success'] == True)
+            print('  ' + twodFiles[ichip] + ': ' + str(len(success)) + ' successful Gaussian fits')
+
             outstr['PIX0'][i, ichip, :] =            pix0
             outstr['GAUSS_HEIGHT'][i, ichip, :] =    gpeaks['pars'][:, 0]
             outstr['E_GAUSS_HEIGHT'][i, ichip, :] =  gpeaks['perr'][:, 0]
@@ -207,9 +210,6 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
             outstr['E_GAUSS_YOFFSET'][i, ichip, :] = gpeaks['perr'][:, 3]
             outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
             outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
-
-            success, = np.where(gpeaks['success'] == True)
-            print('  ' + twodFiles[ichip] + ': ' + str(len(success)) + ' successful Gaussian fits')
 
     Table(outstr).write(outfile, overwrite=True)
 
