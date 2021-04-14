@@ -60,7 +60,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
 
     # Option to start at a certain MJD
     if mjdstart is not None: 
-        gd, = np.where(exp['MJD'] > mjdstart)
+        gd, = np.where(exp['MJD'] >= mjdstart)
         exp = exp[gd]
     ndomes = len(gd)
     ndomestr = str(ndomes)
