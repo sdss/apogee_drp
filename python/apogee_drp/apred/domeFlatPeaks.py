@@ -36,17 +36,16 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
     chips = np.array(['a','b','c'])
     nchips = len(chips)
     nfiber = 300
-    npix = 2048
 
+    instrument = 'apogee-n'
+    inst = 'N'
+    if telescope == 'lco25m':
+        instrument = 'apogee-s'
+        inst = 'S'
     fil = os.path.abspath(__file__)
     codedir = os.path.dirname(fil)
     datadir = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/domeflat/'
-    instrument = 'apogee-n'
-    refpix = ascii.read(datadir + 'refpixN.dat')
-    
-    if telescope == 'lco25m':
-        instrument = 'apogee-s'
-        refpix = ascii.read(datadir + 'refpixS.dat')
+    refpix = ascii.read(datadir + 'refpix' + inst + '.dat')
 
     apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     mdir = apodir + '/monitor/'
@@ -126,7 +125,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
     outstr = np.zeros(ndomes, dtype=dt)
 
     # Loop over the dome flats
-    for i in range(10):
+    for i in range(ndomes):
         ttxt = '\n(' + str(i+1) + '/' + ndomestr + '): '
 
         # Make sure there's a valid MJD
@@ -225,15 +224,17 @@ def matchtrace(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022
     chips = np.array(['a','b','c'])
     nchips = len(chips)
     nfiber = 300
-    npix = 2048
 
     instrument = 'apogee-n'
-    refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixN.dat')
-    
+    inst = 'N'
     if telescope == 'lco25m':
         instrument = 'apogee-s'
-        refpix = ascii.read('/uufs/chpc.utah.edu/common/home/u0955897/refpixS.dat')
-
+        inst = 'S'
+    fil = os.path.abspath(__file__)
+    codedir = os.path.dirname(fil)
+    datadir = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/domeflat/'
+    refpix = ascii.read(datadir + 'refpix' + inst + '.dat')
+    
     apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     mdir = apodir + 'monitor/'
     expdir = apodir + 'exposures/' + instrument + '/'
