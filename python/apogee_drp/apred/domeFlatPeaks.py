@@ -410,23 +410,23 @@ def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
                 #ipix = pix[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
 
                 gfit = peakfit.gausspeakfit(totflux, pix0=pix0[ifiber], sigma=toterror)
-                import pdb; pdb.set_trace()
 
+                success, = np.where(gpeaks['success'] == True)
+                print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
 
-                #success, = np.where(gpeaks['success'] == True)
-                #print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
-
-                #outstr['PIX0'][i, ichip, :] =            pix0
-                #outstr['GAUSS_HEIGHT'][i, ichip, :] =    gpeaks['pars'][:, 0]
-                #outstr['E_GAUSS_HEIGHT'][i, ichip, :] =  gpeaks['perr'][:, 0]
-                #outstr['GAUSS_CENT'][i, ichip, :] =      gpeaks['pars'][:, 1]
-                #outstr['E_GAUSS_CENT'][i, ichip, :] =    gpeaks['perr'][:, 1]
-                #outstr['GAUSS_SIGMA'][i, ichip, :] =     gpeaks['pars'][:, 2]
-                #outstr['E_GAUSS_SIGMA'][i, ichip, :] =   gpeaks['perr'][:, 2]
-                #outstr['GAUSS_YOFFSET'][i, ichip, :] =   gpeaks['pars'][:, 3]
-                #outstr['E_GAUSS_YOFFSET'][i, ichip, :] = gpeaks['perr'][:, 3]
-                #outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
+                outstr['PIX0'][i, ichip, ifiber] =            pix0[ifiber]
+                outstr['GAUSS_HEIGHT'][i, ichip, ifiber] =    gpeaks['pars'][0]
+                outstr['E_GAUSS_HEIGHT'][i, ichip, ifiber] =  gpeaks['perr'][0]
+                outstr['GAUSS_CENT'][i, ichip, ifiber] =      gpeaks['pars'][1]
+                outstr['E_GAUSS_CENT'][i, ichip, ifiber] =    gpeaks['perr'][1]
+                outstr['GAUSS_SIGMA'][i, ichip, ifiber] =     gpeaks['pars'][2]
+                outstr['E_GAUSS_SIGMA'][i, ichip, ifiber] =   gpeaks['perr'][2]
+                outstr['GAUSS_YOFFSET'][i, ichip, ifiber] =   gpeaks['pars'][3]
+                outstr['E_GAUSS_YOFFSET'][i, ichip, ifiber] = gpeaks['perr'][3]
+                #outstr['GAUSS_FLUX'][i, ichip, ifiber] =      gpeaks['sumflux']
                 #outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
+
+        import pdb; pdb.set_trace()
 
     Table(outstr).write(outfile, overwrite=True)
 
