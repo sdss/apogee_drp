@@ -404,8 +404,8 @@ def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
             toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
             pix0 = np.array(refpix[chips[ichip]])
             for ifiber in range(nfibers):
-                iflux = totflux[pix0[ifiber] - fibrad, pix0[ifiber] + fibrad]
-                ierror = toterror[pix0[ifiber] - fibrad, pix0[ifiber] + fibrad]
+                iflux = totflux[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad]
+                ierror = toterror[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad]
                 gfit = peakfit.gausspeakfit(iflux, pix0=pix0[ifiber], sigma=ierror)
 
                 import pdb; pdb.set_trace()
