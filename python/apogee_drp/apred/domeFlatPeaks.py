@@ -226,7 +226,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
     return
 
 ###################################################################################################
-def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None, fibrad=4):
+def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None, fibrad=5):
     start_time = time.time()
 
     chips = np.array(['a','b','c'])
@@ -404,9 +404,9 @@ def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
             toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
             pix0 = np.array(refpix[chips[ichip]])
             for ifiber in range(nfibers):
-                iflux = totflux[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad]
-                ierror = toterror[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad]
-                ipix = pix[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad]
+                iflux = totflux[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
+                ierror = toterror[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
+                ipix = pix[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
                 import pdb; pdb.set_trace()
                 gfit = peakfit.gausspeakfit(iflux, pix0=pix0[ifiber], sigma=ierror)
 
