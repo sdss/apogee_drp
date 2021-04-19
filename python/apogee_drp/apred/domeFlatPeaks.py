@@ -411,18 +411,18 @@ def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
 
                 gfit = peakfit.gausspeakfit(totflux, pix0=pix0[ifiber], sigma=toterror)
 
-                success, = np.where(gpeaks['success'] == True)
-                print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
+                #success, = np.where(gpeaks['success'] == True)
+                #print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
 
                 outstr['PIX0'][i, ichip, ifiber] =            pix0[ifiber]
-                outstr['GAUSS_HEIGHT'][i, ichip, ifiber] =    gpeaks['pars'][0]
-                outstr['E_GAUSS_HEIGHT'][i, ichip, ifiber] =  gpeaks['perr'][0]
-                outstr['GAUSS_CENT'][i, ichip, ifiber] =      gpeaks['pars'][1]
-                outstr['E_GAUSS_CENT'][i, ichip, ifiber] =    gpeaks['perr'][1]
-                outstr['GAUSS_SIGMA'][i, ichip, ifiber] =     gpeaks['pars'][2]
-                outstr['E_GAUSS_SIGMA'][i, ichip, ifiber] =   gpeaks['perr'][2]
-                outstr['GAUSS_YOFFSET'][i, ichip, ifiber] =   gpeaks['pars'][3]
-                outstr['E_GAUSS_YOFFSET'][i, ichip, ifiber] = gpeaks['perr'][3]
+                outstr['GAUSS_HEIGHT'][i, ichip, ifiber] =    gfit['pars'][0]
+                outstr['E_GAUSS_HEIGHT'][i, ichip, ifiber] =  gfit['perr'][0]
+                outstr['GAUSS_CENT'][i, ichip, ifiber] =      gfit['pars'][1]
+                outstr['E_GAUSS_CENT'][i, ichip, ifiber] =    gfit['perr'][1]
+                outstr['GAUSS_SIGMA'][i, ichip, ifiber] =     gfit['pars'][2]
+                outstr['E_GAUSS_SIGMA'][i, ichip, ifiber] =   gfit['perr'][2]
+                outstr['GAUSS_YOFFSET'][i, ichip, ifiber] =   gfit['pars'][3]
+                outstr['E_GAUSS_YOFFSET'][i, ichip, ifiber] = gfit['perr'][3]
                 #outstr['GAUSS_FLUX'][i, ichip, ifiber] =      gpeaks['sumflux']
                 #outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
