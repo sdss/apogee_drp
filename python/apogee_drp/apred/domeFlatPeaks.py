@@ -408,7 +408,7 @@ def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
                 #iflux = totflux[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
                 #ierror = toterror[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
                 #ipix = pix[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
-
+                print(fiber+1)
                 gfit = peakfit.gausspeakfit(totflux, pix0=pix0[ifiber], sigma=toterror)
 
                 #success, = np.where(gpeaks['success'] == True)
