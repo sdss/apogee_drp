@@ -202,7 +202,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
         for ichip in range(nchips):
             pix0 = np.array(refpix[chips[ichip]])
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
 
             success, = np.where(gpeaks['success'] == True)
             print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
@@ -408,7 +408,7 @@ def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
                 #iflux = totflux[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
                 #ierror = toterror[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
                 #ipix = pix[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
-                print(ifiber+1)
+
                 gfit = peakfit.gausspeakfit(totflux, pix0=pix0[ifiber], sigma=toterror)
 
                 #success, = np.where(gpeaks['success'] == True)
@@ -426,8 +426,6 @@ def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
                 outstr['E_GAUSS_YOFFSET'][i, ichip, ifiber] = gfit[1][3]
                 #outstr['GAUSS_FLUX'][i, ichip, ifiber] =      gpeaks['sumflux']
                 #outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
-
-        import pdb; pdb.set_trace()
 
     Table(outstr).write(outfile, overwrite=True)
 
