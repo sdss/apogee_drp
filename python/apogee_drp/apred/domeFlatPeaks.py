@@ -406,9 +406,10 @@ def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
             for ifiber in range(nfibers):
                 iflux = totflux[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad]
                 ierror = toterror[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad]
+                import pdb; pdb.set_trace()
                 gfit = peakfit.gausspeakfit(iflux, pix0=pix0[ifiber], sigma=ierror)
 
-                import pdb; pdb.set_trace()
+
 
                 #success, = np.where(gpeaks['success'] == True)
                 #print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
