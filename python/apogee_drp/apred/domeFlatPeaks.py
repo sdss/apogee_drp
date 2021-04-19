@@ -410,10 +410,11 @@ def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
                 #ipix = pix[pix0[ifiber] - fibrad : pix0[ifiber] + fibrad + 1]
                 print(ifiber+1)
                 gfit = peakfit.gausspeakfit(totflux, pix0=pix0[ifiber], sigma=toterror)
-                if ifiber == 12: import pdb; pdb.set_trace()
+
                 #success, = np.where(gpeaks['success'] == True)
                 #print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
 
+                if gfit[0] is None: continue
                 outstr['PIX0'][i, ichip, ifiber] =            pix0[ifiber]
                 outstr['GAUSS_HEIGHT'][i, ichip, ifiber] =    gfit[0][0]
                 outstr['E_GAUSS_HEIGHT'][i, ichip, ifiber] =  gfit[1][0]
