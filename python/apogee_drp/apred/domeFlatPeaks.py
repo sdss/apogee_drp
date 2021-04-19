@@ -202,6 +202,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
         for ichip in range(nchips):
             pix0 = np.array(refpix[chips[ichip]])
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
+            import pdb; pdb.set_trace()
 
             success, = np.where(gpeaks['success'] == True)
             print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
