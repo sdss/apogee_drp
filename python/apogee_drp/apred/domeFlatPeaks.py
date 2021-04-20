@@ -69,7 +69,7 @@ def FindAllPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
     print('Estimated runtime: ' + str(int(round(3.86*ndomes))) + ' seconds\n')
 
     # Output file name
-    outfile = mdir + instrument + 'DomeFlatTrace.fits'
+    outfile = mdir + instrument + 'DomeFlatTrace-all.fits'
 
     # Lookup table structure.
     dt = np.dtype([('PSFID',           np.int32),
@@ -266,7 +266,7 @@ def FindIndPeaks(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None
     print('Estimated runtime: ' + str(int(round(3.86*ndomes))) + ' seconds\n')
 
     # Output file name
-    outfile = mdir + instrument + 'DomeFlatTrace.fits'
+    outfile = mdir + instrument + 'DomeFlatTrace-fiber.fits'
 
     # Lookup table structure.
     dt = np.dtype([('PSFID',           np.int32),
