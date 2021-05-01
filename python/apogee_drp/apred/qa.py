@@ -420,6 +420,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     dec = tothdr['DECDEG']
     DateObs = tothdr['DATE-OBS']
 
+    #import pdb; pdb.set_trace()
+
     if ims[0] == 0: 
         tot = load.apPlate(int(plate), mjd)
     else:
@@ -1780,8 +1782,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
 
             if objtype != 'SKY':
-                vishtml.write('<TD align ="center"><B>H</B><BR><BR>' + chmag)
-                vishtml.write('<TD align ="center"><B>J - K</B><BR><BR>' + cjkcolor)
+                vishtml.write('<TD align ="center">' + chmag)
+                vishtml.write('<TD align ="center">' + cjkcolor)
                 #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
             else:
                 vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
@@ -1789,12 +1791,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 #vishtml.write('<TD BGCOLOR='+color+'>---\n')
 
             if objtype == 'SKY': 
-                vishtml.write('<TD align="center"><B>Type</B><BR><BR>SKY')
+                vishtml.write('<TD align="center">SKY')
             else:
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
-                    vishtml.write('<TD align="center"><B>Type</B><BR><BR>TEL')
+                    vishtml.write('<TD align="center">TEL')
                 else:
-                    vishtml.write('<TD align="center"><B>Type</B><BR><BR>SCI')
+                    vishtml.write('<TD align="center">SCI')
 
             vishtml.write('<TD align="left">' + targflagtxt)
             vishtml.write('<BR><BR>' + starflagtxt)
@@ -1814,18 +1816,26 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
                     vcol = 'black'
                     if np.absolute(float(vhelio)) > 400: vcol = 'red'
-                    vishtml.write('<TD align ="center"><B>S/N</B><BR><BR>' + snratio)
-                    vishtml.write('<TD align ="center"><B>Vhelio</B><BR><BR><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
-                    vishtml.write('<TD align ="center"><B>Ncomp</B><BR><BR><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
-                    vishtml.write('<TD align ="center"><B>Teff</B><BR><BR><FONT COLOR="' + vcol + '">' + rvteff + '</FONT>')
-                    vishtml.write('<TD align ="center"><B>log(g)</B><BR><BR><FONT COLOR="' + vcol + '">' + rvlogg + '</FONT>')
-                    vishtml.write('<TD align ="center"><B>[Fe/H]</B><BR><BR><FONT COLOR="' + vcol + '">' + rvfeh + '</FONT>')
+                    vishtml.write('<TD align ="center">' + snratio)
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvteff + '</FONT>')
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvlogg + '</FONT>')
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvfeh + '</FONT>')
                 else:
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-99.9<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-1')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-9.999<TD align="center"><FONT COLOR="red">-9.999')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-99.9')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-1')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
             else:
-                vishtml.write('<TD align="center"><FONT COLOR="red">-99.9<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-1')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-9999<TD align="center"><FONT COLOR="red">-9.999<TD align="center"><FONT COLOR="red">-9.999')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-99.9')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-1')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
 
             # Throughput column
             tput = throughput[j]
@@ -2266,6 +2276,8 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 starPlotFilePath = starPlotDir + starPlotFile
                 starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
+                #if objid == '2M09210737+0242172': import pdb; pdb.set_trace()
+
                 # Read the apStar file
                 apstar = doppler.read(apStarPath)
                 apstar.normalize()
@@ -2277,6 +2289,9 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 else: 
                     wave = apstar.wave[:, 0]
                     flux = apstar.flux[:, 0]
+                if np.max(flux) < 0.1:
+                    print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
+                    continue
                 gd, = np.where((np.isnan(flux) == False) & (flux > 0))
                 wave = wave[gd]
                 flux = flux[gd]
