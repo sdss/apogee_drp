@@ -463,7 +463,6 @@ if platenum ge 15000 then begin
     endif
     ;; Still no match, just get catalogdb.catalog information 
     if nmatch eq 0 then begin
-      print,'no match for ',fiber[istar].catalogid
       ;; We have catalogid 
       if fiber[istar].catalogid gt 0 then begin
          cat = dbquery("select catalogid,ra,dec,version_id from catalogdb.catalog where catalogid="+strtrim(fiber[istar].catalogid,2),count=ncat)

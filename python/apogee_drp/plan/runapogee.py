@@ -560,6 +560,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         os.makedirs(logdir)
 
     # What MJD5 are we doing?
+    updatemjdfile = False
     if mjd5 is None:
         # Could get information on which MJDs were processed from database
         # or from $APOGEE_REDUX/daily/log/apo/MJD5.done
@@ -569,6 +570,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
             return
         else:
             mjd5 = int(mjd5[0])
+        updatemjdfile = True
 
     # Make sure the data is there
     mjddatadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory] + '/'+str(mjd5)
@@ -582,7 +584,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         return
 
     # Update the currentmjd file
-    writeNewMJD(observatory,mjd5,apred=apred)
+    if updatemjdfile is True:
+        writeNewMJD(observatory,mjd5,apred=apred)
 
 
     # Set up logging to screen and logfile
