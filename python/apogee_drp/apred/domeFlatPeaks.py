@@ -524,7 +524,7 @@ def matchTraceFiber(apred='daily', telescope='apo25m', medianrad=100, expnum=367
     mdir = apodir + 'monitor/'
     expdir = apodir + 'exposures/' + instrument + '/'
 
-    dome = fits.getdata(mdir + instrument + 'DomeFlatTrace.fits')
+    dome = fits.getdata(mdir + instrument + 'DomeFlatTrace-fiber.fits')
     ndomes = len(dome)
 
     twodFiles = glob.glob(expdir + '*/ap2D-*' + str(expnum) + '.fits')
@@ -567,15 +567,15 @@ def matchTraceFiber(apred='daily', telescope='apo25m', medianrad=100, expnum=367
             #print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
 
             if gfit[0] is None: continue
-            outstr['PIX0'][i, ichip, ifiber] =            pix0[ifiber]
-            outstr['GAUSS_HEIGHT'][i, ichip, ifiber] =    gfit[0][0]
-            outstr['E_GAUSS_HEIGHT'][i, ichip, ifiber] =  gfit[1][0]
-            outstr['GAUSS_CENT'][i, ichip, ifiber] =      gfit[0][1]
-            outstr['E_GAUSS_CENT'][i, ichip, ifiber] =    gfit[1][1]
-            outstr['GAUSS_SIGMA'][i, ichip, ifiber] =     gfit[0][2]
-            outstr['E_GAUSS_SIGMA'][i, ichip, ifiber] =   gfit[1][2]
-            outstr['GAUSS_YOFFSET'][i, ichip, ifiber] =   gfit[0][3]
-            outstr['E_GAUSS_YOFFSET'][i, ichip, ifiber] = gfit[1][3]
+            outstr['PIX0'][ichip, ifiber] =            pix0[ifiber]
+            outstr['GAUSS_HEIGHT'][ichip, ifiber] =    gfit[0][0]
+            outstr['E_GAUSS_HEIGHT'][ichip, ifiber] =  gfit[1][0]
+            outstr['GAUSS_CENT'][ichip, ifiber] =      gfit[0][1]
+            outstr['E_GAUSS_CENT'][ichip, ifiber] =    gfit[1][1]
+            outstr['GAUSS_SIGMA'][ichip, ifiber] =     gfit[0][2]
+            outstr['E_GAUSS_SIGMA'][ichip, ifiber] =   gfit[1][2]
+            outstr['GAUSS_YOFFSET'][ichip, ifiber] =   gfit[0][3]
+            outstr['E_GAUSS_YOFFSET'][ichip, ifiber] = gfit[1][3]
             #outstr['GAUSS_FLUX'][i, ichip, ifiber] =      gpeaks['sumflux']
             #outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
