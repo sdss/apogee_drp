@@ -452,7 +452,7 @@ def matchTraceAll(apred='daily', telescope='apo25m', medianrad=100, expnum=36760
     mdir = apodir + 'monitor/'
     expdir = apodir + 'exposures/' + instrument + '/'
 
-    dome = fits.getdata(mdir + instrument + 'DomeFlatTrace.fits')
+    dome = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
     ndomes = len(dome)
 
     twodFiles = glob.glob(expdir + '*/ap2D-*' + str(expnum) + '.fits')
