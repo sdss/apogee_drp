@@ -549,7 +549,7 @@ def matchTraceFiber(apred='daily', telescope='apo25m', medianrad=100, expnum=367
                    ('GAUSS_FLUX',      np.float64, (nchips, nfibers)),
                    ('GAUSS_NPEAKS',    np.int16, nchips)])
 
-    outstr = np.zeros(1, dtype=dt)
+    gpeaks = np.zeros(1, dtype=dt)
 
     # Loop over the chips
     for ichip in range(nchips):
@@ -567,38 +567,38 @@ def matchTraceFiber(apred='daily', telescope='apo25m', medianrad=100, expnum=367
             #print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
 
             if gfit[0] is None: continue
-            outstr['PIX0'][:, ichip, ifiber] =            pix0[ifiber]
-            outstr['GAUSS_HEIGHT'][:, ichip, ifiber] =    gfit[0][0]
-            outstr['E_GAUSS_HEIGHT'][:, ichip, ifiber] =  gfit[1][0]
-            outstr['GAUSS_CENT'][:, ichip, ifiber] =      gfit[0][1]
-            outstr['E_GAUSS_CENT'][:, ichip, ifiber] =    gfit[1][1]
-            outstr['GAUSS_SIGMA'][:, ichip, ifiber] =     gfit[0][2]
-            outstr['E_GAUSS_SIGMA'][:, ichip, ifiber] =   gfit[1][2]
-            outstr['GAUSS_YOFFSET'][:, ichip, ifiber] =   gfit[0][3]
-            outstr['E_GAUSS_YOFFSET'][:, ichip, ifiber] = gfit[1][3]
+            gpeaks['PIX0'][:, ichip, ifiber] =            pix0[ifiber]
+            gpeaks['GAUSS_HEIGHT'][:, ichip, ifiber] =    gfit[0][0]
+            gpeaks['E_GAUSS_HEIGHT'][:, ichip, ifiber] =  gfit[1][0]
+            gpeaks['GAUSS_CENT'][:, ichip, ifiber] =      gfit[0][1]
+            gpeaks['E_GAUSS_CENT'][:, ichip, ifiber] =    gfit[1][1]
+            gpeaks['GAUSS_SIGMA'][:, ichip, ifiber] =     gfit[0][2]
+            gpeaks['E_GAUSS_SIGMA'][:, ichip, ifiber] =   gfit[1][2]
+            gpeaks['GAUSS_YOFFSET'][:, ichip, ifiber] =   gfit[0][3]
+            gpeaks['E_GAUSS_YOFFSET'][:, ichip, ifiber] = gfit[1][3]
             #outstr['GAUSS_FLUX'][i, ichip, ifiber] =      gpeaks['sumflux']
             #outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
-    import pdb; pdb.set_trace()
-    # Remove failed and discrepant peakfits
-    gd, = np.where(gpeaks['success'] == True)
-    gpeaks = gpeaks[gd]
+        import pdb; pdb.set_trace()
+        # Remove failed and discrepant peakfits
+        gd, = np.where(gpeaks['GAUSS_HEIGHT'][:, ichip, :] > 0)
+        gpeaks = gpeaks[gd]
 
-    # Remove discrepant peakfits
-    medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
-    gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
-    gpeaks = gpeaks[gd]
-    ngpeaks = len(gd)
-    print(str(ngpeaks) + ' good peakfits.')
+        # Remove discrepant peakfits
+        medcenterr = np.nanmedian(gpeaks['E_GAUSS_CENT'][:, ichip, :])
+        gd, = np.where(gpeaks['E_GAUSS_CENT'][:, ichip, :] < medcenterr)
+        gpeaks = gpeaks[gd]
+        ngpeaks = len(gd)
+        print(str(ngpeaks) + ' good peakfits.')
 
-    dcent = dome['CENT'][:, ichip, gpeaks['num']]
-    for idome in range(ndomes):
-        diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
-        gd, = np.where(np.isnan(diff) == False)
-        if len(gd) < 5: continue
-        diff = diff[gd]
-        ndiff = len(diff)
-        rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
+        dcent = dome['CENT'][:, ichip, pix0]
+        for idome in range(ndomes):
+            diff = np.absolute(dcent[idome] - gpeaks['GAUSS_HEIGHT'][:, ichip, :])
+            gd, = np.where(np.isnan(diff) == False)
+            if len(gd) < 5: continue
+            diff = diff[gd]
+            ndiff = len(diff)
+            rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
 
     rmsMean = np.nanmean(rms, axis=0)
     gd, = np.where(rmsMean == np.nanmin(rmsMean))
