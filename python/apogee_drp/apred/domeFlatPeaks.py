@@ -481,7 +481,7 @@ def matchTraceAll(apred='daily', telescope='apo25m', medianrad=100, expnum=36760
         ngpeaks = len(gd)
         print(str(ngpeaks) + ' good peakfits.')
 
-        dcent = dome['CENT'][:, ichip, gpeaks['num']]
+        dcent = dome['GAUSS_CENT'][:, ichip, gpeaks['num']]
         for idome in range(ndomes):
             diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
             gd, = np.where(np.isnan(diff) == False)
