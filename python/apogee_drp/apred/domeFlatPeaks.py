@@ -579,26 +579,26 @@ def matchTraceFiber(apred='daily', telescope='apo25m', medianrad=100, expnum=367
             #outstr['GAUSS_FLUX'][i, ichip, ifiber] =      gpeaks['sumflux']
             #outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
-        import pdb; pdb.set_trace()
-        # Remove failed and discrepant peakfits
-        gd, = np.where(gpeaks['success'] == True)
-        gpeaks = gpeaks[gd]
+    import pdb; pdb.set_trace()
+    # Remove failed and discrepant peakfits
+    gd, = np.where(gpeaks['success'] == True)
+    gpeaks = gpeaks[gd]
 
-        # Remove discrepant peakfits
-        medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
-        gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
-        gpeaks = gpeaks[gd]
-        ngpeaks = len(gd)
-        print(str(ngpeaks) + ' good peakfits.')
+    # Remove discrepant peakfits
+    medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
+    gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
+    gpeaks = gpeaks[gd]
+    ngpeaks = len(gd)
+    print(str(ngpeaks) + ' good peakfits.')
 
-        dcent = dome['CENT'][:, ichip, gpeaks['num']]
-        for idome in range(ndomes):
-            diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
-            gd, = np.where(np.isnan(diff) == False)
-            if len(gd) < 5: continue
-            diff = diff[gd]
-            ndiff = len(diff)
-            rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
+    dcent = dome['CENT'][:, ichip, gpeaks['num']]
+    for idome in range(ndomes):
+        diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
+        gd, = np.where(np.isnan(diff) == False)
+        if len(gd) < 5: continue
+        diff = diff[gd]
+        ndiff = len(diff)
+        rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
 
     rmsMean = np.nanmean(rms, axis=0)
     gd, = np.where(rmsMean == np.nanmin(rmsMean))
