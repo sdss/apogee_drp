@@ -597,7 +597,7 @@ def matchTraceFiber(apred='daily', telescope='apo25m', medianrad=100, expnum=367
         ngpeaks = len(gd)
         print(str(ngpeaks) + ' good peakfits.')
 
-        dcent = dome['CENT'][:, ichip, pix0]
+        dcent = dome['GAUSS_CENT'][:, ichip, pix0]
         for idome in range(ndomes):
             diff = np.absolute(dcent[idome] - gcent)
             gd, = np.where(np.isnan(diff) == False)
