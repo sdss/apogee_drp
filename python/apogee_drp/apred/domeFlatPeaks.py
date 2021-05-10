@@ -579,7 +579,7 @@ def matchTraceFiber(apred='daily', telescope='apo25m', medianrad=100, expnum=367
             #outstr['GAUSS_FLUX'][i, ichip, ifiber] =      gpeaks['sumflux']
             #outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
-        #import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
         # Remove failed and discrepant peakfits
         gd, = np.where(gpeaks['GAUSS_HEIGHT'][:, ichip, :][0] > 0)
         gpeaks = gpeaks[gd]
