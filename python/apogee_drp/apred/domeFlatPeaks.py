@@ -582,6 +582,7 @@ def matchTraceFiber(apred='daily', telescope='apo25m', medianrad=100, expnum=367
         gheight = gpeaks['GAUSS_HEIGHT'][:, ichip, :][0]
         gcent = gpeaks['GAUSS_CENT'][:, ichip, :][0]
         e_gcent = gpeaks['E_GAUSS_CENT'][:, ichip, :][0]
+        pix0 = gpeaks['PIX0'][:, ichip, :][0]
         # Remove failed and discrepant peakfits
         gd, = np.where(gheight > 0)
         gheight = gheight[gd]
