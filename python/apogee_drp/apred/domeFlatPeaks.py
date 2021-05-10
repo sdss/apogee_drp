@@ -551,33 +551,33 @@ def matchTraceFiber(apred='daily', telescope='apo25m', medianrad=100, expnum=367
 
     outstr = np.zeros(1, dtype=dt)
 
-        # Loop over the chips
-        for ichip in range(nchips):
-            flux = fits.open(twodFiles[ichip])[1].data
-            error = fits.open(twodFiles[ichip])[2].data
-            npix = flux.shape[0]
-            pix = np.arange(0, npix, 1)
-            totflux = np.nanmedian(flux[:, (npix//2) - medianrad:(npix//2) + medianrad], axis=1)
-            toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
-            pix0 = np.array(refpix[chips[ichip]])
-            for ifiber in range(nfibers):
-                gfit = peakfit.gausspeakfit(totflux, pix0=pix0[ifiber], sigma=toterror)
+    # Loop over the chips
+    for ichip in range(nchips):
+        flux = fits.open(twodFiles[ichip])[1].data
+        error = fits.open(twodFiles[ichip])[2].data
+        npix = flux.shape[0]
+        pix = np.arange(0, npix, 1)
+        totflux = np.nanmedian(flux[:, (npix//2) - medianrad:(npix//2) + medianrad], axis=1)
+        toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
+        pix0 = np.array(refpix[chips[ichip]])
+        for ifiber in range(nfibers):
+            gfit = peakfit.gausspeakfit(totflux, pix0=pix0[ifiber], sigma=toterror)
 
-                #success, = np.where(gpeaks['success'] == True)
-                #print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
+            #success, = np.where(gpeaks['success'] == True)
+            #print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
 
-                if gfit[0] is None: continue
-                outstr['PIX0'][i, ichip, ifiber] =            pix0[ifiber]
-                outstr['GAUSS_HEIGHT'][i, ichip, ifiber] =    gfit[0][0]
-                outstr['E_GAUSS_HEIGHT'][i, ichip, ifiber] =  gfit[1][0]
-                outstr['GAUSS_CENT'][i, ichip, ifiber] =      gfit[0][1]
-                outstr['E_GAUSS_CENT'][i, ichip, ifiber] =    gfit[1][1]
-                outstr['GAUSS_SIGMA'][i, ichip, ifiber] =     gfit[0][2]
-                outstr['E_GAUSS_SIGMA'][i, ichip, ifiber] =   gfit[1][2]
-                outstr['GAUSS_YOFFSET'][i, ichip, ifiber] =   gfit[0][3]
-                outstr['E_GAUSS_YOFFSET'][i, ichip, ifiber] = gfit[1][3]
-                #outstr['GAUSS_FLUX'][i, ichip, ifiber] =      gpeaks['sumflux']
-                #outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
+            if gfit[0] is None: continue
+            outstr['PIX0'][i, ichip, ifiber] =            pix0[ifiber]
+            outstr['GAUSS_HEIGHT'][i, ichip, ifiber] =    gfit[0][0]
+            outstr['E_GAUSS_HEIGHT'][i, ichip, ifiber] =  gfit[1][0]
+            outstr['GAUSS_CENT'][i, ichip, ifiber] =      gfit[0][1]
+            outstr['E_GAUSS_CENT'][i, ichip, ifiber] =    gfit[1][1]
+            outstr['GAUSS_SIGMA'][i, ichip, ifiber] =     gfit[0][2]
+            outstr['E_GAUSS_SIGMA'][i, ichip, ifiber] =   gfit[1][2]
+            outstr['GAUSS_YOFFSET'][i, ichip, ifiber] =   gfit[0][3]
+            outstr['E_GAUSS_YOFFSET'][i, ichip, ifiber] = gfit[1][3]
+            #outstr['GAUSS_FLUX'][i, ichip, ifiber] =      gpeaks['sumflux']
+            #outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
         import pdb; pdb.set_trace()
         # Remove failed and discrepant peakfits
