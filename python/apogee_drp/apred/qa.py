@@ -2276,7 +2276,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 starPlotFilePath = starPlotDir + starPlotFile
                 starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
-                #if objid == '2M09210737+0242172': import pdb; pdb.set_trace()
+                if objid == '2M14432748+4006125': import pdb; pdb.set_trace()
 
                 # Read the apStar file
                 apstar = doppler.read(apStarPath)
