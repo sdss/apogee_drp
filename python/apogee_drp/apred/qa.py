@@ -2276,7 +2276,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 starPlotFilePath = starPlotDir + starPlotFile
                 starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
-                if objid == '2M14432748+4006125': import pdb; pdb.set_trace()
+                #if objid == '2M14432748+4006125': import pdb; pdb.set_trace()
 
                 # Read the apStar file
                 apstar = doppler.read(apStarPath)
@@ -2289,7 +2289,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 else: 
                     wave = apstar.wave[:, 0]
                     flux = apstar.flux[:, 0]
-                if np.max(flux) < 0.1:
+                if np.nanmax(flux) < 0.1:
                     print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
                     continue
                 gd, = np.where((np.isnan(flux) == False) & (flux > 0))
