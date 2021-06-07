@@ -308,6 +308,10 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
     planstr = plan.load(planfile, np=True)
     instrument = planstr['instrument']
 
+    # Get field name
+    tmp = planfile.split(telescope+'/')
+    field = tmp[1].split('/')[0]
+
     # Establish directories.
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'], 'apo1m':os.environ['APOGEE_DATA_N'],
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
