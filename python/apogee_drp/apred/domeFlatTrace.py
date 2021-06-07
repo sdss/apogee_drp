@@ -55,7 +55,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=N
 
     exp = fits.getdata(mdir + instrument + 'Exp.fits')
     gd, = np.where(exp['IMAGETYP'] == 'DomeFlat')
-    gd, = np.where((exp['IMAGETYP'] == 'DomeFlat') & (exp['MJD'] > 56880))
+    #gd, = np.where((exp['IMAGETYP'] == 'DomeFlat') & (exp['MJD'] > 56880))
     exp = exp[gd]
 
     # Option to start at a certain MJD
