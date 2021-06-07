@@ -360,7 +360,7 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
         p1 = 'sci exposure ' + str(ims[i]) + '----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
         p2 = 'alt [' + str("%.3f" % round(exp['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(dome['ALT'][pflat][0],3)) + '],  '
         p3 = 'ln2level [' + str("%.3f" % round(exp['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(dome['LN2LEVEL'][pflat][0],3)) + '],   '
-        p4 = 'rms = ' + str("%.4f" % round(rms[i],3))
+        p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
         print(p1 + p2 + p3 + p4)
 
     uniqdflatnums = np.unique(dflatnums)
