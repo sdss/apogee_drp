@@ -295,7 +295,7 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
     runtime = str("%.2f" % (time.time() - start_time))
     if silent is False: print("\nDone in " + runtime + " seconds.\n")
     
-    return dome['PSFID'][gd][0], dome['MJD'][gd][0]
+    return dome['PSFID'][gd][0], dome['MJD'][gd][0], gdrms
 
 ###################################################################################################
 def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='daily'):
@@ -350,14 +350,16 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
     n_ims = len(ims)
     dflatnums = np.empty(n_ims)
     dflatmjds = np.empty(n_ims)
+    rms = np.empty(n_ims)
     for i in range(n_ims):
-        dflatnums[i],dflatmjds[i] = findBestFlatExposure(apred=apred, telescope=telescope, expnum=ims[i], silent=True)
+        dflatnums[i], dflatmjds[i], rms[i] = findBestFlatExposure(apred=apred, telescope=telescope, expnum=ims[i], silent=True)
         pflat, = np.where(dflatnums[i] == dome['PSFID'])
         psci, = np.where(ims[i] == exp['NUM'])
         p1 = 'sci exposure ' + str(ims[i]) + '----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
         p2 = 'alt [' + str("%.3f" % round(exp['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(dome['ALT'][pflat][0],3)) + '],  '
-        p3 = 'ln2level [' + str("%.3f" % round(exp['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(dome['LN2LEVEL'][pflat][0],3)) + ']'
-        print(p1 + p2 + p3)
+        p3 = 'ln2level [' + str("%.3f" % round(exp['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(dome['LN2LEVEL'][pflat][0],3)) + '],   '
+        p4 = 'rms = ' + str("%.4f" % round(rms[i],3))
+        print(p1 + p2 + p3 + p4)
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone with plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
