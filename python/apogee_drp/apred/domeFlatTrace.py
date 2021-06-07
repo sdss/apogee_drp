@@ -348,6 +348,8 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
         return
 
     n_ims = len(ims)
+    print(str(int(round(n_ims))) + ' exposures\n')
+
     dflatnums = np.empty(n_ims)
     dflatmjds = np.empty(n_ims)
     rms = np.empty(n_ims)
@@ -361,9 +363,10 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
         p4 = 'rms = ' + str("%.4f" % round(rms[i],3))
         print(p1 + p2 + p3 + p4)
 
-    print('\n')
     uniqdflatnums = np.unique(dflatnums)
     nflats = len(uniqdflatnums)
+    print('\n' + str(int(round(nflats))) + ' dome flats:')
+
     nrepeats = np.empty(nflats)
     for i in range(nflats):
         tmp, = np.where(uniqdflatnums[i] == dflatnums)
