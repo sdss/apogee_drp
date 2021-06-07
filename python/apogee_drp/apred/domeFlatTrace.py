@@ -347,6 +347,7 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
         tmp1,tmp2 = findBestFlatExposure(apred=apred, telescope=telescope, expnum=ims[i], silent=True)
         dflatnums[i] = str(int(round(tmp1)))
         dflatmjds[i] = str(int(round(tmp2)))
+        import pdb; pdb.set_trace()
         print('sci exposure ' + str(ims[i]) + '----> dflat ' + dflatnums[i] + ' (MJD ' + dflatmjds[i] + ')')
 
     runtime = str("%.2f" % (time.time() - start_time))
