@@ -371,7 +371,7 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
     for i in range(nflats):
         tmp, = np.where(uniqdflatnums[i] == dflatnums)
         nrepeats[i] = len(tmp)
-        print(str(int(round(dflatnums[i]))) + ':  ' + str(int(round(nrepeats[i]))) + ' repeats')
+        print(str(int(round(uniqdflatnums[i]))) + ':  ' + str(int(round(nrepeats[i]))) + ' repeats')
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone with plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
