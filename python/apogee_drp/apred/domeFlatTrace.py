@@ -306,14 +306,17 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
     load = apload.ApLoad(apred=apred, telescope=telescope)
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
     planstr = plan.load(planfile, np=True)
-
-    # Get field name
-    tmp = planfile.split(telescope+'/')
-    field = tmp[1].split('/')[0]
+    instrument = planstr['instrument']
 
     # Establish directories.
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'], 'apo1m':os.environ['APOGEE_DATA_N'],
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
+    apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
+    mdir = apodir + 'monitor/'
+
+    # Read in the dome flat lookup table and master exposure table
+    dome = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
+    exp = fits.getdata(mdir + instrument + 'Exp.fits')
 
     # Get array of object exposures and find out how many are objects.
     all_ims = planstr['APEXP']['name']
@@ -345,7 +348,12 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
     dflatmjds = np.empty(n_ims)
     for i in range(n_ims):
         dflatnums[i],dflatmjds[i] = findBestFlatExposure(apred=apred, telescope=telescope, expnum=ims[i], silent=True)
-        print('sci exposure ' + str(ims[i]) + '----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + ')')
+        pflat, = np.where(dflatnums[i] == dome['PSFID']
+        psci, = np.where(ims[i] == exp['NUM']
+        p1 = 'sci exposure ' + str(ims[i]) + '----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
+        p2 = 'alt [' + str("%.3f" % round(exp['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(dome['ALT'][pflat][0],3)) + '],  '
+        p3 = 'ln2level [' + str("%.3f" % round(exp['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(dome['LN2LEVEL'][pflat][0],3)) + ']'
+        print(p1 + p2 + p3)
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone with plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
