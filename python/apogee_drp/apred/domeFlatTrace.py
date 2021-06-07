@@ -317,6 +317,7 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
 
     # Get array of object exposures and find out how many are objects.
     all_ims = planstr['APEXP']['name']
+    flavor = planstr['APEXP']['flavor']
 
     gd,= np.where(flavor == 'object')
     n_ims = len(gd)
