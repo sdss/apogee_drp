@@ -295,12 +295,12 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
     runtime = str("%.2f" % (time.time() - start_time))
     if silent is False: print("\nDone in " + runtime + " seconds.\n")
     
-    return dome['PSFID'][gd][0], dome['MJD'][gd][0], gdrms
+    return dome['PSFID'][gd][0], dome['MJD'][gd][0], rmsMean[gd][0]
 
 ###################################################################################################
 def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='daily'):
     start_time = time.time()
-    print("Finding best dome flats for plate " + plate + ", MJD " + mjd + "\n")
+    print("Finding best dome flats for plate " + plate + ", MJD " + mjd)
 
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -348,7 +348,7 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
         return
 
     n_ims = len(ims)
-    print(str(int(round(n_ims))) + ' exposures\n')
+    print(str(int(round(n_ims))) + " exposures\n")
 
     dflatnums = np.empty(n_ims)
     dflatmjds = np.empty(n_ims)
