@@ -261,7 +261,7 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
         if silent is False: print('ap2D files found for exposure ' + str(expnum))
 
     # Loop over the chips
-    rms = np.full([nchips, ndomes], 50).astype(float)
+    rms = np.full([nchips, ndomes], 50).astype(np.float64)
     for ichip in range(nchips):
         pix0 = np.array(refpix[chips[ichip]])
         gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
