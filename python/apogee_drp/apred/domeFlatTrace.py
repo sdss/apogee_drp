@@ -357,7 +357,7 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
         dflatnums[i], dflatmjds[i], rms[i] = findBestFlatExposure(apred=apred, telescope=telescope, expnum=ims[i], silent=True)
         pflat, = np.where(dflatnums[i] == dome['PSFID'])
         psci, = np.where(ims[i] == exp['NUM'])
-        p1 = 'sci exposure ' + str(ims[i]) + '----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
+        p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + '----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
         p2 = 'alt [' + str("%.3f" % round(exp['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(dome['ALT'][pflat][0],3)) + '],  '
         p3 = 'ln2level [' + str("%.3f" % round(exp['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(dome['LN2LEVEL'][pflat][0],3)) + '],   '
         p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
