@@ -295,7 +295,7 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
     runtime = str("%.2f" % (time.time() - start_time))
     if silent is False: print("\nDone in " + runtime + " seconds.\n")
     
-    return dome['PSFID'][gd]
+    return dome['PSFID'][gd][0]
 
 ###################################################################################################
 def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='daily'):
