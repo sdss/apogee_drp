@@ -343,7 +343,7 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
     n_ims = len(ims)
     dflatnums = np.empty(n_ims)
     for i in range(n_ims):
-        dflatnums[i] = findBestFlatExposure(apred=apred, telescope=telescope, expnum=ims[i], silent=True)
+        dflatnums[i] = int(round(findBestFlatExposure(apred=apred, telescope=telescope, expnum=ims[i], silent=True)))
         print('sci exposure ' + str(ims[i]) + '----> dflat ' + str(dflatnums[i]))
 
     runtime = str("%.2f" % (time.time() - start_time))
