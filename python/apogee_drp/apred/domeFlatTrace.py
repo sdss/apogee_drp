@@ -351,3 +351,17 @@ def findBestFlatSequence(plate='15000', mjd='59146', telescope='apo25m', apred='
 
 
 
+
+###################################################################################################
+def gaussFitAll(infile=None, medianrad=None, pix0=None):
+    flux = fits.open(infile)[1].data
+    error = fits.open(infile)[2].data
+    npix = flux.shape[0]
+
+    totflux = np.nanmedian(flux[:, (npix//2) - medianrad:(npix//2) + medianrad], axis=1)
+    toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
+    gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+
+    return gpeaks
+
+
