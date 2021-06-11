@@ -90,8 +90,8 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
 
     print(str(int(round(n_ims))) + " exposures\n")
 
-    dflatnums = np.empty(n_ims)
-    dflatmjds = np.empty(n_ims)
+    dflatnums = np.empty(n_ims).astype(int)
+    dflatmjds = np.empty(n_ims).astype(int)
     rms =       np.empty(n_ims)
 
     for i in range(n_ims):
@@ -123,7 +123,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
     for i in range(nflats):
         tmp, = np.where(uniqdflatnums[i] == dflatnums)
         nrepeats[i] = len(tmp)
-        print(str(int(round(uniqdflatnums[i]))) + ':  ' + str(int(round(nrepeats[i]))).rjust(2) + ' matches\n')
+        print(str(int(round(uniqdflatnums[i]))) + ':  ' + str(int(round(nrepeats[i]))).rjust(2) + ' matches')
 
     # Option to retun a single dome flat rather than an array of them
     if single is True:
@@ -137,14 +137,14 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         else:
             # If more than one dome flat have maxrepeats, decide based on rms
             minrmsind, = np.where(rms == np.min(rms))
-            dflatnums = dflatnums[minrmsind][0]
+            uniqdflatnums = uniqdflatnums[minrmsind][0]
             rms = rms[minrmsind][0]
-        print(" Single keyword set: going with " + str(dflatnums) + " for all exposures.")
+        print("\nSingle keyword set: going with " + str(uniqdflatnums) + " for all exposures.")
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.\n")
 
-    return dflatnums
+    return int(dflatnums)
 
 
 ###################################################################################################
