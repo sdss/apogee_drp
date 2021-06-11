@@ -139,7 +139,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
             minrmsind, = np.where(rms == np.min(rms))
             dflatnums = uniqdflatnums[minrmsind][0]
             rms = rms[minrmsind][0]
-        print("\nSingle keyword set: going with " + str(dflatnums) + " for all exposures.")
+        print("\nSingle keyword set: going with dflat " + str(dflatnums) + " for all exposures.")
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.\n")
