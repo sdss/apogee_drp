@@ -68,11 +68,6 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         load = apload.ApLoad(apred=apred, telescope=telescope)
         if planfile is None: planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
         planstr = plan.load(planfile, np=True)
-        import pdb; pdb.set_trace()
-
-        # Get field name
-        tmp = planfile.split(telescope+'/')
-        field = tmp[1].split('/')[0]
 
         # Get array of object exposures and find out how many are objects.
         all_ims = planstr['APEXP']['name']
