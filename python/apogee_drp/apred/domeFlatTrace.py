@@ -147,11 +147,11 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
     # Loop over the chips
     rms = np.full([nchips, ndomes], 50).astype(np.float64)
     for ichip in range(nchips):
-        twodfile = twodFiles[ichip]
+        twodfile = twodfiles[ichip]
         expnum = int(twodfile.split('-')[:-1].split('.')[0])
         import pdb; pdb.set_trace()
         pix0 = np.array(refpix[chips[ichip]])
-        gpeaks = gaussFitAll(infile=twodFile, medianrad=medianrad, pix0=pix0)
+        gpeaks = gaussFitAll(infile=twodfile, medianrad=medianrad, pix0=pix0)
 
         # Remove failed and discrepant peakfits
         gd, = np.where(gpeaks['success'] == True)
