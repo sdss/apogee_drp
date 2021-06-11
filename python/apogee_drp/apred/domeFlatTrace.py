@@ -130,19 +130,20 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         maxrepeats = np.max(nrepeats)
         maxind, = np.where(nrepeats == maxrepeats)
         uniqdflatnums = uniqdflatnums[maxind]
-        rms = rms[maxind]
         if len(maxind) == 1:
             dflatnums = uniqdflatnums[0]
-            rms = rms[0]
         else:
             # If more than one dome flat have maxrepeats, decide based on rms
-            minrmsind, = np.where(rms == np.min(rms))
+            urms = np.empty(len(uniqdflatnums))
+            for j in range(len(uniqdflatnums)):
+                gd, = np.where(uniqdflatnums[j] == dflatnums)
+                urms[j] = np.sum(rms[gd])
+            minrmsind, = np.where(urms == np.min(urms))
             dflatnums = uniqdflatnums[minrmsind][0]
-            rms = rms[minrmsind][0]
         print("\nSingle keyword set: going with dflat " + str(dflatnums) + " for all exposures.")
 
     runtime = str("%.2f" % (time.time() - start_time))
-    print("\nDone in " + runtime + " seconds.\n")
+    print("\nDone in " + runtime + " seconds.")
 
     return int(dflatnums)
 
