@@ -144,10 +144,6 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
     nfibers = 300
     ndomes = len(domeTable)
 
-    apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
-    mdir = apodir + 'monitor/'
-    expdir = apodir + 'exposures/' + instrument + '/'
-
     # Loop over the chips
     rms = np.full([nchips, ndomes], 50).astype(np.float64)
     for ichip in range(nchips):
