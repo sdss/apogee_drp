@@ -68,7 +68,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         load = apload.ApLoad(apred=apred, telescope=telescope)
         if planfile is None: planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
         planstr = plan.load(planfile, np=True)
-        instrument = planstr['instrument']
+        import pdb; pdb.set_trace()
 
         # Get field name
         tmp = planfile.split(telescope+'/')
@@ -87,16 +87,16 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
             # 0 = not reduced, 1 = reduced
             imsReduced = np.zeros(n_ims)
             for i in range(n_ims):
-                cframe = load.filename('Cframe', field=field, plate=int(plate), mjd=mjd, num=ims[i], chips=True)
-                if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
+                twodname = load.filename('ap2D', field=field, plate=int(plate), mjd=mjd, num=ims[i], chips=True)
+                if os.path.exists(twodname.replace('ap2D-','ap2D-a-')): imsReduced[i] = 1
             good, = np.where(imsReduced == 1)
             if len(good) > 0:
                 ims = ims[good]
             else:
-                print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
+                print("PROBLEM!!! 2D files not found . Skipping.\n")
                 return
         else:
-            print("PROBLEM!!! no object images found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
+            print("PROBLEM!!! No object images found. Skipping.\n")
             return
 
     n_ims = len(ims)
