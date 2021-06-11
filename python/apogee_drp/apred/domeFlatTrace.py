@@ -191,7 +191,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
             ngpeaks = len(gpeaks)
             if silent is False: print("   Keeping " + str(ngpeaks) + " fibers with flux > " + str(minflux))
 
-        dcent = dome['GAUSS_CENT'][:, ichip, gpeaks['num']]
+        dcent = domeTable['GAUSS_CENT'][:, ichip, gpeaks['num']]
         for idome in range(ndomes):
             diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
             gd, = np.where(np.isnan(diff) == False)
@@ -210,7 +210,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
     runtime = str("%.2f" % (time.time() - start_time))
     if silent is False: print("\n   Done in " + runtime + " seconds.\n")
     
-    return dome['PSFID'][gd][0], dome['MJD'][gd][0], rmsMean[gd][0]
+    return domeTable['PSFID'][gd][0], domeTable['MJD'][gd][0], rmsMean[gd][0]
 
 
 ###################################################################################################
