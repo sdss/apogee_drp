@@ -129,15 +129,15 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
     if single is True:
         maxrepeats = np.max(nrepeats)
         maxind, = np.where(nrepeats == maxrepeats)
-        dflatnums = dflatnums[maxind]
+        uniqdflatnums = uniqdflatnums[maxind]
         rms = rms[maxind]
         if len(maxind) == 1:
-            dflatnums = dflatnums[0]
+            dflatnums = uniqdflatnums[0]
             rms = rms[0]
         else:
             # If more than one dome flat have maxrepeats, decide based on rms
             minrmsind, = np.where(rms == np.min(rms))
-            uniqdflatnums = uniqdflatnums[minrmsind][0]
+            dflatnums = uniqdflatnums[minrmsind][0]
             rms = rms[minrmsind][0]
         print("\nSingle keyword set: going with " + str(uniqdflatnums) + " for all exposures.")
 
