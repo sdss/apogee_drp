@@ -68,6 +68,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         load = apload.ApLoad(apred=apred, telescope=telescope)
         if planfile is None: planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
         planstr = plan.load(planfile, np=True)
+        import pdb; pdb.set_trace()
 
         # Get array of object exposures and find out how many are objects.
         all_ims = planstr['APEXP']['name']
@@ -82,8 +83,9 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
             # 0 = not reduced, 1 = reduced
             imsReduced = np.zeros(n_ims)
             for i in range(n_ims):
-                twodname = load.filename('2D', num=ims[i], chips=True)
-                if os.path.exists(twodname.replace('ap2D-','ap2D-a-')): imsReduced[i] = 1
+                file2d = load.filename('2D', mjd=mjd, num=ims[i], chips='c').replace('2D-', '2D-c-')
+                #twodname = load.filename('2D', num=ims[i], chips=True)
+                if os.path.exists(file2d): imsReduced[i] = 1
             good, = np.where(imsReduced == 1)
             if len(good) > 0:
                 ims = ims[good]
