@@ -147,10 +147,16 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
     # Loop over the chips
     rms = np.full([nchips, ndomes], 50).astype(np.float64)
     for ichip in range(nchips):
+        # ap2D file for this chip
         twodfile = twodfiles[ichip]
+
+        # Get exposure number from the filename
         expnum = int(twodfile.split('-')[-1].split('.')[0])
-        import pdb; pdb.set_trace()
+
+        # Get reference pixels for this chip
         pix0 = np.array(refpix[chips[ichip]])
+
+        # Fit Gaussians to the trace positions
         gpeaks = gaussFitAll(infile=twodfile, medianrad=medianrad, pix0=pix0)
 
         # Remove failed and discrepant peakfits
