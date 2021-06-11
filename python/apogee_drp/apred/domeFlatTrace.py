@@ -183,9 +183,9 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
         gpeaks = gpeaks[gd]
 
         # Remove discrepant peakfits
-        #medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
-        #gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
-        #gpeaks = gpeaks[gd]
+        medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
+        gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
+        gpeaks = gpeaks[gd]
         ngpeaks = len(gd)
         if silent is False: print("   " + str(ngpeaks) + " successful peakfits")
 
