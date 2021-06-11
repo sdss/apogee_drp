@@ -87,7 +87,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
             # 0 = not reduced, 1 = reduced
             imsReduced = np.zeros(n_ims)
             for i in range(n_ims):
-                twodname = load.filename('ap2D', field=field, plate=int(plate), mjd=mjd, num=ims[i], chips=True)
+                twodname = load.filename('ap2D', num=ims[i], chips=True)
                 if os.path.exists(twodname.replace('ap2D-','ap2D-a-')): imsReduced[i] = 1
             good, = np.where(imsReduced == 1)
             if len(good) > 0:
