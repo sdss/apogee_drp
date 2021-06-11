@@ -194,11 +194,12 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
             if (highfluxfrac < 0) | (highfluxfrac > 1):
                 sys.exit("The highfluxfrac value needs to be between 0 and 1. Try again.")
             nkeep = int(np.ceil(ngpeaks * highfluxfrac))
+            print(" Matching to dome flats based on the " + str(nkeep) + " highest flux fibers")
+            # Sort by flux sum and keep the highest flux fibers
             fluxord = np.argsort(gpeaks['sumflux'])[::-1]
             gpeaks = gpeaks[fluxord][:nkeep]
             numord = np.argsort(gpeaks['num'])
             gpeaks = gpeaks[numord]
-            import pdb; pdb.set_trace()
 
         dcent = dome['GAUSS_CENT'][:, ichip, gpeaks['num']]
         for idome in range(ndomes):
@@ -214,7 +215,7 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
     if silent is False: print(rms[:, gd[0]])
 
     gdrms = str("%.5f" % round(rmsMean[gd][0],5))
-    if silent is False: print(' Best dome flat for exposure ' + str(expnum) + ': ' + str(dome['PSFID'][gd][0]) + ' (<rms> = ' + str(gdrms) + ')')
+    if silent is False: print(" Best dome flat for exposure " + str(expnum) + ": " + str(dome['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
     runtime = str("%.2f" % (time.time() - start_time))
     if silent is False: print("\nDone in " + runtime + " seconds.\n")
     
