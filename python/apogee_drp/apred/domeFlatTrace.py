@@ -225,7 +225,7 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
 
     rmsMean = np.nanmean(rms, axis=0)
     gd, = np.where(rmsMean == np.nanmin(rmsMean))
-    if silent is False: print(rms[:, gd[0]])
+    if silent is False: print("   rms:  " + str(rms[:, gd[0]]))
 
     gdrms = str("%.5f" % round(rmsMean[gd][0],5))
     if silent is False: print("   Best dome flat for exposure " + str(expnum) + ": " + str(dome['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
