@@ -88,20 +88,6 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
 
     n_ims = len(ims)
 
-    # Make an array indicating which exposures made it to ap2D
-    # 0 = not reduced, 1 = reduced
-    ims2D = np.zeros(n_ims)
-    for i in range(n_ims):
-        twodfile = load.filename('2D', mjd=mjd, num=ims[i], chips='c')
-        if os.path.exists(twodfile.replace('2D-','2D-a-')): ims2D[i] = 1
-    gd, = np.where(ims2D == 1)
-    if len(gd) > 0:
-        ims = ims[gd]
-    else:
-        sys.exit("PROBLEM!!! 2D files not found for exposure " + str(ims[i]))
-
-    n_ims = len(ims)
-
     print(str(int(round(n_ims))) + " exposures\n")
 
     dflatnums = np.empty(n_ims)
