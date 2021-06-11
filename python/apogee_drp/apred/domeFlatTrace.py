@@ -90,11 +90,11 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
 
     # Make an array indicating which exposures made it to ap2D
     # 0 = not reduced, 1 = reduced
-    imsReduced = np.zeros(n_ims)
+    ims2D = np.zeros(n_ims)
     for i in range(n_ims):
         twodfile = load.filename('2D', mjd=mjd, num=ims[i], chips='c')
-        if os.path.exists(twodfile.replace('2D-','2D-a-')): imsReduced[i] = 1
-    gd, = np.where(imsReduced == 1)
+        if os.path.exists(twodfile.replace('2D-','2D-a-')): ims2D[i] = 1
+    gd, = np.where(ims2D == 1)
     if len(gd) > 0:
         ims = ims[gd]
     else:
