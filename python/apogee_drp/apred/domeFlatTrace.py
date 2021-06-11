@@ -183,11 +183,11 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
         gpeaks = gpeaks[gd]
 
         # Remove discrepant peakfits
-        medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
-        gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
-        gpeaks = gpeaks[gd]
+        #medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
+        #gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
+        #gpeaks = gpeaks[gd]
         ngpeaks = len(gd)
-        if silent is False: print("   " + str(ngpeaks) + " good peakfits")
+        if silent is False: print("   " + str(ngpeaks) + " successful peakfits")
 
         # Option to only use fibers with flux higher than average dome flat flux
         if highfluxfrac is not None:
