@@ -129,7 +129,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         print(str(int(round(uniqdflatnums[i]))) + ':  ' + str(int(round(nrepeats[i]))).rjust(2) + ' matches')
 
     runtime = str("%.2f" % (time.time() - start_time))
-    print("\nDone with plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
+    print("\nDone in " + runtime + " seconds.\n")
 
     return dflatnums
 
