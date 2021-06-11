@@ -187,14 +187,14 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
         gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
         gpeaks = gpeaks[gd]
         ngpeaks = len(gd)
-        if silent is False: print(str(ngpeaks) + ' good peakfits.')
+        if silent is False: print("   " + str(ngpeaks) + " good peakfits")
 
         # Option to only use fibers with flux higher than average dome flat flux
         if highfluxfrac is not None:
             if (highfluxfrac < 0) | (highfluxfrac > 1):
                 sys.exit("The highfluxfrac value needs to be between 0 and 1. Try again.")
             nkeep = int(np.ceil(ngpeaks * highfluxfrac))
-            print(" Matching to dome flats based on the " + str(nkeep) + " highest flux fibers")
+            if silent is False: print("   Matching to dome flats based on the " + str(nkeep) + " highest flux fibers")
             # Sort by flux sum and keep the highest flux fibers
             fluxord = np.argsort(gpeaks['sumflux'])[::-1]
             gpeaks = gpeaks[fluxord][:nkeep]
@@ -215,9 +215,9 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
     if silent is False: print(rms[:, gd[0]])
 
     gdrms = str("%.5f" % round(rmsMean[gd][0],5))
-    if silent is False: print(" Best dome flat for exposure " + str(expnum) + ": " + str(dome['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
+    if silent is False: print("   Best dome flat for exposure " + str(expnum) + ": " + str(dome['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
     runtime = str("%.2f" % (time.time() - start_time))
-    if silent is False: print("\nDone in " + runtime + " seconds.\n")
+    if silent is False: print("\n   Done in " + runtime + " seconds.\n")
     
     return dome['PSFID'][gd][0], dome['MJD'][gd][0], rmsMean[gd][0]
 
