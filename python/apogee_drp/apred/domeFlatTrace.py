@@ -220,6 +220,8 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
             diff = diff[gd]
             ndiff = len(diff)
             rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
+            if silent is False: print("   Final match based on " + str(ndiff) + " fibers:")
+            if silent is False: print(gpeaks['num'][gd])
 
     rmsMean = np.nanmean(rms, axis=0)
     gd, = np.where(rmsMean == np.nanmin(rmsMean))
