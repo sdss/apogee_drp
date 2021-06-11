@@ -45,7 +45,7 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 #
 ###################################################################################################
 def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', telescope='apo25m', 
-                         apred='daily', single=False, highfluxfrac=None):
+                         apred='daily', single=False, highfluxfrac=None, silent=True):
 
     start_time = time.time()
     print("Finding best dome flats for plate " + plate + ", MJD " + mjd)
@@ -103,7 +103,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
     dflatmjds = np.empty(n_ims)
     rms = np.empty(n_ims)
     for i in range(n_ims):
-        dflatnums[i], dflatmjds[i], rms[i] = findBestFlatExposure(apred=apred, telescope=telescope, expnum=ims[i], silent=True, highfluxfrac=highfluxfrac)
+        dflatnums[i], dflatmjds[i], rms[i] = findBestFlatExposure(apred=apred, telescope=telescope, expnum=ims[i], silent=silent, highfluxfrac=highfluxfrac)
         pflat, = np.where(dflatnums[i] == dome['PSFID'])
         psci, = np.where(ims[i] == exp['NUM'])
         p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
@@ -138,7 +138,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
 #
 ###################################################################################################
 def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022, 
-                         silent=False, highfluxfrac=None):
+                         silent=True, highfluxfrac=None):
 
     start_time = time.time()
 
