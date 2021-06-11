@@ -48,7 +48,10 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
                          apred='daily', single=False, highfluxfrac=None, minflux=None, silent=True):
 
     start_time = time.time()
-    print("Finding best dome flats for plate " + plate + ", MJD " + mjd)
+    #print("Finding best dome flats for plate " + plate + ", MJD " + mjd)
+
+    instrument = 'apogee-n'
+    if telescope == 'lco25m': instrument = 'apogee-s'
 
     # Establish directories.
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'], 'apo1m':os.environ['APOGEE_DATA_N'],
