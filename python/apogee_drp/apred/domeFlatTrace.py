@@ -35,9 +35,9 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 # Calls "findBestFlatExposure" to do the matching.
 #
 # Inputs can be:
-#     (1) an array of exposure numbers
+#     (1) an array of exposure numbers, e.g. [36880094, 36880095], or [36880094] for single exposure
 #     (2) a planfile
-#     (3) a plate + MJD
+#     (3) a plate + MJD pair
 #
 # Output can be:
 #     (1) an array of dome flat exposure numbers, one per input exposure number (default)
@@ -81,8 +81,10 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         gd, = np.where(planstr['APEXP']['flavor'] == 'object')
         ims = planstr['APEXP']['name'][gd]
         mjd = str(planstr['mjd'])
+        import pdb; pdb.set_trace()
     else:
         # Construct MJD from exposure number
+        if len(ims
         num = (ims[0] - ims[0] % 10000 ) / 10000
         mjd = '{:05d}'.format(int(num) + 55562)
 
@@ -112,15 +114,32 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
         print(p1 + p2 + p3 + p4)
 
+    # Get the unique dome flat exposure numbers
     uniqdflatnums = np.unique(dflatnums)
     nflats = len(uniqdflatnums)
     print('\n' + str(int(round(nflats))) + ' dome flats:')
 
+    # Check on how many time each unique dome flat was selected
     nrepeats = np.empty(nflats)
     for i in range(nflats):
         tmp, = np.where(uniqdflatnums[i] == dflatnums)
         nrepeats[i] = len(tmp)
         print(str(int(round(uniqdflatnums[i]))) + ':  ' + str(int(round(nrepeats[i]))).rjust(2) + ' matches')
+
+    # Option to retun a single dome flat rather than an array of them
+    if single is True:
+        maxrepeats = np.max(nrepeats)
+        maxind, = np.where(nrepeats == maxrepeats)
+        dflatnums = dflatnums[maxind]
+        rms = rms[maxind]
+        if len(maxind) == 1:
+            dflatnums = dflatnums[0]
+            rms = rms[0]
+        else:
+            # If more than one dome flat have maxrepeats, decide based on rms
+            minrmsind, = np.where(rms == np.min(rms))
+            dflatnums = dflatnums[minrmsind][0]
+            rms = rms[minrmsind][0]
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.\n")
@@ -129,10 +148,10 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
 
 
 ###################################################################################################
-# Program for matching an exposure to the dome flat lookup table
+# Function for matching an exposure to the dome flat lookup table
 # Calls "gaussFitAll" to do the Gaussian fitting
 #
-# Input is an exposure number.
+# Only run by calling findBestFlatSequence, which can be a single exposure
 #
 # Output is the matched dome flat exposure number, MJD, and the r.m.s. of the match.
 #
