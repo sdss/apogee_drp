@@ -95,7 +95,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
 
     for i in range(n_ims):
         # Find the ap2D files for this exposure
-        file2d = load.filename('2D', mjd=mjd, num=expnum, chips='c')
+        file2d = load.filename('2D', mjd=mjd, num=ims[i], chips='c')
         twodfiles = np.array([file2d.replace('2D-', '2D-a-'),
                               file2d.replace('2D-', '2D-b-'),
                               file2d.replace('2D-', '2D-c-')])
