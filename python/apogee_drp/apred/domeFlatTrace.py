@@ -207,8 +207,6 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 
     gdrms = str("%.5f" % round(rmsMean[gd][0],5))
     if silent is False: print("   Best dome flat for exposure " + str(expnum) + ": " + str(domeTable['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
-    runtime = str("%.2f" % (time.time() - start_time))
-    if silent is False: print("\n   Done in " + runtime + " seconds.\n")
     
     return domeTable['PSFID'][gd][0], domeTable['MJD'][gd][0], rmsMean[gd][0]
 
