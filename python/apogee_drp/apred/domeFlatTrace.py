@@ -50,6 +50,16 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
     start_time = time.time()
     print("Finding best dome flats for plate " + plate + ", MJD " + mjd)
 
+    # Establish directories.
+    datadir = {'apo25m':os.environ['APOGEE_DATA_N'], 'apo1m':os.environ['APOGEE_DATA_N'],
+               'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
+    apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
+    mdir = apodir + 'monitor/'
+
+    # Read in the dome flat lookup table and master exposure table
+    dome = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
+    exp = fits.getdata(mdir + instrument + 'Exp.fits')
+
     if ims is None:
         # Use telescope, plate, mjd, and apred to load planfile into structure.
         load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -60,16 +70,6 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         # Get field name
         tmp = planfile.split(telescope+'/')
         field = tmp[1].split('/')[0]
-
-        # Establish directories.
-        datadir = {'apo25m':os.environ['APOGEE_DATA_N'], 'apo1m':os.environ['APOGEE_DATA_N'],
-                   'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
-        apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
-        mdir = apodir + 'monitor/'
-
-        # Read in the dome flat lookup table and master exposure table
-        dome = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
-        exp = fits.getdata(mdir + instrument + 'Exp.fits')
 
         # Get array of object exposures and find out how many are objects.
         all_ims = planstr['APEXP']['name']
@@ -221,7 +221,7 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
             diff = diff[gd]
             ndiff = len(diff)
             rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
-        if silent is False: print("   Final match based on " + str(ndiff) + " fibers:")
+        #if silent is False: print("   Final match based on " + str(ndiff) + " fibers:")
 
     rmsMean = np.nanmean(rms, axis=0)
     gd, = np.where(rmsMean == np.nanmin(rmsMean))
