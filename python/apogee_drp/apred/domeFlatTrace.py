@@ -84,7 +84,6 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         import pdb; pdb.set_trace()
     else:
         # Construct MJD from exposure number
-        if len(ims
         num = (ims[0] - ims[0] % 10000 ) / 10000
         mjd = '{:05d}'.format(int(num) + 55562)
 
