@@ -454,6 +454,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     rows = 300 - fiber['fiberid']
     guide = plug['guidedata']
 
+    import pdb; pdb.set_trace()
+
     # Add sn and obsmag columns to fiber structure
     dtype =        np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
     snColumn =     np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
@@ -2520,7 +2522,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         n = int(round(uExposures[i]))
         file1d = load.filename('1D', mjd=mjd, num=n, chips='c').replace('1D-', '1D-c-')
         if os.path.exists(file1d) == False:
-            file2d = load.filename('2D', mjd=mjd, num=n, chips='c').replace('1D-', '1D-c-')
+            file2d = load.filename('2D', mjd=mjd, num=n, chips='c').replace('2D-', '2D-c-')
             if (os.path.exists(file2d) == False) & (os.path.exists(file2d + '.fz') == False):
                 miss2d = 1
             else:
