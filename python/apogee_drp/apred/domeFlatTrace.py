@@ -68,43 +68,44 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         load = apload.ApLoad(apred=apred, telescope=telescope)
         if planfile is None: planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
         planstr = plan.load(planfile, np=True)
-        import pdb; pdb.set_trace()
 
         # Get array of object exposures and find out how many are objects.
-        all_ims = planstr['APEXP']['name']
-        flavor = planstr['APEXP']['flavor']
+        gd, = np.where(planstr['APEXP']['flavor'] == 'object')
+        ims = planstr['APEXP']['name'][gd]
+        mjd = str(planstr['mjd'])
 
-        gd,= np.where(flavor == 'object')
-        n_ims = len(gd)
-
-        if n_ims > 0:
-            ims = all_ims[gd]
-            # Make an array indicating which exposures made it to apCframe
-            # 0 = not reduced, 1 = reduced
-            imsReduced = np.zeros(n_ims)
-            for i in range(n_ims):
-                file2d = load.filename('2D', mjd=mjd, num=ims[i], chips='c').replace('2D-', '2D-c-')
-                #twodname = load.filename('2D', num=ims[i], chips=True)
-                if os.path.exists(file2d): imsReduced[i] = 1
-            good, = np.where(imsReduced == 1)
-            if len(good) > 0:
-                ims = ims[good]
-            else:
-                print("PROBLEM!!! 2D files not found . Skipping.\n")
-                return
-        else:
-            print("PROBLEM!!! No object images found. Skipping.\n")
-            return
+        #if n_ims > 0:
+        #    ims = all_ims[gd]
+        #    # Make an array indicating which exposures made it to apCframe
+        #    # 0 = not reduced, 1 = reduced
+        #    imsReduced = np.zeros(n_ims)
+        #    for i in range(n_ims):
+        #        file2d = load.filename('2D', mjd=mjd, num=ims[i], chips='c').replace('2D-', '2D-c-')
+        #        #twodname = load.filename('2D', num=ims[i], chips=True)
+        #        if os.path.exists(file2d): imsReduced[i] = 1
+        #    good, = np.where(imsReduced == 1)
+        #    if len(good) > 0:
+        #        ims = ims[good]
+        #    else:
+        #        print("PROBLEM!!! 2D files not found . Skipping.\n")
+        #        return
+        #else:
+        #    print("PROBLEM!!! No object images found. Skipping.\n")
+        #    return
+    else:
+        num = (ims[0] - ims[0] % 10000 ) / 10000
+        mjd = '{:05d}'.format(int(num) + 55562)
 
     n_ims = len(ims)
     print(str(int(round(n_ims))) + " exposures\n")
 
     dflatnums = np.empty(n_ims)
     dflatmjds = np.empty(n_ims)
-    rms = np.empty(n_ims)
+    rms =       np.empty(n_ims)
+
     for i in range(n_ims):
         # Run findBestFlatExposure on this exposure
-        dflatnums[i], dflatmjds[i], rms[i] = findBestFlatExposure(apred=apred, telescope=telescope, expnum=ims[i],
+        dflatnums[i], dflatmjds[i], rms[i] = findBestFlatExposure(apred=apred, telescope=telescope, mjd=mjd, expnum=ims[i],
                                                                   minflux=minflux, highfluxfrac=highfluxfrac, silent=silent)
         # Get info about exposure and matching dome flat
         pflat, = np.where(dflatnums[i] == dome['PSFID'])
@@ -140,7 +141,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
 # Output is the matched dome flat exposure number, MJD, and the r.m.s. of the match.
 #
 ###################################################################################################
-def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnum=36760022, 
+def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, mjd='59249', expnum=36870054, 
                          minflux=None, highfluxfrac=None, silent=True):
 
     start_time = time.time()
@@ -166,14 +167,19 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
     dome = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
     ndomes = len(dome)
 
-    twodFiles = glob.glob(expdir + '*/ap2D-*' + str(expnum) + '.fits')
-    twodFiles.sort()
-    twodFiles = np.array(twodFiles)
+    file2d = load.filename('2D', mjd=mjd, num=expnum, chips='c')
+    twodfiles = np.array([file2d.replace('2D-', '2D-a-'),
+                          file2d.replace('2D-', '2D-b-'),
+                          file2d.replace('2D-', '2D-c-')])
 
-    if len(twodFiles) < 3:
-        if silent is False: print('PROBLEM: less then 3 ap2D files found for exposure ' + str(expnum))
-    else:
-        if silent is False: print('ap2D files found for exposure ' + str(expnum))
+    #twodFiles = glob.glob(expdir + '*/ap2D-*' + str(expnum) + '.fits')
+    #twodFiles.sort()
+    #twodFiles = np.array(twodFiles)
+
+    #if len(twodFiles) < 3:
+    #    if silent is False: print('PROBLEM: less then 3 ap2D files found for exposure ' + str(expnum))
+    #else:
+   #     if silent is False: print('ap2D files found for exposure ' + str(expnum))
 
     # Loop over the chips
     rms = np.full([nchips, ndomes], 50).astype(np.float64)
