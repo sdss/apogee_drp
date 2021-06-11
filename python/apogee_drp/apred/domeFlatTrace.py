@@ -190,8 +190,15 @@ def findBestFlatExposure(apred='daily', telescope='apo25m', medianrad=100, expnu
         if silent is False: print(str(ngpeaks) + ' good peakfits.')
 
         # Option to only use fibers with flux higher than average dome flat flux
-        fluxord = np.argsort(gpeaks['sumflux'])[::-1]
-        import pdb; pdb.set_trace()
+        if highfluxfrac is not None:
+            if (highfluxfrac < 0) | (highfluxfrac > 1):
+                sys.exit("The highfluxfrac value needs to be between 0 and 1. Try again.")
+            nkeep = int(np.ceil(ngpeaks * highfluxfrac))
+            fluxord = np.argsort(gpeaks['sumflux'])[::-1]
+            gpeaks = gpeaks[fluxord][:nkeep]
+            numord = np.argsort(gpeaks['num'])
+            gpeaks = gpeaks[numord]
+            import pdb; pdb.set_trace()
 
         dcent = dome['GAUSS_CENT'][:, ichip, gpeaks['num']]
         for idome in range(ndomes):
