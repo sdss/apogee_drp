@@ -145,7 +145,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.")
 
-    return int(dflatnums)
+    return dflatnums
 
 
 ###################################################################################################
