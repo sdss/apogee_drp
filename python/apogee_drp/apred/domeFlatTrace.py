@@ -275,6 +275,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=N
 
     # Output file name
     outfile = mdir + instrument + 'DomeFlatTrace-all.fits'
+    if medianrad != 100: outfile = mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits'
 
     # Lookup table structure.
     dt = np.dtype([('PSFID',           np.int32),
