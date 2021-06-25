@@ -70,6 +70,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
 
     # Read in the dome flat lookup table and master exposure table
     domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
+    if medianrad != 100: domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits')
     expTable = fits.getdata(mdir + instrument + 'Exp.fits')
 
     if ims is None:
