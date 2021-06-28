@@ -419,6 +419,9 @@ def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=N
         # Loop over the chips
         for ichip in range(nchips):
             pix0 = np.array(refpix[chips[ichip]])
+            if exp['MJD'][i] < 56530:
+                if ichip > 0: pix0 = pix0 - 2
+
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
             #import pdb; pdb.set_trace()
 
