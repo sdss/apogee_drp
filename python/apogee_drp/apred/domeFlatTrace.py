@@ -294,6 +294,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=N
     if mjdstart is not None: outfile = outfile + '_medrad' + str(medianrad) + '_start' + str(mjdstart)
     if mjdstop is not None: outfile = outfile + '_medrad' + str(medianrad) + '_stop' + str(mjdstop)
     outfile = outfile + '.fits'
+    print('Output file = ' + outfile)
 
     # Lookup table structure.
     dt = np.dtype([('PSFID',           np.int32),
