@@ -196,6 +196,9 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
         gd, = np.where(gpeaks['success'] == True)
         gpeaks = gpeaks[gd]
 
+        for k in range(len(gpeaks)):
+            print(str(gpeaks['num'][k]) + '   ' + str(gpeaks['pars'][k, 1]))
+
         # Remove discrepant peakfits
         medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
         gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
