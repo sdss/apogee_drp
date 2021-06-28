@@ -247,7 +247,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 # Program for making the domeflat lookup table.
 # Takes about 8 hours to run, unless a later "mjdstart" is specified.
 ###################################################################################################
-def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None):
+def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None, mjdstop=None):
     start_time = time.time()
 
     chips = np.array(['a','b','c'])
@@ -275,19 +275,25 @@ def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=N
     #gd, = np.where((exp['IMAGETYP'] == 'DomeFlat') & (exp['MJD'] > 56880))
     exp = exp[gd]
 
-    # Option to start at a certain MJD
+    # Option to start and stop at certain MJDs
     if mjdstart is not None: 
         gd, = np.where(exp['MJD'] >= mjdstart)
         exp = exp[gd]
-    ndomes = len(gd)
+    if mjdstop is not None: 
+        gd, = np.where(exp['MJD'] <= mjdstop)
+        exp = exp[gd]
+    ndomes = len(exp)
     ndomestr = str(ndomes)
     
     print('Running code on ' + ndomestr + ' dome flats')
     print('Estimated runtime: ' + str(int(round(3.86*ndomes))) + ' seconds\n')
 
     # Output file name
-    outfile = mdir + instrument + 'DomeFlatTrace-all.fits'
-    if medianrad != 100: outfile = mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits'
+    outfile = mdir + instrument + 'DomeFlatTrace-all'
+    if medianrad != 100: outfile = outfile + '_medrad' + str(medianrad)
+    if mjdstart is not None: outfile = outfile + '_medrad' + str(medianrad) + '_start' + str(mjdstart)
+    if mjdstop is not None: outfile = outfile + '_medrad' + str(medianrad) + '_stop' + str(mjdstop)
+    outfile = outfile + '.fits'
 
     # Lookup table structure.
     dt = np.dtype([('PSFID',           np.int32),
@@ -419,11 +425,14 @@ def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=N
         # Loop over the chips
         for ichip in range(nchips):
             pix0 = np.array(refpix[chips[ichip]])
-            if exp['MJD'][i] < 56530:
-                if ichip == 0: 
-                    pix0 = pix0 - 1
-                else:
-                    pix0 = pix0 - 2
+
+            # Slight corrections to reference pixel values for older apo25m dome flats
+            if telescope == 'apo25m':
+                if exp['MJD'][i] < 56530:
+                    if ichip == 0: 
+                        pix0 = pix0 - 1
+                    else:
+                        pix0 = pix0 - 2
 
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
             #import pdb; pdb.set_trace()
