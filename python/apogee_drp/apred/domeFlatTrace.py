@@ -272,7 +272,6 @@ def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=N
 
     exp = fits.getdata(mdir + instrument + 'Exp.fits')
     gd, = np.where(exp['IMAGETYP'] == 'DomeFlat')
-    import pdb; pdb.set_trace()
     #gd, = np.where((exp['IMAGETYP'] == 'DomeFlat') & (exp['MJD'] > 56880))
     exp = exp[gd]
 
