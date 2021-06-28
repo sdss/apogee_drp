@@ -45,13 +45,19 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 #
 ###################################################################################################
 def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', telescope='apo25m', medianrad=100,
-                         apred='daily', single=False, highfluxfrac=None, minflux=None, silent=True):
+                         apred='daily', apred_exp=None, single=False, highfluxfrac=None, minflux=None, silent=True):
 
     start_time = time.time()
     #print("Finding best dome flats for plate " + plate + ", MJD " + mjd)
 
-    load = apload.ApLoad(apred=apred, telescope=telescope)
+    # Option to use a different apred to find the science exposures
+    if apred_exp is None: apred_exp = apred
 
+    # Set up apload
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    load_exp =  apload.ApLoad(apred=apred_exp, telescope=telescope)
+
+    # Find the reference pixel file
     instrument = 'apogee-n'
     inst = 'N'
     if telescope == 'lco25m':
@@ -97,7 +103,7 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
 
     for i in range(n_ims):
         # Find the ap2D files for this exposure
-        file2d = load.filename('2D', mjd=mjd, num=ims[i], chips='c')
+        file2d = load_exp.filename('2D', mjd=mjd, num=ims[i], chips='c')
         twodfiles = np.array([file2d.replace('2D-', '2D-a-'),
                               file2d.replace('2D-', '2D-b-'),
                               file2d.replace('2D-', '2D-c-')])
@@ -108,11 +114,16 @@ def findBestFlatSequence(ims=None, planfile=None, plate='15000', mjd='59146', te
         # Print info about this exposure and the matching dome flat
         pflat, = np.where(dflatnums[i] == domeTable['PSFID'])
         psci, = np.where(ims[i] == expTable['NUM'])
-        p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
-        p2 = 'alt [' + str("%.3f" % round(expTable['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['ALT'][pflat][0],3)) + '],  '
-        p3 = 'ln2level [' + str("%.3f" % round(expTable['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['LN2LEVEL'][pflat][0],3)) + '],   '
-        p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
-        print(p1 + p2 + p3 + p4)
+        if len(psci) > 0:
+            p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
+            p2 = 'alt [' + str("%.3f" % round(expTable['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['ALT'][pflat][0],3)) + '],  '
+            p3 = 'ln2level [' + str("%.3f" % round(expTable['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['LN2LEVEL'][pflat][0],3)) + '],   '
+            p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
+            print(p1 + p2 + p3 + p4)
+        else:
+            p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
+            p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
+            print(p1 + p4)
 
     # Get the unique dome flat exposure numbers
     uniqdflatnums = np.unique(dflatnums)
