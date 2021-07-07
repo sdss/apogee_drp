@@ -673,7 +673,7 @@ def getexpinfo(observatory=None,mjd5=None,files=None):
         files = files[np.argsort(files)]  # sort        
 
     nfiles = len(files)
-    dtype = np.dtype([('num',int),('nread',int),('exptype',np.str,20),('plateid',np.str,20),
+    dtype = np.dtype([('num',int),('nread',int),('exptype',np.str,20),('arctype',np.str,20),('plateid',np.str,20),
                       ('exptime',float),('dateobs',np.str,50),('mjd',int),('observatory',(np.str,10))])
     cat = np.zeros(nfiles,dtype=dtype)
     # Loop over the files
@@ -696,6 +696,14 @@ def getexpinfo(observatory=None,mjd5=None,files=None):
             cat['observatory'] = observatory
         else:
             cat['observatory'] = {'p':'apo','s':'lco'}[base[1]]
+        # arc types
+        if cat['exptype'][i]=='ARCLAMP':
+            if header['lampune']==1:
+                cat['arctype'][i] = 'UNE'
+            elif header['lampthar']==1:
+                cat['arctype'][i] = 'THAR'
+            else:
+                header['arctype'][i] = 'None'
 
     return cat
 
