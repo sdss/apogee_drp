@@ -11,7 +11,8 @@ from __future__ import unicode_literals
 
 import copy
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import matplotlib
 import os
 import glob
 import pdb
@@ -27,7 +28,7 @@ from . import wave
 #from holtztools import plots, html
 from astropy.table import Table,hstack,vstack
 from dlnpyutils import utils as dln
-
+matplotlib.use('Qt5Agg')
 
 def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True):
     """
@@ -88,7 +89,9 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
     wfile = reduxdir+'cal/'+instrument+'/wave/apWave-'+str(mjd5)+'.fits'
     if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False or clobber is True:
         # The previously measured lines in the apLines files will be reused if they exist
-        wave.wavecal(arcframes,rows=np.arange(300),name=str(mjd5),npoly=4,inst=instrument,verbose=verbose,vers=apred)
+        npoly = 4 # 5
+        wave.wavecal(arcframes,rows=np.arange(300),name=str(mjd5),npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
+        # npoly=4 gives lower RMS values
         # Check that it's there
         if os.path.exists(wavefile) is False:
             raise Exception(wfile+' not found')
@@ -286,6 +289,8 @@ def fpiwavesol(fpilinestr,fpilines,wavecal,verbose=True):
     """
 
     npoly = 4
+    # increasing npoly doesn't improve the solution
+    # probably because the original wavelength solution had npoly=4
 
     chipnum = np.zeros(len(fpilines),int)
     for ichip,chip in enumerate(['a','b','c']):
@@ -303,7 +308,7 @@ def fpiwavesol(fpilinestr,fpilines,wavecal,verbose=True):
             continue
         x = np.zeros([3,len(thisrow)])
         x[0,:] = fpilines['pars'][thisrow,1]
-        x[1,:] = chipnum[thisrow]
+        x[1,:] = chipnum[thisrow]+1
         x[2,:] = 0
         y = fpilines['linewave'][thisrow].data
 
@@ -321,7 +326,9 @@ def fpiwavesol(fpilinestr,fpilines,wavecal,verbose=True):
         gd, = np.where(y < 2e5)
 
         # Get initial guess from arclamp wavelength solution
-        pars0 = wavecal['a'][3].data[:,row]
+        pars0 = np.zeros(npoly+3,float)
+        pars0[len(pars0)-7:] = wavecal['a'][3].data[:,row]
+        
 
         # use curve_fit to optimize parameters
         try :
@@ -331,7 +338,7 @@ def fpiwavesol(fpilinestr,fpilines,wavecal,verbose=True):
             popt,pcov = curve_fit(wave.func_multi_poly,x[:,gd],y[gd],p0=pars0,bounds=bounds)
             pars = copy.copy(popt)
             res = y-wave.func_multi_poly(x,*pars)
-            rms = np.sqrt(np.mean(res**2))
+            rms = np.sqrt(np.mean(res[gd]**2))
             if verbose:
                 print('res: ',len(gd),np.median(res),np.median(np.abs(res)),res[gd].std())
                 print(pars)
@@ -345,11 +352,36 @@ def fpiwavesol(fpilinestr,fpilines,wavecal,verbose=True):
         allpars[0:npoly,row] = popt[0:npoly]
         allrms[row] = rms
 
+        xglobal = np.zeros(len(thisrow),float)
+        g1,=np.where(x[1,:]==1)
+        g2,=np.where(x[1,:]==2)
+        g3,=np.where(x[1,:]==3)
+        xglobal[g1] = x[0,g1]-1023.5+pars[npoly]
+        xglobal[g2] = x[0,g2]-1023.5+pars[npoly+1]
+        xglobal[g3] = x[0,g3]-1023.5+pars[npoly+2]
+
+        # there is obvious structure in the residuals
+        # fitting all lines from just ONE chip at a time gives much lower rms
+        # -should I be fitting with local X values and higher order?
+        # -should the original arclamp wavelength solutions use a higher order
+        #   cubic seems very low
+        
+        figfile = 'wave_resid_fiber'+str(row)+'.png'
+        matplotlib.use('Agg')
+        fig,ax = plt.subplots()
+        plt.scatter(xglobal[gd],y[gd]-wave.func_multi_poly(x[:,gd],*pars))
+        plt.ylim([-0.02,0.02])
+        plt.xlabel('Xglobal (pix)')
+        plt.ylabel('Residuals (A)')
+        plt.title('Residual to global fit - fiber='+str(row))
+        plt.savefig(figfile,bbox_inches='tight')
+        print('Saving figure to ',figfile)
+
         import pdb; pdb.set_trace()
 
         #waves[chip][row,:] = func_multi_poly(x,*allpars[:,row],npoly=4)
 
-        import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
 
 def frame2mjd(frame) :
     """ Get MJD from frame number """
