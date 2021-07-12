@@ -698,12 +698,12 @@ def getexpinfo(observatory=None,mjd5=None,files=None):
             cat['observatory'] = {'p':'apo','s':'lco'}[base[1]]
         # arc types
         if cat['exptype'][i]=='ARCLAMP':
-            if header['lampune']==1:
+            if head['lampune']==1:
                 cat['arctype'][i] = 'UNE'
-            elif header['lampthar']==1:
+            elif head['lampthar']==1:
                 cat['arctype'][i] = 'THAR'
             else:
-                header['arctype'][i] = 'None'
+                cat['arctype'][i] = 'None'
 
     return cat
 
