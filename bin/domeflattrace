@@ -54,8 +54,8 @@ if __name__ == '__main__' :
     observatory = args.observatory[0]
     apred = args.apred
     ims = args.ims
-    mjdplate = args.mjdplate[0]
-    planfile = args.planfile[0]
+    mjdplate = args.mjdplate
+    planfile = args.planfile
     if ims == '':
         telescope = 'apo25m'
         if observatory == 'lco': telescope = 'lco25m'
