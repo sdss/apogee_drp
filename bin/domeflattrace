@@ -78,6 +78,8 @@ if __name__ == '__main__' :
 
     # Run the domeFlatTrace code
     dflatnums = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims)
+    for i in range(len(ims)): 
+        print(str(ims[i]) + '   ' + str(dflatnums[i]))
 
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
