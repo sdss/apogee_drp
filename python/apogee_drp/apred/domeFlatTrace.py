@@ -171,7 +171,7 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.")
 
-    return ims, dflatnums
+    return dflatnums
 
 
 ###################################################################################################
