@@ -118,10 +118,10 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, plate='15000', 
         psci, = np.where(ims[i] == expTable['NUM'])
         if len(psci) > 0:
             p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
-            p2 = 'alt [' + str("%.3f" % round(expTable['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['ALT'][pflat][0],3)) + '],  '
+            #p2 = 'alt [' + str("%.3f" % round(expTable['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['ALT'][pflat][0],3)) + '],  '
             p3 = 'ln2level [' + str("%.3f" % round(expTable['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['LN2LEVEL'][pflat][0],3)) + '],   '
             p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
-            print(p1 + p2 + p3 + p4)
+            print(p1 + p3 + p4)
         else:
             p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
             p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
@@ -208,6 +208,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 
 	    # Find median gaussian FWHM and restrict lookup table to similar values
         medFWHM = np.nanmedian(gpeaks['pars'][:, 2])*2.354
+        print('Median Science FWHM = ' + str(medFWHM))
         medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
         gd, = np.where(np.absolute(medFWHM - medDomeFWHM) < 0.05)
         domeTable1 = domeTable[gd]
@@ -252,7 +253,9 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 
     gdrms = str("%.5f" % round(rmsMean[gd][0],5))
     if silent is False: print("   Best dome flat for exposure " + str(expnum) + ": " + str(domeTable1['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
-    
+
+    print(medDomeFWHM[gd][0])
+
     return domeTable1['PSFID'][gd][0], domeTable1['MJD'][gd][0], rmsMean[gd][0]
 
 
