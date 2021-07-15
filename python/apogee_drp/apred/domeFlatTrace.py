@@ -203,7 +203,6 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 
         # Get reference pixels for this chip
         pix0 = np.array(refpix[chips[ichip]])
-        pdb.set_trace()
         # Fit Gaussians to the trace positions
         gpeaks = gaussFitAll(infile=twodfile, medianrad=medianrad, pix0=pix0)
 
