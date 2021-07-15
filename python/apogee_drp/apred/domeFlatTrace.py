@@ -208,7 +208,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 
 	    # Find median gaussian FWHM and restrict lookup table to similar values
         medFWHM = np.nanmedian(gpeaks['pars'][:, 2])*2.354
-        print('Median Science FWHM = ' + str(medFWHM))
+        print('Median Science FWHM (chip ' + chips[ichip] + ') = ' + str(medFWHM))
         medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
         gd, = np.where(np.absolute(medFWHM - medDomeFWHM) < 0.05)
         domeTable1 = domeTable[gd]
