@@ -76,10 +76,13 @@ if __name__ == '__main__' :
     else:
         ims = np.array(args.ims[0].split(',')).astype(int)
         print(ims)
+
     # Run the domeFlatTrace code
     dflatnums = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims)
+    print('\nDOME FLAT RESULTS:')
     for i in range(len(ims)): 
         print(str(ims[i]) + '   ' + str(dflatnums[i]))
+    print('\n')
 
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
