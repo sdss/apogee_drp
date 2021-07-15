@@ -178,7 +178,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
     nfibers = 300
     ndomes = len(domeTable)
 
-    pdb.set_trace()
+    medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'], axis=2) * 2.354
 
     # Loop over the chips
     rms = np.full([nchips, ndomes], 50).astype(np.float64)
@@ -209,11 +209,10 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
         ngpeaks = len(gd)
 
 	    # Find median gaussian FWHM and restrict lookup table to similar values
-        medFWHM = np.nanmedian(gpeaks['pars'][:, 2])*2.354
+        medFWHM = np.nanmedian(gpeaks['pars'][:, 2]) * 2.354
         print('Median Science FWHM (chip ' + chips[ichip] + ') = ' + str(medFWHM))
-        medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
-        gd, = np.where(np.absolute(medFWHM - medDomeFWHM) < 0.05)
-        domeTable1 = domeTable#[gd]
+        gd, = np.where(np.absolute(medFWHM - medDomeFWHM[:, ichip]) < 0.05)
+        domeTable1 = domeTable[gd]
         ndomes1 = len(domeTable1)
         #pdb.set_trace()
 
