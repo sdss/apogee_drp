@@ -1,4 +1,5 @@
 import sys
+import pdb
 import glob
 import os
 import subprocess
@@ -205,12 +206,13 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
         gpeaks = gpeaks[gd]
         ngpeaks = len(gd)
 
-	# Find median gaussian FWHM and restrict lookup table to similar values
-        #medFWHM = np.nanmedian(gpeaks['pars'][:, 2])*2.354
-        #medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
-        #gd, = np.where(np.absolute(medFWHM - medDomeFWHM) < 0.05)
-        domeTable1 = domeTable#[gd]
+	    # Find median gaussian FWHM and restrict lookup table to similar values
+        medFWHM = np.nanmedian(gpeaks['pars'][:, 2])*2.354
+        medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
+        gd, = np.where(np.absolute(medFWHM - medDomeFWHM) < 0.05)
+        domeTable1 = domeTable[gd]
         ndomes1 = len(domeTable1)
+        pdb.set_trace()
 
         # Option to only use fibers with flux higher than average dome flat flux
         if highfluxfrac is not None:
