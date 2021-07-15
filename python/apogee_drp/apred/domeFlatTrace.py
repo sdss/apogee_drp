@@ -226,7 +226,6 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
         #gd, = np.where(np.absolute(medFWHM - medDomeFWHM[:, ichip]) < 0.05)
         domeTable1 = domeTable#[gd]
         ndomes1 = len(domeTable1)
-        pdb.set_trace()
 
         # Option to only use fibers with flux higher than average dome flat flux
         if highfluxfrac is not None:
