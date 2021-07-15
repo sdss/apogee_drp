@@ -69,13 +69,12 @@ if __name__ == '__main__' :
             gd, = np.where(planstr['APEXP']['flavor'] == 'object')
             ims = planstr['APEXP']['name'][gd]
         if planfile != '':
-            planstr = plan.load(planfile, np=True)
+            planstr = plan.load(planfile[0], np=True)
             # Get array of object exposures and find out how many are objects.
             gd, = np.where(planstr['APEXP']['flavor'] == 'object')
             ims = planstr['APEXP']['name'][gd]
     else:
         ims = np.array(args.ims[0].split(',')).astype(int)
-        print(ims)
 
     # Run the domeFlatTrace code
     dflatnums = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims)
