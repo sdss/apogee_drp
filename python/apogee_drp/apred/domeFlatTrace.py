@@ -188,7 +188,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 
         # Get reference pixels for this chip
         pix0 = np.array(refpix[chips[ichip]])
-        import pdb; pdb.set_trace()
+
         # Fit Gaussians to the trace positions
         gpeaks = gaussFitAll(infile=twodfile, medianrad=medianrad, pix0=pix0)
 
@@ -196,14 +196,21 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
         gd, = np.where(gpeaks['success'] == True)
         gpeaks = gpeaks[gd]
 
-        for k in range(len(gpeaks)):
-            print(str(gpeaks['num'][k]) + '   ' + str(gpeaks['pars'][k, 1]))
+        #for k in range(len(gpeaks)):
+        #    print(str(gpeaks['num'][k]) + '   ' + str(gpeaks['pars'][k, 1]))
 
         # Remove discrepant peakfits
         medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
         gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
         gpeaks = gpeaks[gd]
         ngpeaks = len(gd)
+
+	# Find median gaussian FWHM and restrict lookup table to similar values
+        #medFWHM = np.nanmedian(gpeaks['pars'][:, 2])*2.354
+        #medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
+        #gd, = np.where(np.absolute(medFWHM - medDomeFWHM) < 0.05)
+        domeTable1 = domeTable#[gd]
+        ndomes1 = len(domeTable1)
 
         # Option to only use fibers with flux higher than average dome flat flux
         if highfluxfrac is not None:
@@ -227,8 +234,8 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
             ngpeaks = len(gpeaks)
             if silent is False: print("   Keeping " + str(ngpeaks) + " fibers with flux > " + str(minflux))
 
-        dcent = domeTable['GAUSS_CENT'][:, ichip, gpeaks['num']]
-        for idome in range(ndomes):
+        dcent = domeTable1['GAUSS_CENT'][:, ichip, gpeaks['num']]
+        for idome in range(ndomes1):
             diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
             gd, = np.where(np.isnan(diff) == False)
             if len(gd) < 5: continue
@@ -242,9 +249,9 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
     if silent is False: print("   rms:  " + str(rms[:, gd[0]]))
 
     gdrms = str("%.5f" % round(rmsMean[gd][0],5))
-    if silent is False: print("   Best dome flat for exposure " + str(expnum) + ": " + str(domeTable['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
+    if silent is False: print("   Best dome flat for exposure " + str(expnum) + ": " + str(domeTable1['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
     
-    return domeTable['PSFID'][gd][0], domeTable['MJD'][gd][0], rmsMean[gd][0]
+    return domeTable1['PSFID'][gd][0], domeTable1['MJD'][gd][0], rmsMean[gd][0]
 
 
 ###################################################################################################
