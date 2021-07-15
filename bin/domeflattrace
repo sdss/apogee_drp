@@ -60,8 +60,8 @@ if __name__ == '__main__' :
         telescope = 'apo25m'
         if observatory == 'lco': telescope = 'lco25m'
         if mjdplate != '':
-            mjd = mjdplate.split('-')[0]
-            plate = mjdplate.split('-')[1]
+            mjd = mjdplate[0].split('-')[0]
+            plate = mjdplate[0].split('-')[1]
             load = apload.ApLoad(apred=apred, telescope=telescope)
             planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
             planstr = plan.load(planfile, np=True)
