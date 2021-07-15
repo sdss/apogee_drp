@@ -81,7 +81,7 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
 
     # Get quantitative estimates of height, center, sigma
     flux = spec[xlo0:xhi0]-medspec
-    #flux -= np.median(flux)            # put the median at zero
+    flux -= np.median(flux)            # put the median at zero
     flux = np.maximum(0,flux)          # don't want negative pixels
     ht0 = np.max(flux)
     totflux = np.sum(flux)
