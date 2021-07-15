@@ -75,7 +75,7 @@ if __name__ == '__main__' :
             ims = planstr['APEXP']['name'][gd]
     else:
         ims = np.array(args.ims[0].split(',')).astype(int)
-
+        print(ims)
     # Run the domeFlatTrace code
     dflatnums = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims)
     for i in range(len(ims)): 
