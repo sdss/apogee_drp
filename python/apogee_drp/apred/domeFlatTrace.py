@@ -78,6 +78,8 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, plate='15000', 
     # Read in the dome flat lookup table and master exposure table
     domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
     if domeFile is not None: domeTable = fits.getdata(mdir + domeFile)
+    gd, = np.where(domeTable['MJD'] > 0)
+    domeTable = domeTable[gd]
     #if medianrad != 100: domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits')
     expTable = fits.getdata(mdir + instrument + 'Exp.fits')
 
@@ -210,7 +212,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 
 	    # Find median gaussian FWHM and restrict lookup table to similar values
         medFWHM = np.nanmedian(gpeaks['pars'][:, 2]) * 2.354
-        print('Median Science FWHM (chip ' + chips[ichip] + ') = ' + str(medFWHM))
+        print('Median Science FWHM (chip ' + chips[ichip] + ') = ' + str("%.5f" % round(medFWHM,5)))
         gd, = np.where(np.absolute(medFWHM - medDomeFWHM[:, ichip]) < 0.05)
         domeTable1 = domeTable[gd]
         ndomes1 = len(domeTable1)
