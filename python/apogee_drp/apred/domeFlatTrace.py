@@ -214,7 +214,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
         medFWHM = np.nanmedian(gpeaks['pars'][:, 2]) * 2.354
         print('Median Science FWHM (chip ' + chips[ichip] + ') = ' + str("%.5f" % round(medFWHM,5)))
         gd, = np.where(np.absolute(medFWHM - medDomeFWHM[:, ichip]) < 0.05)
-        domeTable1 = domeTable[gd]
+        domeTable1 = domeTable#[gd]
         ndomes1 = len(domeTable1)
         #pdb.set_trace()
 
