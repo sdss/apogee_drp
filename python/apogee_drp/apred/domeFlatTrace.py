@@ -45,28 +45,38 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 #     (2) a single dome flat exposure number (if the "single" keyword is set)
 #
 ###################################################################################################
-def findBestFlatSequence(ims=None, domeFile=None, planfile=None, plate='15000', mjd='59146', telescope='apo25m', medianrad=100,
+def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146-15000', observatory='apo', medianrad=100,
                          apred='daily', apred_exp=None, single=False, highfluxfrac=None, minflux=None, silent=True):
 
     start_time = time.time()
     #print("Finding best dome flats for plate " + plate + ", MJD " + mjd)
 
+    mjd = mjdplate.split('-')[0]
+    plate = mjdplate.split('-')[1]
+
     # Option to use a different apred to find the science exposures
     if apred_exp is None: apred_exp = apred
 
-    # Set up apload
-    load = apload.ApLoad(apred=apred, telescope=telescope)
-    load_exp =  apload.ApLoad(apred=apred_exp, telescope=telescope)
-
-    # Find the reference pixel file
+    # Get telescope/instrument info
     instrument = 'apogee-n'
     inst = 'N'
-    if telescope == 'lco25m':
+    telescope = 'apo25m'
+    if observatory == 'lco':
         instrument = 'apogee-s'
         inst = 'S'
+        telescope = 'lco25m'
+
+    # Set up apload
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    load_exp = apload.ApLoad(apred=apred_exp, telescope=telescope)
+
+    # Find the reference pixel file
     fil = os.path.abspath(__file__)
     codedir = os.path.dirname(fil)
     datadir = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/domeflat/'
+
+    # Need to make pixel reference file for lco25m
+    if inst == 'S': sys.exit('Problem! Reference pixel file for LCO 2.5m does not exist yet')
     refpix = ascii.read(datadir + 'refpix' + inst + '.dat')
 
     # Establish directories.
@@ -161,7 +171,7 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, plate='15000', 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.")
 
-    return dflatnums
+    return ims, dflatnums
 
 
 ###################################################################################################
@@ -211,10 +221,10 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
         ngpeaks = len(gd)
 
 	    # Find median gaussian FWHM and restrict lookup table to similar values
-        medFWHM = np.nanmedian(gpeaks['pars'][:, 2]) * 2.354
-        print('Median Science FWHM (chip ' + chips[ichip] + ') = ' + str("%.5f" % round(medFWHM,5)))
+        #medFWHM = np.nanmedian(gpeaks['pars'][:, 2]) * 2.354
+        #print('Median Science FWHM (chip ' + chips[ichip] + ') = ' + str("%.5f" % round(medFWHM,5)))
         #medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
-        gd, = np.where(np.absolute(medFWHM - medDomeFWHM[:, ichip]) < 0.05)
+        #gd, = np.where(np.absolute(medFWHM - medDomeFWHM[:, ichip]) < 0.05)
         domeTable1 = domeTable#[gd]
         ndomes1 = len(domeTable1)
         pdb.set_trace()
@@ -258,7 +268,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
     gdrms = str("%.5f" % round(rmsMean[gd][0],5))
     if silent is False: print("   Best dome flat for exposure " + str(expnum) + ": " + str(domeTable1['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
 
-    print(medDomeFWHM[gd][0])
+    #print(medDomeFWHM[gd][0])
 
     return domeTable1['PSFID'][gd][0], domeTable1['MJD'][gd][0], rmsMean[gd][0]
 
