@@ -88,7 +88,9 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
     for chip in chips : waves[chip] = np.tile(np.polyval(coef0[chip],pixels),(300,1))
     maxgroup=1
     frames=[]
-    framesgroup=[]
+    framesgroup = []
+    framesdithpix = []
+    fcnt = 0
     for inum,num in enumerate(nums) :
         print(str(inum+1)+'/'+str(len(nums))+' '+str(num))
         # load 1D frame
@@ -97,8 +99,12 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         print(num,frame)
         if frame is not None and frame != 0 :
             # get correct arclines
-            if frame['a'][0].header['LAMPUNE'] : lampfile = 'UNe.vac.apogee'
-            if frame['a'][0].header['LAMPTHAR'] : lampfile = 'tharne.lines.vac.apogee'
+            if frame['a'][0].header['LAMPUNE']:
+                lampfile = 'UNe.vac.apogee'
+                lamptype = 'UNE'
+            if frame['a'][0].header['LAMPTHAR']:
+                lampfile = 'tharne.lines.vac.apogee'
+                lamptype = 'THARNE'
             arclines=ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
             j=np.where(arclines['USEWAVE'])[0]
             arclines=arclines[j]
@@ -112,9 +118,17 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                 flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1)
                 Table(flinestr).write(linesfile,overwrite=True)
             # replace frameid tag with group identification, which must start at 0 for func_multi_poly indexing
-            if inum > 0 and abs(num-nums[inum-1]) > 1 : maxgroup +=1
+
+            # GROUPS: Frames must be consecutive and at the same dither position to be considered a group
+            framesdithpix.append(frame['a'][0].header['DITHPIX'])
+            #import pdb; pdb.set_trace()
+            if inum > 0 and (abs(num-nums[inum-1]) > 1 or abs(framesdithpix[fcnt]-framesdithpix[fcnt-1])>0.1): maxgroup +=1
+
             flinestr = Table(flinestr)  # convert temporarily to astropy Table to easily add a column
             flinestr['group'] = -1
+            flinestr['lamptype'] = '      '  # initalize with enough spaces for UNE and THARNE
+            flinestr['lamptype'] = lamptype
+            #flinestr['bad'] = 1
             flinestr = np.array(flinestr)
             flinestr['group'] = maxgroup-1
             #flinestr['frameid'] = maxgroup-1
@@ -131,19 +145,22 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                 gd1, = np.where(np.abs(res1) < 3.5*sig1)
                 if len(gd1)>0:
                     gdind = np.append(gdind,ind1[gd1])
+                else:
+                    gdind = np.array([])
             if len(gdind)<len(flinestr):
                 print('Pruning ',len(flinestr)-len(gdind),' of ',len(flinestr),' lines as outliers')
                 flinestr = flinestr[gdind]
+                #flinestr['bad'][gdind] = 0  # good
             framesgroup.append(maxgroup-1)
             if inum == 0 : linestr = flinestr
             else : linestr = np.append(linestr,flinestr)
             print(' Frame: {:d}  Nlines: {:d}  '.format(num,len(flinestr)))
             frames.append(num)
+            fcnt += 1   # increment good frame counter
         else :
             print('Error reading frame: ', num)
 
     if nofit : return
-
 
     # do the wavecal fit
     # initial parameter guess for first row, subsequent rows will use guess from previous row
@@ -210,11 +227,16 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                 fibmed[j] = np.median(res2[ind1])
                 fibsig[j] = dln.mad(res3[ind1])
                 allsig[ind1] = fibsig[j]
+        # One final fit to the residuals
         sig2 = dln.mad(res3)
-        #gd2, = np.where((np.abs(res3)<3.5*sig2) & (linestr['pixel'][ind]>=0) & (linestr['pixel'][ind]<=2047))
-        gd2, = np.where((np.abs(res3)<3.5*allsig) & (linestr['pixel'][ind]>=0) & (linestr['pixel'][ind]<=2047))
-        print('chip-frameid: ',fibch,len(gd2),len(ind)-len(gd2))
-        gdind = np.append(gdind,ind[gd2])
+        gd2, = np.where(np.abs(res3)<3*sig2)
+        res_coefs = robust.polyfit(x[gd2],res3[gd2],3)
+        res4 = res3 - np.poly1d(res_coefs)(x)
+        # Final selection of good points
+        sig3 = dln.mad(res4)
+        gd3, = np.where((np.abs(res4)<3.5*allsig) & (linestr['pixel'][ind]>=0) & (linestr['pixel'][ind]<=2047))
+        print('chip-frameid: ',fibch,len(gd3),len(ind)-len(gd3))
+        gdind = np.append(gdind,ind[gd3])
 
     # Pruning lines
     print(str(len(gdind))+' of '+str(len(linestr))+' lines retained')
@@ -279,11 +301,18 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
 
     #import pdb; pdb.set_trace()
 
+    # Add some columns to the table
+    linestr = Table(linestr)   # convert temporarily to astropy Table to easily add a column
+    linestr['good'] = -1
+    linestr['res'] = 999999.
+    linestr['xglobal'] = 999999.
+    linestr = np.array(linestr)
 
     # loop over requested rows
     for irow,row in enumerate(rows) :
         # set up independent variable array with pixel, chip, groupid, and dependent variable (wavelength)
         thisrow = np.where((linestr['row'] == row) & (linestr['peak'] > 100) & (linestr['pixel']>0) )[0]
+        linestr['good'][thisrow] = 0    # initialize to bad
         x = np.zeros([3,len(thisrow)])
         x[0,:] = linestr['pixel'][thisrow]
         x[1,:] = linestr['chip'][thisrow]
@@ -309,7 +338,13 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
             group0, = np.where(np.array(framesgroup)==0)
             num0 = nums[group0]
             print('running wavecal for: ', num0,maxgroup,ngroup,' row: ',row)
-            pars0 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,reject=reject,init=init,verbose=verbose)
+            pars0,linestr1 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,reject=reject,init=init,verbose=verbose)
+
+            thisrow1, = np.where(linestr1['row']==row)
+            Table(linestr1[thisrow1]).write('arclamp_linestr_fiber'+str(row)+'.fits',overwrite=True)
+            print('Writing group 1 results to  arclamp_linestr_fiber'+str(row)+'.fits')
+            #import pdb; pdb.set_trace()
+
             pars[:npoly] = pars0[:npoly]
             for igroup in range(ngroup): pars[npoly+igroup*3:npoly+(igroup+1)*3] = pars0[npoly:npoly+3]
             #pars0 = wavecal(nums=nums[0:2],name=None,vers=vers,inst=inst,rows=[row],npoly=4,reject=reject,init=init,verbose=verbose)
@@ -481,7 +516,7 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                 import pdb; pdb.set_trace()
                 popt = pars*0.
 
-            # loop over all chip/group combinations
+            # Calculate Xglobal for all chip/group combinations
             xglobal = np.zeros(len(thisrow))
             for ich in range(3):
                 for igr in range(ngroup):
@@ -528,7 +563,7 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
             #    #plt.scatter(xglobal[gd],res[gd])
             #    plt.colorbar()
             #    plt.show()
-            #
+            # 
             #    import pdb; pdb.set_trace()
 
 
@@ -549,8 +584,14 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                 if not hard :
                     import pdb; pdb.set_trace()
 
-        #import pdb; pdb.set_trace()
+        # Save quality information
+        if len(gd)>0:
+            linestr['good'][thisrow[gd]] = 1
+        linestr['res'][thisrow] = res
+        linestr['xglobal'][thisrow] = xglobal
         
+        #import pdb; pdb.set_trace()
+
         allrms = res[gd].std()
         # throw out bad solutions
         #if allrms > 0.1 : popt = pars*0.
@@ -566,10 +607,14 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
             rms[row,igroup] = res[gd[j]].std()
             sig[row,igroup] = np.median(np.abs(res[gd[j]]))
 
+        if ngroup>1:
+            Table(linestr[thisrow]).write('arclamp_linestr_fiber'+str(row)+'_all.fits',overwrite=True)
+    
     # now refine the solution by averaging zeropoint across all groups and
     # by fitting across different rows to require a smooth solution
     if ngroup > 1 : newpars,newwaves = refine(allpars)
     else : newpars = allpars
+
 
     # save results in apWave fies
     out=load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
@@ -586,7 +631,7 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
     if ngroup>1:
         import pdb; pdb.set_trace()
 
-    return pars
+    return pars,linestr
 
 def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
 
@@ -810,12 +855,13 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
         for irow,row in enumerate(np.append([rows[0]],rows)) :
             # subtract off median-filtered spectrum to remove background
             medspec = frame[chip][1].data[row,:]-medfilt(frame[chip][1].data[row,:],101)
-            j = np.where(lines['CHIPNUM'] == ichip+1)[0]
+            chlineind = np.where(lines['CHIPNUM'] == ichip+1)[0]
             dpixel=[]
+            rowind=[]
             # for dummy row, open up the search window by a factor of two
             if irow == 0 : estsig0=2*estsig
             else : estsig0=estsig
-            for iline in j :
+            for iline in chlineind:
                 wave = lines['WAVE'][iline]
                 try :
                     pix0 = wave2pix(wave,waves[chip][row,:])+dpixel_median
@@ -824,6 +870,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                                           sigma=frame[chip][2].data[row,:],mask=frame[chip][3].data[row,:])
                     if lines['USEWAVE'][iline] == 1 : dpixel.append(pars[1]-pix0)
                     if irow > 0 :
+                        rowind.append(nline)
                         linestr['chip'][nline] = ichip+1
                         linestr['row'][nline] = row
                         linestr['wave'][nline] = wave
@@ -843,8 +890,32 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                 except :
                     if verbose : print('failed: ',num,row,chip,wave)
                 #import pdb; pdb.set_trace()
+
+            # Fit robust line to the offsets, and try to refit the outliers with better guess
+            if irow>0:
+                coef1,absdev = ladfit.ladfit(linestr['pixel'][rowind],linestr['dpixel'][rowind])
+                yfit = np.poly1d(np.flip(coef1))(linestr['pixel'][rowind])
+                res1 = linestr['dpixel'][rowind]-yfit
+                sig1 = dln.mad(res1)
+                gd1, = np.where(np.abs(res1) <= 3.5*sig1)
+                bd1, = np.where(np.abs(res1) > 3.5*sig1)
+                # Refit outliers with better guesses
+                if len(bd1)>0:
+                    print('Refit ',len(bd1),'outliers with better initial guesses')
+                    import pdb; pdb.set_trace()
+
+                # Refit lines that are in groups
+                print('Refit lines that are in groups with peakfit_multi()')
+                # peakfit_multi()
+                # I need the full linelist, not just the lines with USEWAVE=1
+
+
             if len(dpixel) > 10 : dpixel_median = np.median(np.array(dpixel))
             if verbose: print('median offset: ',row,chip,dpixel_median)
+
+
+
+
 
     return linestr[0:nline]
 
