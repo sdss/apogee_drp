@@ -844,9 +844,9 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
     nlines = len(lines)
     nrows = len(rows)
     linestr = np.zeros(nlines*nrows,dtype=[
-                       ('chip','i4'), ('row','i4'), ('wave',float), ('peak','f4'), ('xpix0','f4'),('pixel','f4'),
-                       ('pixelerr','f4'),('dpixel','f4'), ('wave_found',float), ('frameid','i4'),('failed','i4'),
-                       ])
+                       ('chip','i4'), ('row','i4'),('id',np.str,5),('wave',float), ('peak','f4'), ('xpix0','f4'),('pixel','f4'),
+                       ('pixelerr','f4'),('sigma','f4'),('yoffset','f4'),('dpixel','f4'), ('wave_found',float),
+                       ('frameid','i4'),('failed','i4')])
     nline=0
     for ichip,chip in enumerate(['a','b','c']) :
         # Use median offset of previous row for starting guess
@@ -866,6 +866,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                 wave = lines['WAVE'][iline]
                 linestr['chip'][nline] = ichip+1
                 linestr['row'][nline] = row
+                linestr['id'][nline] = str(lines['ID'][iline])
                 linestr['xpix0'][nline] = lines['XPIX'][iline]
                 linestr['wave'][nline] = wave
                 linestr['frameid'][nline] = num
@@ -883,6 +884,8 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                         linestr['peak'][nline] = pars[0]
                         linestr['pixel'][nline] = pars[1]
                         linestr['pixelerr'][nline] = perror[1]
+                        linestr['sigma'][nline] = pars[2]
+                        linestr['yoffset'][nline] = pars[3]
                         linestr['dpixel'][nline] = pars[1]-pix0
                         linestr['wave_found'][nline] = pix2wave(pars[1],waves[chip][row,:])
                         linestr['failed'][nline] = 0
@@ -899,6 +902,9 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                     rowind.append(nline)
                     linestr['pixel'][nline] = 999999.
                     linestr['pixelerr'][nline] = 999999.
+                    linestr['peak'][nline] = 999999.
+                    linestr['sigma'][nline] = 999999.
+                    linestr['yoffset'][nline] = 999999.
                     linestr['dpixel'][nline] = 999999.
                     linestr['wave_found'][nline] = 999999.
                     linestr['frameid'][nline] = num
@@ -917,16 +923,21 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                 bd1, = np.where((np.abs(res1) > 3.5*sig1) | (linestr['failed'][rowind]==1))
                 # Refit outliers with better guesses
                 if len(bd1)>0:
-                    print('Refit ',len(bd1),'outliers with better initial guesses')
+                    print('Refitting ',len(bd1),'outliers with better initial guesses')
+                    # robust linear fit to sigma
+                    sigcoef1,sigabsdev = ladfit.ladfit(linestr['xpix0'][rowind[gdind]],linestr['sigma'][rowind[gdind]])
                     for k in range(len(bd1)):
                         nline = rowind[bd1[k]]
                         pix0 = np.poly1d(np.flip(coef1))(linestr['xpix0'][nline])
-                        initpars = [np.maximum(medspec[int(round(pix0))],50),pix0,2.0,0.0]
+                        sig0 = np.poly1d(np.flip(sigcoef1))(linestr['xpix0'][nline])
+                        initpars = [np.maximum(medspec[int(round(pix0))],50),pix0,sig0,0.0]
                         try:
                             pars,perror = peakfit(medspec,pix0,estsig=estsig0,sigma=frame[chip][2].data[row,:],
                                                   mask=frame[chip][3].data[row,:],initpars=initpars)
                             linestr['peak'][nline] = pars[0]
                             linestr['pixel'][nline] = pars[1]
+                            linestr['sigma'][nline] = pars[2]
+                            linestr['yoffset'][nline] = pars[3]
                             linestr['pixelerr'][nline] = perror[1]
                             linestr['dpixel'][nline] = pars[1]-pix0
                             linestr['wave_found'][nline] = pix2wave(pars[1],waves[chip][row,:])
@@ -942,9 +953,54 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                 if len(grplineind)>0:
                     print('Refitting ',len(grplineind),' lines that are in groups with peakfit_multi()')
                     for k in range(len(grplineind)):
-                        nline = grplineind[k]
-                        wavegroup = lines['WAVEGROUP'][nline]
-                        ind, = np.where((lines['CHIPNUM'] == ichip+1) & (lines['WAVEGROUP']==wavegroup))
+                        iline = grplineind[k]
+                        nline = rowind[np.where(linestr['id'][rowind]==str(lines['ID'][iline]))[0]][0]
+                        wavegroup = lines['WAVEGROUP'][iline]
+                        grpind, = np.where((lines['CHIPNUM'] == ichip+1) & (lines['WAVEGROUP']==wavegroup) & (lines['ID']!=lines['ID'][iline]))
+                        nnei = len(grpind)
+                        # If initial pass was successful then use those parameters
+                        # if not, then use linear fit to pixel offset and sigma for initial guess
+                        if linestr['failed'][nline]==0:
+                            pars0 = [linestr['peak'][nline], linestr['pixel'][nline], linestr['sigma'][nline], linestr['yoffset'][nline]]
+                        else:
+                            pars0 = [10.0, np.poly1d(np.flip(coef1))(lines['XPIX'][iline]),
+                                     np.poly1d(np.flip(sigcoef1))(lines['XPIX'][iline]), 0.0]
+                            pars0[0] = np.maximum(medspec[int(round(pars0[1]))],50)
+                        pars0 = np.array(pars0)
+                        # Neighbor parameters
+                        neipars = np.zeros(4*nnei,float)
+                        for l in range(len(grpind)):
+                            x0 = np.poly1d(np.flip(coef1))(lines['XPIX'][grpind[l]])
+                            xlo = int(np.maximum(x0-10,0))
+                            xhi = int(np.minimum(x0+10,2048))
+                            neipars[l*4] = np.maximum(medspec[int(round(x0))],50)
+                            neipars[l*4+1] = x0
+                            neipars[l*4+2] = np.poly1d(np.flip(sigcoef1))(lines['XPIX'][grpind[l]])
+                            neipars[l*4+3] = np.median(medspec[xlo:xhi])
+
+                        # Run peakfit_multi
+                        try:
+                            pars,perror = peakfit_multi(medspec,pars0,neipars, sigma=frame[chip][2].data[row,:],
+                                                        mask=frame[chip][3].data[row,:])
+                            # update parameters
+                            pix0 = wave2pix(linestr['wave'][nline],waves[chip][row,:])+dpixel_median
+                            linestr['peak'][nline] = pars[0]
+                            linestr['pixel'][nline] = pars[1]
+                            linestr['pixelerr'][nline] = perror[1]
+                            linestr['sigma'][nline] = pars[2]
+                            linestr['yoffset'][nline] = pars[3]
+                            linestr['dpixel'][nline] = pars[1]-pix0
+                            linestr['wave_found'][nline] = pix2wave(pars[1],waves[chip][row,:])
+                            linestr['failed'][nline] = 0
+                            if verbose:
+                                print('{:5d}{:5d}{:12.3f}{:12.3f}{:12.3f}{:12.3f}{:12d}'.format(
+                                    ichip+1,row,linestr['wave'][nline],pars[0],pars[1],pars[1]-pix0,num))
+                        except:
+                            if verbose : print('peakfit_multi failed: ',iline)
+                            # leave parameters as is, if it previously failed then it still failed
+                            # if it previously was successful then return those values
+
+
                         import pdb; pdb.set_trace()
 
                 
@@ -965,15 +1021,19 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
 
     return linestr[0:nline]
 
-def gaussbin(x,a,x0,sig,yoff):
+def gaussbin(x,*args):
     """ Evaluate integrated Gaussian function 
     """
     # bin width
     xbin = 1.
-    t1 = (x -x0-xbin/2.)/np.sqrt(2.)/sig
-    t2 = (x-x0+xbin/2.)/np.sqrt(2.)/sig
-    y = (myerf(t2)-myerf(t1))/xbin + yoff
-    return a*y
+    ngauss = len(args)//4
+    y = x.copy()*0
+    for i in range(ngauss):
+        a,x0,sig,yoff = args[i*4:(i+1)*4]
+        t1 = (x -x0-xbin/2.)/np.sqrt(2.)/sig
+        t2 = (x-x0+xbin/2.)/np.sqrt(2.)/sig
+        y += a * (myerf(t2)-myerf(t1))/xbin + yoff
+    return y
 
 def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin,initpars=None) :
     """ Return integrated-Gaussian centers near input pixel center
@@ -1030,53 +1090,78 @@ def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin,ini
         pdb.set_trace()
     return pars,perror
 
-def peakfit_multi(spec,initpars,neipars,sigma=None,mask=None,func=gaussbin):
+
+def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin):
     """
     Multi-component Gaussian fit for blended lines
     
     Args:
         spec (float) : data spectrum array
-        initpars (float) : initial parameter guesses
-        neipars (float) : initial guesses for neighbors
+        pars0 (float) : initial parameter guesses for main line
+        neipars0 (float) : initial guesses for neighbors
         sigma (float)  : uncertainty array (default=None)
         mask (float)  : mask array (default=None), NOT CURRENTLY IMPLEMENT
         func (function) : user-supplied function to use to fit (default=gaussbin)
     """
     x = np.arange(len(spec))
-    cen = int(round(pix0))
-    sig = estsig
-    back = 0.
 
-    # window width to search
-    xwid = int(round(5*sig))
-    if xwid < 3 : xwid=3
-    y = spec[cen-xwid:cen+xwid+1]
-    yerr = sigma[cen-xwid:cen+xwid+1]
-    x0 = y.argmax()+(cen-xwid)
-    peak = y.max()
-    sig = np.sqrt(y.sum()**2/peak**2/(2*np.pi))
-    if niter==0:
-        if initpars is not None:
-            pars0 = initpars
-        else:
-            pars0 = [peak/sig/np.sqrt(2*np.pi),x0,sig,0.0]
-    else:
-        pars0 = pars
-    bounds = ( np.zeros(len(pars0))-np.inf, np.zeros(len(pars0))+np.inf)
-    bounds[0][0] = 0.0     # height must be >=0
-    bounds[0][1] = x0-xwid   # center
-    bounds[1][1] = x0+xwid
-    bounds[0][2] = 0.5     # sigma
-    bounds[1][2] = np.maximum(5,2*sig)
-    bounds[0][3] = np.min(y)-10   # yoffset
-    bounds[1][3] = np.max(y)+10
-    pars,pcov = curve_fit(func,x[cen-xwid:cen+xwid+1],y,p0=pars0,sigma=yerr,bounds=bounds)
-    perror = np.sqrt(np.diag(pcov))
-    # iterate unless new array range is the same
-    if int(round(5*pars[2])) == xwid and int(round(pars[1])) == cen : break
-    cen = int(round(pars[1]))
-    sig = pars[2]
+    initpars = np.append(pars0,neipars0)
+    nnei = len(neipars0)//4
 
+    # First pass, only fit heights and yoffset, hold centers and sigma fixed
+    initpars1 = initpars.copy()
+    bounds1 = ( np.zeros(len(initpars1))-np.inf, np.zeros(len(initpars1))+np.inf)
+    bounds1[0][:] = initpars1-1e-7
+    bounds1[1][:] = initpars1+1e-7
+    bounds1[0][0::4] = 0.0    # height must be >=0
+    bounds1[1][0::4] = np.inf
+    bounds1[0][3::4] = -np.inf 
+    bounds1[1][3::4] = np.inf
+    xlo = int(np.maximum(np.min(initpars1[1::4])-5,0))
+    xhi = int(np.minimum(np.max(initpars1[1::4])+5,2048))
+    pars1,pcov1 = curve_fit(gaussbin,x[xlo:xhi],spec[xlo:xhi],p0=initpars1,
+                            sigma=sigma[xlo:xhi],bounds=bounds1)
+    perror1 = np.sqrt(np.diag(pcov1))
+    
+    
+    # Second pass, Allow sigmas to vary slightly
+    initpars2 = pars1.copy()
+    bounds2 = ( np.zeros(len(initpars2))-np.inf, np.zeros(len(initpars2))+np.inf)
+    bounds2[0][:] = initpars2-1e-7
+    bounds2[1][:] = initpars2+1e-7
+    bounds2[0][0::4] = initpars2[0::4]*0.8    # height must be >=0
+    bounds2[1][0::4] = initpars2[0::4]*1.2
+    bounds2[0][1::4] = initpars2[1::4]-0.5    # center
+    bounds2[1][1::4] = initpars2[1::4]+0.5
+    bounds2[0][2::4] = initpars2[2::4]*0.8    # sigma
+    bounds2[1][2::4] = initpars2[2::4]*1.2
+    bounds2[0][3::4] = initpars2[3::4]-50    # yoffset
+    bounds2[1][3::4] = initpars2[3::4]+50
+    xlo = int(np.maximum(np.min(initpars2[1::4])-5,0))
+    xhi = int(np.minimum(np.max(initpars2[1::4])+5,2048))
+    x = np.arange(len(spec))
+    pars2,pcov2 = curve_fit(gaussbin,x[xlo:xhi],spec[xlo:xhi],p0=initpars2,
+                            sigma=sigma[xlo:xhi],bounds=bounds2)
+    perror2 = np.sqrt(np.diag(pcov2))
+
+    # Final pass, fix neighbors and let main line completely float
+    initpars3 = pars2.copy()
+    bounds3 = ( np.zeros(len(initpars3))-np.inf, np.zeros(len(initpars3))+np.inf)
+    bounds3[0][:] = initpars3-1e-7
+    bounds3[1][:] = initpars3+1e-7
+    bounds3[0][0:4] = -np.inf   # main line can completely float
+    bounds3[1][0:4] = np.inf
+    xlo = int(np.maximum(np.min(initpars3[1::4])-5,0))
+    xhi = int(np.minimum(np.max(initpars3[1::4])+5,2048))
+    x = np.arange(len(spec))
+    pars3,pcov3 = curve_fit(gaussbin,x[xlo:xhi],spec[xlo:xhi],p0=initpars3,
+                            sigma=sigma[xlo:xhi],bounds=bounds3)
+    perror3 = np.sqrt(np.diag(pcov3))
+
+    # Final parameters
+    pars = pars3
+    perror = perror3
+    
     return pars,perror
 
 
