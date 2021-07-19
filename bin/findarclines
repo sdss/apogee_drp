@@ -107,6 +107,7 @@ if __name__ == '__main__' :
             try:
                 rows = np.arange(300)
                 flinestr = wave.findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1)
+                logger.info('Writing table to '+linesfile)
                 Table(flinestr).write(linesfile,overwrite=True)
             except:
                 logger.exception('Error running wave.findlines() on '+str(exp))
