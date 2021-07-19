@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: David Nidever
+# @Date: July 2021
+# @Filename: findarclines
+# @License: BSD 3-Clause
+# @Copyright: David Nidever
+
+# Find and measure lines for an arclamp exposure
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import time
+import datetime
+import glob
+from holtztools import struct
+import numpy as np
+from astropy.table import Table,Column
+from astropy.io import fits,ascii
+import logging
+import traceback
+
+from apogee_drp.apred import wave
+from apogee_drp.utils import bitmask,apload,plan
+from dlnpyutils import utils as dln
+
+if __name__ == '__main__' :
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Find arclamp lines')
+    parser.add_argument('expnum',type=int,nargs='+',help='Exposure number(s)')
+    parser.add_argument('--apred', type=str, nargs=1, default='daily',  help='Reduction version, default is daily')
+    parser.add_argument('--telescope', type=str, nargs=1, default='apo25m',  help='Telescope, default is apo25m')
+    parser.add_argument('-c','--clobber', action='store_true', help='Overwrite files?')
+    parser.add_argument('-v','--verbose', action='store_true', help='Verbose output')
+    args = parser.parse_args()
+    expnum = args.expnum
+    apred = args.apred
+    telescope = args.telescope
+    clobber = args.clobber
+    verbose = args.verbose
+    instrument = {'apo25m':'apogee-n','lco25m':'apogee-s'}[telescope]
+
+    # Initial guess for wavelengths, used to find lines                                                                                                        
+    coef0 = {}
+    if instrument == 'apogee-n':
+        coef0['a'] = np.flip([ 16955.45703, -0.2128979266, -1.117692409e-05])
+        coef0['b'] = np.flip([ 16434.20508, -0.2613874376, -1.035568130e-05])
+        coef0['c'] = np.flip([ 15809.69238, -0.3065520823, -9.610030247e-06])
+        pars0 = [1.19112154e-10,-1.03229705e-05,-2.82422124e-01,1.61568801e+04,
+                -1.44043125e+02,0.00000000e+00,1.54456264e+02]
+    else:
+        coef0['a'] = np.flip([  16957.7252,  -2.14859462e-01,  -1.09959211e-05])
+        coef0['b'] = np.flip([  16432.4720,  -2.63317139e-01,  -1.03074667e-05])
+        coef0['c'] = np.flip([  15802.3346,  -3.08933509e-01,  -9.45618858e-06])
+        pars0 = [ 1.19138048e-10,-1.03101159e-05,-2.84129914e-01,1.61531282e+04,
+                 -1.49566344e+02,-9.99666738e-11, 1.58164526e+02]
+
+    # Initial wavelength guesses
+    waves = {}
+    pixels = np.arange(2048)
+    chips = ['a','b','c']
+    for chip in chips : waves[chip] = np.tile(np.polyval(coef0[chip],pixels),(300,1))
+
+    load = apload.ApLoad(apred=apred,instrument=instrument)
+
+    logger = dln.basiclogger()
+    logger.handlers[0].setFormatter(logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s"))
+    logger.handlers[0].setStream(sys.stdout)   
+
+    now = datetime.datetime.now()
+    start = time.time()
+    logger.info("Start: "+now.strftime("%Y-%m-%d %H:%M:%S"))
+
+    logger.info('Finding arclamp lines for '+str(len(expnum))+' exposures')
+
+    # Loop over exposures
+    for i,exp in enumerate(expnum):
+        logger.info(' ')
+        logger.info(str(i+1)+' '+str(exp))
+        logger.info('-------------')
+
+        # Check if the output apLines file exists already
+        wavefile = load.filename('Wave',num=exp,chips=True)
+        linesfile = wavefile.replace('Wave','Lines')
+
+        # load 1D frame
+        frame = load.ap1D(exp)
+        # get correct arclines                                                                                                                             
+        if frame['a'][0].header['LAMPUNE']:
+            lampfile = 'UNe.vac.apogee'
+            lamptype = 'UNE'
+        if frame['a'][0].header['LAMPTHAR']:
+            lampfile = 'tharne.lines.vac.apogee'
+            lamptype = 'THARNE'
+        arclines = ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
+        if not os.path.exists(linesfile) or clobber:
+            print('Finding lines: ', exp)
+            try:
+                rows = np.arange(300)
+                flinestr = wave.findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1)
+                Table(flinestr).write(linesfile,overwrite=True)
+            except:
+                logger.exception('Error running wave.findlines() on '+str(exp))
+        else:
+            print(linesfile,' already exists and clobber not set')
+            continue
+
+    now = datetime.datetime.now()
+    logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("elapsed: %0.1f sec." % (time.time()-start))
