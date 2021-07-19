@@ -10,3 +10,11 @@ set USEWAVE=0 for ID=23, weak line on top of high continuum, often not detected 
 set USEWAVE=0 for ID=29, left edge of green chip is masked out and often this line is affected
 set USEWAVE=0 for ID=31, has weak blend that skews the centroid but hard to fit both of them simultaneously
 set USEWAVE=0 for ID=92, at very edge of blue chip and often cut off or masked out
+7/19/2021
+Changed the wavelengths of some lines that are consistently off by using APOGEE data.  Used quadratic fit to lines within 120
+pixels.  Used exposures 38240004-38240007 (two THARNE and two UNE exposures).
+changed wavelength of ID=8 from 16753.0188 -> 16753.1516, standard error = 0.0017A
+changed wavelength of ID=11 from 16709.2059 -> 16709.2734, standard error = 0.0070A
+changed wavelength of ID=14 from 16638.5935 -> 16638.6958, standard error = 0.0029A
+changed	wavelength of ID=18 from 16603.8887 -> 16603.9227, standard error = 0.0039A
+changed wavelength of ID=30 from 16409.7373 -> 16409.9328, standard error = 0.0020A
