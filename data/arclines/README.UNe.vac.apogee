@@ -1,4 +1,5 @@
 Updates to UNe.vac.apogee in summer of 2021 to improve fitting of arclamp lines
+
 7/16/2021
 original UNe.vac.apogee that has been in use for a long time was copied to UNe.vac.apogee1+2
 Added WAVEGROUP column
@@ -45,3 +46,11 @@ set WAVEGROUP=14 for ID=285,285b,285c, three close okay lines that need to be fi
 added ID=285b,285c so they can be fit together with line ID=285
 set WAVEGROUP=15 for ID=289,289b,289c, three lines close together that need to be fit together
 added ID=289b,289c so they can be fit together with line ID=289
+
+07/19/2021
+Changed the wavelengths of some lines that are consistently off by using APOGEE data.  Used quadratic fit to lines within 120
+pixels.  Used exposures 38240004-38240007 (two THARNE and two UNE exposures).
+changed wavelength of ID=104 from 16268.5130 -> 16268.6602, standard error = 0.0005A
+changed wavelength of ID=226 from 15479.1230 -> 15479.2716, standard error = 0.0030A
+changed wavelength of ID=264 from 15321.7790 -> 15321.6883, standard error = 0.0018A
+changed wavelength of ID=284 from 15212.7130 -> 15212.7627, standard error = 0.0023A

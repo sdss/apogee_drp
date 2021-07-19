@@ -1,4 +1,5 @@
 Updates to tharne.lines.vac.apogee in summer of 2021 to improve fitting of arclamp lines
+
 7/16/2021
 original tharne.lines.vac.apogee that has been in use for a long time was copied to tharne.lines.vac.apogee1+2
 Added WAVEGROUP column
@@ -10,6 +11,7 @@ set USEWAVE=0 for ID=23, weak line on top of high continuum, often not detected 
 set USEWAVE=0 for ID=29, left edge of green chip is masked out and often this line is affected
 set USEWAVE=0 for ID=31, has weak blend that skews the centroid but hard to fit both of them simultaneously
 set USEWAVE=0 for ID=92, at very edge of blue chip and often cut off or masked out
+
 7/19/2021
 Changed the wavelengths of some lines that are consistently off by using APOGEE data.  Used quadratic fit to lines within 120
 pixels.  Used exposures 38240004-38240007 (two THARNE and two UNE exposures).
