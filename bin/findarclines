@@ -88,32 +88,34 @@ if __name__ == '__main__' :
         logger.info(str(i+1)+' '+str(exp))
         logger.info('-------------')
 
-        # Check if the output apLines file exists already
-        wavefile = load.filename('Wave',num=exp,chips=True)
-        linesfile = wavefile.replace('Wave','Lines')
+        try:
 
-        # load 1D frame
-        frame = load.ap1D(exp)
-        # get correct arclines                                                                                                                             
-        if frame['a'][0].header['LAMPUNE']:
-            lampfile = 'UNe.vac.apogee'
-            lamptype = 'UNE'
-        if frame['a'][0].header['LAMPTHAR']:
-            lampfile = 'tharne.lines.vac.apogee'
-            lamptype = 'THARNE'
-        arclines = ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
-        if not os.path.exists(linesfile) or clobber:
-            print('Finding lines: ', exp)
-            try:
+            # Check if the output apLines file exists already
+            wavefile = load.filename('Wave',num=exp,chips=True)
+            linesfile = wavefile.replace('Wave','Lines')
+
+            # load 1D frame
+            frame = load.ap1D(exp)
+            # get correct arclines                                                                                                                             
+            if frame['a'][0].header['LAMPUNE']:
+                lampfile = 'UNe.vac.apogee'
+                lamptype = 'UNE'
+            if frame['a'][0].header['LAMPTHAR']:
+                lampfile = 'tharne.lines.vac.apogee'
+                lamptype = 'THARNE'
+            arclines = ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
+            if not os.path.exists(linesfile) or clobber:
+                print('Finding lines: ', exp)
                 rows = np.arange(300)
                 flinestr = wave.findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1)
                 logger.info('Writing table to '+linesfile)
                 Table(flinestr).write(linesfile,overwrite=True)
-            except:
-                logger.exception('Error running wave.findlines() on '+str(exp))
-        else:
-            print(linesfile,' already exists and clobber not set')
-            continue
+            else:
+                print(linesfile,' already exists and clobber not set')
+                continue
+
+        except:
+            logger.exception('Encountered a problem with exposure '+str(exp))
 
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
