@@ -25,3 +25,13 @@ changed wavelength of ID=30 from 16409.7373 -> 16409.9328, standard error = 0.00
 set USEWAVE=0 for ID=47 because it is always saturated and the residuals are consistently off
 set USEWAVE=0 for ID=86 because it is always saturated and the residuals are consistently off
 set USEWAVE=0 for ID=91 because it is always saturated and the residuals are consistently off
+set USEWAVE=0 for ID=13 because there is no clear line visible in the spectra
+set WAVEGROUP=2 for ID=21,21b
+added ID=21b so that it can be fit together with line ID=21
+set WAVEGROUP=3 for ID=58,58b
+added ID=58b so that it can be fit together with line ID=58
+set WAVEGROUP=4 for ID=63,63b
+added ID=63b so that it can be fit together with line ID=63
+set WAVEGROUP=5 for ID=70,71
+set WAVEGROUP=6 for ID=87,87b
+added ID=87b so that it can be fit together with line ID=87
