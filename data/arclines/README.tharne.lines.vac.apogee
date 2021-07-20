@@ -20,3 +20,8 @@ changed wavelength of ID=11 from 16709.2059 -> 16709.2734, standard error = 0.00
 changed wavelength of ID=14 from 16638.5935 -> 16638.6958, standard error = 0.0029A
 changed	wavelength of ID=18 from 16603.8887 -> 16603.9227, standard error = 0.0039A
 changed wavelength of ID=30 from 16409.7373 -> 16409.9328, standard error = 0.0020A
+
+7/20/2021
+set USEWAVE=0 for ID=47 because it is always saturated and the residuals are consistently off
+set USEWAVE=0 for ID=86 because it is always saturated and the residuals are consistently off
+set USEWAVE=0 for ID=91 because it is always saturated and the residuals are consistently off
