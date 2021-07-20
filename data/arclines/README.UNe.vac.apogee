@@ -11,40 +11,40 @@ set USEWAVE=0 for ID=64, weak line on high background, not well detected in most
 set USEWAVE=0 for ID=68, left edge of green chip is bad/masked out, line not detected
 set USEWAVE=0 for ID=74, good line but has blend that will skew centroid and hard to fit simultaneously
 set USEWAVE=0 for ID=76, nothing visible, probably very weak line
-set WAVEGROUP=2 for ID=81-83, they are three close and bright lines that should be fit together
-set WAVEGROUP=3 for ID=89+90, they are two lines slightly blended that need to be fit together
+set WAVEGROUP=2 (renamed 11 below) for ID=81-83, they are three close and bright lines that should be fit together
+set WAVEGROUP=3 (renamed 12 below) for ID=89+90, they are two lines slightly blended that need to be fit together
 set USEWAVE=0 for ID=91, weak blended neighbor makes it challenging to get a good centroid for this line
 set USEWAVE=0 for ID=94, weak line on top of high continuum, visibile only in some spectra
 set USEWAVE=0 for ID=95, weak line on top of high continuum, visibile only in some spectra
 set USEWAVE=0 for ID=100, okay line on top of high continuum, visible only in some spectra
 set USEWAVE=0 for ID=123, pretty weak line on top of high continuum, visible in most spectra, wedges between two brighter neighbors/blends
-set WAVEGROUP=4 for ID=122-124, three close lines are blended, need to fit them together
+set WAVEGROUP=4 (renamed 16 below) for ID=122-124, three close lines are blended, need to fit them together
 set USEWAVE=0 for ID=138, okay line on top of high continuum, visible in most spectra, complete blend with similar-brightness line (#137)
 set USEWAVE=0 for ID=147, weak line on top of high continuum, visible in some spectra, close neighbor that will mess up detection and centroiding
 set USEWAVE=0 for ID=148, decent line on top of high continuum, visible in most spectra, complete blend with very close similar-brightness neighbor
 set USEWAVE=0 for ID=149, weak line on top of high continuum, visible in some spectra, close neighbors within ~5 pixels on both sides
-set WAVEGROUP=5 for ID=170+170b, close neighbors/blends that need to be fit together
+set WAVEGROUP=5 (renamed 20 below) for ID=170+170b, close neighbors/blends that need to be fit together
 added ID=170b so that it can be fit together with line ID=170
-set WAVEGROUP=6 for ID=174+175, two fairly bright lines only 4 pixels apart, need to be fit together
-set WAVEGROUP=7 for ID=188-190, three lines very close need to be fit together
-set WAVEGROUP=8 for ID=216+217, two bright lines close enough together to affect each other
-set WAVEGROUP=9 for ID=221,221b,222,222b, four lines close enough to each other that they need to be fit together
+set WAVEGROUP=6 (renamed 21 below) for ID=174+175, two fairly bright lines only 4 pixels apart, need to be fit together
+set WAVEGROUP=7 (renamed 23 below) for ID=188-190, three lines very close need to be fit together
+set WAVEGROUP=8 (renamed 25 below) for ID=216+217, two bright lines close enough together to affect each other
+set WAVEGROUP=9 (renamed 26 below) for ID=221,221b,222,222b, four lines close enough to each other that they need to be fit together
 added ID=221b and 222b so they can be fit together with lines ID=221,222
 set USEWAVE=0 for ID=227, weak line, visible only in some spectra
 set USEWAVE=0 for ID=233, no line visible in the spectrum and very close to a bright neighbor
-set WAVEGROUP=10 for ID=235,236,236b, three lines very close together and need to be fit together
+set WAVEGROUP=10 (renamed 28 below) for ID=235,236,236b, three lines very close together and need to be fit together
 added ID=236b so it can be fit together with lines ID=235+236
 set USEWAVE=0 for ID=237, okay line, visible in most spectra, but there is a weak close neighbor only 3 pixels away, I'm not sure these can even be fit
 set USEWAVE=0 for ID=245, decent line, visible in almost all spectra, there is a weak line 4 pixels to the right, might be hard to fit these together
      since the other line is so weak
-set WAVEGROUP=11 for ID=252+253, two good lines pretty close together, fit them together
-set WAVEGROUP=12 for ID=254+255, two good lines	pretty close together, fit them	together
+set WAVEGROUP=11 (renamed 30 below) for ID=252+253, two good lines pretty close together, fit them together
+set WAVEGROUP=12 (renamed 31 below) for ID=254+255, two good lines	pretty close together, fit them	together
 set USEWAVE=0 for ID=261, good line, visible in all spectra, part of VERY close blend only 1-2 pixels apart, don't think they can be fit together
-set WAVEGROUP=13 for ID=265+266, two decent lines pretty close together need to be fit together
+set WAVEGROUP=13 (renamed 32 below) for ID=265+266, two decent lines pretty close together need to be fit together
 set USEWAVE=0 for ID=276, weak line on high continuum, visible in some spectra, also has weak neighbor 5 pixels away
-set WAVEGROUP=14 for ID=285,285b,285c, three close okay lines that need to be fit together
+set WAVEGROUP=14 (renamed 34 below) for ID=285,285b,285c, three close okay lines that need to be fit together
 added ID=285b,285c so they can be fit together with line ID=285
-set WAVEGROUP=15 for ID=289,289b,289c, three lines close together that need to be fit together
+set WAVEGROUP=15 (renamed 35 below) for ID=289,289b,289c, three lines close together that need to be fit together
 added ID=289b,289c so they can be fit together with line ID=289
 
 07/19/2021
@@ -57,3 +57,48 @@ changed wavelength of ID=284 from 15212.7130 -> 15212.7627, standard error = 0.0
 
 07/20/2021
 set USEWAVE=0 for ID=281 because it is saturated in all spectra and the residuals are consistently off
+set WAVEGROUP=2 for ID=18,18b
+added ID=18b so it can be fit together with line ID=18
+renaming previous defined wavegroup 2 -> 11 (ID=81,82,83)
+renaming previous defined wavegroup 3 -> 12 (ID=89,90)
+set USEWAVE=0 for ID=20 very weak line hardly distinguishable in most spectra
+changed wavelength of ID=21 from 16755.59 -> 16756.0348, standard error = 0.0037A
+set WAVEGROUP=3 for ID=23,23b
+added ID=23b so it can be fit together with line ID=23
+set WAVEGROUP=4 for ID=26,26b
+added ID=26b so it can be fit together with line ID=26
+set WAVEGROUP=5 for ID=31,31b
+added ID=31b so it can be fit together with line ID=31
+set WAVEGROUP=6 for ID=35,36
+set WAVEGROUP=7 for ID=41,42
+set WAVEGROUP=8 for ID=56,57
+set WAVEGROUP=9 for ID=66,67
+set WAVEGROUP=10 for ID=78,78b
+added ID=78b so it can be fit together with line ID=78
+set WAVEGROUP=13	for ID=105,106
+set WAVEGROUP=14 for ID=110,111
+set WAVEGROUP=15 for ID=116,117
+renaming previous defined wavegroup 4 -> 16 (ID=122,123,124)
+set WAVEGROUP=17 for ID=127,127b
+added ID=127b so it can be fit together with line ID=127
+set WAVEGROUP=18 for ID=139,140
+set WAVEGROUP=19 for ID=168,168b
+added ID=168b so it can be fit together with line ID=168
+renaming previous defined wavegroup 5 -> 20 (ID=170,170b)
+renaming previous defined wavegroup 6 -> 21 (ID=174,175)
+set WAVEGROUP=22 for ID=176,177
+renaming previous defined wavegroup 7 -> 23 (ID=188,189,190)
+set WAVEGROUP=24 for ID=201,202
+renaming previous defined wavegroup 8 -> 25 (ID=216,217)
+renaming previous defined wavegroup 9 -> 26 (ID=221,221b,222,222b)
+set WAVEGROUP=27 for ID=223,224
+renaming previous defined wavegroup 10 -> 28 (ID=235,236,236b)
+set WAVEGROUP=29 for ID=240,240b
+added ID=240b so it can be fit together with line ID=240
+renaming previous defined wavegroup 11 -> 30 (ID=252,253)
+renaming previous defined wavegroup 12 -> 31 (ID=254,255)
+renaming previous defined wavegroup 13 -> 32 (ID=265,266)
+set WAVEGROUP=33 for ID=273,273b
+added ID=273b so it can	be fit together	with line ID=273
+renaming previous defined wavegroup 14 -> 34 (ID=285,285b,285c)
+renaming previous defined wavegroup 15 -> 35 (ID=289,289b,289c)
