@@ -54,3 +54,6 @@ changed wavelength of ID=104 from 16268.5130 -> 16268.6602, standard error = 0.0
 changed wavelength of ID=226 from 15479.1230 -> 15479.2716, standard error = 0.0030A
 changed wavelength of ID=264 from 15321.7790 -> 15321.6883, standard error = 0.0018A
 changed wavelength of ID=284 from 15212.7130 -> 15212.7627, standard error = 0.0023A
+
+07/20/2021
+set USEWAVE=0 for ID=281 because it is saturated in all spectra and the residuals are consistently off
