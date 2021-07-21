@@ -35,6 +35,7 @@ from astropy.table import Table
 #from RobustPolyfit import robust_polyfit 
 from dlnpyutils import utils as dln,robust,ladfit
 import time
+import traceback
 
 chips = ['a','b','c']
 colors = ['r','g','b','c','m','y']
@@ -115,7 +116,7 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                 flinestr = fits.open(linesfile)[1].data
             else :
                 print('Finding lines: ', num)
-                flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1)
+                flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1,plot=plot)
                 Table(flinestr).write(linesfile,overwrite=True)
             # replace frameid tag with group identification, which must start at 0 for func_multi_poly indexing
 
@@ -728,7 +729,7 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=
         allhdu.append(hdu)
     return allhdu
 
-def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
+def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False):
     """ Determine positions of lines from input file in input frame for specified rows
 
     Args:
@@ -782,7 +783,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                 try:
                     pix0 = wave2pix(wave,waves[chip][row,:])+dpixel_median
                     # find peak in median-filtered subtracted spectrum
-                    pars,perror = peakfit(medspec,pix0,estsig=estsig0,
+                    pars,perror = peakfit(medspec,pix0,estsig=estsig0,plot=plot,
                                           sigma=frame[chip][2].data[row,:],mask=frame[chip][3].data[row,:])
                     if lines['USEWAVE'][iline] == 1 : dpixel.append(pars[1]-pix0)
                     if irow > 0 :
@@ -804,6 +805,8 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                 # Peakfit failed
                 except:
                     if verbose : print('failed: ',num,row,chip,wave)
+                    traceback.print_exc()
+                    import pdb; pdb.set_trace()
                     rowind.append(nline)
                     linestr['pixel'][nline] = 999999.
                     linestr['pixelerr'][nline] = 999999.
@@ -844,7 +847,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                         initpars = [np.maximum(medspec[int(round(pix0))],50),pix0,sig0,0.0]
                         try:
                             pars,perror = peakfit(medspec,pix0,estsig=estsig0,sigma=frame[chip][2].data[row,:],
-                                                  mask=frame[chip][3].data[row,:],initpars=initpars)
+                                                  mask=frame[chip][3].data[row,:],initpars=initpars,plot=plot)
                             linestr['peak'][nline1] = pars[0]
                             linestr['pixel'][nline1] = pars[1]
                             linestr['sigma'][nline1] = pars[2]
@@ -858,6 +861,8 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                                     ichip+1,row,linestr['wave'][nline1],pars[0],pars[1],pars[1]-pix0,num))
                         except:
                             if verbose : print('failed: ',num,row,chip,wave)
+                            traceback.print_exc()
+                            import pdb; pdb.set_trace()
                             
                 # Refit lines that are in groups
                 if 'WAVEGROUP' in lines.dtype.names:
@@ -894,7 +899,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                         # Run peakfit_multi
                         try:
                             pars,perror = peakfit_multi(medspec,pars0,neipars, sigma=frame[chip][2].data[row,:],
-                                                        mask=frame[chip][3].data[row,:])
+                                                        mask=frame[chip][3].data[row,:],plot=plot)
                             # update parameters
                             pix0 = wave2pix(linestr['wave'][nline1],waves[chip][row,:])+dpixel_median
                             linestr['peak'][nline1] = pars[0]
@@ -910,6 +915,8 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
                                     ichip+1,row,linestr['wave'][nline1],pars[0],pars[1],pars[1]-pix0,num))
                         except:
                             if verbose : print('peakfit_multi failed: ',iline)
+                            traceback.print_exc()
+                            import pdb; pdb.set_trace()
                             # leave parameters as is, if it previously failed then it still failed
                             # if it previously was successful then return those values
 
@@ -938,7 +945,7 @@ def gaussbin(x,*args):
     # bin width
     xbin = 1.
     ngauss = len(args)//4
-    y = x.copy()*0
+    y = np.zeros(x.shape,float)
     for i in range(ngauss):
         a,x0,sig,yoff = args[i*4:(i+1)*4]
         t1 = (x -x0-xbin/2.)/np.sqrt(2.)/sig
@@ -971,6 +978,7 @@ def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin,ini
         x0 = y.argmax()+(cen-xwid)
         peak = y.max()
         sig = np.sqrt(y.sum()**2/peak**2/(2*np.pi))
+        sig = np.maximum(sig,0.51)
         if niter==0:
             if initpars is not None:
                 pars0 = initpars
@@ -980,29 +988,39 @@ def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin,ini
             pars0 = pars
         bounds = ( np.zeros(len(pars0))-np.inf, np.zeros(len(pars0))+np.inf)
         bounds[0][0] = 0.0     # height must be >=0
-        bounds[0][1] = x0-xwid   # center
-        bounds[1][1] = x0+xwid
+        bounds[0][1] = pars0[1]-xwid   # center
+        bounds[1][1] = pars0[1]+xwid
         bounds[0][2] = 0.5     # sigma
         bounds[1][2] = np.maximum(5,2*sig)
-        bounds[0][3] = np.min(y)-10   # yoffset
-        bounds[1][3] = np.max(y)+10
-        pars,pcov = curve_fit(func,x[cen-xwid:cen+xwid+1],y,p0=pars0,sigma=yerr,bounds=bounds)
-        perror = np.sqrt(np.diag(pcov))
+        bounds[0][3] = np.minimum(np.min(y),pars0[3])-10   # yoffset
+        bounds[1][3] = np.maximum(np.max(y),pars0[3])+10
+        try:
+            pars,pcov = curve_fit(func,x[cen-xwid:cen+xwid+1],y,p0=pars0,sigma=yerr,bounds=bounds)
+            perror = np.sqrt(np.diag(pcov))
+        except:
+            traceback.print_exc()
+            import pdb; pdb.set_trace()
         # iterate unless new array range is the same
         if int(round(5*pars[2])) == xwid and int(round(pars[1])) == cen : break
         cen = int(round(pars[1]))
         sig = pars[2]
-    if plot :
+    if plot:
         plt.clf()
         plt.plot(x,spec)
-        plt.plot(x,func(x,pars[0],pars[1],pars[2]))
+        plt.plot(x[cen-xwid:cen+xwid+1],y)
+        plt.plot(x,func(x,*pars),linewidth=2,alpha=0.8,linestyle='dashed')
         plt.xlim((pars[1]-50,pars[1]+50))
+        yr = dln.minmax(np.append(y,func(x,*pars)))
+        plt.ylim([yr[0]-0.2*dln.valrange(yr),yr[1]+0.2*dln.valrange(yr)])
+        plt.xlabel('X (pixels)')
+        plt.ylabel('Flux')
         plt.draw()
-        pdb.set_trace()
+        #import pdb; pdb.set_trace()
+
     return pars,perror
 
 
-def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin):
+def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin,plot=False):
     """
     Multi-component Gaussian fit for blended lines
     
@@ -1018,16 +1036,19 @@ def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin):
 
     initpars = np.append(pars0,neipars0)
     nnei = len(neipars0)//4
-
+    
     # First pass, only fit heights and yoffset, hold centers and sigma fixed
     initpars1 = initpars.copy()
+    initpars1[7::4] = 0.0     # force all yoffset except first to zero
     bounds1 = ( np.zeros(len(initpars1))-np.inf, np.zeros(len(initpars1))+np.inf)
     bounds1[0][:] = initpars1-1e-7
     bounds1[1][:] = initpars1+1e-7
     bounds1[0][0::4] = 0.0    # height must be >=0
     bounds1[1][0::4] = np.inf
-    bounds1[0][3::4] = -np.inf 
-    bounds1[1][3::4] = np.inf
+    bounds1[0][3] = -np.inf   # only let first yoffset float
+    bounds1[1][3] = np.inf
+    bounds1[0][7::4] = -1e-7   # hold all yoffsets except first one fixed
+    bounds1[1][7::4] = 1e-7
     xlo = int(np.maximum(np.min(initpars1[1::4])-5,0))
     xhi = int(np.minimum(np.max(initpars1[1::4])+5,2048))
     pars1,pcov1 = curve_fit(gaussbin,x[xlo:xhi],spec[xlo:xhi],p0=initpars1,
@@ -1035,19 +1056,22 @@ def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin):
     perror1 = np.sqrt(np.diag(pcov1))
     
     
-    # Second pass, Allow sigmas to vary slightly
+    # Second pass, allow amplitudes, centers and sigmas to vary slightly
     initpars2 = pars1.copy()
+    initpars2[7::4] = 0.0     # force all yoffset except first to zero    
     bounds2 = ( np.zeros(len(initpars2))-np.inf, np.zeros(len(initpars2))+np.inf)
     bounds2[0][:] = initpars2-1e-7
     bounds2[1][:] = initpars2+1e-7
-    bounds2[0][0::4] = initpars2[0::4]*0.8    # height must be >=0
-    bounds2[1][0::4] = initpars2[0::4]*1.2
-    bounds2[0][1::4] = initpars2[1::4]-0.5    # center
-    bounds2[1][1::4] = initpars2[1::4]+0.5
-    bounds2[0][2::4] = initpars2[2::4]*0.8    # sigma
-    bounds2[1][2::4] = initpars2[2::4]*1.2
-    bounds2[0][3::4] = initpars2[3::4]-50    # yoffset
-    bounds2[1][3::4] = initpars2[3::4]+50
+    bounds2[0][0::4] = initpars2[0::4]*0.5    # height must be >=0
+    bounds2[1][0::4] = initpars2[0::4]*1.5
+    bounds2[0][1::4] = initpars2[1::4]-1.0 #0.5    # center
+    bounds2[1][1::4] = initpars2[1::4]+1.0 #0.5
+    bounds2[0][2::4] = initpars2[2::4]*0.5    # sigma
+    bounds2[1][2::4] = initpars2[2::4]*1.5
+    bounds2[0][3] = initpars2[3]-50    # yoffset
+    bounds2[1][3] = initpars2[3]+50
+    bounds2[0][7::4] = -1e-7   # hold all yoffsets except first one fixed
+    bounds2[1][7::4] = 1e-7    
     xlo = int(np.maximum(np.min(initpars2[1::4])-5,0))
     xhi = int(np.minimum(np.max(initpars2[1::4])+5,2048))
     x = np.arange(len(spec))
@@ -1057,6 +1081,7 @@ def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin):
 
     # Final pass, fix neighbors and let main line completely float
     initpars3 = pars2.copy()
+    initpars3[7::4] = 0.0     # force all yoffset except first to zero    
     bounds3 = ( np.zeros(len(initpars3))-np.inf, np.zeros(len(initpars3))+np.inf)
     bounds3[0][:] = initpars3-1e-7
     bounds3[1][:] = initpars3+1e-7
@@ -1072,6 +1097,19 @@ def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin):
     # Final parameters
     pars = pars3
     perror = perror3
+
+    if plot:
+        plt.clf()
+        plt.plot(x,spec)
+        plt.plot(x[xlo:xhi],spec[xlo:xhi])
+        plt.plot(x,gaussbin(x,*pars),linewidth=2,alpha=0.8,linestyle='dashed')
+        plt.xlim((xlo-10,xhi+10))
+        yr = dln.minmax(np.append(spec[xlo:xhi],gaussbin(x,*pars)))
+        plt.ylim([yr[0]-0.2*dln.valrange(yr),yr[1]+0.2*dln.valrange(yr)])
+        plt.xlabel('X (pixels)')
+        plt.ylabel('Flux')
+        plt.draw()
+        import pdb; pdb.set_trace()
     
     return pars,perror
 
