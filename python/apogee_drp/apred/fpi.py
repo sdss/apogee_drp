@@ -86,11 +86,14 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
     # This is what apmultiwavecal does
     if verbose:
         print('Solving wavelength solutions simultaneously using all arclamp exposures')
-    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-'+str(mjd5)+'.fits'
+    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%8d.fits' % mjd5
     if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False or clobber is True:
         # The previously measured lines in the apLines files will be reused if they exist
         npoly = 4 # 5
-        wave.wavecal(arcframes,rows=np.arange(300),name=str(mjd5),npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
+        #print('KLUDGE!! only using first four frames!!')
+        #arcframes = arcframes[0:4]
+        #import pdb; pdb.set_trace()
+        pars,arclinestr = wave.wavecal(arcframes,rows=np.arange(300),name=str(mjd5),npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
         # npoly=4 gives lower RMS values
         # Check that it's there
         if os.path.exists(wavefile) is False:
