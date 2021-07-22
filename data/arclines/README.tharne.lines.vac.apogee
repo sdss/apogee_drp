@@ -35,3 +35,7 @@ added ID=63b so that it can be fit together with line ID=63
 set WAVEGROUP=5 for ID=70,71
 set WAVEGROUP=6 for ID=87,87b
 added ID=87b so that it can be fit together with line ID=87
+
+07/22/2021
+added ID=70b so it can be fit together with ID=70,71
+set WAVEGROUP=5 for 70b (now has ID=70,70b,71)
