@@ -84,8 +84,10 @@ if __name__ == '__main__' :
     dflatnums = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims, single=single)
     print('\nDOME FLAT RESULTS:')
     for i in range(len(ims)): 
-        df = dflatnums[i]
-        if single == True: df = dflatnums
+        if single == False: 
+            df = dflatnums[i]
+        else:
+            df = dflatnums
         print(str(ims[i]) + '   ' + str(df))
     print('\n')
 
