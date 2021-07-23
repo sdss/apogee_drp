@@ -58,25 +58,26 @@ if __name__ == '__main__' :
     mjdplate = args.mjdplate
     planfile = args.planfile
     single = args.single
-    print(single)
+
+    # Simplest option: comma-separated list of exposure numbers
     if ims != '':
         ims = np.array(args.ims[0].split(',')).astype(int)
     else:
         telescope = 'apo25m'
         if observatory == 'lco': telescope = 'lco25m'
+        # MJD-Plate option
         if mjdplate != '':
             mjd = mjdplate[0].split('-')[0]
             plate = mjdplate[0].split('-')[1]
             load = apload.ApLoad(apred=apred, telescope=telescope)
             planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
             planstr = plan.load(planfile, np=True)
-            # Get array of object exposures and find out how many are objects.
             gd, = np.where(planstr['APEXP']['flavor'] == 'object')
             ims = planstr['APEXP']['name'][gd]
         else:
+            # Absolute path to planfile option
             if planfile != '':
                 planstr = plan.load(planfile[0], np=True)
-                # Get array of object exposures and find out how many are objects.
                 gd, = np.where(planstr['APEXP']['flavor'] == 'object')
                 ims = planstr['APEXP']['name'][gd]
 
