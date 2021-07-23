@@ -34,13 +34,13 @@ if __name__ == '__main__' :
         prog=os.path.basename(sys.argv[0]),
         description='Run domeFlatTrace')
 
-    #single = False
+    single = False
     parser.add_argument('observatory', type=str, nargs=1, help='APOGEE observatory (apo or lco)')
     parser.add_argument('--apred', type=str, nargs=1, default='daily', help='APOGEE reduction version')
     parser.add_argument('--ims', type=str, nargs=1, default='', help='Comma-separated list of exposure numbers')
     parser.add_argument('--mjdplate', type=str, nargs=1, default='',  help='Optional: Night MJD5 dash Plate ID')
     parser.add_argument('--planfile', type=str, nargs=1, default='',  help='Optional: path to yaml planfile')
-    #parser.add_argument('-s','--single', action='store_true', help='Option to return a single dome flat')
+    parser.add_argument('-s','--single', action='store_true', help='Option to return a single dome flat')
     args = parser.parse_args()
 
     logger = dln.basiclogger()
@@ -57,8 +57,7 @@ if __name__ == '__main__' :
     ims = args.ims
     mjdplate = args.mjdplate
     planfile = args.planfile
-    print(planfile)
-    #single = args.single
+    single = args.single
     if ims != '':
         ims = np.array(args.ims[0].split(',')).astype(int)
     else:
@@ -81,10 +80,12 @@ if __name__ == '__main__' :
                 ims = planstr['APEXP']['name'][gd]
 
     # Run the domeFlatTrace code
-    dflatnums = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims)#, single=single)
+    dflatnums = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims, single=single)
     print('\nDOME FLAT RESULTS:')
     for i in range(len(ims)): 
-        print(str(ims[i]) + '   ' + str(dflatnums[i]))
+        df = dflatnums[i]
+        if single == True: df = dflatnums
+        print(str(ims[i]) + '   ' + str(df))
     print('\n')
 
     now = datetime.datetime.now()
