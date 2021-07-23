@@ -57,6 +57,7 @@ if __name__ == '__main__' :
     ims = args.ims
     mjdplate = args.mjdplate
     planfile = args.planfile
+    print(planfile)
     #single = args.single
     if ims == '':
         telescope = 'apo25m'
