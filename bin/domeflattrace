@@ -58,6 +58,7 @@ if __name__ == '__main__' :
     mjdplate = args.mjdplate
     planfile = args.planfile
     single = args.single
+    print(single)
     if ims != '':
         ims = np.array(args.ims[0].split(',')).astype(int)
     else:
