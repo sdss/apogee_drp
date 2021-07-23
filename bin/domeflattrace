@@ -34,13 +34,13 @@ if __name__ == '__main__' :
         prog=os.path.basename(sys.argv[0]),
         description='Run domeFlatTrace')
 
-    single = False
+    #single = False
     parser.add_argument('observatory', type=str, nargs=1, help='APOGEE observatory (apo or lco)')
     parser.add_argument('--apred', type=str, nargs=1, default='daily', help='APOGEE reduction version')
     parser.add_argument('--ims', type=str, nargs=1, default='', help='Comma-separated list of exposure numbers')
     parser.add_argument('--mjdplate', type=str, nargs=1, default='',  help='Optional: Night MJD5 dash Plate ID')
     parser.add_argument('--planfile', type=str, nargs=1, default='',  help='Optional: path to yaml planfile')
-    parser.add_argument('-s','--single', action='store_true', help='Option to return a single dome flat')
+    #parser.add_argument('-s','--single', action='store_true', help='Option to return a single dome flat')
     args = parser.parse_args()
 
     logger = dln.basiclogger()
