@@ -39,3 +39,19 @@ added ID=87b so that it can be fit together with line ID=87
 07/22/2021
 added ID=70b so it can be fit together with ID=70,71
 set WAVEGROUP=5 for 70b (now has ID=70,70b,71)
+
+07/29/2021
+set USEWAVE=0 for ID=73 because it has a close, blended neighbor that is skewing the centroid
+  NOTE this line exists in the UNe spectra (ID=229) and is stronger
+set USEWAVE=0 for ID=43 because it has a close, blended neighbor that is skewing the centroid
+  NOTE this line exists in the UNe spectra (ID=135) and is stronger
+changed wavelength of ID=30 from 16409.9328 -> 16409.7373 back to original value and consistent with UNe linelist
+  this line has a close strong blended neighbor that is skewing the centroid
+set USEWAVE=0 for ID=30 because it has a close, strong, blended neighbor that is skewing the centroid
+  NOTE this line exists in the UNe spectra (ID=73) and is stronger
+set USEWAVE=0 for ID=19 because it has a close, blended neighbor that is skewing the centroid
+  NOTE this line exists in the UNe spectra (ID=46) and is stronger
+changed wavelength of ID=14 from 16638.6958 -> 16638.5935 back to original value and consistent with UNe linelist
+  this has a close strong blended neighbor that is skewing the centroid
+set USEWAVE=0 for ID=14 because it has a close, blended neighbr that is skewing the centroid
+  NOTE this line exists in the UNe spectra (ID=40) and is stronger

@@ -102,3 +102,52 @@ set WAVEGROUP=33 for ID=273,273b
 added ID=273b so it can	be fit together	with line ID=273
 renaming previous defined wavegroup 14 -> 34 (ID=285,285b,285c)
 renaming previous defined wavegroup 15 -> 35 (ID=289,289b,289c)
+
+07/29/2021
+changed wavelength of ID=54 from 16553.79 -> 16553.78240 to be consistent with the THARNE list
+changed wavelenth of ID=104 from 16268.6602 -> 16268.5130 (back to its original value) to be consistent with the THARNE list
+  the UNe line has a close blended neighbor that skews the centroid
+set USEWAVE=0 for ID=104 because it has a close blended neighbor that skews the centroid
+  NOTE that this line exists in the THARNE spectra (ID=34) and is stronger
+set USEWAVE=0 for ID=2 because it has a close blended neighbor
+set USEWAVE=0 for ID=55 because it has a close strong blended neighbor
+set USEWAVE=0 for ID=67 because it is a weak line and is between two bright lines and generally not well fit
+set USEWAVE=0 for ID=79 because it has a close, strong blended line and the residuals are consistently large
+set USEWAVE=0 for ID=87 because it has a close, strong blended line and the residuals are consistently off
+set WAVEGROUP=36 for ID=93,93b
+added ID=93b so it can be fit together with line ID=93
+set USEWAVE=0 for ID=97 because it has a close, strong blended line that is skewing the centroids
+set WAVEGROUP=37 for ID=101,101b
+added ID=101b so it can be fit together with line ID=101
+set WAVEGROUP=38 for ID=113,113b
+added ID=113b so it can be fit together with line ID=113
+set WAVEGROUP=39 for ID=115,115b
+added ID=115b so it can be fit together with line ID=115
+set USEWAVE=0 for ID=125 because it has a close blended neighbor that is skewing the centroids
+set USEWAVE=0 for ID=130 because it has	a close	blended	neighbor that is skewing the centroids
+set WAVEWGROUP=40 for ID=169,169b
+added ID=169b so it can be fit together with line ID=169
+set USEWAVE=0 for ID=171 because it has close blended neighbors on both sides that are skewing the centroids
+set USEWAVE=0 for ID=186 because it has close, strong blended neighbor that is skewing the centroids
+set WAVEGROUP=41 for ID=197,197b
+added ID=197b so it can be fit together with line ID=197
+set USEWAVE=0 for ID=198 because it has a close blended neighbor that is skewing the centroids
+set WAVEGROUP=42 for ID=215,215b
+added ID=215b so it can be fit together with line ID=215
+set USEWAVE=0 for ID=221 because it is weak, consistently off and has a strong blend
+set WAVEGROUP=43 for ID=225,225b
+added ID=225b so it can	be fit together	with line ID=225
+set USEWAVE=0 for ID=238 because it has a close, blended neighbor that is skewing the centroids
+set USEWAVE=0 for ID=239 because it has a close, blended neighbor that is skewing the centroids
+set WAVEGROUP=44 for ID=243,243b
+added ID=243b so it can be fit together with line ID=243b
+set WAVEGROUP=45 for ID=251,251b
+added ID=251b so it can be fit together with line ID=251b
+set WAVEGROUP=46 for ID=292,292b
+added ID=292b so it can be fit together with line ID=292
+set WAVEGROUP=47 for ID=297,297b
+added ID=297b so it can be fit together with line ID=297
+set WAVEGROUP=48 for ID=22,22b
+added ID=22b so it can be fit together with line ID=22
+set USEWAVE=0 for ID=29 because it has a close, blended neighbor that is skewing the centroids
+set USEWAVE=0 for ID=23 because it has a close, blended neighbors on both sides and the residuals are consistently off
