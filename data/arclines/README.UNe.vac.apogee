@@ -151,3 +151,10 @@ set WAVEGROUP=48 for ID=22,22b
 added ID=22b so it can be fit together with line ID=22
 set USEWAVE=0 for ID=29 because it has a close, blended neighbor that is skewing the centroids
 set USEWAVE=0 for ID=23 because it has a close, blended neighbors on both sides and the residuals are consistently off
+
+07/30/2021
+updating the XPIX and WAVE values for new lines I added for group fitting using fit_groups.pro which performed
+multi-gauss fitting to the groups in all fibers for 38240006.  The fitted values were used to calculate
+the mean XPIX and WAVE offset of the added line relative to the nearby line (e.g. 21b relative to 21).
+ID=78b, 127b, 168b, 18b, 170b, 221b, 222b, 236b, 240b, 23b, 273b, 285b, 285c, 289b, 289c, 93b, 101b,
+113b, 115b, 26b, 169b, 197b, 215b, 225b, 243b, 251b, 292b, 297b, 22b, 31b updated

@@ -55,3 +55,9 @@ changed wavelength of ID=14 from 16638.6958 -> 16638.5935 back to original value
   this has a close strong blended neighbor that is skewing the centroid
 set USEWAVE=0 for ID=14 because it has a close, blended neighbr that is skewing the centroid
   NOTE this line exists in the UNe spectra (ID=40) and is stronger
+
+07/30/2021
+updating the XPIX and WAVE values for new lines I added for group fitting using fit_groups.pro which performed
+multi-gauss fitting to the groups in all fibers for 38240004.  The fitted values were used to calculate
+the mean XPIX and WAVE offset of the added line relative to the nearby line (e.g. 21b relative to 21).
+ID=21b, 58b, 63b, 70b, 87b updated
