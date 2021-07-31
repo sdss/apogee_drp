@@ -169,3 +169,6 @@ added ID=201b to be fit together with ID=201,202 in WAVEGROUP=24
 set WAVEGROUP=8 for ID=56,57,57b
 added ID=57b to be fit together with ID=56,57 in WAVEGROUP=8
 Updating XPIX/WAVE for added using multi-gaussian fitting (like above). ID=90b, 116b, 176b, 201b, 57b, updated
+changed wavelength of ID=284 from 15212.7627 -> 15212.7130 back to the original value, because it is a blend
+set WAVEGROUP=49 for ID=284,284b
+added 284b to be fit together with 284
