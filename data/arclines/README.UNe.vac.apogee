@@ -158,3 +158,14 @@ multi-gauss fitting to the groups in all fibers for 38240006.  The fitted values
 the mean XPIX and WAVE offset of the added line relative to the nearby line (e.g. 21b relative to 21).
 ID=78b, 127b, 168b, 18b, 170b, 221b, 222b, 236b, 240b, 23b, 273b, 285b, 285c, 289b, 289c, 93b, 101b,
 113b, 115b, 26b, 169b, 197b, 215b, 225b, 243b, 251b, 292b, 297b, 22b, 31b updated
+set WAVEGROUP=12 for ID=89,90,90b
+added ID=90b to be fit together with ID=89,90 in WAVEGROUP=12
+set WAVEGROUP=15 for ID=116,116b,117
+added ID=116b to be fit together with ID=116,117 in WAVEGROUP=15
+set WAVEGROUP=22 for ID=176,176b,177
+added ID=176b to be fit together with ID=176,177 in WAVEGROUP=22
+set WAVEGROUP=24 for ID=201,201b,202
+added ID=201b to be fit together with ID=201,202 in WAVEGROUP=24
+set WAVEGROUP=8 for ID=56,57,57b
+added ID=57b to be fit together with ID=56,57 in WAVEGROUP=8
+Updating XPIX/WAVE for added using multi-gaussian fitting (like above). ID=90b, 116b, 176b, 201b, 57b, updated
