@@ -61,3 +61,12 @@ updating the XPIX and WAVE values for new lines I added for group fitting using 
 multi-gauss fitting to the groups in all fibers for 38240004.  The fitted values were used to calculate
 the mean XPIX and WAVE offset of the added line relative to the nearby line (e.g. 21b relative to 21).
 ID=21b, 58b, 63b, 70b, 87b updated
+
+08/03/2021
+Discovered that the Neon lines are systematically offset from the Th-Ar and Uranium lines.  Redman+2012 (Uranium linelist)
+also found an issue with the Neon lines from Sansonetti+2004 (the source of our Neon wavelengths) relative to other
+reference lines and decided not to use them.  Therefore, I decided to use the Th-Ar lines (from Kerber+2008) and the
+Uranium lines (from Redman+2012) as our absolute wavelength reference and derive our own wavelengths for the Neon lines.
+I did this using the 38240004-38240007 exposures, fitting quadratic solutions to each chip and all 300 fibers.  I then
+found the median wavelength for each unique line (averaging over fibers and exposures) to find the new Neon wavelengths
+for 34 unique lines.  Both linelists were updated.
