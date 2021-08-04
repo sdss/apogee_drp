@@ -181,3 +181,8 @@ Uranium	lines (from Redman+2012) as our	absolute wavelength reference and derive
 I did this using the 38240004-38240007 exposures, fitting quadratic solutions to each chip and all 300 fibers.	I then
 found the median wavelength for	each unique line (averaging over fibers and exposures) to find the new Neon wavelengths
 for 34 unique lines.  Both linelists were updated.
+
+set USEWAVE=0 for ID=153.  There are multiple close lines, too close to get good fits.  According to Redman there are actually
+   five lines right on top of each other, with three of similar fluxes.
+set USEWAVe=0 for ID=255.  This line is systematically off and according to Redman it has a very close blend.  A neighboring
+   line a few pixels away seems to be fine.
