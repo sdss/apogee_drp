@@ -178,7 +178,7 @@ Discovered that	the Neon lines are systematically offset from the Th-Ar	and Uran
 also found an issue with the Neon lines	from Sansonetti+2004 (the source of our Neon wavelengths) relative to other
 reference lines	and decided not	to use them.  Therefore, I decided to use the Th-Ar lines (from Kerber+2008) and the
 Uranium	lines (from Redman+2012) as our	absolute wavelength reference and derive our own wavelengths for the Neon lines.
-I did this using the 38240004-38240007 exposures, fitting quadratic solutions to each chip and all 300 fibers.	I then
+I did this using the 38240004-38240007 exposures, fitting cubic solutions to each chip and all 300 fibers. I then
 found the median wavelength for	each unique line (averaging over fibers and exposures) to find the new Neon wavelengths
 for 34 unique lines.  Both linelists were updated.
 
