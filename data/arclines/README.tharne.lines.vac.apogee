@@ -70,3 +70,16 @@ Uranium lines (from Redman+2012) as our absolute wavelength reference and derive
 I did this using the 38240004-38240007 exposures, fitting cubic solutions to each chip and all 300 fibers.  I then
 found the median wavelength for each unique line (averaging over fibers and exposures) to find the new Neon wavelengths
 for 34 unique lines.  Both linelists were updated.
+
+08/04/2021
+changed wavelength of ID=6 from 16789.642 -> 16789.6794.  this line is consistently off and according to Kerber+2008 it
+  consists of a close blend of two Th I lines.
+  16789.7990 (intensity=62) and 16789.6420 (intensity=92) separated by only 0.157A or ~0.5 pixels.
+  There is no indication from the fitted Gaussian sigmas that the line is wider than other lines in this region of the
+  spectrum, but the systematic wavelength offset is consistent with Kerber information.  The lines are too close to
+  fit together as a group.  Therefore, I've decided to change the "mean" wavelength of the doublet instead.
+  I'm using the value from tweak_arclamp_wavelengths.pro, which uses the APOGEE data itself to measure the wavelength.
+changed wavelength of ID=62 from 15602.9357 -> 15603.0005.  this line has almost the exact same issue as ID=6.  I took
+  the same route as with ID=6.
+set WAVEGROUP=7 for ID=42,42b because there is a close/weak line next to ID=42
+added ID=42b so it can be fit together with ID=42
