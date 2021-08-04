@@ -134,7 +134,6 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
             flinestr['bad'] = -1
             flinestr = np.array(flinestr)
             flinestr['group'] = maxgroup-1
-            #flinestr['frameid'] = maxgroup-1
             # Prune lines that are WAY off
             fibchid = flinestr['row']+flinestr['chip']*1000
             fchindex = dln.create_index(fibchid)
@@ -152,21 +151,11 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                     gd1, = np.where((np.abs(res1) < thresh) & (flinestr1['failed']==0))
                     if len(gd1)>0:
                         gdind = np.append(gdind,ind1[gd1])
-                    else:
-                        # don't do anything
-                        pass
-                    #bd1, = np.where((np.abs(res1) >= thresh) | (flinestr1['failed']==1))
-                    #if len(bd1)>0:
-                    #    import pdb; pdb.set_trace()   
                 else:
                     # all lines failed
                     gd1 = np.array([],int)
-                #print(fibch,str(len(gd1)),' ',str(len(ind1)))
                     
             if len(gdind)<len(flinestr):
-                #import pdb; pdb.set_trace()
-                #print('Pruning ',len(flinestr)-len(gdind),' of ',len(flinestr),' lines as outliers')
-                #flinestr = flinestr[gdind]
                 print('Setting BAD=1 for ',len(flinestr)-len(gdind),' of ',len(flinestr),' outlier lines')
                 flinestr['bad'] = 1  # bad
                 flinestr['bad'][gdind] = 0  # good
@@ -180,8 +169,6 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
             print('Error reading frame: ', num)
 
     if nofit : return
-
-    #import pdb; pdb.set_trace()
 
     # do the wavecal fit
     # initial parameter guess for first row, subsequent rows will use guess from previous row
@@ -209,10 +196,6 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
 
     # Get improved initial guesses and prune out bad lines
     print('Getting improved initial estimates and pruning out bad lines using all fibers')
-    # Only keep good lines
-    #linestr0 = linestr.copy()
-    #gd1, = np.where((linestr['peak']>200) & np.isfinite(linestr['wave_found']))
-    #linestr = linestr[gd1]
     # Check each set of frameid-chip lines
     # only check the GOOD lines
     gdlines, = np.where(linestr['bad']==0)
@@ -228,14 +211,14 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         x = np.float64(linestr1['pixel'])
         y = np.float64(linestr1['wave'])
         # Robust polynomial fit
-        rob_coefs1 = robust.polyfit(x,y,2)
+        rob_coefs1 = robust.polyfit(x,y,3)
         rob_preds1 = np.poly1d(rob_coefs1)(x)
         # outlier rejection
         res1 = linestr1['wave']-rob_preds1
         sig1 = dln.mad(res1)
         gd1, = np.where(np.abs(res1) < 3*sig1)
         # refit
-        rob_coefs2 = robust.polyfit(x[gd1],y[gd1],2)
+        rob_coefs2 = robust.polyfit(x[gd1],y[gd1],3)
         rob_preds2 = np.poly1d(rob_coefs2)(x)
         res2 = linestr1['wave']-rob_preds2
         # Remove fiber-specific offsets
@@ -260,7 +243,6 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         res4 = res3 - np.poly1d(res_coefs)(x)
         # Final selection of good points
         sig3 = dln.mad(res4)
-        #gd3, = np.where((np.abs(res4)<3.5*allsig) & (linestr1['pixel']>=0) & (linestr1['pixel']<=2047))
         bd3, = np.where((np.abs(res4)>4*allsig) | (linestr1['pixel']<0) | (linestr1['pixel']>2047))
         nbad += len(bd3)
         print('chip-frameid: ',fibch,len(ind),len(bd3))
@@ -275,8 +257,6 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         
     # Outlier lines
     print(str(nbad)+' of '+str(len(linestr))+' lines marked as BAD=2')
-    #print(str(len(gdind))+' of '+str(len(linestr))+' lines retained')    
-    #linestr = linestr[gdind]
 
     # Now do a global fit to all chips and chipgaps
     gdlines, = np.where(linestr['bad']==0)
@@ -325,19 +305,12 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         #   to avoid local minima
         if ngroup > 1 :
             if abs(nums[1]-nums[0]) > 1 : 
-                print('for multiple groups, first two frames must be from same group!')
-                import pdb; pdb.set_trace()
+                raise Exception('for multiple groups, first two frames must be from same group!')
             # Run all exposures of first group
             group0, = np.where(np.array(framesgroup)==0)
             num0 = nums[group0]
             print('running wavecal for: ', num0,maxgroup,ngroup,' row: ',row)
             pars0,linestr1 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,reject=reject,init=init,verbose=verbose)
-
-            thisrow1, = np.where(linestr1['row']==row)
-            Table(linestr1[thisrow1]).write('arclamp_linestr_fiber'+str(row)+'.fits',overwrite=True)
-            print('Writing group 1 results to  arclamp_linestr_fiber'+str(row)+'.fits')
-            #import pdb; pdb.set_trace()
-
             pars[:npoly] = pars0[:npoly]
             for igroup in range(ngroup): pars[npoly+igroup*3:npoly+(igroup+1)*3] = pars0[npoly:npoly+3]
         else :
@@ -374,8 +347,6 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
             if niter>0:
                 medres = np.median(res)
                 gd = np.where(abs(res-medres) < reject*dln.mad(res))[0]
-                # this line below has a bug
-                #gd = np.where(abs(res) < np.median(res)+reject*np.median(np.abs(res)))[0]
             else:
                 gd = np.arange(len(res))
 
@@ -384,12 +355,7 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                 j=np.where(x[2,gd] == igroup)[0]
                 if len(j) <= 0 :
                   # if any group is missing, things will fail in func_multi_poly to determine correct npoly
-                  print('missing lines from group: ', igroup)
-                  import pdb; pdb.set_trace()
-
-            #import pdb; pdb.set_trace()
-
-            #pars[npoly-1] += np.median(res[gd])
+                  raise Exception('missing lines from group: '+str(igroup))
             
             # use curve_fit to optimize parameters
             try :
@@ -404,7 +370,7 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                     print(pars)
             except :
                 print('Solution failed for row: ', row)
-                import pdb; pdb.set_trace()
+                #import pdb; pdb.set_trace()
                 popt = pars*0.
 
             # Calculate Xglobal for all chip/group combinations
@@ -472,7 +438,7 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
             linestr['used'][thisrow[gd]] = 1
         linestr['res'][thisrow] = res
         linestr['xglobal'][thisrow] = xglobal
-
+        
         allrms = res[gd].std()
         # throw out bad solutions
         #if allrms > 0.1: popt = pars*0.
@@ -487,20 +453,17 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
             j = np.where(x[2,gd] == igroup)[0]
             rms[row,igroup] = res[gd[j]].std()
             sig[row,igroup] = np.median(np.abs(res[gd[j]]))
-
-        if ngroup>1:
-            Table(linestr[thisrow]).write('arclamp_linestr_fiber'+str(row)+'_all.fits',overwrite=True)
     
     # now refine the solution by averaging zeropoint across all groups and
     # by fitting across different rows to require a smooth solution
     if ngroup > 1: newpars,newwaves = refine(allpars)
     else: newpars = allpars
 
-    #import pdb; pdb.set_trace()
-
     # save results in apWave fies
     out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
-    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,rms=rms,sig=sig,allpars=allpars)
+    if name.isnumeric()==False or len(str(name))<8:  # non-ID input
+        out = os.path.dirname(out)+'/apWave-'+str(name)+'.fits'
+    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,rms=rms,sig=sig,allpars=allpars,linestr=linestr)
 
     if plot: 
         plot_apWave([name],apred=vers,inst=inst,hard=hard)
@@ -509,9 +472,6 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         #    try : os.mkdir(os.path.dirname(root))
         #    except : pass
         #    fig.savefig(root+'.png')
-
-    #if ngroup>1:
-    #    import pdb; pdb.set_trace()
 
     return pars,linestr
 
@@ -662,7 +622,8 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
       for i in range(4) : plt.close()
 
 
-def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=None,sig=None,allpars=None) :
+def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=None,sig=None,
+                allpars=None,linestr=None):
     """ Write the apWave files in standard format given the wavecal parameters
     """
     x = np.zeros([3,2048])
@@ -693,7 +654,7 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=
         hdu[0].header['COMMENT']='HDU#4 : rms from fit [300,ngroup]'
         hdu[0].header['COMMENT']='HDU#5 : sig from fit [300,ngroup]'
         if allpars is not None : hdu[0].header['COMMENT']='HDU#3 : wavecal fit parameter array [npoly+3*ngroup,300]'
-        hdu[0].header.add_comment('APOGEE_DRP_VER:'+os.environ['APOGEE_DRP_VER'])
+        hdu[0].header.add_comment('APOGEE_DRP_VER:'+str(os.environ.get('APOGEE_DRP_VER')))
         hdu.append(fits.ImageHDU(chippars))
         hdu.append(fits.ImageHDU(chipwaves))
         hdu.append(fits.ImageHDU(pars))
@@ -707,6 +668,9 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=
             hdu.append(fits.ImageHDU(allpars))
         if out is not None: hdu.writeto(out.replace('Wave','Wave-'+chip),overwrite=True)
         allhdu.append(hdu)
+    # Save table of line measurements
+    if linestr is not None:
+        Table(linestr).write(out.replace('.fits','_lines.fits'),overwrite=True)
     return allhdu
 
 def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False):
