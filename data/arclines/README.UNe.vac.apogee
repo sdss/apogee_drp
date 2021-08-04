@@ -181,11 +181,16 @@ Uranium	lines (from Redman+2012) as our	absolute wavelength reference and derive
 I did this using the 38240004-38240007 exposures, fitting cubic solutions to each chip and all 300 fibers. I then
 found the median wavelength for	each unique line (averaging over fibers and exposures) to find the new Neon wavelengths
 for 34 unique lines.  Both linelists were updated.
+Note that the wavelengths of three Neon lines were NOT changed because they have USEWAVE=0 set.  These are:
+  UNE 87, 103 (same as THARNE 33 which was changed), 238
+  (note wavelength of UNE 103 was changed below)
 
 set USEWAVE=0 for ID=153.  There are multiple close lines, too close to get good fits.  According to Redman there are actually
    five lines right on top of each other, with three of similar fluxes.
 set USEWAVe=0 for ID=255.  This line is systematically off and according to Redman it has a very close blend.  A neighboring
    line a few pixels away seems to be fine.
+
+08/04/2021
 
 changing wavelength of ID=103 from 16273.2070 -> 16273.3860 so this Neon line is consistent with the THARNE linelist.  This
   line IS used in THARNE but not used in this UNE list.

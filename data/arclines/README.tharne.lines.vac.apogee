@@ -70,6 +70,8 @@ Uranium lines (from Redman+2012) as our absolute wavelength reference and derive
 I did this using the 38240004-38240007 exposures, fitting cubic solutions to each chip and all 300 fibers.  I then
 found the median wavelength for each unique line (averaging over fibers and exposures) to find the new Neon wavelengths
 for 34 unique lines.  Both linelists were updated.
+Note that the wavelengths of three Neon lines were NOT changed because they have USEWAVE=0 set.  These are:
+  THARNE 2, 31 (same as UNE 87), 78
 
 08/04/2021
 changed wavelength of ID=6 from 16789.642 -> 16789.6794.  this line is consistently off and according to Kerber+2008 it
