@@ -86,7 +86,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
     # This is what apmultiwavecal does
     if verbose:
         print('Solving wavelength solutions simultaneously using all arclamp exposures')
-    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%8d.fits' % mjd5
+    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%s.fits' % str(mjd5)
     if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False or clobber is True:
         # The previously measured lines in the apLines files will be reused if they exist
         npoly = 4 # 5
