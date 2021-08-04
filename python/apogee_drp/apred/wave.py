@@ -463,7 +463,7 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
     out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
     if str(name).isnumeric()==False or len(str(name))<8:  # non-ID input
         out = os.path.dirname(out)+'/apWave-'+str(name)+'.fits'
-    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,framesgroup,framesgroup,
+    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,framesgroup=framesgroup,
                 rms=rms,sig=sig,allpars=allpars,linestr=linestr)
 
     if plot: 
