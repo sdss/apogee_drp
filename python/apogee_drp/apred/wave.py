@@ -459,11 +459,12 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
     if ngroup > 1: newpars,newwaves = refine(allpars)
     else: newpars = allpars
 
-    # save results in apWave fies
+    # save results in apWave files
     out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
-    if name.isnumeric()==False or len(str(name))<8:  # non-ID input
+    if str(name).isnumeric()==False or len(str(name))<8:  # non-ID input
         out = os.path.dirname(out)+'/apWave-'+str(name)+'.fits'
-    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,rms=rms,sig=sig,allpars=allpars,linestr=linestr)
+    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,framesgroup,framesgroup,
+                rms=rms,sig=sig,allpars=allpars,linestr=linestr)
 
     if plot: 
         plot_apWave([name],apred=vers,inst=inst,hard=hard)
@@ -622,8 +623,8 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
       for i in range(4) : plt.close()
 
 
-def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=None,sig=None,
-                allpars=None,linestr=None):
+def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],framesgroup=[],
+                rms=None,sig=None,allpars=None,linestr=None):
     """ Write the apWave files in standard format given the wavecal parameters
     """
     x = np.zeros([3,2048])
@@ -653,7 +654,8 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=
         hdu[0].header['COMMENT']='HDU#3 : wavecal fit parameter array [npoly+3*ngroup,300]'
         hdu[0].header['COMMENT']='HDU#4 : rms from fit [300,ngroup]'
         hdu[0].header['COMMENT']='HDU#5 : sig from fit [300,ngroup]'
-        if allpars is not None : hdu[0].header['COMMENT']='HDU#3 : wavecal fit parameter array [npoly+3*ngroup,300]'
+        hdu[0].header['COMMENT']='HDU#6 : wavecal fit parameter array [npoly+3*ngroup,300]'
+        hdu[0].header['COMMENT']='HDU#7 : table with frames/group information'
         hdu[0].header.add_comment('APOGEE_DRP_VER:'+str(os.environ.get('APOGEE_DRP_VER')))
         hdu.append(fits.ImageHDU(chippars))
         hdu.append(fits.ImageHDU(chipwaves))
@@ -661,11 +663,24 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=
         if rms is not None :
             hdu[0].header['MEDRMS']=(np.nanmedian(rms),'median rms')
             hdu.append(fits.ImageHDU(rms))
+        else:
+            hdu.append(fits.ImageHUD(None))
         if sig is not None :
             hdu[0].header['MEDSIG']=(np.nanmedian(sig),'median sig')
             hdu.append(fits.ImageHDU(sig))
+        else:
+            hdu.append(fits.ImageHDU(None))
         if allpars is not None :
             hdu.append(fits.ImageHDU(allpars))
+        else:
+            hdu.append(fits.ImageHDU(None))
+        if len(frames)>0 and len(framesgroup)>0:
+            ftable = np.zeros(len(frames),dtype=np.dtype([('frame',np.str,8),('group',int)]))
+            ftable['frame'] = frames
+            ftable['group'] = framesgroup
+            hdu.append(fits.table_to_hdu(Table(ftable)))
+        else:
+            hdu.append(fits.ImageHDU(None))
         if out is not None: hdu.writeto(out.replace('Wave','Wave-'+chip),overwrite=True)
         allhdu.append(hdu)
     # Save table of line measurements

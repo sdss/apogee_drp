@@ -86,7 +86,9 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
     # This is what apmultiwavecal does
     if verbose:
         print('Solving wavelength solutions simultaneously using all arclamp exposures')
-    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%s.fits' % str(mjd5)
+    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%08d.fits' % mjd5
+    #wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%s.fits' % str(mjd5)
+    #import pdb; pdb.set_trace()
     if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False or clobber is True:
         # The previously measured lines in the apLines files will be reused if they exist
         npoly = 4 # 5
@@ -102,7 +104,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
         print(wfile,' wavelength calibration file already exists')
 
     # Load the wavelength solution from today
-    #daynum = mjd2day(mjd5)
+    daynum = mjd2day(mjd5)
     #import pdb; pdb.set_trace()
     #wavefiles = glob.glob(reduxdir+'cal/'+instrument+'/wave/apWave-b-%4d????.fits' % daynum)
     #print('KLUDGE!  hard coding apWave-31690004')
@@ -110,10 +112,19 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
     #waveid = os.path.basename(dln.first_el(wavefiles))[9:17]
     #print('Using wavelength cal file ',waveid)
     #wavecal = load.apWave(waveid)  # why doesn't this work??
-    #wfile = load.allfile('Wave',num=str(mjd5),chips=True)
+    wfile = load.allfile('Wave',num=str(mjd5),chips=True)
     print('Using ',wfile,' wavelength calibration file')
     wavecal = load._readchip(wfile,'Wave')
     
+    # The wavelength solutions are fit in groups
+    # find the group for the beginning of this night
+    wheader = wavecal['a'][0].header
+    nframes = wheader['nframes']
+    ngroups = wheader['ngroup']
+    frames = []
+    for f in range(nframes):
+        frames.append(wheader['frame'+str(f)])
+
     # Step 3: Fit peaks to the full-frame FPI data
     # --------------------------------------------
     print('Finding FPI lines')
