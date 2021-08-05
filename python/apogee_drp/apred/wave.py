@@ -65,6 +65,9 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         nofit (bool) : only find lines, skip fit (default=False)
         test (bool) : if True, use polynomial from first set, only let centers shift for all other sets
     """
+
+    start = time.time()
+
     load = apload.ApLoad(apred=vers,instrument=inst)
 
     if name is None : name = nums[0]
@@ -473,6 +476,8 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         #    try : os.mkdir(os.path.dirname(root))
         #    except : pass
         #    fig.savefig(root+'.png')
+
+    print("elapsed: %0.1f sec." % (time.time()-start))
 
     return pars,linestr
 
