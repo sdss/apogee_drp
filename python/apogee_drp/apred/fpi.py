@@ -193,7 +193,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
     #-----------------
     fpiwavefile = reduxdir+'cal/'+instrument+'/wave/apWaveFPI-%5d-%8d.fits' % (mjd5,fpinum)
     print('Writing new FPI wavelength information to '+fpiwavefile)
-    save_fpiwave(fpiwavefile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr)
+    save_fpiwave(fpiwavefile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines)
     # table of FPI lines data: chip, gauss center, Gaussian parameters, wavelength, flux
     # wavelength coefficients
     # wavelength array??
@@ -213,7 +213,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
 
 
 
-def fitlines(frame,verbose=False):
+def fitlines(frame,rows=np.arange(300),verbose=False):
     """
     Fit the FPI lines with binned Gaussians.
     frame: FPI full-frame data loaded with load.ap1D().
@@ -225,13 +225,12 @@ def fitlines(frame,verbose=False):
         flux = frame[chip][1].data
         err = frame[chip][2].data
         nfibers,npix = flux.shape
-        fibers = np.arange(nfibers)
-        for f in fibers:
+        for f in rows:
             linestr1 = peakfit.peakfit(flux[f,:],err[f,:])
             if linestr1 is not None:
                 nlines = len(linestr1)
                 linestr1 = Table(linestr1)
-                linestr1['fiber'] = f 
+                linestr1['row'] = f 
                 linestr1['chip'] = chip
                 linestr1['expnum'] = 0
                 if verbose:
@@ -271,16 +270,16 @@ def getfpiwave(fpilines,wcoef,fpipeaks,verbose=True):
     for ichip,chip in enumerate(['a','b','c']):
         ind, = np.where(fpilines['chip']==chip)
         chipnum[ind] = ichip
-    findex = dln.create_index(fpilines['fiber'])
-    for i in range(len(findex['num'])):
-        fiber = findex['value'][i]
-        ind = findex['index'][findex['lo'][i]:findex['hi'][i]+1]
+    rowindex = dln.create_index(fpilines['row'])
+    for i in range(len(rowindex['num'])):
+        row = rowindex['value'][i]
+        ind = rowindex['index'][rowindex['lo'][i]:rowindex['hi'][i]+1]
         nind = len(ind)
         x = np.zeros((3,nind),float)
         x[0,:] = fpilines['pars'][ind,1].data
         x[1,:] = chipnum[ind]+1
         x[2,:] = 0
-        wpars = wcoef[:,fiber]
+        wpars = wcoef[:,row]
         fpilines['wave'][ind] = wave.func_multi_poly(x,*wpars,npoly=4)
 
     # Final FPI line table, one row per unique FPI line
@@ -329,11 +328,12 @@ def getfpiwave(fpilines,wcoef,fpipeaks,verbose=True):
 
     return fpilinestr, fpilines
 
+
 def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
     """ 
     Refit wavelength solution using FPI wavelengths
     fpilinestr: information on each unique FPI line
-    fpilines: information on FPI full-frame
+    fpilines: catalog of FPI full-frame line measurements (all fibers)
     wcoef: original arclamp wavelength solution coefficients
     """
 
@@ -362,7 +362,7 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
 
     for row in np.arange(300):
         # set up independent variable array with pixel, chip, groupid, and dependent variable (wavelength)
-        thisrow, = np.where(fpilines['fiber'] == row)
+        thisrow, = np.where(fpilines['row'] == row)
         if len(thisrow)==0:
             print('No lines for row ',row)
             continue
@@ -463,29 +463,213 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
 
     return newwcoef,newwaves
     
-def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr):
+def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines):
     """
     Save the FPI wavelength information
-    outfile: output file name
+    outfile: output file name (with no chip tag in name)
     mjd5: day MJD value
     fpinum: FPI full-frame exposure number
     fpiwcoef: new wavelength coefficients [3,5,300]
     fpiwaves: new wavelength array [3,300,2048]
     fpilinestr: table of unique FPI lines and wavelengths
+    fpilines: table of all FPI full-frame line measurements (all fibers)
     """
 
     # Save the new wavelength solution
-    hdu = fits.HDUList()
-    hdu.append(fits.PrimaryHDU())
-    hdu[0].header['FRAME']=fpinum
-    hdu[0].header['COMMENT']='HDU#1 : wavelength calibration array [3,300,2048]'
-    hdu[0].header['COMMENT']='HDU#2 : wavelength calibration parameters [3,5,300]'
-    hdu[0].header['COMMENT']='HDU#3 : table of unique FPI lines and wavelengths'
-    hdu.append(fits.ImageHDU(fpiwaves))
-    hdu.append(fits.ImageHDU(fpiwcoef))
-    hdu.append(fits.table_to_hdu(Table(fpilinestr)))
-    hdu.writeto(outfile,overwrite=True)
+    for ichip,chip in enumerate(chips):
+        hdu = fits.HDUList()
+        hdu.append(fits.PrimaryHDU())
+        hdu[0].header['FRAME'] = fpinum
+        hdu[0].header['COMMENT'] = 'HDU#1 : wavelength calibration array [300,2048]'
+        hdu[0].header['COMMENT'] = 'HDU#2 : wavelength calibration parameters [5,300]'
+        hdu[0].header['COMMENT'] = 'HDU#3 : table of unique FPI lines and wavelengths'
+        hdu[0].header['COMMENT'] = 'HDU#4 : table of full-frame FPI lines measurements'
+        hdu.append(fits.ImageHDU(fpiwaves[ichip,:,:]))
+        hdu.append(fits.ImageHDU(fpiwcoef[ichip,:,:]))
+        ind, = np.where(fpilinestr['chip']==ichip)
+        hdu.append(fits.table_to_hdu(Table(fpilinestr[ind])))
+        ind, = np.where(fpielines['chip']==ichip)
+        hdu.append(fits.table_to_hdu(Table(fpilines[ind])))    
+        hdu.writeto(outfile.replace('WaveFPI','WaveFPI-'+chip),overwrite=True)
 
+
+def fpi1dcal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
+             vers=None,telescope=None,plugmap=None,verbose=False):
+    """ 
+    Determine positions of FPI lines and figure out shifts for all fibers
+    """
+
+    # Deal with the two cases: 1) planfile, or 2) individual exposure
+    if planfile is not None:
+        # read planfile
+        if type(planfile) is dict:
+            p = planfile
+            dirname = '.'
+        else :
+            p = plan.load(planfile,np=True)
+            dirname = os.path.dirname(planfile)
+        telescope = p['telescope']
+        instrument = p['instrument']
+    # single exposure, make fake plan file dictionary
+    else:
+        p={}
+        p['APEXP']={}
+        p['APEXP']['name']=[str(frameid)]
+        p['mjd'] = int(frameid) // 10000  + 55562
+        p['waveid'] = str(fpiid)
+        p['fpiid'] = str(fpiid)        
+        if plugmap is None :
+            p['platetype'] = 'sky'
+        else :
+            p['platetype'] = 'object'
+            p['plugmap'] = plugmap
+        p['telescope'] = telescope
+        if telescope == 'lco25m' : instrument = 'apogee-s'
+        else : instrument = 'apogee-n'
+        p['apred_vers'] = vers
+        p['instrument'] = instrument
+
+    
+    reduxdir = os.environ['APOGEE_REDUX']+'/'+vers+'/'
+    observatory = {'apo25m':'apo', 'apo1m':'apo', 'lco25m':'lco'}
+    datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
+    load = apload.ApLoad(apred=vers,instrument=instrument)
+    
+        
+    # Load the wavelength array/solution
+    print('loading fpiid wavelengtth solution: ', fpiid)
+    waveframe = load.apWave(waveid)
+    npoly = waveframe['a'][0].header['NPOLY']
+    allpars = waveframe['a'][3].data
+    waves = np.zeros((3,300,2048),float)    
+    for ichip,chip in chips: waves[chip,:,:]=waveframe[chip][2].data
+
+    # Load the FPI reference frame line data
+    fpiwavefile = reduxdir+'cal/'+instrument+'/wave/apWaveFPI-%s.fits' % fpiid
+    fpiframe = load._readchip(fpiwavefile,'apWaveFPI')
+    
+    # Loop over all frames in the planfile and assess FPI lines in each
+    grid = []
+    ytit = []
+    x = np.arange(2048).astype(float)
+    for iframe,name in enumerate(p['APEXP']['name']) :
+        name = str(name)  # make sure it's a string
+        print('frame: ', name)
+        frame = load.ap1D(int(name))
+        plot = dirname+'/plots/fpipixshift-'+name+'-'+str(fpiid)
+
+        norder = 4
+        newwaves = np.zeros((3,300,2048),float)
+        newwcoef = np.zeros((3,norder+1,300),float)    
+
+        # Find the FPI lines
+        fpirows = [75,225]
+        linestr = fitlines(frame,fpirows,verbose=verbose)
+
+        # Do each chip separately
+        for ichip,chip in chips:
+        
+            # Match up the lines with the reference frame
+            fpilinestr = fpiframe[chip][3].data   # unique FPI lines
+            fpilines = fpiframe[chip][4].data     # all lines
+            gdfpi = []
+            for f in fpirows:
+                gdfpi, = np.where(fpilines['chip']
+            
+            # Perform the linear surface fit
+            out = fpisurfit(lines1,lines2)
+
+        
+            # Get new wavelength solutions for each fiber using the
+            #  shifts in X position
+            # loop over rows
+            for row in np.arange(300):
+                # get wavelengths for the FPI reference frame
+                w1 = waves[chip][row,:]
+                x1 = x+xoffset  # new x positions
+                # refit polynomial
+                newcoef1 = robust.polyfit(x1,w1,norder)
+                newwave1 = robust.npp_polyval(x,np.flip(newcoef1))
+                newcoef[ichip,:,row] = newcoef1
+                newwaves[ichip,row,:] = newwave1
+                
+        # Adjust wavelength solution based on skyline fit
+        #newpars = copy.copy(allpars)
+        #for ichip in range(3) :
+        #    newpars[npoly+ichip,:] -= (w[0]*np.arange(300) + w[ichip+1])
+        #allhdu = save_apWave(newpars,npoly=npoly)
+        
+        # Rewrite out 1D file with adjusted wavelength information
+        outname = load.filename('1D',num=int(name),mjd=load.cmjd(int(name)),chips=True)
+        for ichip,chip in enumerate(chips) :
+            hdu = fits.HDUList()
+            frame[chip][0].header['HISTORY'] = 'Added wavelengths from FPICAL, fpiid: {:08d}'.format(fpiid)
+            frame[chip][0].header['HISTORY'] = 'Wavelength shift parameters {:12.5e} {:8.3f} {:8.3f} {:8.3f}'.format(w[0],w[1],w[2],w[3])
+            frame[chip][0].header['WAVEFILE'] = load.allfile('Wave',num=fpiid,chips=True)
+            frame[chip][0].header['WAVEHDU'] = 5
+
+            hdu.append(frame[chip][0])
+            hdu.append(frame[chip][1])
+            hdu.append(frame[chip][2])
+            hdu.append(frame[chip][3])
+            hdu.append(allhdu[ichip][2])
+            hdu.append(allhdu[ichip][1])
+            hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
+
+        # Plots
+        if plot is not None:
+            try: os.mkdir(dirname+'/plots')
+            except: pass
+            # plot the pixel shift for each chip derived from the FPI lines
+            fig,ax = plots.multi(1,1)
+            wfig,wax = plots.multi(1,3)
+            for ichip in range(3) :
+                gd = np.where(linestr['chip'][use] == ichip+1)[0]
+                med = np.median(linestr['dpixel'][use[gd]])
+                x = linestr['row'][use[gd]]
+                y = linestr['dpixel'][use[gd]]
+                plots.plotp(ax,x,y,color=colors[ichip],xr=[0,300],yr=[med-0.2,med+0.2],
+                            size=12,xt='Row',yt='Pixel shift')
+                plots.plotc(wax[ichip],linestr['wave'][use[gd]],y,linestr['row'][use[gd]],zr=[0,300],yr=[med-0.5,med+0.5],
+                            xr=xlim[ichip],size=12,xt='Wavelength',yt='Pixel shift')
+                gdfit = np.where(np.abs(y-med) < 0.5)[0]
+                xx = np.arange(300)
+                #if len(gdfit) > 1 :
+                #    p=np.polyfit(x[gdfit],y[gdfit],1)
+                #    xx=np.arange(300)
+                #    plots.plotl(ax,xx,p[0]*xx+p[1],color=colors[ichip])
+                yy = w[0]*xx
+                yy += w[ichip+1]
+                plots.plotl(ax,xx,yy,color=colors[ichip])
+                if waveid > 0 : label = 'Frame: {:s}  Waveid: {:8d}'.format(name,waveid)
+                else : label = 'Frame: {:s}  Delta from ap1dwavecal'.format(name)
+                ax.text(0.1,0.9,label,transform=ax.transAxes)
+            if type(plot) is str or type(plot) is unicode: 
+                wfig.tight_layout()
+                wfig.savefig(plot+'_wave.png')
+                fig.savefig(plot+'.png')
+                grid.append(['../plots/'+os.path.basename(plot)+'.png','../plots/'+os.path.basename(plot)+'_wave.png'])
+                ytit.append(name)
+            else: 
+                plt.show()
+                plt.draw()
+                pdb.set_trace()
+            plt.close('all')
+            
+        
+    import pdb; pdb.set_trace()
+
+    
+def fpisurfit(lines1,lines2,type='x'):
+    """
+    Fit linear surface to FPI line offsets
+    type: "x" means only a surface in X, while "xy" means linear surface
+           in X and Y (row/fiber).
+    """
+
+    import pdb; pdb.set_trace()
+    
+    
 def frame2mjd(frame) :
     """ Get MJD from frame number """
     mjd = 55562+int(frame//10000)

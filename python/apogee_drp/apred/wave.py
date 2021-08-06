@@ -1147,7 +1147,9 @@ def getgroup(groups) :
     return out,group
 
 
-def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',vers=None,nosky=False) :
+
+    
+def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='airglow',vers=None,nosky=False) :
     """ Determine positions of skylines for all frames in input planfile
     """
     # read planfile
@@ -1393,7 +1395,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
         html.htmltab(grid,file=dirname+'/html/skywavecal.html',ytitle=ytit)
     return linestr
 
-def getskywave(frame,waveid,group=-1,vers='test',telescope='apo25m',plugmap=None) :
+def getskywave(frame,waveid,group=-1,fpiid=None,vers='test',telescope='apo25m',plugmap=None) :
     """ Given input frame and waveid/group for frame taken without dither move to waveid,
         return skyline wavelengths
     """
@@ -1412,7 +1414,7 @@ def getskywave(frame,waveid,group=-1,vers='test',telescope='apo25m',plugmap=None
     else : inst = 'apogee-n'
     p['apred_vers'] = vers
     p['instrument'] = inst
-    return skycal(p,group=group)
+    return skycal(p,group=group,fpiid=fpiid)
     
 def skywaves() :
     """ get skyline wavelengths from some particular frames, 16390029 and 22430033
