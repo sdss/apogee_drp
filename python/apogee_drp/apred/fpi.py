@@ -378,16 +378,16 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
         npars = npoly+3*ngroup
         pars = np.zeros(npars,float)
 
-        # initialize bounds (to no bounds)
-        bounds = ( np.zeros(len(pars))-np.inf, np.zeros(len(pars))+np.inf)
-        # lock the middle chip position if we have one group, else the central wavelength
-        bounds[0][npoly+1] = -1.e-7
-        bounds[1][npoly+1] = 1.e-7
-
         # Get initial guess from arclamp wavelength solution
         pars0 = np.zeros(npoly+3,float)
         #pars0[len(pars0)-7:] = wavecal['a'][3].data[:,row]
         pars0[len(pars0)-7:] = wcoef[:,row]
+
+        # initialize bounds (to no bounds)
+        bounds = ( np.zeros(len(pars))-np.inf, np.zeros(len(pars))+np.inf)
+        # lock the middle chip position if we have one group, else the central wavelength
+        bounds[0][npoly+1] = pars0[npoly+1]-1.e-7
+        bounds[1][npoly+1] = pars0[npoly+1]+1.e-7
         
         # use curve_fit to optimize parameters
         try :
