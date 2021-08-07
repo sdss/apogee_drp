@@ -202,11 +202,21 @@ clobber = 1
     BOMB1:
 
   Endfor ; frame loop
-  
-  ; Now add in wavelength calibration information, with shift from skylines
-  if waveid gt 0 then begin
-      if skywave then spawn,['apskywavecal',planfile],/noshell $
-      else  spawn,['apskywavecal',planfile,'--nosky'],/noshell
+
+  ;; Now add in wavelength calibration information, with shift from
+  ;;  fpi or sky lines
+  ;; This used to call "apskywavecal", "ap1dwavecal" now handles
+  ;; both cases (sky lines and FPI lines)
+  if waveid gt 0 or fpiid gt 0 then begin
+     cmd = ['ap1dwavecal',planfile]
+     if keyword_set(fpiid) then begin  ;; use FPI lines
+       cmd = [cmd,'--fpiid',strtrim(fpiid,2)]
+    endif else begin  ;; use sky lines
+       if not keyword_set(skywave) then cmd=[cmd,'--nosky']
+    endelse
+     spawn,cmd,/noshell
+     ;; if skywave then spawn,['apskywavecal',planfile],/noshell $
+     ;; else  spawn,['apskywavecal',planfile,'--nosky'],/noshell
   endif
 
   BOMB:
