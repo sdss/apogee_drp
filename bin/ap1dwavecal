@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 #
-# @Author: Jon Holtzman
-# @Date: November 2018
-# @Filename: apskywavecal
+# @Author: David Nidever, Jon Holtzman
+# @Date: August 2021
+# @Filename: ap1dwavecal
 # @License: BSD 3-Clause
-# @Copyright: Jon Holtzman
+# @Copyright: David Nidever, Jon Holtzman
+# mostly a copy of apskywavecal
 
+# This performs what apskywavecal used to, but also handles the case if we want to use FPI fibers.
 
 from __future__ import division
 from __future__ import print_function
@@ -24,16 +26,17 @@ import numpy as np
 import pdb
 matplotlib.use('Agg')
 
-from apogee_drp.apred import wave
+from apogee_drp.apred import wave, fpi
 
 if __name__ == '__main__' :
 
     parser = argparse.ArgumentParser(
         prog=os.path.basename(sys.argv[0]),
-        description='Adjust wavelength solution based on sky lines')
+        description='Adjust wavelength solution based on sky or FPI lines')
 
     parser.add_argument("planfile", type=str, help='Planfile for visit reduction')
     parser.add_argument("--waveid", type=int, help='ID for wavecal', default=None)
+    parser.add_argument("--fpiid", type=int, help='ID for FPI', default=None)    
     parser.add_argument("--skyfile", type=str, help='Sky lines file', default='airglow')
     parser.add_argument("--nosky", help='No sky correction', action='store_true')
     parser.add_argument("--frameid", type=int, help='Override for single frame', default=None)
@@ -47,10 +50,18 @@ if __name__ == '__main__' :
     now = datetime.datetime.now()
     start = time.time()
     print ("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
-    if args.frameid == None :
-        wave.skycal(args.planfile,waveid=args.waveid,skyfile=args.skyfile,nosky=args.nosky)
-    else :
-        wave.getskywave(args.frameid,args.waveid,vers=args.apred,telescope=args.telescope)
+    # Sky lines
+    if args.fpiid == None:
+        if args.frameid == None:
+            wave.skycal(args.planfile,waveid=args.waveid,skyfile=args.skyfile,nosky=args.nosky)
+        else :
+            wave.getskywave(args.frameid,args.waveid,vers=args.apred,telescope=args.telescope)
+    # FPI lines
+    else:
+        if args.frameid == None:
+            fpi.fpi1dwavecal(planfile=args.planfile,waveid=args.waveid,fpiid=args.fpiid)
+        else :
+            fpi.fpi1dwavecal(frameid=args.frameid,args.waveid,fpiid=args.fpiid,vers=args.apred,telescope=args.telescope)        
     now = datetime.datetime.now()
     print ("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
     print("elapsed: ",time.time()-start)
