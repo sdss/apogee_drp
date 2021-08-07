@@ -40,7 +40,7 @@ if __name__ == '__main__' :
     parser.add_argument("--skyfile", type=str, help='Sky lines file', default='airglow')
     parser.add_argument("--nosky", help='No sky correction', action='store_true')
     parser.add_argument("--frameid", type=int, help='Override for single frame', default=None)
-    parser.add_argument("--apred", type=str, help='apred_vers for single frame', default='current')
+    parser.add_argument("--apred", type=str, help='apred_vers for single frame', default='daily')
     parser.add_argument("--telescope", type=str, help='telescope for single frame', default='apo25m')
     parser.add_argument('--clobber', help='Overwrite files?',action="store_true")
     parser.add_argument("--flag",default='11111')
