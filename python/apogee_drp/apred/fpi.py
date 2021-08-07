@@ -28,7 +28,7 @@ from ..plan import mkplan
 from . import wave
 #from holtztools import plots, html
 from astropy.table import Table,hstack,vstack
-from dlnpyutils import utils as dln, robust
+from dlnpyutils import utils as dln, robust, coords
 matplotlib.use('Qt5Agg')
 
 chips = ['a','b','c']
@@ -169,7 +169,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
         fpilines = Table.read(fpilinesfile)
     else:
         fpiframe = load.ap1D(fpinum)
-        fpilines = fitlines(fpiframe)
+        fpilines = fitlines(fpiframe,verbose=verbose)
         # Save the catalog
         print('Writing FPI lines to ',fpilinesfile)
         fpilines.write(fpilinesfile,overwrite=True)
@@ -213,7 +213,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
 
 
 
-def fitlines(frame,rows=np.arange(300),verbose=False):
+def fitlines(frame,rows=np.arange(300),chips=['a','b','c'],verbose=False):
     """
     Fit the FPI lines with binned Gaussians.
     frame: FPI full-frame data loaded with load.ap1D().
@@ -221,7 +221,7 @@ def fitlines(frame,rows=np.arange(300),verbose=False):
 
     # chip loop
     linestr = None
-    for ichip,chip in enumerate(['a','b','c']):
+    for ichip,chip in enumerate(chips):
         flux = frame[chip][1].data
         err = frame[chip][2].data
         nfibers,npix = flux.shape
@@ -306,7 +306,7 @@ def getfpiwave(fpilines,wcoef,fpipeaks,verbose=True):
             ind2, = np.where(np.abs(fpilines1['wave']-wave1) < 4*wsig1)
             wave2 = np.median(fpilines1['wave'][ind2])
             wsig2 = dln.mad(fpilines1['wave'][ind2].data)
-            fpilinestr1['chip'][i] = ichip
+            fpilinestr1['chip'][i] = chip
             fpilinestr1['x'][i] = np.median(fpilines1['pars'][ind2,1])
             fpilinestr1['height'][i] = np.median(fpilines1['pars'][ind2,0])
             fpilinestr1['flux'][i] = np.median(fpilines1['sumflux'][ind2])
@@ -475,26 +475,29 @@ def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines):
     fpilines: table of all FPI full-frame line measurements (all fibers)
     """
 
+    nchips,npoly,nfibers = fpiwcoef.shape
+
     # Save the new wavelength solution
     for ichip,chip in enumerate(chips):
         hdu = fits.HDUList()
         hdu.append(fits.PrimaryHDU())
         hdu[0].header['FRAME'] = fpinum
-        hdu[0].header['COMMENT'] = 'HDU#1 : wavelength calibration array [300,2048]'
-        hdu[0].header['COMMENT'] = 'HDU#2 : wavelength calibration parameters [5,300]'
+        hdu[0].header['NPOLY'] = npoly
+        hdu[0].header['COMMENT'] = 'HDU#1 : wavelength calibration parameters [5,300]'
+        hdu[0].header['COMMENT'] = 'HDU#2 : wavelength calibration array [300,2048]'
         hdu[0].header['COMMENT'] = 'HDU#3 : table of unique FPI lines and wavelengths'
         hdu[0].header['COMMENT'] = 'HDU#4 : table of full-frame FPI lines measurements'
-        hdu.append(fits.ImageHDU(fpiwaves[ichip,:,:]))
         hdu.append(fits.ImageHDU(fpiwcoef[ichip,:,:]))
-        ind, = np.where(fpilinestr['chip']==ichip)
+        hdu.append(fits.ImageHDU(fpiwaves[ichip,:,:]))
+        ind, = np.where(fpilinestr['chip']==chip)
         hdu.append(fits.table_to_hdu(Table(fpilinestr[ind])))
-        ind, = np.where(fpielines['chip']==ichip)
+        ind, = np.where(fpilines['chip']==chip)
         hdu.append(fits.table_to_hdu(Table(fpilines[ind])))    
         hdu.writeto(outfile.replace('WaveFPI','WaveFPI-'+chip),overwrite=True)
 
 
-def fpi1dcal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
-             vers=None,telescope=None,plugmap=None,verbose=False):
+def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
+                 vers='daily',telescope='apo25m',plugmap=None,verbose=False):
     """ 
     Determine positions of FPI lines and figure out shifts for all fibers
     """
@@ -531,54 +534,79 @@ def fpi1dcal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
 
     
     reduxdir = os.environ['APOGEE_REDUX']+'/'+vers+'/'
-    observatory = {'apo25m':'apo', 'apo1m':'apo', 'lco25m':'lco'}
+    observatory = {'apo25m':'apo', 'apo1m':'apo', 'lco25m':'lco'}[telescope]
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     load = apload.ApLoad(apred=vers,instrument=instrument)
     
         
     # Load the wavelength array/solution
     print('loading fpiid wavelengtth solution: ', fpiid)
-    waveframe = load.apWave(waveid)
-    npoly = waveframe['a'][0].header['NPOLY']
-    allpars = waveframe['a'][3].data
-    waves = np.zeros((3,300,2048),float)    
-    for ichip,chip in chips: waves[chip,:,:]=waveframe[chip][2].data
-
-    # Load the FPI reference frame line data
     fpiwavefile = reduxdir+'cal/'+instrument+'/wave/apWaveFPI-%s.fits' % fpiid
-    fpiframe = load._readchip(fpiwavefile,'apWaveFPI')
-    
+    waveframe = load._readchip(fpiwavefile,'apWaveFPI')
+    npoly = waveframe['a'][0].header['NPOLY']
+    norder = npoly-1
+    wcoef = waveframe['a'][1].data
+    waves = np.zeros((3,300,2048),float)    
+    for ichip,chip in enumerate(chips): waves[ichip,:,:]=waveframe[chip][2].data
+
+    # FPI fibers
+    fpirows = [75,225]
+
     # Loop over all frames in the planfile and assess FPI lines in each
     grid = []
     ytit = []
     x = np.arange(2048).astype(float)
     for iframe,name in enumerate(p['APEXP']['name']) :
         name = str(name)  # make sure it's a string
+        print('KLUDGE! hard-coding frame name')
+        name = '38310023'
         print('frame: ', name)
         frame = load.ap1D(int(name))
         plot = dirname+'/plots/fpipixshift-'+name+'-'+str(fpiid)
 
-        norder = 4
         newwaves = np.zeros((3,300,2048),float)
         newwcoef = np.zeros((3,norder+1,300),float)    
 
-        # Find the FPI lines
-        fpirows = [75,225]
-        linestr = fitlines(frame,fpirows,verbose=verbose)
-
         # Do each chip separately
-        for ichip,chip in chips:
-        
-            # Match up the lines with the reference frame
-            fpilinestr = fpiframe[chip][3].data   # unique FPI lines
-            fpilines = fpiframe[chip][4].data     # all lines
-            gdfpi = []
-            for f in fpirows:
-                gdfpi, = np.where(fpilines['chip']
-            
-            # Perform the linear surface fit
-            out = fpisurfit(lines1,lines2)
+        for ichip,chip in enumerate(chips):
 
+            # Find the FPI lines
+            linestr = fitlines(frame,fpirows,chips=[chip],verbose=verbose)
+            linestr['x'] = linestr['pars'][:,1]
+
+            # Match up the lines with the reference frame
+            fpilinestr = Table(waveframe[chip][3].data)   # unique FPI lines
+            fpilines = Table(waveframe[chip][4].data)     # all lines, these already have lineid's and linewave 
+            fpilines['x'] = fpilines['pars'][:,1]
+            mlinestr = []     # matched lines
+            mfpilines = []    # matched lines
+            for f in fpirows:
+                indfpi, = np.where(fpilines['row']==f)
+                indline, = np.where(linestr['row']==f)
+                if len(indfpi)>0 and len(indline)>0:
+                    fpilines1 = fpilines[indfpi]
+                    linestr1 = linestr[indline]
+                    # crossmatch the two lists of positions, find matches within 1 pixel
+                    x1 = np.vstack((np.array(linestr1['pars'][:,1]),np.zeros(len(linestr1),float))).T
+                    x2 = np.vstack((np.array(fpilines1['pars'][:,1]),np.zeros(len(fpilines1),float))).T
+                    dist,ind = coords.crossmatch(x1,x2,max_distance=1.0)
+                    gd, = np.where(dist<1.0)
+                    print('row: ',f,' ',len(gd),' matches')
+                    ind1 = gd
+                    ind2 = ind[gd]
+                    if len(mlinestr)==0:
+                        mlinestr = linestr1[ind1]
+                        mfpilines = fpilines1[ind2]
+                    else:
+                        mlinestr = np.append(mlinestr,linestr1[ind1])
+                        mfpilines = np.append(mfpilines,fpilines1[ind2])
+                else:
+                    print('row: ',f,' No measured FPI lines')
+
+            # Perform the linear surface fit
+            lincoef,xoffset = fpisurfit(mlinestr,mfpilines)
+
+            import pdb; pdb.set_trace()
         
             # Get new wavelength solutions for each fiber using the
             #  shifts in X position
@@ -660,15 +688,159 @@ def fpi1dcal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
     import pdb; pdb.set_trace()
 
     
-def fpisurfit(lines1,lines2,type='x'):
+def fpisurfit(mlinestr,mfpilines,method='y'):
     """
     Fit linear surface to FPI line offsets
-    type: "x" means only a surface in X, while "xy" means linear surface
-           in X and Y (row/fiber).
+    mlinestr: (matched) measured lines in this exposure
+    mfpilines: (matched)  measured lines from the full-frame FPI reference exposure
+    method: "y" means only a surface in Y, while "xy" means linear surface
+            in X and Y (row/fiber).
     """
 
-    import pdb; pdb.set_trace()
-    
+    # Get unique rows
+    rows = np.unique(mlinestr['row'])
+    nrows = len(rows)
+    npix = 2048
+    x = np.arange(npix).astype(float)
+
+    # Linear surface in X
+    if method=='y':
+
+        # translated from fpi_peaks_ylinsurf.pro
+
+
+        ## this is the XY code below!!!!!
+
+        import pdb; pdb.set_trace()
+
+        ncoef = 4   # 3 or 4 for linear surface, need 4 to get a good fit
+        # Loop over the rows and get robust linear fits
+        refcoef = np.zeros((2,len(rows)),float)
+        xx = np.zeros(nrows*npix,float)
+        yy = np.zeros(nrows*npix,float)
+        zz = np.zeros(nrows*npix,float)
+        for irow,row in enumerate(rows):
+            indline, = np.where(mlinestr['row']==row)
+            indfpi, = np.where(mfpilines['row']==row)
+            mlinestr1 = mlinestr[indline]
+            mfpilines1 = mfpilines[indfpi]
+            coef1 = robust.polyfit(mlinestr1['x'],mlinestr1['x']-mfpilines1['x'],1)
+            refcoef[:,irow] = coef1
+            xx[irow*npix:(irow+1)*npix] = x
+            yy[irow*npix:(irow+1)*npix] = row
+            zz[irow*npix:(irow+1)*npix] = robust.npp_polyval(x,np.flip(coef1))
+
+        # Now perform linear surface fit
+        err = zz*0+1
+        initpar = np.zeros(ncoef,float)
+        xinp = np.zeros((nrows*npix,2),float)
+        xinp[:,0] = xx
+        xinp[:,1] = yy
+        pars,pcov = curve_fit(func_poly2d_wrap,xinp,zz,p0=initpar,sigma=err)
+        perror = np.diag(np.sqrt(pcov))
+        xxall = x.reshape(npix,1)+np.zeros(300,float)
+        yyall = (np.arange(300).reshape(300,1)+np.zeros(npix,float)).T
+        dxoffset = func_poly2d(xxall.flatten(),yyall.flatten(),*pars)
+        mnx = np.median(mlinestr['x'])
+        #dxlines_fit = func_poly2d(replicate(1,300)#mnx,findgen(300)#replicate(1,npeaks),pars)
+            
+        rms = np.sqrt(np.mean((dx-dx_fit)**2))
+        sig = dln.mad(dx-dx_fit,zero=True)
+        print('rms = ',rms)
+        print('sig = ',sig)
+
+        import pdb; pdb.set_trace()
+
+        return pars, dxoffset
+
+    # Linear surface in X and Y
+    elif method=='xy':
+
+        # translated from from fpi_peaks_xylinsurf.pro
+
+        ncoef = 4   # 3 or 4 for linear surface, need 4 to get a good fit
+        # Loop over the rows and get robust linear fits
+        refcoef = np.zeros((2,len(rows)),float)
+        xx = np.zeros(nrows*npix,float)
+        yy = np.zeros(nrows*npix,float)
+        zz = np.zeros(nrows*npix,float)
+        for irow,row in enumerate(rows):
+            indline, = np.where(mlinestr['row']==row)
+            indfpi, = np.where(mfpilines['row']==row)
+            mlinestr1 = mlinestr[indline]
+            mfpilines1 = mfpilines[indfpi]
+            coef1 = robust.polyfit(mlinestr1['x'],mlinestr1['x']-mfpilines1['x'],1)
+            refcoef[:,irow] = coef1
+            xx[irow*npix:(irow+1)*npix] = x
+            yy[irow*npix:(irow+1)*npix] = row
+            zz[irow*npix:(irow+1)*npix] = robust.npp_polyval(x,np.flip(coef1))
+
+        # Now perform linear surface fit
+        err = zz*0+1
+        initpar = np.zeros(ncoef,float)
+        xinp = np.zeros((nrows*npix,2),float)
+        xinp[:,0] = xx
+        xinp[:,1] = yy
+        pars,pcov = curve_fit(func_poly2d_wrap,xinp,zz,p0=initpar,sigma=err)
+        perror = np.diag(np.sqrt(pcov))
+        xxall = x.reshape(npix,1)+np.zeros(300,float)
+        yyall = (np.arange(300).reshape(300,1)+np.zeros(npix,float)).T
+        dxoffset = func_poly2d(xxall.flatten(),yyall.flatten(),*pars)
+        mnx = np.median(mlinestr['x'])
+        #dxlines_fit = func_poly2d(replicate(1,300)#mnx,findgen(300)#replicate(1,npeaks),pars)
+            
+        rms = np.sqrt(np.mean((dx-dx_fit)**2))
+        sig = dln.mad(dx-dx_fit,zero=True)
+        print('rms = ',rms)
+        print('sig = ',sig)
+
+        import pdb; pdb.set_trace()
+
+        return pars, dxoffset
+
+    else:
+        raise Exception('method '+str(method)+' not supported')
+
+    return lincoef, xoffset
+
+def func_poly2d_wrap(x,*args):
+    """ thin wrapper for curve_fit"""
+    xx = x[:,0]
+    yy = x[:,1]
+    return func_poly2d(xx,yy,*args)
+
+def func_poly2d(x,y,*args):
+    """ 2D polynomial surface"""
+
+    p = args
+    np = len(p)
+    if np==0:
+        a = p[0] 
+    elif np==3:
+        a = p[0] + p[1]*x + p[2]*y 
+    elif np==4:
+        a = p[0] + p[1]*x + p[2]*x*y + p[3]*y 
+    elif np==6:
+        a = p[0] + p[1]*x + p[2]*x**2 + p[3]*x*y + p[4]*y + p[5]*y**2
+    elif np==8:
+        a = p[0] + p[1]*x + p[2]*x**2 + p[3]*x*y + p[4]*(x**2)*y + p[5]*x*y**2 + p[6]*y + p[7]*y**2
+    elif np==11:
+        a = p[0] + p[1]*x + p[2]*x**2.0 + p[3]*x**3.0 + p[4]*x*y + p[5]*(x**2.0)*y + \
+            p[6]*x*y**2.0 + p[7]*(x**2.0)*(y**2.0) + p[8]*y + p[9]*y**2.0 + p[10]*y**3.0
+    elif np==15:
+        a = p[0] + p[1]*x + p[2]*x**2 + p[3]*x**3 + p[4]*x**4 + p[5]*y + p[6]*x*y + \
+            p[7]*(x**2)*y + p[8]*(x**3)*y + p[9]*y**2 + p[10]*x*y**2 + p[11]*(x**2)*y**2 + \
+            p[12]*y**3 + p[13]*x*y**3 + p[14]*y**4
+    elif np==21:
+        a = p[0] + p[1]*x + p[2]*x**2 + p[3]*x**3 + p[4]*x**4 + p[5]*x**5 + p[6]*y + p[7]*x*y + \
+            p[8]*(x**2)*y + p[9]*(x**3)*y + p[10]*(x**4)*y + p[11]*y**2 + p[12]*x*y**2 + \
+            p[13]*(x**2)*y**2 + p[14]*(x**3)*y**2 + p[15]*y**3 + p[16]*x*y**3 + p[17]*(x**2)*y**3 + \
+            p[18]*y**4 + p[19]*x*y**4 + p[20]*y**5
+    else:
+        raise Exception('Only 3, 4, 6, 8, 11 amd 15 parameters supported')
+
+    return a
+
     
 def frame2mjd(frame) :
     """ Get MJD from frame number """
