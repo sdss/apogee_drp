@@ -604,50 +604,53 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
                     print('row: ',f,' No measured FPI lines')
 
             # Perform the linear surface fit
-            lincoef,xoffset = fpisurfit(mlinestr,mfpilines)
+            fpifitmethod = 'xy'
+            lincoef,xoffset = fpisurfit(mlinestr,mfpilines,method=fpifitmethod)
 
             import pdb; pdb.set_trace()
         
             # Get new wavelength solutions for each fiber using the
             #  shifts in X position
             # loop over rows
-            for row in np.arange(300):
+            for irow in np.arange(300):
                 # get wavelengths for the FPI reference frame
-                w1 = waves[chip][row,:]
-                x1 = x+xoffset  # new x positions
+                w1 = waves[chip][irow,:]
+                x1 = x+xoffset[irow,:]  # new x positions
                 # refit polynomial
                 newcoef1 = robust.polyfit(x1,w1,norder)
                 newwave1 = robust.npp_polyval(x,np.flip(newcoef1))
                 newcoef[ichip,:,row] = newcoef1
                 newwaves[ichip,row,:] = newwave1
                 
-        # Adjust wavelength solution based on skyline fit
-        #newpars = copy.copy(allpars)
-        #for ichip in range(3) :
-        #    newpars[npoly+ichip,:] -= (w[0]*np.arange(300) + w[ichip+1])
-        #allhdu = save_apWave(newpars,npoly=npoly)
-        
         # Rewrite out 1D file with adjusted wavelength information
         outname = load.filename('1D',num=int(name),mjd=load.cmjd(int(name)),chips=True)
         for ichip,chip in enumerate(chips) :
             hdu = fits.HDUList()
-            frame[chip][0].header['HISTORY'] = 'Added wavelengths from FPICAL, fpiid: {:08d}'.format(fpiid)
-            frame[chip][0].header['HISTORY'] = 'Wavelength shift parameters {:12.5e} {:8.3f} {:8.3f} {:8.3f}'.format(w[0],w[1],w[2],w[3])
-            frame[chip][0].header['WAVEFILE'] = load.allfile('Wave',num=fpiid,chips=True)
+            frame[chip][0].header['HISTORY'] = 'Added wavelengths from FPI cal, fpiid: '+strfpiid)
+            frame[chip][0].header['FPIMETHOD'] = fpifitmethod
+            frame[chip][0].header['FPINPARS'] = len(pars)
+            for ip,p in enumerate(pars):
+                frame[chip][0].header['FPIPAR'+str(ip)] = p
+            frame[chip][0].header['FPIFILE'] = fpiwavefile
             frame[chip][0].header['WAVEHDU'] = 5
-
-            hdu.append(frame[chip][0])
-            hdu.append(frame[chip][1])
-            hdu.append(frame[chip][2])
-            hdu.append(frame[chip][3])
-            hdu.append(allhdu[ichip][2])
-            hdu.append(allhdu[ichip][1])
+            hdu.append(frame[chip][0])           # header
+            hdu.append(frame[chip][1])           # flux
+            hdu.append(frame[chip][2])           # err
+            hdu.append(frame[chip][3])           # mask
+            hdu.append(fits.ImageHDU(newcoef))   # wave coefficients
+            hdu.append(fits.ImageHDU(newwaves))  # wavelength array
             hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
 
         # Plots
         if plot is not None:
             try: os.mkdir(dirname+'/plots')
             except: pass
+
+            # this is the plotting code from wave.skycal()
+            # needs to be updated
+
+            import pdb; pdb.set_trace()
+            
             # plot the pixel shift for each chip derived from the FPI lines
             fig,ax = plots.multi(1,1)
             wfig,wax = plots.multi(1,3)
@@ -662,10 +665,6 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
                             xr=xlim[ichip],size=12,xt='Wavelength',yt='Pixel shift')
                 gdfit = np.where(np.abs(y-med) < 0.5)[0]
                 xx = np.arange(300)
-                #if len(gdfit) > 1 :
-                #    p=np.polyfit(x[gdfit],y[gdfit],1)
-                #    xx=np.arange(300)
-                #    plots.plotl(ax,xx,p[0]*xx+p[1],color=colors[ichip])
                 yy = w[0]*xx
                 yy += w[ichip+1]
                 plots.plotl(ax,xx,yy,color=colors[ichip])
@@ -708,48 +707,18 @@ def fpisurfit(mlinestr,mfpilines,method='y'):
 
         # translated from fpi_peaks_ylinsurf.pro
 
-
-        ## this is the XY code below!!!!!
-
-        import pdb; pdb.set_trace()
-
-        ncoef = 4   # 3 or 4 for linear surface, need 4 to get a good fit
-        # Loop over the rows and get robust linear fits
-        refcoef = np.zeros((2,len(rows)),float)
-        xx = np.zeros(nrows*npix,float)
-        yy = np.zeros(nrows*npix,float)
-        zz = np.zeros(nrows*npix,float)
+        # median dx values for reference fibers
+        refmeddx = np.zeros(len(rows),float)        
         for irow,row in enumerate(rows):
             indline, = np.where(mlinestr['row']==row)
             indfpi, = np.where(mfpilines['row']==row)
             mlinestr1 = mlinestr[indline]
             mfpilines1 = mfpilines[indfpi]
-            coef1 = robust.polyfit(mlinestr1['x'],mlinestr1['x']-mfpilines1['x'],1)
-            refcoef[:,irow] = coef1
-            xx[irow*npix:(irow+1)*npix] = x
-            yy[irow*npix:(irow+1)*npix] = row
-            zz[irow*npix:(irow+1)*npix] = robust.npp_polyval(x,np.flip(coef1))
-
-        # Now perform linear surface fit
-        err = zz*0+1
-        initpar = np.zeros(ncoef,float)
-        xinp = np.zeros((nrows*npix,2),float)
-        xinp[:,0] = xx
-        xinp[:,1] = yy
-        pars,pcov = curve_fit(func_poly2d_wrap,xinp,zz,p0=initpar,sigma=err)
-        perror = np.diag(np.sqrt(pcov))
-        xxall = x.reshape(npix,1)+np.zeros(300,float)
+            refmeddx[irow] = np.median(mlinestr1['x']-mfpilines1['x'])
+        # linear fit of dx in Y
+        pars = np.poly_fit(rows,refmeddx,1)
         yyall = (np.arange(300).reshape(300,1)+np.zeros(npix,float)).T
-        dxoffset = func_poly2d(xxall.flatten(),yyall.flatten(),*pars)
-        mnx = np.median(mlinestr['x'])
-        #dxlines_fit = func_poly2d(replicate(1,300)#mnx,findgen(300)#replicate(1,npeaks),pars)
-            
-        rms = np.sqrt(np.mean((dx-dx_fit)**2))
-        sig = dln.mad(dx-dx_fit,zero=True)
-        print('rms = ',rms)
-        print('sig = ',sig)
-
-        import pdb; pdb.set_trace()
+        dxoffset = np.polyval(pars,yyall)
 
         return pars, dxoffset
 

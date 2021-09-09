@@ -1147,7 +1147,7 @@ def getgroup(groups) :
     return out,group
 
 
-
+# The FPI version of this calibration program is in the fpi.py module
     
 def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='airglow',vers=None,nosky=False) :
     """ Determine positions of skylines for all frames in input planfile
