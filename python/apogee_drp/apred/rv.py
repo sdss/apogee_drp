@@ -11,7 +11,7 @@ import esutil
 import pickle
 import yaml
 from astropy.io import fits
-from ..utils import apload, applot, bitmask, spectra, norm, yanny
+from ..utils import apload, applot, bitmask, spectra, norm, yanny, plan
 from ..utils.apspec import ApSpec
 from ..database import apogeedb
 from holtztools import plots, html, match, struct
@@ -109,7 +109,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
 
     # Initalize star-level summary table
     startype = np.dtype([('apogee_id','U30'),('file','U100'),('uri','U300'),('starver','U50'),('mjdbeg',int),('mjdend',int),
-                         ('telescope','U6'),('apred_vers','U50'),('healpix',int),('snr',float),
+                         ('telescope','U6'),('apred_vers','U50'),('v_apred','U50'),('healpix',int),('snr',float),
                          ('ra',float),('dec',float),('glon',float),('glat',float),
                          ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
                          ('src_h','U16'),('targ_pmra',float),('targ_pmdec',float),('targ_pm_src','U16'),
@@ -126,11 +126,13 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                          ('rv_feherr',float),('rv_ccpfwhm',float),('rv_autofwhm',float),
                          ('n_components',int),('meanfib',float),('sigfib',float)
                      ])
+    gitvers = plan.getgitvers()
     startab = np.zeros(1,dtype=startype)
     startab['apogee_id'] = star
     startab['telescope'] = telescope
     startab['starver'] = starver
     startab['apred_vers'] = apred
+    startab['v_apred'] = gitvers
     startab['mjdbeg'] = np.min(allvisits['mjd'].astype(int))
     startab['mjdend'] = np.max(allvisits['mjd'].astype(int))    
     startab['healpix'] = apload.obj2healpix(star)
@@ -853,6 +855,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
     # Populate header
     apstar.header['OBJID'] = (allvisit['apogee_id'][0], 'APOGEE object name')
+    apstar.header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
     apstar.header['APRED'] = (apred, 'APOGEE reduction version')
     apstar.header['STARVER'] = (starver, 'apStar version')
     apstar.header['HEALPIX'] = ( apload.obj2healpix(allvisit['apogee_id'][0]), 'HEALPix location')

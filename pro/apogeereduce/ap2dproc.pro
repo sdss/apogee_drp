@@ -455,7 +455,8 @@ For i=0,n_elements(chips)-1 do begin
   head = chstr.header
   sxaddpar,head,'PSFFILE',ipsffile,' PSF file used'
   leadstr = 'AP2D: '
-  sxaddpar,head,'V_APRED',getvers()
+  sxaddpar,head,'V_APRED',getgitvers(),'apogee software version'
+  sxaddpar,head,'APRED',getvers(),'apogee reduction version'
   sxaddhist,leadstr+systime(0),head
   info = GET_LOGIN_INFO()
   sxaddhist,leadstr+info.user_name+' on '+info.machine_name,head

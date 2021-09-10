@@ -69,7 +69,7 @@ npix = sz[1]
 nfibers = sz[2]
 
 svn_vers = getvers()
-
+git_vers = getgitvers()
 
 ;##############################################################
 ;  OUTPUT THE PLATE FILE
@@ -121,7 +121,8 @@ For i=0,2 do begin
   ; Add extension explanations
   ;----------------------------
   leadstr = 'AP1DVISIT: '
-  sxaddpar,header,'V_APRED',svn_vers,'apogee software version'
+  sxaddpar,header,'V_APRED',git_vers,'apogee software version'
+  sxaddpar,header,'APRED',svn_vers,'apogee reduction version'
   sxaddhist,leadstr+systime(0),header
   info = GET_LOGIN_INFO()
   sxaddhist,leadstr+info.user_name+' on '+info.machine_name,header
@@ -553,7 +554,9 @@ For i=0,nfibers-1 do begin
 
     ; Description of the extensions
     leadstr = 'AP1DVISIT: '
-    sxaddpar,header,'V_APRED',svn_vers,'apogeereduce software version'
+    sxaddpar,header,'V_APRED',git_vers,'apogee software version'
+    sxaddpar,header,'APRED',svn_vers,'apogee reduction version'
+
     sxaddhist,leadstr+systime(0),header
     info = GET_LOGIN_INFO()
     sxaddhist,leadstr+info.user_name+' on '+info.machine_name,header
