@@ -361,7 +361,13 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             # Make the visit plots
             if makevisplots == True:
                 q = apVisitPlots(load=load, plate=plate, mjd=mjd)
-                            
+
+        # Make mjd.html and fields.html
+        if makemasterqa == True: 
+            q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True,
+                                  mjdfilebase='mjd.html',fieldfilebase='fields.html')
+
+        if os.path.exists(platesum):
             # Make the star level html pages
             if makestarhtml == True:
                 q = makeStarHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope)
@@ -373,11 +379,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         # Make the nightly QA page
         if makenightqa == True:
             q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
-
-        # Make mjd.html and fields.html
-        if makemasterqa == True: 
-            q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True,
-                                  mjdfilebase='mjd.html',fieldfilebase='fields.html')
 
         # Make the monitor page
         if makemonitor == True:
@@ -2276,7 +2277,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 starPlotFilePath = starPlotDir + starPlotFile
                 starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
-                #if objid == '2M09210737+0242172': import pdb; pdb.set_trace()
+                #if objid == '2M14432748+4006125': import pdb; pdb.set_trace()
 
                 # Read the apStar file
                 apstar = doppler.read(apStarPath)
@@ -2289,7 +2290,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 else: 
                     wave = apstar.wave[:, 0]
                     flux = apstar.flux[:, 0]
-                if np.max(flux) < 0.1:
+                if np.nanmax(flux) < 0.1:
                     print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
                     continue
                 gd, = np.where((np.isnan(flux) == False) & (flux > 0))
@@ -2520,7 +2521,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         n = int(round(uExposures[i]))
         file1d = load.filename('1D', mjd=mjd, num=n, chips='c').replace('1D-', '1D-c-')
         if os.path.exists(file1d) == False:
-            file2d = load.filename('2D', mjd=mjd, num=n, chips='c').replace('1D-', '1D-c-')
+            file2d = load.filename('2D', mjd=mjd, num=n, chips='c').replace('2D-', '2D-c-')
             if (os.path.exists(file2d) == False) & (os.path.exists(file2d + '.fz') == False):
                 miss2d = 1
             else:
