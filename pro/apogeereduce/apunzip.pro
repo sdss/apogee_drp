@@ -186,7 +186,7 @@ if nreads ge 1 then begin
      if res eq -1 then begin
          error = '        Checksum failed on '+files+' (ext=0)'
          if not keyword_set(silent) then print,error
-         return
+         ;;return
      endif
   endif
 
@@ -200,7 +200,7 @@ if nreads ge 1 then begin
      if res eq -1 then begin
          error = '        Checksum failed on '+files+' (ext=1)'
          if not keyword_set(silent) then print,error
-         return
+         ;;return
      endif
   endif
 
@@ -256,7 +256,7 @@ if nreads ge 1 then begin
        if res eq -1 then begin
            error = '         Checksum failed on '+files+' (ext='+strtrim(i,2)+')'
            if not keyword_set(silent) then print,error
-           return
+           ;;return
        endif
     endif
 
