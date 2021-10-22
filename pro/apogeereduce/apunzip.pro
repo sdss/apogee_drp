@@ -184,8 +184,8 @@ if nreads ge 1 then begin
      print,'checking checksum 0'
      res = FITS_TEST_CHECKSUM(head0,avg_dcounts,errmsg=errmsg)
      if res eq -1 then begin
-         error = '        Checksum failed on '+files+' (ext=0)'
-         if not keyword_set(silent) then print,error
+         ;;error = '        Checksum failed on '+files+' (ext=0)'
+         ;;if not keyword_set(silent) then print,error
          ;;return
      endif
   endif
@@ -198,8 +198,8 @@ if nreads ge 1 then begin
      print,'checking checksum 1'
      res = FITS_TEST_CHECKSUM(head1,read1,errmsg=errmsg)
      if res eq -1 then begin
-         error = '        Checksum failed on '+files+' (ext=1)'
-         if not keyword_set(silent) then print,error
+         ;;error = '        Checksum failed on '+files+' (ext=1)'
+         ;;if not keyword_set(silent) then print,error
          ;;return
      endif
   endif
@@ -254,8 +254,8 @@ if nreads ge 1 then begin
        print,'checking checksum',i
        res = FITS_TEST_CHECKSUM(head,residim,errmsg=errmsg)
        if res eq -1 then begin
-           error = '         Checksum failed on '+files+' (ext='+strtrim(i,2)+')'
-           if not keyword_set(silent) then print,error
+           ;;error = '         Checksum failed on '+files+' (ext='+strtrim(i,2)+')'
+           ;;if not keyword_set(silent) then print,error
            ;;return
        endif
     endif
