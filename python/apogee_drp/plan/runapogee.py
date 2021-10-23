@@ -109,7 +109,7 @@ def dbload_plans(planfiles):
     db = apogeedb.DBSession()   # open db session
     nplans = len(planfiles)
     
-    gitvers = plan.getgitver()
+    gitvers = plan.getgitvers()
 
     # Loop over the planfiles
     dtype = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),('telescope',(np.str,10)),
