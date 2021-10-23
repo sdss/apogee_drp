@@ -2280,7 +2280,8 @@ print,'no_checksum: ', no_checksum
   ; Update header
   ;-----------------------------
   leadstr = 'AP3D: '
-  sxaddpar,head,'V_APRED',getvers()
+  sxaddpar,head,'V_APRED',getgitvers(),'apogee software version'
+  sxaddpar,head,'APRED',getvers(),'apogee reduction version'
   sxaddhist,leadstr+systime(0),head
   info = GET_LOGIN_INFO()
   sxaddhist,leadstr+info.user_name+' on '+info.machine_name,head
