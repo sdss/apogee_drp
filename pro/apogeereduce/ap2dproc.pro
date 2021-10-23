@@ -702,7 +702,6 @@ For i=0,n_elements(chips)-1 do begin
         if keyword_set(recenterln2) then sxaddhist,leadstr+' /RECENTERLN2 set, shifting traces by '+stringize(xshift,ndec=3),head
       endif
 
-stop
       APEXTRACT_EPSF,frame.(ichip),epsf,outstr,model=ymodel,/scat ;,subonly=50*indgen(6)
       ;stop
 
