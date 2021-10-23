@@ -109,14 +109,17 @@ def dbload_plans(planfiles):
     db = apogeedb.DBSession()   # open db session
     nplans = len(planfiles)
     
+    gitvers = plan.getgitver()
+
     # Loop over the planfiles
-    dtype = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('telescope',(np.str,10)),
+    dtype = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),('telescope',(np.str,10)),
                       ('instrument',(np.str,20)),('mjd',int),('plate',int),('platetype',(np.str,20))])
     plantab = np.zeros(nplans,dtype=dtype)
     for i,planfile in enumerate(planfiles):
         planstr = plan.load(planfile)
         plantab['planfile'][i] = planfile
         plantab['apred_vers'][i] = planstr['apred_vers']
+        plantab['v_apred'][i] = gitvers
         plantab['telescope'][i] = planstr['telescope']
         plantab['instrument'][i] = planstr['instrument']
         plantab['mjd'][i] = planstr['mjd']
@@ -169,9 +172,9 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             fiberdata = None
 
         # Exposure-level processing: ap3d, ap2d, apcframe
-        dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('instrument',(np.str,20)),
-                          ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
-                          ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
+        dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
+                          ('instrument',(np.str,20)),('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),
+                          ('plate',int),('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
                           ('num',int),('success',bool)])
         chkexp1 = np.zeros(nexp*3,dtype=dtype)
         chkexp1['planfile'] = pfile
@@ -197,10 +200,13 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             base = load.filename('2D',num=num,mjd=mjd,chips=True)
             chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
             exists = [os.path.exists(chf) for chf in chfiles]
+            if exists[0]==True:  # get V_APRED (git version) from file
+                chead = fits.getheader(chfiles[0])
+                chkexp1['v_apred'][cnt] = chead.get('V_APRED')
             chkexp1['checktime'][cnt] = str(datetime.now())
             if np.sum(exists)==3:
                 chkexp1['success'][cnt] = True
-            cnt += 1
+            cnt += 1  # increment counter
             # AP2D
             #-----
             if (platetype=='normal') | (platetype=='cal'):
@@ -210,9 +216,12 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 base = load.filename('1D',num=num,mjd=mjd,chips=True)
                 chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
+                if exists[0]==True:  # get V_APRED (git version) from file
+                    chead = fits.getheader(chfiles[0])
+                    chkexp1['v_apred'][cnt] = chead.get('V_APRED')
                 if np.sum(exists)==3:
                     chkexp1['success'][cnt] = True
-                cnt += 1
+                cnt += 1  # increment counter
             # APCframe
             #---------
             if platetype=='normal':
@@ -222,16 +231,19 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 base = load.filename('Cframe',num=num,mjd=mjd,plate=plate,chips=True)
                 chfiles = [base.replace('Cframe-','Cframe-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
+                if exists[0]==True:  # get V_APRED (git version) from file
+                    chead = fits.getheader(chfiles[0])
+                    chkexp1['v_apred'][cnt] = chead.get('V_APRED')
                 if np.sum(exists)==3:
                     chkexp1['success'][cnt] = True
-                cnt += 1
+                cnt += 1  # increment counter
         # Trim extra elements
         chkexp1 = chkexp1[0:cnt]
 
         # Plan summary and ap1dvisit
         #---------------------------
         dtypeap = np.dtype([('planfile',(np.str,300)),('logfile',(np.str,300)),('errfile',(np.str,300)),
-                            ('apred_vers',(np.str,20)),('instrument',(np.str,20)),
+                            ('apred_vers',(np.str,20)),('v_apred',(np.str,50)),('instrument',(np.str,20)),
                             ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
                             ('nobj',int),('pbskey',(np.str,50)),('checktime',(np.str,100)),('ap3d_success',bool),
                             ('ap3d_nexp_success',int),('ap2d_success',bool),('ap2d_nexp_success',int),
@@ -270,6 +282,9 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             base = load.filename('Plate',plate=plate,mjd=mjd,chips=True)
             chfiles = [base.replace('Plate-','Plate-'+ch+'-') for ch in ['a','b','c']]
             exists = [os.path.exists(chf) for chf in chfiles]
+            if exists[0]==True:  # get V_APRED (git version) from file
+                chead = fits.getheader(chfiles[0])
+                chkap1['v_apred'] = chead.get('V_APRED')
             if np.sum(exists)==3:
                 chkap1['applate_success'] = True
             # apVisit
@@ -277,6 +292,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             visitfiles = glob(base.replace('-001.fits','-???.fits'))
             nvisitfiles = len(visitfiles)
             chkap1['apvisit_nobj_success']  = nvisitfiles
+            # take broken fibers into account for visit success!!!
             chkap1['apvisit_success'] = nvisitfiles==chkap1['nobj']
             apvisitsumfile = load.filename('VisitSum',plate=plate,mjd=mjd)
             chkap1['apvisitsum_success'] = os.path.exists(apvisitsumfile)
@@ -368,8 +384,8 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
 
     # Loop over the stars
     nstars = len(visits)
-    dtype = np.dtype([('apogee_id',(np.str,50)),('apred_vers',(np.str,20)),('telescope',(np.str,10)),
-                      ('healpix',int),('nvisits',int),('pbskey',(np.str,50)),
+    dtype = np.dtype([('apogee_id',(np.str,50)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
+                      ('telescope',(np.str,10)),('healpix',int),('nvisits',int),('pbskey',(np.str,50)),
                       ('file',(np.str,300)),('checktime',(np.str,100)),('success',bool)])
     chkrv = np.zeros(nstars,dtype=dtype)
     chkrv['apred_vers'] = apred_vers
@@ -377,7 +393,7 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
     chkrv['pbskey'] = pbskey
     for i,visit in enumerate(visits):
         starfilenover = load.filename('Star',obj=visit['apogee_id'])
-        # add version number, should be MJD of of the latest visit
+        # add version number, should be MJD of the latest visit
         stardir = os.path.dirname(starfilenover)
         starbase = os.path.splitext(os.path.basename(starfilenover))[0]
         starbase += '-'+str(visit['mjd'])   # add star version 
@@ -389,6 +405,9 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
         chkrv['healpix'][i] = apload.obj2healpix(visit['apogee_id'])
         chkrv['nvisits'][i] = len(starvisits)
         chkrv['file'][i] = starfile
+        if os.path.exists(starfile):
+            head = fits.getheader(starfile)
+            chkrv['v_apred'][i] = head.get('V_APRED')
         chkrv['checktime'][i] = str(datetime.now())
         chkrv['success'][i] = os.path.exists(starfile)
 
@@ -551,6 +570,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     # No version input, use 'daily'
     if apred is None:
         apred = 'daily'
+    # Get software version (git hash)
+    gitvers = plan.getgitvers()
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
 
