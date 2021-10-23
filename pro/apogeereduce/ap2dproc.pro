@@ -850,8 +850,6 @@ For i=0,n_elements(chips)-1 do begin
 
   BOMB:
 
-stop
-
 Endfor ; chip loop
 
 ; now we have output structure with three chips, each with tags header, flux, err, mask
