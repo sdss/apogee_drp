@@ -177,8 +177,6 @@ FOR i=0L,nplanfiles-1 do begin
     print,strtrim(j+1,2),'/',strtrim(nframes,2),'  Processing Frame Number >>',strtrim(framenum,2),'<<'
     print,'-----------------------------------------'
 
-clobber = 1
-
     ; Run AP2DPROC
     if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' then skywave=0 else skywave=1
     if tag_exist(planstr,'platetype') then if planstr.platetype eq 'sky' then plugmap=0
@@ -195,9 +193,6 @@ clobber = 1
       AP2DPROC,inpfile,tracefile,exttype,outdir=outdir,$
                fluxcalfile=fluxfile,responsefile=responsefile,$
                clobber=clobber,/compress 
-
-  stop
-
 
     BOMB1:
 
