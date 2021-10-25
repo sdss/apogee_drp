@@ -131,7 +131,8 @@ FOR i=0L,nplanfiles-1 do begin
 
   ; Load the Plug Plate Map file
   ;------------------------------
-  if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' or planstr.platetype eq 'single' then plugmap=0 else begin
+  if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' or planstr.platetype eq 'extra' or $
+     planstr.platetype eq 'single' then plugmap=0 else begin
     print,'' & print,'Plug Map file information:'
     plugfile = planstr.plugmap
     if tag_exist(planstr,'fixfiberid') then fixfiberid=planstr.fixfiberid
