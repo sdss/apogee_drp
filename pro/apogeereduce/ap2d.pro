@@ -101,7 +101,7 @@ FOR i=0L,nplanfiles-1 do begin
 
   ; apWave files : wavelength calibration
   waveid = planstr.waveid
-  if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' then waveid=0
+  if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' or planstr.platetype eq 'extra' then waveid=0
   if waveid gt 0 then MAKECAL,multiwave=waveid
 
   ; apFlux files : since individual frames are usually made per plate
