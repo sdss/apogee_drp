@@ -107,6 +107,11 @@ FOR i=0,nflatframe-1 do begin
 
     ;; Trace the fibers
     APFINDTRACE,str.(j),tracestr,pl=pl,nthreshsig=20,sigkern=1.2,thresh=peakthresh
+    if n_elements(tracestr) eq 0 then begin
+      print,'No traces found for ',outfile
+      file_delete,outfile+'.lock',/allow
+      goto,BOMB1
+    endif
 
     ;; Extract the spectra
     print,'Extracting the spectra'
