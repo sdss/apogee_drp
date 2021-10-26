@@ -83,7 +83,7 @@ if __name__ == '__main__' :
                 ims = planstr['APEXP']['name'][gd]
 
     # Run the domeFlatTrace code
-    dflatnums = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims, single=single)
+    dflatnums,ims = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims, single=single)
     print('\nDOME FLAT RESULTS:')
     for i in range(len(ims)): 
         if single == False: 
