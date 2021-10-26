@@ -65,6 +65,7 @@ if __name__ == '__main__' :
     else:
         telescope = 'apo25m'
         if observatory == 'lco': telescope = 'lco25m'
+        ims = None
         # MJD-Plate option
         if mjdplate != '':
             mjd = mjdplate[0].split('-')[0]
