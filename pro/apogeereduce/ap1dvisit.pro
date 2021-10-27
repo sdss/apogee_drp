@@ -705,7 +705,8 @@ FOR i=0L,nplanfiles-1 do begin
   sxaddpar,head0,'NPAIRS',sxpar(header0,'NPAIRS'),' Number of dither pairs combined'
 
   leadstr = 'AP1DVISIT: '
-  sxaddpar,head0,'V_APRED',getvers()
+  sxaddpar,head0,'V_APRED',getgitvers(),'apogee software version'
+  sxaddpar,head0,'APRED',getvers(),'apogee reduction version'
   sxaddhist,leadstr+systime(0),head0
   info = GET_LOGIN_INFO()
   sxaddhist,leadstr+info.user_name+' on '+info.machine_name,head0

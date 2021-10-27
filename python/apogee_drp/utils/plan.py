@@ -3,12 +3,21 @@ import os
 import glob
 from dlnpyutils import utils as dln
 import yaml
+import subprocess
 #try:
 #    from yaml import CLoader as Loader, CDumper as Dumper
 #except ImportError:
 #    from yaml import Loader, Dumper
 
 from ..utils import yanny,apload
+
+def getgitvers():
+    """ Return the current apogee_drp Git hash ("version")."""
+
+    out = subprocess.run('apgitvers',capture_output=True)
+    vers = out.stdout.decode().strip()
+    return vers
+
 
 def load(planfile,verbose=False,np=False,expand=False,plugmapm=False):
     """
