@@ -2,7 +2,7 @@
 apogee_drp
 ==========
 
-.. image:: https://img.shields.io/badge/python->3.7-blue)
+.. image:: https://img.shields.io/badge/python->3.7-blue
 .. image:: https://codecov.io/gh/sdss/apogee_drp/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/sdss/apogee_drp
 
