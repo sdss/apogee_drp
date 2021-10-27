@@ -1,2 +1,7 @@
 recursive-include python/apogee_drp/etc *
 recursive-include cextern/**/*
+
+include README.rst
+
+prune build
+
