@@ -4,8 +4,11 @@ apogee_drp
 
 .. image:: https://img.shields.io/badge/python->3.7-blue)
 
-.. image:: https://img.shields.io/travis/sdss/apogee_drp
-        :target: https://travis-ci.org/sdss/apogee_drp
+..
+
+  .. image:: https://img.shields.io/travis/sdss/apogee_drp
+          :target: https://travis-ci.org/sdss/apogee_drp
+
 .. image:: https://codecov.io/gh/sdss/apogee_drp/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/sdss/apogee_drp
 
