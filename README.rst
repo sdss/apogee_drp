@@ -1,6 +1,13 @@
 
 apogee_drp
-=========
+==========
+
+.. image:: https://img.shields.io/badge/python->3.7-blue)
+
+.. image:: https://img.shields.io/travis/sdss/apogee_drp
+        :target: https://travis-ci.org/sdss/apogee_drp
+.. image:: https://codecov.io/gh/sdss/apogee_drp/branch/master/graph/badge.svg
+        :target: https://codecov.io/gh/sdss/apogee_drp
 
 SDSS APOGEE data reduction software.
 
@@ -32,8 +39,3 @@ License
 
 .. image:: http://img.shields.io/badge/license-BSD3-blue.svg?style=flat
         :target: https://github.com/sdss/apogee_drp/blob/main/LICENSE.md
-
-
-![Versions](https://img.shields.io/badge/python->3.7-blue)
-[![Travis (.org)](https://img.shields.io/travis/sdss/apogee_drp)](https://travis-ci.org/sdss/apogee_drp)
-[![codecov](https://codecov.io/gh/sdss/apogee_drp/branch/master/graph/badge.svg)](https://codecov.io/gh/sdss/apogee_drp)
