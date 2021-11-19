@@ -1,0 +1,196 @@
+Updates to UNe.vac.apogee in summer of 2021 to improve fitting of arclamp lines
+
+7/16/2021
+original UNe.vac.apogee that has been in use for a long time was copied to UNe.vac.apogee1+2
+Added WAVEGROUP column
+set WAVEGROUP=1 for ID=5 and 6 since these lines are close enough to affect each other's centroids
+set USEWAVE=0 for ID=14, weak line not always detected in individual spectra
+set USEWAVE=0 for ID=28, weak line on top of high continuum, often not detected in individual spectra
+set USEWAVE=0 for ID=49, weak line on top of high continuum, often not detected	in individual spectra
+set USEWAVE=0 for ID=64, weak line on high background, not well detected in most spectra, two weak neighbors on left side
+set USEWAVE=0 for ID=68, left edge of green chip is bad/masked out, line not detected
+set USEWAVE=0 for ID=74, good line but has blend that will skew centroid and hard to fit simultaneously
+set USEWAVE=0 for ID=76, nothing visible, probably very weak line
+set WAVEGROUP=2 (renamed 11 below) for ID=81-83, they are three close and bright lines that should be fit together
+set WAVEGROUP=3 (renamed 12 below) for ID=89+90, they are two lines slightly blended that need to be fit together
+set USEWAVE=0 for ID=91, weak blended neighbor makes it challenging to get a good centroid for this line
+set USEWAVE=0 for ID=94, weak line on top of high continuum, visibile only in some spectra
+set USEWAVE=0 for ID=95, weak line on top of high continuum, visibile only in some spectra
+set USEWAVE=0 for ID=100, okay line on top of high continuum, visible only in some spectra
+set USEWAVE=0 for ID=123, pretty weak line on top of high continuum, visible in most spectra, wedges between two brighter neighbors/blends
+set WAVEGROUP=4 (renamed 16 below) for ID=122-124, three close lines are blended, need to fit them together
+set USEWAVE=0 for ID=138, okay line on top of high continuum, visible in most spectra, complete blend with similar-brightness line (#137)
+set USEWAVE=0 for ID=147, weak line on top of high continuum, visible in some spectra, close neighbor that will mess up detection and centroiding
+set USEWAVE=0 for ID=148, decent line on top of high continuum, visible in most spectra, complete blend with very close similar-brightness neighbor
+set USEWAVE=0 for ID=149, weak line on top of high continuum, visible in some spectra, close neighbors within ~5 pixels on both sides
+set WAVEGROUP=5 (renamed 20 below) for ID=170+170b, close neighbors/blends that need to be fit together
+added ID=170b so that it can be fit together with line ID=170
+set WAVEGROUP=6 (renamed 21 below) for ID=174+175, two fairly bright lines only 4 pixels apart, need to be fit together
+set WAVEGROUP=7 (renamed 23 below) for ID=188-190, three lines very close need to be fit together
+set WAVEGROUP=8 (renamed 25 below) for ID=216+217, two bright lines close enough together to affect each other
+set WAVEGROUP=9 (renamed 26 below) for ID=221,221b,222,222b, four lines close enough to each other that they need to be fit together
+added ID=221b and 222b so they can be fit together with lines ID=221,222
+set USEWAVE=0 for ID=227, weak line, visible only in some spectra
+set USEWAVE=0 for ID=233, no line visible in the spectrum and very close to a bright neighbor
+set WAVEGROUP=10 (renamed 28 below) for ID=235,236,236b, three lines very close together and need to be fit together
+added ID=236b so it can be fit together with lines ID=235+236
+set USEWAVE=0 for ID=237, okay line, visible in most spectra, but there is a weak close neighbor only 3 pixels away, I'm not sure these can even be fit
+set USEWAVE=0 for ID=245, decent line, visible in almost all spectra, there is a weak line 4 pixels to the right, might be hard to fit these together
+     since the other line is so weak
+set WAVEGROUP=11 (renamed 30 below) for ID=252+253, two good lines pretty close together, fit them together
+set WAVEGROUP=12 (renamed 31 below) for ID=254+255, two good lines	pretty close together, fit them	together
+set USEWAVE=0 for ID=261, good line, visible in all spectra, part of VERY close blend only 1-2 pixels apart, don't think they can be fit together
+set WAVEGROUP=13 (renamed 32 below) for ID=265+266, two decent lines pretty close together need to be fit together
+set USEWAVE=0 for ID=276, weak line on high continuum, visible in some spectra, also has weak neighbor 5 pixels away
+set WAVEGROUP=14 (renamed 34 below) for ID=285,285b,285c, three close okay lines that need to be fit together
+added ID=285b,285c so they can be fit together with line ID=285
+set WAVEGROUP=15 (renamed 35 below) for ID=289,289b,289c, three lines close together that need to be fit together
+added ID=289b,289c so they can be fit together with line ID=289
+
+07/19/2021
+Changed the wavelengths of some lines that are consistently off by using APOGEE data.  Used quadratic fit to lines within 120
+pixels.  Used exposures 38240004-38240007 (two THARNE and two UNE exposures).
+changed wavelength of ID=104 from 16268.5130 -> 16268.6602, standard error = 0.0005A
+changed wavelength of ID=226 from 15479.1230 -> 15479.2716, standard error = 0.0030A
+changed wavelength of ID=264 from 15321.7790 -> 15321.6883, standard error = 0.0018A
+changed wavelength of ID=284 from 15212.7130 -> 15212.7627, standard error = 0.0023A
+
+07/20/2021
+set USEWAVE=0 for ID=281 because it is saturated in all spectra and the residuals are consistently off
+set WAVEGROUP=2 for ID=18,18b
+added ID=18b so it can be fit together with line ID=18
+renaming previous defined wavegroup 2 -> 11 (ID=81,82,83)
+renaming previous defined wavegroup 3 -> 12 (ID=89,90)
+set USEWAVE=0 for ID=20 very weak line hardly distinguishable in most spectra
+changed wavelength of ID=21 from 16755.59 -> 16756.0348, standard error = 0.0037A
+set WAVEGROUP=3 for ID=23,23b
+added ID=23b so it can be fit together with line ID=23
+set WAVEGROUP=4 for ID=26,26b
+added ID=26b so it can be fit together with line ID=26
+set WAVEGROUP=5 for ID=31,31b
+added ID=31b so it can be fit together with line ID=31
+set WAVEGROUP=6 for ID=35,36
+set WAVEGROUP=7 for ID=41,42
+set WAVEGROUP=8 for ID=56,57
+set WAVEGROUP=9 for ID=66,67
+set WAVEGROUP=10 for ID=78,78b
+added ID=78b so it can be fit together with line ID=78
+set WAVEGROUP=13	for ID=105,106
+set WAVEGROUP=14 for ID=110,111
+set WAVEGROUP=15 for ID=116,117
+renaming previous defined wavegroup 4 -> 16 (ID=122,123,124)
+set WAVEGROUP=17 for ID=127,127b
+added ID=127b so it can be fit together with line ID=127
+set WAVEGROUP=18 for ID=139,140
+set WAVEGROUP=19 for ID=168,168b
+added ID=168b so it can be fit together with line ID=168
+renaming previous defined wavegroup 5 -> 20 (ID=170,170b)
+renaming previous defined wavegroup 6 -> 21 (ID=174,175)
+set WAVEGROUP=22 for ID=176,177
+renaming previous defined wavegroup 7 -> 23 (ID=188,189,190)
+set WAVEGROUP=24 for ID=201,202
+renaming previous defined wavegroup 8 -> 25 (ID=216,217)
+renaming previous defined wavegroup 9 -> 26 (ID=221,221b,222,222b)
+set WAVEGROUP=27 for ID=223,224
+renaming previous defined wavegroup 10 -> 28 (ID=235,236,236b)
+set WAVEGROUP=29 for ID=240,240b
+added ID=240b so it can be fit together with line ID=240
+renaming previous defined wavegroup 11 -> 30 (ID=252,253)
+renaming previous defined wavegroup 12 -> 31 (ID=254,255)
+renaming previous defined wavegroup 13 -> 32 (ID=265,266)
+set WAVEGROUP=33 for ID=273,273b
+added ID=273b so it can	be fit together	with line ID=273
+renaming previous defined wavegroup 14 -> 34 (ID=285,285b,285c)
+renaming previous defined wavegroup 15 -> 35 (ID=289,289b,289c)
+
+07/29/2021
+changed wavelength of ID=54 from 16553.79 -> 16553.78240 to be consistent with the THARNE list
+changed wavelenth of ID=104 from 16268.6602 -> 16268.5130 (back to its original value) to be consistent with the THARNE list
+  the UNe line has a close blended neighbor that skews the centroid
+set USEWAVE=0 for ID=104 because it has a close blended neighbor that skews the centroid
+  NOTE that this line exists in the THARNE spectra (ID=34) and is stronger
+set USEWAVE=0 for ID=2 because it has a close blended neighbor
+set USEWAVE=0 for ID=55 because it has a close strong blended neighbor
+set USEWAVE=0 for ID=67 because it is a weak line and is between two bright lines and generally not well fit
+set USEWAVE=0 for ID=79 because it has a close, strong blended line and the residuals are consistently large
+set USEWAVE=0 for ID=87 because it has a close, strong blended line and the residuals are consistently off
+set WAVEGROUP=36 for ID=93,93b
+added ID=93b so it can be fit together with line ID=93
+set USEWAVE=0 for ID=97 because it has a close, strong blended line that is skewing the centroids
+set WAVEGROUP=37 for ID=101,101b
+added ID=101b so it can be fit together with line ID=101
+set WAVEGROUP=38 for ID=113,113b
+added ID=113b so it can be fit together with line ID=113
+set WAVEGROUP=39 for ID=115,115b
+added ID=115b so it can be fit together with line ID=115
+set USEWAVE=0 for ID=125 because it has a close blended neighbor that is skewing the centroids
+set USEWAVE=0 for ID=130 because it has	a close	blended	neighbor that is skewing the centroids
+set WAVEWGROUP=40 for ID=169,169b
+added ID=169b so it can be fit together with line ID=169
+set USEWAVE=0 for ID=171 because it has close blended neighbors on both sides that are skewing the centroids
+set USEWAVE=0 for ID=186 because it has close, strong blended neighbor that is skewing the centroids
+set WAVEGROUP=41 for ID=197,197b
+added ID=197b so it can be fit together with line ID=197
+set USEWAVE=0 for ID=198 because it has a close blended neighbor that is skewing the centroids
+set WAVEGROUP=42 for ID=215,215b
+added ID=215b so it can be fit together with line ID=215
+set USEWAVE=0 for ID=221 because it is weak, consistently off and has a strong blend
+set WAVEGROUP=43 for ID=225,225b
+added ID=225b so it can	be fit together	with line ID=225
+set USEWAVE=0 for ID=238 because it has a close, blended neighbor that is skewing the centroids
+set USEWAVE=0 for ID=239 because it has a close, blended neighbor that is skewing the centroids
+set WAVEGROUP=44 for ID=243,243b
+added ID=243b so it can be fit together with line ID=243b
+set WAVEGROUP=45 for ID=251,251b
+added ID=251b so it can be fit together with line ID=251b
+set WAVEGROUP=46 for ID=292,292b
+added ID=292b so it can be fit together with line ID=292
+set WAVEGROUP=47 for ID=297,297b
+added ID=297b so it can be fit together with line ID=297
+set WAVEGROUP=48 for ID=22,22b
+added ID=22b so it can be fit together with line ID=22
+set USEWAVE=0 for ID=29 because it has a close, blended neighbor that is skewing the centroids
+set USEWAVE=0 for ID=23 because it has a close, blended neighbors on both sides and the residuals are consistently off
+
+07/30/2021
+updating the XPIX and WAVE values for new lines I added for group fitting using fit_groups.pro which performed
+multi-gauss fitting to the groups in all fibers for 38240006.  The fitted values were used to calculate
+the mean XPIX and WAVE offset of the added line relative to the nearby line (e.g. 21b relative to 21).
+ID=78b, 127b, 168b, 18b, 170b, 221b, 222b, 236b, 240b, 23b, 273b, 285b, 285c, 289b, 289c, 93b, 101b,
+113b, 115b, 26b, 169b, 197b, 215b, 225b, 243b, 251b, 292b, 297b, 22b, 31b updated
+set WAVEGROUP=12 for ID=89,90,90b
+added ID=90b to be fit together with ID=89,90 in WAVEGROUP=12
+set WAVEGROUP=15 for ID=116,116b,117
+added ID=116b to be fit together with ID=116,117 in WAVEGROUP=15
+set WAVEGROUP=22 for ID=176,176b,177
+added ID=176b to be fit together with ID=176,177 in WAVEGROUP=22
+set WAVEGROUP=24 for ID=201,201b,202
+added ID=201b to be fit together with ID=201,202 in WAVEGROUP=24
+set WAVEGROUP=8 for ID=56,57,57b
+added ID=57b to be fit together with ID=56,57 in WAVEGROUP=8
+Updating XPIX/WAVE for added using multi-gaussian fitting (like above). ID=90b, 116b, 176b, 201b, 57b, updated
+changed wavelength of ID=284 from 15212.7627 -> 15212.7130 back to the original value, because it is a blend
+set WAVEGROUP=49 for ID=284,284b
+added 284b to be fit together with 284
+
+08/03/2021
+Discovered that	the Neon lines are systematically offset from the Th-Ar	and Uranium lines.  Redman+2012	(Uranium linelist)
+also found an issue with the Neon lines	from Sansonetti+2004 (the source of our Neon wavelengths) relative to other
+reference lines	and decided not	to use them.  Therefore, I decided to use the Th-Ar lines (from Kerber+2008) and the
+Uranium	lines (from Redman+2012) as our	absolute wavelength reference and derive our own wavelengths for the Neon lines.
+I did this using the 38240004-38240007 exposures, fitting cubic solutions to each chip and all 300 fibers. I then
+found the median wavelength for	each unique line (averaging over fibers and exposures) to find the new Neon wavelengths
+for 34 unique lines.  Both linelists were updated.
+Note that the wavelengths of three Neon lines were NOT changed because they have USEWAVE=0 set.  These are:
+  UNE 87, 103 (same as THARNE 33 which was changed), 238
+  (note wavelength of UNE 103 was changed below)
+
+set USEWAVE=0 for ID=153.  There are multiple close lines, too close to get good fits.  According to Redman there are actually
+   five lines right on top of each other, with three of similar fluxes.
+set USEWAVe=0 for ID=255.  This line is systematically off and according to Redman it has a very close blend.  A neighboring
+   line a few pixels away seems to be fine.
+
+08/04/2021
+
+changing wavelength of ID=103 from 16273.2070 -> 16273.3860 so this Neon line is consistent with the THARNE linelist.  This
+  line IS used in THARNE but not used in this UNE list.

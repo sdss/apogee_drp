@@ -16,6 +16,8 @@ from __future__ import unicode_literals
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import colors as mcolors
+import matplotlib
 import os
 import glob
 import pdb
@@ -30,10 +32,16 @@ from holtztools import plots, html
 from astropy.table import Table
 #from pyvista import tv
 # pyvista.tv is only used by compare() but not used by anything
+#from RobustPolyfit import robust_polyfit 
+from dlnpyutils import utils as dln,robust,ladfit
+import time
+import traceback
 
 chips = ['a','b','c']
 colors = ['r','g','b','c','m','y']
 xlim = [[16400,17000],[15900,16500],[15100,15800]]
+
+DEBUG = False
 
 def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],npoly=4,reject=3,
             plot=False,hard=True,verbose=False,clobber=False,init=False,nofit=False,test=False) :
@@ -57,6 +65,9 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         nofit (bool) : only find lines, skip fit (default=False)
         test (bool) : if True, use polynomial from first set, only let centers shift for all other sets
     """
+
+    start = time.time()
+
     load = apload.ApLoad(apred=vers,instrument=inst)
 
     if name is None : name = nums[0]
@@ -83,18 +94,26 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
     for chip in chips : waves[chip] = np.tile(np.polyval(coef0[chip],pixels),(300,1))
     maxgroup=1
     frames=[]
+    framesgroup = []
+    framesdithpix = []
+    fcnt = 0
     for inum,num in enumerate(nums) :
+        print(str(inum+1)+'/'+str(len(nums))+' '+str(num))
         # load 1D frame
         frame = load.ap1D(num)
         out = load.filename('Wave',num=num,chips=True)
         print(num,frame)
         if frame is not None and frame != 0 :
             # get correct arclines
-            if frame['a'][0].header['LAMPUNE'] : lampfile = 'UNe.vac.apogee'
-            if frame['a'][0].header['LAMPTHAR'] : lampfile = 'tharne.lines.vac.apogee'
+            if frame['a'][0].header['LAMPUNE']:
+                lampfile = 'UNe.vac.apogee'
+                lamptype = 'UNE'
+            if frame['a'][0].header['LAMPTHAR']:
+                lampfile = 'tharne.lines.vac.apogee'
+                lamptype = 'THARNE'
             arclines=ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
-            j=np.where(arclines['USEWAVE'])[0]
-            arclines=arclines[j]
+            #j=np.where(arclines['USEWAVE'])[0]  # this is now down in findlines()
+            #arclines=arclines[j]
             # find lines or use previous found lines
             linesfile=out.replace('Wave','Lines')
             if os.path.exists(linesfile) and not clobber :
@@ -102,15 +121,53 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                 flinestr = fits.open(linesfile)[1].data
             else :
                 print('Finding lines: ', num)
-                flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1)
+                flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1,plot=plot)
                 Table(flinestr).write(linesfile,overwrite=True)
             # replace frameid tag with group identification, which must start at 0 for func_multi_poly indexing
-            if inum > 0 and abs(num-nums[inum-1]) > 1 : maxgroup +=1
-            flinestr['frameid'] = maxgroup-1
+
+            # GROUPS: Frames must be consecutive and at the same dither position to be considered a group
+            framesdithpix.append(frame['a'][0].header['DITHPIX'])
+            #import pdb; pdb.set_trace()
+            if inum > 0 and (abs(num-nums[inum-1]) > 1 or abs(framesdithpix[fcnt]-framesdithpix[fcnt-1])>0.1): maxgroup +=1
+
+            flinestr = Table(flinestr)  # convert temporarily to astropy Table to easily add a column
+            flinestr['group'] = -1
+            flinestr['lamptype'] = '      '  # initalize with enough spaces for UNE and THARNE
+            flinestr['lamptype'] = lamptype
+            flinestr['bad'] = -1
+            flinestr = np.array(flinestr)
+            flinestr['group'] = maxgroup-1
+            # Prune lines that are WAY off
+            fibchid = flinestr['row']+flinestr['chip']*1000
+            fchindex = dln.create_index(fibchid)
+            gdind = np.array([],int)
+            for i,fibch in enumerate(fchindex['value']):
+                ind1 = fchindex['index'][fchindex['lo'][i]:fchindex['hi'][i]+1]
+                flinestr1 = flinestr[ind1]
+                gdlines, = np.where(flinestr1['failed']==0)
+                if len(gdlines)>0:
+                    coef1,absdev = ladfit.ladfit(flinestr1['pixel'][gdlines],flinestr1['dpixel'][gdlines])
+                    yfit = np.poly1d(np.flip(coef1))(flinestr1['pixel'])
+                    res1 = flinestr1['dpixel']-yfit
+                    sig1 = dln.mad(res1[gdlines])
+                    thresh = np.maximum(5*sig1,0.5)
+                    gd1, = np.where((np.abs(res1) < thresh) & (flinestr1['failed']==0))
+                    if len(gd1)>0:
+                        gdind = np.append(gdind,ind1[gd1])
+                else:
+                    # all lines failed
+                    gd1 = np.array([],int)
+                    
+            if len(gdind)<len(flinestr):
+                print('Setting BAD=1 for ',len(flinestr)-len(gdind),' of ',len(flinestr),' outlier lines')
+                flinestr['bad'] = 1  # bad
+                flinestr['bad'][gdind] = 0  # good
+            framesgroup.append(maxgroup-1)
             if inum == 0 : linestr = flinestr
             else : linestr = np.append(linestr,flinestr)
             print(' Frame: {:d}  Nlines: {:d}  '.format(num,len(flinestr)))
             frames.append(num)
+            fcnt += 1   # increment good frame counter
         else :
             print('Error reading frame: ', num)
 
@@ -139,39 +196,132 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         fig,ax=plots.multi(1,3,hspace=0.001,wspace=0.001)
         fig2,ax2=plots.multi(1,3,hspace=0.001,wspace=0.001)
 
+
+    # Get improved initial guesses and prune out bad lines
+    print('Getting improved initial estimates and pruning out bad lines using all fibers')
+    # Check each set of frameid-chip lines
+    # only check the GOOD lines
+    gdlines, = np.where(linestr['bad']==0)
+    linestr_all = linestr.copy()
+    linestr = linestr[gdlines]
+    # index
+    fchid = linestr['frameid']+linestr['chip']*100000000
+    fchindex = dln.create_index(fchid)
+    nbad = 0
+    for i,fibch in enumerate(fchindex['value']):
+        ind = fchindex['index'][fchindex['lo'][i]:fchindex['hi'][i]+1]
+        linestr1 = linestr[ind]
+        x = np.float64(linestr1['pixel'])
+        y = np.float64(linestr1['wave'])
+        # Robust polynomial fit
+        rob_coefs1 = robust.polyfit(x,y,3)
+        rob_preds1 = np.poly1d(rob_coefs1)(x)
+        # outlier rejection
+        res1 = linestr1['wave']-rob_preds1
+        sig1 = dln.mad(res1)
+        gd1, = np.where(np.abs(res1) < 3*sig1)
+        # refit
+        rob_coefs2 = robust.polyfit(x[gd1],y[gd1],3)
+        rob_preds2 = np.poly1d(rob_coefs2)(x)
+        res2 = linestr1['wave']-rob_preds2
+        # Remove fiber-specific offsets
+        #  only for the good lines
+        res3 = res2.copy()
+        fibid = linestr1['row']
+        fibindex = dln.create_index(fibid)
+        fibmed = np.zeros(len(fibindex['value']),float)
+        fibsig = np.zeros(len(fibindex['value']),float)
+        allsig = res3.copy()*0
+        for j in range(len(fibindex['value'])):
+            ind1 = fibindex['index'][fibindex['lo'][j]:fibindex['hi'][j]+1]
+            if len(ind1)>0:
+                res3[ind1] -= np.median(res2[ind1])
+                fibmed[j] = np.median(res2[ind1])
+                fibsig[j] = dln.mad(res3[ind1])
+                allsig[ind1] = fibsig[j]
+        # One final fit to the residuals
+        sig2 = dln.mad(res3)
+        gd2, = np.where(np.abs(res3)<3*sig2)
+        res_coefs = robust.polyfit(x[gd2],res3[gd2],3)
+        res4 = res3 - np.poly1d(res_coefs)(x)
+        # Final selection of good points
+        sig3 = dln.mad(res4)
+        bd3, = np.where((np.abs(res4)>4*allsig) | (linestr1['pixel']<0) | (linestr1['pixel']>2047))
+        nbad += len(bd3)
+        print('chip-frameid: ',fibch,len(ind),len(bd3))
+        if len(bd3)>0:
+            linestr1['bad'][bd3] = 2
+        linestr[ind] = linestr1
+
+    # Stuff back in to the full list
+    linestr_all[gdlines] = linestr
+    linestr = linestr_all
+    del linestr_all
+        
+    # Outlier lines
+    print(str(nbad)+' of '+str(len(linestr))+' lines marked as BAD=2')
+
+    # Now do a global fit to all chips and chipgaps
+    gdlines, = np.where(linestr['bad']==0)
+    x = np.zeros([3,len(gdlines)])
+    x[0,:] = linestr['pixel'][gdlines]
+    x[1,:] = linestr['chip'][gdlines]
+    y = linestr['wave'][gdlines]
+    bounds = ( np.zeros(len(pars0))-np.inf, np.zeros(len(pars0))+np.inf)
+    bounds[0][-2] = -1e-7
+    bounds[1][-2] = 1e-7
+    popt,pcov = curve_fit(func_multi_poly,x,y,p0=pars0,bounds=bounds)
+    #pars0 = popt
+    yfit = func_multi_poly(x,*popt)
+    offset = np.array([popt[-3], 0.0, popt[-1]])
+    xglobal = x[0,:] - 1023.5 + (x[1,:]-2)*2048 + offset[np.round(x[1,:]).astype(int)-1]
+
+    # Add some columns to the table
+    linestr = Table(linestr)   # convert temporarily to astropy Table to easily add a column
+    linestr['used'] = 0
+    linestr['res'] = 999999.
+    linestr['xglobal'] = 999999.
+    linestr = np.array(linestr)
+
     # loop over requested rows
     for irow,row in enumerate(rows) :
         # set up independent variable array with pixel, chip, groupid, and dependent variable (wavelength)
-        thisrow = np.where((linestr['row'] == row) & (linestr['peak'] > 100) & (linestr['pixel']>0) )[0]
+        thisrow = np.where((linestr['row'] == row) & (linestr['peak'] > 100) & (linestr['pixel']>=0) &
+                           (linestr['pixel']<=2047) & (linestr['bad']==0))[0]
+        linestr['used'][thisrow] = 0    # initialize to not used
         x = np.zeros([3,len(thisrow)])
         x[0,:] = linestr['pixel'][thisrow]
         x[1,:] = linestr['chip'][thisrow]
         # we may have missing groups for this row
-        groupid,groups = getgroup(linestr['frameid'][thisrow])
+        #groupid,groups = getgroup(linestr['frameid'][thisrow])
+        groupid,groups = getgroup(linestr['group'][thisrow])
         x[2,:] = groupid
         #x[2,:] = linestr['frameid'][thisrow]
         ngroup = len(groups)
-        y = linestr['wave'][thisrow]
+        y = np.float64(linestr['wave'][thisrow])
         # if we don't have any groups, skip this row
         if ngroup<= 0: continue
-
+        
         npars=npoly+3*ngroup
         pars = np.zeros(npars)
         # if we have more than one group, get starting polynomial guess from first group, to help
         #   to avoid local minima
         if ngroup > 1 :
             if abs(nums[1]-nums[0]) > 1 : 
-                print('for multiple groups, first two frames must be from same group!')
-                pdb.set_trace()
-            print('running wavecal for: ', nums[0:2],maxgroup,ngroup,' row: ',row)
-            pars0 = wavecal(nums=nums[0:2],name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,reject=reject,init=init,verbose=verbose)
-            pars[npoly-4:npoly] = pars0[0:4]
-            for igroup in range(ngroup): pars[npoly+igroup*3:npoly+(igroup+1)*3] = pars0[4:7]
+                raise Exception('for multiple groups, first two frames must be from same group!')
+            # Run all exposures of first group
+            group0, = np.where(np.array(framesgroup)==0)
+            num0 = nums[group0]
+            print('running wavecal for: ', num0,maxgroup,ngroup,' row: ',row)
+            pars0,linestr1 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,reject=reject,init=init,verbose=verbose)
+            pars[:npoly] = pars0[:npoly]
+            for igroup in range(ngroup): pars[npoly+igroup*3:npoly+(igroup+1)*3] = pars0[npoly:npoly+3]
         else :
             pars = copy.copy(initpars)
-        # initial residuals
+        # Initial residuals
         res = y-func_multi_poly(x,*pars)
-        # iterate to allow outlier rejection
+
+        # Iterate to allow outlier rejection
         if irow == 0 : maxiter=7
         else : maxiter=7
         for niter in range(maxiter) :
@@ -187,19 +337,28 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                 # if we have multiple groups, only fit for chip locations during first iterations and every 3rd thereafter
                 if test or niter<3 or niter%3 == 1 : 
                     for i in range(npoly) : 
-                        bounds[0][i] =  pars[i]-1.e-7*abs(pars[i])
-                        bounds[1][i] =  pars[i]+1.e-7*abs(pars[i])
+                        if pars[i]!=0.0:
+                            bounds[0][i] = pars[i]-1.e-7*abs(pars[i])
+                            bounds[1][i] = pars[i]+1.e-7*abs(pars[i])
+                        else:
+                            bounds[0][i] = -1.e-7
+                            bounds[1][i] = +1.e-7
 
-            # reject lines with bad residuals
-            gd = np.where(abs(res) < np.median(res)+reject*np.median(np.abs(res)))[0]
+            ## reject lines with bad residuals
+            # sometimes the initial guess from the first group is quite off for other groups
+            #  allow one fitting before pruning
+            if niter>0:
+                medres = np.median(res)
+                gd = np.where(abs(res-medres) < reject*dln.mad(res))[0]
+            else:
+                gd = np.arange(len(res))
 
             # calculate rms in each group and make sure we have lines in all groups
             for igroup in range(ngroup) : 
                 j=np.where(x[2,gd] == igroup)[0]
                 if len(j) <= 0 :
                   # if any group is missing, things will fail in func_multi_poly to determine correct npoly
-                  print('missing lines from group: ', igroup)
-                  pdb.set_trace()
+                  raise Exception('missing lines from group: '+str(igroup))
             
             # use curve_fit to optimize parameters
             try :
@@ -214,8 +373,52 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                     print(pars)
             except :
                 print('Solution failed for row: ', row)
-                pdb.set_trace()
+                #import pdb; pdb.set_trace()
                 popt = pars*0.
+
+            # Calculate Xglobal for all chip/group combinations
+            xglobal = np.zeros(len(thisrow))
+            for ich in range(3):
+                for igr in range(ngroup):
+                    offset = pars[npoly+igr*3+ich]
+                    jgr = np.where((x[1,:] == ich+1) & (np.round(x[2,:]).astype(int) == igr))[0]
+                    xglobal[jgr] = x[0,jgr] - 1023.5 + (ich-1)*2048 + offset
+
+            if ngroup>1 and hard and niter==maxiter-1:
+                figfile = 'wave_resid_'+str(nums[0])+'_fiber'+str(row)+'.png'
+                matplotlib.use('Agg')
+                fig,ax = plt.subplots()
+                figsize = 10.0
+                fig.set_figheight(figsize*0.8)
+                fig.set_figwidth(figsize)
+                if ngroup==1:
+                    plt.scatter(xglobal[gd],res[gd],s=1)
+                else:
+                    plt.scatter(xglobal[gd],res[gd],c=x[2,gd],s=1)
+                    plt.colorbar(label='Group ID')
+                yr = dln.minmax(res[gd])
+                yr = [yr[0]-0.1*dln.valrange(yr),yr[1]+0.1*dln.valrange(yr)]
+                xr = dln.minmax(xglobal[gd])
+                xr = [xr[0]-0.1*dln.valrange(xr),xr[1]+0.1*dln.valrange(xr)]
+                plt.ylim(yr)
+                plt.xlim(xr)
+                plt.xlabel('Xglobal (pix)')
+                plt.ylabel('Residuals (A)')
+                plt.title('Wavelength residuals - Fiber='+str(row))
+                ax.annotate('RMS = %.4f' % res[gd].std(), xy=(xr[0]+dln.valrange(xr)*0.05, yr[1]-dln.valrange(yr)*0.05),ha='left')
+                plt.savefig(figfile,bbox_inches='tight')
+                print('Saving figure to ',figfile)
+
+            #if True and ngroup==1 and niter==maxiter-1:
+            #    matplotlib.use('Qt5Agg')
+            #    plt.scatter(xglobal[gd],res[gd],c=linestr['peak'][thisrow][gd],norm = mcolors.LogNorm(vmin=100,vmax=1e6))
+            #    #plt.scatter(xglobal[gd],res[gd])
+            #    plt.colorbar()
+            #    plt.show()
+            # 
+            #    import pdb; pdb.set_trace()
+
+
             # plot individual line residuals if requested. Get rid of maxiter-1 if you want to see plots at each iteration
             if plot and niter == maxiter-1 :
                 for ichip in range(3) :
@@ -230,33 +433,43 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
                     plots.plotc(ax[ichip],x[0,gd[gdplt]],res[gd[gdplt]],z[gd[gdplt]],zr=zr,
                                 xt='Pixel',yt='obs-fit wavelength',size=10)
                     plt.show()
-                if not hard : pdb.set_trace()
+                if not hard :
+                    import pdb; pdb.set_trace()
+
+        # Save quality information
+        if len(gd)>0:
+            linestr['used'][thisrow[gd]] = 1
+        linestr['res'][thisrow] = res
+        linestr['xglobal'][thisrow] = xglobal
         
         allrms = res[gd].std()
         # throw out bad solutions
-        #if allrms > 0.1 : popt = pars*0.
-        if allrms < 0.1 : initpars = copy.copy(pars)
-        if verbose : print(row,pars)
+        #if allrms > 0.1: popt = pars*0.
+        if allrms < 0.1: initpars = copy.copy(pars)
+        if verbose: print(row,pars)
         allpars[0:npoly,row] = popt[0:npoly]
-        ref=allpars[npoly+1,row]
+        ref = allpars[npoly+1,row]
         # save final fits in allpars. For chip locations, transform to chip offsets
         for jgroup in range(ngroup) :
             igroup=groups[jgroup]
-            for ichip in range(3) : allpars[npoly+igroup*3+ichip,row] = popt[npoly+jgroup*3+ichip]
-            j=np.where(x[2,gd] == igroup)[0]
+            for ichip in range(3): allpars[npoly+igroup*3+ichip,row] = popt[npoly+jgroup*3+ichip]
+            j = np.where(x[2,gd] == igroup)[0]
             rms[row,igroup] = res[gd[j]].std()
             sig[row,igroup] = np.median(np.abs(res[gd[j]]))
-
+    
     # now refine the solution by averaging zeropoint across all groups and
     # by fitting across different rows to require a smooth solution
-    if ngroup > 1 : newpars,newwaves = refine(allpars)
-    else : newpars = allpars
+    if ngroup > 1: newpars,newwaves = refine(allpars)
+    else: newpars = allpars
 
-    # save results in apWave fies
-    out=load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
-    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,rms=rms,sig=sig,allpars=allpars)
+    # save results in apWave files
+    out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
+    if str(name).isnumeric()==False or len(str(name))<8:  # non-ID input
+        out = os.path.dirname(out)+'/apWave-'+str(name)+'.fits'
+    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,framesgroup=framesgroup,
+                rms=rms,sig=sig,allpars=allpars,linestr=linestr)
 
-    if plot : 
+    if plot: 
         plot_apWave([name],apred=vers,inst=inst,hard=hard)
         # individual lines from last row
         #if hard :
@@ -264,7 +477,9 @@ def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],n
         #    except : pass
         #    fig.savefig(root+'.png')
 
-    return pars
+    print("elapsed: %0.1f sec." % (time.time()-start))
+
+    return pars,linestr
 
 def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
 
@@ -378,7 +593,7 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
             wgroup.append(w)
         except : 
             print('fit failed ....')
-            pdb.set_trace()
+            import pdb; pdb.set_trace()
         print('fit parameters: ', w)
     # subtract median parameter value for this wavecal, so we can compare across different wavecals
     wgroup=np.array(wgroup)
@@ -409,11 +624,12 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
               '<TD><IMG SRC=../plots/'+os.path.basename(root)+'_exposures.png></TABLE>')
       html.htmltab(grid,file=root+'.html',xtitle=xtit,ytitle=yt,header=header)
   else: 
-      pdb.set_trace()
+      import pdb; pdb.set_trace()
       for i in range(4) : plt.close()
 
 
-def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=None,sig=None,allpars=None) :
+def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],framesgroup=[],
+                rms=None,sig=None,allpars=None,linestr=None):
     """ Write the apWave files in standard format given the wavecal parameters
     """
     x = np.zeros([3,2048])
@@ -443,24 +659,41 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],rms=
         hdu[0].header['COMMENT']='HDU#3 : wavecal fit parameter array [npoly+3*ngroup,300]'
         hdu[0].header['COMMENT']='HDU#4 : rms from fit [300,ngroup]'
         hdu[0].header['COMMENT']='HDU#5 : sig from fit [300,ngroup]'
-        if allpars is not None : hdu[0].header['COMMENT']='HDU#3 : wavecal fit parameter array [npoly+3*ngroup,300]'
-        hdu[0].header.add_comment('APOGEE_DRP_VER:'+os.environ['APOGEE_DRP_VER'])
+        hdu[0].header['COMMENT']='HDU#6 : wavecal fit parameter array [npoly+3*ngroup,300]'
+        hdu[0].header['COMMENT']='HDU#7 : table with frames/group information'
+        hdu[0].header.add_comment('APOGEE_DRP_VER:'+str(os.environ.get('APOGEE_DRP_VER')))
         hdu.append(fits.ImageHDU(chippars))
         hdu.append(fits.ImageHDU(chipwaves))
         hdu.append(fits.ImageHDU(pars))
         if rms is not None :
             hdu[0].header['MEDRMS']=(np.nanmedian(rms),'median rms')
             hdu.append(fits.ImageHDU(rms))
+        else:
+            hdu.append(fits.ImageHUD(None))
         if sig is not None :
             hdu[0].header['MEDSIG']=(np.nanmedian(sig),'median sig')
             hdu.append(fits.ImageHDU(sig))
+        else:
+            hdu.append(fits.ImageHDU(None))
         if allpars is not None :
             hdu.append(fits.ImageHDU(allpars))
+        else:
+            hdu.append(fits.ImageHDU(None))
+        if len(frames)>0 and len(framesgroup)>0:
+            ftable = np.zeros(len(frames),dtype=np.dtype([('frame',np.str,8),('group',int)]))
+            ftable['frame'] = frames
+            ftable['group'] = framesgroup
+            hdu.append(fits.table_to_hdu(Table(ftable)))
+        else:
+            hdu.append(fits.ImageHDU(None))
         if out is not None: hdu.writeto(out.replace('Wave','Wave-'+chip),overwrite=True)
         allhdu.append(hdu)
+    # Save table of line measurements
+    if linestr is not None:
+        Table(linestr).write(out.replace('.fits','_lines.fits'),overwrite=True)
     return allhdu
 
-def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
+def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False):
     """ Determine positions of lines from input file in input frame for specified rows
 
     Args:
@@ -473,72 +706,238 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2) :
     Returns :
         structure with identified lines, with tags chip, row, wave, peak, pixrel, dpixel, frameid
     """
+    t0 = time.time()
+    
     num = int(os.path.basename(frame['a'][0].header['FILENAME']).split('-')[1])
     nlines = len(lines)
     nrows = len(rows)
     linestr = np.zeros(nlines*nrows,dtype=[
-                       ('chip','i4'), ('row','i4'), ('wave','f4'), ('peak','f4'), ('pixel','f4'),
-                       ('dpixel','f4'), ('wave_found','f4'), ('frameid','i4')
-                       ])
+                       ('chip','i4'), ('row','i4'),('id',np.str,5),('wave',float), ('peak','f4'), ('xpix0','f4'),('pixel','f4'),
+                       ('pixelerr','f4'),('sigma','f4'),('yoffset','f4'),('dpixel','f4'), ('wave_found',float),
+                       ('frameid','i4'),('failed','i4'),('dummy','i4')])
     nline=0
-    for ichip,chip in enumerate(['a','b','c']) :
+    for ichip,chip in enumerate(['a','b','c']):
         # Use median offset of previous row for starting guess
         # Add a dummy first row to get starting guess offset for the first row
         dpixel_median = 0.
         for irow,row in enumerate(np.append([rows[0]],rows)) :
             # subtract off median-filtered spectrum to remove background
             medspec = frame[chip][1].data[row,:]-medfilt(frame[chip][1].data[row,:],101)
-            j = np.where(lines['CHIPNUM'] == ichip+1)[0]
+            if np.max(medspec)-np.min(medspec)==0:
+                print('row ',irow,' Bad spectrum. skipping')
+                continue
+            chlineallind, = np.where(lines['CHIPNUM'] == ichip+1)
+            chlineind, = np.where((lines['CHIPNUM'] == ichip+1) & (lines['USEWAVE']==1))
             dpixel=[]
+            rowind=[]
             # for dummy row, open up the search window by a factor of two
             if irow == 0 : estsig0=2*estsig
             else : estsig0=estsig
-            for iline in j :
+            for iline in chlineind:
                 wave = lines['WAVE'][iline]
-                try :
+                linestr['chip'][nline] = ichip+1
+                linestr['row'][nline] = row
+                linestr['id'][nline] = str(lines['ID'][iline])
+                linestr['xpix0'][nline] = lines['XPIX'][iline]
+                linestr['wave'][nline] = wave
+                linestr['frameid'][nline] = num
+                linestr['failed'][nline] = 1  # everything's bad until proven good
+
+                # Check if the spectrum is saturated
+
+                # Run peakfit on this line
+                try:
                     pix0 = wave2pix(wave,waves[chip][row,:])+dpixel_median
                     # find peak in median-filtered subtracted spectrum
-                    pars = peakfit(medspec,pix0,estsig=estsig0,
-                                   sigma=frame[chip][2].data[row,:],mask=frame[chip][3].data[row,:])
+                    pars,perror = peakfit(medspec,pix0,estsig=estsig0,plot=plot,
+                                          sigma=frame[chip][2].data[row,:],mask=frame[chip][3].data[row,:])
                     if lines['USEWAVE'][iline] == 1 : dpixel.append(pars[1]-pix0)
                     if irow > 0 :
-                        linestr['chip'][nline] = ichip+1
-                        linestr['row'][nline] = row
-                        linestr['wave'][nline] = wave
+                        rowind.append(nline)
                         linestr['peak'][nline] = pars[0]
                         linestr['pixel'][nline] = pars[1]
+                        linestr['pixelerr'][nline] = perror[1]
+                        linestr['sigma'][nline] = pars[2]
+                        linestr['yoffset'][nline] = pars[3]
                         linestr['dpixel'][nline] = pars[1]-pix0
                         linestr['wave_found'][nline] = pix2wave(pars[1],waves[chip][row,:])
-                        linestr['frameid'][nline] = num
-                        nline+=1
+                        linestr['failed'][nline] = 0
                     if out is not None :
                         out.write('{:5d}{:5d}{:12.3f}{:12.3f}{:12.3f}{:12.3f}{:12d}\n'.format(
                                   ichip+1,row,wave,pars[0],pars[1],pars[1]-pix0,num))
                     elif verbose :
                         print('{:5d}{:5d}{:12.3f}{:12.3f}{:12.3f}{:12.3f}{:12d}'.format(
                               ichip+1,row,wave,pars[0],pars[1],pars[1]-pix0,num))
-                except :
+                # Peakfit failed
+                except:
                     if verbose : print('failed: ',num,row,chip,wave)
+                    if DEBUG:
+                        traceback.print_exc()
+                        import pdb; pdb.set_trace()
+                    rowind.append(nline)
+                    linestr['pixel'][nline] = 999999.
+                    linestr['pixelerr'][nline] = 999999.
+                    linestr['peak'][nline] = 999999.
+                    linestr['sigma'][nline] = 999999.
+                    linestr['yoffset'][nline] = 999999.
+                    linestr['dpixel'][nline] = 999999.
+                    linestr['wave_found'][nline] = 999999.
+                    linestr['failed'][nline] = 1
+
+                if irow==0: linestr['dummy'][nline]=1  # dummy row
+                nline+=1  # increment counter
+
+
+            # Refitting failed lines and fitting groups
+            doextra = False
+            if irow>0:
+                # Fit robust line to the offsets, and try to refit the outliers with better guess
+                rowind = np.array(rowind)
+                gdind, = np.where(linestr['failed'][rowind]==0)
+                coef1,absdev = ladfit.ladfit(linestr['xpix0'][rowind[gdind]],linestr['pixel'][rowind[gdind]])
+                yfit = np.poly1d(np.flip(coef1))(linestr['xpix0'][rowind])
+                res1 = linestr['pixel'][rowind]-yfit
+                sig1 = dln.mad(res1)
+                gd1, = np.where((np.abs(res1) <= 3.5*sig1) & (linestr['failed'][rowind]==0))
+                bd1, = np.where((np.abs(res1) > 3.5*sig1) | (linestr['failed'][rowind]==1))
+                # Refit outliers with better guesses
+                if len(bd1)>0:
+                    if verbose: print('Refitting ',len(bd1),'outliers with better initial guesses')
+                    # robust linear fit to sigma
+                    sigcoef1,sigabsdev = ladfit.ladfit(linestr['xpix0'][rowind[gdind]],linestr['sigma'][rowind[gdind]])
+                    for k in range(len(bd1)):
+                        nline1 = rowind[bd1[k]]
+                        pix0 = np.poly1d(np.flip(coef1))(linestr['xpix0'][nline1])
+                        sig0 = np.poly1d(np.flip(sigcoef1))(linestr['xpix0'][nline1])
+                        if ~np.isfinite(pix0) or ~np.isfinite(sig0):
+                            print('problems with pix0/sig0')
+                            import pdb; pdb.set_trace()
+                        initpars = [np.maximum(medspec[int(round(pix0))],50),pix0,sig0,0.0]
+                        try:
+                            pars,perror = peakfit(medspec,pix0,estsig=estsig0,sigma=frame[chip][2].data[row,:],
+                                                  mask=frame[chip][3].data[row,:],initpars=initpars,plot=plot)
+                            linestr['peak'][nline1] = pars[0]
+                            linestr['pixel'][nline1] = pars[1]
+                            linestr['sigma'][nline1] = pars[2]
+                            linestr['yoffset'][nline1] = pars[3]
+                            linestr['pixelerr'][nline1] = perror[1]
+                            linestr['dpixel'][nline1] = pars[1]-pix0  # note this pix0 was determined differently from above
+                            linestr['wave_found'][nline1] = pix2wave(pars[1],waves[chip][row,:])
+                            linestr['failed'][nline1] = 0
+                            if verbose:
+                                print('{:5d}{:5d}{:12.3f}{:12.3f}{:12.3f}{:12.3f}{:12d}'.format(
+                                    ichip+1,row,linestr['wave'][nline1],pars[0],pars[1],pars[1]-pix0,num))
+                        except:
+                            if verbose : print('failed: ',num,row,chip,wave)
+                            if DEBUG:
+                                traceback.print_exc()
+                                import pdb; pdb.set_trace()
+                            
+                # Refit lines that are in groups
+                if 'WAVEGROUP' in lines.dtype.names:
+                    grplineind, = np.where((lines['CHIPNUM'] == ichip+1) & (lines['USEWAVE']==1) & (lines['WAVEGROUP']>-1))
+                else: grplineind=[]
+                if len(grplineind)>0:
+                    if verbose: print('Refitting ',len(grplineind),' lines that are in groups with peakfit_multi()')
+                    for k in range(len(grplineind)):
+                        iline = grplineind[k]
+                        nline1 = rowind[np.where(linestr['id'][rowind]==str(lines['ID'][iline]))[0]][0]
+                        wavegroup = lines['WAVEGROUP'][iline]
+                        grpind, = np.where((lines['CHIPNUM'] == ichip+1) & (lines['WAVEGROUP']==wavegroup) & (lines['ID']!=lines['ID'][iline]))
+                        nnei = len(grpind)
+                        # Always use linear fit to pixel offset and sigma for initial
+                        #  because initial fits to lines in groups can sometimes be way off
+                        pars0 = [10.0, np.poly1d(np.flip(coef1))(lines['XPIX'][iline]),
+                                 np.poly1d(np.flip(sigcoef1))(lines['XPIX'][iline]), 0.0]
+                        pars0[0] = np.maximum(medspec[int(round(pars0[1]))],50)
+                        pars0 = np.array(pars0)
+                        # Neighbor parameters
+                        neipars = np.zeros(4*nnei,float)
+                        for l in range(len(grpind)):
+                            x0 = np.poly1d(np.flip(coef1))(lines['XPIX'][grpind[l]])
+                            xlo = int(np.maximum(x0-10,0))
+                            xhi = int(np.minimum(x0+10,2048))
+                            neipars[l*4] = np.maximum(medspec[int(round(x0))],50)
+                            neipars[l*4+1] = x0
+                            neipars[l*4+2] = np.poly1d(np.flip(sigcoef1))(lines['XPIX'][grpind[l]])
+                            neipars[l*4+3] = np.median(medspec[xlo:xhi])
+
+                        # Run peakfit_multi
+                        try:
+                            pars,perror = peakfit_multi(medspec,pars0,neipars, sigma=frame[chip][2].data[row,:],
+                                                        mask=frame[chip][3].data[row,:],plot=plot)
+                            # update parameters
+                            pix0 = wave2pix(linestr['wave'][nline1],waves[chip][row,:])+dpixel_median
+                            linestr['peak'][nline1] = pars[0]
+                            linestr['pixel'][nline1] = pars[1]
+                            linestr['pixelerr'][nline1] = perror[1]
+                            linestr['sigma'][nline1] = pars[2]
+                            linestr['yoffset'][nline1] = pars[3]
+                            linestr['dpixel'][nline1] = pars[1]-pix0
+                            linestr['wave_found'][nline1] = pix2wave(pars[1],waves[chip][row,:])
+                            linestr['failed'][nline1] = 0
+                            if verbose:
+                                print('{:5d}{:5d}{:12.3f}{:12.3f}{:12.3f}{:12.3f}{:12d}'.format(
+                                    ichip+1,row,linestr['wave'][nline1],pars[0],pars[1],pars[1]-pix0,num))
+                        except:
+                            if verbose : print('peakfit_multi failed: ',iline)
+                            if DEBUG:
+                                traceback.print_exc()
+                                import pdb; pdb.set_trace()
+                            # The initial values for lines in groups can often be way off.
+                            # If it failed in peakfit_multi() then it failed (even if previously successful).
+                            linestr['peak'][nline1] = 999999.                            
+                            linestr['pixel'][nline1] = 999999.
+                            linestr['pixelerr'][nline1] = 999999.
+                            linestr['sigma'][nline1] = 999999.
+                            linestr['yoffset'][nline1] = 999999.
+                            linestr['dpixel'][nline1] = 999999.
+                            linestr['wave_found'][nline1] = 999999.
+                            linestr['failed'][nline1] = 1
+                            
+
             if len(dpixel) > 10 : dpixel_median = np.median(np.array(dpixel))
             if verbose: print('median offset: ',row,chip,dpixel_median)
 
-    return linestr[0:nline]
+    # Trim out extra rows at the end
+    linestr = linestr[0:nline]  # trim out extra lines
+    # Trim out dummy rows
+    dummy, = np.where(linestr['dummy']==1)
+    # remove "dummy" column
+    linestr = Table(linestr)
+    linestr.remove_column('dummy')
+    linestr = np.array(linestr)
+    # Leave in failed lines so we can keep track of issues with lines
+    #  they should be ignored in other parts of the wavelength solution programs
 
-def gaussbin(x,a,x0,sig) :
+    #import pdb; pdb.set_trace()
+
+    print('dt = ',time.time()-t0,' seconds')
+    
+    return linestr
+
+def gaussbin(x,*args):
     """ Evaluate integrated Gaussian function 
     """
     # bin width
     xbin = 1.
-    t1 = (x -x0-xbin/2.)/np.sqrt(2.)/sig
-    t2 = (x-x0+xbin/2.)/np.sqrt(2.)/sig
-    y = (myerf(t2)-myerf(t1))/xbin
-    return a*y
+    ngauss = len(args)//4
+    y = np.zeros(x.shape,float)
+    for i in range(ngauss):
+        a,x0,sig,yoff = args[i*4:(i+1)*4]
+        t1 = (x-x0-xbin/2.)/np.sqrt(2.)/sig
+        t2 = (x-x0+xbin/2.)/np.sqrt(2.)/sig
+        # Jon's way: normalized Gaussian, so "a" is the area of the Gaussian not the amplitude        
+        #y += a * (myerf(t2)-myerf(t1))/xbin + yoff
+        # Back to the original way as in the IDL code, "a" is the amplitude/peak value
+        y += a * (np.sqrt(2.0)*sig * np.sqrt(np.pi)/2.0) * (erf(t2)-erf(t1)) + yoff
+    return y
 
-def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin) :
+def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin,initpars=None) :
     """ Return integrated-Gaussian centers near input pixel center
     
     Args:
-        spec (float) : data spectrum arraty
+        spec (float) : data spectrum array
         pix0 (float) : initial pixel guess
         estsig (float ) : initial guess for window width=5*estsig (default=5)
         sigma (float)  : uncertainty array (default=None)
@@ -550,28 +949,152 @@ def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin) :
     cen = int(round(pix0))
     sig = estsig
     back = 0.
-    for iter in range(11) :
+    for niter in range(11) :
         # window width to search
         xwid = int(round(5*sig))
         if xwid < 3 : xwid=3
-        y = spec[cen-xwid:cen+xwid+1]
-        yerr = sigma[cen-xwid:cen+xwid+1]
+        xlo = cen-xwid
+        xhi = cen+xwid
+        y = spec[xlo:xhi+1]
+        yerr = sigma[xlo:xhi+1]
         x0 = y.argmax()+(cen-xwid)
         peak = y.max()
         sig = np.sqrt(y.sum()**2/peak**2/(2*np.pi))
-        pars = curve_fit(func,x[cen-xwid:cen+xwid+1],y,p0=[peak/sig/np.sqrt(2*np.pi),x0,sig],sigma=yerr)[0]
+        sig = np.maximum(sig,0.51)
+        if niter==0:
+            if initpars is not None:
+                pars0 = initpars
+            else:
+                pars0 = [peak/sig/np.sqrt(2*np.pi),x0,sig,0.0]
+        else:
+            pars0 = pars
+        bounds = ( np.zeros(len(pars0))-np.inf, np.zeros(len(pars0))+np.inf)
+        bounds[0][0] = 0.0     # height must be >=0
+        bounds[0][1] = pars0[1]-xwid   # center
+        bounds[1][1] = pars0[1]+xwid
+        bounds[0][2] = 0.5     # sigma
+        bounds[1][2] = np.maximum(5,2*sig)
+        bounds[0][3] = np.minimum(np.min(y),pars0[3])-10   # yoffset
+        bounds[1][3] = np.maximum(np.max(y),pars0[3])+10
+        pars,pcov = curve_fit(func,x[xlo:xhi+1],y,p0=pars0,sigma=yerr,bounds=bounds)
+        perror = np.sqrt(np.diag(pcov))
         # iterate unless new array range is the same
         if int(round(5*pars[2])) == xwid and int(round(pars[1])) == cen : break
         cen = int(round(pars[1]))
         sig = pars[2]
-    if plot :
+    if plot:
         plt.clf()
         plt.plot(x,spec)
-        plt.plot(x,func(x,pars[0],pars[1],pars[2]))
+        plt.plot(x[xlo:xhi+1],y)
+        plt.plot(x,func(x,*pars),linewidth=2,alpha=0.8,linestyle='dashed')
         plt.xlim((pars[1]-50,pars[1]+50))
+        yr = dln.minmax(np.append(y,func(x,*pars)))
+        plt.ylim([yr[0]-0.2*dln.valrange(yr),yr[1]+0.2*dln.valrange(yr)])
+        plt.xlabel('X (pixels)')
+        plt.ylabel('Flux')
         plt.draw()
-        pdb.set_trace()
-    return(pars)
+        import pdb; pdb.set_trace()
+
+    return pars,perror
+
+
+def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin,plot=False):
+    """
+    Multi-component Gaussian fit for blended lines
+    
+    Args:
+        spec (float) : data spectrum array
+        pars0 (float) : initial parameter guesses for main line
+        neipars0 (float) : initial guesses for neighbors
+        sigma (float)  : uncertainty array (default=None)
+        mask (float)  : mask array (default=None), NOT CURRENTLY IMPLEMENT
+        func (function) : user-supplied function to use to fit (default=gaussbin)
+    """
+    x = np.arange(len(spec))
+
+    initpars = np.append(pars0,neipars0)
+    nnei = len(neipars0)//4
+    
+    # First pass, only fit heights and yoffset, allow centers and sigma to vary slightly
+    initpars1 = initpars.copy()
+    initpars1[7::4] = 0.0     # force all yoffset except first to zero
+    bounds1 = ( np.zeros(len(initpars1))-np.inf, np.zeros(len(initpars1))+np.inf)
+    bounds1[0][:] = initpars1-1e-7
+    bounds1[1][:] = initpars1+1e-7
+    bounds1[0][0::4] = 0.0    # height must be >=0
+    bounds1[1][0::4] = np.inf
+    bounds1[0][1::4] = initpars1[1::4]-0.6   # center
+    bounds1[1][1::4] = initpars1[1::4]+0.6
+    bounds1[0][2::4] = initpars1[2::4]*0.7   # sigma
+    bounds1[1][2::4] = initpars1[2::4]*1.3
+    bounds1[0][3] = -np.inf   # only let first yoffset float
+    bounds1[1][3] = np.inf
+    bounds1[0][7::4] = -1e-7   # hold all yoffsets except first one fixed
+    bounds1[1][7::4] = 1e-7
+    xlo = int(np.maximum(np.min(initpars1[1::4])-5,0))
+    xhi = int(np.minimum(np.max(initpars1[1::4])+5,2048))
+    pars1,pcov1 = curve_fit(gaussbin,x[xlo:xhi],spec[xlo:xhi],p0=initpars1,
+                            sigma=sigma[xlo:xhi],bounds=bounds1)
+    perror1 = np.sqrt(np.diag(pcov1))
+    
+    
+    # Second pass, allow amplitudes, centers and sigmas to vary slightly
+    initpars2 = pars1.copy()
+    initpars2[7::4] = 0.0     # force all yoffset except first to zero    
+    bounds2 = ( np.zeros(len(initpars2))-np.inf, np.zeros(len(initpars2))+np.inf)
+    bounds2[0][:] = initpars2-1e-7
+    bounds2[1][:] = initpars2+1e-7
+    bounds2[0][0::4] = initpars2[0::4]*0.4    # height must be >=0
+    bounds2[1][0::4] = initpars2[0::4]*1.6
+    bounds2[0][1::4] = initpars2[1::4]-1.1    # center
+    bounds2[1][1::4] = initpars2[1::4]+1.1
+    bounds2[0][2::4] = initpars2[2::4]*0.5    # sigma
+    bounds2[1][2::4] = initpars2[2::4]*1.5
+    bounds2[0][3] = initpars2[3]-np.maximum(50,0.1*initpars2[0])    # yoffset
+    bounds2[1][3] = initpars2[3]+np.maximum(50,0.1*initpars2[0])
+    bounds2[0][7::4] = -1e-7   # hold all yoffsets except first one fixed
+    bounds2[1][7::4] = 1e-7    
+    xlo = int(np.maximum(np.min(initpars2[1::4])-5,0))
+    xhi = int(np.minimum(np.max(initpars2[1::4])+5,2048))
+    x = np.arange(len(spec))
+    pars2,pcov2 = curve_fit(gaussbin,x[xlo:xhi],spec[xlo:xhi],p0=initpars2,
+                            sigma=sigma[xlo:xhi],bounds=bounds2)
+    perror2 = np.sqrt(np.diag(pcov2))
+
+    # Final pass, fix neighbors and let main line completely float
+    initpars3 = pars2.copy()
+    initpars3[7::4] = 0.0     # force all yoffset except first to zero    
+    bounds3 = ( np.zeros(len(initpars3))-np.inf, np.zeros(len(initpars3))+np.inf)
+    bounds3[0][:] = initpars3-1e-7
+    bounds3[1][:] = initpars3+1e-7
+    bounds3[0][0:4] = -np.inf   # main line can completely float
+    bounds3[1][0:4] = np.inf
+    xlo = int(np.maximum(np.min(initpars3[1::4])-5,0))
+    xhi = int(np.minimum(np.max(initpars3[1::4])+5,2048))
+    x = np.arange(len(spec))
+    pars3,pcov3 = curve_fit(gaussbin,x[xlo:xhi],spec[xlo:xhi],p0=initpars3,
+                            sigma=sigma[xlo:xhi],bounds=bounds3)
+    perror3 = np.sqrt(np.diag(pcov3))
+
+    # Final parameters
+    pars = pars3
+    perror = perror3
+
+    if plot:
+        plt.clf()
+        plt.plot(x,spec)
+        plt.plot(x[xlo:xhi],spec[xlo:xhi])
+        plt.plot(x,gaussbin(x,*pars),linewidth=2,alpha=0.8,linestyle='dashed')
+        plt.xlim((xlo-10,xhi+10))
+        yr = dln.minmax(np.append(spec[xlo:xhi],gaussbin(x,*pars)))
+        plt.ylim([yr[0]-0.2*dln.valrange(yr),yr[1]+0.2*dln.valrange(yr)])
+        plt.xlabel('X (pixels)')
+        plt.ylabel('Flux')
+        plt.draw()
+        import pdb; pdb.set_trace()
+    
+    return pars,perror
+
 
 def test() :
     """ test routine for peakfity
@@ -624,7 +1147,9 @@ def getgroup(groups) :
     return out,group
 
 
-def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',vers=None,nosky=False) :
+# The FPI version of this calibration program is in the fpi.py module
+    
+def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='airglow',vers=None,nosky=False) :
     """ Determine positions of skylines for all frames in input planfile
     """
     # read planfile
@@ -870,7 +1395,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,group=-1,skyfile='airglow',ve
         html.htmltab(grid,file=dirname+'/html/skywavecal.html',ytitle=ytit)
     return linestr
 
-def getskywave(frame,waveid,group=-1,vers='test',telescope='apo25m',plugmap=None) :
+def getskywave(frame,waveid,group=-1,fpiid=None,vers='test',telescope='apo25m',plugmap=None) :
     """ Given input frame and waveid/group for frame taken without dither move to waveid,
         return skyline wavelengths
     """
@@ -889,7 +1414,7 @@ def getskywave(frame,waveid,group=-1,vers='test',telescope='apo25m',plugmap=None
     else : inst = 'apogee-n'
     p['apred_vers'] = vers
     p['instrument'] = inst
-    return skycal(p,group=group)
+    return skycal(p,group=group,fpiid=fpiid)
     
 def skywaves() :
     """ get skyline wavelengths from some particular frames, 16390029 and 22430033

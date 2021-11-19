@@ -1,0 +1,87 @@
+Updates to tharne.lines.vac.apogee in summer of 2021 to improve fitting of arclamp lines
+
+7/16/2021
+original tharne.lines.vac.apogee that has been in use for a long time was copied to tharne.lines.vac.apogee1+2
+Added WAVEGROUP column
+set USEWAVE=0 for ID=1, the line is very bright and often saturated
+set USEWAVE=0 for ID=2, weak line on top of high continuum, often not detected in individual spectra
+set WAVEGROUP=1 for ID=3,4
+set USEWAVE=0 for ID=10, weak line on top of high continuum, often not detected in individual spectra
+set USEWAVE=0 for ID=23, weak line on top of high continuum, often not detected in individual spectra
+set USEWAVE=0 for ID=29, left edge of green chip is masked out and often this line is affected
+set USEWAVE=0 for ID=31, has weak blend that skews the centroid but hard to fit both of them simultaneously
+set USEWAVE=0 for ID=92, at very edge of blue chip and often cut off or masked out
+
+7/19/2021
+Changed the wavelengths of some lines that are consistently off by using APOGEE data.  Used quadratic fit to lines within 120
+pixels.  Used exposures 38240004-38240007 (two THARNE and two UNE exposures).
+changed wavelength of ID=8 from 16753.0188 -> 16753.1516, standard error = 0.0017A
+changed wavelength of ID=11 from 16709.2059 -> 16709.2734, standard error = 0.0070A
+changed wavelength of ID=14 from 16638.5935 -> 16638.6958, standard error = 0.0029A
+changed	wavelength of ID=18 from 16603.8887 -> 16603.9227, standard error = 0.0039A
+changed wavelength of ID=30 from 16409.7373 -> 16409.9328, standard error = 0.0020A
+
+7/20/2021
+set USEWAVE=0 for ID=47 because it is always saturated and the residuals are consistently off
+set USEWAVE=0 for ID=86 because it is always saturated and the residuals are consistently off
+set USEWAVE=0 for ID=91 because it is always saturated and the residuals are consistently off
+set USEWAVE=0 for ID=13 because there is no clear line visible in the spectra
+set WAVEGROUP=2 for ID=21,21b
+added ID=21b so that it can be fit together with line ID=21
+set WAVEGROUP=3 for ID=58,58b
+added ID=58b so that it can be fit together with line ID=58
+set WAVEGROUP=4 for ID=63,63b
+added ID=63b so that it can be fit together with line ID=63
+set WAVEGROUP=5 for ID=70,71
+set WAVEGROUP=6 for ID=87,87b
+added ID=87b so that it can be fit together with line ID=87
+
+07/22/2021
+added ID=70b so it can be fit together with ID=70,71
+set WAVEGROUP=5 for 70b (now has ID=70,70b,71)
+
+07/29/2021
+set USEWAVE=0 for ID=73 because it has a close, blended neighbor that is skewing the centroid
+  NOTE this line exists in the UNe spectra (ID=229) and is stronger
+set USEWAVE=0 for ID=43 because it has a close, blended neighbor that is skewing the centroid
+  NOTE this line exists in the UNe spectra (ID=135) and is stronger
+changed wavelength of ID=30 from 16409.9328 -> 16409.7373 back to original value and consistent with UNe linelist
+  this line has a close strong blended neighbor that is skewing the centroid
+set USEWAVE=0 for ID=30 because it has a close, strong, blended neighbor that is skewing the centroid
+  NOTE this line exists in the UNe spectra (ID=73) and is stronger
+set USEWAVE=0 for ID=19 because it has a close, blended neighbor that is skewing the centroid
+  NOTE this line exists in the UNe spectra (ID=46) and is stronger
+changed wavelength of ID=14 from 16638.6958 -> 16638.5935 back to original value and consistent with UNe linelist
+  this has a close strong blended neighbor that is skewing the centroid
+set USEWAVE=0 for ID=14 because it has a close, blended neighbr that is skewing the centroid
+  NOTE this line exists in the UNe spectra (ID=40) and is stronger
+
+07/30/2021
+updating the XPIX and WAVE values for new lines I added for group fitting using fit_groups.pro which performed
+multi-gauss fitting to the groups in all fibers for 38240004.  The fitted values were used to calculate
+the mean XPIX and WAVE offset of the added line relative to the nearby line (e.g. 21b relative to 21).
+ID=21b, 58b, 63b, 70b, 87b updated
+
+08/03/2021
+Discovered that the Neon lines are systematically offset from the Th-Ar and Uranium lines.  Redman+2012 (Uranium linelist)
+also found an issue with the Neon lines from Sansonetti+2004 (the source of our Neon wavelengths) relative to other
+reference lines and decided not to use them.  Therefore, I decided to use the Th-Ar lines (from Kerber+2008) and the
+Uranium lines (from Redman+2012) as our absolute wavelength reference and derive our own wavelengths for the Neon lines.
+I did this using the 38240004-38240007 exposures, fitting cubic solutions to each chip and all 300 fibers.  I then
+found the median wavelength for each unique line (averaging over fibers and exposures) to find the new Neon wavelengths
+for 34 unique lines.  Both linelists were updated.
+Note that the wavelengths of three Neon lines were NOT changed because they have USEWAVE=0 set.  These are:
+  THARNE 2, 31 (same as UNE 87), 78
+
+08/04/2021
+changed wavelength of ID=6 from 16789.642 -> 16789.6794.  this line is consistently off and according to Kerber+2008 it
+  consists of a close blend of two Th I lines.
+  16789.7990 (intensity=62) and 16789.6420 (intensity=92) separated by only 0.157A or ~0.5 pixels.
+  There is no indication from the fitted Gaussian sigmas that the line is wider than other lines in this region of the
+  spectrum, but the systematic wavelength offset is consistent with Kerber information.  The lines are too close to
+  fit together as a group.  Therefore, I've decided to change the "mean" wavelength of the doublet instead.
+  I'm using the value from tweak_arclamp_wavelengths.pro, which uses the APOGEE data itself to measure the wavelength.
+changed wavelength of ID=62 from 15602.9357 -> 15603.0005.  this line has almost the exact same issue as ID=6.  I took
+  the same route as with ID=6.
+set WAVEGROUP=7 for ID=42,42b because there is a close/weak line next to ID=42
+added ID=42b so it can be fit together with ID=42
