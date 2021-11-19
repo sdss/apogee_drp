@@ -37,15 +37,15 @@ pro apred,planfile,flag,sclobber
 if n_elements(flag) eq 0 then flag = '1111111'
 if n_elements(sclobber) eq 0 then sclobber = '1'
 
-clobber=intarr(1)
+clobber = intarr(1)
 reads,sclobber,clobber
 
-bytes=byte(flag)
-dim=n_elements(bytes)
-charflag=strarr(dim)
+bytes = byte(flag)
+dim = n_elements(bytes)
+charflag = strarr(dim)
 for i=0,dim-1 do charflag[i] = string(bytes[i])
-bin=Total( (Byte(Reverse(charflag)) EQ 49) * 2L^Indgen(dim) )
-bin=long(bin)
+bin = Total( (Byte(Reverse(charflag)) EQ 49) * 2L^Indgen(dim) )
+bin = long(bin)
 
 aploadplan,planfile,planstr
 override=0
@@ -88,7 +88,8 @@ print,'.cal'
   if (bin and 16) ne 0 then makecal,/lsf,file='dailycal.yaml',mjd=mjd
 
 endif else if strpos(planfile,'apPlan-') ge 0 or strpos(planfile,'apCalPlan-') ge 0 or strpos(planfile,'apDarkPlan-') ge 0 or $
-              strpos(planfile,'asPlan-') ge 0 or strpos(planfile,'asCalPlan-') ge 0 or strpos(planfile,'asDarkPlan-') ge 0 then  begin
+              strpos(planfile,'apExtraPlan-') ge 0 or strpos(planfile,'asPlan-') ge 0 or strpos(planfile,'asCalPlan-') ge 0 or $
+              strpos(planfile,'asDarkPlan-') ge 0 or strpos(planfile,'asExtraPlan-') ge 0 then  begin
 print,'.yaml'
   if (bin and 1) ne 0 then ap3d,planfile,clobber=clobber
   if (bin and 2) ne 0 then ap2d,planfile,clobber=clobber

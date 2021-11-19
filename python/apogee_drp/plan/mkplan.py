@@ -364,7 +364,7 @@ def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
 
 
 def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
-           dark=False,sky=False,plugid=None,fixfiberid=None,stars=None,
+           dark=False,extra=False,sky=False,plugid=None,fixfiberid=None,stars=None,
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False,logger=None):
     """
@@ -393,6 +393,9 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         This is a calibration plan file.
     dark : bool, optional
         This is a dark sequence plan file.
+    extra : bool, optional
+        This is an "extra" sequence plan file.  These are "leftover" exposures that weren't
+          included in any other plan files.
     sky : bool, optional
         This is a sky flat sequence plan file.
     plugid : int, optional
@@ -461,6 +464,8 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         planfile = load.filename('CalPlan',mjd=mjd)
     elif dark==True:
         planfile = load.filename('DarkPlan',mjd=mjd)
+    elif extra==True:
+        planfile = load.filename('ExtraPlan',mjd=mjd)
     elif onem==True:
         planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd) 
         if suffix is not None:
@@ -534,6 +539,8 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         out['platetype'] = 'sky'
     elif dark==True:
         out['platetype'] = 'dark'
+    elif extra==True:
+        out['platetype'] = 'extra'
     elif test==True:
         out['platetype'] = 'test'
     else:
@@ -564,7 +571,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
             plugid = 'header'
     logger.info(str(ims[0]))
     logger.info(str(plugid))
-    if (cal==False) & (dark==False) & (onem==False):
+    if (cal==False) & (dark==False) & (extra==False) & (onem==False):
         tmp = plugid.split('-')
         if os.path.exists(mapper_data+'/'+tmp[1]+'/plPlugMapM-'+plugid+'.par')==False:
             logger.info('Cannot find plugmap file '+str(plugid))
@@ -781,7 +788,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             logger.info('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
 
     # Scan through all files, accumulate IDs of the various types
-    dark, cal, exp, sky, dome, calpsfid = [], [], [], [], None, None
+    dark, cal, exp, sky, extra, dome, calpsfid = [], [], [], [], [], None, None
     out, planfiles = [], []
     for i in range(nfiles):
         # Load image number in variable according to exptype and nreads
@@ -790,29 +797,37 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             logger.info(str(info['num'][i])+' has less than the required 3 reads')
 
         # Dark
-        if (info['exptype'][i]=='DARK') and info['nread'][i]>=3:
+        elif (info['exptype'][i]=='DARK') and info['nread'][i]>=3:
             dark.append(int(info['num'][i]))
         # Internal flat
         #   reduced only to 2D, hence treated like darks
-        if (info['exptype'][i]=='INTERNALFLAT') and info['nread'][i]>=3:
+        elif (info['exptype'][i]=='INTERNALFLAT') and info['nread'][i]>=3:
             dark.append(int(info['num'][i]))
         # Dome flat
-        if (info['exptype'][i]=='QUARTZFLAT') and info['nread'][i]>=3:
+        elif (info['exptype'][i]=='QUARTZFLAT') and info['nread'][i]>=3:
             cal.append(int(info['num'][i]))
             calpsfid = int(info['num'][i])
         # Arc lamps
-        if (info['exptype'][i]=='ARCLAMP') and info['nread'][i]>=3:
+        elif (info['exptype'][i]=='ARCLAMP') and info['nread'][i]>=3:
             cal.append(int(info['num'][i]))
         # Sky frame
         #   identify sky frames as object frames with 10<nread<15
-        if (info['exptype'][i]=='OBJECT') and (info['nread'][i]<15 and info['nread'][i]>10):
+        elif (info['exptype'][i]=='OBJECT') and (info['nread'][i]<15 and info['nread'][i]>10):
             sky.append(int(info['num'][i]))
         # Object exposure
-        if (info['exptype'][i]=='OBJECT') and info['nread'][i]>15:
+        elif (info['exptype'][i]=='OBJECT') and info['nread'][i]>15:
             exp.append(int(info['num'][i]))
         # Dome flat
-        if (info['exptype'][i]=='DOMEFLAT') and info['nread'][i]>3:
+        elif (info['exptype'][i]=='DOMEFLAT') and info['nread'][i]>3:
             dome = int(info['num'][i])
+        # Other exposure
+        else:
+            print('Unknown exposure: ',info['num'][i],info['exptype'][i],info['nread'][i],' adding to extra plan file')
+            extra.append(int(info['num'][i]))
+
+        # Maybe make a new plan file called "extra"
+        # some object exposures aren't getting added to a visit plan file
+        #  because the plateID didn't change
 
         # End of this plate block
         #  if plateid changed or last exposure
@@ -836,6 +851,12 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                 planfiles.append(skyplanfile)
                 sky = []
 
+    # Some object exposures not used in visit plan files
+    if len(exp)>0:
+        print(str(len(exp))+' unused object exposures in visit plan files.  Adding them to ExtraPlan')
+        extra += exp
+        exp = []
+
     # Dark frame information
     cplate = '0000'
     if len(dark)>0:
@@ -850,6 +871,13 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                    'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':cal, 'cal':True}
         out.append(calplan)
         planfile = load.filename('CalPlan',mjd=mjd)
+        planfiles.append(planfile)
+    # "extra" frames information
+    if len(extra)>0:
+        extraplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
+                     'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':extra, 'extra':True}
+        out.append(extraplan)
+        planfile = load.filename('ExtraPlan',mjd=mjd)
         planfiles.append(planfile)
 
     # Write out the MJD5 file

@@ -11,6 +11,7 @@
 ;  =mapper_data  Directory for mapper data.
 ;  /verbose      Print a lot of information to the screen
 ;  /clobber      Overwrite existing files.
+;  /domelibrary  Use the domeflat library.
 ;  /stp          Stop at the end of the prrogram
 ;
 ; OUTPUTS:
@@ -23,7 +24,8 @@
 ; Modifications: J. Holtzman 2011+
 ;-
 
-pro ap2d,planfiles,verbose=verbose,stp=stp,clobber=clobber,exttype=exttype,mapper_data=mapper_data
+pro ap2d,planfiles,verbose=verbose,stp=stp,clobber=clobber,exttype=exttype,mapper_data=mapper_data,$
+         domelibrary=domelibrary
 
 common savedepsf, savedepsffiles, epsfchip
 
@@ -35,6 +37,7 @@ if n_elements(verbose) eq 0 then verbose=0  ; NOT verbose by default
 ; clobber will redo PSF, Flux and 1D frames (but not other fundamental calibration frames)
 if not keyword_set(clobber) then clobber=0  ; NOT clobber by default,
 if not keyword_set(exttype) then exttype=4
+if n_elements(domelibrary) eq 0 then domelibrary=0
 
 t0 = systime(1)
 
@@ -73,6 +76,59 @@ FOR i=0L,nplanfiles-1 do begin
   if n_elements(planerror) gt 0 then goto,BOMB
   logfile = apogee_filename('Diag',plate=planstr.plateid,mjd=planstr.mjd)
 
+  ;; Add PSFID tag to planstr APEXP structure
+  if tag_exist(planstr.apexp,'psfid') eq 0 then begin
+    apexp = planstr.apexp
+    add_tag,apexp,'psfid',0L,apexp
+    old = planstr
+    oldtags = tag_names(old)
+    planstr = create_struct(oldtags[0],old.(0))
+    for j=1,n_elements(oldtags)-1 do begin
+      if oldtags[j] eq 'APEXP' then begin
+        planstr = create_struct(planstr,'APEXP',apexp)
+      endif else begin
+        planstr = create_struct(planstr,oldtags[j],old.(j))
+      endelse
+    endfor
+    undefine,old,oldtags
+  endif
+
+  ;; Use domeflat library
+  ;;---------------------
+  ;; if (1) no domeflat ID set in planfile, or (2) domelibrary parameter
+  ;; set in planfile, or (3) /domelibrary keyword is set.
+  if tag_exist(planstr,'domelibrary') eq 1 then plandomelibrary=planstr.domelibrary else plandomelibrary=0
+  if keyword_set(domelibrary) or tag_exist(planstr,'psfid') eq 0 or keyword_set(plandomelibrary) then begin
+    print,'Using domeflat library'
+    ;; You can do "domeflattrace --mjdplate" where mjdplate could be
+    ;; e.g. 59223-9244, or "domeflattrace --planfile", with absolute
+    ;; path of planfile
+    ;; Force single domeflat if a short visit or domelibrary=='single'
+    if planstr.telescope eq 'apo25m' or planstr.telescope eq 'apo1m' then observatory='apo' else observatory='lco'
+    if strtrim(domelibrary,2) eq 'single' or strtrim(plandomelibrary,2) eq 'single' or n_elements(planstr.apexp) le 3 then begin
+      spawn,['domeflattrace',observatory,'--planfile',planfile,'--s'],out,errout,/noshell
+    endif else begin
+      spawn,['domeflattrace',observatory,'--planfile',planfile],out,errout,/noshell
+    endelse
+    nout = n_elements(out)
+    for f=0,nout-1 do print,out[f]
+    ;; Parse the output
+    lo = where(stregex(out,'^DOME FLAT RESULTS:',/boolean) eq 1,nlo)
+    hi = first_el(where(strtrim(out,2) eq '' and lindgen(nout) gt lo[0]))
+    if lo eq -1 or hi eq -1 then begin
+      print,'Problem running domeflattrace for ',planfile,'.  Skipping this planfile.'
+      continue
+    endif
+    outarr = strsplitter(out[lo+1:hi-1],' ',/extract)
+    ims = reform(outarr[0,*])
+    domeflatims = reform(outarr[1,*])
+    ;; Update planstr
+    match,apexp.name,ims,ind1,ind2,/sort
+    planstr.apexp[ind1].psfid = domeflatims[ind2]
+  endif else begin
+    planstr.apexp.psfid = planstr.psfid
+  endelse
+
   ; Don't extract dark frames
   if tag_exist(planstr,'platetype') then $
     if planstr.platetype eq 'dark' or planstr.platetype eq 'intflat' then goto,BOMB
@@ -84,25 +140,30 @@ FOR i=0L,nplanfiles-1 do begin
   ; apPSF files 
   if planstr.sparseid ne 0 then makecal,sparse=planstr.sparseid
   if planstr.fiberid ne 0 then makecal,fiber=planstr.fiberid
-  MAKECAL,psf=planstr.psfid,clobber=clobber
-  tracefiles = apogee_filename('PSF',num=planstr.psfid,chip=chiptag)
-  tracefile = file_dirname(tracefiles[0])+'/'+string(format='(i8.8)',planstr.psfid)
-  tracetest = FILE_TEST(tracefiles)  
-  if min(tracetest) eq 0 then begin
-    bd1 = where(tracetest eq 0,nbd1)
-    if nbd1 gt 0 then stop,'halt: ',tracefiles[bd1],' NOT FOUND'
-    for ichip=0,2 do begin
-      p = mrdfits(tracefiles[ichip],1,/silent)
-      if n_elements(p) ne 300 then begin
-        print, 'halt: tracefile ', tracefiles[ichip],' does not have 300 traces'
-      endif
-    endfor
+  if tag_exist(planstr,'psfid') then begin
+    MAKECAL,psf=planstr.psfid,clobber=clobber
+    tracefiles = apogee_filename('PSF',num=planstr.psfid,chip=chiptag)
+    tracefile = file_dirname(tracefiles[0])+'/'+string(format='(i8.8)',planstr.psfid)
+    tracetest = FILE_TEST(tracefiles)  
+    if min(tracetest) eq 0 then begin
+      bd1 = where(tracetest eq 0,nbd1)
+      if nbd1 gt 0 then stop,'halt: ',tracefiles[bd1],' NOT FOUND'
+      for ichip=0,2 do begin
+        p = mrdfits(tracefiles[ichip],1,/silent)
+        if n_elements(p) ne 300 then begin
+          print, 'halt: tracefile ', tracefiles[ichip],' does not have 300 traces'
+        endif
+      endfor
+    endif 
   endif
 
   ; apWave files : wavelength calibration
   waveid = planstr.waveid
-  if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' then waveid=0
+  if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' or planstr.platetype eq 'extra' then waveid=0
   if waveid gt 0 then MAKECAL,multiwave=waveid
+
+;; FOR SDSS-V, NEED TO MAKE apFlux and apResponse FILES FROM THE
+;; DOMEFLAT AT THE BEGINNING OF THE NIGHT!!
 
   ; apFlux files : since individual frames are usually made per plate
   if planstr.fluxid ne 0 then begin
@@ -131,7 +192,8 @@ FOR i=0L,nplanfiles-1 do begin
 
   ; Load the Plug Plate Map file
   ;------------------------------
-  if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' or planstr.platetype eq 'single' then plugmap=0 else begin
+  if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' or planstr.platetype eq 'extra' or $
+     planstr.platetype eq 'single' then plugmap=0 else begin
     print,'' & print,'Plug Map file information:'
     plugfile = planstr.plugmap
     if tag_exist(planstr,'fixfiberid') then fixfiberid=planstr.fixfiberid
@@ -158,6 +220,21 @@ FOR i=0L,nplanfiles-1 do begin
   ;-------------------
   For j=0L,nframes-1 do begin
 
+    ;; Get trace files
+    tracefiles = apogee_filename('PSF',num=planstr.apexp[i].psfid,chip=chiptag)
+    tracefile = file_dirname(tracefiles[0])+'/'+string(format='(i8.8)',planstr.apexp[i].psfid)
+    tracetest = FILE_TEST(tracefiles)  
+    if min(tracetest) eq 0 then begin
+      bd1 = where(tracetest eq 0,nbd1)
+      if nbd1 gt 0 then stop,'halt: ',tracefiles[bd1],' NOT FOUND'
+      for ichip=0,2 do begin
+        p = mrdfits(tracefiles[ichip],1,/silent)
+        if n_elements(p) ne 300 then begin
+          print, 'halt: tracefile ', tracefiles[ichip],' does not have 300 traces'
+        endif
+      endfor
+    endif 
+
     ; Make the filenames and check the files
     rawfiles = apogee_filename('R',chip=chiptag,num=planstr.apexp[j].name)
     rawinfo = APFILEINFO(rawfiles,/silent)        ; this returns useful info even if the files don't exist
@@ -177,8 +254,6 @@ FOR i=0L,nplanfiles-1 do begin
     print,strtrim(j+1,2),'/',strtrim(nframes,2),'  Processing Frame Number >>',strtrim(framenum,2),'<<'
     print,'-----------------------------------------'
 
-clobber = 1
-
     ; Run AP2DPROC
     if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' then skywave=0 else skywave=1
     if tag_exist(planstr,'platetype') then if planstr.platetype eq 'sky' then plugmap=0
@@ -195,9 +270,6 @@ clobber = 1
       AP2DPROC,inpfile,tracefile,exttype,outdir=outdir,$
                fluxcalfile=fluxfile,responsefile=responsefile,$
                clobber=clobber,/compress 
-
-  stop
-
 
     BOMB1:
 

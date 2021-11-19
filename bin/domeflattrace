@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: David Nidever, Drew Chojnowski
+# @Date: July 2021
+# @Filename: domeflattrace
+# @License: BSD 3-Clause
+# @Copyright: David Nidever, Drew Chojnowski
+
+# Run domeFlatTrace for a sequence of exposures
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import time
+import datetime
+import glob
+import numpy as np
+from astropy.table import Table,Column
+import logging
+
+from apogee_drp.apred import domeFlatTrace
+from apogee_drp.utils import plan,apload
+from dlnpyutils import utils as dln
+
+if __name__ == '__main__' :
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Run domeFlatTrace')
+
+    single = False
+    parser.add_argument('observatory', type=str, nargs=1, help='APOGEE observatory (apo or lco)')
+    parser.add_argument('--apred', type=str, nargs=1, default='daily', help='APOGEE reduction version')
+    parser.add_argument('--ims', type=str, nargs=1, default='', help='Comma-separated list of exposure numbers')
+    parser.add_argument('--mjdplate', type=str, nargs=1, default='',  help='Optional: Night MJD5 dash Plate ID')
+    parser.add_argument('--planfile', type=str, nargs=1, default='',  help='Optional: path to yaml planfile')
+    parser.add_argument('-s','--single', action='store_true', help='Option to return a single dome flat')
+    args = parser.parse_args()
+
+    logger = dln.basiclogger()
+    logger.handlers[0].setFormatter(logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s"))
+    logger.handlers[0].setStream(sys.stdout)   
+
+    now = datetime.datetime.now()
+    start = time.time()
+    logger.info("Start: "+now.strftime("%Y-%m-%d %H:%M:%S"))
+
+    # Code copied from rv.dopple_rv()
+    observatory = args.observatory[0]
+    apred = args.apred
+    ims = args.ims
+    mjdplate = args.mjdplate
+    planfile = args.planfile
+    single = args.single
+
+    # Simplest option: comma-separated list of exposure numbers
+    if ims != '':
+        ims = np.array(args.ims[0].split(',')).astype(int)
+    else:
+        telescope = 'apo25m'
+        if observatory == 'lco': telescope = 'lco25m'
+        ims = None
+        # MJD-Plate option
+        if mjdplate != '':
+            mjd = mjdplate[0].split('-')[0]
+            plate = mjdplate[0].split('-')[1]
+            load = apload.ApLoad(apred=apred, telescope=telescope)
+            planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
+            planstr = plan.load(planfile, np=True)
+            gd, = np.where(planstr['APEXP']['flavor'] == 'object')
+            ims = planstr['APEXP']['name'][gd]
+        else:
+            # Absolute path to planfile option
+            if planfile != '':
+                planstr = plan.load(planfile[0], np=True)
+                gd, = np.where(planstr['APEXP']['flavor'] == 'object')
+                ims = planstr['APEXP']['name'][gd]
+
+    # Run the domeFlatTrace code
+    dflatnums,ims = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims, single=single)
+    print('\nDOME FLAT RESULTS:')
+    for i in range(len(ims)): 
+        if single == False: 
+            df = dflatnums[i]
+        else:
+            df = dflatnums
+        print(str(ims[i]) + '   ' + str(df))
+    print('\n')
+
+    now = datetime.datetime.now()
+    logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("elapsed: %0.1f sec." % (time.time()-start))

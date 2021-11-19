@@ -361,7 +361,13 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             # Make the visit plots
             if makevisplots == True:
                 q = apVisitPlots(load=load, plate=plate, mjd=mjd)
-                            
+
+        # Make mjd.html and fields.html
+        if makemasterqa == True: 
+            q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True,
+                                  mjdfilebase='mjd.html',fieldfilebase='fields.html')
+
+        if os.path.exists(platesum):
             # Make the star level html pages
             if makestarhtml == True:
                 q = makeStarHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope)
@@ -373,11 +379,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         # Make the nightly QA page
         if makenightqa == True:
             q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
-
-        # Make mjd.html and fields.html
-        if makemasterqa == True: 
-            q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True,
-                                  mjdfilebase='mjd.html',fieldfilebase='fields.html')
 
         # Make the monitor page
         if makemonitor == True:

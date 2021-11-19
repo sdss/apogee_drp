@@ -1,4 +1,5 @@
 import sys
+import pdb
 import glob
 import os
 import subprocess
@@ -44,28 +45,38 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 #     (2) a single dome flat exposure number (if the "single" keyword is set)
 #
 ###################################################################################################
-def findBestFlatSequence(ims=None, domeFile=None, planfile=None, plate='15000', mjd='59146', telescope='apo25m', medianrad=100,
+def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146-15000', observatory='apo', medianrad=100,
                          apred='daily', apred_exp=None, single=False, highfluxfrac=None, minflux=None, silent=True):
 
     start_time = time.time()
     #print("Finding best dome flats for plate " + plate + ", MJD " + mjd)
 
+    mjd = mjdplate.split('-')[0]
+    plate = mjdplate.split('-')[1]
+
     # Option to use a different apred to find the science exposures
     if apred_exp is None: apred_exp = apred
 
-    # Set up apload
-    load = apload.ApLoad(apred=apred, telescope=telescope)
-    load_exp =  apload.ApLoad(apred=apred_exp, telescope=telescope)
-
-    # Find the reference pixel file
+    # Get telescope/instrument info
     instrument = 'apogee-n'
     inst = 'N'
-    if telescope == 'lco25m':
+    telescope = 'apo25m'
+    if observatory == 'lco':
         instrument = 'apogee-s'
         inst = 'S'
+        telescope = 'lco25m'
+
+    # Set up apload
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    load_exp = apload.ApLoad(apred=apred_exp, telescope=telescope)
+
+    # Find the reference pixel file
     fil = os.path.abspath(__file__)
     codedir = os.path.dirname(fil)
     datadir = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/domeflat/'
+
+    # Need to make pixel reference file for lco25m
+    if inst == 'S': sys.exit('Problem! Reference pixel file for LCO 2.5m does not exist yet')
     refpix = ascii.read(datadir + 'refpix' + inst + '.dat')
 
     # Establish directories.
@@ -77,6 +88,8 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, plate='15000', 
     # Read in the dome flat lookup table and master exposure table
     domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
     if domeFile is not None: domeTable = fits.getdata(mdir + domeFile)
+    gd, = np.where(domeTable['MJD'] > 0)
+    domeTable = domeTable[gd]
     #if medianrad != 100: domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits')
     expTable = fits.getdata(mdir + instrument + 'Exp.fits')
 
@@ -117,10 +130,10 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, plate='15000', 
         psci, = np.where(ims[i] == expTable['NUM'])
         if len(psci) > 0:
             p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
-            p2 = 'alt [' + str("%.3f" % round(expTable['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['ALT'][pflat][0],3)) + '],  '
+            #p2 = 'alt [' + str("%.3f" % round(expTable['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['ALT'][pflat][0],3)) + '],  '
             p3 = 'ln2level [' + str("%.3f" % round(expTable['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['LN2LEVEL'][pflat][0],3)) + '],   '
             p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
-            print(p1 + p2 + p3 + p4)
+            print(p1 + p3 + p4)
         else:
             p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
             p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
@@ -158,7 +171,7 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, plate='15000', 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.")
 
-    return dflatnums
+    return dflatnums,ims
 
 
 ###################################################################################################
@@ -177,6 +190,8 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
     nfibers = 300
     ndomes = len(domeTable)
 
+    medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'], axis=2) * 2.354
+
     # Loop over the chips
     rms = np.full([nchips, ndomes], 50).astype(np.float64)
     for ichip in range(nchips):
@@ -188,7 +203,6 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 
         # Get reference pixels for this chip
         pix0 = np.array(refpix[chips[ichip]])
-        import pdb; pdb.set_trace()
         # Fit Gaussians to the trace positions
         gpeaks = gaussFitAll(infile=twodfile, medianrad=medianrad, pix0=pix0)
 
@@ -196,14 +210,22 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
         gd, = np.where(gpeaks['success'] == True)
         gpeaks = gpeaks[gd]
 
-        for k in range(len(gpeaks)):
-            print(str(gpeaks['num'][k]) + '   ' + str(gpeaks['pars'][k, 1]))
+        #for k in range(len(gpeaks)):
+        #    print(str(gpeaks['num'][k]) + '   ' + str(gpeaks['pars'][k, 1]))
 
         # Remove discrepant peakfits
         medcenterr = np.nanmedian(gpeaks['perr'][:, 1])
         gd, = np.where(gpeaks['perr'][:, 1] < medcenterr)
         gpeaks = gpeaks[gd]
         ngpeaks = len(gd)
+
+	    # Find median gaussian FWHM and restrict lookup table to similar values
+        #medFWHM = np.nanmedian(gpeaks['pars'][:, 2]) * 2.354
+        #print('Median Science FWHM (chip ' + chips[ichip] + ') = ' + str("%.5f" % round(medFWHM,5)))
+        #medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
+        #gd, = np.where(np.absolute(medFWHM - medDomeFWHM[:, ichip]) < 0.05)
+        domeTable1 = domeTable#[gd]
+        ndomes1 = len(domeTable1)
 
         # Option to only use fibers with flux higher than average dome flat flux
         if highfluxfrac is not None:
@@ -227,8 +249,8 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
             ngpeaks = len(gpeaks)
             if silent is False: print("   Keeping " + str(ngpeaks) + " fibers with flux > " + str(minflux))
 
-        dcent = domeTable['GAUSS_CENT'][:, ichip, gpeaks['num']]
-        for idome in range(ndomes):
+        dcent = domeTable1['GAUSS_CENT'][:, ichip, gpeaks['num']]
+        for idome in range(ndomes1):
             diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
             gd, = np.where(np.isnan(diff) == False)
             if len(gd) < 5: continue
@@ -242,9 +264,11 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
     if silent is False: print("   rms:  " + str(rms[:, gd[0]]))
 
     gdrms = str("%.5f" % round(rmsMean[gd][0],5))
-    if silent is False: print("   Best dome flat for exposure " + str(expnum) + ": " + str(domeTable['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
-    
-    return domeTable['PSFID'][gd][0], domeTable['MJD'][gd][0], rmsMean[gd][0]
+    if silent is False: print("   Best dome flat for exposure " + str(expnum) + ": " + str(domeTable1['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
+
+    #print(medDomeFWHM[gd][0])
+
+    return domeTable1['PSFID'][gd][0], domeTable1['MJD'][gd][0], rmsMean[gd][0]
 
 
 ###################################################################################################
