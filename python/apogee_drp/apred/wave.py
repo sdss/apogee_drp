@@ -43,7 +43,7 @@ xlim = [[16400,17000],[15900,16500],[15100,15800]]
 
 DEBUG = False
 
-def wavecal(nums=[2420038],name=None,vers='current',inst='apogee-n',rows=[150],npoly=4,reject=3,
+def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npoly=4,reject=3,
             plot=False,hard=True,verbose=False,clobber=False,init=False,nofit=False,test=False) :
     """ APOGEE wavelength calibration
 
@@ -711,7 +711,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
     num = int(os.path.basename(frame['a'][0].header['FILENAME']).split('-')[1])
     nlines = len(lines)
     nrows = len(rows)
-    linestr = np.zeros(nlines*nrows,dtype=[
+    linestr = np.zeros(nlines*(nrows+1),dtype=[
                        ('chip','i4'), ('row','i4'),('id',np.str,5),('wave',float), ('peak','f4'), ('xpix0','f4'),('pixel','f4'),
                        ('pixelerr','f4'),('sigma','f4'),('yoffset','f4'),('dpixel','f4'), ('wave_found',float),
                        ('frameid','i4'),('failed','i4'),('dummy','i4')])
@@ -786,7 +786,6 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
 
                 if irow==0: linestr['dummy'][nline]=1  # dummy row
                 nline+=1  # increment counter
-
 
             # Refitting failed lines and fitting groups
             doextra = False
@@ -909,8 +908,6 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
     linestr = np.array(linestr)
     # Leave in failed lines so we can keep track of issues with lines
     #  they should be ignored in other parts of the wavelength solution programs
-
-    #import pdb; pdb.set_trace()
 
     print('dt = ',time.time()-t0,' seconds')
     
