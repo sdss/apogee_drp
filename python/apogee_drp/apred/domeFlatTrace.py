@@ -275,7 +275,9 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 # Program for making the domeflat lookup table.
 # Takes about 8 hours to run, unless a later "mjdstart" is specified.
 ###################################################################################################
-def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=None, mjdstop=None):
+def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', medianrad=100, 
+                    mjdstart=None, mjdstop=None):
+
     start_time = time.time()
 
     chips = np.array(['a','b','c'])
@@ -299,7 +301,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=N
     expdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/dr17/exposures/' + instrument + '/'
 
     exp = fits.getdata(mdir + instrument + 'Exp.fits')
-    gd, = np.where(exp['IMAGETYP'] == 'DomeFlat')
+    gd, = np.where(exp['IMAGETYP'] == imtype)
     #gd, = np.where((exp['IMAGETYP'] == 'DomeFlat') & (exp['MJD'] > 56880))
     exp = exp[gd]
 
@@ -310,14 +312,14 @@ def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=N
     if mjdstop is not None: 
         gd, = np.where(exp['MJD'] <= mjdstop)
         exp = exp[gd]
-    ndomes = len(exp)
-    ndomestr = str(ndomes)
+    nexp = len(exp)
+    nexptr = str(nexp)
     
-    print('Running code on ' + ndomestr + ' dome flats')
-    print('Estimated runtime: ' + str(int(round(3.86*ndomes))) + ' seconds\n')
+    print('Running code on ' + nexptr + ' ' + imtype + ' exposures.')
+    print('Estimated runtime: ' + str(int(round(3.86*nexp))) + ' seconds.\n')
 
     # Output file name
-    outfile = mdir + instrument + 'DomeFlatTrace-all'
+    outfile = mdir + instrument + imtype + 'Trace-all'
     if medianrad != 100: outfile = outfile + '_medrad' + str(medianrad)
     if mjdstart is not None: outfile = outfile + '_start' + str(mjdstart)
     if mjdstop is not None: outfile = outfile + '_stop' + str(mjdstop)
@@ -375,11 +377,11 @@ def makeLookupTable(apred='daily', telescope='apo25m', medianrad=100, mjdstart=N
                    ('GAUSS_FLUX',      np.float64, (nchips, nfibers)),
                    ('GAUSS_NPEAKS',    np.int16, nchips)])
 
-    outstr = np.zeros(ndomes, dtype=dt)
+    outstr = np.zeros(nexp, dtype=dt)
 
     # Loop over the dome flats
-    for i in range(ndomes):
-        ttxt = '\n(' + str(i+1) + '/' + ndomestr + '): '
+    for i in range(nexp):
+        ttxt = '\n(' + str(i+1) + '/' + nexptr + '): '
 
         # Make sure there's a valid MJD
         if exp['MJD'][i] < 100: 
