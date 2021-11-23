@@ -199,6 +199,18 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         print("Making " + mjd + "exp.fits\n")
         x = makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=mjd, clobber=clobber)
 
+        # Update the summary pages if there are not science exposures
+        if nsciplans < 1:
+            # Make the nightly QA page
+            if makenightqa is True:
+                q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
+
+            # Make mjd.html and fields.html
+            if makemasterqa is True: 
+                q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
+                                      mjdfilebase='mjd.html',fieldfilebase='fields.html',
+                                      domjd=True, dofields=True)
+
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
     for i in range(nsciplans):
