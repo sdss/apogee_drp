@@ -211,6 +211,10 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                                       mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                       domjd=True, dofields=True)
 
+            # Make the monitor page
+            if makemonitor == True:
+                q = monitor.monitor()
+
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
     for i in range(nsciplans):
