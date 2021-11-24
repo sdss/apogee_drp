@@ -69,6 +69,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
     allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
+    dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
+    quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
 
 
@@ -299,10 +301,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<ul>\n')
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
-    html.write('<li> <a href=#quartz> Cal channel quartz</a>\n')
-    html.write('<li> <a href=#dome>Dome flats</a>\n')
-    html.write('<li> <a href=' + instrument + '/fiber/fiber.html target="_blank">Individual fiber throughputs from dome flats</a>\n')
-    html.write('<li> <a href=' + instrument + '/fiber/fiber_qrtz.html target="_blank">Individual fiber throughputs from quartz lamp</a>\n')
+    html.write('<li> <a href=#qflux>Quartz lamp median brightness</a>\n')
+    html.write('<li> <a href=#qfwhm>Quartz lamp trace FWHM</a>\n')
+    html.write('<li> <a href=#dflux>Dome flat median brightness</a>\n')
+    html.write('<li> <a href=#dfwhm>Dome flat trace FWHM</a>\n')
+    html.write('<li> <a href=' + instrument + '/qfiber/fiber_qrtz.html target="_blank">Fiber throughput from quartz lamp</a>\n')
+    html.write('<li> <a href=' + instrument + '/dfiber/fiber.html target="_blank">Fiber throughput from dome flats</a>\n')
     html.write('<li> <a href=#tharflux> Cal channel ThAr</a>\n')
     html.write('<li> <a href=#uneflux> Cal channel UNe</a>\n')
     html.write('<li> <a href=#zero>Plate zeropoints</a>\n')
@@ -326,9 +330,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
-    html.write('<H3> <a name=dome></a>Dome flat median brightness</H3>\n')
+    html.write('<h3> <a name=qfwhm></a> Quartz lamp trace FWHM </h3>\n')
+    html.write('<A HREF=' + instrument + '/qfwhm.png target="_blank"><IMG SRC=' + instrument + '/qfwhm.png WIDTH=1200></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<H3> <a name=dflux></a> Dome flat median brightness</H3>\n')
     html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
-    html.write('<A HREF=' + instrument + '/dome.png target="_blank"><IMG SRC=' + instrument + '/dome.png WIDTH=1200></A>\n')
+    html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=1200></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<h3> <a name=dfwhm></a> Dome flat trace FWHM </h3>\n')
+    html.write('<A HREF=' + instrument + '/dfwhm.png target="_blank"><IMG SRC=' + instrument + '/dfwhm.png WIDTH=1200></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a href=' + instrument + '/fiber/fiber.html> Individual fiber throughputs from dome flats </A></H3>\n')
@@ -773,6 +785,60 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.close('all')
 
         ###########################################################################################
+        # qfwhm.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/qfwhm.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 5
+            if instrument == 'apogee-s': 
+                ymax = 5
+            ymin = 1
+            yspan = ymax - ymin
+
+            gd, = np.where(quartztrace['MJD'] > 50000)
+            qtz = quartztrace[gd]
+            qmjd = qtz['MJD']
+            qfwhm = qtz['GAUSS_SIGMA']*2.355
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = qfwhm[:, ichip, ifib]
+                    ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
         # tharflux.png
         plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -877,8 +943,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.close('all')
 
         ###########################################################################################
-        # dome.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/dome.png'
+        # dflux.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/dflux.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
@@ -918,6 +984,60 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     yvals = gdcal['MED'][:, ichip, fibers[ifib]]
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='Fiber ' + str(fibers[ifib]), zorder=3)
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # dfwhm.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/dfwhm.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 5
+            if instrument == 'apogee-s': 
+                ymax = 5
+            ymin = 1
+            yspan = ymax - ymin
+
+            gd, = np.where(dometrace['MJD'] > 50000)
+            df = dometrace[gd]
+            dmjd = df['MJD']
+            dfwhm = df['GAUSS_SIGMA']*2.355
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = dfwhm[:, ichip, ifib]
+                    ax.scatter(dmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
