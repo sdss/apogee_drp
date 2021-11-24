@@ -791,10 +791,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 4
+            ymax = 3.2
             if instrument == 'apogee-s': 
-                ymax = 4
-            ymin = 1
+                ymax = 3.2
+            ymin = 0.8
             yspan = ymax - ymin
 
             gd, = np.where(quartztrace['MJD'] > 50000)
@@ -1002,10 +1002,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 4
+            ymax = 3.2
             if instrument == 'apogee-s': 
-                ymax = 4
-            ymin = 1
+                ymax = 3.2
+            ymin = 0.8
             yspan = ymax - ymin
 
             gd, = np.where(dometrace['MJD'] > 50000)
