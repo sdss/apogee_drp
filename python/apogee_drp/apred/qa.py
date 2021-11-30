@@ -3267,8 +3267,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
         tharline = np.array([[935.,1127.,1130.],[1723.,618.,1773.]])
         uneline =  np.array([[598.,1213.,1116.],[1763.,605.,1893.]])
         if int(mjd) > 59420:
-            tharline -= 17
-            uneline -= 17
+            tharline -= 22.425
+            uneline -= 22.425
 
         if instrument == 'apogee-s': tharline = np.array([[944.,1112.,1102.],[1726.,608.,1745.]])
         if instrument == 'apogee-s':  uneline = np.array([[607.,1229.,1088.],[1765.,620.,1860.]])
