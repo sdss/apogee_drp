@@ -3270,6 +3270,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
             tharline -= 18
             uneline -= 18
 
+        pdb.set_trace()
         if instrument == 'apogee-s': tharline = np.array([[944.,1112.,1102.],[1726.,608.,1745.]])
         if instrument == 'apogee-s':  uneline = np.array([[607.,1229.,1088.],[1765.,620.,1860.]])
 
