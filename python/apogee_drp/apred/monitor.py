@@ -1113,9 +1113,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
 
-                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
-                ymin = w - 30
-                ymax = w + 30
+                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 0])
+                ymin = w - 40
+                ymax = w + 40
                 yspan = ymax - ymin
                 ax.set_ylim(ymin, ymax)
 
@@ -1124,7 +1124,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
-                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
+                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 0] 
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
