@@ -100,11 +100,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 check, = np.where(data['NAME'][0] == outstr['NAME'])
                 if len(check) > 0:
                     if overwritesumfiles is True:
-                    newstr = getQAcalStruct(data)
-                    pdb.set_trace()
-                    outstr[check] = newstr
-                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
-                    continue
+                        newstr = getQAcalStruct(data)
+                        pdb.set_trace()
+                        outstr[check] = newstr
+                        #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                        continue
                 else:
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                     newstr = getQAcalStruct(data)
