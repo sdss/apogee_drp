@@ -3318,9 +3318,15 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
             struct['NREAD'][i] =   oneDhdr['NREAD']
             pdb.set_trace()
             struct['EXPTIME'][i] = oneDhdr['EXPTIME']
-            struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
-            struct['THAR'][i] =    oneDhdr['LAMPTHAR']
-            struct['UNE'][i] =     oneDhdr['LAMPUNE']
+            try:
+                struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
+                struct['THAR'][i] =    oneDhdr['LAMPTHAR']
+                struct['UNE'][i] =     oneDhdr['LAMPUNE']
+            except:
+                if oneDhdr['IMAGETYP'] == 'QuartzFlat':
+                    struct['QRTZ'][i] =    1
+                    struct['THAR'][i] =    0
+                    struct['UNE'][i] =     0
             struct['FIBERS'][i] =  fibers
 
             tp = 'quartz'
