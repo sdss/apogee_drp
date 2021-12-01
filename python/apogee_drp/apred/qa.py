@@ -3340,9 +3340,9 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                     for ichip in range(nchips):
                         for ifiber in range(nfibers):
                             fiber = fibers[ifiber]
-                            pixrange = [line[iline,ichip]-10, line[iline,ichip]+10]
-                            gflux = oneDflux[ichip, pixrange[0]:pixrange[1], fiber]
-                            gerror = oneDerror[ichip, pixrange[0]:pixrange[1], fiber]
+                            intline = int(round(line[iline,ichip]))
+                            gflux = oneDflux[ichip, intline-10:intline+10, fiber]
+                            gerror = oneDerror[ichip, intline-10:intline+10, fiber]
                             try:
                                 # Try to fit Gaussians to the lamp lines
                                 gpeaks = peakfit.peakfit(gflux, sigma=gerror)
