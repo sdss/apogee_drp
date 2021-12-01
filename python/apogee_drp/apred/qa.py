@@ -3248,7 +3248,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
 ###################################################################################################
 ''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.) '''
-def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
+def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None, lineSearchRad=40):
 
     outfile = load.filename('QAcal', mjd=mjd)
     if (os.path.exists(outfile) is False) | (clobber is True):
@@ -3341,18 +3341,19 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                         for ifiber in range(nfibers):
                             fiber = fibers[ifiber]
                             intline = int(round(line[iline,ichip]))
-                            gflux = oneDflux[ichip, intline-25:intline+25, fiber]
-                            gerror = oneDerror[ichip, intline-25:intline+25, fiber]
+                            gflux =   oneDflux[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
+                            gerror = oneDerror[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
                             try:
                                 # Try to fit Gaussians to the lamp lines
                                 gpeaks = peakfit.peakfit(gflux, sigma=gerror)
                                 gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
-                                pdb.set_trace()
                                 gpeaks = gpeaks[gd]
                                 # Find the desired peak and load struct
-                                pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
+                                gcent = gpeaks['pars'][:, 1] + intline - lineSearchRad
+                                pixdif = np.abs(gcent - line[iline, ichip])
                                 gdline, = np.where(pixdif == np.min(pixdif))
-
+                                tmp = iline+ichip+ifiber
+                                if tmp == 0: print(gcent[gdline])
                             except:
                                 print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
                                 continue
