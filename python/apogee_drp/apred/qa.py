@@ -153,7 +153,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     apodir = os.environ.get('APOGEE_REDUX')+'/'
     planlist = apodir + apred + '/log/'+observatory+'/' + str(mjd) + '.plans'
     if os.path.exists(planlist) == False:
-        print('Uh-oh, not finding ' + planlist)
+        print('Uh-oh, not finding ' + planlist + '\n')
         return
     plans = open(planlist, 'r')
     plans = plans.readlines()
@@ -3522,6 +3522,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
             struct['NUM'][i] =       int(imnum)
             struct['NFRAMES'][i] =   hdr['NFRAMES']
             struct['IMAGETYP'][i] =  hdr['IMAGETYP']
+            pdb.set_trace()
             struct['PLATEID'][i] =   hdr['PLATEID']
             struct['CARTID'][i] =    hdr['CARTID']
             struct['RA'][i] =        hdr['RA']
