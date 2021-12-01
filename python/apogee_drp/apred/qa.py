@@ -3541,9 +3541,15 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
                 print("----> makeExpFits: seeing is 'NAN.0' for exposure " + imnum + ". Setting to -9.999")
                 struct['SEEING'][i] = -9.999
             struct['ALT'][i] =       hdr['ALT']
-            struct['QRTZ'][i] =      hdr['LAMPQRTZ']
-            struct['THAR'][i] =      hdr['LAMPTHAR']
-            struct['UNE'][i] =       hdr['LAMPUNE']
+            try:
+                struct['QRTZ'][i] =      hdr['LAMPQRTZ']
+                struct['THAR'][i] =      hdr['LAMPTHAR']
+                struct['UNE'][i] =       hdr['LAMPUNE']
+            except:
+                if oneDhdr['IMAGETYP'] == 'QuartzFlat':
+                    struct['QRTZ'][i] =    1
+                    struct['THAR'][i] =    0
+                    struct['UNE'][i] =     0
             struct['FFS'][i] =       hdr['FFS']
             struct['LN2LEVEL'][i] =  hdr['LN2LEVEL']
             struct['DITHPIX'][i] =   hdr['DITHPIX']
