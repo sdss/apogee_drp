@@ -3347,11 +3347,12 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                                 # Try to fit Gaussians to the lamp lines
                                 gpeaks = peakfit.peakfit(gflux, sigma=gerror)
                                 gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
+                                pdb.set_trace()
                                 gpeaks = gpeaks[gd]
                                 # Find the desired peak and load struct
                                 pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
                                 gdline, = np.where(pixdif == np.min(pixdif))
-                                pdb.set_trace()
+
                             except:
                                 print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
                                 continue
