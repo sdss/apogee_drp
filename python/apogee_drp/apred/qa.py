@@ -3336,6 +3336,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None, li
                 nlines = 1
                 if line.shape[1] != 1: nlines = line.shape[0]
 
+                print('MEASURED_CENT     EXPECTED_CENT     DIFF      SUMFLUX')
                 for iline in range(nlines):
                     for ichip in range(nchips):
                         for ifiber in range(nfibers):
@@ -3352,8 +3353,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None, li
                                 gcent = gpeaks['pars'][:, 1] + intline - lineSearchRad
                                 pixdif = np.abs(gcent - line[iline, ichip])
                                 gdline, = np.where(pixdif == np.min(pixdif))
-                                tmp = iline+ichip+ifiber
-                                if tmp == 0: print(gcent[gdline])
+                                #tmp = iline+ichip+ifiber
+                                print(str("%.2f" % round(gcent[gdline][0],2)).rjust(10) + str("%.2f" % round(line[iline,ichip],2)).rjust(10) + str(int(round(gpeaks['sumflux'][gdline]))))
                             except:
                                 print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
                                 continue
