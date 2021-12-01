@@ -3264,14 +3264,14 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
         chips = np.array(['a','b','c'])
         nchips = len(chips)
 
-        tharline = np.array([[935.,1127.,1130.],[1723.,618.,1773.]])
-        uneline =  np.array([[598.,1213.,1116.],[1763.,605.,1893.]])
+        tharline = np.array([[940.3,1129.4,1131.9],[1728.3,623.0,1778.4]])
+        uneline =  np.array([[604.5,1214.1,1118.1],[1762.6,605.3,1895.3]])
         if int(mjd) > 59420:
-            tharline -= 22.425
-            uneline -= 22.425
+            tharline -= 21.832
+            uneline -= 21.855
 
-        if instrument == 'apogee-s': tharline = np.array([[944.,1112.,1102.],[1726.,608.,1745.]])
-        if instrument == 'apogee-s':  uneline = np.array([[607.,1229.,1088.],[1765.,620.,1860.]])
+        if instrument == 'apogee-s': tharline = np.array([[940.,1112.,1102.],[1727.,608.,1745.]])
+        if instrument == 'apogee-s':  uneline = np.array([[604.,1229.,1088.],[1763.,620.,1860.]])
 
         fibers = np.array([10,80,150,220,290])
         nfibers = len(fibers)
