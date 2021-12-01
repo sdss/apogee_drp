@@ -36,8 +36,7 @@ from datetime import date,datetime
 
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True,
-            overwritesumfiles=False, makeplots=True, makedomeplots=True, 
-            makeqrtzplots=True, fiberdaysbin=20):
+            makeplots=True, makedomeplots=True, makeqrtzplots=True, fiberdaysbin=20):
 
     print("----> monitor starting")
 
@@ -99,12 +98,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 data = fits.open(files[i])[1].data
                 check, = np.where(data['NAME'][0] == outstr['NAME'])
                 if len(check) > 0:
-                    if overwritesumfiles is True:
-                        newstr = getQAcalStruct(data)
-                        pdb.set_trace()
-                        outstr[check] = newstr
-                        #print("---->    monitor: skipping " + os.path.basename(files[i]))
-                        continue
+                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
                 else:
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                     newstr = getQAcalStruct(data)
