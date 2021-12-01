@@ -3360,6 +3360,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                             else:
                                 print("----> makeCalFits: ERROR!!! Desired line not found for " + tp + " exposure " + str(ims[i]))
 
+        pdb.set_trace()
         Table(struct).write(outfile, overwrite=True)
 
         print("Done with MAKECALFITS for MJD " + mjd)
