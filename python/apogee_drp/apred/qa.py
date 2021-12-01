@@ -154,7 +154,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     planlist = apodir + apred + '/log/'+observatory+'/' + str(mjd) + '.plans'
     if os.path.exists(planlist) == False:
         print('Uh-oh, not finding ' + planlist)
-        continue
+        return
     plans = open(planlist, 'r')
     plans = plans.readlines()
     nplans = len(plans)
