@@ -3248,7 +3248,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
 ###################################################################################################
 ''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.) '''
-def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None, lineSearchRad=40):
+def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
+
+    lineSearchRad = 40
 
     outfile = load.filename('QAcal', mjd=mjd)
     if (os.path.exists(outfile) is False) | (clobber is True):
@@ -3353,8 +3355,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None, li
                                 gcent = gpeaks['pars'][:, 1] + intline - lineSearchRad
                                 pixdif = np.abs(gcent - line[iline, ichip])
                                 gdline, = np.where(pixdif == np.min(pixdif))
-                                #tmp = iline+ichip+ifiber
-                                print(str("%.2f" % round(gcent[gdline][0],2)).rjust(10) + str("%.2f" % round(line[iline,ichip],2)).rjust(10) + str(int(round(gpeaks['sumflux'][gdline]))))
+                                tmp = iline+ichip+ifiber
+                                print(str("%.2f" % round(gcent[gdline][0],2)).rjust(10) + str("%.2f" % round(line[iline,ichip],2)).rjust(10) + str(int(round(gpeaks['sumflux'][gdline][0]))))
                             except:
                                 print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
                                 continue
