@@ -3546,7 +3546,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
                 struct['THAR'][i] =      hdr['LAMPTHAR']
                 struct['UNE'][i] =       hdr['LAMPUNE']
             except:
-                if oneDhdr['IMAGETYP'] == 'QuartzFlat':
+                if hdr['IMAGETYP'] == 'QuartzFlat':
                     struct['QRTZ'][i] =    1
                     struct['THAR'][i] =    0
                     struct['UNE'][i] =     0
