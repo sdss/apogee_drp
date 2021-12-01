@@ -3522,11 +3522,13 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
             struct['NUM'][i] =       int(imnum)
             struct['NFRAMES'][i] =   hdr['NFRAMES']
             struct['IMAGETYP'][i] =  hdr['IMAGETYP']
-            pdb.set_trace()
-            struct['PLATEID'][i] =   hdr['PLATEID']
-            struct['CARTID'][i] =    hdr['CARTID']
-            struct['RA'][i] =        hdr['RA']
-            struct['DEC'][i] =       hdr['DEC']
+            try:
+                struct['PLATEID'][i] =   hdr['PLATEID']
+                struct['CARTID'][i] =    hdr['CARTID']
+                struct['RA'][i] =        hdr['RA']
+                struct['DEC'][i] =       hdr['DEC']
+            except:
+                nothing = 0
             if hdr['SEEING'] != 'NAN.0':
                 struct['SEEING'][i] = hdr['SEEING']
             else:
