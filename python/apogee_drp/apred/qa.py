@@ -3338,7 +3338,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                 nlines = 1
                 if line.shape[1] != 1: nlines = line.shape[0]
 
-                print('MEASURED_CENT     EXPECTED_CENT     DIFF      SUMFLUX')
+                print('MEASURED_CENT   EXPECTED_CENT     DIFF')#      SUMFLUX')
                 for iline in range(nlines):
                     for ichip in range(nchips):
                         for ifiber in range(nfibers):
@@ -3358,10 +3358,10 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                                 tmp = iline+ichip+ifiber
                                 diff = gcent[gdline][0] - line[iline,ichip]
                                 txt1 = str("%.2f" % round(gcent[gdline][0],2)).rjust(12)
-                                txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(10)
+                                txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(14)
                                 txt3 = str("%.2f" % round(diff,2)).rjust(10)
-                                txt4 = str(int(round(gpeaks['sumflux'][gdline][0])))
-                                print(txt1 + txt2 + txt3 + txt4)
+                                #txt4 = str(int(round(gpeaks['sumflux'][gdline][0])))
+                                print(txt1 + txt2 + txt3)# + txt4)
                             except:
                                 print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
                                 continue
@@ -3369,7 +3369,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                             if len(gdline) > 0:
                                 struct['GAUSS'][i, iline, ichip, ifiber, :] = gpeaks['pars'][gdline, :][0]
                                 struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
-                                pdb.set_trace()
                             else:
                                 print("----> makeCalFits: ERROR!!! Desired line not found for " + tp + " exposure " + str(ims[i]))
 
