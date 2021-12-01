@@ -152,6 +152,9 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     # Find the list of plan files
     apodir = os.environ.get('APOGEE_REDUX')+'/'
     planlist = apodir + apred + '/log/'+observatory+'/' + str(mjd) + '.plans'
+    if os.path.exists(planlist) == False:
+        print('Uh-oh, not finding ' + planlist)
+        continue
     plans = open(planlist, 'r')
     plans = plans.readlines()
     nplans = len(plans)
@@ -3338,7 +3341,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                 nlines = 1
                 if line.shape[1] != 1: nlines = line.shape[0]
 
-                print('MEASURED_CENT   EXPECTED_CENT     DIFF')#      SUMFLUX')
+                print('MEASURED_CENT  EXPECTED_CENT   DIFF')#      SUMFLUX')
                 for iline in range(nlines):
                     for ichip in range(nchips):
                         for ifiber in range(nfibers):
@@ -3359,7 +3362,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                                 diff = gcent[gdline][0] - line[iline,ichip]
                                 if fiber == 150:
                                     txt1 = str("%.2f" % round(gcent[gdline][0],2)).rjust(12)
-                                    txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(14)
+                                    txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(15)
                                     txt3 = str("%.2f" % round(diff,2)).rjust(10)
                                     print(txt1 + txt2 + txt3)# + txt4)
                             except:
