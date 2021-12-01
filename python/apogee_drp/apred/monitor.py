@@ -1114,8 +1114,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axvline(x=59146, color='r', linewidth=2)
 
                 w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
-                ymin = w - 20
-                ymax = w + 20
+                ymin = w - 30
+                ymax = w + 30
                 yspan = ymax - ymin
                 ax.set_ylim(ymin, ymax)
 
