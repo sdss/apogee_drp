@@ -3341,8 +3341,8 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                         for ifiber in range(nfibers):
                             fiber = fibers[ifiber]
                             intline = int(round(line[iline,ichip]))
-                            gflux = oneDflux[ichip, intline-10:intline+10, fiber]
-                            gerror = oneDerror[ichip, intline-10:intline+10, fiber]
+                            gflux = oneDflux[ichip, intline-25:intline+25, fiber]
+                            gerror = oneDerror[ichip, intline-25:intline+25, fiber]
                             try:
                                 # Try to fit Gaussians to the lamp lines
                                 gpeaks = peakfit.peakfit(gflux, sigma=gerror)
