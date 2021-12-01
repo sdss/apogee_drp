@@ -3316,7 +3316,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
             struct['JD'][i] =      oneDhdr['JD-MID']
             struct['NFRAMES'][i] = oneDhdr['NFRAMES']
             struct['NREAD'][i] =   oneDhdr['NREAD']
-            pdb.set_trace()
             struct['EXPTIME'][i] = oneDhdr['EXPTIME']
             try:
                 struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
