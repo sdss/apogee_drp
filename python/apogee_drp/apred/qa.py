@@ -3357,11 +3357,11 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                                 gdline, = np.where(pixdif == np.min(pixdif))
                                 tmp = iline+ichip+ifiber
                                 diff = gcent[gdline][0] - line[iline,ichip]
-                                txt1 = str("%.2f" % round(gcent[gdline][0],2)).rjust(12)
-                                txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(14)
-                                txt3 = str("%.2f" % round(diff,2)).rjust(10)
-                                #txt4 = str(int(round(gpeaks['sumflux'][gdline][0])))
-                                print(txt1 + txt2 + txt3)# + txt4)
+                                if fiber == 150:
+                                    txt1 = str("%.2f" % round(gcent[gdline][0],2)).rjust(12)
+                                    txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(14)
+                                    txt3 = str("%.2f" % round(diff,2)).rjust(10)
+                                    print(txt1 + txt2 + txt3)# + txt4)
                             except:
                                 print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
                                 continue
