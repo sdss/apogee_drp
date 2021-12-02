@@ -3361,16 +3361,17 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                                 gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                                 gpeaks = gpeaks[gd]
                                 # Find the desired peak and load struct
-                                gcent = gpeaks['pars'][:, 1] + intline - lineSearchRad
-                                pixdif = np.abs(gcent - line[iline, ichip])
+                                gpeaks['pars'][:, 1] = gpeaks['pars'][:, 1] + intline - lineSearchRad
+                                pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
                                 gdline, = np.where(pixdif == np.min(pixdif))
                                 tmp = iline+ichip+ifiber
-                                diff = gcent[gdline][0] - line[iline,ichip]
+                                diff = gpeaks['pars'][:, 1][gdline][0] - line[iline,ichip]
                                 if fiber == 150:
-                                    txt1 = str("%.2f" % round(gcent[gdline][0],2)).rjust(12)
+                                    txt1 = str("%.2f" % round(gpeaks['pars'][:, 1][gdline][0],2)).rjust(12)
                                     txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(15)
                                     txt3 = str("%.2f" % round(diff,2)).rjust(10)
                                     print(txt1 + txt2 + txt3)# + txt4)
+                                pdb.set_trace()
                             except:
                                 print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
                                 continue
