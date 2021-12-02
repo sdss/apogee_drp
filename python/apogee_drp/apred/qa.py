@@ -3366,7 +3366,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                                 gdline, = np.where(pixdif == np.min(pixdif))
                                 tmp = iline+ichip+ifiber
                                 diff = gpeaks['pars'][:, 1][gdline][0] - line[iline,ichip]
-                                pdb.set_trace()
                                 if fiber == 150:
                                     txt1 = str("%.2f" % round(gpeaks['pars'][:, 1][gdline][0],2)).rjust(12)
                                     txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(15)
