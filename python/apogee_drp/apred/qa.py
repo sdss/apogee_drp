@@ -3371,7 +3371,6 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                                     txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(15)
                                     txt3 = str("%.2f" % round(diff,2)).rjust(10)
                                     print(txt1 + txt2 + txt3)# + txt4)
-                                pdb.set_trace()
                             except:
                                 print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
                                 continue
