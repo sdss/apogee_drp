@@ -928,7 +928,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
-                    yvals = flux[:, 1, ichip, ifib] / gdcal['NREAD']*10.0
+                    yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='Fiber ' + str(fibers[ifib]))
 
