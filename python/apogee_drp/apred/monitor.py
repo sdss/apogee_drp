@@ -658,7 +658,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.savefig(plotfile)
                 plt.close('all')
 
-    if makeqrtzplots is True:
+    if makequartzplots is True:
         for i in range(300):
             gd, = np.where(allcal['QRTZ'] > 0)
             gdcal = allcal[gd]
