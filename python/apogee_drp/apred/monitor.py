@@ -36,7 +36,7 @@ from datetime import date,datetime
 
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True,
-            makeplots=True, makedomeplots=True, makeqrtzplots=True, fiberdaysbin=20):
+            makeplots=True, makedomeplots=True, makequartzplots=True, fiberdaysbin=20):
 
     print("----> monitor starting")
 
@@ -527,7 +527,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     axminlen = 3.5
     alf = 0.6
     markersz = 7
-    colors = np.array(['gold', 'orange', 'lightcoral', 'crimson', 'maroon'])
+    colors = np.array(['peru', 'gold', 'darkorange', 'red', 'maroon'])
     colors1 = np.array(['k', 'salmon', 'limegreen', 'cornflowerblue'])
     colors2 = np.array(['dodgerblue', 'seagreen', 'orange'])
     fibers = np.array([10, 80, 150, 220, 290])[::-1]
