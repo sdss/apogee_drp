@@ -552,7 +552,8 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     if os.path.exists(rawfile)==False:
         raise ValueError('Cannot find file '+rawfile)
     head = fits.getheader(rawfile,1)
-    plateid = head['PLATEID']
+    plateid = head.get('PLATEID')
+    configid = head.get('CONFIGID')
     if (ignore==False):
         if (plate!=0) & (plate!=plateid):
             raise ValueError('plateid in header does not match plate!')
