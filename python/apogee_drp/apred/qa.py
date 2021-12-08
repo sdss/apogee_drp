@@ -152,6 +152,9 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     # Find the list of plan files
     apodir = os.environ.get('APOGEE_REDUX')+'/'
     planlist = apodir + apred + '/log/'+observatory+'/' + str(mjd) + '.plans'
+    if os.path.exists(planlist) == False:
+        print('Uh-oh, not finding ' + planlist + '\n')
+        return
     plans = open(planlist, 'r')
     plans = plans.readlines()
     nplans = len(plans)
@@ -198,6 +201,22 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         # Make the MJDexp fits file for this MJD
         print("Making " + mjd + "exp.fits\n")
         x = makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=mjd, clobber=clobber)
+
+        # Update the summary pages if there are not science exposures
+        if nsciplans < 1:
+            # Make the nightly QA page
+            if makenightqa is True:
+                q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
+
+            # Make mjd.html and fields.html
+            if makemasterqa is True: 
+                q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
+                                      mjdfilebase='mjd.html',fieldfilebase='fields.html',
+                                      domjd=True, dofields=True)
+
+            # Make the monitor page
+            if makemonitor == True:
+                q = monitor.monitor()
 
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
@@ -3234,6 +3253,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 ''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.) '''
 def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
 
+    lineSearchRad = 40
+
     outfile = load.filename('QAcal', mjd=mjd)
     if (os.path.exists(outfile) is False) | (clobber is True):
         print("--------------------------------------------------------------------")
@@ -3248,11 +3269,14 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
         chips = np.array(['a','b','c'])
         nchips = len(chips)
 
-        tharline = np.array([[935.,1127.,1130.],[1723.,618.,1773.]])
-        uneline =  np.array([[598.,1213.,1116.],[1763.,605.,1893.]])
+        tharline = np.array([[940.3,1129.4,1131.9],[1728.3,623.0,1778.4]])
+        uneline =  np.array([[604.5,1214.1,1118.1],[1762.6,605.3,1895.3]])
+        if int(mjd) > 59420:
+            tharline -= 21.832
+            uneline -= 21.855
 
-        if instrument == 'apogee-s': tharline = np.array([[944.,1112.,1102.],[1726.,608.,1745.]])
-        if instrument == 'apogee-s':  uneline = np.array([[607.,1229.,1088.],[1765.,620.,1860.]])
+        if instrument == 'apogee-s': tharline = np.array([[940.,1112.,1102.],[1727.,608.,1745.]])
+        if instrument == 'apogee-s':  uneline = np.array([[604.,1229.,1088.],[1763.,620.,1860.]])
 
         fibers = np.array([10,80,150,220,290])
         nfibers = len(fibers)
@@ -3293,9 +3317,15 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
             struct['NFRAMES'][i] = oneDhdr['NFRAMES']
             struct['NREAD'][i] =   oneDhdr['NREAD']
             struct['EXPTIME'][i] = oneDhdr['EXPTIME']
-            struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
-            struct['THAR'][i] =    oneDhdr['LAMPTHAR']
-            struct['UNE'][i] =     oneDhdr['LAMPUNE']
+            try:
+                struct['QRTZ'][i] =    oneDhdr['LAMPQRTZ']
+                struct['THAR'][i] =    oneDhdr['LAMPTHAR']
+                struct['UNE'][i] =     oneDhdr['LAMPUNE']
+            except:
+                if oneDhdr['IMAGETYP'] == 'QuartzFlat':
+                    struct['QRTZ'][i] =    1
+                    struct['THAR'][i] =    0
+                    struct['UNE'][i] =     0
             struct['FIBERS'][i] =  fibers
 
             tp = 'quartz'
@@ -3317,20 +3347,30 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                 nlines = 1
                 if line.shape[1] != 1: nlines = line.shape[0]
 
+                print('MEASURED_CENT  EXPECTED_CENT   DIFF')#      SUMFLUX')
                 for iline in range(nlines):
                     for ichip in range(nchips):
                         for ifiber in range(nfibers):
                             fiber = fibers[ifiber]
-                            gflux = oneDflux[ichip, :, fiber]
-                            gerror = oneDerror[ichip, :, fiber]
+                            intline = int(round(line[iline,ichip]))
+                            gflux =   oneDflux[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
+                            gerror = oneDerror[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
                             try:
                                 # Try to fit Gaussians to the lamp lines
                                 gpeaks = peakfit.peakfit(gflux, sigma=gerror)
                                 gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                                 gpeaks = gpeaks[gd]
                                 # Find the desired peak and load struct
+                                gpeaks['pars'][:, 1] = gpeaks['pars'][:, 1] + intline - lineSearchRad
                                 pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
                                 gdline, = np.where(pixdif == np.min(pixdif))
+                                tmp = iline+ichip+ifiber
+                                diff = gpeaks['pars'][:, 1][gdline][0] - line[iline,ichip]
+                                if fiber == 150:
+                                    txt1 = str("%.2f" % round(gpeaks['pars'][:, 1][gdline][0],2)).rjust(12)
+                                    txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(15)
+                                    txt3 = str("%.2f" % round(diff,2)).rjust(10)
+                                    print(txt1 + txt2 + txt3)# + txt4)
                             except:
                                 print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
                                 continue
@@ -3340,6 +3380,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                                 struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
                             else:
                                 print("----> makeCalFits: ERROR!!! Desired line not found for " + tp + " exposure " + str(ims[i]))
+
 
         Table(struct).write(outfile, overwrite=True)
 
@@ -3487,19 +3528,28 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
             struct['NUM'][i] =       int(imnum)
             struct['NFRAMES'][i] =   hdr['NFRAMES']
             struct['IMAGETYP'][i] =  hdr['IMAGETYP']
-            struct['PLATEID'][i] =   hdr['PLATEID']
-            struct['CARTID'][i] =    hdr['CARTID']
-            struct['RA'][i] =        hdr['RA']
-            struct['DEC'][i] =       hdr['DEC']
+            try:
+                struct['PLATEID'][i] =   hdr['PLATEID']
+                struct['CARTID'][i] =    hdr['CARTID']
+                struct['RA'][i] =        hdr['RA']
+                struct['DEC'][i] =       hdr['DEC']
+            except:
+                nothing = 0
             if hdr['SEEING'] != 'NAN.0':
                 struct['SEEING'][i] = hdr['SEEING']
             else:
                 print("----> makeExpFits: seeing is 'NAN.0' for exposure " + imnum + ". Setting to -9.999")
                 struct['SEEING'][i] = -9.999
             struct['ALT'][i] =       hdr['ALT']
-            struct['QRTZ'][i] =      hdr['LAMPQRTZ']
-            struct['THAR'][i] =      hdr['LAMPTHAR']
-            struct['UNE'][i] =       hdr['LAMPUNE']
+            try:
+                struct['QRTZ'][i] =      hdr['LAMPQRTZ']
+                struct['THAR'][i] =      hdr['LAMPTHAR']
+                struct['UNE'][i] =       hdr['LAMPUNE']
+            except:
+                if hdr['IMAGETYP'] == 'QuartzFlat':
+                    struct['QRTZ'][i] =    1
+                    struct['THAR'][i] =    0
+                    struct['UNE'][i] =     0
             struct['FFS'][i] =       hdr['FFS']
             struct['LN2LEVEL'][i] =  hdr['LN2LEVEL']
             struct['DITHPIX'][i] =   hdr['DITHPIX']
