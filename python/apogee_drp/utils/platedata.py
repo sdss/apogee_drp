@@ -173,27 +173,38 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     platedata['locationid'] = loc
     platedata['programname'] = programname
 
-    # Do we want to use a plPlugMapA file with the matching already done?
-    havematch = 0
-    if mapa==True:
-        root = 'plPlugMapA'
+    # SDSS-V FPS configuration files
+    #-------------------------------
+    if mjd>=59556:
+        plugfile = ''
+        plugdir = configdir+'/'+str(mjd)+'/'
+        # Should we add the config files to the data model?
+        import pdb; pdb.set_trace()
+
+    # SDSS-III/IV/V Plate plugmap files
+    #----------------------------------
     else:
-        root = 'plPlugMapM'
-    if plugid is not None:
-        base,ext = os.path.splitext(os.path.basename(plugid))
-        if base.find('plPlug')>-1:
-            tplugid = base[11:]
+        # Do we want to use a plPlugMapA file with the matching already done?
+        havematch = 0
+        if mapa==True:
+            root = 'plPlugMapA'
         else:
-            tplugid = base
-        plugfile = root+'-'+tplugid+'.par'
-    else:
-        tplugid = root+'-'+str(plate)
-        plugfile = tplugid+'.par'
-    if mapa==True:
-        plugdir = datadir+'/'+str(mjd)+'/'
-    else:
-        plugmjd = tplugid.split('-')[1]
-        plugdir = mapper_data+'/'+plugmjd+'/'
+            root = 'plPlugMapM'
+        if plugid is not None:
+            base,ext = os.path.splitext(os.path.basename(plugid))
+            if base.find('plPlug')>-1:
+                tplugid = base[11:]
+            else:
+                tplugid = base
+            plugfile = root+'-'+tplugid+'.par'
+        else:
+            tplugid = root+'-'+str(plate)
+            plugfile = tplugid+'.par'
+        if mapa==True:
+            plugdir = datadir+'/'+str(mjd)+'/'
+        else:
+            plugmjd = tplugid.split('-')[1]
+            plugdir = mapper_data+'/'+plugmjd+'/'
 
     # Does the plugfile exist? If so, load it
     if os.path.exists(plugdir+'/'+plugfile):

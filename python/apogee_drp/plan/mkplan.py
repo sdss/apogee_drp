@@ -573,11 +573,12 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     logger.info(str(plugid))
     if (cal==False) & (dark==False) & (extra==False) & (onem==False):
         tmp = plugid.split('-')
-        if os.path.exists(mapper_data+'/'+tmp[1]+'/plPlugMapM-'+plugid+'.par')==False:
-            logger.info('Cannot find plugmap file '+str(plugid))
-            #spawn,'"ls" '+mapper_data+'/'+tmp[1]+'/plPlugMapA*'
-            if ignore is False:
-                raise Exception
+        if mjd<59556:
+            if os.path.exists(mapper_data+'/'+tmp[1]+'/plPlugMapM-'+plugid+'.par')==False:
+                logger.info('Cannot find plugmap file '+str(plugid))
+                #spawn,'"ls" '+mapper_data+'/'+tmp[1]+'/plPlugMapA*'
+                if ignore is False:
+                    raise Exception
         if sky==False:
             logger.info('getting plate data')
             plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,apred=apred,telescope=telescope)
@@ -820,14 +821,13 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         # Dome flat
         elif (info['exptype'][i]=='DOMEFLAT') and info['nread'][i]>3:
             dome = int(info['num'][i])
+        # FPI
+        # still need a header flag for this
+
         # Other exposure
         else:
             print('Unknown exposure: ',info['num'][i],info['exptype'][i],info['nread'][i],' adding to extra plan file')
             extra.append(int(info['num'][i]))
-
-        # Maybe make a new plan file called "extra"
-        # some object exposures aren't getting added to a visit plan file
-        #  because the plateID didn't change
 
         # End of this plate block
         #  if plateid changed or last exposure

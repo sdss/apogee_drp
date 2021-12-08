@@ -8,6 +8,7 @@ from apogee_drp.plan import mkslurm
 from apogee_drp.apred import mkcal
 from sdss_access.path import path
 from astropy.io import fits
+from . import bitmask as bmask
 
 def load(plugfile,verbose=False,fixfiberid=None):
     """
@@ -39,50 +40,74 @@ def load(plugfile,verbose=False,fixfiberid=None):
     plugmap = yanny.yanny(plugfile,np=-True)
 
     # Add ETA/ZETA to plugmap structure
-    fiberdata = plugmap['PLUGMAPOBJ']
-    del plugmap['PLUGMAPOBJ']   # gets replaced with fiberdata below
+    if 'PLUGMAPOBJ' in plugmap.keys():
+        fiberdata = plugmap['PLUGMAPOBJ']  # plate plugmap
+        del plugmap['PLUGMAPOBJ']   # gets replaced with fiberdata below
+        FPS = False
+    else:
+        fiberdata = plugmap['FIBERMAP']   # FPS configuration file
+        del plugmap['FIBERMAP']   # gets replaced with fiberdata below
+        FPS = True
     fiberdata = dln.addcatcols(fiberdata,np.dtype([('zeta',np.float64),('eta',np.float64)]))
     zeta,eta = coords.rotsphcen(fiberdata['ra'],fiberdata['dec'],np.float64(plugmap['raCen']),np.float64(plugmap['decCen']),gnomic=True)
     fiberdata['zeta'] = zeta
     fiberdata['eta'] = eta
 
-    # Fix bit 6 erroneously set in plugmap files for tellurics 
-    ind, = np.where((fiberdata['spectrographId']==2) &
-                    (fiberdata['holeType'].astype(str)=='OBJECT') &
-                    (fiberdata['objType'].astype(str)=='HOT_STD'))
-    if len(ind)>0:
-        fiberdata['secTarget'][ind] = np.int32(fiberdata['secTarget'][ind] & 0xFFFFFFDF)
-        #fiberdata['secTarget'][ind] = np.uint64(fiberdata['secTarget'][ind] & 0xFFFFFFDF)
+    # SDSS-V FPS configuration data
+    if FPS:
+        # Add objType
+        fiberdata = dln.addcatcols(fiberdata,np.dtype([('objType',np.str,20)]))
+        fiberdata['objType'] = 'OBJECT'   # default
+        skyind, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
+                            (bmask.is_bit_set(fibermap['sdssv_apogee_target0'],0)==1))    # SKY
+        if len(skyind)>0:
+            fiberdata['objType'][skyind] = 'SKY'
+        tellind, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
+                             (bmask.is_bit_set(fibermap['sdssv_apogee_target0'],1)==1))    # HOT_STD/telluric
+        if len(tellind)>0:
+            fiberdata['objType'][tellind] = 'HOT_STD'
+        # Plug fixed fiberdata back in
+        plugmap['fiberdata'] = fiberdata
 
-    # Custom errors in mapping?
-    if fixfiberid is not None:
-        if fixfiberid==1:
-            starind = np.where(fiberdata['spectrographId']==2)
-            for istar in range(len(star)):
-                fiberid = fiberdata['fiberId'][starind[istar]]
-                if fiberid>=0:
-                    subid = (fiberid - 1) % 30
-                    bundleid = (fiberid-subid)//30
-                    fiberdata['fiberId'][star[istar]] = (9-bundleid)*30 + subid +1
-                print(star,fiberid,subid,bundleid,fiberdata['fiberId'][star[istar]])
-        if fixfiberid==2:
-            # MTP#2 rotated
-            starind, = np.where((fiberdata['spectrographId']==2) &
-                               (fiberdata['holeType']=='OBJECT'))
-            fiberid = fiberdata['fiberId'][starind]
-            j, = np.where((fiberid==31) & (fiberid<=36))
-            fiberdata['fiberId'][starind[j]] = fiberid[j] + 23
-            j, = np.where((fiberid==37) & (fiberid<=44))
-            fiberdata['fiberId'][starind[j]] = fiberid[j] + 8
-            j, = np.where((fiberid==45) & (fiberid<=52))
-            fiberdata['fiberId'][starind[j]] = fiberid[j] - 8
-            j, = np.where((fiberid==54) & (fiberid<=59))
-            fiberdata['fiberId'][starind[j]] = fiberid[j] - 23
-            # Missing fibers from unpopulated 2 of MTP
-            j, = np.where((fiberdata['fiberId'][star]==53) | (fiberdata['fiberId'][star]==60))
-            fiberdata['fiberId'][starind[j]] = -1
+    # SDSS-III/IV/V Plate plugmap data
+    else:
+        # Fix bit 6 erroneously set in plugmap files for tellurics 
+        ind, = np.where((fiberdata['spectrographId']==2) &
+                        (fiberdata['holeType'].astype(str)=='OBJECT') &
+                        (fiberdata['objType'].astype(str)=='HOT_STD'))
+        if len(ind)>0:
+            fiberdata['secTarget'][ind] = np.int32(fiberdata['secTarget'][ind] & 0xFFFFFFDF)
+            #fiberdata['secTarget'][ind] = np.uint64(fiberdata['secTarget'][ind] & 0xFFFFFFDF)
+
+        # Custom errors in mapping?
+        if fixfiberid is not None:
+            if fixfiberid==1:
+                starind = np.where(fiberdata['spectrographId']==2)
+                for istar in range(len(star)):
+                    fiberid = fiberdata['fiberId'][starind[istar]]
+                    if fiberid>=0:
+                        subid = (fiberid - 1) % 30
+                        bundleid = (fiberid-subid)//30
+                        fiberdata['fiberId'][star[istar]] = (9-bundleid)*30 + subid +1
+                    print(star,fiberid,subid,bundleid,fiberdata['fiberId'][star[istar]])
+            if fixfiberid==2:
+                # MTP#2 rotated
+                starind, = np.where((fiberdata['spectrographId']==2) &
+                                    (fiberdata['holeType']=='OBJECT'))
+                fiberid = fiberdata['fiberId'][starind]
+                j, = np.where((fiberid==31) & (fiberid<=36))
+                fiberdata['fiberId'][starind[j]] = fiberid[j] + 23
+                j, = np.where((fiberid==37) & (fiberid<=44))
+                fiberdata['fiberId'][starind[j]] = fiberid[j] + 8
+                j, = np.where((fiberid==45) & (fiberid<=52))
+                fiberdata['fiberId'][starind[j]] = fiberid[j] - 8
+                j, = np.where((fiberid==54) & (fiberid<=59))
+                fiberdata['fiberId'][starind[j]] = fiberid[j] - 23
+                # Missing fibers from unpopulated 2 of MTP
+                j, = np.where((fiberdata['fiberId'][star]==53) | (fiberdata['fiberId'][star]==60))
+                fiberdata['fiberId'][starind[j]] = -1
         
-    # Plug fixed fiberdata back in
-    plugmap['fiberdata'] = fiberdata
+        # Plug fixed fiberdata back in
+        plugmap['fiberdata'] = fiberdata
 
     return plugmap

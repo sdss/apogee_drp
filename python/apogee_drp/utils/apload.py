@@ -951,6 +951,9 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m') : #,plans=None
     """
     global plans
 
+    if plateid==0:
+        return 0, None, None
+
     if telescope == 'apo1m' :
         # for apo1m, plateid is the field and programname
         survey='apo1m'
@@ -959,14 +962,18 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m') : #,plans=None
     if plans == None : 
         print('reading platePlans')
         plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par')['PLATEPLANS']
-    j = np.where(np.array(plans['plateid']) == int(plateid))[0][0]
+    j, = np.where(np.array(plans['plateid']) == int(plateid))
+    if len(j)>0:
+        j = j[0]
+    else:
+        return None, None, None
 
     survey = plans['survey'][j]
     programname = plans['programname'][j]
     if survey == 'manga-apogee2' : field = plans['comments'][j]
     else : field = plans['name'][j]
 
-    field=field.split()[0]
+    field = field.split()[0]
     field = field.replace('APGS_','')
     field = field.replace('APG_','')
     field = field.replace('MC-','MC')
