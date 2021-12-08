@@ -94,6 +94,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     # Data directory
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
+    observatory = {'apo25m':'apo','apo1m':'apo','lco25m':'lco'}[telescope]
 
     # Create the output fiber structure
     dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),('eta',np.float64),('zeta',np.float64),
@@ -176,10 +177,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     # SDSS-V FPS configuration files
     #-------------------------------
     if mjd>=59556:
-        plugfile = ''
-        plugdir = configdir+'/'+str(mjd)+'/'
+        plugdir = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/0000XX'
+        plugfile = 'confSummary-'+str(plate)+'.par'  # plate=configid 
         # Should we add the config files to the data model?
-        import pdb; pdb.set_trace()
 
     # SDSS-III/IV/V Plate plugmap files
     #----------------------------------
@@ -213,7 +213,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         if skip==True:
             return None
         else:
-            raise Exception('Cannot find plugmap file '+plugdir+'/'+plugfile)
+            raise Exception('Cannot find plugmap/fibermap file '+plugdir+'/'+plugfile)
 
     platedata['locationid'] = plugmap['locationId']
     platedata['ha'][0] = plugmap['ha'][0]
