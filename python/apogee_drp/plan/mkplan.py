@@ -933,8 +933,6 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         planfile = load.filename('ExtraPlan',mjd=mjd)
         planfiles.append(planfile)
 
-    import pdb; pdb.set_trace()
-
     # Write out the MJD5 file
     if os.path.exists(outfile): os.remove(outfile)
     logger.info('Writing MJD5.yaml file to '+outfile)
