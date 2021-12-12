@@ -675,7 +675,6 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     daycat['success'] = False
     db.ingest('daily_status',daycat)
 
-
     # Run APRED on all planfiles using "pbs" package
     #------------------------------------------------
     if nplanfiles>0:

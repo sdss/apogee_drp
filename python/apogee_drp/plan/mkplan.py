@@ -366,7 +366,8 @@ def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
 def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
            dark=False,extra=False,sky=False,plugid=None,fixfiberid=None,stars=None,
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
-           ignore=False,test=False,logger=None):
+           ignore=False,test=False,logger=None,configid=None,designid=None,
+           fieldid=None,fps=False):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -418,6 +419,14 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         Ignore warnings and continue.
     test : bool, optional
         Just a test.
+    configid : str, optional
+        The SDSS-V FPS configuration_id.
+    designid : str, optional
+        The SDSS-V FPS design_id.
+    fieldid : str, optional
+        The SDSS-V FPS field_id.
+    fps : boolean, optional
+        Whether the data were taken with the FPS or now.  Default is False.
 
     Returns
     -------
@@ -467,7 +476,10 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     elif extra==True:
         planfile = load.filename('ExtraPlan',mjd=mjd)
     elif onem==True:
-        planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd) 
+        if fps:
+            planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd,field=str(fieldid)) 
+        else:
+            planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd) 
         if suffix is not None:
             planfile = os.path.dirname(planfile)+'/'+os.path.splitext(os.path.basename(planfile))[0]+suffix+'.yaml'
     else:
@@ -507,6 +519,11 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     out['telescope'] = telescope
     out['instrument'] = load.instrument
     out['plateid'] = plate
+    out['fps'] = fps
+    if fps:
+        out['configid'] = configid
+        out['designid'] = designid
+        out['fieldid'] = fieldid
     out['mjd'] = mjd
     out['planfile'] = os.path.basename(planfile)
     out['logfile'] = 'apDiag-'+str(plate)+'-'+str(mjd)+'.log'
@@ -683,7 +700,8 @@ def getexpinfo(observatory=None,mjd5=None,files=None):
 
     nfiles = len(files)
     dtype = np.dtype([('num',int),('nread',int),('exptype',np.str,20),('arctype',np.str,20),('plateid',np.str,20),
-                      ('exptime',float),('dateobs',np.str,50),('mjd',int),('observatory',(np.str,10))])
+                      ('configid',np.str,50),('designid',np.str,50),('fieldid',np.str,50),('exptime',float),('dateobs',np.str,50),
+                      ('mjd',int),('observatory',(np.str,10))])
     cat = np.zeros(nfiles,dtype=dtype)
     # Loop over the files
     for i in range(nfiles):
@@ -695,6 +713,9 @@ def getexpinfo(observatory=None,mjd5=None,files=None):
         cat['nread'][i] = head['nread']
         cat['exptype'][i] = head['exptype']
         cat['plateid'][i] = head['plateid']
+        cat['configid'][i] = head.get('configid')
+        cat['designid'][i] = head.get('designid')
+        cat['fieldid'][i] = head.get('fieldid')
         cat['exptime'][i] = head['exptime']
         cat['dateobs'][i] = head['date-obs']
         if mjd5 is not None:
@@ -777,6 +798,13 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     nfiles = len(info)
     logger.info(str(nfiles)+' exposures found')
 
+    # SDSS-V FPS, use configid for plateid
+    fps = False
+    if int(mjd)>=59556:
+        logger.info('SDSS-V FPS data.  Using configid for plateid')
+        info['plateid'] = info['configid']
+        fps = True
+
     # Print summary information about the data
     expindex = dln.create_index(info['exptype'])
     for i in range(len(expindex['value'])):
@@ -784,7 +812,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     objind, = np.where(info['exptype']=='OBJECT')
     if len(objind)>0:
         plates = np.unique(info['plateid'][objind])
-        logger.info('Observations of '+str(len(plates))+' plates')
+        logger.info('Observations of '+str(len(plates))+' plates/configs')
         plateindex = dln.create_index(info['plateid'][objind])
         for i in range(len(plateindex['value'])):
             logger.info('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
@@ -813,17 +841,17 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         elif (info['exptype'][i]=='ARCLAMP') and info['nread'][i]>=3:
             cal.append(int(info['num'][i]))
         # Sky frame
-        #   identify sky frames as object frames with 10<nread<15
-        elif (info['exptype'][i]=='OBJECT') and (info['nread'][i]<15 and info['nread'][i]>10):
+        #   identify sky frames as object frames with 10<nread<13
+        elif (info['exptype'][i]=='OBJECT') and (info['nread'][i]<13 and info['nread'][i]>10):
             sky.append(int(info['num'][i]))
-        # Object exposure
-        elif (info['exptype'][i]=='OBJECT') and info['nread'][i]>15:
+        # Object exposure, used to be >15
+        elif (info['exptype'][i]=='OBJECT') and info['nread'][i]>13:
             exp.append(int(info['num'][i]))
         # Dome flat
         elif (info['exptype'][i]=='DOMEFLAT') and info['nread'][i]>3:
             dome = int(info['num'][i])
         # FPI
-        # still need a header flag for this
+        # still need a header card for this
 
         # Other exposure
         else:
@@ -833,12 +861,18 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         # End of this plate block
         #  if plateid changed or last exposure
         platechange = info['plateid'][i] != info['plateid'][np.minimum(i+1,nfiles-1)]
-        if (platechange or i==nfiles-1) and len(exp)>0 and dome is not None:
+        # We don't need a domeflat with each field visit in the SDSS-V FPS era since
+        #   we will use the domeflat lookup table
+        if (platechange or i==nfiles-1) and len(exp)>0 and (dome is not None or fps):
             # Object plate visit
             objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                       'plate':int(info['plateid'][i]), 'psfid':dome, 'fluxid':dome, 'ims':exp}
+                       'plate':int(info['plateid'][i]), 'psfid':dome, 'fluxid':dome, 'ims':exp, 'fps':fps}
+            if fps:
+                objplan['configid'] = str(info['configid'][i])
+                objplan['designid'] = str(info['designid'][i])
+                objplan['fieldid'] = str(info['fieldid'][i])
             out.append(objplan)
-            planfile = load.filename('Plan',plate=int(info['plateid'][i]),mjd=mjd)
+            planfile = load.filename('Plan',plate=int(info['plateid'][i]),field=info['fieldid'][i],mjd=mjd)
             planfiles.append(planfile)
             exp = []
             # Sky exposures
@@ -846,7 +880,11 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             if len(sky)>0:
                 skyplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':int(info['plateid'][i]), 'psfid':dome, 'fluxid':dome, 
-                           'ims':sky, 'sky':True}
+                           'ims':sky, 'fps':fps, 'sky':True}
+                if fps:
+                    skyplan['configid'] = str(info['configid'][i])
+                    skyplan['designid'] = str(info['designid'][i])
+                    skyplan['fieldid'] = str(info['fieldid'][i])
                 out.append(skyplan)
                 skyplanfile = planfile.replace('.yaml','sky.yaml')
                 planfiles.append(skyplanfile)
@@ -862,24 +900,40 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     cplate = '0000'
     if len(dark)>0:
         darkplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                    'plate':0, 'psfid':0, 'fluxid':0, 'ims':dark, 'dark':True}
+                    'plate':0, 'psfid':0, 'fluxid':0, 'ims':dark, 'fps':fps, 'dark':True}
+        if fps:
+            darkplan['configid'] = str(info['configid'][i])
+            darkplan['designid'] = str(info['designid'][i])
+            darkplan['fieldid'] = str(info['fieldid'][i])
         out.append(darkplan)
         planfile = load.filename('DarkPlan',mjd=mjd)
         planfiles.append(planfile)
     # Calibration frame information
     if len(cal)>0 and calpsfid is not None:
         calplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                   'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':cal, 'cal':True}
+                   'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':cal, 'fps':fps,
+                   'cal':True}
+        if fps:
+            calplan['configid'] = str(info['configid'][i])
+            calplan['designid'] = str(info['designid'][i])
+            calplan['fieldid'] = str(info['fieldid'][i])
         out.append(calplan)
         planfile = load.filename('CalPlan',mjd=mjd)
         planfiles.append(planfile)
     # "extra" frames information
     if len(extra)>0:
         extraplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                     'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':extra, 'extra':True}
+                     'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':extra, 'fps':fps,
+                     'extra':True}
+        if fps:
+            extraplan['configid'] = str(info['configid'][i])
+            extraplan['designid'] = str(info['designid'][i])
+            extraplan['fieldid'] = str(info['fieldid'][i])
         out.append(extraplan)
         planfile = load.filename('ExtraPlan',mjd=mjd)
         planfiles.append(planfile)
+
+    import pdb; pdb.set_trace()
 
     # Write out the MJD5 file
     if os.path.exists(outfile): os.remove(outfile)
