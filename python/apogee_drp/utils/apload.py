@@ -167,9 +167,13 @@ class ApLoad:
         self.http_access.remote()
    
     def settelescope(self,telescope) :
-        self.telescope=telescope
-        if 'apo' in telescope : self.instrument='apogee-n'
-        if 'lco' in telescope : self.instrument='apogee-s'
+        self.telescope = telescope
+        if 'apo' in telescope:
+            self.instrument = 'apogee-n'
+            self.observatory = 'apo'
+        if 'lco' in telescope:
+            self.instrument = 'apogee-s'
+            self.observatory = 'lco'
  
     def setinst(self,instrument) :
         self.instrument=instrument
@@ -741,15 +745,15 @@ class ApLoad:
             return data, header
     
     def filename(self,root,
-                 location=None,obj=None,plate=None,mjd=None,num=None,fiber=None,chips=False,field=None) :
+                 location=None,obj=None,plate=None,mjd=None,num=None,fiber=None,chips=False,field=None,configid=None) :
 
         return self.allfile(root,
                             location=location,obj=obj,plate=plate,mjd=mjd,num=num,fiber=fiber,chips=chips,field=field,
-                            download=False)
+                            configid=configid,download=False)
 
     def allfile(self,root,
                 location=None,obj=None,reduction=None,plate=None,mjd=None,num=None,fiber=None,chips=False,field=None,
-                healpix=None,download=True,fz=False) :
+                healpix=None,configid=None,download=True,fz=False) :
         '''
         Uses sdss_access to create filenames and download files if necessary
         '''
@@ -777,6 +781,8 @@ class ApLoad:
            (root == 'Plan' or root == 'PlateSum' or root == 'Visit' or root == 'VisitSum' or root == 'Tellstar' or 
             root == 'Cframe' or root == 'Plate') ) :
             sdssroot = 'ap'+root+'-1m'
+        elif root=='confSummary':
+            sdssroot = root
         else :
             sdssroot = 'ap'+root
 
@@ -797,20 +803,20 @@ class ApLoad:
                                            apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
                                            field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
                                            telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
-                                           healpix=healpix)
+                                           healpix=healpix,configid=configid,obs=self.observatory)
             if self.verbose: print('filePath',filePath)
             if os.path.exists(filePath) is False and download: 
                 downloadPath = self.sdss_path.url(sdssroot,
                                       apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
                                       field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
                                       telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
-                                      healpix=healpix)
+                                                  healpix=healpix,configid=configid,obs=self.observatory)
                 if self.verbose: print('downloadPath',downloadPath)
                 self.http_access.get(sdssroot,
                                 apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
                                 field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
                                 telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
-                                healpix=healpix)
+                                     healpix=healpix,configid=configid,obs=self.observatory)
             return filePath
         else :
             for chip in ['a','b','c'] :

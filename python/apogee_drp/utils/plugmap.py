@@ -55,15 +55,28 @@ def load(plugfile,verbose=False,fixfiberid=None):
 
     # SDSS-V FPS configuration data
     if FPS:
+        # Fix some early duplicates
+        # P0650 = 275 (was duplicate 175)
+        # P0880 = 276 (was duplicate 176)
+        # P0177 = 286 (was duplicate 186)
+        bd, = np.where((fiberdata['positionerId']==650) & (fiberdata['spectrographId']==2) & (fiberdata['fiberId']==175))
+        if len(bd)>0: fiberdata['fiberId'][bd]=275
+        bd, = np.where((fiberdata['positionerId']==880) & (fiberdata['spectrographId']==2) & (fiberdata['fiberId']==176))
+        if len(bd)>0: fiberdata['fiberId'][bd]=276
+        bd, = np.where((fiberdata['positionerId']==177) & (fiberdata['spectrographId']==2) & (fiberdata['fiberId']==186))
+        if len(bd)>0: fiberdata['fiberId'][bd]=286        
+
         # Add objType
         fiberdata = dln.addcatcols(fiberdata,np.dtype([('objType',np.str,20)]))
         fiberdata['objType'] = 'OBJECT'   # default
-        skyind, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
-                            (bmask.is_bit_set(fibermap['sdssv_apogee_target0'],0)==1))    # SKY
+        skyind, = np.where( (fiberdata['fiberId']>=0) & (fiberdata['spectrographId']==2) &
+                            (fiberdata['category'].astype(str)=='SKY'))
+                            #(bmask.is_bit_set(fiberdata['sdssv_apogee_target0'],0)==1))    # SKY
         if len(skyind)>0:
             fiberdata['objType'][skyind] = 'SKY'
-        tellind, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
-                             (bmask.is_bit_set(fibermap['sdssv_apogee_target0'],1)==1))    # HOT_STD/telluric
+        tellind, = np.where( (fiberdata['fiberId']>=0) & (fiberdata['spectrographId']==2) &
+                             (fiberdata['category'].astype(str)=='HOT_STD'))
+                             #(bmask.is_bit_set(fiberdata['sdssv_apogee_target0'],1)==1))    # HOT_STD/telluric
         if len(tellind)>0:
             fiberdata['objType'][tellind] = 'HOT_STD'
         # Plug fixed fiberdata back in

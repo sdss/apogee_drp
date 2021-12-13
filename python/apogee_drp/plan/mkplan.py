@@ -572,7 +572,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     plateid = head.get('PLATEID')
     configid = head.get('CONFIGID')
     if (ignore==False):
-        if (plate!=0) & (plate!=plateid):
+        if fps==False & (plate!=0) & (plate!=plateid):
             raise ValueError('plateid in header does not match plate!')
 
     # plugmap
