@@ -582,9 +582,15 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         #rawfile = load.filename('R',chip='a',num=ims[0])
         if os.path.exists(rawfile)==True:
             head = fits.getheader(rawfile,1)
-            plugid = head['NAME']
-            if type(plugid) is not str:
-                plugid = 'header'
+            if fps==False:
+                plugid = head['NAME']
+                if type(plugid) is not str:
+                    plugid = 'header'
+            else:
+                if configid is None:
+                    plugid = os.path.basename(head['CONFIGID'])
+                else:
+                    plugid = 'confSummary-'+str(configid)+'.par'
         else:
             plugid = 'header'
     logger.info(str(ims[0]))
@@ -600,13 +606,18 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         if sky==False:
             logger.info('getting plate data')
             plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,apred=apred,telescope=telescope)
+            import pdb; pdb.set_trace()
             loc = plug['locationid']
             spectro_dir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
             if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:
                 os.makedirs(spectro_dir+'fields/'+telescope+'/'+str(loc))
-            field,survey,program = apload.apfield(plate,plug['locationid'])
-            out['survey'] = survey
-            out['field'] = field
+            if fps==False:
+                field,survey,program = apload.apfield(plate,plug['locationid'])
+                out['survey'] = survey
+                out['field'] = field
+            else:
+                out['survey'] = 'SDSS-V'
+                out['field'] = plug['field']
             with open(spectro_dir+'fields/'+telescope+'/'+str(loc)+'/plan-'+str(loc)+'.lis','w+') as file:
                 file.write(telescope+'/'+str(plate)+'/'+str(mjd)+'/'+os.path.basename(planfile))
             file.close()
