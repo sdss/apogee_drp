@@ -476,14 +476,14 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     elif extra==True:
         planfile = load.filename('ExtraPlan',mjd=mjd)
     elif onem==True:
-        if fps:
-            planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd,field=str(fieldid)) 
-        else:
-            planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd) 
+        planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd) 
         if suffix is not None:
             planfile = os.path.dirname(planfile)+'/'+os.path.splitext(os.path.basename(planfile))[0]+suffix+'.yaml'
     else:
-        planfile = load.filename('Plan',plate=plate,mjd=mjd)
+        if fps:
+            planfile = load.filename('Plan',plate=plate,mjd=mjd,field=str(fieldid)) 
+        else:
+            planfile = load.filename('Plan',plate=plate,mjd=mjd)
     # Make sure the file ends with .yaml
     if planfile.endswith('.yaml')==False:
         planfile = planfile.replace(os.path.splitext(planfile)[-1],'.yaml')     # TEMPORARY KLUDGE!
@@ -606,7 +606,6 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         if sky==False:
             logger.info('getting plate data')
             plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,apred=apred,telescope=telescope)
-            import pdb; pdb.set_trace()
             loc = plug['locationid']
             spectro_dir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
             if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:
