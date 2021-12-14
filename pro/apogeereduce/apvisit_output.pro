@@ -63,6 +63,7 @@ plate = plugmap.plateid
 mjd = plugmap.mjd
 platemjd5 = strtrim(plate,2)+'-'+strtrim(mjd,2)
 locid = plugmap.locationid
+field = strtrim(plugmap.field,2)
 
 sz = size(frame.chipa.flux)
 npix = sz[1]
@@ -159,7 +160,7 @@ For i=0,2 do begin
 
   ; Create filename
   ;   apPlate-[abc]-PLATE4-MJD5.fits 
-  outfile = apogee_filename('Plate',chip=chiptag[i],plate=plate,mjd=mjd)
+  outfile = apogee_filename('Plate',chip=chiptag[i],plate=plate,mjd=mjd,field=field)
   if not keyword_set(silent) then $
     print,'Writing Plate frame to ',outfile
 
@@ -434,7 +435,7 @@ For i=0,nfibers-1 do begin
 
     ; Create filename
     ;   apVisit-VERS-PLATE4-MJD5-FIBER3.fits 
-    outfile = apogee_filename('Visit',plate=plate,mjd=mjd,fiber=ifiberid,reduction=strtrim(tmass_name,2))
+    outfile = apogee_filename('Visit',plate=plate,mjd=mjd,fiber=ifiberid,reduction=strtrim(tmass_name,2),field=field)
     if keyword_set(mjdfrac) then begin
       cmjd=strtrim(string(mjd),2)
       s=strsplit(outfile,cmjd,/extract,/regex)

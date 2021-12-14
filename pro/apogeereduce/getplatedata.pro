@@ -108,6 +108,10 @@ function getplatedata,plate,cmjd,plugid=plugid,asdaf=asdaf,mapa=mapa,obj1m=obj1m
 
 dirs = getdir(apodir,datadir=datadir)
 if n_elements(mapper_data) eq 0 then mapper_data=dirs.mapperdir
+
+mjd = 0L
+reads,cmjd,mjd
+if long(mjd) ge 59556 then fps=1 else fps=0
 if size(plate,/type) eq 7 then begin
   cplate = plate 
   platenum = 0L
@@ -115,10 +119,7 @@ endif else begin
   cplate = strtrim(string(format='(i6.4)',plate),2)
   platenum = long(plate)
 endelse
-mjd = 0L
-reads,cmjd,mjd
-
-if long(mjd) ge 59556 then fps=1 else fps=0
+if keyword_set(fps) then cplate=strtrim(long(plate),2)  ;; no zero padding for FPS config
 
 ;; Deal with null values from yaml file
 if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then $

@@ -1,7 +1,8 @@
 pro aptelluric,frame,plugmap,outframe,tellstar,nearest=nearest,silent=silent,verbose=verbose,$
                starfitopt=starfitopt,specfitopt=specfitopt,error=error,pl=pl,pltelstarfit=pltelstarfit,stp=stp,$
                save=save,plots_dir=plots_dir,preconv=preconv,single=single,visitstr=visitstr,$
-               usetelstarfit=usetelstarfit,maxtellstars=maxtellstars,tellzones=tellzones,test=test
+               usetelstarfit=usetelstarfit,maxtellstars=maxtellstars,tellzones=tellzones,test=test,$
+               force=force
 
 ;+
 ;
@@ -193,6 +194,24 @@ else: begin
 end
 ENDCASE
 
+;; No tellurics and /force set, use all stars
+if nstar eq 0 and keyword_set(force) then begin
+  med = median(frame.chipb.flux[900:1100,*],dim=1)
+  starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
+                     plugmap.fiberdata.holetype eq 'OBJECT' and $
+                     (plugmap.fiberdata.objtype eq 'HOT_STD' or plugmap.fiberdata.objtype eq 'STAR') and $
+                     med gt 100,nstar)
+  print,'No telluric stars and /force set.  Using '+strtrim(nstar,2)+' stars with decent flux'
+  if nstar lt 2 then begin
+    print,'Not enough stars.  Cannot perform telluric correction'
+    outframe.chipa.telluric[*,*] = 1.0
+    outframe.chipb.telluric[*,*] = 1.0
+    outframe.chipc.telluric[*,*] = 1.0
+    return
+  endif
+endif
+
+
 if nstar eq 0 then stop,'halt: no telluric stars!'
 
 ; special keyword to limits number of telluric stars
@@ -351,6 +370,8 @@ for iter=0,niter-1 do begin
   ;stop
 
  endfor  ; star loop
+
+stop
 
  ; for first iteration, determine which model spectrum to adopt for each species
  if iter eq 0 then begin

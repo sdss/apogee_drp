@@ -281,15 +281,15 @@ fpiid = 0
   ;; This used to call "apskywavecal", "ap1dwavecal" now handles
   ;; both cases (sky lines and FPI lines)
   if waveid gt 0 or fpiid gt 0 then begin
-     cmd = ['ap1dwavecal',planfile]
-     if keyword_set(fpiid) then begin  ;; use FPI lines
+    cmd = ['ap1dwavecal',planfile]
+    if fpiid gt 0 then begin  ;; use FPI lines
        cmd = [cmd,'--fpiid',strtrim(fpiid,2)]
     endif else begin  ;; use sky lines
        if not keyword_set(skywave) then cmd=[cmd,'--nosky']
     endelse
-     spawn,cmd,/noshell
-     ;; if skywave then spawn,['apskywavecal',planfile],/noshell $
-     ;; else  spawn,['apskywavecal',planfile,'--nosky'],/noshell
+    spawn,cmd,/noshell
+    ;; if skywave then spawn,['apskywavecal',planfile],/noshell $
+    ;; else  spawn,['apskywavecal',planfile,'--nosky'],/noshell
   endif
 
   BOMB:

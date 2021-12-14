@@ -31,7 +31,7 @@
 
 pro ap1dvisit,planfiles,clobber=clobber,verbose=verbose,stp=stp,newwave=newwave,$
               test=test,mapper_data=mapper_data,halt=halt,dithonly=dithonly,$
-              ap1dwavecal=ap1dwavecal
+              ap1dwavecal=ap1dwavecal,force=force
 
 common telluric,convolved_telluric
 
@@ -76,6 +76,11 @@ FOR i=0L,nplanfiles-1 do begin
   print,'' & print,'Plan file information:'
   APLOADPLAN,planfile,planstr,/verbose,error=planerror
   if n_elements(planerror) gt 0 then goto,BOMB
+  if planstr.mjd ge 59556 then fps=1 else fps=0
+  if not tag_exist(planstr,'field') then begin
+    add_tag,planstr,'field','',planstr
+    planstr.field=apogee_field(0,planstr.plate)
+  endif   
 
   ; Get APOGEE directories
   dirs=getdir(apogee_dir,cal_dir,spectro_dir,apred_vers=apred_vers,datadir=datadir)
@@ -98,6 +103,7 @@ FOR i=0L,nplanfiles-1 do begin
   ; Load the Plug Plate Map file
   ;------------------------------
   print,'' & print,'Plug Map file information:'
+  if tag_exist(planstr,'force') and n_elements(force) eq 0 then force=planstr.force
   if tag_exist(planstr,'fixfiberid') then fixfiberid=planstr.fixfiberid 
   if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then $
     if (strtrim(fixfiberid,2) eq 'null' or strtrim(strlowcase(fixfiberid),2) eq 'none') then undefine,fixfiberid  ;; null/none  
@@ -144,7 +150,7 @@ FOR i=0L,nplanfiles-1 do begin
   endif
 
   ; Do the output directories exist?
-  plate_dir=apogee_filename('Plate',mjd=planstr.mjd,plate=planstr.plateid,chip='a',/dir)
+  plate_dir=apogee_filename('Plate',mjd=planstr.mjd,plate=planstr.plateid,chip='a',field=planstr.field,/dir)
   if file_test(plate_dir,/directory) eq 0 then FILE_MKDIR,plate_dir
   s=strsplit(plate_dir,'/',/extract)
   if dirs.telescope ne 'apo1m' and planstr.platetype ne 'cal' then begin
@@ -170,7 +176,7 @@ FOR i=0L,nplanfiles-1 do begin
   undefine,allframes
 
   ; do we already have apPlate file?
-  file=apogee_filename('Plate',chip='c',mjd=planstr.mjd,plate=planstr.plateid)
+  file=apogee_filename('Plate',chip='c',mjd=planstr.mjd,plate=planstr.plateid,field=planstr.field)
   if file_test(file) and not keyword_set(clobber) then begin
     print,'File already exists: ', file
     goto,dorv
@@ -227,7 +233,7 @@ FOR i=0L,nplanfiles-1 do begin
     ;------------------------------------------
     ; Correcting and Calibrating the ap1D files
     ;------------------------------------------
-    cfiles = apogee_filename('Cframe',chip=chiptag,num=framenum,plate=planstr.plateid,mjd=planstr.mjd)
+    cfiles = apogee_filename('Cframe',chip=chiptag,num=framenum,plate=planstr.plateid,mjd=planstr.mjd,field=planstr.field)
     if keyword_set(clobber) or $
          not file_test(cfiles[0]) or $
          not file_test(cfiles[1]) or $
@@ -377,7 +383,7 @@ FOR i=0L,nplanfiles-1 do begin
       ; STEP 3:  Airglow Subtraction
       ;----------------------------------
       print,'STEP 3: Airglow Subtraction with APSKYSUB'
-      APSKYSUB,frame_wave,plugmap,frame_skysub,subopt=1,error=skyerror 
+      APSKYSUB,frame_wave,plugmap,frame_skysub,subopt=1,error=skyerror,force=force
       if n_elements(skyerror) gt 0 and planstr.platetype ne 'twilight' then begin
         stop,'halt: APSKYSUB Error: ',skyerror
         apgundef,frame_wave,frame_skysub,skyerror
@@ -411,7 +417,8 @@ FOR i=0L,nplanfiles-1 do begin
       APTELLURIC,frame_skysub,plugmap,frame_telluric,tellstar,starfit=starfit,$
         single=single,pltelstarfit=pltelstarfit,usetelstarfit=usetelstarfit,$
         maxtellstars=maxtellstars,tellzones=tellzones,specfitopt=1,$
-        plots_dir=plots_dir,error=telerror,/save,/preconv,visitstr=visitstr,test=test
+        plots_dir=plots_dir,error=telerror,/save,/preconv,visitstr=visitstr,$
+        test=test,force=force
       tellstar.im=planstr.apexp[j].name
       ADD_TAG,frame_telluric,'TELLSTAR',tellstar,frame_telluric
       if n_elements(alltellstar) eq 0 then alltellstar=tellstar else alltellstar=[alltellstar,tellstar]
@@ -428,7 +435,7 @@ FOR i=0L,nplanfiles-1 do begin
       ; Output apCframe files
       ;-----------------------
       print,'Writing output apCframe files'
-      outfiles = apogee_filename('Cframe',chip=chiptag,num=framenum,plate=planstr.plateid,mjd=planstr.mjd)
+      outfiles = apogee_filename('Cframe',chip=chiptag,num=framenum,plate=planstr.plateid,mjd=planstr.mjd,field=planstr.field)
       if keyword_set(stp) then stop
       APVISIT_OUTCFRAME,frame_telluric,plugmap,outfiles,/silent
 
@@ -441,7 +448,7 @@ FOR i=0L,nplanfiles-1 do begin
 
     ; Make the filenames and check the files
     ; Cframe files
-    cfiles = apogee_filename('Cframe',chip=chiptag,num=framenum,plate=planstr.plateid,mjd=planstr.mjd)
+    cfiles = apogee_filename('Cframe',chip=chiptag,num=framenum,plate=planstr.plateid,mjd=planstr.mjd,field=planstr.field)
     cinfo = APFILEINFO(cfiles,/silent)
     okay = (cinfo.exists AND cinfo.allchips AND (cinfo.mjd5 eq planstr.mjd) AND $
             ((cinfo.naxis eq 3) OR (cinfo.exten eq 1)))
@@ -507,12 +514,11 @@ FOR i=0L,nplanfiles-1 do begin
 
   ; Write summary telluric file
   if planstr.platetype eq 'single' then begin
-
     tellstarfile=$
       planstr.plate_dir+'/apTellstar-'+strtrim(planstr.mjd,2)+'-'+strtrim(planstr.name,2)+'.fits'  
     mwrfits,alltellstar,tellstarfile,/create
   endif else if planstr.platetype eq 'normal'  then begin
-    tellstarfile=apogee_filename('Tellstar',plate=planstr.plateid,mjd=planstr.mjd)
+    tellstarfile=apogee_filename('Tellstar',plate=planstr.plateid,mjd=planstr.mjd,field=planstr.field)
     mwrfits,alltellstar,tellstarfile,/create
   endif
   t1=systime(1)
@@ -580,7 +586,8 @@ FOR i=0L,nplanfiles-1 do begin
     if planstr.platetype ne 'normal' and planstr.platetype ne 'single' then goto,BOMB
   print,'Radial velocity measurements'
   locid=plugmap.locationid
-  visitstrfile = apogee_filename('VisitSum',plate=planstr.plateid,mjd=planstr.mjd,reduction=plugmap.fiberdata[obj].tmass_style)
+  visitstrfile = apogee_filename('VisitSum',plate=planstr.plateid,mjd=planstr.mjd,$
+                                 reduction=plugmap.fiberdata[obj].tmass_style,field=planstr.field)
   if tag_exist(planstr,'mjdfrac') then if planstr.mjdfrac eq 1 then begin
     cmjd=strtrim(string(planstr.mjd),2)
     s=strsplit(visitstrfile,cmjd,/extract,/regex)
@@ -603,10 +610,10 @@ FOR i=0L,nplanfiles-1 do begin
     if tag_exist(planstr,'mjdfrac') then if planstr.mjdfrac eq 1 then $
       mjd=sxpar(finalframe.(0).header,'JD-MID')-2400000.5  else $
       mjd=planstr.mjd
-    visitfile=apread('Visit',plate=planstr.plateid,mjd=mjd,fiber=objdata[0].fiberid,reduction=obj)
+    visitfile=apread('Visit',plate=planstr.plateid,mjd=mjd,fiber=objdata[0].fiberid,reduction=obj,field=planstr.field)
     header0=visitfile[0].hdr
   endif else begin
-    finalframe=apread('Plate',mjd=planstr.mjd,plate=planstr.plateid)
+    finalframe=apread('Plate',mjd=planstr.mjd,plate=planstr.plateid,field=planstr.field)
     header0=finalframe[0].hdr
   endelse
 
@@ -618,7 +625,8 @@ FOR i=0L,nplanfiles-1 do begin
   ;; Loop over the objects
   apgundef,allvisitstr
   for istar=0,n_elements(objind)-1 do begin
-    visitfile = apogee_filename('Visit',plate=planstr.plateid,mjd=planstr.mjd,fiber=objdata[istar].fiberid,reduction=obj)
+    visitfile = apogee_filename('Visit',plate=planstr.plateid,mjd=planstr.mjd,$
+                                fiber=objdata[istar].fiberid,reduction=obj,field=planstr.field)
     if tag_exist(planstr,'mjdfrac') then if planstr.mjdfrac eq 1 then begin
       cmjd = strtrim(mjd,2)
       s = strsplit(visitfile,cmjd,/extract,/regex)

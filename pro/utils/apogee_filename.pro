@@ -22,7 +22,8 @@ if filetype eq 'Tellstar' and dirs.telescope eq 'apo1m' then sdsstype='apTellsta
 if filetype eq 'Cframe' and dirs.telescope eq 'apo1m' then sdsstype='apCframe-1m'
 if filetype eq 'Plate' and dirs.telescope eq 'apo1m' then sdsstype='apPlate-1m'
 
-if n_elements(keywords) gt 0 then if tag_exist(keywords,'plate') then keywords=create_struct(keywords,'FIELD',apogee_field(0,keywords.plate))
+if n_elements(keywords) gt 0 then if tag_exist(keywords,'plate') and not tag_exist(keywords,'field') then $
+   keywords=create_struct(keywords,'FIELD',apogee_field(0,keywords.plate))
 
 if keyword_set(nochip) then chip='-asdf'
 

@@ -1,5 +1,5 @@
 pro apskysub,frame,plugmap,outframe,suboption=suboption,nearest=nearest,$
-             error=error,silent=silent,verbose=verbose,pl=pl,stp=stp
+             error=error,silent=silent,verbose=verbose,pl=pl,stp=stp,force=force
 
 ;+
 ;
@@ -128,10 +128,21 @@ for i=0,nplug-1 do begin
   sky[i]=issky(plugmap.fiberdata[i].target1,plugmap.fiberdata[i].target2) 
   sci[i]=isscience(plugmap.fiberdata[i].target1,plugmap.fiberdata[i].target2) 
 endfor
+
 skyplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
                    plugmap.fiberdata.holetype eq 'OBJECT' and $
                    sky and not sci,nsky)
 ;                   plugmap.fiberdata.objtype eq 'SKY',nsky)
+
+;; No sky fibers, if /force use faint fibers
+if nsky eq 0 and keyword_set(force) then begin
+  med = median(frame.chipb.flux[900:1100,*],dim=1)
+  skyplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
+                     plugmap.fiberdata.holetype eq 'OBJECT' and $
+                     med lt 10,nsky)
+  print,'No sky fibers found and /force set.  Using '+strtrim(nsky,2)+' faint fibers instead.'
+endif
+
 
 if nsky eq 0 then begin
   error = 'halt: NO SKY fibers.  CANNOT do sky subtraction.'
