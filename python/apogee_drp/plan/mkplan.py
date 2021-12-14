@@ -591,10 +591,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
                 if type(plugid) is not str:
                     plugid = 'header'
             else:
-                if configid is None:
-                    plugid = os.path.basename(head['CONFIGID'])
-                else:
-                    plugid = 'confSummary-'+str(configid)+'.par'
+                plugid = 'confSummary-'+str(configid)+'.par'
         else:
             plugid = 'header'
     logger.info(str(ims[0]))
@@ -879,21 +876,30 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         #   we will use the domeflat lookup table
         if (platechange or i==nfiles-1) and len(exp)>0 and (dome is not None or fps):
             # Object plate visit
-            objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                       'plate':int(info['plateid'][i]), 'psfid':dome, 'fluxid':dome, 'ims':exp, 'fps':fps}
             if fps:
+                plate = info['configid'][i]
+                if plate=='None':
+                    plate = 0
+                else:
+                    plate = int(plate)
+                objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
+                           'plate':plate, 'psfid':dome, 'fluxid':dome, 'ims':exp, 'fps':fps}
                 objplan['configid'] = str(info['configid'][i])
                 objplan['designid'] = str(info['designid'][i])
                 objplan['fieldid'] = str(info['fieldid'][i])
+            else:
+                plate = int(info['plateid'][i])
+                objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
+                           'plate':plate, 'psfid':dome, 'fluxid':dome, 'ims':exp, 'fps':fps}
             out.append(objplan)
-            planfile = load.filename('Plan',plate=int(info['plateid'][i]),field=info['fieldid'][i],mjd=mjd)
+            planfile = load.filename('Plan',plate=plate,field=info['fieldid'][i],mjd=mjd)
             planfiles.append(planfile)
             exp = []
             # Sky exposures
             #   use same cals as for object
             if len(sky)>0:
                 skyplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                           'plate':int(info['plateid'][i]), 'psfid':dome, 'fluxid':dome, 
+                           'plate':plate, 'psfid':dome, 'fluxid':dome, 
                            'ims':sky, 'fps':fps, 'sky':True}
                 if fps:
                     skyplan['configid'] = str(info['configid'][i])
