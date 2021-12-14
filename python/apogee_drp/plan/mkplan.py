@@ -367,7 +367,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
            dark=False,extra=False,sky=False,plugid=None,fixfiberid=None,stars=None,
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False,logger=None,configid=None,designid=None,
-           fieldid=None,fps=False):
+           fieldid=None,fps=False,force=False):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -427,6 +427,9 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         The SDSS-V FPS field_id.
     fps : boolean, optional
         Whether the data were taken with the FPS or now.  Default is False.
+    force : boolean, optional
+        Force ap1dvisit to push through sky and tellurics even if there aren't
+          any sky or telluric fibers.
 
     Returns
     -------
@@ -520,6 +523,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     out['instrument'] = load.instrument
     out['plateid'] = plate
     out['fps'] = fps
+    out['force'] = force
     if fps:
         out['configid'] = configid
         out['designid'] = designid
