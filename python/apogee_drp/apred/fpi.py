@@ -626,7 +626,7 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
         outname = load.filename('1D',num=int(name),mjd=load.cmjd(int(name)),chips=True)
         for ichip,chip in enumerate(chips) :
             hdu = fits.HDUList()
-            frame[chip][0].header['HISTORY'] = 'Added wavelengths from FPI cal, fpiid: '+strfpiid)
+            frame[chip][0].header['HISTORY'] = 'Added wavelengths from FPI cal, fpiid: '+strfpiid
             frame[chip][0].header['FPIMETHOD'] = fpifitmethod
             frame[chip][0].header['FPINPARS'] = len(pars)
             for ip,p in enumerate(pars):
