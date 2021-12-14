@@ -10,6 +10,7 @@
 ;  =ra    Array of RA values (need DEC as well).
 ;  =dec   Array of DEC values.
 ;  =dcr   Search radius in arcsec.  Default is 1".
+;  =designid  Design ID.
 ;
 ; OUTPUTS:
 ;  Returns a structure of catalogdb information.
@@ -22,11 +23,11 @@
 ;
 ; By D.Nidever, Oct 2020
 ;-
-function get_catalogdb_data,id=catalogid,ra=ra,dec=dec,dcr=dcr
+function get_catalogdb_data,id=catalogid,ra=ra,dec=dec,dcr=dcr,designid=designid
 
 catalogstr = -1
 
-if (n_elements(catalogid) eq 0) and (n_elements(ra) eq 0 or n_elements(dec) eq 0) then begin
+if (n_elements(catalogid) eq 0) and (n_elements(ra) eq 0 or n_elements(dec) eq 0) and (n_elements(designid) eq 0) then begin
   print,'Syntax - catalogstr = get_catalogdb_data(id=id,ra=ra,dec=dec)'
   return,-1
 endif
@@ -54,6 +55,18 @@ if n_elements(catalogid) gt 0 then begin
     sql = "select "+cols+" from catalogdb.tic_v8 as t join catalogdb.catalog_to_tic_v8 as x on x.target_id=t.id "+$
           "join catalogdb.catalog as c on x.catalogid=c.catalogid where x.catalogid="+ids
   endelse
+
+;; Get all targets for a certain design
+endif else if keyword_set(designid) then begin
+  sql = "select t.catalogid,t.ra,t.dec,t.pmra,t.pmdec,t.epoch,m.bp as gaia_bpmag,m.rp as gaia_rpmag,m.gaia_g as gaia_gmag,"+$
+        "m.j as jmag,m.h as hmag,m.k as kmag,c.carton,c.program "+$
+        "from targetdb.carton_to_target as ct "+$
+        "join targetdb.assignment as a on a.carton_to_target_pk=ct.pk "+$
+        "join magnitude as m on m.carton_to_target_pk=a.carton_to_target_pk "+$
+        "join target as t on t.pk=ct.target_pk "+$
+        "join carton as c on c.pk=ct.carton_pk "+$
+        "where a.design_id="+strtrim(designid,2)+";"
+
 ;; Use coordinates
 endif else begin
   if n_elements(dcr) eq 0 then dcr=1.0  ; search radius in arcsec

@@ -79,7 +79,8 @@ if n_elements(pdata) eq 0 then begin
   return
 endif
 for i=0, N_elements(pdata)-1 do begin
-   if (tag_names(*pdata[i], /structure_name) EQ 'PLUGMAPOBJ') then $
+   if (tag_names(*pdata[i], /structure_name) EQ 'PLUGMAPOBJ') or $
+      (tag_names(*pdata[i], /structure_name) EQ 'FIBERMAP') then $
     plugdata = *pdata[i]
 endfor
 YANNY_FREE, pdata
@@ -163,7 +164,13 @@ for j=0,nkeywords-1 do begin
   if min(valid_num(value,/integer)) eq 1 then type=3   ; use min in case value is an array
 
   ;type = keytype[j]
-  plugmap = CREATE_STRUCT(plugmap,keywords[j],fix(value,type=type))
+  havetag = where(strupcase(tags) eq keywords[j],nhavetag)
+  if nhavetag eq 0 then begin
+    plugmap = CREATE_STRUCT(plugmap,keywords[j],fix(value,type=type))
+  endif else begin
+    plugmap.(havetag[0]) = fix(value,type=type)
+    if type eq 7 then plugmap.(havetag[0])=strtrim(fix(value,type=type),2)
+  endelse
   tags = tag_names(plugmap)
   ;tagind = where(tags eq strupcase(keywords[j]))
   ;type = size(plugmap.(tagind),/type)
@@ -171,7 +178,16 @@ for j=0,nkeywords-1 do begin
   ; Print out the keyword/value pair
   if keyword_set(verbose) then print,keywords[j],' = ',fix(value,type=type)
  endif
-end
+endfor
+
+if long(plugmap.mjd) ge 59556 then fps=1 else fps=0
+
+if keyword_set(fps) then begin
+  if tag_exist(plugmap,'PLATEID') eq 0 then $
+    plugmap = CREATE_STRUCT(plugmap,'PLATEID',plugmap.configuration_id)
+  if tag_exist(plugmap,'LOCATIONID') eq 0 then $
+    plugmap = CREATE_STRUCT(plugmap,'LOCATIONID',plugmap.field_id)
+endif
 
 ; Get ETA/ZETA using plate center
 ;---------------------------------
@@ -179,12 +195,53 @@ ROTSPHCEN,plugmap.fiberdata.ra,plugmap.fiberdata.dec,plugmap.raCen,plugmap.decCe
 plugmap.fiberdata.zeta = zeta
 plugmap.fiberdata.eta = eta
 
+
+;; SDSS-V FPS configuration data
+if keyword_set(fps) then begin                                                                                                                       
+  fiberdata = plugmap.fiberdata
+  ;; Fix some early duplicates
+  ;; P0650 = 275 (was duplicate 175)                                                                                                                   
+  ;; P0880 = 276 (was duplicate 176)                                                                                                                   
+  ;; P0177 = 286 (was duplicate 186)                                                                                                                   
+  bd = where((fiberdata.positionerid eq 650) and (fiberdata.spectrographid eq 2) and (fiberdata.fiberid eq 175),nbd)
+  if nbd gt 0 then fiberdata[bd].fiberid = 275
+  bd = where((fiberdata.positionerid eq 880) and (fiberdata.spectrographid eq 2) and (fiberdata.fiberid eq 176),nbd)
+  if nbd gt 0 then fiberdata[bd].fiberid = 276
+  bd = where((fiberdata.positionerid  eq 177) and (fiberdata.spectrographid eq 2) and (fiberdata.fiberid eq 186),nbd)
+  if nbd gt 0 then fiberdata[bd].fiberid = 286
+
+  ;; Add objType
+  add_tag,fiberdata,'objtype','',fiberdata
+  fiberdata.objtype = 'OBJECT'   ;; default
+  skyind = where( (fiberdata.fiberid ge 0) and (fiberdata.spectrographid eq 2) and $
+                  (fiberdata.category eq 'SKY'),nskyind)
+                  ;;(bmask.is_bit_set(fiberdata['sdssv_apogee_target0'],0)==1))    ;; SKY
+  if nskyind gt 0 then fiberdata[skyind].objtype = 'SKY'
+  tellind = where( (fiberdata.fiberid ge 0) and (fiberdata.spectrographid eq 2) and $
+                   (fiberdata.category eq 'HOT_STD'),ntellind)
+                   ;;(bmask.is_bit_set(fiberdata['sdssv_apogee_target0'],1)==1))    ;; HOT_STD/telluric
+  if ntellind gt 0 then fiberdata[tellind].objtype = 'HOT_STD'
+  ;; Plug fixed fiberdata back in
+  ;;   need to recreate it because the fiberdata structure changed
+  old = plugmap
+  undefine,plugmap
+  plugmap = CREATE_STRUCT('hdr',old.hdr,'fiberdata',fiberdata)
+  otags = tag_names(old)
+  for i=0,n_tags(old)-1 do begin
+    gotit = where(tag_names(plugmap) eq otags[i],ngotit)
+    if ngotit eq 0 then plugmap = CREATE_STRUCT(plugmap,otags[i],old.(i))
+  endfor
+  undefine,old
+endif
+
 ; Fix bit 6 erroneously set in plugmap files for tellurics 
-ind = where(plugmap.fiberdata.spectrographid eq 2 and $
-                     plugmap.fiberdata.holetype eq 'OBJECT' and $
-                     plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
-m=0L & m='FFFFFFDF'X
-if nstar gt 0 then plugmap.fiberdata[ind].sectarget = long(plugmap.fiberdata[ind].sectarget and m)
+if not keyword_set(fps) then begin
+  ind = where(plugmap.fiberdata.spectrographid eq 2 and $
+              plugmap.fiberdata.holetype eq 'OBJECT' and $
+              plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
+  m=0L & m='FFFFFFDF'X
+  if nstar gt 0 then plugmap.fiberdata[ind].sectarget = long(plugmap.fiberdata[ind].sectarget and m)
+endif
 
 ; remove duplicate plateId entries if they exist
 if n_elements(plugmap.plateid) gt 1 then begin

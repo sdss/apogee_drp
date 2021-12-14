@@ -118,6 +118,8 @@ endelse
 mjd = 0L
 reads,cmjd,mjd
 
+if long(mjd) ge 59556 then fps=1 else fps=0
+
 ;; Deal with null values from yaml file
 if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then $
   if (strtrim(fixfiberid,2) eq 'null' or strtrim(strlowcase(fixfiberid),2) eq 'none') then undefine,fixfiberid  ;; null/none  
@@ -193,9 +195,15 @@ fiber = replicate(tmp,300)
 reads,cplate,platenum
 platedata = {plate:platenum, mjd:mjd, plateid:cplate, locationid:0L, field:' ', programname:'', cmjd:cmjd,$
              ha:[-99.,-99.,-99.], fiberdata:fiber, guidedata:guide}
-platedata.field = apogee_field(loc,platenum,survey,programname)
-platedata.locationid = loc
-platedata.programname = programname
+if not keyword_set(fps) then begin
+  platedata.field = apogee_field(loc,platenum,survey,programname)
+  platedata.locationid = loc
+  platedata.programname = programname
+endif else begin
+  ;stop
+  ;platedata.locationid = fieldid  ;; fieldid
+  ;platedata.programname = carton ;; carton
+endelse
 
 ;; Do we want to use a plPlugMapA file with the matching already done?
 havematch = 0
@@ -213,16 +221,24 @@ if keyword_set(mapa) then plugdir=datadir+cmjd+'/' else begin
   plugmjd = tmp[1]
   plugdir = mapper_data+'/'+plugmjd+'/'
 endelse
+if keyword_set(fps) then begin
+  observatory = 'apo'
+  configgrp = string(plate/100,format='(I04)')+'XX'
+  plugdir = getenv('SDSSCORE_DIR')+'/'+observatory+'/summary_files/'+configgrp+'/'
+  plugfile = 'confSummary-'+strtrim(plate,2)+'.par'
+endif
 
 ;; Does the plugfile exist? If so, load it
 if file_test(plugdir+'/'+plugfile) then APLOADPLUGMAP,plugdir+'/'+plugfile,plugmap,fixfiberid=fixfiberid else $
    if keyword_set(skip) then return,0 else stop,'halt: cannot find plugmap file '+plugdir+'/'+plugfile
 
 platedata.locationid = plugmap.locationid
-platedata.ha[0] = plugmap.ha[0]
-platedata.ha[1] = plugmap.ha_observable_min[0]
-platedata.ha[2] = plugmap.ha_observable_max[0]
-if not keyword_set(mapa) then begin
+if not keyword_set(fps) then begin
+  platedata.ha[0] = plugmap.ha[0]
+  platedata.ha[1] = plugmap.ha_observable_min[0]
+  platedata.ha[2] = plugmap.ha_observable_max[0]
+endif
+if not keyword_set(mapa) and not keyword_set(fps) then begin
   ;; Get the plateHolesSorted file for thie plate and read it
   platestr = string(format='(i6.6)',platenum)
   platedir = getenv('PLATELIST_DIR')+'/plates/'+strmid(platestr,0,4)+'XX/'+platestr
@@ -263,25 +279,86 @@ if not keyword_set(mapa) then begin
   endif
 endif
 
+;; Get SDSS-V FPS photometry from targetdb                                                                                                               
+if keyword_set(fps) then begin
+  print,'Querying targetdb/catalogdb'
+  p = get_catalogdb_data(designid=plugmap.design_id)
+  add_tag,p,'target_ra',0.0d0,p
+  p.target_ra = p.ra
+  add_tag,p,'target_dec',0.0d0,p
+  p.target_dec = p.dec
+  add_tag,p,'tmass_j',0.0,p
+  p.tmass_j = p.jmag
+  add_tag,p,'tmass_h',0.0,p
+  p.tmass_h = p.hmag
+  add_tag,p,'tmass_k',0.0,p
+  p.tmass_k = p.kmag
+  ;; get 2MASS IDs and other info from catalogdb
+  gdid = where(plugmap.fiberdata.catalogid gt 0,ngdid)
+  if ngdid gt 0 then begin
+    catinfo = get_catalogdb_data(id=plugmap.fiberdata[gdid].catalogid)
+    match,p.catalogid,catinfo.catalogid,ind1,ind2,/sort,coun=nmatch
+    if nmatch gt 0 then begin
+       orig = p
+       undefine,p
+       tagnames = ['tmass_id','e_jmag','e_hmag','e_kmag','phflag','gaiadr2_sourceid','gaiadr2_ra','gaiadr2_dec',$
+                   'gaiadr2_pmra','gaiadr2_pmdec','gaiadr2_pmra_error','gaiadr2_pmdec_error','gaiadr2_plx',$
+                   'gaiadr2_plx_error','gaiadr2_gmag','gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr',$
+                   'gaiadr2_rpmag','gaiadr2_rperr']
+       tagvals = ['" "','0.0','0.0','0.0','" "','0LL','0.0d0','0.0d0','0.0','0.0','0.0','0.0','0.0','0.0','0.0',$
+                  '0.0','0.0','0.0','0.0','0.0']
+       add_tags,orig,tagnames,tagvals,p
+       undefine,orig
+       p[ind1].tmass_id = catinfo[ind2].twomass
+       p[ind1].e_jmag = catinfo[ind2].e_jmag
+       p[ind1].e_hmag = catinfo[ind2].e_hmag
+       p[ind1].e_kmag = catinfo[ind2].e_kmag
+       p[ind1].phflag = catinfo[ind2].twomflag
+       p[ind1].gaiadr2_sourceid = catinfo[ind2].gaia
+       p[ind1].gaiadr2_ra = catinfo[ind2].ra
+       p[ind1].gaiadr2_dec = catinfo[ind2].dec
+       p[ind1].gaiadr2_pmra = catinfo[ind2].pmra
+       p[ind1].gaiadr2_pmdec = catinfo[ind2].pmdec
+       p[ind1].gaiadr2_pmra_error = catinfo[ind2].e_pmra
+       p[ind1].gaiadr2_pmdec_error = catinfo[ind2].e_pmdec
+       p[ind1].gaiadr2_plx = catinfo[ind2].plx
+       p[ind1].gaiadr2_plx_error = catinfo[ind2].e_plx
+       p[ind1].gaiadr2_gmag = catinfo[ind2].gaiamag
+       p[ind1].gaiadr2_gerr = catinfo[ind2].e_gaiamag
+       p[ind1].gaiadr2_bpmag = catinfo[ind2].gaiabp
+       p[ind1].gaiadr2_bperr = catinfo[ind2].e_gaiabp
+       p[ind1].gaiadr2_rpmag = catinfo[ind2].gaiarp
+       p[ind1].gaiadr2_rperr = catinfo[ind2].e_gaiarp
+    endif
+  endif
+endif
+
 ;; Load guide stars
-for i=0,15 do begin
-  m = where(plugmap.fiberdata.holetype eq 'GUIDE' and $
-            plugmap.fiberdata.fiberid eq i,nm)
-  guide[i].fiberid = plugmap.fiberdata[m].fiberid
-  guide[i].ra = plugmap.fiberdata[m].ra 
-  guide[i].dec = plugmap.fiberdata[m].dec 
-  guide[i].eta = plugmap.fiberdata[m].eta
-  guide[i].zeta = plugmap.fiberdata[m].zeta
-  guide[i].spectrographid = plugmap.fiberdata[m].spectrographid
-endfor
-platedata.guidedata = guide
+if not keyword_set(fps) then begin
+  for i=0,15 do begin
+    m = where(plugmap.fiberdata.holetype eq 'GUIDE' and $
+              plugmap.fiberdata.fiberid eq i,nm)
+    guide[i].fiberid = plugmap.fiberdata[m].fiberid
+    guide[i].ra = plugmap.fiberdata[m].ra 
+    guide[i].dec = plugmap.fiberdata[m].dec 
+    guide[i].eta = plugmap.fiberdata[m].eta
+    guide[i].zeta = plugmap.fiberdata[m].zeta
+    guide[i].spectrographid = plugmap.fiberdata[m].spectrographid
+  endfor
+  platedata.guidedata = guide
+endif
 
 ;; Find matching plugged entry for each spectrum and load up the output information from correct source(s)
 for i=0,299 do begin
   fiber[i].spectrographid = -1
-  m = where(plugmap.fiberdata.holetype eq 'OBJECT' and $
-            plugmap.fiberdata.spectrographid eq 2 and $
-            plugmap.fiberdata.fiberid eq 300-i,nm)
+  if keyword_set(fps) then begin
+    m = where(plugmap.fiberdata.spectrographid eq 2 and $
+              plugmap.fiberdata.fiberid eq 300-i,nm)
+  endif else begin
+    m = where(plugmap.fiberdata.holetype eq 'OBJECT' and $
+              plugmap.fiberdata.spectrographid eq 2 and $
+              plugmap.fiberdata.fiberid eq 300-i,nm)
+  endelse
   if keyword_set(badfiberid) then begin
     j = where(badfiberid eq 300-i,nbad)
     if nbad gt 0 then begin
@@ -300,8 +377,12 @@ for i=0,299 do begin
     fiber[i].dec = plugmap.fiberdata[m].dec 
     fiber[i].eta = plugmap.fiberdata[m].eta
     fiber[i].zeta = plugmap.fiberdata[m].zeta
-    fiber[i].target1 = plugmap.fiberdata[m].primTarget
-    fiber[i].target2 = plugmap.fiberdata[m].secTarget
+    if keyword_set(fps) then begin
+      fiber[i].sdssv_apogee_target0 = plugmap.fiberdata[m].sdssv_apogee_target0
+    endif else begin
+      fiber[i].target1 = plugmap.fiberdata[m].primTarget
+      fiber[i].target2 = plugmap.fiberdata[m].secTarget
+    endelse
     fiber[i].spectrographid = plugmap.fiberdata[m].spectrographid
 
     ;; Special for asdaf object plates
@@ -320,7 +401,8 @@ for i=0,299 do begin
       fiber[i].objtype = plugmap.fiberdata[m].objtype
       ;; Fix up objtype
       fiber[i].objtype = 'STAR'
-      fiber[i].holetype = plugmap.fiberdata[m].holetype
+      if not keyword_set(fps) then $
+        fiber[i].holetype = plugmap.fiberdata[m].holetype
       if keyword_set(mapa) then begin
         ;; HMAG's are correct from plPlugMapA files
         fiber[i].hmag = plugmap.fiberdata[m].mag[1]
@@ -334,7 +416,7 @@ for i=0,299 do begin
                       abs(p.target_dec-fiber[i].dec) lt 0.00002,nmatch)
         if nmatch gt 0 then begin
           ;; APOGEE-2 plate
-          if tag_exist(p,'apogee2_target1') and platenum gt 7500 and platenum lt 15000 then begin
+          if tag_exist(p,'apogee2_target1') and platenum gt 7500 and platenum lt 15000 and not keyword_set(fps) then begin
             fiber[i].target1 = p[match].apogee2_target1
             fiber[i].target2 = p[match].apogee2_target2
             fiber[i].target3 = p[match].apogee2_target3
@@ -352,28 +434,57 @@ for i=0,299 do begin
             endif
           endif
           ;; APOGEE-1 plate
-          if not tag_exist(p,'apogee2_target1') and platenum le 7500 then begin
+          if not tag_exist(p,'apogee2_target1') and platenum le 7500 and not keyword_set(fps) then begin
             fiber[i].target1 = p[match].apogee_target1
             fiber[i].target2 = p[match].apogee_target2
             apogee2 = 0
             sdss5 = 0
           endif
           ;; SDSS-V plate
-          if platenum ge 15000 then begin
-            fiber[i].catalogid = p[match].catalogid
-            fiber[i].gaia_g = p[match].gaia_g
-            fiber[i].gaia_bp = p[match].gaia_bp
-            fiber[i].gaia_rp = p[match].gaia_rp
-            fiber[i].sdssv_apogee_target0 = p[match].sdssv_apogee_target0
-            fiber[i].firstcarton = p[match].firstcarton
-            fiber[i].pmra = p[match].pmra
-            fiber[i].pmdec = p[match].pmdec
-            ;; objtype: OBJECT, HOT_STD, or SKY
-            objtype = 'OBJECT'
-            if is_bit_set(fiber[i].sdssv_apogee_target0,0) then objtype='SKY'
-            if is_bit_set(fiber[i].sdssv_apogee_target0,1) then objtype='HOT_STD'
-            apogee2 = 0
+          if platenum ge 15000 or keyword_set(fps) then begin
             sdss5 = 1
+            if not keyword_set(fps) then begin  ;; SDSS-V plate data
+              fiber[i].catalogid = p[match].catalogid
+              fiber[i].gaia_g = p[match].gaia_g
+              fiber[i].gaia_bp = p[match].gaia_bp
+              fiber[i].gaia_rp = p[match].gaia_rp
+              fiber[i].sdssv_apogee_target0 = p[match].sdssv_apogee_target0
+              fiber[i].firstcarton = p[match].firstcarton
+              fiber[i].pmra = p[match].pmra
+              fiber[i].pmdec = p[match].pmdec
+              ;; objtype: OBJECT, HOT_STD, or SKY
+              objtype = 'OBJECT'
+              if is_bit_set(fiber[i].sdssv_apogee_target0,0) then objtype='SKY'
+              if is_bit_set(fiber[i].sdssv_apogee_target0,1) then objtype='HOT_STD'
+              apogee2 = 0
+            ;; SDSS-V FPS data
+            endif else begin
+              fiber[i].catalogid = p[match].catalogid
+              fiber[i].twomass_designation = p[match].tmass_id
+              fiber[i].gaia_g = p[match].gaia_gmag
+              fiber[i].gaia_bp = p[match].gaia_bpmag
+              fiber[i].gaia_rp = p[match].gaia_rpmag
+              fiber[i].jmag = p[match].jmag
+              fiber[i].jerr = p[match].e_jmag
+              fiber[i].hmag = p[match].hmag
+              fiber[i].herr = p[match].e_hmag
+              fiber[i].kmag = p[match].kmag
+              fiber[i].kerr = p[match].e_kmag
+              ;;fiber[i].sdssv_apogee_target0 = p[match].sdssv_apogee_target0
+              fiber[i].firstcarton = p[match].carton
+              fiber[i].pmra = p[match].pmra
+              fiber[i].pmdec = p[match].pmdec
+              fiber[i].gaiadr2_sourceid = p[match].gaiadr2_sourceid
+              fnames = ['gaiadr2_ra','gaiadr2_dec','gaiadr2_pmra','gaiadr2_pmdec','gaiadr2_pmra_error',$
+                        'gaiadr2_pmdec_error','gaiadr2_plx','gaiadr2_plx_error','gaiadr2_gmag','gaiadr2_gerr',$
+                        'gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr']
+              for k=0,n_elements(fnames)-1 do begin
+                mind1 = where(tag_names(fiber) eq strupcase(fnames[k]),nmind1)
+                mind2 = where(tag_names(p) eq strupcase(fnames[k]),nmind2)
+                if nmind1 eq 0 or nmind2 eq 0 then stop,'problem with names'
+                fiber[i].(mind1[0]) = p[match].(mind2[0])
+              endfor
+            endelse
           endif
           ;; APOGEE-1/2 target types
           if platenum lt 15000 then begin
@@ -389,8 +500,11 @@ for i=0,299 do begin
             fiber[i].objtype = 'SKY'
           endif else begin
             fiber[i].objtype = objtype
-            if platenum lt 15000 then tmp = strtrim(p[match].targetids,2) else $
+            if platenum lt 15000 and not keyword_set(fps) then begin
+              tmp = strtrim(p[match].targetids,2)
+            endif else begin
               tmp = strtrim(p[match].tmass_id,2)
+            endelse
             len = strlen(tmp)
             object = strmid(tmp,len-16)
             if strpos(tmp,'A') eq 0 then $
@@ -404,7 +518,7 @@ for i=0,299 do begin
           fiber[i].hmag = hmag
           fiber[i].object = object
           fiber[i].tmass_style = object
-        endif else stop,'no match found in plateHoles!',fiber[i].ra,fiber[i].dec, i
+        endif else print,'no match found in plateHoles!',fiber[i].ra,fiber[i].dec, 300-i
       endelse
     endelse
   endif else begin
@@ -553,6 +667,14 @@ if platenum ge 15000 then begin
   endfor ; object loop
 
 endif  ; get catalogdb info
+
+;; SDSS-V FPS data
+if keyword_set(fps) then begin
+  platedata.field = plugmap.field_id                                                                                                                       
+  if n_elements(p) gt 0 then platedata.programname=p[0].carton                
+endif
+
+stop
 
 ;; Load apogeeObject file to get proper name and coordinates
 ;; Get apogeeObject catalog info for this field
