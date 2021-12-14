@@ -443,6 +443,7 @@ for i=0,299 do begin
           ;; SDSS-V plate
           if platenum ge 15000 or keyword_set(fps) then begin
             sdss5 = 1
+            apogee2 = 0
             if not keyword_set(fps) then begin  ;; SDSS-V plate data
               fiber[i].catalogid = p[match].catalogid
               fiber[i].gaia_g = p[match].gaia_g
@@ -456,7 +457,6 @@ for i=0,299 do begin
               objtype = 'OBJECT'
               if is_bit_set(fiber[i].sdssv_apogee_target0,0) then objtype='SKY'
               if is_bit_set(fiber[i].sdssv_apogee_target0,1) then objtype='HOT_STD'
-              apogee2 = 0
             ;; SDSS-V FPS data
             endif else begin
               fiber[i].catalogid = p[match].catalogid
