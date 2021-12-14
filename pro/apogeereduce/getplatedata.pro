@@ -674,8 +674,6 @@ if keyword_set(fps) then begin
   if n_elements(p) gt 0 then platedata.programname=p[0].carton                
 endif
 
-stop
-
 ;; Load apogeeObject file to get proper name and coordinates
 ;; Get apogeeObject catalog info for this field
 ;; No apogeeObject files for SDSS-V   
