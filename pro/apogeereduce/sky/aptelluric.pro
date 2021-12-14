@@ -49,6 +49,7 @@ apgundef,outframe
 if n_elements(frame) eq 0 or n_elements(plugmap) eq 0 then begin
   print,'Syntax - aptelluric,frame,plugmap,outframe,starfitopt=starfitopt,specfitopt=specfitopt,'
   print,'                    preconv=preconv,error=error,silent=silent,verbose=verbose,pl=pl,stp=stp'
+  error = 'Not enough inputs'
   return
 endif
 

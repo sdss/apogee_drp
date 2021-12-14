@@ -61,7 +61,7 @@ if __name__ == '__main__' :
         if args.frameid == None:
             fpi.fpi1dwavecal(planfile=args.planfile,waveid=args.waveid,fpiid=args.fpiid)
         else :
-            fpi.fpi1dwavecal(frameid=args.frameid,args.waveid,fpiid=args.fpiid,vers=args.apred,telescope=args.telescope)        
+            fpi.fpi1dwavecal(frameid=args.frameid,fpiid=args.fpiid,vers=args.apred,telescope=args.telescope)
     now = datetime.datetime.now()
     print ("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
     print("elapsed: ",time.time()-start)
