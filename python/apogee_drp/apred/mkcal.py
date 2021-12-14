@@ -51,7 +51,7 @@ def getnums(numlist):
    if numlist.find(',')>-1:
       names = numlist.split(',')
    else:
-      names = numlist
+      names = [numlist]
    # Loop over comma-separated list
    for i in range(len(names)):
       if names[i].find('-')>-1:
@@ -218,6 +218,8 @@ def getcal(calfile,mjd):
        if (caltype=='fixfiber') or (caltype=='badfiber'):
           val = getnums(val)  # expand list
        if type(val) is np.ndarray:
+          if len(val)==1: val=val[0]
+       if type(val) is list:
           if len(val)==1: val=val[0]
        caldict[caltype] = val
 
