@@ -164,6 +164,7 @@ FOR i=0L,nplanfiles-1 do begin
 
 ;; FOR SDSS-V, NEED TO MAKE apFlux and apResponse FILES FROM THE
 ;; DOMEFLAT AT THE BEGINNING OF THE NIGHT!!
+fpiid = 0
 
   ; apFlux files : since individual frames are usually made per plate
   if planstr.fluxid ne 0 then begin
