@@ -669,7 +669,7 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],fram
             hdu[0].header['MEDRMS']=(np.nanmedian(rms),'median rms')
             hdu.append(fits.ImageHDU(rms))
         else:
-            hdu.append(fits.ImageHUD(None))
+            hdu.append(fits.ImageHDU(None))
         if sig is not None :
             hdu[0].header['MEDSIG']=(np.nanmedian(sig),'median sig')
             hdu.append(fits.ImageHDU(sig))
@@ -1146,7 +1146,7 @@ def getgroup(groups) :
 
 # The FPI version of this calibration program is in the fpi.py module
     
-def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='airglow',vers=None,nosky=False) :
+def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='airglow',vers=None,nosky=False,plot=None):
     """ Determine positions of skylines for all frames in input planfile
     """
     # read planfile
@@ -1160,6 +1160,12 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
     if inst is None : inst = p['instrument'].strip("'") if p.get('instrument') else 'apogee-n'
     if vers is None : vers = p['apred_vers'].strip("'") if p.get('apred_vers') else 'current'
     if waveid is None : waveid = int(str(p['waveid']).strip("'")) if p.get('waveid') else None
+    if int(p['mjd'])>59556:
+        fps = True
+    else:
+        fps = False
+    observatory = 'lco'
+    if 'apo' in inst: observatory='apo'
 
     # set up file reader
     load = apload.ApLoad(apred=vers,instrument=inst,verbose=False)
@@ -1181,18 +1187,33 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
             skyrows = np.sort(300-skyfibers)
             print(skyrows)
     else :
-        plugmjd = p['plugmap'].split('-')[1]
-        if inst == 'apogee-s' : 
-            plugmap = yanny.yanny(
-                    os.environ['MAPPER_DATA_S']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
-        else :
-            plugmap = yanny.yanny(
-                os.environ['MAPPER_DATA_N']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
-        skyind = np.where((np.array(plugmap['PLUGMAPOBJ']['objType']) == 'SKY') & 
-                          (np.array(plugmap['PLUGMAPOBJ']['holeType']) == 'OBJECT') &
-                          (np.array(plugmap['PLUGMAPOBJ']['spectrographId']) == 2) )[0]
-        skyfibers = np.array(plugmap['PLUGMAPOBJ']['fiberId'])[skyind]
-        skyrows = np.sort(300-skyfibers)
+        # SDSS-V FPS
+        if fps:
+            configid = p['plateid']
+            configgrp = '{:0>4d}XX'.format(int(configid) // 100)
+            plugdir = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/'
+            plugmap = yanny.yanny(plugdir+'confSummary-'+str(configid)+'.par')
+            skyind = np.where((np.array(plugmap['FIBERMAP']['category']) == 'SKY') & 
+                              (np.array(plugmap['FIBERMAP']['spectrographId']) == 2) )[0]
+            skyfibers = np.array(plugmap['FIBERMAP']['fiberId'])[skyind]
+            skyrows = np.sort(300-skyfibers)
+            if len(skyind)==0:
+                print('No sky fibers found. Not using sky lines.')
+                nosky = True
+        # SDSS plates
+        else:
+            plugmjd = p['plugmap'].split('-')[1]
+            if inst == 'apogee-s' : 
+                plugmap = yanny.yanny(
+                            os.environ['MAPPER_DATA_S']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
+            else :
+                plugmap = yanny.yanny(
+                           os.environ['MAPPER_DATA_N']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
+            skyind = np.where((np.array(plugmap['PLUGMAPOBJ']['objType']) == 'SKY') & 
+                              (np.array(plugmap['PLUGMAPOBJ']['holeType']) == 'OBJECT') &
+                              (np.array(plugmap['PLUGMAPOBJ']['spectrographId']) == 2) )[0]
+            skyfibers = np.array(plugmap['PLUGMAPOBJ']['fiberId'])[skyind]
+            skyrows = np.sort(300-skyfibers)
     if not nosky :
         skylines = ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/skylines/'+skyfile+'.txt')
 
@@ -1235,6 +1256,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
 
         if nosky :
             w = np.zeros(4)
+            linestr = None
         else :
 
             # Only use USEWAVE=1 lines for fit (can output others to derive wavelengths)
@@ -1314,7 +1336,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
                 hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
 
         # Plots
-        if plot is not None :
+        if plot is not None:
             try: os.mkdir(dirname+'/plots')
             except: pass
             # plot the pixel shift for each chip derived from the airglow lines
@@ -1354,19 +1376,20 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
             plt.close('all')
 
         # Get shifts relative to first frame for each line/fiber
-        if iframe == 0: 
-            linestr0 = copy.copy(linestr)
-            use0 = copy.copy(use)
-            refnum = int(name)
-        print(iframe,len(linestr0),len(linestr))
-        for line in range(len(use)):
-            ref = np.where((linestr0['chip'][use0] == linestr['chip'][use[line]]) & 
-                           (linestr0['row'][use0] == linestr['row'][use[line]]) &
-                           (linestr0['wave'][use0] == linestr['wave'][use[line]]))[0]
-            if len(ref) > 0:
-                linestr['pixel'][use[line]] -= linestr0['pixel'][use0[ref]].mean()
-            else : linestr['pixel'][use[line]] = -999
-        med = np.median(linestr['pixel'][use])
+        if not nosky:
+            if iframe == 0: 
+                linestr0 = copy.copy(linestr)
+                use0 = copy.copy(use)
+                refnum = int(name)
+            print(iframe,len(linestr0),len(linestr))
+            for line in range(len(use)):
+                ref = np.where((linestr0['chip'][use0] == linestr['chip'][use[line]]) & 
+                               (linestr0['row'][use0] == linestr['row'][use[line]]) &
+                               (linestr0['wave'][use0] == linestr['wave'][use[line]]))[0]
+                if len(ref) > 0:
+                    linestr['pixel'][use[line]] -= linestr0['pixel'][use0[ref]].mean()
+                else : linestr['pixel'][use[line]] = -999
+            med = np.median(linestr['pixel'][use])
 
         # plot shifts relative to first frame, i.e. dithershift via sky lines
         if plot is not None:
