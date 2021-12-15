@@ -982,7 +982,7 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m',fps=False):
         configgrp = '{:0>4d}XX'.format(int(plateid) // 100)
         configfile = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/confSummary-'+str(plateid)+'.par'
         planstr = yanny.yanny(configfile)
-        field = planstr['field_id']
+        field = planstr.get('field_id')
         return field, 'SDSS-V', None
 
     # None found
