@@ -2291,7 +2291,7 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
         chmag = str("%.3f" % round(jdata['HMAG'], 3))
 
         # Only run it for valid stars
-        if (fiber > 0) & (objtype != 'SKY') & (objid != '2MNone'):
+        if (fiber > 0) & (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
 
             # Find which healpix this star is in
             healpix = apload.obj2healpix(objid)
