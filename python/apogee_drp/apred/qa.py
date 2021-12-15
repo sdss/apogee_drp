@@ -3116,13 +3116,14 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             ira[i] = str("%.6f" % round(plans['PLATEPLANS']['raCen'][gd][0],6))
             idec[i] = str("%.6f" % round(plans['PLATEPLANS']['decCen'][gd][0],6))
             platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-            tmp = fits.open(platesumfile)
-            plsum1 = tmp[1].data
-            inexposures[i] = str(len(plsum1['IM']))
-            iexptime[i] = str(np.sum(plsum1['EXPTIME']))
-            icart[i] = str(plsum1['CART'][0])
-            izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
-            imoonphase[i] = np.mean(plsum1['MOONPHASE'])
+            if os.path.exists(platesumfile):
+                tmp = fits.open(platesumfile)
+                plsum1 = tmp[1].data
+                inexposures[i] = str(len(plsum1['IM']))
+                iexptime[i] = str(np.sum(plsum1['EXPTIME']))
+                icart[i] = str(plsum1['CART'][0])
+                izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
+                imoonphase[i] = np.mean(plsum1['MOONPHASE'])
 
         # Sort by MJD
         order = np.argsort(imjd)
