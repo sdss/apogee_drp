@@ -965,21 +965,23 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m',fps=False):
         survey='apo1m'
         return plateid, survey, plateid
 
-    if plans == None : 
+    nj = 0
+    if plans == None and fps==False: 
         print('reading platePlans')
         plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par')['PLATEPLANS']
-    j, = np.where(np.array(plans['plateid']) == int(plateid))
-    nj = len(j)
-    if nj>0:
-        j = j[0]
+        j, = np.where(np.array(plans['plateid']) == int(plateid))
+        nj = len(j)
+        if nj>0:
+            j = j[0]
 
     # FPS
     if nj==0 or fps:
         # Pull this from the confSummary file
-        configgrp = '{:0>4d}XX'.format(int(plateid)) // 100)
+        observatory = {'apo25m':'apo','apo1m':'apo','lco25m':'lco'}[telescope]
+        configgrp = '{:0>4d}XX'.format(int(plateid) // 100)
         configfile = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/confSummary-'+str(plateid)+'.par'
-        planstr = yanny.yanny(confgfile)
-        field = planstr['fieldid']
+        planstr = yanny.yanny(configfile)
+        field = planstr['field_id']
         return field, 'SDSS-V', None
 
     # None found
