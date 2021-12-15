@@ -111,7 +111,11 @@ if n_elements(mapper_data) eq 0 then mapper_data=dirs.mapperdir
 
 mjd = 0L
 reads,cmjd,mjd
-if long(mjd) ge 59556 then fps=1 else fps=0
+if long(mjd) ge 59556 then begin
+  fps = 1
+  sdss5 = 1
+  apogee2 = 0
+endif else fps=0
 if size(plate,/type) eq 7 then begin
   cplate = plate 
   platenum = 0L
@@ -671,7 +675,7 @@ endif  ; get catalogdb info
 
 ;; SDSS-V FPS data
 if keyword_set(fps) then begin
-  platedata.field = plugmap.field_id                                                                                                                       
+  platedata.field = plugmap.field_id
   if n_elements(p) gt 0 then platedata.programname=p[0].carton                
 endif
 
