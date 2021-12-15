@@ -712,6 +712,10 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         # Get unique stars
         objects,ui = np.unique(vcat['apogee_id'],return_index=True)
         vcat = vcat[ui]
+        # remove ones with missing or blank apogee_ids
+        bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None'))
+        if len(bd)>0:
+            vcat = np.delete(vcat,bd)
         for obj in vcat['apogee_id']:
             apstarfile = load.filename('Star',obj=obj)
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
