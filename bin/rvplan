@@ -79,7 +79,8 @@ if __name__ == '__main__' :
     logger.info('Loading '+apvisitsumfile)
     visitsum = fits.getdata(apvisitsumfile,1)
     # Remove rows with missing/blank apogee_ids
-    bd, = np.where((visitsum['apogee_id']=='') | (visitsum['apogee_id']=='None'))
+    bd, = np.where((np.char.array(visitsum['apogee_id']).strip()=='') | 
+                   (np.char.array(visitsum['apogee_id']).strip()=='None'))
     if len(bd)>0:
         visitsum = np.delete(visitsum,bd)
     nstar = len(visitsum)
