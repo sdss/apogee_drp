@@ -113,7 +113,8 @@ def dbload_plans(planfiles):
 
     # Loop over the planfiles
     dtype = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),('telescope',(np.str,10)),
-                      ('instrument',(np.str,20)),('mjd',int),('plate',int),('platetype',(np.str,20))])
+                      ('instrument',(np.str,20)),('mjd',int),('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),
+                      ('fieldid',(np.str,20)),('fps',bool),('platetype',(np.str,20))])
     plantab = np.zeros(nplans,dtype=dtype)
     for i,planfile in enumerate(planfiles):
         planstr = plan.load(planfile)
@@ -124,6 +125,13 @@ def dbload_plans(planfiles):
         plantab['instrument'][i] = planstr['instrument']
         plantab['mjd'][i] = planstr['mjd']
         plantab['plate'][i] = planstr['plateid']
+        if planstr['fps']:
+            plantab['configid'] = planstr['configid']
+            plantab['designid'] = planstr['desigid']
+            plantab['fieldid'] = planstr['fieldid']
+            plantab['fps'] = True
+        else:
+            plantab['fps'] = False
         plantab['platetype'][i] = planstr['platetype']
 
     # Insert into the database
@@ -174,7 +182,8 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         # Exposure-level processing: ap3d, ap2d, apcframe
         dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
                           ('instrument',(np.str,20)),('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),
-                          ('plate',int),('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
+                          ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldied',(np.str,20)),
+                          ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
                           ('num',int),('success',bool)])
         chkexp1 = np.zeros(nexp*3,dtype=dtype)
         chkexp1['planfile'] = pfile
@@ -184,6 +193,13 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         chkexp1['platetype'] = platetype
         chkexp1['mjd'] = mjd
         chkexp1['plate'] = plate
+        if planstr['fps']:
+            chekexp1['configid'] = planstr['configid']
+            chekexp1['designid'] = planstr['designid']
+            chekexp1['fieldid'] = planstr['fieldid']
+            field = planstr['fieldid']
+        else:
+            field = load.apfield(planstr['plate'])
         chkexp1['proctype'] = 'AP3D'
         chkexp1['pbskey'] = pbskey
         chkexp1['checktime'] = str(datetime.now())
@@ -228,7 +244,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 chkexp1['exposure_pk'][cnt] = exposure_pk
                 chkexp1['num'][cnt] = num
                 chkexp1['proctype'][cnt] = 'APCFRAME'
-                base = load.filename('Cframe',num=num,mjd=mjd,plate=plate,chips=True)
+                base = load.filename('Cframe',num=num,mjd=mjd,plate=plate,chips=True,field=field)
                 chfiles = [base.replace('Cframe-','Cframe-'+ch+'-') for ch in ['a','b','c']]
                 exists = [os.path.exists(chf) for chf in chfiles]
                 if exists[0]==True:  # get V_APRED (git version) from file
@@ -245,6 +261,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         dtypeap = np.dtype([('planfile',(np.str,300)),('logfile',(np.str,300)),('errfile',(np.str,300)),
                             ('apred_vers',(np.str,20)),('v_apred',(np.str,50)),('instrument',(np.str,20)),
                             ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
+                            ('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
                             ('nobj',int),('pbskey',(np.str,50)),('checktime',(np.str,100)),('ap3d_success',bool),
                             ('ap3d_nexp_success',int),('ap2d_success',bool),('ap2d_nexp_success',int),
                             ('apcframe_success',bool),('apcframe_nexp_success',int),('applate_success',bool),
@@ -260,6 +277,10 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         chkap1['platetype'] = platetype
         chkap1['mjd'] = mjd
         chkap1['plate'] = plate
+        if planstr['fps']:
+            chkap1['configid'] = planstr['configid']
+            chkap1['designid'] = planstr['designid']
+            chkap1['fieldid'] = planstr['fieldid']
         if platetype=='normal':
             chkap1['nobj'] = np.sum(fiberdata['objtype']!='SKY')  # stars and tellurics
         chkap1['pbskey'] = pbskey
@@ -279,7 +300,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         if platetype=='normal':
             # apPlate
             chkap1['applate_success'] = False
-            base = load.filename('Plate',plate=plate,mjd=mjd,chips=True)
+            base = load.filename('Plate',plate=plate,mjd=mjd,chips=True,field=field)
             chfiles = [base.replace('Plate-','Plate-'+ch+'-') for ch in ['a','b','c']]
             exists = [os.path.exists(chf) for chf in chfiles]
             if exists[0]==True:  # get V_APRED (git version) from file
@@ -288,13 +309,13 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             if np.sum(exists)==3:
                 chkap1['applate_success'] = True
             # apVisit
-            base = load.filename('Visit',plate=plate,mjd=mjd,fiber=1) 
+            base = load.filename('Visit',plate=plate,mjd=mjd,fiber=1,field=field) 
             visitfiles = glob(base.replace('-001.fits','-???.fits'))
             nvisitfiles = len(visitfiles)
             chkap1['apvisit_nobj_success']  = nvisitfiles
             # take broken fibers into account for visit success!!!
             chkap1['apvisit_success'] = nvisitfiles==chkap1['nobj']
-            apvisitsumfile = load.filename('VisitSum',plate=plate,mjd=mjd)
+            apvisitsumfile = load.filename('VisitSum',plate=plate,mjd=mjd,field=field)
             chkap1['apvisitsum_success'] = os.path.exists(apvisitsumfile)
         # Success of plan file
         if platetype=='normal':
