@@ -140,6 +140,11 @@ if nsky eq 0 and keyword_set(force) then begin
   skyplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
                      plugmap.fiberdata.holetype eq 'OBJECT' and $
                      med lt 10,nsky)
+  if nsky lt 5 then begin
+  skyplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
+                     plugmap.fiberdata.holetype eq 'OBJECT' and $
+                     med lt 30,nsky)
+  endif
   print,'No sky fibers found and /force set.  Using '+strtrim(nsky,2)+' faint fibers instead.'
 endif
 

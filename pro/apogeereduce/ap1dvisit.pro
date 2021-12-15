@@ -527,14 +527,16 @@ FOR i=0L,nplanfiles-1 do begin
     if planstr.platetype ne 'normal' and planstr.platetype ne 'single' and planstr.platetype ne 'twilight' then goto,BOMB
 
   ; Remove frames that had problems from SHIFTSTR
-  bdframe = where(shiftstr.index eq -1,nbdframe)
   if nodither eq 1 then minframes=1 else minframes=2
-  if (nframes-nbdframe) lt minframes then begin
-    print,'halt: Error: dont have two good frames to proceed'
-    stop
-    goto, BOMB
+  if nodither eq 0 or nframes gt 1 then begin
+    bdframe = where(shiftstr.index eq -1,nbdframe)
+    if (nframes-nbdframe) lt minframes then begin
+      print,'halt: Error: dont have two good frames to proceed'
+      stop
+      goto, BOMB
+    endif
+    if nbdframe gt 0 then REMOVE,bdframe,shiftstr
   endif
-  if nbdframe gt 0 then REMOVE,bdframe,shiftstr
   ; stop with telluric errors
   if ntellerror gt 0 then begin
     print, ntellerror,' frames had APTELLURIC errors'
