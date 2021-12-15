@@ -127,7 +127,7 @@ def dbload_plans(planfiles):
         plantab['plate'][i] = planstr['plateid']
         if planstr['fps']:
             plantab['configid'] = planstr['configid']
-            plantab['designid'] = planstr['desigid']
+            plantab['designid'] = planstr['designid']
             plantab['fieldid'] = planstr['fieldid']
             plantab['fps'] = True
         else:
