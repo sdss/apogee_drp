@@ -77,17 +77,17 @@ if __name__ == '__main__' :
     if os.path.exists(apvisitsumfile)==False:
         raise ValueError(apvisitsumfile+" NOT FOUND")
     logger.info('Loading '+apvisitsumfile)
-    visitsum = fits.getdata(apvisitsumfile,1)
+    visitsum = Table(fits.getdata(apvisitsumfile,1))
     # Remove rows with missing/blank apogee_ids
-    bd, = np.where((np.char.array(visitsum['apogee_id']).strip()=='') | 
-                   (np.char.array(visitsum['apogee_id']).strip()=='None'))
+    bd, = np.where((np.char.array(visitsum['APOGEE_ID']).strip()=='') | 
+                   (np.char.array(visitsum['APOGEE_ID']).strip()=='None'))
     if len(bd)>0:
         visitsum = np.delete(visitsum,bd)
     nstar = len(visitsum)
     logger.info(str(nstar)+' stars')
 
     # Loop over stars
-    for i,star in enumerate(visitsum['apogee_id']):
+    for i,star in enumerate(visitsum['APOGEE_ID']):
         logger.info(' ')
         logger.info(str(i+1)+' '+star)
         logger.info('--------------------')

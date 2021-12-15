@@ -81,6 +81,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else:
         allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"' and mjd<="+str(mjd))
     db.close()
+    # Sometimes "field" has leading spaces
+    allvisits['field'] = np.char.array(allvisits['field']).strip()
     nallvisits = len(allvisits)
     if nallvisits==0:
         logger.info('No visit files found')
