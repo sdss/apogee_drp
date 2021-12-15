@@ -194,9 +194,9 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         chkexp1['mjd'] = mjd
         chkexp1['plate'] = plate
         if planstr['fps']:
-            chekexp1['configid'] = planstr['configid']
-            chekexp1['designid'] = planstr['designid']
-            chekexp1['fieldid'] = planstr['fieldid']
+            chkexp1['configid'] = planstr['configid']
+            chkexp1['designid'] = planstr['designid']
+            chkexp1['fieldid'] = planstr['fieldid']
             field = planstr['fieldid']
         else:
             field = load.apfield(planstr['plate'])
