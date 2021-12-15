@@ -745,15 +745,16 @@ class ApLoad:
             return data, header
     
     def filename(self,root,
-                 location=None,obj=None,plate=None,mjd=None,num=None,fiber=None,chips=False,field=None,configid=None) :
+                 location=None,obj=None,plate=None,mjd=None,num=None,fiber=None,chips=False,
+                 field=None,configid=None,fps=None) :
 
         return self.allfile(root,
                             location=location,obj=obj,plate=plate,mjd=mjd,num=num,fiber=fiber,chips=chips,field=field,
-                            configid=configid,download=False)
+                            configid=configid,fps=fps,download=False)
 
     def allfile(self,root,
                 location=None,obj=None,reduction=None,plate=None,mjd=None,num=None,fiber=None,chips=False,field=None,
-                healpix=None,configid=None,download=True,fz=False) :
+                healpix=None,configid=None,fps=None,download=True,fz=False) :
         '''
         Uses sdss_access to create filenames and download files if necessary
         '''
@@ -787,7 +788,7 @@ class ApLoad:
             sdssroot = 'ap'+root
 
         if (plate is not None) and (field is None):
-            field = apfield(plate,telescope=self.telescope)[0]
+            field = apfield(plate,telescope=self.telescope,fps=fps)[0]
  
         if chips == False :
             # First make sure the file doesn't exist locally
