@@ -1409,19 +1409,24 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 # PLOTS 8a: observed mag vs H mag
                 x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,ii,1]-plSum1['ZERO'][ii]
                 ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
-                x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,ii,1]-plSum1['ZERO'][ii]
-                ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue', label='Telluric')
+                if ntelluric>0:
+                    x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,ii,1]-plSum1['ZERO'][ii]
+                    ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue', label='Telluric')
                 ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
                 # PLOTS 8b: observed mag - fit mag vs H mag
                 x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,ii,1]
                 yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
                 ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
-                x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,ii,1]
-                ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
-                ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue')
-                ymin = np.min([yminsci,ymintel])
-                ymax = np.max([ymaxsci,ymaxtel])
+                if ntelluric>0:
+                    x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,ii,1]
+                    ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
+                    ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue')
+                    ymin = np.min([yminsci,ymintel])
+                    ymax = np.max([ymaxsci,ymaxtel])
+                else:
+                    ymin = yminsci
+                    ymax = ymaxsci
                 yspan=ymax-ymin
                 #ax2.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
                 ax2.set_ylim(-8,2)
@@ -1436,11 +1441,19 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 x = plSum2['HMAG'][science];   y = plSum2['SN'][science,ii,1]
                 yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
                 ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
-                x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,ii,1]
-                ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
-                ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
-                ymin = np.min([yminsci,ymintel])
-                ymax = np.max([ymaxsci,ymaxtel])
+                if ntelluric>0:
+                    x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,ii,1]
+                    ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
+                    ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
+                    ymin = np.min([yminsci,ymintel])
+                    ymax = np.max([ymaxsci,ymaxtel])
+                else:
+                    ymin = yminsci
+                    ymax = ymaxsci
+                if np.isfinite(ymin)==False:
+                    ymin = 1.0
+                if np.isfinite(ymax)==False:
+                    ymax = 200.0
                 yspan=ymax-ymin
                 ax3.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
 
@@ -1480,9 +1493,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 c = plSum2['HMAG'][science] - plSum2['obsmag'][science,ii,1]
                 psci = ax1.scatter(x, y, marker='*', s=400, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
-                x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
-                c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,ii,1]
-                ptel = ax1.scatter(x, y, marker='o', s=215, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
+                if ntelluric>0:
+                    x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
+                    c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,ii,1]
+                    ptel = ax1.scatter(x, y, marker='o', s=215, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
                 #try:
                 #    x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
@@ -1518,11 +1532,17 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
                 fibersky, = np.where(platesum2['OBJTYPE'] == 'SKY')
                 nsky = len(fibersky)
-                sky = rows[fibersky]
+                if nsky>0:
+                    sky = rows[fibersky]
+                else:
+                    sky = []
 
                 fibertelluric, = np.where((platesum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (platesum2['OBJTYPE'] == 'HOT_STD'))
                 ntelluric = len(fibertelluric)
-                telluric = rows[fibertelluric]
+                if ntelluric>0:
+                    telluric = rows[fibertelluric]
+                else:
+                    telluric = []
 
                 fiberobj, = np.where((platesum2['OBJTYPE'] == 'STAR_BHB') | (platesum2['OBJTYPE'] == 'STAR') |
                                      (platesum2['OBJTYPE'] == 'EXTOBJ') | (platesum2['OBJTYPE'] == 'OBJECT'))
@@ -1572,15 +1592,17 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 cc = skylines['FLUX'][0][fiberobj] / medsky
                 ax1.scatter(xx, yy, marker='*', s=400, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
 
-                xx = platesum2['ZETA'][fibertelluric]
-                yy = platesum2['ETA'][fibertelluric]
-                cc = skylines['FLUX'][0][fibertelluric] / medsky
-                ax1.scatter(xx, yy, marker='o', s=215, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
+                if ntelluric>0:
+                    xx = platesum2['ZETA'][fibertelluric]
+                    yy = platesum2['ETA'][fibertelluric]
+                    cc = skylines['FLUX'][0][fibertelluric] / medsky
+                    ax1.scatter(xx, yy, marker='o', s=215, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
 
-                xx = platesum2['ZETA'][fibersky]
-                yy = platesum2['ETA'][fibersky]
-                cc = skylines['FLUX'][0][fibersky] / medsky
-                sc = ax1.scatter(xx, yy, marker='s', s=230, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
+                if nsky>0:
+                    xx = platesum2['ZETA'][fibersky]
+                    yy = platesum2['ETA'][fibersky]
+                    cc = skylines['FLUX'][0][fibersky] / medsky
+                    sc = ax1.scatter(xx, yy, marker='s', s=230, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
 
                 ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
@@ -1741,7 +1763,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             simbadlink = txt1 + txt2
 
             apStarRelPath = None
-            if (objtype != 'SKY') & (objid != '2MNone'):
+            if (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
                 # Find which healpix this star is in
                 healpix = apload.obj2healpix(objid)
                 healpixgroup = str(healpix // 1000)
@@ -1916,7 +1938,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
         if fiber > 0:
             objtype = jdata['OBJTYPE']
             objid = jdata['OBJECT']
-            if (objtype != 'SKY') & (objid != '2MNone'):
+            if (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
                 print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
 
                 cfiber = str(fiber).zfill(3)
