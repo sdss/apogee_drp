@@ -952,7 +952,7 @@ class ApLoad:
 
 plans=None
 
-def apfield(plateid,loc=0,addloc=False,telescope='apo25m') : #,plans=None
+def apfield(plateid,loc=0,addloc=False,telescope='apo25m',fps=False):
     """ Get field name given plateid and plateplans
     """
     global plans
@@ -969,9 +969,21 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m') : #,plans=None
         print('reading platePlans')
         plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par')['PLATEPLANS']
     j, = np.where(np.array(plans['plateid']) == int(plateid))
-    if len(j)>0:
+    nj = len(j)
+    if nj>0:
         j = j[0]
-    else:
+
+    # FPS
+    if nj==0 or fps:
+        # Pull this from the confSummary file
+        configgrp = '{:0>4d}XX'.format(int(plateid)) // 100)
+        configfile = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/confSummary-'+str(plateid)+'.par'
+        planstr = yanny.yanny(confgfile)
+        field = planstr['fieldid']
+        return field, 'SDSS-V', None
+
+    # None found
+    if nj==0:
         return None, None, None
 
     survey = plans['survey'][j]
