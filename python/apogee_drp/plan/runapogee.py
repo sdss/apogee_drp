@@ -675,7 +675,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     #--------------------------
     rootLogger.info('Making plan files')
     plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
-    dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'auto.yaml'
+    dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'.yaml'
     planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
     nplanfiles = len(planfiles)
     if nplanfiles>0:
