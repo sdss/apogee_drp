@@ -83,6 +83,16 @@ def load(planfile,verbose=False,np=False,expand=False,plugmapm=False):
                     new[n][i] = apexp[i][n]
             plandata['APEXP'] = new
 
+    # FPS or plate data
+    fps = False
+    if 'fps' in plandata.keys():
+        fps = plandata['fps']
+    
+    # Field
+    if fps:
+        field = plandata['fieldid']
+    else:
+        field,survey,program = apload.apfield(plandata['plateid'])
 
     # Expand, add paths to the calibration IDs and add directories
     if expand==True:
@@ -103,7 +113,7 @@ def load(planfile,verbose=False,np=False,expand=False,plugmapm=False):
                    'lco25m':os.environ['APOGEE_DATA_S']}[plandata['telescope']]+'/'
         if plandata.get('plate_dir') is None:
             plandata['plate_dir'] = spectro_dir+'visit/'+plandata['telescope']+'/'+\
-                                    str(plandata['plateid'])+'/'+str(plandata['mjd'])+'/'
+                                    str(field)+'/'+str(plandata['plateid'])+'/'+str(plandata['mjd'])+'/'
         if plandata.get('star_dir') is None:
             plandata['star_dir'] = spectro_dir+'fields/'+plandata['telescope']
 
@@ -112,18 +122,25 @@ def load(planfile,verbose=False,np=False,expand=False,plugmapm=False):
         if val is not None:
             # Check that it has no path information
             if val.find('/') == -1 and val.strip() != '':
-                # Add directory
-                plugfile = datadir+str(plandata['mjd'])+'/'
-                # Add plPlugMap prefix if necessary
-                if val.startswith('pl')==False:
-                    if plugmapm==False:
-                        plugfile += 'plPlugMapA-'
-                    else:
-                        plugfile += 'plPlugMapM-'
-                plugfile += val
-                # Add .par ending if necessary
-                if val.endswith('.yaml')==False:
-                    plugfile += '.yaml'
+                # FPS
+                if fps:
+                    observatory = {'apo25m':'apo','apo1m':'apo','lcoc25m':'lco'}[plandata['telescope']]
+                    configgrp = '{:0>4d}XX'.format(int(plandata['configid']) // 100)
+                    plugfile = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/'+val
+                # Plates
+                else:
+                    # Add directory
+                    plugfile = datadir+str(plandata['mjd'])+'/'
+                    # Add plPlugMap prefix if necessary
+                    if val.startswith('pl')==False:
+                        if plugmapm==False:
+                            plugfile += 'plPlugMapA-'
+                        else:
+                            plugfile += 'plPlugMapM-'
+                    plugfile += val
+                    # Add .par ending if necessary
+                    if val.endswith('.yaml')==False:
+                        plugfile += '.yaml'
                 plandata['plugmap'] = plugfile
 
     return plandata

@@ -199,7 +199,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkexp1['fieldid'] = planstr['fieldid']
             field = planstr['fieldid']
         else:
-            field = load.apfield(planstr['plate'])
+            field,survey,program = apload.apfield(planstr['plate'])
         chkexp1['proctype'] = 'AP3D'
         chkexp1['pbskey'] = pbskey
         chkexp1['checktime'] = str(datetime.now())

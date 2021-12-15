@@ -371,8 +371,6 @@ for iter=0,niter-1 do begin
 
  endfor  ; star loop
 
-stop
-
  ; for first iteration, determine which model spectrum to adopt for each species
  if iter eq 0 then begin
    bestmod=[-1,-1,-1]
