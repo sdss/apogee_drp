@@ -182,7 +182,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         # Exposure-level processing: ap3d, ap2d, apcframe
         dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
                           ('instrument',(np.str,20)),('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),
-                          ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldied',(np.str,20)),
+                          ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
                           ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
                           ('num',int),('success',bool)])
         chkexp1 = np.zeros(nexp*3,dtype=dtype)
