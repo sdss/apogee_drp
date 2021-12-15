@@ -227,7 +227,11 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         mjd = tmp[2].split('.')[0]
 
         # Load the plan file
-        planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
+        if int(mjd)>59556:
+            fps = True
+        else:
+            fps = False
+        planfile = load.filename('Plan', plate=int(plate), mjd=mjd, fps=fps)
         planstr = plan.load(planfile, np=True)
 
         # Get array of object exposures and find out how many are objects.
