@@ -314,7 +314,12 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             nvisitfiles = len(visitfiles)
             chkap1['apvisit_nobj_success']  = nvisitfiles
             # take broken fibers into account for visit success!!!
-            chkap1['apvisit_success'] = nvisitfiles==chkap1['nobj']
+            nbadfiber = dln.size(planstr['badfiberid'])
+            if planstr['fps']:
+                # take two FPI fibers into account
+                chkap1['apvisit_success'] = (nvisitfiles>=(chkap1['nobj']-nbadfiber-2))
+            else:
+                chkap1['apvisit_success'] = (nvisitfiles>=(chkap1['nobj']-nbadfiber))
             apvisitsumfile = load.filename('VisitSum',plate=plate,mjd=mjd,field=field)
             chkap1['apvisitsum_success'] = os.path.exists(apvisitsumfile)
         # Success of plan file
