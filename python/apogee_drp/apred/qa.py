@@ -2712,8 +2712,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         else:
             ymin = 15
         ymax = np.max(zero)
-        if ymin > 15: ymin = 15
-        if ymax < 20: ymax = 20
+        if ymin > 15 or np.isfinite(ymin)==False: ymin = 15
+        if ymax < 20 or np.isfinite(ymax)==False: ymax = 20
         ax1.set_ylim(ymin, ymax)
 
         ax1.scatter(ims % 10000, zero, marker='o', s=150, c='dodgerblue', edgecolors='k', alpha=0.8)
