@@ -829,7 +829,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             logger.info('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
 
     # Scan through all files, accumulate IDs of the various types
-    dark, cal, exp, sky, extra, dome, calpsfid = [], [], [], [], [], None, None
+    dark, cal, exp, sky, extra, dome, calpsfid = [], [], [], [], [], [], None
     out, planfiles = [], []
     for i in range(nfiles):
         # Load image number in variable according to exptype and nreads
@@ -844,7 +844,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         #   reduced only to 2D, hence treated like darks
         elif (info['exptype'][i]=='INTERNALFLAT') and info['nread'][i]>=3:
             dark.append(int(info['num'][i]))
-        # Dome flat
+        # Quartz flat
         elif (info['exptype'][i]=='QUARTZFLAT') and info['nread'][i]>=3:
             cal.append(int(info['num'][i]))
             calpsfid = int(info['num'][i])
@@ -860,7 +860,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             exp.append(int(info['num'][i]))
         # Dome flat
         elif (info['exptype'][i]=='DOMEFLAT') and info['nread'][i]>3:
-            dome = int(info['num'][i])
+            dome.append(int(info['num'][i]))
         # FPI
         # still need a header card for this
 
@@ -874,7 +874,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         platechange = info['plateid'][i] != info['plateid'][np.minimum(i+1,nfiles-1)]
         # We don't need a domeflat with each field visit in the SDSS-V FPS era since
         #   we will use the domeflat lookup table
-        if (platechange or i==nfiles-1) and len(exp)>0 and (dome is not None or fps):
+        if (platechange or i==nfiles-1) and len(exp)>0 and (len(dome)>0 or fps):
             # Object plate visit
             if fps:
                 plate = info['configid'][i]
@@ -882,8 +882,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                     plate = 0
                 else:
                     plate = int(plate)
+                dome1 = dome.pop()
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                           'plate':plate, 'psfid':dome, 'fluxid':dome, 'ims':exp, 'fps':fps}
+                           'plate':plate, 'psfid':dome1, 'fluxid':dome1, 'ims':exp, 'fps':fps}
                 objplan['configid'] = str(info['configid'][i])
                 objplan['designid'] = str(info['designid'][i])
                 objplan['fieldid'] = str(info['fieldid'][i])
@@ -892,7 +893,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             else:
                 plate = int(info['plateid'][i])
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                           'plate':plate, 'psfid':dome, 'fluxid':dome, 'ims':exp, 'fps':fps}
+                           'plate':plate, 'psfid':dome1, 'fluxid':dome1, 'ims':exp, 'fps':fps}
             out.append(objplan)
             planfile = load.filename('Plan',plate=plate,field=info['fieldid'][i],mjd=mjd)
             planfiles.append(planfile)
@@ -901,7 +902,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             #   use same cals as for object
             if len(sky)>0:
                 skyplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                           'plate':plate, 'psfid':dome, 'fluxid':dome, 
+                           'plate':plate, 'psfid':dome1, 'fluxid':dome1, 
                            'ims':sky, 'fps':fps, 'sky':True}
                 if fps:
                     skyplan['configid'] = str(info['configid'][i])
@@ -916,6 +917,11 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     if len(exp)>0:
         print(str(len(exp))+' unused object exposures in visit plan files.  Adding them to ExtraPlan')
         extra += exp
+        exp = []
+    # Some domeflat exposures not used in visit plan files
+    if len(dome)>0:
+        print(str(len(dome))+' unused dome flat exposures in visit plan files.  Adding them to ExtraPlan')
+        extra += dome
         exp = []
 
     # Dark frame information
