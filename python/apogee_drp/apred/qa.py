@@ -3120,7 +3120,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 ira[i] = str("%.6f" % round(plans['PLATEPLANS']['raCen'][gd][0],6))
                 idec[i] = str("%.6f" % round(plans['PLATEPLANS']['decCen'][gd][0],6))
                 platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
-                pdb.set_trace()
                 if os.path.exists(platesumfile):
                     tmp = fits.open(platesumfile)
                     plsum1 = tmp[1].data
