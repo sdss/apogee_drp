@@ -2707,7 +2707,10 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         xmax = np.max(ims % 10000)+1
         ax1.set_xlim(xmin, xmax)
         gd, = np.where(zero > 0)
-        ymin = np.min(zero[gd])
+        if len(gd)>0:
+            ymin = np.min(zero[gd])
+        else:
+            ymin = 15
         ymax = np.max(zero)
         if ymin > 15: ymin = 15
         if ymax < 20: ymax = 20
