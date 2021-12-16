@@ -967,7 +967,7 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m',fps=False):
         return plateid, survey, plateid
 
     nj = 0
-    if fps==False:
+    if fps==False or fps is None:
         if plans == None: 
             print('reading platePlans')
             plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par')['PLATEPLANS']
