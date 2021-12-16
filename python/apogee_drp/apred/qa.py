@@ -2631,11 +2631,11 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 html.write('<TD align="right">' + str(len(platetab)) + '\n')
                 # Zero and zerorms
                 if len(platetab['ZERO']) > 1:
-                    html.write('<TD align="right">' + str("%.2f" % round(np.nanmedian(platetab['ZERO']),2)) + '\n')
-                    html.write('<TD align="right">' + str("%.2f" % round(np.nanmedian(platetab['ZERORMS']),2)) + '\n')
+                    html.write('<TD align="right">' + str("%.2f" % np.round(np.nanmedian(platetab['ZERO']),2)) + '\n')
+                    html.write('<TD align="right">' + str("%.2f" % np.round(np.nanmedian(platetab['ZERORMS']),2)) + '\n')
                 else:
-                    html.write('<TD align="right">' + str("%.2f" % round(platetab['ZERO'],2)) + '\n')
-                    html.write('<TD align="right">' + str("%.2f" % round(platetab['ZERORMS'],2)) + '\n')
+                    html.write('<TD align="right">' + str("%.2f" % np.round(platetab['ZERO'],2)) + '\n')
+                    html.write('<TD align="right">' + str("%.2f" % np.round(platetab['ZERORMS'],2)) + '\n')
                 # Cart
                 html.write('<TD align="center">' + str(platetab['CART'][0]) + '\n')
                 unplugged, = np.where(platefiber['FIBERID'] < 0)
