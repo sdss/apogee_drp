@@ -500,7 +500,7 @@ FOR i=0L,nplanfiles-1 do begin
     ;  use median frame zeropoint instead
     if planstr.platetype ne 'single' then begin
       fiberloc=300-plugmap.fiberdata[obj].fiberid
-      zero=median(hmag+2.5*alog10(median(frame_telluric.(1).flux[*,fiberloc],dim=1)))
+      zero=median([hmag+2.5*alog10(median(frame_telluric.(1).flux[*,fiberloc],dim=1))])
       shiftstr[j].sn=zero
     endif
     apgundef,frame_telluric  ; free up memory
