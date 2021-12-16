@@ -563,8 +563,8 @@ FOR i=0L,nplanfiles-1 do begin
   ;----------------------------------
   print,'STEP 6: Flux Calibration with AP1DFLUXING'
   if planstr.platetype ne 'single' then begin
-    fiberloc=300-plugmap.fiberdata[obj].fiberid
-    zero=median(hmag+2.5*alog10(median(combframe.(1).flux[*,fiberloc],dim=1)))
+    fiberloc = 300-plugmap.fiberdata[obj].fiberid
+    zero = median([hmag+2.5*alog10(median(combframe.(1).flux[*,fiberloc],dim=1))])
   endif else zero=0.
   AP1DFLUXING,combframe,plugmap,finalframe
 
