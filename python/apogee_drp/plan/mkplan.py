@@ -887,6 +887,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                 objplan['configid'] = str(info['configid'][i])
                 objplan['designid'] = str(info['designid'][i])
                 objplan['fieldid'] = str(info['fieldid'][i])
+                print('Setting force=True for now')
+                objplan['force'] = True
             else:
                 plate = int(info['plateid'][i])
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
