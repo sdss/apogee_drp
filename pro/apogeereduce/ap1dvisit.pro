@@ -422,7 +422,7 @@ FOR i=0L,nplanfiles-1 do begin
       tellstar.im=planstr.apexp[j].name
       ADD_TAG,frame_telluric,'TELLSTAR',tellstar,frame_telluric
       if n_elements(alltellstar) eq 0 then alltellstar=tellstar else alltellstar=[alltellstar,tellstar]
-      if n_elements(telerror) gt 0 and planstr.platetype ne 'single' then begin
+      if n_elements(telerror) gt 0 and planstr.platetype ne 'single' and not keyword_set(force) then begin
         print,'not halted: APTELLURIC Error: ',telerror
         ntellerror+=1
         apgundef,frame_skysub,frame_telluric,telerror
