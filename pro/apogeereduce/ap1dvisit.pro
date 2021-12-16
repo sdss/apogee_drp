@@ -465,6 +465,7 @@ FOR i=0L,nplanfiles-1 do begin
     ; Get the dither shift information from the header
     if j eq 0 then begin
       ref_dither_commanded = sxpar(frame_telluric.(0).header,'DITHPIX')
+      if n_elements(ref_frame) eq 0 then ref_frame=frame_telluric
     endif else begin
       dither_commanded = sxpar(frame_telluric.(0).header,'DITHPIX')
       if dither_commanded ne 0 and abs(dither_commanded-ref_dither_commanded) gt 0.002 then nodither=0

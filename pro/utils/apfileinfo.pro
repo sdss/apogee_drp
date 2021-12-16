@@ -48,7 +48,7 @@ filestr = REPLICATE({file:'',exists:0,filesize:0LL,atime:0LL,ctime:0LL,mtime:0LL
                      fpack:0,exten:0,dir:'',base:'',ext:'',rawfmt:0,darkfmt:0,$ 
                      flatfmt:0,linfmt:0,sp2dfmt:0,sp1dfmt:0,chip:'',fid8:'',fmjd5:'',$
                      suffix:'',allchips:0,mjd5:0L,naxis:0,size:lonarr(4),$
-                     sz2048:0,nreads:0L,dateobs:'',jd:0.0d0,plateid:0L,cartid:0L,$
+                     sz2048:0,nreads:0L,dateobs:'',jd:0.0d0,plateid:0L,cartid:'',$
                      object:'',obstype:'',exptype:'',imagetyp:'',exptime:0.0,$
                      ra:0.0d,dec:0.0d0,dithpix:0.0,collpist:0.0,colpitch:0.0,collyaw:0.0,$
                      tcammid:0.0,tdetbase:0.0,lampqrtz:-1,lampune:-1,lampthar:-1},nfiles)
@@ -293,12 +293,11 @@ for i=0,nfiles-1 do begin
         filestr[i].(strind[0]) = fix(value,type=type)
     end
 
-  end
-
+  endfor
 
   BOMB:
 
-end
+endfor
 
 if keyword_set(stp) then stop
 
