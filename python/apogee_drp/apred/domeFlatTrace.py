@@ -5,6 +5,7 @@ import os
 import subprocess
 import math
 import time
+import pdb
 import numpy as np
 from pathlib import Path
 from astropy.io import fits, ascii
@@ -19,7 +20,6 @@ from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
 from apogee_drp.apred import wave
 from dlnpyutils import utils as dln
 from sdss_access.path import path
-import pdb
 import matplotlib.pyplot as plt
 import matplotlib
 from astropy.convolution import convolve, Box1DKernel
@@ -275,8 +275,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 # Program for making the domeflat lookup table.
 # Takes about 8 hours to run, unless a later "mjdstart" is specified.
 ###################################################################################################
-def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', medianrad=100, 
-                    mjdstart=None, mjdstop=None):
+def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', medianrad=100, append=True):
 
     start_time = time.time()
 
@@ -297,34 +296,30 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
     apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     mdir = apodir + '/monitor/'
 
+    # Output file name
+    outfile = mdir + instrument + imtype + 'Trace-all.fits'
+    print('Output file = ' + os.path.basename(outfile))
+
     expdir5 = apodir + 'exposures/' + instrument + '/'
     expdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/dr17/exposures/' + instrument + '/'
 
+    # Read in the exposure summary file and restrict to either dome or quartz
     exp = fits.getdata(mdir + instrument + 'Exp.fits')
     gd, = np.where(exp['IMAGETYP'] == imtype)
-    #gd, = np.where((exp['IMAGETYP'] == 'DomeFlat') & (exp['MJD'] > 56880))
     exp = exp[gd]
 
-    # Option to start and stop at certain MJDs
-    if mjdstart is not None: 
-        gd, = np.where(exp['MJD'] >= mjdstart)
-        exp = exp[gd]
-    if mjdstop is not None: 
-        gd, = np.where(exp['MJD'] <= mjdstop)
-        exp = exp[gd]
+    # Default option to append new values rather than remake the entire file
+    if append:
+        clib = fits.getdata(outfile)
+        pdb.set_trace()
+        gd, = np.where(exp['MJD'] > np.max(clib['MJD']))
     nexp = len(exp)
     nexptr = str(nexp)
     
     print('Running code on ' + nexptr + ' ' + imtype + ' exposures.')
     print('Estimated runtime: ' + str(int(round(3.86*nexp))) + ' seconds.\n')
 
-    # Output file name
-    outfile = mdir + instrument + imtype + 'Trace-all'
-    if medianrad != 100: outfile = outfile + '_medrad' + str(medianrad)
-    if mjdstart is not None: outfile = outfile + '_start' + str(mjdstart)
-    if mjdstop is not None: outfile = outfile + '_stop' + str(mjdstop)
-    outfile = outfile + '.fits'
-    print('Output file = ' + os.path.basename(outfile))
+
 
     # Lookup table structure.
     dt = np.dtype([('PSFID',           np.int32),
