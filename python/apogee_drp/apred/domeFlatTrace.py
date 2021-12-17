@@ -381,6 +381,13 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
     for i in range(nexp):
         ttxt = '\n(' + str(i+1) + '/' + nexptr + '): '
 
+        # Get values from master exposure table
+        outstr['PSFID'][i] =   exp['NUM'][i]
+        outstr['PLATEID'][i] = exp['PLATEID'][i]
+        outstr['CARTID'][i] =  exp['CARTID'][i]
+        outstr['DATEOBS'][i] = exp['DATEOBS'][i]
+        outstr['MJD'][i] =     exp['MJD'][i]
+
         # Make sure there's a valid MJD
         if exp['MJD'][i] < 100: 
             print(ttxt + 'PROBLEM: MJD < 100 for ' + str(exp['NUM'][i]))
@@ -395,13 +402,6 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
                 continue
         twodFiles.sort()
         twodFiles = np.array(twodFiles)
-
-        # Get values from master exposure table
-        outstr['PSFID'][i] =   exp['NUM'][i]
-        outstr['PLATEID'][i] = exp['PLATEID'][i]
-        outstr['CARTID'][i] =  exp['CARTID'][i]
-        outstr['DATEOBS'][i] = exp['DATEOBS'][i]
-        outstr['MJD'][i] =     exp['MJD'][i]
 
         if len(twodFiles) < 3:
             print(ttxt + 'PROBLEM: <3 ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
