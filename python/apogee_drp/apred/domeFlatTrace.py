@@ -396,18 +396,18 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
         twodFiles.sort()
         twodFiles = np.array(twodFiles)
 
-        if len(twodFiles) < 3:
-            print(ttxt + 'PROBLEM: <3 ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
-            continue
-        else:
-            print(ttxt + 'ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
-
         # Get values from master exposure table
         outstr['PSFID'][i] =   exp['NUM'][i]
         outstr['PLATEID'][i] = exp['PLATEID'][i]
         outstr['CARTID'][i] =  exp['CARTID'][i]
         outstr['DATEOBS'][i] = exp['DATEOBS'][i]
         outstr['MJD'][i] =     exp['MJD'][i]
+
+        if len(twodFiles) < 3:
+            print(ttxt + 'PROBLEM: <3 ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
+            continue
+        else:
+            print(ttxt + 'ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
 
         # Get ap2D header values
         hdr = fits.getheader(twodFiles[0])
