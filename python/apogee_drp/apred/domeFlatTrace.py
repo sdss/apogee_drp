@@ -6,10 +6,11 @@ import subprocess
 import math
 import time
 import pdb
+import fitsio
 import numpy as np
 from pathlib import Path
 from astropy.io import fits, ascii
-from astropy.table import Table
+from astropy.table import Table,vstack
 from astropy.time import Time
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -310,7 +311,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
 
     # Default option to append new values rather than remake the entire file
     if append:
-        clib = fits.getdata(outfile)
+        clib = fitsio.read(outfile)
         gd, = np.where(exp['NUM'] > np.max(clib['PSFID']))
         if len(gd) < 1:
             print(os.path.basename(outfile) + ' is already up-to-date.')
@@ -480,9 +481,14 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
             outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
             outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
-    pdb.set_trace()
-
-    Table(outstr).write(outfile, overwrite=True)
+    # Either append new results to master file, or create new master file
+    if append:
+        #p1 = Table(clib)
+        #p2 = Table(outstr)
+        #newoutstr = vstack([Table(clib), Table(outstr)])
+        vstack([Table(clib), Table(outstr)]).write(outfile, overwrite=True)
+    else:
+        Table(outstr).write(outfile, overwrite=True)
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.\n")
