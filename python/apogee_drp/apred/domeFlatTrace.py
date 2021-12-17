@@ -5,10 +5,12 @@ import os
 import subprocess
 import math
 import time
+import pdb
+import fitsio
 import numpy as np
 from pathlib import Path
 from astropy.io import fits, ascii
-from astropy.table import Table
+from astropy.table import Table,vstack
 from astropy.time import Time
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -19,7 +21,6 @@ from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
 from apogee_drp.apred import wave
 from dlnpyutils import utils as dln
 from sdss_access.path import path
-import pdb
 import matplotlib.pyplot as plt
 import matplotlib
 from astropy.convolution import convolve, Box1DKernel
@@ -88,10 +89,12 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146
     # Read in the dome flat lookup table and master exposure table
     domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
     if domeFile is not None: domeTable = fits.getdata(mdir + domeFile)
-    gd, = np.where(domeTable['MJD'] > 0)
+    expTable = fits.getdata(mdir + instrument + 'Exp.fits')
+
+    # Restrict to valid data with at least nchips*290 Gaussian fits
+    gd, = np.where((domeTable['MJD'] > 0) & (np.sum(domeTable['GAUSS_NPEAKS'], axis=1) > 870))
     domeTable = domeTable[gd]
     #if medianrad != 100: domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits')
-    expTable = fits.getdata(mdir + instrument + 'Exp.fits')
 
     if ims is None:
         # Load planfile into structure.
@@ -275,8 +278,7 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 # Program for making the domeflat lookup table.
 # Takes about 8 hours to run, unless a later "mjdstart" is specified.
 ###################################################################################################
-def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', medianrad=100, 
-                    mjdstart=None, mjdstop=None):
+def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', medianrad=100, append=True):
 
     start_time = time.time()
 
@@ -297,34 +299,33 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
     apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     mdir = apodir + '/monitor/'
 
+    # Output file name
+    outfile = mdir + instrument + imtype + 'Trace-all.fits'
+    print('Output file = ' + os.path.basename(outfile))
+
     expdir5 = apodir + 'exposures/' + instrument + '/'
     expdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/dr17/exposures/' + instrument + '/'
 
+    # Read in the exposure summary file and restrict to either dome or quartz
     exp = fits.getdata(mdir + instrument + 'Exp.fits')
     gd, = np.where(exp['IMAGETYP'] == imtype)
-    #gd, = np.where((exp['IMAGETYP'] == 'DomeFlat') & (exp['MJD'] > 56880))
     exp = exp[gd]
 
-    # Option to start and stop at certain MJDs
-    if mjdstart is not None: 
-        gd, = np.where(exp['MJD'] >= mjdstart)
-        exp = exp[gd]
-    if mjdstop is not None: 
-        gd, = np.where(exp['MJD'] <= mjdstop)
-        exp = exp[gd]
-    nexp = len(exp)
-    nexptr = str(nexp)
-    
-    print('Running code on ' + nexptr + ' ' + imtype + ' exposures.')
+    # Default option to append new values rather than remake the entire file
+    if append:
+        clib = fitsio.read(outfile)
+        gd, = np.where(exp['NUM'] > np.max(clib['PSFID']))
+        if len(gd) < 1:
+            print(os.path.basename(outfile) + ' is already up-to-date.')
+            return
+        else:
+            exp = exp[gd]
+            nexp = len(exp)
+            nexptr = str(nexp)
+            print('Adding ' + str(nexp) + ' exposures to ' + os.path.basename(outfile) + '.')
+    else:
+        print('Running code on ' + nexptr + ' ' + imtype + ' exposures.')
     print('Estimated runtime: ' + str(int(round(3.86*nexp))) + ' seconds.\n')
-
-    # Output file name
-    outfile = mdir + instrument + imtype + 'Trace-all'
-    if medianrad != 100: outfile = outfile + '_medrad' + str(medianrad)
-    if mjdstart is not None: outfile = outfile + '_start' + str(mjdstart)
-    if mjdstop is not None: outfile = outfile + '_stop' + str(mjdstop)
-    outfile = outfile + '.fits'
-    print('Output file = ' + os.path.basename(outfile))
 
     # Lookup table structure.
     dt = np.dtype([('PSFID',           np.int32),
@@ -383,6 +384,13 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
     for i in range(nexp):
         ttxt = '\n(' + str(i+1) + '/' + nexptr + '): '
 
+        # Get values from master exposure table
+        outstr['PSFID'][i] =   exp['NUM'][i]
+        outstr['PLATEID'][i] = exp['PLATEID'][i]
+        outstr['CARTID'][i] =  exp['CARTID'][i]
+        outstr['DATEOBS'][i] = exp['DATEOBS'][i]
+        outstr['MJD'][i] =     exp['MJD'][i]
+
         # Make sure there's a valid MJD
         if exp['MJD'][i] < 100: 
             print(ttxt + 'PROBLEM: MJD < 100 for ' + str(exp['NUM'][i]))
@@ -403,13 +411,6 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
             continue
         else:
             print(ttxt + 'ap2D files found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
-
-        # Get values from master exposure table
-        outstr['PSFID'][i] =   exp['NUM'][i]
-        outstr['PLATEID'][i] = exp['PLATEID'][i]
-        outstr['CARTID'][i] =  exp['CARTID'][i]
-        outstr['DATEOBS'][i] = exp['DATEOBS'][i]
-        outstr['MJD'][i] =     exp['MJD'][i]
 
         # Get ap2D header values
         hdr = fits.getheader(twodFiles[0])
@@ -483,7 +484,14 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
             outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
             outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
-    Table(outstr).write(outfile, overwrite=True)
+    # Either append new results to master file, or create new master file
+    if append:
+        #p1 = Table(clib)
+        #p2 = Table(outstr)
+        #newoutstr = vstack([Table(clib), Table(outstr)])
+        vstack([Table(clib), Table(outstr)]).write(outfile, overwrite=True)
+    else:
+        Table(outstr).write(outfile, overwrite=True)
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.\n")
