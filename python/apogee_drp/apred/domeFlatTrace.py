@@ -89,10 +89,12 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146
     # Read in the dome flat lookup table and master exposure table
     domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
     if domeFile is not None: domeTable = fits.getdata(mdir + domeFile)
-    gd, = np.where(domeTable['MJD'] > 0)
+    expTable = fits.getdata(mdir + instrument + 'Exp.fits')
+
+    # Restrict to valid data with at least nchips*290 Gaussian fits
+    gd, = np.where((domeTable['MJD'] > 0) & (np.sum(domeTable['GAUSS_NPEAKS'], axis=1) > 870))
     domeTable = domeTable[gd]
     #if medianrad != 100: domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits')
-    expTable = fits.getdata(mdir + instrument + 'Exp.fits')
 
     if ims is None:
         # Load planfile into structure.
@@ -318,10 +320,11 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
             return
         else:
             exp = exp[gd]
-    nexp = len(exp)
-    nexptr = str(nexp)
-
-    print('Running code on ' + nexptr + ' ' + imtype + ' exposures.')
+            nexp = len(exp)
+            nexptr = str(nexp)
+            print('Adding ' + str(nexp) + ' exposures to ' + os.path.basename(outfile) + '.')
+    else:
+        print('Running code on ' + nexptr + ' ' + imtype + ' exposures.')
     print('Estimated runtime: ' + str(int(round(3.86*nexp))) + ' seconds.\n')
 
     # Lookup table structure.
