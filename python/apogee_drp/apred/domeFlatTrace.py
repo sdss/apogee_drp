@@ -319,7 +319,6 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
             exp = exp[gd]
     nexp = len(exp)
     nexptr = str(nexp)
-    pdb.set_trace()
 
     print('Running code on ' + nexptr + ' ' + imtype + ' exposures.')
     print('Estimated runtime: ' + str(int(round(3.86*nexp))) + ' seconds.\n')
@@ -480,6 +479,8 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
             outstr['E_GAUSS_YOFFSET'][i, ichip, :] = gpeaks['perr'][:, 3]
             outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
             outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
+
+    pdb.set_trace()
 
     Table(outstr).write(outfile, overwrite=True)
 
