@@ -41,7 +41,7 @@ if __name__ == '__main__' :
     parser.add_argument('--modelpersist', type=str, help='apModelPersist ID')
     parser.add_argument('--response', type=str, help='apResponse ID')
     parser.add_argument('--mjd', type=str, help='MJD')
-    parser.add_argument('--nskip', type=int, default=1, help='Number of arclamps to skip for WAVE')
+    parser.add_argument('--nskip', type=int, help='Number of arclamps to skip for WAVE')
     parser.add_argument("--vers", type=str, default='daily', help='APOGEE Reduction version')
     parser.add_argument("--telescope", type=str, default='apo25m', help='Telescope')
     parser.add_argument('--full', type=str, nargs='*', help='Full processing for MKLSF')
@@ -49,26 +49,38 @@ if __name__ == '__main__' :
     parser.add_argument('--nofit', type=str, nargs='*', help='/nofit for MKWAVE')
     parser.add_argument('--pl', type=str, nargs='*', help='Plotting for MKLSF')
     parser.add_argument('--clobber', type=str, nargs='*', help='Overwrite files')
-    parser.add_argument("--flag", type=str, default='11111', help='Processing flag')
     args = parser.parse_args()
     argsdict = vars(args)
+
+    # Check that we have some inputs 
+    chknames = ['file','det','dark','flat','wave','multiwave','lsf','bpm','psf','flux',
+                'sparse','fiber','littrow','persist','modelpersist','response','mjd']
+    inputs = []
+    for n in chknames:
+        if argsdict[n] is not None:
+            inputs.append(n)
+    # No inputs
+    if len(inputs)==0:
+        parser.print_help()
+        sys.exit()
 
     # Put together the IDL command
     cmd = "makecal"
 
-    # Inputs
+    # Add inputs
     inpnames = ['file','det','dark','flat','wave','multiwave','lsf','bpm','psf','flux',
                 'sparse','fiber','littrow','persist','modelpersist','response','mjd',
-                'nskip','vers','telescope','flag']
+                'nskip','vers','telescope']
     for i,key in enumerate(inpnames):
         val = argsdict[key]
         if val is not None:
+            inputs.append(val)
             if type(val) is str:
                 cmd += ","+str(key)+"='"+val+"'"
             else:
                 cmd += ","+str(key)+"="+str(val)
-
-    # Flags
+                
+    # Add flags
     flagnames = ['full','newwave','nofit','pl','clobber']
     for i,key in enumerate(flagnames):
         val = argsdict[key]
@@ -85,6 +97,8 @@ if __name__ == '__main__' :
                     cmd += ','+str(key)+'=0'
                 else:
                     cmd += ','+str(key)+'=1'
+
+    import pdb; pdb.set_trace()
 
     # Run the command
     subprocess.call(["idl","-e",cmd])
