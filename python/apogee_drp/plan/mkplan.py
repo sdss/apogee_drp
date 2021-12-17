@@ -830,7 +830,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
 
     # Scan through all files, accumulate IDs of the various types
     dark, cal, exp, sky, extra, dome, calpsfid = [], [], [], [], [], [], None
-    out, planfiles = [], []
+    domeused, out, planfiles = [], [], []
     for i in range(nfiles):
         # Load image number in variable according to exptype and nreads
         #   discard images with nread<3
@@ -882,7 +882,11 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                     plate = 0
                 else:
                     plate = int(plate)
-                dome1 = dome.pop()
+                if len(dome)>0:
+                    dome1 = dome[-1]
+                    domeused.append(dome1)
+                else:
+                    dome1 = None
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':dome1, 'fluxid':dome1, 'ims':exp, 'fps':fps}
                 objplan['configid'] = str(info['configid'][i])
@@ -919,10 +923,15 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         extra += exp
         exp = []
     # Some domeflat exposures not used in visit plan files
-    if len(dome)>0:
-        print(str(len(dome))+' unused dome flat exposures in visit plan files.  Adding them to ExtraPlan')
-        extra += dome
-        exp = []
+    if len(dome)>0 and len(dome)>len(domeused):
+        # add unused dome flats to ExtraPlan
+        dometoadd = []
+        for d in dome:
+            if d not in domeused:
+                dometoadd.append(d)
+        print(str(len(dometoadd))+' unused dome flat exposures in visit plan files.  Adding them to ExtraPlan')
+        extra += dometoadd
+        dome = []
 
     # Dark frame information
     cplate = '0000'

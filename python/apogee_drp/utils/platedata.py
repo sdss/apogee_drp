@@ -166,19 +166,22 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         platedata['guidedata'] = guide
         return platedata
 
+    # Plates or FPS
+    fps = False  # default
+    if mjd>=59556:
+        fps = True
+
     fiber = np.zeros(300,dtype=dtype)
     platedata = {'plate':plate, 'mjd':mjd, 'locationid':0, 'field':' ', 'programname':'',
                  'ha':[-99.,-99.,-99.], 'fiberdata':fiber, 'guidedata':guide}
-    field, survey, programname = apload.apfield(plate,loc,telescope=load.telescope)
+    field, survey, programname = apload.apfield(plate,loc,telescope=load.telescope,fps=fps)
     platedata['field'] = field
     platedata['locationid'] = loc
     platedata['programname'] = programname
 
     # SDSS-V FPS configuration files
     #-------------------------------
-    fps = False  # default
-    if mjd>=59556:
-        fps = True
+    if fps:
         plugmapfile = load.filename('confSummary',configid=plate)
         plugdir = os.path.dirname(plugmapfile)+'/'
         plugfile = os.path.basename(plugmapfile)
