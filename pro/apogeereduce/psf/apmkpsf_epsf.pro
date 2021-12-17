@@ -222,12 +222,12 @@ for i=0,2047 do begin
        sd2 = spsf[is].cent[i]+d2-spsf[is].lo
        a = spsf[is].img
        sz = size(*a)
-       if abs(d1) lt dmax and nint(sd1) ge 0 and nint(sd1) lt sz[2] then begin
+       if abs(d1) lt dmax and nint(sd1) ge 0 and fix(sd1)+1 lt sz[2] then begin
          wlo = (*a)[i,fix(sd1)]
          whi = (*a)[i,fix(sd1)+1]
          w1 = wlo+(sd1-fix(sd1))*(whi-wlo)
        endif
-       if abs(d2) lt dmax and nint(sd2) ge 0 and nint(sd2) lt sz[2] then begin
+       if abs(d2) lt dmax and nint(sd2) ge 0 and fix(sd2)+1 lt sz[2] then begin
          wlo = (*a)[i,fix(sd2)]
          whi = (*a)[i,fix(sd2)+1]
          w2 = wlo+(sd2-fix(sd2))*(whi-wlo)
