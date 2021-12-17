@@ -311,15 +311,18 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
     # Default option to append new values rather than remake the entire file
     if append:
         clib = fits.getdata(outfile)
-        pdb.set_trace()
-        gd, = np.where(exp['MJD'] > np.max(clib['MJD']))
+        gd, = np.where(exp['NUM'] > np.max(clib['PSFID']))
+        if len(gd) < 1:
+            print(os.path.basename(outfile) + ' is already up-to-date.')
+            return
+        else:
+            exp = exp[gd]
     nexp = len(exp)
     nexptr = str(nexp)
-    
+    pdb.set_trace()
+
     print('Running code on ' + nexptr + ' ' + imtype + ' exposures.')
     print('Estimated runtime: ' + str(int(round(3.86*nexp))) + ' seconds.\n')
-
-
 
     # Lookup table structure.
     dt = np.dtype([('PSFID',           np.int32),
