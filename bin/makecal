@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Jon Holtzman
+# @Date: March 2018
+# @Filename: mkgrid
+# @License: BSD 3-Clause
+# @Copyright: Jon Holtzman
+# updates by D. Nidever, 12/17/2021
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import subprocess
+import pdb
+
+if __name__ == '__main__' :
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Wrapper to run IDL makecal')
+    parser.add_argument('--file', type=str, help='Filename')
+    parser.add_argument('--det', type=str, help='apDetector ID')
+    parser.add_argument('--dark', type=str, help='apDark ID')
+    parser.add_argument('--flat', type=str, help='apFlat ID')
+    parser.add_argument('--wave', type=str, help='apWave ID')
+    parser.add_argument('--multiwave', type=str, help='multiwave ID')
+    parser.add_argument('--lsf', type=str, help='LSF ID')
+    parser.add_argument('--bpm', type=str, help='apBPM ID')
+    parser.add_argument('--psf', type=str, help='PSF ID')
+    parser.add_argument('--flux', type=str, help='apFlux ID')
+    parser.add_argument('--sparse', type=str, help='apSparse ID')
+    parser.add_argument('--fiber', type=str, help='apFiber ID')
+    parser.add_argument('--littrow', type=str, help='apLittrow ID')
+    parser.add_argument('--persist', type=str, help='apPersist ID')
+    parser.add_argument('--modelpersist', type=str, help='apModelPersist ID')
+    parser.add_argument('--response', type=str, help='apResponse ID')
+    parser.add_argument('--mjd', type=str, help='MJD')
+    parser.add_argument('--nskip', type=int, default=1, help='Number of arclamps to skip for WAVE')
+    parser.add_argument("--vers", type=str, default='daily', help='APOGEE Reduction version')
+    parser.add_argument("--telescope", type=str, default='apo25m', help='Telescope')
+    parser.add_argument('--full', type=str, nargs='*', help='Full processing for MKLSF')
+    parser.add_argument('--newwave', type=str, nargs='*', help='newwave parameter for MKLSF')
+    parser.add_argument('--nofit', type=str, nargs='*', help='/nofit for MKWAVE')
+    parser.add_argument('--pl', type=str, nargs='*', help='Plotting for MKLSF')
+    parser.add_argument('--clobber', type=str, nargs='*', help='Overwrite files')
+    parser.add_argument("--flag", type=str, default='11111', help='Processing flag')
+    args = parser.parse_args()
+    argsdict = vars(args)
+
+    # Put together the IDL command
+    cmd = "makecal"
+
+    # Inputs
+    inpnames = ['file','det','dark','flat','wave','multiwave','lsf','bpm','psf','flux',
+                'sparse','fiber','littrow','persist','modelpersist','response','mjd',
+                'nskip','vers','telescope','flag']
+    for i,key in enumerate(inpnames):
+        val = argsdict[key]
+        if val is not None:
+            if type(val) is str:
+                cmd += ","+str(key)+"='"+val+"'"
+            else:
+                cmd += ","+str(key)+"="+str(val)
+
+    # Flags
+    flagnames = ['full','newwave','nofit','pl','clobber']
+    for i,key in enumerate(flagnames):
+        val = argsdict[key]
+        # val=None when the argument was not set
+        if val is not None:
+            # val=[] if the argument was set but with no additional information
+            if len(val)==0:
+                cmd += ','+str(key)+'=1'
+            # val=something if the argument was set to a specific value
+            else:
+                if val[0]=='1' or val[0].lower()=='true' or val[0].lower()=='t':
+                    cmd += ','+str(key)+'=1'
+                elif val[0]=='0' or val[0].lower()=='false' or val[0].lower()=='f':
+                    cmd += ','+str(key)+'=0'
+                else:
+                    cmd += ','+str(key)+'=1'
+
+    # Run the command
+    subprocess.call(["idl","-e",cmd])
+
