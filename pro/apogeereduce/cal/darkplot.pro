@@ -20,7 +20,7 @@
 ; By J. Holtzman, 2011?
 ;-
 
-pro darkplot,cube,mask,darkfile,hard=hard
+pro darkplot,dark,mask,darkfile,hard=hard
 
   sz = size(dark)
   nr = sz[3]
