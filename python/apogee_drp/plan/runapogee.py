@@ -192,7 +192,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         chkcal['caltype'][i] = caltype
         try:
             chkcal['plate'][i] = expinfo['plateid'][i]
-        else:
+        except:
             chkcal['plate'][i] = -1
         chkcal['configid'][i] = expinfo['configid'][i]
         chkcal['designid'][i] = expinfo['designid'][i]
