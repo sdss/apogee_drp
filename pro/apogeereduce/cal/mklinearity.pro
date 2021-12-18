@@ -15,6 +15,7 @@
 ;  /inter    Interactive plots.
 ;  /clobber  Rereduce images even if they exist
 ;  /stp      Stop at the end of the program.
+;  /unlock   Delete the lock file and start fresh.
 ;
 ; OUTPUT:
 ;  A set of apLinearity-[abc]-ID8.fits files in the appropriate location
@@ -28,7 +29,8 @@
 ;-
 
 function mklinearity,frameid,clobber=clobber,chip=chip, stp=stp,lindata=lindata,$
-                     nread=nread,minread=minread,norder=norder,nskip=nskip,inter=inter
+                     nread=nread,minread=minread,norder=norder,nskip=nskip,$
+                     inter=inter,unlock=unlock
 
 ;; Defaults
 if n_elements(minread) eq 0 then minread=2
@@ -65,10 +67,20 @@ if n_elements(lindata) gt 0 then $
   linfile = lindir+dirs.prefix+'Linearity-'+cframeid+'.dat'
 
 ;; Make sure file construction isn't already in process
-while file_test(linfile+'.lock') do apwait,linfile,10
+lockfile = linfile+'.lock'
+if not keyword_set(unlock) then begin
+  while file_test(lockfile) do apwait,lockfile,10
+endif else begin
+  if file_test(lockfile) then file_delete,lockfile,/allow
+endelse
 
 ;; Does file already exist? 
 if file_test(linfile) and ~keyword_set(clobber) then goto, havefile
+
+print,'Making Linearity: ', frameid
+;; Open .lock file
+openw,lock,/get_lun,lockfile
+free_lun,lock
 
 ;; Loop over the chips
 openw,lun,linfile,/get_lun
@@ -235,6 +247,8 @@ oplot,xx,yy,color=3,thick=3
 device,/close
 ps2jpg,file,/eps
 set_plot,'X'
+
+file_delete,lockfile,/allow
 
 if keyword_set(stp) then stop
 

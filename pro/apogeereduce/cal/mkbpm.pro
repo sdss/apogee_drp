@@ -10,6 +10,7 @@
 ;  =flatid   ID8 number for the flat to use.
 ;  =badrow   Array of known bad rows
 ;  /clobber  Overwrite existing files.
+;  /unlock   Delete lock file and start fresh 
 ;
 ; OUTPUTS:
 ;  BPM files (e.g. apBPM-a-ID8.fits) are created in the appropriate

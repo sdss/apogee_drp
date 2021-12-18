@@ -12,6 +12,7 @@
 ;  =fiberid    ID8 number for the ETrace calibration file to use. 
 ;  /clobber    Overwrite any existing files.
 ;  =cmjd       Depricated parameter.
+;  /unlock     Delete lock file and start fresh 
 ;
 ; OUTPUT:
 ;  A set of apLittrow-[abc]-ID8.fits files in the appropriate location

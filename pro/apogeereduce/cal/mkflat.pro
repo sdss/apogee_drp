@@ -11,6 +11,7 @@
 ;  /clobber : rereduce images even if they exist
 ;  /kludge : set bottom and top non-illuminated pixels to unity
 ;  nrep=nrep : median filters each batch of nrep frames before combining
+;  /unlock : delete lock file and start fresh 
 ;
 ; OUTPUT:
 ;  A set of apFlat-[abc]-ID8.fits files in the appropriate location

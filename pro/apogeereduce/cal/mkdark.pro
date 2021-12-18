@@ -9,6 +9,7 @@
 ;   cmjd=cmjd : (optional,obsolete) gives MJD directory name if not encoded in file number
 ;   step=step : (optional,obsolete) process every step image in UTR
 ;   psfid=psfid : (optional) EPSF id to use to try to subtract off thermal traces
+;  /unlock : delete lock file and start fresh 
 ;
 ; OUTPUT:
 ;   A set of apDark-[abc]-ID8.fits files.

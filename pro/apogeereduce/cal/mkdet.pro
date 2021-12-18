@@ -5,8 +5,9 @@
 ; Make an APOGEE detector calibration product.
 ;
 ; INPUTS:
-;  detid  ID8 number for the detector file.
-;  linid  ID8 number for the linearity file.
+;  detid    ID8 number for the detector file.
+;  linid    ID8 number for the linearity file.
+;  /unlock  Delete lock file and start fresh 
 ;
 ; OUTPUTS:
 ;  Detector files (e.g. apDetector-a-ID8.fits) are created in the
