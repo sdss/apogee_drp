@@ -828,8 +828,14 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         for i in range(len(plateindex['value'])):
             logger.info('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
 
+    # Get domeflat and quartzflats for this night
+    domeind, = np.where((info['exptype']=='DOMEFLAT') & (info['nread']>=3))
+    dome = list(info['num'][domeind].astype(int))
+    quartzind, = np.where((info['exptype']=='QUARTZFLAT') & (info['nread']>=3))
+    quartz = list(info['num'][quartzind].astype(int))
+
     # Scan through all files, accumulate IDs of the various types
-    dark, cal, exp, sky, extra, dome, calpsfid = [], [], [], [], [], [], None
+    dark, cal, exp, sky, extra, calpsfid = [], [], [], [], [], None
     domeused, out, planfiles = [], [], []
     for i in range(nfiles):
         # Load image number in variable according to exptype and nreads
@@ -860,7 +866,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             exp.append(int(info['num'][i]))
         # Dome flat
         elif (info['exptype'][i]=='DOMEFLAT') and info['nread'][i]>3:
-            dome.append(int(info['num'][i]))
+            pass
+            #dome.append(int(info['num'][i]))
         # FPI
         # still need a header card for this
 
@@ -882,13 +889,25 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                     plate = 0
                 else:
                     plate = int(plate)
+                # Get PSF calibration file
+                #  use quartz flats if possible
+                if len(quartz)>0:
+                    bestind = np.argsort(np.abs(np.array(quartz)-int(exp[0])))
+                    psf1 = int(quartz[bestind[0]])
+                elif len(dome)>0:
+                    bestind = np.argsort(np.abs(np.array(dome)-int(exp[0])))
+                    psf1 = int(dome[bestind[0]])
+                    #domeused.append(dome1)
+                else:
+                    psf1 = None
+                # Use domeflat for flux calibration
                 if len(dome)>0:
-                    dome1 = dome[-1]
-                    domeused.append(dome1)
+                    bestind = np.argsort(np.abs(np.array(dome)-int(exp[0])))
+                    dome1 = int(dome[bestind[0]])
                 else:
                     dome1 = None
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                           'plate':plate, 'psfid':dome1, 'fluxid':dome1, 'ims':exp, 'fps':fps}
+                           'plate':plate, 'psfid':psf1, 'fluxid':dome1, 'ims':exp, 'fps':fps}
                 objplan['configid'] = str(info['configid'][i])
                 objplan['designid'] = str(info['designid'][i])
                 objplan['fieldid'] = str(info['fieldid'][i])
@@ -897,7 +916,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             else:
                 plate = int(info['plateid'][i])
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                           'plate':plate, 'psfid':dome1, 'fluxid':dome1, 'ims':exp, 'fps':fps}
+                           'plate':plate, 'psfid':psf1, 'fluxid':dome1, 'ims':exp, 'fps':fps}
             out.append(objplan)
             planfile = load.filename('Plan',plate=plate,field=info['fieldid'][i],mjd=mjd)
             planfiles.append(planfile)
@@ -906,7 +925,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             #   use same cals as for object
             if len(sky)>0:
                 skyplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                           'plate':plate, 'psfid':dome1, 'fluxid':dome1, 
+                           'plate':plate, 'psfid':psf1, 'fluxid':dome1, 
                            'ims':sky, 'fps':fps, 'sky':True}
                 if fps:
                     skyplan['configid'] = str(info['configid'][i])
@@ -923,15 +942,15 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         extra += exp
         exp = []
     # Some domeflat exposures not used in visit plan files
-    if len(dome)>0 and len(dome)>len(domeused):
-        # add unused dome flats to ExtraPlan
-        dometoadd = []
-        for d in dome:
-            if d not in domeused:
-                dometoadd.append(d)
-        print(str(len(dometoadd))+' unused dome flat exposures in visit plan files.  Adding them to ExtraPlan')
-        extra += dometoadd
-        dome = []
+    #if len(dome)>0 and len(dome)>len(domeused):
+    #    # add unused dome flats to ExtraPlan
+    #    dometoadd = []
+    #    for d in dome:
+    #        if d not in domeused:
+    #            dometoadd.append(d)
+    #    print(str(len(dometoadd))+' unused dome flat exposures in visit plan files.  Adding them to ExtraPlan')
+    #    extra += dometoadd
+    #    dome = []
 
     # Dark frame information
     cplate = '0000'

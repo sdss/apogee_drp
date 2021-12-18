@@ -338,6 +338,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         platedata['guidedata'] = guide
     
     # Find matching plugged entry for each spectrum and load up the output information from correct source(s)
+    nomatch = 0
     for i in range(300):
         fiber['spectrographid'][i] = -1
         if fps:
@@ -366,6 +367,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             fiber['eta'][i] = plugmap['fiberdata']['eta'][m]
             fiber['zeta'][i] = plugmap['fiberdata']['zeta'][m]
             if fps:
+                fiber['catalogid'][i] = plugmap['fiberdata']['catalogid'][m]
                 fiber['sdssv_apogee_target0'][i] = plugmap['fiberdata']['sdssv_apogee_target0'][m]
             else:
                 fiber['target1'][i] = plugmap['fiberdata']['primTarget'][m]
@@ -397,9 +399,13 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     if bmask.is_bit_set(fiber['target2'][i],9) == 1: fiber['objtype'][i]='HOT_STD'
                     if bmask.is_bit_set(fiber['target2'][i],4) == 1: fiber['objtype'][i]='SKY'
                 else:
+                    # Get matching stars using catalogid for FPS
+                    if fps:
+                        match, = np.where(fiber['catalogid'][i]==ph['catalogid'])
                     # Get matching stars from coordinate match
-                    match, = np.where((np.abs(ph['target_ra']-fiber['ra'][i]) < 0.00002) &
-                                      (np.abs(ph['target_dec']-fiber['dec'][i]) < 0.00002))
+                    else:
+                        match, = np.where((np.abs(ph['target_ra']-fiber['ra'][i]) < 0.00002) &
+                                          (np.abs(ph['target_dec']-fiber['dec'][i]) < 0.00002))
                     if len(match)>0:
                         # APOGEE-2 plate
                         if ('apogee2_target1' in ph.dtype.names) and (plate > 7500) and (plate < 15000) and fps==False:
@@ -494,10 +500,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     else:
                         #raise Exception('no match found in plateHoles!',fiber['ra'][i],fiber['dec'][i], i)
                         print('no match found to photometry',fiber['ra'][i],fiber['dec'][i], 300-i)
+                        nomatch += 1
         else:
             fiber['fiberid'][i] = -1
             print('no match for fiber index',i)
-
 
     # SDSS-V, get catalogdb information
     #----------------------------------
