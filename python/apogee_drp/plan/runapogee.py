@@ -150,10 +150,12 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         logger.info('Checking Calibration runs')
         logger.info('=========================')
 
+    expinfo = np.atleast_1d(expinfo)
+
     chkcal = None
 
     # Exposure-level processing: ap3d, ap2d, calibration file
-    ncal = len(expinfo)
+    ncal = np.array(expinfo).size
     dtype = np.dtype([('exposure_pk',int),('logfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
                       ('instrument',(np.str,20)),('telescope',(np.str,10)),('mjd',int),('caltype',(np.str,30)),
                       ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
@@ -163,10 +165,10 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
 
     # Loop over the planfiles
     for i in range(ncal):
-        # domeflat
-        # quartzflat
+        # domeflat, quartzflat
         # arclamp
         # fpi
+        lgfile = logfiles[i]
 
         # apWave-49920071_pbs.123232121.log
         caltype = os.path.basename(lgfile)
@@ -180,12 +182,12 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         chkcal['logfile'][i] = lgfile
         chkcal['num'][i] = num
         chkcal['apred_vers'][i] = apred
-        if expinfo['observtory'][i]=='apo':
+        if expinfo['observatory'][i]=='apo':
             chkcal['instrument'][i] = 'apogee-n'
             chkcal['telescope'][i] = 'apo25m'
         else:
             chkcal['instrument'][i] = 'apogee-s'
-            chkcal['telescope'][i] = 'lco25m'
+            chkcal['telescope'] = 'lco25m'
         chkcal['mjd'][i] = mjd
         chkcal['caltype'][i] = caltype
         chkcal['plate'][i] = expinfo['plateid'][i]
@@ -195,6 +197,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         chkcal['pbskey'][i] = pbskey
         chkcal['checktime'][i] = str(datetime.now())
         chkcal['success'][i] = False
+        load = apload.ApLoad(apred=apred,telescope=chkcal['telescope'][i])
         # AP3D
         #-----
         base = load.filename('2D',num=num,mjd=mjd,chips=True)
@@ -221,9 +224,8 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         if exists[0]==True:  # get V_APRED (git version) from file
             chead = fits.getheader(chfiles[0])
             chkcal['v_apred'][i] = chead.get('V_APRED')
-
         # Overall success
-        if chkcal['success3d'] and chkcal['success2d'] and exists:
+        if np.sum(exists)==3:
             chkcal['success'][i] = True
 
     # Load everything into the database
@@ -672,7 +674,7 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles=None):
     email.send(address,subject,message,files=logfiles)
 
 
-def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
+def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     """ Perform daily APOGEE data reduction."""
 
     begtime = str(datetime.now())
@@ -807,30 +809,36 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
         rootLogger.info('Running Calibration Files')
         rootLogger.info('=========================')
         rootLogger.info('')
-        import pdb; pdb.set_trace()
         queue = pbsqueue(verbose=True)
         queue.create(label='makecal', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(calind)),
                      qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
         calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd5))
         logfiles = []
-        for i in range(len(calind)):
+        #for i in range(len(calind)):
+        for i in range(1):
             num1 = expinfo['num'][calind[i]]
             exptype1 = expinfo['exptype'][calind[i]]
+            rootLogger.info('Calibration file %d : %s %d' % (i+1,exptype1,num1))
             if exptype1=='DOMEFLAT' or exptype1=='QUARTZFLAT':
-                cmd1 = 'makecal --psf '+str(num1)
+                cmd1 = 'makecal --psf '+str(num1)+' --unlock'
+                if clobber: cmd1 += ' --clobber'
                 logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
             if exptype1=='ARCLAMP':
-                cmd1 = 'makecal --wave '+str(num1)
+                cmd1 = 'makecal --wave '+str(num1)+' --unlock'
+                if clobber: cmd1 += ' --clobber'
                 logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
             if exptype1=='FPI':
-                cmd1 = 'makecal --fpi '+str(num1)
+                cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
+                if clobber: cmd1 += ' --clobber'
                 logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+            rootLogger.info(logfile1)
             logfiles.append(logfile1)
-            queue.append(cmd1, outfile=logfile1,errfile=logfile1.repliace('.log','.err')
+            queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
         calinfo = expinfo[calind]
+        import pdb; pdb.set_trace()
         chkcal = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
         del queue
     else:

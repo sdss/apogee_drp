@@ -99,8 +99,6 @@ if __name__ == '__main__' :
                 else:
                     cmd += ','+str(key)+'=1'
 
-    import pdb; pdb.set_trace()
-
     # Run the command
     subprocess.call(["idl","-e",cmd])
 
