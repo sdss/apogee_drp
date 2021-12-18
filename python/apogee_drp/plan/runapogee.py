@@ -190,7 +190,10 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
             chkcal['telescope'] = 'lco25m'
         chkcal['mjd'][i] = mjd
         chkcal['caltype'][i] = caltype
-        chkcal['plate'][i] = expinfo['plateid'][i]
+        try:
+            chkcal['plate'][i] = expinfo['plateid'][i]
+        else:
+            chkcal['plate'][i] = -1
         chkcal['configid'][i] = expinfo['configid'][i]
         chkcal['designid'][i] = expinfo['designid'][i]
         chkcal['fieldid'][i] = expinfo['fieldid'][i]
