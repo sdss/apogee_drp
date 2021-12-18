@@ -74,8 +74,12 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   for i=0,n_elements(waveid)-1 do cmd=[cmd,string(waveid[i])]
   spawn,cmd,/noshell
 
-  openw,lock,/get_lun,wavedir+file+'.dat'
-  free_lun,lock
+  ;; Check that the calibrateion file was successfully created
+  outfile = wavedir+repstr(file,'apWave-','apWave-a-')
+  if file_test(outfile) then begin
+    openw,lock,/get_lun,wavedir+file+'.dat'
+    free_lun,lock
+  endif
 
   file_delete,lockfile,/allow
 

@@ -228,6 +228,14 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         if np.sum(exists)==3:
             chkcal['success'][i] = True
 
+        if verbose:
+            logger.info('')
+            logger.info('%d/%d' % (i+1,ncal))
+            logger.info('Calibration type: %s' % chkcal['caltype'][i])
+            logger.info('Calibration file: %s' % chkcal['calfile'][i])
+            logger.info('log/errfile: '+os.path.basename(lgfile)+', '+os.path.basename(lgfile).replace('.log','.err'))
+            logger.info('Calibration success: %s ' % chkcal['success'][i])
+
     # Load everything into the database
     db = apogeedb.DBSession()
     db.ingest('calib_status',chkcal)
@@ -629,7 +637,7 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
 
     db.close()
 
-def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles=None):
+def summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None):
     """ Send a summary email."""
 
     address = 'apogee-pipeline-log@sdss.org'
@@ -642,6 +650,12 @@ def summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfiles=None):
     message += '<p>\n'
     message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/daily/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
 
+    # Calibration status
+    if chkcal is not None:
+        indcal, = np.where(chkcal['success']==True)
+        message += '%d/%d calibrations successfully processed<br> \n' % (len(indcal),len(chkcal))
+    else:
+        message += 'No exposures<br> \n'
     # Exposure status
     if chkexp is not None:
         indexp, = np.where(chkexp['success']==True)
@@ -800,48 +814,62 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
 
     # Run calibration files using "pbs" packages
     #-------------------------------------------
-    # dome, quartz, arcs, fpi
+    # First we need to run domeflats and quartzflats so there are apPSF files
+    # Then the arclamps
+    # Then the FPI exposures last (needs apPSF and apWave files)
     calind, = np.where((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
                        (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI'))
     if len(calind)>0:
-        rootLogger.info('')
-        rootLogger.info('-------------------------')
-        rootLogger.info('Running Calibration Files')
-        rootLogger.info('=========================')
-        rootLogger.info('')
-        queue = pbsqueue(verbose=True)
-        queue.create(label='makecal', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(calind)),
-                     qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
-        calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd5))
-        logfiles = []
-        for i in range(len(calind)):
-            num1 = expinfo['num'][calind[i]]
-            exptype1 = expinfo['exptype'][calind[i]]
-            rootLogger.info('Calibration file %d : %s %d' % (i+1,exptype1,num1))
-            if exptype1=='DOMEFLAT' or exptype1=='QUARTZFLAT':
-                cmd1 = 'makecal --psf '+str(num1)+' --unlock'
-                if clobber: cmd1 += ' --clobber'
-                logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
-            if exptype1=='ARCLAMP':
-                cmd1 = 'makecal --wave '+str(num1)+' --unlock'
-                if clobber: cmd1 += ' --clobber'
-                logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
-            if exptype1=='FPI':
-                cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
-                if clobber: cmd1 += ' --clobber'
-                logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
-            rootLogger.info(logfile1)
-            logfiles.append(logfile1)
-            queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-        queue.commit(hard=True,submit=True)
-        rootLogger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-        calinfo = expinfo[calind]
-        chkcal = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
-        del queue
-    else:
-        rootLogger.info('No calibration files to run')
-        chkcal = None
+        calcodedict = {'DOMEFLAT':0, 'QUARTZFLAT':0, 'ARCLAMP':1, 'FPI':2}
+        calcode = [calcodedict[etype] for etype in expinfo['exptype'][calind]]
+        calnames = ['DOMEFLAT/QUARTZFLAT','ARCLAMP','FPI']
+        shcalnames = ['psf','arcs','fpi']
+        chkcal = []
+        for j,ccode in enumerate([0,1,2]):
+            rootLogger.info('')
+            rootLogger.info('----------------------------------------')
+            rootLogger.info('Running Calibration Files: '+str(calnames[j]))
+            rootLogger.info('========================================')
+            rootLogger.info('')
+            cind, = np.where(np.array(calcode)==ccode)
+            if len(cind)>0:
+                rootLogger.info(str(len(cind))+' files to run')
+                queue = pbsqueue(verbose=True)
+                queue.create(label='makecal-'+shcalnames[j], nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(cind)),
+                             qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
+                calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd5))
+                logfiles = []
+                for k in range(len(cind)):
+                    num1 = expinfo['num'][calind[cind[k]]]
+                    exptype1 = expinfo['exptype'][calind[cind[k]]]
+                    rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
+                    if exptype1=='DOMEFLAT' or exptype1=='QUARTZFLAT':
+                        cmd1 = 'makecal --psf '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
+                    if exptype1=='ARCLAMP':
+                        cmd1 = 'makecal --wave '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
+                    if exptype1=='FPI':
+                        cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+                    rootLogger.info(logfile1)
+                    logfiles.append(logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+                queue.commit(hard=True,submit=True)
+                rootLogger.info('PBS key is '+queue.key)
+                queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
+                calinfo = expinfo[calind[cind]]
+                chkcal1 = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
+                if len(chkcal)==0:
+                    chkcal = chkcal1
+                else:
+                    chkcal = np.hstack((chkcal,chkcal1))
+                del queue
+            else:
+                rootLogger.info('No '+str(calnames[j])+' calibration files to run')
 
     # Run APRED on all planfiles using "pbs" package
     #------------------------------------------------
@@ -954,4 +982,4 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     # give link to QA page
     # attach full run_daily() log (as attachment)
     # don't see it if using --debug mode
-    summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfile)
+    summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfile)
