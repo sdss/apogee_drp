@@ -79,7 +79,7 @@ FOR i=0L,nplanfiles-1 do begin
   if planstr.mjd ge 59556 then fps=1 else fps=0
   if not tag_exist(planstr,'field') then begin
     add_tag,planstr,'field','',planstr
-    planstr.field=apogee_field(0,planstr.plate)
+    planstr.field=apogee_field(0,planstr.plateid)
   endif   
 
   ; Get APOGEE directories
