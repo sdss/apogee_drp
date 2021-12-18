@@ -909,7 +909,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
         objects,ui = np.unique(vcat['apogee_id'],return_index=True)
         vcat = vcat[ui]
         # remove ones with missing or blank apogee_ids
-        bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None'))
+        bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone'))
         if len(bd)>0:
             vcat = np.delete(vcat,bd)
         for obj in vcat['apogee_id']:
