@@ -325,17 +325,39 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     print,'makecal wave: ', wave
     if wave gt 1 then begin
       i = where(wavestr.name eq wave,nwave)
-      if nwave le 0 then begin
-        print,'No matching calibration line for ', wave
-        return
-        stop
-      endif
-      ims = getnums(wavestr[i[0]].frames)
+      if nwave gt 0 then begin
+        ims = getnums(wavestr[i[0]].frames)
+        name = wavestr[i[0]].name
+        psfid = wavestr[i[0]].psfid
+      ;; Use the input filename
+      endif else begin
+        ims = wave
+        name = ims[0]
+        cmjd = getcmjd(ims[0],mjd=mjd)
+        if keyword_set(psf) then begin
+          psfid = psf
+        ;; Try to find a PSF from this day
+        endif else begin
+          print,'Trying to automatically find a PSF calibration file'
+          pname = apogee_filename('PSF',num=strmid(strtrim(ims[0],2),0,4)+'????',chip='a')
+          psffiles = file_search(pname,count=npsffiles)
+          if npsffiles eq 0 then begin
+            print,'No PSF calibration file found for MJD=',cmjd
+            return
+          endif
+          ;; Find closest one
+          psfids = lonarr(npsffiles)
+          for j=0,npsffiles-1 do psfids[j]=strmid(file_basename(psffiles[j]),8,8)
+          si = sort(abs(long(psfids-long(ims[0]))))         
+          psfid = psfids[si[0]]
+        endelse
+      endelse
+
       cmjd = getcmjd(ims[0],mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
       MAKECAL,bpm=bpmid
       MAKECAL,fiber=fiberid
-      MKWAVE,ims,name=wavestr[i[0]].name,darkid=darkid,flatid=flatid,psfid=wavestr[i[0]].psfid,$
+      MKWAVE,ims,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
              fiberid=fiberid,clobber=clobber,nofit=nofit,unlock=unlock
     endif else begin
       if keyword_set(mjd) then  begin

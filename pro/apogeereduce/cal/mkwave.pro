@@ -67,10 +67,13 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc)
 
   ;; New Python version! 
-  if keyword_set(nofit) then nofit='--nofit' else nofit=''
-  cmd = ['apmultiwavecal','--name',name,'--vers',dirs.apred,nofit,'--plot','--hard','--inst',dirs.instrument,'--verbose']
+  cmd = ['apmultiwavecal','--name',strtrim(name,2),'--vers',dirs.apred]
+  if keyword_set(nofit) then cmd=[cmd,'--nofit']
+  if keyword_set(plot) then cmd=[cmd,'--plot','--hard']
+  cmd = [cmd,'--inst',dirs.instrument,'--verbose']
   for i=0,n_elements(waveid)-1 do cmd=[cmd,string(waveid[i])]
   spawn,cmd,/noshell
+
   openw,lock,/get_lun,wavedir+file+'.dat'
   free_lun,lock
 
