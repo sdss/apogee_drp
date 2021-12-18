@@ -22,13 +22,18 @@
 ;  Added doc strings and cleanup.  D. Nidever, Sep 2020
 ;-
 
-pro mkbpm,bpmid,darkid=darkid,flatid=flatid,badrow=badrow,clobber=clobber
+pro mkbpm,bpmid,darkid=darkid,flatid=flatid,badrow=badrow,clobber=clobber,unlock=unlock
 
  dirs = getdir()
  file = apogee_filename('BPM',num=bpmid,chip='c')
+ lockfile = file+'.lock'
 
  ;; If another process is alreadying make this file, wait!
- while file_test(file+'.lock') do apwait,file,10
+ if not keyword_set(unlock) then begin
+   while file_test(lockfile) do apwait,file,10
+ endif else begin
+   if file_test(lockfile) then file_delete,lockfile,/allow
+ endelse
 
  ;; Does product already exist?
  if file_test(file) and not keyword_set(clobber) then begin
@@ -38,7 +43,7 @@ pro mkbpm,bpmid,darkid=darkid,flatid=flatid,badrow=badrow,clobber=clobber
 
  print,'Making BPM: ', bpmid
  ;; Open .lock file
- openw,lock,/get_lun,file+'.lock'
+ openw,lock,/get_lun,lockfile
  free_lun,lock
 
  chips = ['a','b','c']
@@ -74,6 +79,6 @@ pro mkbpm,bpmid,darkid=darkid,flatid=flatid,badrow=badrow,clobber=clobber
    MWRFITS,mask,file,/create
  endfor
 
- file_delete,file+'.lock'
+ file_delete,lockfile
 
 end

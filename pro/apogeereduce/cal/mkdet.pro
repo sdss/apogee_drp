@@ -19,13 +19,19 @@
 ;  Added doc strings, updates to use data model  D. Nidever, Sep 2020
 ;-
 
-pro mkdet,detid,linid
+pro mkdet,detid,linid,unlock=unlock
 
  dirs = getdir()
  caldir = dirs.caldir
  detfile = apogee_filename('Detector',num=detid,chip='c')
+ lockfile = detfile+'.lock'
  ;; If another process is already making this file, wait!
- while file_test(detfile+'.lock') do apwait,file,10
+ if not keyword_set(unlock) then begin
+   while file_test(lockfile) do apwait,lockfile,10
+ endif else begin
+   if file_test(lockfile) then file_delete,lockfile,/allow
+ endelse
+
  ;; Does product already exist?
  print,'testing detector file: ',detfile
  if file_test(detfile) and not keyword_set(clobber) then begin
@@ -35,7 +41,7 @@ pro mkdet,detid,linid
 
  print,'Making Detector: ', detid
  ; open .lock file
- openw,lock,/get_lun,detfile+'.lock'
+ openw,lock,/get_lun,lockfile
  free_lun,lock
 
  lincorr = fltarr(4,3)
@@ -79,5 +85,5 @@ pro mkdet,detid,linid
    MWRFITS,lincorr,file
  endfor
 
- file_delete,detfile+'.lock'
+ file_delete,lockfile,/allow
 end

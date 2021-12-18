@@ -15,6 +15,7 @@
 ;  =fiberid    ID8 number for the ETrace calibration file to use. 
 ;  /average    Find the fibers    
 ;  /clobber    Overwrite any existing files.
+;  /unlock     Remove any existing lock file and start fresh.
 ;
 ; OUTPUTS:
 ;  A set of apPSF-[abc]-ID8.fits files in the appropriate location                                                                                       
@@ -28,7 +29,7 @@
 ;-
 
 pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
-          littrowid=littrowid,average=average,clobber=clobber
+          littrowid=littrowid,average=average,clobber=clobber,unlock=unlock
 
   dirs = getdir(apodir,caldir,spectrodir,vers)
   caldir = dirs.caldir
@@ -38,7 +39,11 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
   ;; If another process is alreadying make this file, wait!
   ;;  don't use chip in name, apmkpsf.pro makes chip-specific lock files
   lockfile = psfdir+repstr(file,'-c-','-')+'.lock'
-  while file_test(lockfile) do apwait,file,10
+  if not keyword_set(unlock) then begin
+    while file_test(lockfile) do apwait,file,10
+  endif else begin
+    if file_test(lockfile) then file_delete,lockfile,/allow
+  endelse
   ;; Does product already exist?
   if file_test(psfdir+file) and not keyword_set(clobber) then begin
     print,' PSF file: ', psfdir+file, ' already made'

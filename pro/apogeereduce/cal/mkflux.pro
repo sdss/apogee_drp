@@ -15,6 +15,7 @@
 ;  persistid=persistid : persist frame to be used if images are reduced
 ;  /clobber : rereduce images even if they exist
 ;  /onedclobber : overwrite the 1D files
+;  /unlock : delete lock file and start fresh
 ;
 ; OUTPUT:
 ;  A set of apFlux-[abc]-ID8.fits files in the appropriate location
@@ -29,7 +30,7 @@
 
 pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,littrowid=littrowid,$
            persistid=persistid,clobber=clobber,onedclobber=onedclobber,bbtemp=bbtemp,plate=plate,$
-           plugid=plugid,holtz=holtz,temp=temp
+           plugid=plugid,holtz=holtz,temp=temp,unlock=unlock
 
   dirs = getdir(apodir,caldir,spectrodir,vers)
   caldir = dirs.caldir
@@ -37,8 +38,15 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
   file = apogee_filename('Flux',num=ims[0],chip='c',/base)
   fluxdir = apogee_filename('Flux',num=ims[0],chip='c',/dir)
   if file_test(fluxdir,/directory) eq 0 then file_mkdir,fluxdir
+  fluxlockfile = fluxdir+file+'.lock'
+
   ;; If another process is alreadying making this file, wait!
-  while file_test(fluxdir+file+'.lock') do apwait,file,10
+  if not keyword_set(unlock) then begin
+    while file_test(fluxlockfile) do apwait,fluxlockfile,10
+  endif else begin
+    if file_test(fluxlockfile) then file_delete,fluxlockfile,/allow
+  endelse
+
   ;; Does product already exist?
   if file_test(fluxdir+file) and not keyword_set(clobber) then begin
     print,' flux file: ',fluxdir+file,' already made'
@@ -46,7 +54,6 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
     return
   endif
   ;; Open .lock file
-  fluxlockfile = fluxdir+file+'.lock'
   openw,lock,/get_lun,fluxlockfile
   free_lun,lock
 
@@ -126,24 +133,30 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
     endfor
   endif
 
-  file_delete,fluxlockfile  ;; delete lock file
+  file_delete,fluxlockfile,/allow  ;; delete lock file
 
   response:
   ;; Extra block if we are calculating response function 
   if n_elements(temp) gt 0 then begin
     file = apogee_filename('Response',num=ims[0],chip='c',/base,/nochip)
     ;file = dirs.prefix+string(format='("Response-c-",i8.8)',ims[0])
+    responselockfile = fluxdir+file+'.lock'
+    
     ;; If another process is alreadying making this file, wait!
-    while file_test(fluxdir+file+'.lock') do apwait,file,10
+    if not keyword_set(unlock) then begin
+      while file_test(responselockfile) do apwait,responselockfile,10
+    endif else begin
+      if file_test(responselockfile) then file_delete,responselockfile,/allow
+    endelse
     ;; Does product already exist?
     if file_test(fluxdir+file) and not keyword_set(clobber) then begin
       print,' flux file: ',fluxdir+file,' already made'
       return
     endif
     ;; Open .lock file
-    responselockfile = fluxdir+file+'.lock'
     openw,lock,/get_lun,responselockfile
     free_lun,lock
+
     chips = ['a','b','c']
     wave = mrdfits(apogee_filename('Wave',num=waveid,chip=chips[1]),2)
     flux = mrdfits(apogee_filename('Flux',num=ims[0],chip=chips[1]),3)
@@ -167,7 +180,7 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
       MWRFITS,bbflux/flux,fluxdir+file,head
     endfor
 
-    file_delete,responselockfile   ;; delete lock file
+    file_delete,responselockfile,/allow   ;; delete lock file
   endif
  
 end

@@ -20,7 +20,7 @@
 ;  Updates, added doc strings, and cleanup by D. Nidever, Sep 2020
 ;-
 
-pro mkdark,ims,cmjd=cmjd,step=step,psfid=psfid,clobber=clobber
+pro mkdark,ims,cmjd=cmjd,step=step,psfid=psfid,clobber=clobber,unlock=unlock
 
 i1 = ims[0]
 nframes = n_elements(ims)
@@ -32,6 +32,7 @@ adarkfile = apogee_filename('Dark',num=i1,chip='a')
 darkdir = file_dirname(adarkfile)
 prefix = strmid(file_basename(adarkfile),0,2)
 darkfile = darkdir+'/'+prefix+string(format='("Dark-",i8.8)',i1) +'.tab'
+lockfile = darkfile+'.lock'
 
 ;; Does file already exist?
 if file_test(darkfile) and ~keyword_set(clobber) then begin
@@ -40,10 +41,14 @@ if file_test(darkfile) and ~keyword_set(clobber) then begin
 endif
 
 ;; Is another process already creating file
-while file_test(darkfile+'.lock') do apwait,darkfile,10
+if not keyword_set(unlock) then begin
+  while file_test(lockfile) do apwait,lockfile,10
+endif else begin
+  if file_test(lockfile) then file_delete,lockfile,/allow
+endelse
 
 ;; Open lock file
-openw,lock,/get_lun,darkfile+'.lock'
+openw,lock,/get_lun,lockfile
 free_lun,lock
 
 ;; Initialize summary structure
@@ -243,7 +248,7 @@ file = prefix+string(format='("Dark-",i8.8)',i1)
 MWRFITS,darklog,darkdir+'/'+file+'.tab',/create
 
 ;; Remove lock file
-file_delete,darkfile+'.lock'
+file_delete,lockfile
 
 ;; Compile summary web page
 DARKHTML,darkdir

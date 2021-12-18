@@ -49,6 +49,7 @@ if __name__ == '__main__' :
     parser.add_argument('--nofit', type=str, nargs='*', help='/nofit for MKWAVE')
     parser.add_argument('--pl', type=str, nargs='*', help='Plotting for MKLSF')
     parser.add_argument('--clobber', type=str, nargs='*', help='Overwrite files')
+    parser.add_argument('--unlock', type=str, nargs='*', help='Remove lock file and start fresh')
     args = parser.parse_args()
     argsdict = vars(args)
 
@@ -81,7 +82,7 @@ if __name__ == '__main__' :
                 cmd += ","+str(key)+"="+str(val)
                 
     # Add flags
-    flagnames = ['full','newwave','nofit','pl','clobber']
+    flagnames = ['full','newwave','nofit','pl','clobber','unlock']
     for i,key in enumerate(flagnames):
         val = argsdict[key]
         # val=None when the argument was not set

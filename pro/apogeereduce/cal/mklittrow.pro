@@ -25,7 +25,7 @@
 ;-
 
 pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
-              fiberid=fiberid,clobber=clobber,cmjd=cmjd
+              fiberid=fiberid,clobber=clobber,cmjd=cmjd,unlock=unlock
 
   dirs = getdir()
   caldir = dirs.caldir
@@ -33,19 +33,26 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   litdir = apogee_filename('Littrow',num=littrowid,chip='b',/dir)
   if file_test(litdir,/directory) eq 0 then file_mkdir,litdir
   file = apogee_filename('Littrow',num=littrowid,chip='b',/base)
+  lockfile = litdir+file+'.lock'
+
   ;; If another process is alreadying making this file, wait!
-  while file_test(litdir+file+'.lock') do apwait,file,10
+  if not keyword_set(unlock) then begin
+    while file_test(lockfile) do apwait,lockfile,10
+  endif else begin
+    if file_test(lockfile) then file_delete,lockfile,/allow
+  endelse
+
   ;; Does product already exist?
   if file_test(litdir+file) and not keyword_set(clobber) then begin
     print,' littrow file: ',litdir+file,' already made'
     return
   endif
   ;; Open .lock file
-  openw,lock,/get_lun,litdir+file+'.lock'
+  openw,lock,/get_lun,lockfile
   free_lun,lock
 
   ;; Make empirical PSF with broader smoothing in columns so that Littrow ghost is not incorporated as much
-  MKPSF,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,average=200,/clobber
+  MKPSF,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,average=200,/clobber,unlock=unlock
   ;; Process the frame with this PSF to get model that does not have Littrow ghost
   psfdir = apogee_filename('PSF',num=littrowid,chip='b',/dir)
   wavefile = 0
@@ -91,7 +98,7 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   file_move,files,outdir,/over
 
   file = apogee_filename('Littrow',num=littrowid,chip='b',/base,/nochip)
-  file_delete,litdir+file+'.lock'
+  file_delete,lockfile,/allow
 
 end
 

@@ -16,6 +16,7 @@
 ;  =peakthresh The threshold to use for finding peaks/fibers.
 ;  /pl         Plot the fits
 ;  /clobber    Overwrite the output file if it already exists
+;  /unlock     Delete lockfile and start fresh.
 ;  /verbose    Verbose output to the screen.
 ;  /silent     Don't print anything to the screen
 ;  /stp        Stop at the end of the program
@@ -31,7 +32,7 @@
 
 pro apmkpsf,flatframe,outdir,no_epsf=no_epsf,pl=pl,clobber=clobber,$
             peakthresh=peakthresh,verbose=verbose,silent=silent,stp=stp,$
-            sparseid=sparseid,fiberid=fiberid,average=average
+            sparseid=sparseid,fiberid=fiberid,average=average,unlock=unlock
 
 t0 = systime(1)
 if not keyword_set(sparseid) then sparseid=0 else makecal,sparse=sparseid
@@ -88,8 +89,13 @@ FOR i=0,nflatframe-1 do begin
 
     ;; Does the output file already exist?
     outfile = apogee_filename('PSF',chip=chiptag[j],num=flatframeid)
+    lockfile = outfile+'.lock'
     ;; if another process is creating file, wait
-    while file_test(outfile+'.lock') do apwait,outfile+'.lock',10
+    if not keyword_set(unlock) then begin
+      while file_test(lockfile) do apwait,lockfile,10
+    endif else begin
+      if file_test(lockfile) then file_delete,lockfile,/allow  
+    endelse
 
     if file_test(outfile) eq 1 and not keyword_set(clobber) then begin
       print,outfile,' already exists and CLOBBER=0'
@@ -97,7 +103,7 @@ FOR i=0,nflatframe-1 do begin
     endif
 
     ;; Create a lock file
-    openw,lock,/get_lun,outfile+'.lock'
+    openw,lock,/get_lun,lockfile
     free_lun,lock
 
     ;; Kludge for 379 c
@@ -109,7 +115,7 @@ FOR i=0,nflatframe-1 do begin
     APFINDTRACE,str.(j),tracestr,pl=pl,nthreshsig=20,sigkern=1.2,thresh=peakthresh
     if n_elements(tracestr) eq 0 then begin
       print,'No traces found for ',outfile
-      file_delete,outfile+'.lock',/allow
+      file_delete,lockfile,/allow
       goto,BOMB1
     endif
 
@@ -326,7 +332,7 @@ FOR i=0,nflatframe-1 do begin
       APMKPSF_EPSF,str.(j),strmid(outdir,0,strlen(outdir)-4),flatid,j,sparseid=sparseid,fiberid=fiberid,/scat,average=average
 
     outfile = apogee_filename('PSF',chip=chiptag[j],num=flatframeid)
-    file_delete,outfile+'.lock'
+    file_delete,lockfile
 
     BOMB1:
 

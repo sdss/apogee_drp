@@ -16,6 +16,7 @@
 ;  =fiberid    ETrace frame to be used if images are reduced.
 ;  =thresh     Threshold to use for persistence.  Default is 0.1.
 ;  /clobber    Overwrite existing files.
+;  /unlock     Delete lockfile and start fresh.
 ;
 ; OUTPUT:
 ;  A set of apPersist-[abc]-ID8.fits files in the appropriate location
@@ -29,7 +30,8 @@
 ;-
 
 pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
-              sparseid=sparseid,fiberid=fiberid,clobber=clobber,thresh=thresh
+              sparseid=sparseid,fiberid=fiberid,clobber=clobber,thresh=thresh,$
+              unlock=unlock
 
   if not keyword_set(thresh) then thresh=0.1
 
@@ -37,15 +39,22 @@ pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
 
   perdir = apogee_filename('Persist',num=persistid,chip='c',/dir)
   file = apogee_filename('Persist',num=persistid,chip='c',/base)
+  lockfile perdir+file+'.lock'
+
   ;; If another process is alreadying making this file, wait!
-  while file_test(perdir+file+'.lock') do apwait,file,10
+  if not keyword_set(unlock) then begin
+    while file_test(lockfile) do apwait,lockfile,10
+  endif else begin
+    if file_test(lockfile) then file_delete,lockfile,/allow
+  endelse
+
   ;; Does product already exist?
   if file_test(perdir+file) and not keyword_set(clobber) then begin
     print,' persist file: ',perdir+file,' already made'
     return
   endif
   ;; Open .lock file
-  openw,lock,/get_lun,perdir+file+'.lock'
+  openw,lock,/get_lun,lockfile
   free_lun,lock
 
   if keyword_set(cmjd) then begin
@@ -78,5 +87,5 @@ pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
   endfor
 
   file = apogee_filename('Persist',num=persistid,chip='c',/base)
-  file_delete,perdir+file+'.lock'
+  file_delete,lockfile,/allow
 end

@@ -23,7 +23,7 @@
 ;  Added doc strings, updates to use data model  D. Nidever, Sep 2020 
 ;-
 
-pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,dithered=dithered
+pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,dithered=dithered,unlock=unlock
 
   i1 = ims[0]
   nframes = n_elements(ims)
@@ -33,8 +33,13 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
 
   flatdir = apogee_filename('Flat',num=i1,chip='c',/dir)
   flatfile = flatdir+dirs.prefix+string(format='("Flat-",i8.8)',i1)+'.tab'
+  lockfile = flatfile+'.lock'
   ;; Is another process already creating file?
-  while file_test(flatfile+'.lock') do apwait,flatfile,10
+  if not keyword_set(unlock) then begin
+    while file_test(lockfile) do apwait,flatfile,10
+  endif else begin
+    if file_test(lockfile) then file_delete,lockfile,/allow
+  endelse
 
   ;: Does file already exist?
   if file_test(flatfile) and not keyword_set(clobber) then begin
@@ -43,7 +48,7 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
   endif
 
   ;; Open lock file
-  openw,lock,/get_lun,flatfile+'.lock'
+  openw,lock,/get_lun,lockfile
   free_lun,lock
 
   sum = {name: '',num: i1, nframes: 0}
@@ -232,7 +237,7 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
   MWRFITS,flatlog,flatdir+file,/create
 
   ;; Wemove lock file
-  file_delete,flatfile+'.lock',/allow_non
+  file_delete,lockfile,/allow_non
 
   ;; Cmpile summary web page
   FLATHTML,caldir

@@ -1,5 +1,7 @@
 ;======================================================================
-pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=clobber,dmax=dmax,sdmax=sdmax,darkims=darkims,outid=outid,average=average,maxread=maxread,filter=filter,thresh=thresh,scat=scat
+pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=clobber,dmax=dmax,$
+           sdmax=sdmax,darkims=darkims,outid=outid,average=average,maxread=maxread,filter=filter,$
+           thresh=thresh,scat=scat,unlock=unlock
 
   if not keyword_set(dmax) then dmax=7
   if not keyword_set(outid) then outid=ims[0]
@@ -10,13 +12,19 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
 
   ;file=dirs.prefix+string(format='("EPSF-c-",i8.8)',outid)
   file = apogee_filename('EPSF',num=outid,chip='c')
+  lockfile = file+'.lock'
 
   ;if another process is alreadying make this file, wait!
-  while file_test(file+'.lock') do apwait,file,10
+  if not keyword_set(unlock) then begin
+    while file_test(lockfile) do apwait,lockfile,10
+  endif else begin
+    if file_test(lockfile) then file_delete,lockfile,/allow
+  endelse
+
   ; does product already exist?
   if not file_test(file) or keyword_set(clobber) then begin
     ; open .lock filea
-    openw,lock,/get_lun,file+'.lock'
+    openw,lock,/get_lun,lockfile
     free_lun,lock
 
     if keyword_set(cmjd) then $
@@ -78,7 +86,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
     sparse = dirs.prefix+string(format='("Sparse-",i8.8)',outid)
     mwrfits,red,file_dirname(file)+'/'+sparse+'.fits',/create
   
-    file_delete,file+'.lock'
+    file_delete,lockfile,/allow
   endif
   
 end

@@ -17,6 +17,7 @@
 ;                just return.
 ;  /clobber    Overwrite existing files.
 ;  /nofit      Skip fit (find lines only).
+;  /unlock     Delete the lock file and start fresh.
 ;
 ; OUTPUT:
 ;  A set of apWave-[abc]-ID8.fits files in the appropriate location
@@ -30,17 +31,25 @@
 ;-
 
 pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
-           fiberid=fiberid,clobber=clobber,nowait=nowait,nofit=nofit
+           fiberid=fiberid,clobber=clobber,nowait=nowait,nofit=nofit,$
+           unlock=unlock
 
   if n_elements(name) eq 0 then name=string(waveid[0])
   dirs = getdir(apodir,caldir,spectrodir,vers)
   wavedir = apogee_filename('Wave',num=name,chip='a',/dir)
   file = dirs.prefix+string(format='("Wave-",i8.8)',name)
+  lockfile = wavedir+file+'.lock'
+
   ;; If another process is alreadying make this file, wait!
-  while file_test(wavedir+file+'.lock') do begin
-    if keyword_set(nowait) then return
-    apwait,file,10
-  endwhile
+  if not keyword_set(unlock) then begin
+    while file_test(lockfile) do begin
+      if keyword_set(nowait) then return
+      apwait,file,10
+    endwhile
+  endif else begin
+    if file_test(lockfile) then file_delete,lockfile,/allow
+  endelse
+
   ;; Does product already exist?
   if file_test(wavedir+file+'.dat') and not keyword_set(clobber) then begin
     print,' Wavecal file: ', wavedir+file+'.dat', ' already made'
@@ -49,7 +58,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
 
   print,'Making wave: ', waveid
   ;; Open .lock file
-  openw,lock,/get_lun,wavedir+file+'.lock'
+  openw,lock,/get_lun,lockfile
   free_lun,lock
 
   ;; Process the frames
@@ -65,6 +74,6 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   openw,lock,/get_lun,wavedir+file+'.dat'
   free_lun,lock
 
-  file_delete,wavedir+file+'.lock'
+  file_delete,lockfile,/allow
 
 end

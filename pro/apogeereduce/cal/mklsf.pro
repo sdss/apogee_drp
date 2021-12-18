@@ -21,6 +21,7 @@
 ;  /nowait     If LSF file is already being made then don't wait
 ;                just return.
 ;  /newwave    Depricated parameter.
+;  /unlock     Delete the lock file and start fresh.
 ;
 ; OUTPUT:
 ;  A set of apLSF-[abc]-ID8.fits files in the appropriate location
@@ -34,7 +35,8 @@
 ;-
 
 pro mklsf,lsfid,waveid,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,$
-          clobber=clobber,full=full,newwave=newwave,pl=pl,fibers=fibers,nowait=nowait
+          clobber=clobber,full=full,newwave=newwave,pl=pl,fibers=fibers,nowait=nowait,$
+          unlock=unlock
 
   if not keyword_set(newwave) then newwave=0
 
@@ -42,15 +44,20 @@ pro mklsf,lsfid,waveid,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,$
   caldir = dirs.caldir
   file = apogee_filename('LSF',num=lsfid[0],/nochip)
   file = file_dirname(file)+'/'+file_basename(file,'.fits')
+  lockfile = file+'.lock'
 
   ;; If another process is alreadying make this file, wait!
-  while file_test(file+'.lock') do begin
-    if keyword_set(nowait) then begin
-      print,' LSF file: ', file, ' already being made (.lock file exists)'
-      return
-    endif
-    apwait,file,10
-  endwhile
+  if not keyword_set(unlock) then begin
+    while file_test(lockfile) do begin
+      if keyword_set(nowait) then begin
+        print,' LSF file: ', file, ' already being made (.lock file exists)'
+        return
+      endif
+      apwait,file,10
+    endwhile
+  endif else begin
+    if file_test(lockfile) then file_delete,lockfile,/allow
+  endelse
 
   ; does product already exist?
   if file_test(file+'.sav') and not keyword_set(clobber) then begin
@@ -59,14 +66,14 @@ pro mklsf,lsfid,waveid,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,$
   endif
 
   ;; Open .lock file
-  openw,lock,/get_lun,file+'.lock'
+  openw,lock,/get_lun,lockfile
   free_lun,lock
 
   cmjd = getcmjd(psfid)
 
   lsffile = apogee_filename('1D',num=lsfid[0],chip='c')
 
-  MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,/clobber
+  MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,/clobber,/unlock
   w = approcess(lsfid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc,/skywave,/clobber)
   cmd = ['apskywavecal','dummy','--frameid',string(lsfid),'--waveid',string(waveid),'--apred',dirs.apred,'--telescope',dirs.telescope]
   spawn,cmd,/noshell
@@ -78,5 +85,5 @@ pro mklsf,lsfid,waveid,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,$
   APLSF,lsffile,wavefile,psf=psffile,/gauss,pl=pl
   if keyword_set(full) then APLSF,lsffile,wavefile,psf=psffile,/clobber,pl=pl,fibers=fibers
 
-  file_delete,file+'.lock'
+  file_delete,lockfile,/allow
 end
