@@ -39,7 +39,7 @@ pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
 
   perdir = apogee_filename('Persist',num=persistid,chip='c',/dir)
   file = apogee_filename('Persist',num=persistid,chip='c',/base)
-  lockfile perdir+file+'.lock'
+  lockfile = perdir+file+'.lock'
 
   ;; If another process is alreadying making this file, wait!
   if not keyword_set(unlock) then begin
