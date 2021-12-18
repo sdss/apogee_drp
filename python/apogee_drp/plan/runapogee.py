@@ -138,6 +138,101 @@ def dbload_plans(planfiles):
     db.ingest('plan',plantab)
     db.close()   # close db session
 
+def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
+    """ Check that the calibration files ran okay and load into database."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    if verbose==True:
+        logger.info('')
+        logger.info('-------------------------')
+        logger.info('Checking Calibration runs')
+        logger.info('=========================')
+
+    chkcal = None
+
+    # Exposure-level processing: ap3d, ap2d, calibration file
+    ncal = len(expinfo)
+    dtype = np.dtype([('exposure_pk',int),('logfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
+                      ('instrument',(np.str,20)),('telescope',(np.str,10)),('mjd',int),('caltype',(np.str,30)),
+                      ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
+                      ('pbskey',(np.str,50)),('checktime',(np.str,100)),
+                      ('num',int),('calfile',(np.str,300)),('success3d',bool),('success2d',bool),('success',bool)])
+    chkcal = np.zeros(ncal,dtype=dtype)
+
+    # Loop over the planfiles
+    for i in range(ncal):
+        # domeflat
+        # quartzflat
+        # arclamp
+        # fpi
+
+        # apWave-49920071_pbs.123232121.log
+        caltype = os.path.basename(lgfile)
+        caltype = caltype.split('_pbs')[0]
+        caltype = caltype.split('-')[0]
+        caltype = caltype[2:]  # remove 
+
+        num = expinfo['num'][i]
+        mjd = int(expinfo['mjd'][i])
+        chkcal['exposure_pk'][i] = expinfo['pk'][i]
+        chkcal['logfile'][i] = lgfile
+        chkcal['num'][i] = num
+        chkcal['apred_vers'][i] = apred
+        if expinfo['observtory'][i]=='apo':
+            chkcal['instrument'][i] = 'apogee-n'
+            chkcal['telescope'][i] = 'apo25m'
+        else:
+            chkcal['instrument'][i] = 'apogee-s'
+            chkcal['telescope'][i] = 'lco25m'
+        chkcal['mjd'][i] = mjd
+        chkcal['caltype'][i] = caltype
+        chkcal['plate'][i] = expinfo['plateid'][i]
+        chkcal['configid'][i] = expinfo['configid'][i]
+        chkcal['designid'][i] = expinfo['designid'][i]
+        chkcal['fieldid'][i] = expinfo['fieldid'][i]
+        chkcal['pbskey'][i] = pbskey
+        chkcal['checktime'][i] = str(datetime.now())
+        chkcal['success'][i] = False
+        # AP3D
+        #-----
+        base = load.filename('2D',num=num,mjd=mjd,chips=True)
+        chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
+        exists = [os.path.exists(chf) for chf in chfiles]
+        if exists[0]==True:  # get V_APRED (git version) from file
+            chead = fits.getheader(chfiles[0])
+            chkcal['v_apred'][i] = chead.get('V_APRED')
+        if np.sum(exists)==3:
+            chkcal['success3d'][i] = True
+        # AP2D
+        #-----
+        base = load.filename('1D',num=num,mjd=mjd,chips=True)
+        chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
+        exists = [os.path.exists(chf) for chf in chfiles]
+        if np.sum(exists)==3:
+            chkcal['success2d'][i] = True
+        # Final calibration file
+        #-----------------------
+        base = load.filename(caltype,num=num,chips=True)
+        chkcal['calfile'][i] = base
+        chfiles = [base.replace(caltype+'-',caltype+'-'+ch+'-') for ch in ['a','b','c']]
+        exists = [os.path.exists(chf) for chf in chfiles]
+        if exists[0]==True:  # get V_APRED (git version) from file
+            chead = fits.getheader(chfiles[0])
+            chkcal['v_apred'][i] = chead.get('V_APRED')
+
+        # Overall success
+        if chkcal['success3d'] and chkcal['success2d'] and exists:
+            chkcal['success'][i] = True
+
+    # Load everything into the database
+    db = apogeedb.DBSession()
+    db.ingest('calib_status',chkcal)
+    db.close()
+
+    return chkcal
+
 
 def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
     """ Check that apred ran okay and load into database."""
@@ -700,6 +795,47 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast'):
     daycat['begtime'] = begtime
     daycat['success'] = False
     db.ingest('daily_status',daycat)
+
+    # Run calibration files using "pbs" packages
+    #-------------------------------------------
+    # dome, quartz, arcs, fpi
+    calind, = np.where((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
+                       (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI'))
+    if len(calind)>0:
+        rootLogger.info('')
+        rootLogger.info('-------------------------')
+        rootLogger.info('Running Calibration Files')
+        rootLogger.info('=========================')
+        rootLogger.info('')
+        import pdb; pdb.set_trace()
+        queue = pbsqueue(verbose=True)
+        queue.create(label='makecal', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(calind)),
+                     qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
+        calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd5))
+        logfiles = []
+        for i in range(len(calind)):
+            num1 = expinfo['num'][calind[i]]
+            exptype1 = expinfo['exptype'][calind[i]]
+            if exptype1=='DOMEFLAT' or exptype1=='QUARTZFLAT':
+                cmd1 = 'makecal --psf '+str(num1)
+                logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
+            if exptype1=='ARCLAMP':
+                cmd1 = 'makecal --wave '+str(num1)
+                logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
+            if exptype1=='FPI':
+                cmd1 = 'makecal --fpi '+str(num1)
+                logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+            logfiles.append(logfile1)
+            queue.append(cmd1, outfile=logfile1,errfile=logfile1.repliace('.log','.err')
+        queue.commit(hard=True,submit=True)
+        rootLogger.info('PBS key is '+queue.key)
+        queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
+        calinfo = expinfo[calind]
+        chkcal = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
+        del queue
+    else:
+        rootLogger.info('No calibration files to run')
+        chkcal = None
 
     # Run APRED on all planfiles using "pbs" package
     #------------------------------------------------
