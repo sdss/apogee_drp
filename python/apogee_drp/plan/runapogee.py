@@ -814,8 +814,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                      qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
         calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd5))
         logfiles = []
-        #for i in range(len(calind)):
-        for i in range(1):
+        for i in range(len(calind)):
             num1 = expinfo['num'][calind[i]]
             exptype1 = expinfo['exptype'][calind[i]]
             rootLogger.info('Calibration file %d : %s %d' % (i+1,exptype1,num1))
@@ -838,7 +837,6 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
         rootLogger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
         calinfo = expinfo[calind]
-        import pdb; pdb.set_trace()
         chkcal = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
         del queue
     else:
