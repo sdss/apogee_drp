@@ -152,9 +152,69 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
     daycat['success'] = False
     db.ingest('daily_status',daycat)
 
+    # 3) Run calibration files using "pbs" packages
+    #-------------------------------------------
+    # First we need to run domeflats and quartzflats so there are apPSF files
+    # Then the arclamps
+    # Then the FPI exposures last (needs apPSF and apWave files)
+    calind, = np.where((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
+                       (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI'))
+    if len(calind)>0:
+        calcodedict = {'DOMEFLAT':0, 'QUARTZFLAT':0, 'ARCLAMP':1, 'FPI':2}
+        calcode = [calcodedict[etype] for etype in expinfo['exptype'][calind]]
+        calnames = ['DOMEFLAT/QUARTZFLAT','ARCLAMP','FPI']
+        shcalnames = ['psf','arcs','fpi']
+        chkcal = []
+        for j,ccode in enumerate([0,1,2]):
+            rootLogger.info('')
+            rootLogger.info('----------------------------------------')
+            rootLogger.info('Running Calibration Files: '+str(calnames[j]))
+            rootLogger.info('========================================')
+            rootLogger.info('')
+            cind, = np.where(np.array(calcode)==ccode)
+            if len(cind)>0:
+                rootLogger.info(str(len(cind))+' files to run')
+                queue = pbsqueue(verbose=True)
+                queue.create(label='makecal-'+shcalnames[j], nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(cind)),
+                             qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
+                calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd5))
+                logfiles = []
+                for k in range(len(cind)):
+                    num1 = expinfo['num'][calind[cind[k]]]
+                    exptype1 = expinfo['exptype'][calind[cind[k]]]
+                    rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
+                    if exptype1=='DOMEFLAT' or exptype1=='QUARTZFLAT':
+                        cmd1 = 'makecal --psf '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
+                    if exptype1=='ARCLAMP':
+                        cmd1 = 'makecal --wave '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
+                    if exptype1=='FPI':
+                        cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+                    rootLogger.info(logfile1)
+                    logfiles.append(logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+                queue.commit(hard=True,submit=True)
+                rootLogger.info('PBS key is '+queue.key)
+                queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
+                calinfo = expinfo[calind[cind]]
+                chkcal1 = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
+                if len(chkcal)==0:
+                    chkcal = chkcal1
+                else:
+                    chkcal = np.hstack((chkcal,chkcal1))
+                del queue
+            else:
+                rootLogger.info('No '+str(calnames[j])+' calibration files to run')
+             
 
-    # Run APRED on all planfiles using "pbs" package
-    #------------------------------------------------
+    
+    # 4) Run APRED on all planfiles using "pbs" package
+    #--------------------------------------------------
     if nplanfiles>0:
         rootLogger.info('')
         rootLogger.info('--------------')
@@ -175,8 +235,9 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
         rootLogger.info('No plan files to run')
         chkexp,chkvisit = None,None
 
-    # Run "rv" on all stars
-    #----------------------
+        
+    # 5) Run "rv" on all unique stars
+    #--------------------------------
     rootLogger.info('')
     rootLogger.info('------------------------------')
     rootLogger.info('Running RV+Visit Combination')
@@ -213,8 +274,13 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
     create_sumfiles(mjd5,apred,telescope)
 
 
-    # Run QA script
-    #--------------
+    
+    # 6) Unified directory structure
+    #---------------------------------
+
+    
+    # 7) Run QA script
+    #------------------
     rootLogger.info('')
     rootLogger.info('------------')
     rootLogger.info('Running QA')
