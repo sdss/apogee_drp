@@ -456,18 +456,18 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
     #import pdb; pdb.set_trace()
 
-    if ims[0] == 0: 
-        tot = load.apPlate(int(plate), mjd)
-    else:
-        tot = load.ap1D(ims[0])
+    #if ims[0] == 0: 
+    #    tot = load.apPlate(int(plate), mjd)
+    #else:
+    #    tot = load.ap1D(ims[0])
 
-    pdb.set_trace()
-    if type(tot) != dict:
+    #pdb.set_trace()
+    #if type(tot) != dict:
     #    html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
     #    htmlsum.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
     #    html.close()
     #    htmlsum.close()
-        print("----> makePlateSum: Error!")
+    #    print("----> makePlateSum: Error!")
 
     plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
 
