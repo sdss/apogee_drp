@@ -461,6 +461,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     else:
         tot = load.ap1D(ims[0])
 
+    pdb.set_trace()
     if type(tot) != dict:
     #    html.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
     #    htmlsum.write('<FONT COLOR=red> PROBLEM/FAILURE WITH: '+str(ims[0])+'\n')
