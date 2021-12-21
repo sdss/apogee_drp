@@ -245,7 +245,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             # 0 = not reduced, 1 = reduced
             imsReduced = np.zeros(n_ims)
             for j in range(n_ims):
-                cframe = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[j], chips=True)
+                cframe = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[j], chips=True, fps=fps)
                 if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[j] = 1
             good, = np.where(imsReduced == 1)
             if len(good) < 1:
@@ -287,9 +287,14 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
     print("Starting APQA for plate " + plate + ", MJD " + mjd + "\n")
 
+    if int(mjd)>59556:
+        fps = True
+    else:
+        fps = False
+
     # Use telescope, plate, mjd, and apred to load planfile into structure.
     load = apload.ApLoad(apred=apred, telescope=telescope)
-    planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
+    planfile = load.filename('Plan', plate=int(plate), mjd=mjd, fps=fps)
     planstr = plan.load(planfile, np=True)
 
     print(os.path.basename(planfile))
@@ -348,7 +353,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     if platetype == 'normal': 
 
         # Make the apPlateSum file if it doesn't already exist.
-        platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+        platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
         if makeplatesum == True:
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
@@ -422,7 +427,12 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     
     apodir = os.environ.get('APOGEE_REDUX')+'/'
 
-    platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+    if int(mjd)>59556:
+        fps = True
+    else:
+        fps = False
+
+    platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
     platesumbase = os.path.basename(platesumfile)
     
     print("----> makePlateSum: Making "+platesumbase)
@@ -434,10 +444,10 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     # Get the fiber association for this plate. Also get some other values
     if ims[0] == 0:
         n_exposures = 1
-        onedfile = load.filename('1D',  plate=int(plate), num=ims[1], mjd=mjd, chips=True)
+        onedfile = load.filename('1D', num=ims[1], mjd=mjd, chips=True)
     else:
         n_exposures = len(ims)
-        onedfile = load.filename('1D',  plate=int(plate), num=ims[0], mjd=mjd, chips=True)
+        onedfile = load.filename('1D', num=ims[0], mjd=mjd, chips=True)
 
     tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
     ra = tothdr['RADEG']
@@ -547,7 +557,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                    ('SEEING',    np.float64),
                    ('FWHM',      np.float64),
                    ('GDRMS',     np.float64),
-                   ('CART',      np.int32),
+                   ('CART',      np.str, 30),
                    ('PLUGID',    np.str, 30),
                    ('DITHER',    np.float64),
                    ('MJD',       np.int32),
@@ -580,15 +590,15 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     # Loop over the exposures.
     for i in range(n_exposures):
         if ims[0] == 0: 
-            pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
-            dfile = load.filename('Plate',  plate=int(plate), mjd=mjd, chips=True)
+            pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
+            dfile = load.filename('Plate',  plate=int(plate), mjd=mjd, chips=True, fps=fps)
             d = load.apPlate(int(plate), mjd) 
             cframe = load.apPlate(int(plate), mjd)
             if type(d)!=dict: print("----> makePlateSum: Problem with apPlate!")
             dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
         else:
-            pfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[i], mjd=mjd, chips=True))
-            dfile = load.filename('1D',  plate=int(plate), num=ims[i], mjd=mjd, chips=True)
+            pfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True))
+            dfile = load.filename('1D', num=ims[i], mjd=mjd, chips=True)
             d = load.ap1D(ims[i])
             cframe = load.apCframe(field, int(plate), mjd, ims[i])
             if type(d)!=dict: print("----> makePlateSum: Problem with ap1D!")
@@ -596,7 +606,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
         ind = 1
         if len(ims) < 2: ind = 0
-        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[ind], chips='c')
+        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[ind], chips='c', fps=fps)
         cframehdr = fits.getheader(cframefile.replace('Cframe-','Cframe-a-'))
         pfile = pfile.replace('.fits','')
 
@@ -775,7 +785,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
         # Summary information in apPlateSum FITS file.
         if ims[0] != 0:
-            tellfile = load.filename('Tellstar', plate=int(plate), mjd=mjd)
+            tellfile = load.filename('Tellstar', plate=int(plate), mjd=mjd, fps=fps)
             if os.path.exists(tellfile):
                 try:
                     telstr = fits.getdata(tellfile)
@@ -821,7 +831,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             fiber['obsmag'][j][i,:] = (-2.5 * np.log10(obs[j,:])) + zero
 
     # Write out the FITS table.
-    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
     if ims[0] != 0:
         Table(platetab).write(platesum, overwrite=True)
         hdulist = fits.open(platesum)
@@ -885,6 +895,11 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     # HTML header background color
     thcolor = '#DCDCDC'
 
+    if int(mjd)>59556:
+        fps = True
+    else:
+        fps = False
+
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
@@ -894,7 +909,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     if telescope == 'lco25m': prefix = 'as'
 
     # Check for existence of plateSum file
-    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
+    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps) 
     platedir = os.path.dirname(platesum)+'/'
 
     if os.path.exists(platesum) == False:
@@ -1090,7 +1105,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     for i in range(n_exposures):
         gd, = np.where(ims[i] == tab1['IM'])
         if len(gd) >= 1:
-            oneDfile = os.path.basename(load.filename('1D', plate=int(plate), num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
+            oneDfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
             #html.write('<TR><TD bgcolor="'+thcolor+'"><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
             html.write('<TR><TD bgcolor="'+thcolor+'">'+str(int(round(ims[i])))+'\n')
             html.write('<TD><TABLE BORDER=1><TD><TD bgcolor="'+thcolor+'">RED<TD bgcolor="'+thcolor+'">GREEN<TD bgcolor="'+thcolor+'">BLUE\n')
@@ -1136,13 +1151,18 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
     print("----> makeObsPlots: Running plate "+plate+", MJD "+mjd)
 
+    if int(mjd)>59556:
+        fps = True
+    else:
+        fps = False
+
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
     chiplab = np.array(['blue','green','red'])
     nchips = len(chips)
 
     # Make plot and html directories if they don't already exist.
-    platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True))
+    platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
     plotsdir = platedir+'/plots/'
     if len(glob.glob(plotsdir)) == 0: subprocess.call(['mkdir',plotsdir])
 
@@ -1158,7 +1178,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     cmap = 'RdBu'
 
     # Check for existence of plateSum file
-    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd) 
+    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps) 
     if os.path.exists(platesum) == False:
         err1 = "----> makeObsPlots: PROBLEM!!! " + os.path.basename(platesum) + " does not exist. Halting execution.\n"
         err2 = "----> makeObsPlots: You need to run MAKEPLATESUM first to make the file."
@@ -1681,10 +1701,15 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # HTML header background color
     thcolor = '#DCDCDC'
 
+    if int(mjd)>59556:
+        fps = True
+    else:
+        fps = False
+
     apodir = os.environ.get('APOGEE_REDUX') + '/'
 
     # Make html directory if it doesn't already exist.
-    htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)) + '/html/'
+    htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
     if os.path.exists(htmldir) == False: os.makedirs(htmldir)
 
     #if os.path.exists(htmldir + 'sorttable.js') == False:
@@ -1693,7 +1718,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     #    subprocess.call(['mv', 'sorttable.js', htmldir])
 
     # Get the HTML file name... apPlate-plate-mjd
-    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)).replace('.fits','')
+    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)).replace('.fits','')
     
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
@@ -1735,7 +1760,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
 
-    tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True).replace('apPlate', 'throughput').replace('fits', 'dat')
+    tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
     tputdat = open(tputfile, 'w')
 
     # Loop over the fibers
@@ -1797,7 +1822,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             targflagtxt = targflagtxt.replace(',','<BR>')
 
             # Find apVisit file
-            visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber)
+            visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber, fps=fps)
             visitfilebase = os.path.basename(visitfile)
             vplotfile = visitfile.replace('.fits','.jpg')
 
@@ -1913,6 +1938,11 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
 
     # HTML header background color
     thcolor = '#DCDCDC'
+
+    if int(mjd)>59556:
+        fps = True
+    else:
+        fps = False
 
     # Setup doppler cannon models
     models = doppler.cannon.models
@@ -2064,7 +2094,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                     cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
                     cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
                     ccart = '?'
-                    platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd)
+                    platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd, fps=fps)
                     if os.path.exists(platefile):
                         platehdus = fits.open(platefile)
                         platetab = platehdus[1].data
@@ -2117,6 +2147,11 @@ def apVisitPlots(load=None, plate=None, mjd=None):
 
     print("----> apVisitPlots: Running plate "+plate+", MJD "+mjd)
 
+    if int(mjd)>59556:
+        fps = True
+    else:
+        fps = False
+
     # Set up some basic plotting parameters
     #plt.ioff()
     #matplotlib.use('agg')
@@ -2143,7 +2178,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
     cnfiber = str(nfiber)
 
     # Make plot and html directories if they don't already exist.
-    plotsdir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True)) + '/plots/'
+    plotsdir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/plots/'
     if os.path.exists(plotsdir) == False: os.makedirs(plotsdir)
 
     # Loop over the fibers
@@ -2438,6 +2473,11 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     # HTML header background color
     thcolor = '#DCDCDC'
 
+    if int(mjd)>59556:
+        fps = True
+    else:
+        fps = False
+
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
     matplotlib.use('agg')
@@ -2620,7 +2660,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             planstr = plan.load(planfiles[i], np=True)
             plate = str(int(round(planstr['plateid'])))
             mjd = str(int(round(planstr['mjd'])))
-            platefile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+            platefile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
             platefilebase = os.path.basename(platefile)
             platefiledir = os.path.dirname(planfiles[i])
             if (planstr['platetype'] == 'normal') & (os.path.exists(platefile)): 
@@ -3106,6 +3146,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             plate = os.path.basename(plates[i]).split('-')[1]
             iplate[i] = plate
             mjd = os.path.basename(plates[i]).split('-')[2][:-5]
+            if int(mjd)>59556:
+                fps = True
+            else:
+                fps = False
             imjd[i] = mjd
             tmp = plates[i].split('visit/')
             tel = tmp[1].split('/')[0]
@@ -3119,7 +3163,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 iloc[i] = str(int(round(plans['PLATEPLANS']['locationid'][gd][0])))
                 ira[i] = str("%.6f" % round(plans['PLATEPLANS']['raCen'][gd][0],6))
                 idec[i] = str("%.6f" % round(plans['PLATEPLANS']['decCen'][gd][0],6))
-                platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd)
+                platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
                 if os.path.exists(platesumfile):
                     tmp = fits.open(platesumfile)
                     plsum1 = tmp[1].data
