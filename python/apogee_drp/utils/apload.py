@@ -471,9 +471,9 @@ class ApLoad:
             print('Usage: apCframe(field,plate,mjd,imagenumber)')
         else :
             try :
-                file = self.allfile(
+                filePath = self.allfile(
                    'Cframe',field=args[0],plate=args[1],mjd=args[2],num=args[3],chips=True)
-                return self._readchip(file,'Cframe',**kwargs)
+                return self._readchip(filePath,'Cframe',**kwargs)
             except :
                 self.printerror()
     
@@ -491,9 +491,12 @@ class ApLoad:
             print('Usage: apPlate(plate,mjd)')
         else :
             try :
-                file = self.allfile(
-                   'Plate',plate=args[0],mjd=args[1],chips=True)
-                return self._readchip(file,'Plate',**kwargs)
+                if kwargs.get('field') is None:
+                    filePath = self.allfile('Plate',plate=args[0],mjd=args[1],chips=True)
+                else:
+                    field = kwargs.pop('field')
+                    filePath = self.allfile('Plate',plate=args[0],mjd=args[1],chips=True,field=field)
+                return self._readchip(filePath,'Plate',**kwargs)
             except :
                 self.printerror()
     
@@ -512,13 +515,14 @@ class ApLoad:
                 if kwargs.get('field') is None:
                     filePath = self.allfile('Visit',plate=args[0],mjd=args[1],fiber=args[2])
                 else:
-                    filePath = self.allfile('Visit',plate=args[0],mjd=args[1],fiber=args[2],field=kwargs['field'])
-                if load : 
-                    hdulist=self._readhdu(filePath)
-                    spec=ApSpec(hdulist[1].data,header=hdulist[0].header,
-                                err=hdulist[2].data,bitmask=hdulist[3].data,wave=hdulist[4].data,
-                                sky=hdulist[5].data,skyerr=hdulist[5].data,
-                                telluric=hdulist[7].data,telerr=hdulist[8].data)
+                    field = kwargs.pop('field')
+                    filePath = self.allfile('Visit',plate=args[0],mjd=args[1],fiber=args[2],field=field)
+                if load: 
+                    hdulist = self._readhdu(filePath)
+                    spec = ApSpec(hdulist[1].data,header=hdulist[0].header,
+                                  err=hdulist[2].data,bitmask=hdulist[3].data,wave=hdulist[4].data,
+                                  sky=hdulist[5].data,skyerr=hdulist[5].data,
+                                  telluric=hdulist[7].data,telerr=hdulist[8].data)
                     return spec
                 return self._readhdu(filePath,**kwargs)
             except :
@@ -561,9 +565,12 @@ class ApLoad:
             print('Usage: apVisitSum(plate,mjd)')
         else :
             try :
-                file = self.allfile(
-                   'VisitSum',plate=args[0],mjd=args[1])
-                return self._readhdu(file,**kwargs)
+                if kwargs.get('field') is None:
+                    filePath = self.allfile('VisitSum',plate=args[0],mjd=args[1])
+                else:
+                    field = kwargs.pop('field')
+                    filePath = self.allfile('VisitSum',plate=args[0],mjd=args[1],field=field)
+                return self._readhdu(filePath,**kwargs)
             except :
                 self.printerror()
     
