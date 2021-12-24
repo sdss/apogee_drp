@@ -489,8 +489,8 @@ class ApLoad:
         """
         if len(args) != 2 :
             print('Usage: apPlate(plate,mjd)')
-        else :
-            try :
+        else:
+            try:
                 if kwargs.get('field') is None:
                     filePath = self.allfile('Plate',plate=args[0],mjd=args[1],chips=True)
                 else:
@@ -511,7 +511,7 @@ class ApLoad:
         if len(args) != 3 :
             print('Usage: apVisit(plate,mjd,fiber)')
         else :
-            try :
+            try:
                 if kwargs.get('field') is None:
                     filePath = self.allfile('Visit',plate=args[0],mjd=args[1],fiber=args[2])
                 else:
@@ -564,7 +564,7 @@ class ApLoad:
         if len(args) != 2 :
             print('Usage: apVisitSum(plate,mjd)')
         else :
-            try :
+            try:
                 if kwargs.get('field') is None:
                     filePath = self.allfile('VisitSum',plate=args[0],mjd=args[1])
                 else:
@@ -793,6 +793,13 @@ class ApLoad:
             sdssroot = root
         else :
             sdssroot = 'ap'+root
+
+        # FPS data
+        if fps is None and mjd is not None:
+            if int(mjd)>=59556:
+                fps = True
+            else:
+                fps = False
 
         if (plate is not None) and (field is None):
             field = apfield(plate,telescope=self.telescope,fps=fps)[0]
