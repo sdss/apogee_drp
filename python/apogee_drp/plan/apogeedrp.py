@@ -21,8 +21,37 @@ from slurm import queue as pbsqueue
 import time
 
 
-def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
-    """ Perform APOGEE Data Release Processing """
+def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
+    """
+    Perform APOGEE Data Release Processing
+
+    Parameters
+    ----------
+    observatory : str
+
+    mjdstart : int
+       Starting MJD date of the reduction.
+    mjdstop : int
+       Ending MJD date of the reduction.
+    apred : str
+       Reduction version name.
+    qoa : str, optional
+       The pbs queue to use.  Default is sdss.
+    fresh : boolean, optional
+       Start the reduction directory fresh.  The default is continue with what is
+         already there.
+    links : str, optional
+       Name of reduction version to use for symlinks for the calibration files.
+
+    Returns
+    -------
+
+    Example
+    -------
+
+    run('apo',54566,56666)
+
+    """
 
     begtime = str(datetime.now())
 
@@ -83,7 +112,21 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
     rootLogger.info('1) Setting up the directory structure')
     rootLogger.info('=====================================')
     rootLogger.info('')
-    
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkvers', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
+    mkvoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkvers.'+logtime+'.log'
+    mkverrfile = mkvoutfile.replace('-mkvers.log','-mkvers.'+logtime+'.err')
+    if os.path.exists(os.path.dirname(mkvoutfile))==False:
+        os.makedirs(os.path.dirname(mkvoutfile))
+    cmd = 'mkvers {0}'.format(apred)
+    if fresh:
+        cmd += ' --fresh'
+    if links is not None:
+        cmd += ' --links '+str(links)
+    queue.append(cmd,outfile=mkvoutfile, errfile=mkverrfile)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue)  # wait for jobs to complete
+    del queue    
 
     # 2) Master calibration products, make sure to do them in the right order
     #------------------------------------------------------------------------
@@ -241,7 +284,7 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
     # Loop over all MJDs
     for m in mjds:
         outfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-unidir.'+logtime+'.log'
-        errfile = qaoutfile.replace('-qa.log','-qa.'+logtime+'.err')
+        errfile = outfile.replace('.log','.err')
         if os.path.exists(os.path.dirname(outfile))==False:
             os.makedirs(os.path.dirname(outfile))
         queue.append('sas_mwm_healpix --spectro apogee --mjd {0} --telescope {1} --drpver {2} -v'.format(mjd5,telescope,apred),
