@@ -34,57 +34,20 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
     shared = True
     ppn = 64
     cpus = 32
-    walltime = '23:00:00'
+    walltime = '10-00:00:00'
 
     # Get software version (git hash)
     gitvers = plan.getgitvers()
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
 
-
-
-    # 1) Setup the directory structure
-    #---------------------------------
-    
-    # 2) Master calibration products, make sure to do them in the right order
-    #------------------------------------------------------------------------
-    
-    # 3) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
-    #----------------------------------------------------------------
-        
-    # 4) Run through all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
-    #--------------------------------------------------------------------------------------------
-    
-    # 5) Run rv for each unique star
-    #---------------------------------
-    
-    # 6) Unified directory structure
-    #---------------------------------
-
-    # 7) QA script
-    #-------------
-
-    
-    # Daily reduction logs directory
+    # Reduction logs directory
     logdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'
     if os.path.exists(logdir)==False:
         os.makedirs(logdir)
 
     # Make sure the data is there
-    mjddatadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory] + '/'+str(mjd5)
-    if os.path.exists(mjddatadir):
-        #mjdfiles = glob(mjddatadir+'/*.apz')
-        mjdfiles = os.listdir(mjddatadir)
-    else:
-        mjdfiles = []
-    if len(mjdfiles)==0:
-        print('No data for MJD5='+str(mjd5))
-        return
-
-    # Update the currentmjd file
-    if updatemjdfile is True:
-        writeNewMJD(observatory,mjd5,apred=apred)
-
+    datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
 
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
@@ -92,7 +55,7 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
     while rootLogger.hasHandlers(): # some existing loggers, remove them   
         rootLogger.removeHandler(rootLogger.handlers[0]) 
     rootLogger = logging.getLogger()
-    logfile = logdir+str(mjd5)+'.log'
+    logfile = logdir+str(mjdstart)+'-'+str(mjdstop)+'.log'
     if os.path.exists(logfile): os.remove(logfile)
     fileHandler = logging.FileHandler(logfile)
     fileHandler.setFormatter(logFormatter)
@@ -103,57 +66,48 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
     rootLogger.setLevel(logging.NOTSET)
     logtime = datetime.now().strftime("%Y%m%d%H%M%S") 
 
-    rootLogger.info('Running daily APOGEE data reduction for '+str(observatory).upper()+' '+str(mjd5)+' '+apred)
+    rootLogger.info('Running APOGEE DRP for '+str(observatory).upper()+' '+str(mjdstart)+' - '+str(mjdstop)+' apred='+apred)
 
     # Initialize the DB connection
     db = apogeedb.DBSession()
 
-    # Check that daily data transfer completed
-    datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
-    datadir += '/'+str(mjd5)+'/'
-    if os.path.exists(datadir)==False:
-        rootLogger.error('Data has not finished transferring yet')
-        return
-
-    # Get exposure information and load into database
-    rootLogger.info('Getting exposure information')
-    expinfo = mkplan.getexpinfo(observatory,mjd5)
+    # Get information for all of the exposures
+    expinfo = db.query('exposure',where="mjd>=%d and mjd<=%d and observatory='%s'" % (mjdstart,mjdstop,observatory))
     nexp = len(expinfo)
-    if nexp==0:
-        rootLogger.error('No raw APOGEE files found.')
-        return        
     rootLogger.info(str(nexp)+' exposures')
-    db.ingest('exposure',expinfo)  # insert into database
-    expinfo0 = expinfo.copy()
-    expinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (mjd5,observatory))
 
-    # Make MJD5 and plan files
-    #--------------------------
-    rootLogger.info('Making plan files')
-    plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
-    dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'auto.yaml'
-    planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
-    nplanfiles = len(planfiles)
-    if nplanfiles>0:
-        dbload_plans(planfiles)  # load plans into db
-        # Write planfiles to MJD5.plans
-        dln.writelines(logdir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
-    else:
-        dln.writelines(logdir+str(mjd5)+'.plans','')   # write blank file
+    # 1) Setup the directory structure
+    #--------------------------------
+    rootLogger.info('')
+    rootLogger.info('-------------------------------------')
+    rootLogger.info('1) Setting up the directory structure')
+    rootLogger.info('=====================================')
+    rootLogger.info('')
+    
 
-    # Start entry in daily_status table
-    daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
-                                        ('nexposures',int),('begtime',(np.str,50)),('success',bool)]))
-    daycat['mjd'] = mjd5
-    daycat['telescope'] = telescope
-    daycat['nplanfiles'] = len(planfiles)
-    daycat['nexposures'] = len(expinfo)
-    daycat['begtime'] = begtime
-    daycat['success'] = False
-    db.ingest('daily_status',daycat)
+    # 2) Master calibration products, make sure to do them in the right order
+    #------------------------------------------------------------------------
+    rootLogger.info('')
+    rootLogger.info('-----------------------------------------')
+    rootLogger.info('2) Generating master calibration products')
+    rootLogger.info('=========================================')
+    rootLogger.info('')
+    # Detector
+    # Dark
+    # Flat
+    # BPM
+    # Sparse
+    # LSF
+    # Maybe have an option to copy/symlink them from a previous apred version
 
-    # 3) Run calibration files using "pbs" packages
-    #-------------------------------------------
+
+    # 3) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
+    #----------------------------------------------------------------
+    rootLogger.info('')
+    rootLogger.info('----------------------------------------')
+    rootLogger.info('3) Generating daily calibration products')
+    rootLogger.info('========================================')
+    rootLogger.info('')
     # First we need to run domeflats and quartzflats so there are apPSF files
     # Then the arclamps
     # Then the FPI exposures last (needs apPSF and apWave files)
@@ -212,14 +166,13 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
                 rootLogger.info('No '+str(calnames[j])+' calibration files to run')
              
 
-    
-    # 4) Run APRED on all planfiles using "pbs" package
-    #--------------------------------------------------
+    # 4) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
+    #--------------------------------------------------------------------------------------------
     if nplanfiles>0:
         rootLogger.info('')
-        rootLogger.info('--------------')
-        rootLogger.info('Running APRED')
-        rootLogger.info('==============')
+        rootLogger.info('----------------')
+        rootLogger.info('4) Running APRED')
+        rootLogger.info('================')
         rootLogger.info('')
         queue = pbsqueue(verbose=True)
         queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
@@ -239,9 +192,9 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
     # 5) Run "rv" on all unique stars
     #--------------------------------
     rootLogger.info('')
-    rootLogger.info('------------------------------')
-    rootLogger.info('Running RV+Visit Combination')
-    rootLogger.info('==============================')
+    rootLogger.info('--------------------------------')
+    rootLogger.info('5) Running RV+Visit Combination')
+    rootLogger.info('================================')
     rootLogger.info('')
     vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
     if len(vcat)>0:
@@ -277,14 +230,35 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss-fast',fresh=False):
     
     # 6) Unified directory structure
     #---------------------------------
+    rootLogger.info('')
+    rootLogger.info('---------------------------------------------')
+    rootLogger.info('6) Generating unified MWM directory structure')
+    rootLogger.info('=============================================')
+    rootLogger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='unidir', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
+                 walltime=walltime, notification=False)
+    # Loop over all MJDs
+    for m in mjds:
+        outfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-unidir.'+logtime+'.log'
+        errfile = qaoutfile.replace('-qa.log','-qa.'+logtime+'.err')
+        if os.path.exists(os.path.dirname(outfile))==False:
+            os.makedirs(os.path.dirname(outfile))
+        queue.append('sas_mwm_healpix --spectro apogee --mjd {0} --telescope {1} --drpver {2} -v'.format(mjd5,telescope,apred),
+                     outfile=outfile, errfile=errfile)
+    queue.commit(hard=True,submit=True)
+    rootLogger.info('PBS key is '+queue.key)        
+    queue_wait(queue,sleeptime=60,verbose=True,logg=rootLogger)  # wait for jobs to complete
+    del queue    
+    #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
 
-    
+
     # 7) Run QA script
     #------------------
     rootLogger.info('')
-    rootLogger.info('------------')
-    rootLogger.info('Running QA')
-    rootLogger.info('============')
+    rootLogger.info('--------------')
+    rootLogger.info('7) Running QA')
+    rootLogger.info('==============')
     rootLogger.info('')
     queue = pbsqueue(verbose=True)
     queue.create(label='qa', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
