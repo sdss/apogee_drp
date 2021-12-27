@@ -870,8 +870,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             #dome.append(int(info['num'][i]))
         # FPI
         # still need a header card for this
-
-        # Other exposure
+        #elif (info['exptype'][i]=='ARCLAMP') and (info['arctype'][i]=='None') and info['nread'][i]>=3:
+        #    fpi.append(int(info['num'][i]))        # Other exposure
         else:
             print('Unknown exposure: ',info['num'][i],info['exptype'][i],info['nread'][i],' adding to extra plan file')
             extra.append(int(info['num'][i]))

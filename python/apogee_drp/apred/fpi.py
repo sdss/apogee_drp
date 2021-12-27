@@ -82,7 +82,8 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
     print(len(arcframes),' arclamp exposures for these nights')
 
     # Get full frame FPI exposure to use
-    fpi, = np.where(expinfo['exptype']=='FPI')
+    #fpi, = np.where(expinfo['exptype']=='FPI')
+    fpi, = np.where((expinfo['exptype']=='ARCLAMP') & (expinfo['arctype']=='None'))
     fpinum = 38310023
     print('KLUDGE!!!  Hardcoding FPI full-frame exposure number')
     print('FPI full-frame exposure ',fpinum)

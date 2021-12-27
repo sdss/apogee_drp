@@ -106,7 +106,7 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     rootLogger.info(str(nexp)+' exposures')
 
     # 1) Setup the directory structure
-    #--------------------------------
+    #----------------------------------
     rootLogger.info('')
     rootLogger.info('-------------------------------------')
     rootLogger.info('1) Setting up the directory structure')
@@ -135,12 +135,27 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     rootLogger.info('2) Generating master calibration products')
     rootLogger.info('=========================================')
     rootLogger.info('')
+    # -- Master calibration products made every year or so --
     # Detector
-    # Dark
-    # Flat
-    # BPM
-    # Sparse
-    # LSF
+    # Dark, sequence of long darks
+    # Flat, sequence of internal flats
+    # BPM, use dark+flat sequence
+    # Sparse, sequence of sparse quartz flats
+    # multiwave, set of arclamp exposures
+    # LSF, sky flat + multiwave
+
+    # fiber?
+
+    # -- Other master calibration products made only once ---
+    # Littrow
+    # Persist, PersistModel
+    # telluric, need LSF
+
+    # -- Daily calibration products ---
+    # PSF/EPSF/Trace, from domeflat or quartzflat
+    # Flux, from domeflat or quartzflat
+    # Wave, from arclamps
+
     # Maybe have an option to copy/symlink them from a previous apred version
 
 

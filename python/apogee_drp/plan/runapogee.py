@@ -845,16 +845,18 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                 for k in range(len(cind)):
                     num1 = expinfo['num'][calind[cind[k]]]
                     exptype1 = expinfo['exptype'][calind[cind[k]]]
+                    arctype1 = expinfo['arctype'][calind[cind[k]]]
                     rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
                     if exptype1=='DOMEFLAT' or exptype1=='QUARTZFLAT':
                         cmd1 = 'makecal --psf '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
-                    if exptype1=='ARCLAMP':
+                    if exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):
                         cmd1 = 'makecal --wave '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
-                    if exptype1=='FPI':
+                    if exptype1=='ARCLAMP' and arctype1=='None':
+                    #if exptype1=='FPI':
                         cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'

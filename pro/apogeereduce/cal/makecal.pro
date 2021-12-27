@@ -16,6 +16,7 @@
 ;  wave=waveid   Make the wavecal with name=waveid 
 ;  /lsf          Make all of the lsfs in the file
 ;  lsf=lsfid     Make the lsf with name=lsfid 
+;  fpi=fpiid     Make the FPI with name=fpiid
 ;
 ; OUTPUT:
 ;  Calibration products are generated in places specified by the
@@ -36,7 +37,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
             littrow=littrow,persist=persist,modelpersist=modelpersist,$
             response=response,mjd=mjd,full=full,newwave=newwave,nskip=nskip,$
             average=average,clobber=clobber,vers=vers,telescope=telescope,$
-            nofit=nofit,pl=pl,unlock=unlock
+            nofit=nofit,pl=pl,unlock=unlock,fpi=fpi
 
   if keyword_set(vers) and keyword_set(telescope) then apsetver,vers=vers,telescope=telescope
   dirs = getdir(apo_dir,cal_dir,spectro_dir,apo_vers,lib_dir)
@@ -224,6 +225,19 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid
       MAKECAL,littrow=littrowid
       MKPSF,psf,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid,clobber=clobber,unlock=unlock
+    endif
+  endif
+
+  ;; Make FPI calibration file
+  if keyword_set(fpi) then begin
+    print,'makecal fpi: ', fpi
+    if fpi gt 1 then begin
+      cmjd = getcmjd(fpi[0],mjd=mjd)
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
+      MAKECAL,bpm=bpmid
+      MAKECAL,fiber=fiberid
+      MKFPI,ims,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
+             fiberid=fiberid,clobber=clobber,unlock=unlock
     endif
   endif
 
@@ -421,7 +435,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
 
     if lsf gt 1 then begin
       i = where(lsfstr.name eq lsf,nlsf)
-      if nlsf le 0 then begin
+      if nlsfz le 0 then begin
         print,'No matching calibration line for ', lsf
         stop
       endif
