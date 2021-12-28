@@ -1227,6 +1227,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 hmagarr = Vsum['HMAG']
             else:
                 hmagarr = Vsum['H']
+            pdb.set_trace()
             gd, = np.where((hmagarr > 0) & (hmagarr < 20))
             minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd]);  spanH = maxH - minH
             xmin = minH - spanH * 0.05;     xmax = maxH + spanH * 0.05
