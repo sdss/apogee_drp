@@ -2841,7 +2841,10 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             platehdus = fits.open(platefiles[i])
             platetab = platehdus[1].data
             plate = str(int(round(platetab['PLATE'][0])))
-            cart = str(int(round(platetab['CART'][0])))
+            try:
+                cart = str(int(round(platetab['CART'][0])))
+            except:
+                cart = platetab['CART'][0]
             nreads = str(int(round(platetab['NREADS'][0])))
             n_exposures = len(platetab['IM'])
             html.write(th0 + th1 + th2)
