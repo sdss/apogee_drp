@@ -1412,7 +1412,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
                 notsky, = np.where((plSum2['HMAG'] > 0) & (plSum2['HMAG'] < 30))
                 hmagarr = plSum2['HMAG'][notsky]
-                minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
+                try:
+                    minH = np.nanmin(hmagarr);  maxH = np.nanmax(hmagarr)
+                except:
+                    minH = 6;  maxH = 14
                 xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
 
                 fig=plt.figure(figsize=(11,14))
