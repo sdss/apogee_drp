@@ -7,7 +7,7 @@ import pdb
 
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email
-from ..apred import mkcal
+from ..apred import mkcal, cal
 from ..database import apogeedb
 from . import mkplan
 from sdss_access.path import path
@@ -19,6 +19,331 @@ from datetime import datetime
 import logging
 from slurm import queue as pbsqueue
 import time
+
+def mkvers(apred,telescope,fresh=False,links=None):
+    """
+    Setup APOGEE DRP directory structure.
+   
+    Parameters
+    ----------
+    apred : str
+       Reduction version name.
+    telescope : str
+       The telescope name: apo25m or lco25m.
+    fresh : boolean, optional
+       Start the reduction directory fresh.  The default is continue with what is
+         already there.
+    
+    Returns
+    -------
+    It makes the directory structure for a new DRP reduction version.
+
+    Example
+    -------
+
+    mkvers('v1.0.0','apo25m')
+
+    """
+
+    apogee_redux = os.environ['APOGEE_REDUX']+'/'
+    apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
+
+    print('Setting up directory structure for APOGEE DRP version = ',vers)
+
+    # Start fresh
+    if args.fresh:
+        print('Starting fresh')
+        if os.path.exists(apogee_redux+vers):
+            shutil.rmtree(apogee_redux+vers)
+
+    # Main directory
+    if os.path.exists(apogee_redux+vers)==False:
+        print('Creating ',apogee_redux+vers)
+        os.makedirs(apogee_redux+vers)
+    else:
+        print(apogee_redux+vers,' already exists')
+    # First level
+    for d in ['cal','exposures','stars','fields','visit','qa','plates','monitor','summary','log']:
+        if os.path.exists(apogee_redux+vers+'/'+d)==False:
+            print('Creating ',apogee_redux+vers+'/'+d)
+            os.makedirs(apogee_redux+vers+'/'+d)
+        else:
+            print(apogee_redux+vers+'/'+d,' already exists')
+    # North/south subdirectories
+    for d in ['cal','exposures','monitor']:
+        for obs in ['apogee-n','apogee-s']:
+            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
+                print('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
+            else:
+                print(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
+    for d in ['visit','stars','fields']:
+        for obs in ['apo25m','lco25m']:
+            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
+                print('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
+            else:
+                print(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
+    for d in ['log']:
+        for obs in ['apo','lco']:
+            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
+                print('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
+            else:
+                print(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
+    # Cal subdirectories
+    for d in ['bpm','darkcorr','detector','flatcorr','flux','fpi','html','littrow','lsf','persist','plans','psf','qa','telluric','trace','wave']:
+        for obs in ['apogee-n','apogee-s']:
+            if os.path.exists(apogee_redux+vers+'/cal/'+obs+'/'+d)==False:
+                print('Creating ',apogee_redux+vers+'/cal/'+obs+'/'+d)
+                os.makedirs(apogee_redux+vers+'/cal/'+obs+'/'+d)
+            else:
+                print(apogee_redux+vers+'/cal/'+obs+'/'+d,' already exists')
+
+    # Webpage files
+    #if os.path.exists(apogee_drp_dir+'etc/htaccess'):
+    #    os.copy(apogee_drp_dir+'etc/htaccess',apogee_redux+vers+'qa/.htaccess'
+    if os.path.exists(apogee_drp_dir+'etc/sorttable.js') and os.path.exists(apogee_redux+vers+'/qa/sorttable.js')==False:
+        print('Copying sorttable.js')
+        shutil.copyfile(apogee_drp_dir+'etc/sorttable.js',apogee_redux+vers+'/qa/sorttable.js')
+
+
+
+
+
+def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
+    """
+    Make the master calibration products for a reduction version.
+
+    Parameters
+    ----------
+    apred : str
+       Reduction version name.
+    telescope : str
+       The telescope name: apo25m or lco25m.
+    clobber : boolean, optional
+       Overwrite any existing files.  Default is False.
+    links : str, optional
+       Name of reduction version to use for symlinks for the calibration files.    
+
+    Returns
+    -------
+    All the master calibration products are made for a reduction version.
+
+    Example
+    -------
+
+    mkmastercals('v1.0.0','telescope')
+
+    """
+
+    nodes = 1
+    alloc = 'sdss-np'
+    shared = True
+    ppn = 64
+    cpus = 32
+    walltime = '10-00:00:00'
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    apogee_redux = os.environ['APOGEE_REDUX']+'/'
+    apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
+    
+
+    # Symbolic links to another version
+    if links is not None:
+        linkvers = links
+        print('Creating calibration product symlinks to version >>',linkvers,'<<')
+        cwd = os.path.abspath(os.curdir)
+        for d in ['bpm','darkcorr','detector','flatcorr','fpi','littrow','lsf','persist','telluric','wave']:
+            for obs in ['apogee-n','apogee-s']:    
+                print('Creating symlinks for ',apogee_redux+vers+'/cal/'+obs+'/'+d)
+                os.chdir(apogee_redux+vers+'/cal/'+obs+'/'+d)
+                subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/*fits .'],shell=True)
+        return
+
+
+    # Read in the master calibration index
+    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
+    calfile = caldir+load.instrument+'.par'
+    allcaldict = mkcal.readcal(calfile)
+
+    # Make calibration frames: darks, waves, LSFs
+    
+    #set host = `hostname -s`
+    #if ( $?UUFSCELL ) then
+    #   setenv APOGEE_LOCALDIR /scratch/local/$USER/$SLURM_JOB_ID 
+    #else
+    #   rm $APOGEE_LOCALDIR/*
+    #endif
+
+
+    # Make darks sequentially
+    #-------------------------
+    # they take too much memory to run in parallel
+    #idl -e "makecal,dark=1,vers='$vers',telescope='$telescope'" >& log/mkdark-$telescope.$host.log
+    #darkplot --apred $vers --telescope $telescope
+    darkdict = allcaldict['dark']
+    logger.info('')
+    logger.info('--------------------------------')
+    logger.info('Making master darks sequentially')
+    logger.info('================================')
+    logger.info(str(len(darkdict))+' Darks to make: '+','.join(darkdict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkdark', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
+    for i in range(len(darkdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkdark-'+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --dark '+str(darkdict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+    # Make the dark plots
+    cal.darkplot(apred=apred,telescope=telescope)
+
+    # Make flats sequentially
+    #-------------------------
+    #idl -e "makecal,flat=1,vers='$vers',telescope='$telescope'" >& log/mkflat-$telescope.$host.log
+    #flatplot --apred $vers --telescope $telescope
+    flatdict = allcaldict['flat']
+    logger.info('')
+    logger.info('--------------------------------')
+    logger.info('Making master flats sequentially')
+    logger.info('================================')
+    logger.info(str(len(flatdict))+' Flats to make: '+','.join(flatdict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkflat', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
+    for i in range(len(flatdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --flat '+str(flatdict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+    # Make the flat plots
+    cal.flatplot(apred=apred,telescope=telescope)
+
+    # Make BPM sequentially
+    #-------------------------
+    #idl -e "makecal,bpm=1,vers='$vers',telescope='$telescope'" >& log/mkbpm-$telescope.$host.log
+    bpmdict = allcaldict['bpm']
+    logger.info('')
+    logger.info('--------------------------------')
+    logger.info('Making master BPMs sequentially')
+    logger.info('================================')
+    logger.info(str(len(bpmdict))+' BPMs to make: '+','.join(bpmdict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkbpm', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
+    for i in range(len(bpmdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkbpm-'+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --bpm '+str(bpmdict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+
+    # Make Littrow sequentially
+    #---------------------------
+    #idl -e "makecal,littrow=1,vers='$vers',telescope='$telescope'" >& log/mklittrow-$telescope.$host.log
+    littdict = allcaldict['littrow']
+    logger.info('')
+    logger.info('-----------------------------------')
+    logger.info('Making master Littrows sequentially')
+    logger.info('===================================')
+    logger.info(str(len(littdict))+' Littrowss to make: '+','.join(littdict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mklittrow', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
+    for i in range(len(littdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklittrow-'+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --littrow '+str(littdict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+
+
+    # Make multiwave cals in parallel
+    #--------------------------------
+    #set n = 0
+    #while ( $n < 5 ) 
+    #   idl -e "makecal,multiwave=1,vers='$vers',telescope='$telescope'" >& log/mkwave-$telescope"$n".$host.log &
+    #   sleep 20
+    #   @ n = $n + 1
+    #end
+    #wait
+
+    multiwavedict = allcaldict['multiwave']
+    logger.info('')
+    logger.info('--------------------------------')
+    logger.info('Making master darks sequentially')
+    logger.info('================================')
+    logger.info(str(len(lsfdict))+' LSFs to make: '+','.join(lsfdict['name']))
+    logger.info(','.join(darkdict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkmultiwave', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=5, shared=shared, walltime=walltime, notification=False)
+    for i in range(len(littdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkmultiwave-'+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --multiwave '+str(littdict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+
+
+    # Make LSFs in parallel
+    #-----------------------
+    #set n = 0
+    #while ( $n < 5 ) 
+    #   idl -e "makecal,lsf=1,/full,/pl,vers='$vers',telescope='$telescope'" >& log/mklsf-$telescope"$n".$host.log &
+    #   sleep 20
+    #   @ n = $n + 1
+    #end
+    #wait
+
+    lsfdict = allcaldict['lst']
+    logger.info('')
+    logger.info('--------------------------------')
+    logger.info('Making master LSFs in parallel')
+    logger.info('================================')
+    logger.info(str(len(lsfdict))+' LSFs to make: '+','.join(lsfdict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mklsf', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=5, shared=shared, walltime=walltime, notification=False)
+    for i in range(len(littdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklsf-'+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --lsf '+str(lsfdict['name'][i])+' --full --pl --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
 
 
 def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
@@ -35,7 +360,7 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
        Ending MJD date of the reduction.
     apred : str
        Reduction version name.
-    qoa : str, optional
+    qos : str, optional
        The pbs queue to use.  Default is sdss.
     fresh : boolean, optional
        Start the reduction directory fresh.  The default is continue with what is

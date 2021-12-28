@@ -1098,7 +1098,7 @@ def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin,plot=Fa
         plt.xlabel('X (pixels)')
         plt.ylabel('Flux')
         plt.draw()
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
     
     return pars,perror
 

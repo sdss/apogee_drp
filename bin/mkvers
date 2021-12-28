@@ -2,21 +2,14 @@
 #
 # Setup APOGEE DRP version
 
-import os
-import time
-import shutil
-from glob import glob
 from argparse import ArgumentParser
-from dlnpyutils import utils as dln
-import subprocess
-
+from .plan import apogeedrp
 
 # Main command-line program
 if __name__ == "__main__":
     parser = ArgumentParser(description='Setup APOGEE DRP directory structure')
     parser.add_argument('vers', type=str, nargs=1, help='APOGEE Reduction version')
     parser.add_argument('--fresh', action='store_true', help='Start fresh.')
-    parser.add_argument('--links', type=str, nargs=1, help='Version to create cal symlinks to')
     args = parser.parse_args()
 
     if isinstance(args.vers,list):
@@ -24,78 +17,4 @@ if __name__ == "__main__":
     else:
         vers = args.vers
 
-    apogee_redux = os.environ['APOGEE_REDUX']+'/'
-    apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
-
-    print('Setting up directory structure for APOGEE DRP version = ',vers)
-
-    # Start fresh
-    if args.fresh:
-        print('Starting fresh')
-        if os.path.exists(apogee_redux+vers):
-            shutil.rmtree(apogee_redux+vers)
-
-    # Main directory
-    if os.path.exists(apogee_redux+vers)==False:
-        print('Creating ',apogee_redux+vers)
-        os.makedirs(apogee_redux+vers)
-    else:
-        print(apogee_redux+vers,' already exists')
-    # First level
-    for d in ['cal','exposures','stars','fields','visit','qa','plates','monitor','summary','log']:
-        if os.path.exists(apogee_redux+vers+'/'+d)==False:
-            print('Creating ',apogee_redux+vers+'/'+d)
-            os.makedirs(apogee_redux+vers+'/'+d)
-        else:
-            print(apogee_redux+vers+'/'+d,' already exists')
-    # North/south subdirectories
-    for d in ['cal','exposures','monitor']:
-        for obs in ['apogee-n','apogee-s']:
-            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
-                print('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
-            else:
-                print(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
-    for d in ['visit','stars','fields']:
-        for obs in ['apo25m','lco25m']:
-            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
-                print('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
-            else:
-                print(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
-    for d in ['log']:
-        for obs in ['apo','lco']:
-            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
-                print('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
-            else:
-                print(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
-    # Cal subdirectories
-    for d in ['bpm','darkcorr','detector','flatcorr','flux','fpi','html','littrow','lsf','persist','plans','psf','qa','telluric','trace','wave']:
-        for obs in ['apogee-n','apogee-s']:
-            if os.path.exists(apogee_redux+vers+'/cal/'+obs+'/'+d)==False:
-                print('Creating ',apogee_redux+vers+'/cal/'+obs+'/'+d)
-                os.makedirs(apogee_redux+vers+'/cal/'+obs+'/'+d)
-            else:
-                print(apogee_redux+vers+'/cal/'+obs+'/'+d,' already exists')
-
-    # Webpage files
-    #if os.path.exists(apogee_drp_dir+'etc/htaccess'):
-    #    os.copy(apogee_drp_dir+'etc/htaccess',apogee_redux+vers+'qa/.htaccess'
-    if os.path.exists(apogee_drp_dir+'etc/sorttable.js') and os.path.exists(apogee_redux+vers+'/qa/sorttable.js')==False:
-        print('Copying sorttable.js')
-        shutil.copyfile(apogee_drp_dir+'etc/sorttable.js',apogee_redux+vers+'/qa/sorttable.js')
-
-
-    # Symbolic links
-    if args.links is not None:
-        linkvers = args.links[0]
-        print('Creating calibration product symlinks to version >>',linkvers,'<<')
-        cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','fpi','littrow','lsf','persist','telluric','wave']:
-            for obs in ['apogee-n','apogee-s']:    
-                print('Creating symlinks for ',apogee_redux+vers+'/cal/'+obs+'/'+d)
-                os.chdir(apogee_redux+vers+'/cal/'+obs+'/'+d)
-                subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/*fits .'],shell=True)
-
-    print('All done')
+    apogeedrp.mkvers(apred=args.vers,fresh=args.fresh)
