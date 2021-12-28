@@ -191,7 +191,7 @@ def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
     queue = pbsqueue(verbose=True)
     queue.create(label='mkdark', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
     for i in range(len(darkdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkdark-'+telescope+'.'+logtime+'.log'
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkdark-'+str(darkdict['name'][i])+telescope+'.'+logtime+'.log'
         errfile1 = mkvoutfile.replace('.log','.err')
         if os.path.exists(os.path.dirname(outfile1))==False:
             os.makedirs(os.path.dirname(outfile1))
@@ -218,7 +218,7 @@ def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
     queue = pbsqueue(verbose=True)
     queue.create(label='mkflat', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
     for i in range(len(flatdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+telescope+'.'+logtime+'.log'
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+str(flatdict['name'][i])+telescope+'.'+logtime+'.log'
         errfile1 = mkvoutfile.replace('.log','.err')
         if os.path.exists(os.path.dirname(outfile1))==False:
             os.makedirs(os.path.dirname(outfile1))
@@ -232,7 +232,7 @@ def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
     cal.flatplot(apred=apred,telescope=telescope)
 
     # Make BPM sequentially
-    #-------------------------
+    #----------------------
     #idl -e "makecal,bpm=1,vers='$vers',telescope='$telescope'" >& log/mkbpm-$telescope.$host.log
     bpmdict = allcaldict['bpm']
     logger.info('')
@@ -244,7 +244,7 @@ def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
     queue = pbsqueue(verbose=True)
     queue.create(label='mkbpm', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
     for i in range(len(bpmdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkbpm-'+telescope+'.'+logtime+'.log'
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkbpm-'+str(bpmdict['name'][i])+telescope+'.'+logtime+'.log'
         errfile1 = mkvoutfile.replace('.log','.err')
         if os.path.exists(os.path.dirname(outfile1))==False:
             os.makedirs(os.path.dirname(outfile1))
@@ -256,24 +256,47 @@ def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
     del queue    
 
     # Make Littrow sequentially
-    #---------------------------
+    #--------------------------
     #idl -e "makecal,littrow=1,vers='$vers',telescope='$telescope'" >& log/mklittrow-$telescope.$host.log
     littdict = allcaldict['littrow']
     logger.info('')
     logger.info('-----------------------------------')
     logger.info('Making master Littrows sequentially')
     logger.info('===================================')
-    logger.info(str(len(littdict))+' Littrowss to make: '+','.join(littdict['name']))
+    logger.info(str(len(littdict))+' Littrows to make: '+','.join(littdict['name']))
     logger.info('')
     queue = pbsqueue(verbose=True)
     queue.create(label='mklittrow', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
     for i in range(len(littdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklittrow-'+telescope+'.'+logtime+'.log'
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklittrow-'+str(littdict['name'][i])+telescope+'.'+logtime+'.log'
         errfile1 = mkvoutfile.replace('.log','.err')
         if os.path.exists(os.path.dirname(outfile1))==False:
             os.makedirs(os.path.dirname(outfile1))
         cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
         cmd += ' --littrow '+str(littdict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+
+    # Make Response sequentially
+    #--------------------------
+    responsedict = allcaldict['response']
+    logger.info('')
+    logger.info('------------------------------------')
+    logger.info('Making master responses sequentially')
+    logger.info('====================================')
+    logger.info(str(len(responsedict))+' Responses to make: '+','.join(responsedict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkresponse', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
+    for i in range(len(responsedict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkresponse-'+str(responsedict['name'][i])+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --response '+str(responsedict['name'][i])+' --unlock'
         queue.append(cmd,outfile=outfile1, errfile=errfile1)
     queue.commit(hard=True,submit=True)
     queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -292,21 +315,20 @@ def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
 
     multiwavedict = allcaldict['multiwave']
     logger.info('')
-    logger.info('--------------------------------')
-    logger.info('Making master darks sequentially')
-    logger.info('================================')
-    logger.info(str(len(lsfdict))+' LSFs to make: '+','.join(lsfdict['name']))
-    logger.info(','.join(darkdict['name']))
+    logger.info('-----------------------------------')
+    logger.info('Making master multiwave in parallel')
+    logger.info('===================================')
+    logger.info(str(len(multiwavedict))+' multiwave to make: '+','.join(multiwavedict['name']))
     logger.info('')
     queue = pbsqueue(verbose=True)
     queue.create(label='mkmultiwave', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=5, shared=shared, walltime=walltime, notification=False)
-    for i in range(len(littdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkmultiwave-'+telescope+'.'+logtime+'.log'
+    for i in range(len(multiwavedict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkmultiwave-'+str(multiwavedict['name'][i])+telescope+'.'+logtime+'.log'
         errfile1 = mkvoutfile.replace('.log','.err')
         if os.path.exists(os.path.dirname(outfile1))==False:
             os.makedirs(os.path.dirname(outfile1))
         cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --multiwave '+str(littdict['name'][i])+' --unlock'
+        cmd += ' --multiwave '+str(multiwavedict['name'][i])+' --unlock'
         queue.append(cmd,outfile=outfile1, errfile=errfile1)
     queue.commit(hard=True,submit=True)
     queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -333,7 +355,7 @@ def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
     queue = pbsqueue(verbose=True)
     queue.create(label='mklsf', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=5, shared=shared, walltime=walltime, notification=False)
     for i in range(len(littdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklsf-'+telescope+'.'+logtime+'.log'
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklsf-'+str(lsfdict['name'][i])+telescope+'.'+logtime+'.log'
         errfile1 = mkvoutfile.replace('.log','.err')
         if os.path.exists(os.path.dirname(outfile1))==False:
             os.makedirs(os.path.dirname(outfile1))
