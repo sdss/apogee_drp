@@ -499,7 +499,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         fix0 = fixfiberid
     else:
         fix0 = None
-    caldata = mkcal.getcal(calfile,mjd)
+    caldaOAta = mkcal.getcal(calfile,mjd)
     if fix0 is not None:
         caldata['fixfiber'] = fix0
 

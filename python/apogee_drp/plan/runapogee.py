@@ -558,7 +558,7 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
     return chkrv
 
 
-def create_sumfiles(mjd5,apred,telescope,logger=None):
+def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     """ Create allVisit/allStar files and summary of objects for this night."""
 
     if logger is None:
@@ -613,30 +613,33 @@ def create_sumfiles(mjd5,apred,telescope,logger=None):
         os.makedirs(os.path.dirname(allvisitfile))
     Table(allvisit).write(allvisitfile,overwrite=True)
 
-    # Nightly allStar, allStarMJD
-    allstarmjd = db.query('star',cols='*',where="apred_vers='%s' and telescope='%s' and starver='%s'" % (apred,telescope,mjd5))
+    # Nightly summary files
+    if mjd5 is not None:
 
-    # Nightly allVisit, allVisitMJD
-    cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
-    allvisitmjd = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
-                           "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' and v.mjd="+str(mjd5)+" and rv.starver='"+str(mjd5)+"'")
+        # Nightly allStar, allStarMJD
+        allstarmjd = db.query('star',cols='*',where="apred_vers='%s' and telescope='%s' and starver='%s'" % (apred,telescope,mjd5))
 
-    # maybe in summary/MJD/ or qa/MJD/ ?
-    #allstarmjdfile = load.filename('allStarMJD')
-    allstarmjdfile = allstarfile.replace('allStar','allStarMJD').replace('.fits','-'+str(mjd5)+'.fits')
-    mjdsumdir = os.path.dirname(allstarmjdfile)+'/'+str(mjd5)
-    allstarmjdfile = mjdsumdir+'/'+os.path.basename(allstarmjdfile)
-    if os.path.exists(mjdsumdir)==False:
-        os.makedirs(mjdsumdir)
-    logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
-    logger.info(str(len(allstarmjd))+' stars for '+str(mjd5))
-    Table(allstarmjd).write(allstarmjdfile,overwrite=True)
+        # Nightly allVisit, allVisitMJD
+        cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
+        allvisitmjd = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
+                               "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' and v.mjd="+str(mjd5)+" and rv.starver='"+str(mjd5)+"'")
 
-    allvisitmjdfile = allvisitfile.replace('allVisit','allVisitMJD').replace('.fits','-'+str(mjd5)+'.fits')
-    allvisitmjdfile = mjdsumdir+'/'+os.path.basename(allvisitmjdfile)
-    logger.info('Writing Nightly allVisitMJD file to '+allvisitmjdfile)
-    logger.info(str(len(allvisitmjd))+' visits for '+str(mjd5))
-    Table(allvisitmjd).write(allvisitmjdfile,overwrite=True)
+        # maybe in summary/MJD/ or qa/MJD/ ?
+        #allstarmjdfile = load.filename('allStarMJD')
+        allstarmjdfile = allstarfile.replace('allStar','allStarMJD').replace('.fits','-'+str(mjd5)+'.fits')
+        mjdsumdir = os.path.dirname(allstarmjdfile)+'/'+str(mjd5)
+        allstarmjdfile = mjdsumdir+'/'+os.path.basename(allstarmjdfile)
+        if os.path.exists(mjdsumdir)==False:
+            os.makedirs(mjdsumdir)
+        logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
+        logger.info(str(len(allstarmjd))+' stars for '+str(mjd5))
+        Table(allstarmjd).write(allstarmjdfile,overwrite=True)
+
+        allvisitmjdfile = allvisitfile.replace('allVisit','allVisitMJD').replace('.fits','-'+str(mjd5)+'.fits')
+        allvisitmjdfile = mjdsumdir+'/'+os.path.basename(allvisitmjdfile)
+        logger.info('Writing Nightly allVisitMJD file to '+allvisitmjdfile)
+        logger.info(str(len(allvisitmjd))+' visits for '+str(mjd5))
+        Table(allvisitmjd).write(allvisitmjdfile,overwrite=True)
 
     db.close()
 
@@ -937,7 +940,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
 
     # Create daily and full allVisit/allStar files
     # The QA code needs these
-    create_sumfiles(mjd5,apred,telescope)
+    create_sumfiles(apred,telescope,mjd5)
 
 
     # Run QA script

@@ -9,7 +9,7 @@ from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email
 from ..apred import mkcal, cal
 from ..database import apogeedb
-from . import mkplan
+from . import mkplan,runapogee
 from sdss_access.path import path
 from astropy.io import fits
 from astropy.table import Table
@@ -20,7 +20,7 @@ import logging
 from slurm import queue as pbsqueue
 import time
 
-def mkvers(apred,telescope,fresh=False,links=None):
+def mkvers(apred,fresh=False):
     """
     Setup APOGEE DRP directory structure.
    
@@ -28,8 +28,6 @@ def mkvers(apred,telescope,fresh=False,links=None):
     ----------
     apred : str
        Reduction version name.
-    telescope : str
-       The telescope name: apo25m or lco25m.
     fresh : boolean, optional
        Start the reduction directory fresh.  The default is continue with what is
          already there.
@@ -41,7 +39,7 @@ def mkvers(apred,telescope,fresh=False,links=None):
     Example
     -------
 
-    mkvers('v1.0.0','apo25m')
+    mkvers('v1.0.0')
 
     """
 
@@ -109,8 +107,6 @@ def mkvers(apred,telescope,fresh=False,links=None):
 
 
 
-
-
 def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
     """
     Make the master calibration products for a reduction version.
@@ -136,6 +132,9 @@ def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
     mkmastercals('v1.0.0','telescope')
 
     """
+
+    if logger is None:
+        logger = dln.basiclogger()
 
     nodes = 1
     alloc = 'sdss-np'
@@ -468,13 +467,14 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     # Sparse, sequence of sparse quartz flats
     # multiwave, set of arclamp exposures
     # LSF, sky flat + multiwave
-
     # fiber?
 
     # -- Other master calibration products made only once ---
     # Littrow
     # Persist, PersistModel
     # telluric, need LSF
+
+    mkmastercals(apred,telescope,clobber=clobber,links=links,logger=rootLogger)
 
     # -- Daily calibration products ---
     # PSF/EPSF/Trace, from domeflat or quartzflat
@@ -493,6 +493,7 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     rootLogger.info('')
     # First we need to run domeflats and quartzflats so there are apPSF files
     # Then the arclamps
+    # apFlux files?
     # Then the FPI exposures last (needs apPSF and apWave files)
     calind, = np.where((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
                        (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI'))
@@ -551,25 +552,24 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
 
     # 4) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
-    if nplanfiles>0:
-        rootLogger.info('')
-        rootLogger.info('----------------')
-        rootLogger.info('4) Running APRED')
-        rootLogger.info('================')
-        rootLogger.info('')
-        queue = pbsqueue(verbose=True)
-        queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
-                     qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
-        for pf in planfiles:
-            queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.'+logtime+'.log'), errfile=pf.replace('.yaml','_pbs.'+logtime+'.err'))
-        queue.commit(hard=True,submit=True)
-        rootLogger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-        chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
-        del queue
-    else:
-        rootLogger.info('No plan files to run')
-        chkexp,chkvisit = None,None
+    rootLogger.info('')
+    rootLogger.info('----------------')
+    rootLogger.info('4) Running APRED')
+    rootLogger.info('================')
+    rootLogger.info('')
+
+
+
+    queue = pbsqueue(verbose=True)
+    queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
+                 qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
+    for pf in planfiles:
+        queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.'+logtime+'.log'), errfile=pf.replace('.yaml','_pbs.'+logtime+'.err'))
+    queue.commit(hard=True,submit=True)
+    rootLogger.info('PBS key is '+queue.key)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
+    chkexp,chkvisit = runapogee.check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
+    del queue
 
         
     # 5) Run "rv" on all unique stars
@@ -579,36 +579,35 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     rootLogger.info('5) Running RV+Visit Combination')
     rootLogger.info('================================')
     rootLogger.info('')
-    vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
-    if len(vcat)>0:
-        queue = pbsqueue(verbose=True)
-        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
-                     walltime=walltime, notification=False)
-        # Get unique stars
-        objects,ui = np.unique(vcat['apogee_id'],return_index=True)
-        vcat = vcat[ui]
-        for obj in vcat['apogee_id']:
-            apstarfile = load.filename('Star',obj=obj)
-            outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
-            if os.path.exists(outdir)==False:
-                os.makedirs(outdir)
-            # Run with --verbose and --clobber set
-            queue.append('rv %s %s %s -c -v -m %s' % (obj,apred,telescope,mjd5),outfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.log'),
-                         errfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.err'))
-        queue.commit(hard=True,submit=True)
-        rootLogger.info('PBS key is '+queue.key)        
-        queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-        chkrv = check_rv(vcat,queue.key)
-        del queue
-    else:
-        rootLogger.info('No visit files for MJD=%d' % mjd5)
-        chkrv = None
+    vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope))
+    queue = pbsqueue(verbose=True)
+    queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
+                 walltime=walltime, notification=False)
+    # Get unique stars
+    objects,ui = np.unique(vcat['apogee_id'],return_index=True)
+    vcat = vcat[ui]
+    # remove ones with missing or blank apogee_ids
+    bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone'))
+    if len(bd)>0:
+        vcat = np.delete(vcat,bd)
+    for obj in vcat['apogee_id']:
+        apstarfile = load.filename('Star',obj=obj)
+        outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
+        if os.path.exists(outdir)==False:
+            os.makedirs(outdir)
+        # Run with --verbose and --clobber set
+        queue.append('rv %s %s %s -c -v -m %s' % (obj,apred,telescope,mjd5),outfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.log'),
+                     errfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.err'))
+    queue.commit(hard=True,submit=True)
+    rootLogger.info('PBS key is '+queue.key)        
+    queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
+    chkrv = runapogee.check_rv(vcat,queue.key)
+    del queue
 
 
-    # Create daily and full allVisit/allStar files
+    # Create full allVisit/allStar files
     # The QA code needs these
-    create_sumfiles(mjd5,apred,telescope)
-
+    runapogee.create_sumfiles(apred,telescope)
 
     
     # 6) Unified directory structure
@@ -683,4 +682,4 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     # give link to QA page
     # attach full run_daily() log (as attachment)
     # don't see it if using --debug mode
-    summary_email(observatory,mjd5,chkexp,chkvisit,chkrv,logfile)
+    runapogee.summary_email(observatory,mjdstart,chkexp,chkvisit,chkrv,logfile)
