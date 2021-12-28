@@ -1810,6 +1810,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
                     apStarRelPath = '../' + starRelPath + apStarNewest
+            else:
+                starHTMLrelPath = None
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
