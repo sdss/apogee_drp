@@ -1000,6 +1000,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
             html.write('<TD align="right">'+str(i+1)+'\n')
             html.write('<TD align="right">'+str(int(round(ims[i])))+'\n')
             html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][gd][0])))+'\n')
+            pdb.set_trace()
             html.write('<TD align="right">'+str(int(round(tab1['CART'][gd][0])))+'\n')
             html.write('<TD align="right">'+str("%.3f" % round(tab1['SECZ'][gd][0],3))+'\n')
             html.write('<TD align="right">'+str("%.2f" % round(tab1['HA'][gd][0],2))+'\n')
