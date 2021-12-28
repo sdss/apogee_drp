@@ -588,7 +588,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     #platetab['MOONDIST'] =  moondist
     #platetab['MOONPHASE'] = moonphase
 
-    pdb.set_trace()
+    #pdb.set_trace()
     # Loop over the exposures.
     for i in range(n_exposures):
         if ims[0] == 0: 
