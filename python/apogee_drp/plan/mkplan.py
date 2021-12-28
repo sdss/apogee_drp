@@ -745,6 +745,9 @@ def getexpinfo(observatory=None,mjd5=None,files=None):
                 cat['arctype'][i] = 'THAR'
             else:
                 cat['arctype'][i] = 'None'
+        # FPI
+        if cat['exptype'][i]=='ARCLAMP' and cat['arctype'][i]=='None' and head.get('OBSCMNT')=='FPI':
+            cat['exptype'][i] = 'FPI'
 
     return cat
 

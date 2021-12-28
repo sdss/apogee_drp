@@ -40,6 +40,7 @@ if __name__ == '__main__' :
     parser.add_argument('--persist', type=int, help='apPersist ID')
     parser.add_argument('--modelpersist', type=int, help='apModelPersist ID')
     parser.add_argument('--response', type=int, help='apResponse ID')
+    parser.add_argument('--fpi', type=int, help='FPI ID')
     parser.add_argument('--mjd', type=int, help='MJD')
     parser.add_argument('--nskip', type=int, help='Number of arclamps to skip for WAVE')
     parser.add_argument("--vers", type=str, default='daily', help='APOGEE Reduction version')
@@ -55,7 +56,7 @@ if __name__ == '__main__' :
 
     # Check that we have some inputs 
     chknames = ['file','det','dark','flat','wave','multiwave','lsf','bpm','psf','flux',
-                'sparse','fiber','littrow','persist','modelpersist','response','mjd']
+                'sparse','fiber','littrow','persist','modelpersist','response','fpi','mjd']
     inputs = []
     for n in chknames:
         if argsdict[n] is not None:
@@ -70,7 +71,7 @@ if __name__ == '__main__' :
 
     # Add inputs
     inpnames = ['file','det','dark','flat','wave','multiwave','lsf','bpm','psf','flux',
-                'sparse','fiber','littrow','persist','modelpersist','response','mjd',
+                'sparse','fiber','littrow','persist','modelpersist','response','fpi','mjd',
                 'nskip','vers','telescope']
     for i,key in enumerate(inpnames):
         val = argsdict[key]
