@@ -520,24 +520,19 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     calind, = np.where((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
                        (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI'))
     if len(calind)>0:
-        # psf, flux, arcs, fpi
-        calcodedict = [{'DOMEFLAT':True, 'QUARTZFLAT':True, 'ARCLAMP':False, 'FPI':False},
-                       {'DOMEFLAT':True, 'QUARTZFLAT':False, 'ARCLAMP':False, 'FPI':False},
-                       {'DOMEFLAT':False, 'QUARTZFLAT':False, 'ARCLAMP':True, 'FPI':False},
-                       {'DOMEFLAT':False, 'QUARTZFLAT':False, 'ARCLAMP':False, 'FPI':True}]
-        #calcodedict = {'DOMEFLAT':0, 'QUARTZFLAT':0, 'ARCLAMP':2, 'FPI':3}
-        #calcode = [calcodedict[etype] for etype in expinfo['exptype'][calind]]
+        # 1: psf, 2: flux, 3: arcs, 4: fpi
+        calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':3, 'FPI':4}
+        calcode = [calcodedict[etype] for etype in expinfo['exptype'][calind]]
         calnames = ['DOMEFLAT/QUARTZFLAT','FLUX','ARCLAMP','FPI']
         shcalnames = ['psf','flux','arcs','fpi']
         chkcal = []
-        for j,ccode in enumerate([0,1,2,3]):
+        for j,ccode in enumerate([1,2,3,4]):
             rootLogger.info('')
             rootLogger.info('----------------------------------------')
             rootLogger.info('Running Calibration Files: '+str(calnames[j]))
             rootLogger.info('========================================')
             rootLogger.info('')
-            calcode = [calcodedict[ccode][etype] for etype in expinfo['exptype'][calind]]            
-            cind, = np.where(np.array(calcode)==True)
+            cind, = np.where((np.array(calcode) & ccode) > 0)
             if len(cind)>0:
                 rootLogger.info(str(len(cind))+' files to run')
                 queue = pbsqueue(verbose=True)
@@ -548,20 +543,23 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
                 for k in range(len(cind)):
                     num1 = expinfo['num'][calind[cind[k]]]
                     exptype1 = expinfo['exptype'][calind[cind[k]]]
+                    arctype1 = expinfo['arctype'][calind[cind[k]]]                    
                     rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
-                    if ccode==0:   # psfs
+                    if ccode==1:   # psfs
                         cmd1 = 'makecal --psf '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
-                    elif ccode==1   # flux
+                    elif ccode==2:   # flux
                         cmd1 = 'makecal --psf '+str(num1)+' --flux '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
-                    elif ccode==2:  # arcs
+                    #elif ccode==3:  # arcs 
+                    elif exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):  # arcs                       
                         cmd1 = 'makecal --wave '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
-                        logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
-                    elif ccode==3:  # fpi
+                        logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
+                    elif exptype1=='ARCLAMP' and arctype1=='None':    # fpi                       
+                    #elif ccode==4:  # fpi
                         cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'

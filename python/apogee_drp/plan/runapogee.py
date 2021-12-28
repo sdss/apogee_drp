@@ -826,18 +826,19 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     calind, = np.where((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
                        (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI'))
     if len(calind)>0:
-        calcodedict = {'DOMEFLAT':0, 'QUARTZFLAT':0, 'ARCLAMP':1, 'FPI':2}
+        # 1: psf, 2: flux, 3: arcs, 4: fpi
+        calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':3, 'FPI':4}
         calcode = [calcodedict[etype] for etype in expinfo['exptype'][calind]]
-        calnames = ['DOMEFLAT/QUARTZFLAT','ARCLAMP','FPI']
-        shcalnames = ['psf','arcs','fpi']
+        calnames = ['DOMEFLAT/QUARTZFLAT','FLUX','ARCLAMP','FPI']
+        shcalnames = ['psf','flux','arcs','fpi']
         chkcal = []
-        for j,ccode in enumerate([0,1,2]):
+        for j,ccode in enumerate([1,2,3,4]):
             rootLogger.info('')
             rootLogger.info('----------------------------------------')
             rootLogger.info('Running Calibration Files: '+str(calnames[j]))
             rootLogger.info('========================================')
             rootLogger.info('')
-            cind, = np.where(np.array(calcode)==ccode)
+            cind, = np.where((np.array(calcode) & ccode) > 0)
             if len(cind)>0:
                 rootLogger.info(str(len(cind))+' files to run')
                 queue = pbsqueue(verbose=True)
@@ -850,16 +851,21 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                     exptype1 = expinfo['exptype'][calind[cind[k]]]
                     arctype1 = expinfo['arctype'][calind[cind[k]]]
                     rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
-                    if exptype1=='DOMEFLAT' or exptype1=='QUARTZFLAT':
+                    if ccode==1:   # psfs                    
                         cmd1 = 'makecal --psf '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
-                    if exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):
+                    elif ccode==2:  # flux
+                        cmd1 = 'makecal --psf '+str(num1)+' --flux '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
+                    #elif ccode==3:  # arcs
+                    elif exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):  # arcs
                         cmd1 = 'makecal --wave '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
-                    if exptype1=='ARCLAMP' and arctype1=='None':
-                    #if exptype1=='FPI':
+                    elif exptype1=='ARCLAMP' and arctype1=='None':    # fpi
+                    #elif ccode==4:   # fpi
                         cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
