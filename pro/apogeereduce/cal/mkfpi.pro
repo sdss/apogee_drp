@@ -63,9 +63,8 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc)
 
   ;; New Python version! 
-  cmd = ['ap1dwavecal','--fpiid',strtrim(fpiid,2),'--vers',dirs.apred]
-  cmd = [cmd,'--telescope',dirs.telescope,'--verbose']
-  for i=0,n_elements(fpiid)-1 do cmd=[cmd,string(fpiid[i])]
+  cmd = ['mkfpiwave',strtrim(cmjd,2),dirs.apred,dirs.observatory,'--verbose']
+  print,'Running: ',cmd
   spawn,cmd,/noshell
 
   ;; Check that the calibration file was successfully created

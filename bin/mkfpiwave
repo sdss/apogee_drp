@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+#
+# Make APOGEE daily FPI wavelength solutions
+
+from argparse import ArgumentParser
+from .apred import fpi
+
+# Main command-line program
+if __name__ == "__main__":
+    parser = ArgumentParser(description='Make APOGEE daily FPI wavelength solutions')
+    parser.add_argument('mjd', type=int, nargs=1, help='MJD to run')
+    parser.add_argument('apred', type=str, nargs=1, help='APOGEE Reduction version')
+    parser.add_argument('observatory', type=str, nargs=1, help='Observatory')
+    parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
+    parser.add_argument('--verbose', action='store_true', help='Verbose output')
+    args = parser.parse_args()
+
+    fpi.dailyfpiwave(mjd=args.mjd,observatory=args.observatory,apred=args.apred,clobber=args.clobber,verbose=args.verbose)
