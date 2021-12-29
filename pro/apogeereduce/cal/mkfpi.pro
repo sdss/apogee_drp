@@ -28,8 +28,7 @@
 ;-
 
 pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
-          fiberid=fiberid,clobber=clobber,nowait=nowait,$
-          unlock=unlock
+          fiberid=fiberid,clobber=clobber,unlock=unlock
 
   if n_elements(name) eq 0 then name=string(fpiid[0])
   dirs = getdir(apodir,caldir,spectrodir,vers)

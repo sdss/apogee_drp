@@ -220,7 +220,10 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
             chkcal['success2d'][i] = True
         # Final calibration file
         #-----------------------
-        base = load.filename(caltype,num=num,chips=True)
+        if caltype.lower()=='fpi':
+            base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-')
+        else:
+            base = load.filename(caltype,num=num,chips=True)
         chkcal['calfile'][i] = base
         chfiles = [base.replace(caltype+'-',caltype+'-'+ch+'-') for ch in ['a','b','c']]
         exists = [os.path.exists(chf) for chf in chfiles]

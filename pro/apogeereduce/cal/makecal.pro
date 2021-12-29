@@ -236,8 +236,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
       MAKECAL,bpm=bpmid
       MAKECAL,fiber=fiberid
-      MKFPI,ims,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
-             fiberid=fiberid,clobber=clobber,unlock=unlock
+      MKFPI,fpi,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
+            fiberid=fiberid,clobber=clobber,unlock=unlock
     endif
   endif
 
