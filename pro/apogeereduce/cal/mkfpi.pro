@@ -63,7 +63,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc)
 
   ;; New Python version! 
-  cmd = ['mkfpiwave',strtrim(cmjd,2),dirs.apred,dirs.observatory,'--verbose']
+  cmd = ['mkfpiwave',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--verbose']
   print,'Running: ',cmd
   spawn,cmd,/noshell
 
