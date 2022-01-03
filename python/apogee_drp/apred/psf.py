@@ -260,7 +260,8 @@ def getprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
 
 
 def extract_pmul(p1lo,p1hi,img,p2):
-
+    """ Helper function for extract()."""
+    
     lo = np.max([p1lo,p2['lo'][0]])
     k1 = lo-p1lo
     l1 = lo-p2['lo'][0]
@@ -268,13 +269,16 @@ def extract_pmul(p1lo,p1hi,img,p2):
     k2 = hi-p1lo
     l2 = hi-p2['lo'][0]
     if lo>hi:
-        return np.zeros(2048,float)
+        out = np.zeros(2048,float)
     img2 = p2['img'][0].T  # transpose
     if lo==hi:
-        return img[:,k1:k2+1]*img2[:,l1:l2+1]
+        out = img[:,k1:k2+1]*img2[:,l1:l2+1]
     else:
-        return np.nansum(img[:,k1:k2+1]*img2[:,l1:l2+1],axis=1)
-
+        out = np.nansum(img[:,k1:k2+1]*img2[:,l1:l2+1],axis=1)
+    if out.ndim==2:
+        out = out.flatten()   # make sure it's 1D
+    return out
+        
 def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     """
     This extracts spectra using an empirical PSF.
@@ -312,11 +316,14 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     WARNMASK = -16640
     BADMASK = 16639
     BADERR = 1.00000e+10
+    maskval = {'NOT_ENOUGH_PSF': 16384}
+
+    t0 = time.time()
     
     nframe = len(frame)
     ntrace = len(epsf)
 
-    fibers = [e['fiber'] for e in epsf]
+    fibers = np.array([e['fiber'][0] for e in epsf])
     red = frame['flux'].T
     var = frame['err'].T**2
     inmask = frame['mask'].T
@@ -332,9 +339,9 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     # calculate extraction matrix
     if doback:
         nback = 1 
-        back = np.zeros(2048,float)
     else:
         nback = 0
+    back = np.zeros(2048,float)        
     beta = np.zeros((ntrace+nback,2048),float)
     betavar = np.zeros((ntrace+nback,2048),float)
     psftot = np.zeros((ntrace+nback,2048),float)
@@ -343,7 +350,10 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     badmasked = np.zeros((ntrace+nback,2048),int)
     inmask_warn = (inmask & WARNMASK) > 0
     inmask_bad = (inmask & BADMASK) > 0
+    print('Calculating extraction matrix')
     for k in np.arange(0,ntrace+nback):
+        if k % 50 == 0:
+            print('fiber = ',k)
         # Background
         if k > ntrace-1:
             beta[k,:] = np.nansum(red[:,lo:hi+1],axis=1)
@@ -362,14 +372,14 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
             img = p1['img'][0].T   # transpose
             if nbad > 0:
                 img[bad] = np.nan
-
+                
             # are there any warning flags for this trace? If so, flag the output
-            for i in range(2048):
-                warnmasked[k,i] = inmask_warn[i,lo]
-                badmasked[k,i] = inmask_bad[i,lo]
-                for j in np.arange(lo+1,hi+1):
-                    warnmasked[k,i] = warnmasked[k,i] | inmask_warn[i,j]
-                    badmasked[k,i] = badmasked[k,i] | inmask_bad[i,j]
+            warnmasked[k,:] = np.sum(inmask_warn[:,lo:hi+1],axis=1)
+            warntot = np.maximum(warnmasked[k,:],1)
+            warnmasked[k,:] = warnmasked[k,:] / warntot
+            badmasked[k,:] = np.sum(inmask_bad[:,lo:hi+1],axis=1)
+            badtot = np.maximum(badmasked[k,:],1)
+            badmasked[k,:] = badmasked[k,:] / badtot
             psftot[k,:] = np.nansum(img,axis=1)
             beta[k,:] = np.nansum(red[:,lo:hi+1]*img,axis=1)
             betavar[k,:] = np.nansum(var[:,lo:hi+1]*img**2,axis=1)
@@ -399,7 +409,10 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
                 tridiag[ll,k,:] = extract_pmul(p1['lo'][0],p1['hi'][0],img,epsf[l])
                 ll += 1
 
+    print('solving columns')
     for i in np.arange(4,2044):
+        if i % 100 == 0:
+            print('col = ',i)
         # Good fibers
         good, = np.where(psftot[:,i] > 0.5)
         ngood = len(good)
@@ -414,46 +427,50 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
             nbad1 = len(bad1)
             if nbad1 > 0:
                 tridiag[0,bad[bad1]+1,i] = 0 
-    if ngood>0:
-        a = tridiag[0,good,i]
-        b = tridiag[1,good,i]
-        c = tridiag[2,good,i]
-        v = beta[good,i]
-        vvar = betavar[good,i]
-        for j in np.arange(1,ngood):
-            m = a[j]/b[j-1]
-            b[j] = b[j]-m*c[j-1]
-            v[j] = v[j]-m*v[j-1]
-            vvar[j] = vvar[j]+m**2*vvar[j-1]
-        x = np.zeros(ngood,float)
-        xvar = np.zeros(ngood,float)
-        x[ngood-1] = v[ngood-1]/b[ngood-1]
-        xvar[ngood-1] = vvar[ngood-1]/b[ngood-1]**2
-        for j in np.flip(np.arange(0,ngood-1)):
-            x[j] = (v[j]-c[j]*x[j+1])/b[j]
-            xvar[j] = (vvar[j]+c[j]**2*xvar[j+1])/b[j]**2
-        spec[i,fibers[good]] = x
-        err[i,fibers[good]] = np.sqrt(xvar)
-        # mask the bad pixels
-        outmask[i,fibers[good]] = 0
-        if nbad > 0:
-            outmask[i,fibers[bad]] = maskval('NOT_ENOUGH_PSF') | badmasked[bad,i]
-        # put the warning bits into the mask
-        outmask[i,fibers] = outmask[i,fibers] | warnmasked[:,i]
+        if ngood>0:
+            a = tridiag[0,good,i]
+            b = tridiag[1,good,i]
+            c = tridiag[2,good,i]
+            v = beta[good,i]
+            vvar = betavar[good,i]
+            for j in np.arange(1,ngood):
+                m = a[j]/b[j-1]
+                b[j] = b[j]-m*c[j-1]
+                v[j] = v[j]-m*v[j-1]
+                vvar[j] = vvar[j]+m**2*vvar[j-1]
+            x = np.zeros(ngood,float)
+            xvar = np.zeros(ngood,float)
+            x[ngood-1] = v[ngood-1]/b[ngood-1]
+            xvar[ngood-1] = vvar[ngood-1]/b[ngood-1]**2
+            for j in np.flip(np.arange(0,ngood-1)):
+                x[j] = (v[j]-c[j]*x[j+1])/b[j]
+                try:
+                    xvar[j] = (vvar[j]+c[j]**2*xvar[j+1])/b[j]**2
+                except:
+                    print('problem')
+                    import pdb; pdb.set_trace()
+            spec[i,fibers[good]] = x
+            err[i,fibers[good]] = np.sqrt(xvar)
+            # mask the bad pixels
+            outmask[i,fibers[good]] = 0
+            if nbad > 0:
+                outmask[i,fibers[bad]] = maskval['NOT_ENOUGH_PSF'] | badmasked[bad,i]
+            # put the warning bits into the mask
+            outmask[i,fibers] = outmask[i,fibers] | warnmasked[:,i]
 
-    # No good fibers for this column
-    else:
-        spec[i,:] = 0
-        err[i,:] = BADERR
-        outmask[i,fibers] = maskval('NOT_ENOUGH_PSF') | badmasked[:,i]
+        # No good fibers for this column
+        else:
+            spec[i,:] = 0
+            err[i,:] = BADERR
+            outmask[i,fibers] = maskval['NOT_ENOUGH_PSF'] | badmasked[:,i]
 
-    if doback:
-        back[i] = x[ngood-1]
+        if doback:
+            back[i] = x[ngood-1]
 
 
     # Catch any NaNs (shouldn't be there, but ....)
-    bad, = np.where(~np.isfinite(spec))
-    nbad = len(bad)
+    bad = ~np.isfinite(spec)
+    nbad = np.sum(bad)
     if nbad > 0:
         spec[bad] = 0.
         err[bad] = BADERR
@@ -465,11 +482,14 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
 
     # Create the Model 2D image
     model = np.zeros(red.shape,float)
-    t = spec
-    bad, = np.where(t<=0)
-    if len(bad)>0:
+    t = np.zeros(spec.shape,float)
+    bad = (t<=0)
+    if np.sum(bad)>0:
         t[bad] = 0
+    print('Generating model')
     for k in range(ntrace):
+        if k % 100 == 0:
+            print('col = ',k)
         nf = 1
         ns = 0
         if subonly:
@@ -484,10 +504,12 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
             hi = epsf[k]['hi'][0]
             img = p1['img'][0].T
             rows = np.ones(hi-lo+1,int)
-            fiber = epsf[k]['fiber']
+            fiber = epsf[k]['fiber'][0]
             #model[:,lo:hi] += img[:,:]*(rows##t[:,fiber])
-            model[:,lo:hi] += img[:,:]*(rows.reshape(-1,1)*t[:,fiber])                                        
+            model[:,lo:hi+1] += img[:,:]*(rows.reshape(-1,1)*t[:,fiber]).T                                    
 
+    print(time.time()-t0,' sec')
+            
     return outstr,back,model
 
       
