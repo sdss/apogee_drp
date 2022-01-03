@@ -36,13 +36,14 @@ if __name__ == '__main__' :
 
     parser.add_argument("planfile", type=str, help='Planfile for visit reduction')
     parser.add_argument("--waveid", type=int, help='ID for wavecal', default=None)
-    parser.add_argument("--fpiid", type=int, help='ID for FPI', default=None)    
+    parser.add_argument("--fpiid", type=int, help='ID for FPI')
     parser.add_argument("--skyfile", type=str, help='Sky lines file', default='airglow')
     parser.add_argument("--nosky", help='No sky correction', action='store_true')
     parser.add_argument("--frameid", type=int, help='Override for single frame', default=None)
     parser.add_argument("--apred", type=str, help='apred_vers for single frame', default='daily')
     parser.add_argument("--telescope", type=str, help='telescope for single frame', default='apo25m')
     parser.add_argument('--clobber', help='Overwrite files?',action="store_true")
+    parser.add_argument('--verbose', help='Verbose output',action="store_true")
     parser.add_argument("--flag",default='11111')
 
     args=parser.parse_args()
@@ -51,7 +52,7 @@ if __name__ == '__main__' :
     start = time.time()
     print ("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
     # Sky lines
-    if args.fpiid == None:
+    if args.fpi == None:
         if args.frameid == None:
             wave.skycal(args.planfile,waveid=args.waveid,skyfile=args.skyfile,nosky=args.nosky)
         else :
@@ -59,9 +60,9 @@ if __name__ == '__main__' :
     # FPI lines
     else:
         if args.frameid == None:
-            fpi.fpi1dwavecal(planfile=args.planfile,waveid=args.waveid,fpiid=args.fpiid)
+            fpi.fpi1dwavecal(planfile=args.planfile,waveid=args.waveid,fpiid=args.fpiid,verbose=args.verbose)
         else :
-            fpi.fpi1dwavecal(frameid=args.frameid,fpiid=args.fpiid,vers=args.apred,telescope=args.telescope)
+            fpi.fpi1dwavecal(frameid=args.frameid,fpiid=args.fpiid,vers=args.apred,telescope=args.telescope,verbose=args.verbose)
     now = datetime.datetime.now()
     print ("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
     print("elapsed: ",time.time()-start)

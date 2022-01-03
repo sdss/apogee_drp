@@ -499,7 +499,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         fix0 = fixfiberid
     else:
         fix0 = None
-    caldaOAta = mkcal.getcal(calfile,mjd)
+    caldata = mkcal.getcal(calfile,mjd)
     if fix0 is not None:
         caldata['fixfiber'] = fix0
 
@@ -745,6 +745,9 @@ def getexpinfo(observatory=None,mjd5=None,files=None):
                 cat['arctype'][i] = 'THAR'
             else:
                 cat['arctype'][i] = 'None'
+        # FPI
+        if cat['exptype'][i]=='ARCLAMP' and cat['arctype'][i]=='None' and head.get('OBSCMNT')=='FPI':
+            cat['exptype'][i] = 'FPI'
 
     return cat
 

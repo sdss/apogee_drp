@@ -588,7 +588,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     #platetab['MOONDIST'] =  moondist
     #platetab['MOONPHASE'] = moonphase
 
-    pdb.set_trace()
+    #pdb.set_trace()
     # Loop over the exposures.
     for i in range(n_exposures):
         if ims[0] == 0: 
@@ -1000,7 +1000,10 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
             html.write('<TD align="right">'+str(i+1)+'\n')
             html.write('<TD align="right">'+str(int(round(ims[i])))+'\n')
             html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][gd][0])))+'\n')
-            html.write('<TD align="right">'+str(int(round(tab1['CART'][gd][0])))+'\n')
+            try:
+                html.write('<TD align="right">'+str(int(round(tab1['CART'][gd][0])))+'\n')
+            except:
+                html.write('<TD align="right">'+tab1['CART'][gd][0]+'\n')
             html.write('<TD align="right">'+str("%.3f" % round(tab1['SECZ'][gd][0],3))+'\n')
             html.write('<TD align="right">'+str("%.2f" % round(tab1['HA'][gd][0],2))+'\n')
             html.write('<TD align="right">'+str(np.round(tab1['DESIGN_HA'][gd][0],0)).replace('[',' ')[:-1]+'\n')
@@ -1225,10 +1228,18 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             else:
                 hmagarr = Vsum['H']
             gd, = np.where((hmagarr > 0) & (hmagarr < 20))
-            minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd]);  spanH = maxH - minH
+            try:
+                minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd])
+            except:
+                minH = 6;  maxH = 14
+            spanH = maxH - minH
             xmin = minH - spanH * 0.05;     xmax = maxH + spanH * 0.05
 
-            minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR']);  spanSNR = maxSNR - minSNR
+            try:
+                minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR'])
+            except:
+                minSNR = 0;  maxSNR = 500
+            spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
             
             ax.set_xlim(xmin,xmax)
@@ -1401,7 +1412,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
                 notsky, = np.where((plSum2['HMAG'] > 0) & (plSum2['HMAG'] < 30))
                 hmagarr = plSum2['HMAG'][notsky]
-                minH = np.nanmin(hmagarr);       maxH = np.nanmax(hmagarr);        spanH = maxH - minH
+                try:
+                    minH = np.nanmin(hmagarr);  maxH = np.nanmax(hmagarr)
+                except:
+                    minH = 6;  maxH = 14
                 xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
 
                 fig=plt.figure(figsize=(11,14))
@@ -1807,6 +1821,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     apStarCheck = np.array(apStarCheck)
                     apStarNewest = os.path.basename(apStarCheck[-1])
                     apStarRelPath = '../' + starRelPath + apStarNewest
+            else:
+                starHTMLrelPath = 'None'
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
@@ -2836,7 +2852,10 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             platehdus = fits.open(platefiles[i])
             platetab = platehdus[1].data
             plate = str(int(round(platetab['PLATE'][0])))
-            cart = str(int(round(platetab['CART'][0])))
+            try:
+                cart = str(int(round(platetab['CART'][0])))
+            except:
+                cart = platetab['CART'][0]
             nreads = str(int(round(platetab['NREADS'][0])))
             n_exposures = len(platetab['IM'])
             html.write(th0 + th1 + th2)

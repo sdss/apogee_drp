@@ -1,13 +1,13 @@
 ;+
 ;
-; MKWAVE
+; MKFPI
 ;
 ; Procedure to make an APOGEE FPI wavelength calibration file from
 ; FPI arc lamp exposures.  This is a wrapper around the python
 ; apmultiwavecal program.
 ;
 ; INPUT:
-;  fpiid      The ID8 numbers of the FPI arc lamp exposures to use.
+;  fpiid       The ID8 numbers of the FPI arc lamp exposures to use.
 ;  =name       Output filename base.  By default waveid[0] is used.
 ;  =darkid     Dark frame to be used if images are reduced.
 ;  =flatid     Flat frame to be used if images are reduced.
@@ -28,8 +28,7 @@
 ;-
 
 pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
-          fiberid=fiberid,clobber=clobber,nowait=nowait,$
-          unlock=unlock
+          fiberid=fiberid,clobber=clobber,unlock=unlock
 
   if n_elements(name) eq 0 then name=string(fpiid[0])
   dirs = getdir(apodir,caldir,spectrodir,vers)
@@ -48,8 +47,8 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   endelse
 
   ;; Does product already exist?
-  if file_test(wavedir+file+'.dat') and not keyword_set(clobber) then begin
-    print,' Wavecal file: ', wavedir+file+'.dat', ' already made'
+  if file_test(wavedir+file+'.fits') and not keyword_set(clobber) then begin
+    print,' Wavecal file: ', wavedir+file+'.fits', ' already made'
     return
   endif
 
@@ -64,9 +63,8 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc)
 
   ;; New Python version! 
-  cmd = ['ap1dwavecal','--fpiid',strtrim(waveid,2),'--vers',dirs.apred]
-  cmd = [cmd,'--telescope',dirs.telescope,'--verbose']
-  for i=0,n_elements(fpiid)-1 do cmd=[cmd,string(fpiid[i])]
+  cmd = ['mkfpiwave',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--verbose']
+  print,'Running: ',cmd
   spawn,cmd,/noshell
 
   ;; Check that the calibration file was successfully created
