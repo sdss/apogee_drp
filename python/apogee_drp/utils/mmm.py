@@ -5,15 +5,9 @@
 
 import numpy as np
 
-def mmm( sky_vector, 
-         highbad = False,
-         debug = False,
-         readnoise = False,
-         nsky = False,
-         integer = "discrete",
-         mxiter = 50,
-         minsky = 20,
-         nan=True):
+def mmm( sky_vector, highbad = False, debug = False,
+         readnoise = False, nsky = False, integer = "discrete",
+         mxiter = 50, minsky = 20, nan=True):
     """Estimate the sky background in a stellar contaminated field.
 
     MMM assumes that contaminated sky pixel values overwhelmingly display 
@@ -122,8 +116,8 @@ def mmm( sky_vector,
     skymid = 0.5*sky[int((nsky-1)/2)] + 0.5*sky[int(nsky/2)]  #Median value of all sky values
        
     cut1 = np.min( [skymid-sky[0],sky[nsky-1] - skymid] ) 
-    if highbad: 
-        cut1[np.where(cut1 > highbad - skymid)[0]] = highbad - skymid
+    if highbad:
+        cut1 = np.minimum(cut1, (highbad - skymid))
     cut2 = skymid + cut1
     cut1 = skymid - cut1
 
