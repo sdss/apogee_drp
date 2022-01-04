@@ -11,6 +11,7 @@ from scipy.interpolate import interp1d
 from scipy.signal import argrelextrema
 import statsmodels.api as sm
 from apogee_drp.utils import peakfit
+from numba import njit
 
 def getprofdata(fibs,cols,hdulist,fiber2hdu):
     """ Get the apEPSF profile data for a range of fibers and columns."""
@@ -278,6 +279,13 @@ def extract_pmul(p1lo,p1hi,img,p2):
     if out.ndim==2:
         out = out.flatten()   # make sure it's 1D
     return out
+
+@njit
+def solvefibers(x,xvar,ngood,v,b,c,vvar):
+    for j in np.flip(np.arange(0,ngood-1)):
+        x[j] = (v[j]-c[j]*x[j+1])/b[j]
+        xvar[j] = (vvar[j]+c[j]**2*xvar[j+1])/b[j]**2            
+    return x,xvar
         
 def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     """
@@ -317,8 +325,6 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     BADMASK = 16639
     BADERR = 1.00000e+10
     maskval = {'NOT_ENOUGH_PSF': 16384}
-
-    t0 = time.time()
     
     nframe = len(frame)
     ntrace = len(epsf)
@@ -350,10 +356,8 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     badmasked = np.zeros((ntrace+nback,2048),int)
     inmask_warn = (inmask & WARNMASK) > 0
     inmask_bad = (inmask & BADMASK) > 0
-    print('Calculating extraction matrix')
+
     for k in np.arange(0,ntrace+nback):
-        if k % 50 == 0:
-            print('fiber = ',k)
         # Background
         if k > ntrace-1:
             beta[k,:] = np.nansum(red[:,lo:hi+1],axis=1)
@@ -394,7 +398,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
         # Last fiber (on top edge)
         elif k == ntrace-1:
             ll = 0
-            for k in np.arange(k-1,k+1):
+            for l in np.arange(k-1,k+1):
                 tridiag[ll,k,:] = extract_pmul(p1['lo'][0],p1['hi'][0],img,epsf[l])
                 ll += 1
 
@@ -409,10 +413,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
                 tridiag[ll,k,:] = extract_pmul(p1['lo'][0],p1['hi'][0],img,epsf[l])
                 ll += 1
 
-    print('solving columns')
     for i in np.arange(4,2044):
-        if i % 100 == 0:
-            print('col = ',i)
         # Good fibers
         good, = np.where(psftot[:,i] > 0.5)
         ngood = len(good)
@@ -433,22 +434,19 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
             c = tridiag[2,good,i]
             v = beta[good,i]
             vvar = betavar[good,i]
-            for j in np.arange(1,ngood):
-                m = a[j]/b[j-1]
-                b[j] = b[j]-m*c[j-1]
-                v[j] = v[j]-m*v[j-1]
-                vvar[j] = vvar[j]+m**2*vvar[j-1]
+            m = a[1:ngood]/b[0:ngood-1]
+            b[1:] = b[1:]-m*c[0:ngood-1]
+            v[1:] = v[1:]-m*v[0:ngood-1]
+            vvar[1:] = vvar[1:]+m**2*vvar[0:ngood-1]
             x = np.zeros(ngood,float)
             xvar = np.zeros(ngood,float)
             x[ngood-1] = v[ngood-1]/b[ngood-1]
             xvar[ngood-1] = vvar[ngood-1]/b[ngood-1]**2
-            for j in np.flip(np.arange(0,ngood-1)):
-                x[j] = (v[j]-c[j]*x[j+1])/b[j]
-                try:
-                    xvar[j] = (vvar[j]+c[j]**2*xvar[j+1])/b[j]**2
-                except:
-                    print('problem')
-                    import pdb; pdb.set_trace()
+            # Use numba to speed up this slow lopp
+            #for j in np.flip(np.arange(0,ngood-1)):
+            #    x[j] = (v[j]-c[j]*x[j+1])/b[j]
+            #    xvar[j] = (vvar[j]+c[j]**2*xvar[j+1])/b[j]**2
+            x,xvar = solvefibers(x,xvar,ngood,v,b,c,vvar)
             spec[i,fibers[good]] = x
             err[i,fibers[good]] = np.sqrt(xvar)
             # mask the bad pixels
@@ -457,7 +455,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
                 outmask[i,fibers[bad]] = maskval['NOT_ENOUGH_PSF'] | badmasked[bad,i]
             # put the warning bits into the mask
             outmask[i,fibers] = outmask[i,fibers] | warnmasked[:,i]
-
+            
         # No good fibers for this column
         else:
             spec[i,:] = 0
@@ -482,14 +480,11 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
 
     # Create the Model 2D image
     model = np.zeros(red.shape,float)
-    t = np.zeros(spec.shape,float)
+    t = np.copy(spec)
     bad = (t<=0)
     if np.sum(bad)>0:
         t[bad] = 0
-    print('Generating model')
     for k in range(ntrace):
-        if k % 100 == 0:
-            print('col = ',k)
         nf = 1
         ns = 0
         if subonly:
@@ -507,8 +502,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
             fiber = epsf[k]['fiber'][0]
             #model[:,lo:hi] += img[:,:]*(rows##t[:,fiber])
             model[:,lo:hi+1] += img[:,:]*(rows.reshape(-1,1)*t[:,fiber]).T                                    
-
-    print(time.time()-t0,' sec')
+    model = model.T
             
     return outstr,back,model
 
