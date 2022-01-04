@@ -10,8 +10,14 @@ from astropy.io import fits
 from scipy.interpolate import interp1d
 from scipy.signal import argrelextrema
 import statsmodels.api as sm
-from apogee_drp.utils import peakfit
+from apogee_drp.utils import peakfit, mmm
 from numba import njit
+
+WARNMASK = -16640
+BADMASK = 16639
+BADERR = 1.00000e+10
+maskval = {'NOT_ENOUGH_PSF': 16384}
+
 
 def getprofdata(fibs,cols,hdulist,fiber2hdu):
     """ Get the apEPSF profile data for a range of fibers and columns."""
@@ -260,6 +266,84 @@ def getprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
     return data,mnx,mny,profiles
 
 
+def scat_remove(a,scat=None,mask=None):
+    """
+    remove scattered light
+    """
+
+    if scat==1:
+        # simple stupid single level removal!
+        if mask is not None:
+            flux = np.copy(a)
+            bad = (mask & BADMASK) > 0
+            flux[bad] = np.nan
+        else:
+            flux = np.copy(a)
+        bot = np.nanmedian(flux[100:1948,5:11])
+        top = np.nanmedian(flux[100:1948,2038:2043])
+        scatlevel = (bot+top)/2.
+        print('scatlevel: ',scatlevel)
+        flux -= scatlevel
+
+    else:
+        # variable scattered light, but only works for sparse exposures
+        sz = a.ndim
+        t = np.copy(a)
+        bad = (~np.isfinite(t) | (t < -10))
+        t[bad] = 1e10
+        nbox = 51
+        grid = np.zeros((41,41),float)
+        ii = 0
+        for i in range(4,2045,nbox):
+            print(i)
+            jj = 0
+            for j in range(4,2045,nbox):
+                i1 = i-nbox//2
+                i2 = i+nbox//2
+                j1 = j-nbox//2
+                j2 = j+nbox//2
+                i1 = np.max([4,i1])
+                i2 = np.min([2044,i2])
+                j1 = np.max([4,j1])
+                j2 = np.min([2044,j2])
+                sky = t[i1:i2+1,j1:j2+1]
+                val,sig,skew = mmm.mmm(sky.ravel(),highbad=1e5)
+                if sig > 0: grid[ii,jj]=val
+                jj += 1
+            ii += 1
+  
+        vec1 = np.arange(nbox).astype(int)
+        vec2 = np.ones(nbox,float)
+        xramp = vec1.reshape(-1,1)*vec2.reshape(1,-1)
+        yramp = vec1.reshape(1,-1)*vec2.reshape(-1,1)
+        
+        w1 = (nbox-xramp)/nbox*(nbox-yramp)/nbox
+        w2 = xramp/nbox*(nbox-yramp)/nbox
+        w3 = (nbox-xramp)/nbox*yramp/nbox
+        w4 = xramp/nbox*yramp/nbox
+        
+        out = np.zeros((2048,2048),float)
+        ii = 0
+
+        for i in range(4+nbox//2,2045-nbox//2,nbox):
+            jj = 0
+            for j in range(4+nbox//2,2045-nbox//2,nbox):            
+                v1 = grid[ii,jj]
+                v2 = grid[ii+1,jj]
+                v3 = grid[ii,jj+1]
+                v4 = grid[ii+1,jj+1]
+                if v1 > 1e9: v1=v2
+                if v2 > 1e9: v2=v1
+                out[i-nbox//2:i+nbox//2+1,j-nbox//2:j+nbox//2+1] = v1*w1+v2*w2+v3*w3+v4*w4
+                jj += 1
+            ii += 1
+
+        flux = np.copy(a)
+        flux -= out
+        
+    return flux
+
+
 def extract_pmul(p1lo,p1hi,img,p2):
     """ Helper function for extract()."""
     
@@ -320,11 +404,6 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
       Incorporated into ap2dproc.pro  D.Nidever May 2011  
 
     """
-
-    WARNMASK = -16640
-    BADMASK = 16639
-    BADERR = 1.00000e+10
-    maskval = {'NOT_ENOUGH_PSF': 16384}
     
     nframe = len(frame)
     ntrace = len(epsf)
@@ -335,8 +414,9 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     inmask = frame['mask'].T
     # use the transposes
     
-    #if keyword_set(scat) then scat_remove,red,scat=scat,mask=inmask
-
+    if scat:
+        red = scat_remove(red,scat=scat,mask=inmask)
+    
     # Initialize output arrays
     spec = np.zeros((2048,300),float)
     err = np.zeros((2048,300),float)+999999.09 #+baderr()
