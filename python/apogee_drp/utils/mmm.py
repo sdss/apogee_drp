@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # D. Jones - 2/13/14
+# https://github.com/djones1040/PythonPhot/blob/master/PythonPhot/mmm.py
 """This code is from the IDL Astronomy Users Library"""
 
 import numpy as np
