@@ -586,6 +586,54 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
             
     return outstr,back,model
 
+def getoffset(imfile,tracefile):
+    """
+    Measure the offset of an object exposure and the PSF model/traces.
+    """
+
+    # Load the files
+    flux = fits.getdata(imfile,1)         # [2048,2048]
+    tracestr = fits.getdata(tracefile,0)  # [Nfibers,2048]
+    
+    # Find bright fibers and measure the centroid
+    medflux = np.median(flux[:,900:1100],axis=1)
+    medcent = np.median(tracestr[:,900:1100],axis=1)
+    nfibers = tracestr.shape[0]
+    
+    # Loop over bright fibers
+    x = np.arange(2048)
+    gcent = np.zeros(nfibers,float)
+    offset = np.zeros(nfibers,float)
+    for i in range(nfibers):
+        # Fit Gaussian
+        lo = int(np.floor(medcent[i]-3))
+        hi = int(np.ceil(medcent[i]+3))
+        xx = np.arange(hi-lo+1)+lo
+        yy = medflux[lo:hi+1]
+        initpar = [yy[3],medcent[i],1.0,0.0]
+        pars,perror = dln.gaussfit(xx,yy,initpar=initpar)
+        gcent[i] = pars[1]
+        offset[i] = pars[1]-medcent[i]
+
+    # Fit line to it
+    coef = np.polyfit(np.arange(nfibers),offset,1)
+
+    return coef
+    
+def extractwing():
+    """ Extract taking wings into account."""
+
+    # ideas for extraction with wings if I can't fit fiber and 4 neighbors simultaneously:
+    # 1) do usual fiber + 2 neighbor extraction using narrower profile
+    # 2) create model using the broad profile and find the residual of data-model.
+    # 3) loop through each fiber and add its broad profile back in (this is the same as
+    #  subtracting all other fibers only)
+    # use the narrow profile to find improved flux using weighted mean of best scaled profile
+    # -can iterate if wanted
+    # -could do this just around bright stars?
+
+    import pdb; pdb.set_trace()
+
       
 if __name__ == '__main__' :
 
