@@ -33,6 +33,8 @@ class PSF(object):
         self.npix = len(self.y)
         self.nxgrid = nxgrid
         self.nygrid = nygrid
+        self._xgrid = None
+        self._ygrid = None        
         self._grid = None
 
     def __call__(self,labels,y=None,ycen=0.0):
@@ -41,10 +43,9 @@ class PSF(object):
         # Make grid, if needed
         if self._grid is None:
             self.mkgrid()
-        
-        # Find the closest points on the grid and
-        
-        # linearly interpolate so it's smooth
+
+        # Interpolate in the grid
+        profile = self.gridinterp(labels)
 
         # Pixel values input, shift and interpolate
         if y is not None:
@@ -76,6 +77,81 @@ class PSF(object):
         m = np.einsum('ij,j->i', w_array_2, leaky_relu(outside)) + b_array_2
         return m
 
+    def gridinterp(self,labels):
+        """ Interpolate model in the grid."""
+
+        if self._grid is None:
+            raise ValueError('No grid')
+
+        xind = np.searchsorted(self.xgrid,labels[0])
+        yind = np.searchsorted(self.xgrid,labels[1])        
+        
+        # Find the closest points on the grid
+        #------------------------------------
+        # -- At corners, use corner values --
+        # bottom left
+        if labels[0] < self.xmin[0] and labels[1] < self.xmin[1]:
+            return self.grid[0,0,:]
+        # top left
+        if labels[0] < self.xmin[0] and labels[1] > self.xmax[1]:
+            return self.grid[0,-1,:]
+        # bottom right
+        if labels[0] > self.xmax[0] and labels[1] < self.xmin[1]:
+            return self.grid[-1,0,:]
+        # top right
+        if labels[0] > self.xmax[0] and labels[1] > self.xmax[1]:
+            return self.grid[-1,-1,:]
+
+        # -- Edges, use two points --
+        # linearly interpolate so it's smooth        
+        # left
+        if labels[0] < self.xmin[0]:
+            yind1 = yind-1
+            yind2 = yind
+            wt = (labels[1]-self.ygrid[yind1])/(self.ygrid[yind2]-self.ygrid[yind1])
+            profile = (1-wt)*self._grid[0,yind1,:] + wt*self._grid[0,yind2,:]
+            return profile
+        # right
+        if labels[0] > self.xmax[0]:
+            yind1 = yind-1
+            yind2 = yind
+            wt = (labels[1]-self.ygrid[yind1])/(self.ygrid[yind2]-self.ygrid[yind1])
+            profile = (1-wt)*self._grid[-1,yind1,:] + wt*self._grid[-1,yind2,:]
+            return profile
+        # bottom
+        if labels[1] < self.xmin[1]:
+            xind1 = xind-1
+            xind2 = xind
+            wt = (labels[0]-self.xgrid[xind1])/(self.xgrid[xind2]-self.xgrid[xind1])
+            profile = (1-wt)*self._grid[xind1,0,:] + wt*self._grid[xind2,0,:]
+            return profile
+        # top
+        if labels[1] > self.xmax[1]:
+            xind1 = xind-1
+            xind2 = xind
+            wt = (labels[0]-self.xgrid[xind1])/(self.xgrid[xind2]-self.xgrid[xind1])
+            profile = (1-wt)*self._grid[xind1,-1,:] + wt*self._grid[xind2,-1,:]
+            return profile
+            
+        # -- In the middle --
+        # linearly interpolate so it's smooth
+        xind1 = xind-1
+        xind2 = xind
+        yind1 = yind-1
+        yind2 = yind
+        wtdx = (self.xgrid[xind2]-self.xgrid[xind1])
+        wtdy = (self.ygrid[yind2]-self.ygrid[yind1])        
+        profile = np.zeros(self.npix,nfloat)
+        totwt = 0.0
+        for xind in [xind1,xind2]:
+            for yind in [yind1,yind2]:
+                wt = (labels[0]-self.xgrid[xind])*(labels[1]-self.ygrid[yind])/(wtdx*wtdy)
+                totwt += wt
+                profile += wt*self._grid[xind,yind]
+        profile /= totwt
+                
+        return profile
+        
     def mkgrid(self,nx=None,ny=None):
         """ Make a grid of models to be used later."""
 
