@@ -18,6 +18,103 @@ BADMASK = 16639
 BADERR = 1.00000e+10
 maskval = {'NOT_ENOUGH_PSF': 16384}
 
+def leaky_relu(z):
+    """ This is the activation function used by default in all our neural networks. """
+    return z*(z > 0) + 0.01*z*(z < 0)
+
+class PSF(object):
+
+    def __init__(self,coeffs,nxgrid=20,nygrid=50):
+        # coeffs = (w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y)
+        self._coeffs = coeffs
+        self.xmin = coeffs[-3]
+        self.xmax = coeffs[-2]
+        self.y = coeffs[-1]
+        self.npix = len(self.y)
+        self.nxgrid = nxgrid
+        self.nygrid = nygrid
+        self._grid = None
+
+    def __call__(self,labels,y=None,ycen=0.0):
+        """  Make the PSF."""
+
+        # Make grid, if needed
+        if self._grid is None:
+            self.mkgrid()
+        
+        # Find the closest points on the grid and
+        
+        # linearly interpolate so it's smooth
+
+        # Pixel values input, shift and interpolate
+        if y is not None:
+            yfine = np.arange(self.npix)
+            fullprofile = profile
+            profile = interp1d(self.y+ycen,fullprofile)(y)
+
+        return profile
+        
+    def scaled_labels(self,labels):
+        """ Scale the labels."""
+        if self.xmin is None or self.xmax is None:
+            raise ValueError('No label scaling informationl')
+        slabels = (labels-self.xmin)/(self.xmax-self.xmin) - 0.5   # scale the labels
+        return slabels
+        
+    def model(self,inlabels):
+        """ Make a brand-new model."""
+
+        labels = self.scaled_labels(inlabels) # scale the labels
+        
+        # We input the scaled stellar labels (not in the original unit).
+        # Each label ranges from -0.5 to 0.5
+    
+        # assuming your NN has two hidden layers.
+        w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y = self._coeffs
+        inside = np.einsum('ij,j->i', w_array_0, labels) + b_array_0
+        outside = np.einsum('ij,j->i', w_array_1, leaky_relu(inside)) + b_array_1
+        m = np.einsum('ij,j->i', w_array_2, leaky_relu(outside)) + b_array_2
+        return m
+
+    def mkgrid(self,nx=None,ny=None):
+        """ Make a grid of models to be used later."""
+
+        # Default values
+        if self.nxgrid is None and nx is None:
+            nx = 20
+        if self.nygrid is None and ny is None:
+            ny = 50
+
+        # Limits and steps
+        npix = 2048
+        dx = (self.xmax[0]-self.xmin[0])/nx
+        dy = (self.xmax[1]-self.xmin[1])/ny        
+        x0 = self.xmin[0]
+        y0 = self.xmin[1]
+        
+        # Loop over X and Y points and fill in the 3D grid
+        xgrid = np.linspace(self.xmin[0],self.xmax[0],nx)
+        ygrid = np.linspace(self.xmin[1],self.xmax[1],ny)
+        grid = np.zeros((nx,ny,self.npix),float)
+        for x1,i in enumerate(xgrid):
+            for y1,j in enumerate(ygrid): 
+                m1 = self.model([x1,y1])
+                grid[i,j,:] = m1
+
+        # Save the information
+        self._xgrid = xgrid
+        self._ygrid = ygrid
+        self._grid = grid
+    
+    @cls
+    def read(infile):
+        # Load the file and return a PSF object
+        coeffs = []
+        for i in range(9):
+            coeffs.append( fits.getdata(infile,i) )
+        # coeffs = (w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y)
+        return PSF(coeffss)
+    
 
 def getprofdata(fibs,cols,hdulist,fiber2hdu):
     """ Get the apEPSF profile data for a range of fibers and columns."""
@@ -620,7 +717,7 @@ def getoffset(imfile,tracefile):
 
     return coef
     
-def extractwing():
+def extractwing(frame,epsf):
     """ Extract taking wings into account."""
 
     # ideas for extraction with wings if I can't fit fiber and 4 neighbors simultaneously:
@@ -632,6 +729,15 @@ def extractwing():
     # -can iterate if wanted
     # -could do this just around bright stars?
 
+    # Step 1) Regular fiber+2 neighbor extraction
+
+    # Step 2) Create model using the broad profile and find the residual of data-model.
+
+    # Step 3) Subtract all neighbor profiles and refit fiber
+
+    
+    
+    
     import pdb; pdb.set_trace()
 
       
