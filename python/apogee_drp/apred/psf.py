@@ -9,6 +9,7 @@ from dlnpyutils import utils as dln, bindata
 from astropy.io import fits
 from scipy.interpolate import interp1d
 from scipy.signal import argrelextrema
+from scipy.optimize import curve_fit
 import statsmodels.api as sm
 from apogee_drp.utils import peakfit, mmm
 from numba import njit
@@ -17,6 +18,9 @@ WARNMASK = -16640
 BADMASK = 16639
 BADERR = 1.00000e+10
 maskval = {'NOT_ENOUGH_PSF': 16384}
+
+
+#####  EMPIRICAL PSF MODEL CLASS #######
 
 def leaky_relu(z):
     """ This is the activation function used by default in all our neural networks. """
@@ -27,32 +31,46 @@ class PSF(object):
     def __init__(self,coeffs,nxgrid=20,nygrid=50):
         # coeffs = (w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y)
         self._coeffs = coeffs
-        self.xmin = coeffs[-3]
-        self.xmax = coeffs[-2]
-        self.y = coeffs[-1]
+        self.xmin = coeffs['xmin']
+        self.xmax = coeffs['xmax']
+        self.y = coeffs['y']
         self.npix = len(self.y)
-        self.nxgrid = nxgrid
-        self.nygrid = nygrid
         self._xgrid = None
+        self._nxgrid = nxgrid
         self._ygrid = None        
+        self._nygrid = nygrid
         self._grid = None
 
-    def __call__(self,labels,y=None,ycen=0.0):
-        """  Make the PSF."""
+    def __str__(self):
+        """ String representation of the PSF."""
+        return self.__class__.__name__+'(%.1f<X<%.1f, %.1f<X<%.1f, Npix=%d)' % \
+                                        (self.xmin[0],self.xmax[0],self.xmin[1],self.xmax[1],self.npix)
 
-        # Make grid, if needed
-        if self._grid is None:
-            self.mkgrid()
+    def __repr__(self):
+        """ String representation of the PSF."""
+        return self.__class__.__name__+'(%.1f<X<%.1f, %.1f<X<%.1f, Npix=%d)' % \
+                                        (self.xmin[0],self.xmax[0],self.xmin[1],self.xmax[1],self.npix)
+    
+    def __call__(self,labels,y=None,ycen=None):
+        """  Make the PSF. """
 
+        if labels[0]<0 or labels[0]>2047 or labels[1]<0 or labels[1]>2047:
+            raise ValueError('X/Y must be between 0 and 2047')
+            
         # Interpolate in the grid
         profile = self.gridinterp(labels)
 
         # Pixel values input, shift and interpolate
         if y is not None:
+            if ycen is None:
+                ycen = labels[1]
             yfine = np.arange(self.npix)
             fullprofile = profile
-            profile = interp1d(self.y+ycen,fullprofile)(y)
-
+            profile = interp1d(self.y,fullprofile,kind='quadratic',bounds_error=False,fill_value=np.nan)(y-ycen)
+            # Set values beyond the range to 0.0
+            if np.sum(~np.isfinite(profile))>0:
+                profile[~np.isfinite(profile)] = 0.0
+                
         return profile
         
     def scaled_labels(self,labels):
@@ -63,44 +81,52 @@ class PSF(object):
         return slabels
         
     def model(self,inlabels):
-        """ Make a brand-new model."""
-
+        """ Make a brand-new full profile model with input labels."""
+        if inlabels[0]<0 or inlabels[0]>2047 or inlabels[1]<0 or inlabels[1]>2047:
+            raise ValueError('X/Y must be between 0 and 2047')
         labels = self.scaled_labels(inlabels) # scale the labels
-        
         # We input the scaled stellar labels (not in the original unit).
         # Each label ranges from -0.5 to 0.5
-    
-        # assuming your NN has two hidden layers.
-        w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y = self._coeffs
+        w_array_0 = self._coeffs['weight0']
+        b_array_0 = self._coeffs['bias0']
+        w_array_1 = self._coeffs['weight2']
+        b_array_1 = self._coeffs['bias2']
+        w_array_2 = self._coeffs['weight4']
+        b_array_2 = self._coeffs['bias4']                
         inside = np.einsum('ij,j->i', w_array_0, labels) + b_array_0
         outside = np.einsum('ij,j->i', w_array_1, leaky_relu(inside)) + b_array_1
         m = np.einsum('ij,j->i', w_array_2, leaky_relu(outside)) + b_array_2
+        # This is the log of the model
+        m = 10**m
         return m
 
     def gridinterp(self,labels):
         """ Interpolate model in the grid."""
 
+        if labels[0]<0 or labels[0]>2047 or labels[1]<0 or labels[1]>2047:
+            raise ValueError('X/Y must be between 0 and 2047')
+        
         if self._grid is None:
-            raise ValueError('No grid')
+            self.mkgrid()
 
-        xind = np.searchsorted(self.xgrid,labels[0])
-        yind = np.searchsorted(self.xgrid,labels[1])        
+        xind = np.searchsorted(self._xgrid,labels[0])
+        yind = np.searchsorted(self._ygrid,labels[1])        
         
         # Find the closest points on the grid
         #------------------------------------
         # -- At corners, use corner values --
         # bottom left
         if labels[0] < self.xmin[0] and labels[1] < self.xmin[1]:
-            return self.grid[0,0,:]
+            return self._grid[0,0,:]
         # top left
         if labels[0] < self.xmin[0] and labels[1] > self.xmax[1]:
-            return self.grid[0,-1,:]
+            return self._grid[0,-1,:]
         # bottom right
         if labels[0] > self.xmax[0] and labels[1] < self.xmin[1]:
-            return self.grid[-1,0,:]
+            return self._grid[-1,0,:]
         # top right
         if labels[0] > self.xmax[0] and labels[1] > self.xmax[1]:
-            return self.grid[-1,-1,:]
+            return self._grid[-1,-1,:]
 
         # -- Edges, use two points --
         # linearly interpolate so it's smooth        
@@ -108,28 +134,28 @@ class PSF(object):
         if labels[0] < self.xmin[0]:
             yind1 = yind-1
             yind2 = yind
-            wt = (labels[1]-self.ygrid[yind1])/(self.ygrid[yind2]-self.ygrid[yind1])
+            wt = (labels[1]-self._ygrid[yind1])/(self._ygrid[yind2]-self._ygrid[yind1])
             profile = (1-wt)*self._grid[0,yind1,:] + wt*self._grid[0,yind2,:]
             return profile
         # right
         if labels[0] > self.xmax[0]:
             yind1 = yind-1
             yind2 = yind
-            wt = (labels[1]-self.ygrid[yind1])/(self.ygrid[yind2]-self.ygrid[yind1])
+            wt = (labels[1]-self._ygrid[yind1])/(self._ygrid[yind2]-self._ygrid[yind1])
             profile = (1-wt)*self._grid[-1,yind1,:] + wt*self._grid[-1,yind2,:]
             return profile
         # bottom
         if labels[1] < self.xmin[1]:
             xind1 = xind-1
             xind2 = xind
-            wt = (labels[0]-self.xgrid[xind1])/(self.xgrid[xind2]-self.xgrid[xind1])
+            wt = (labels[0]-self._xgrid[xind1])/(self._xgrid[xind2]-self._xgrid[xind1])
             profile = (1-wt)*self._grid[xind1,0,:] + wt*self._grid[xind2,0,:]
             return profile
         # top
         if labels[1] > self.xmax[1]:
             xind1 = xind-1
             xind2 = xind
-            wt = (labels[0]-self.xgrid[xind1])/(self.xgrid[xind2]-self.xgrid[xind1])
+            wt = (labels[0]-self._xgrid[xind1])/(self._xgrid[xind2]-self._xgrid[xind1])
             profile = (1-wt)*self._grid[xind1,-1,:] + wt*self._grid[xind2,-1,:]
             return profile
             
@@ -139,13 +165,13 @@ class PSF(object):
         xind2 = xind
         yind1 = yind-1
         yind2 = yind
-        wtdx = (self.xgrid[xind2]-self.xgrid[xind1])
-        wtdy = (self.ygrid[yind2]-self.ygrid[yind1])        
-        profile = np.zeros(self.npix,nfloat)
+        wtdx = (self._xgrid[xind2]-self._xgrid[xind1])
+        wtdy = (self._ygrid[yind2]-self._ygrid[yind1])        
+        profile = np.zeros(self.npix,float)
         totwt = 0.0
         for xind in [xind1,xind2]:
             for yind in [yind1,yind2]:
-                wt = (labels[0]-self.xgrid[xind])*(labels[1]-self.ygrid[yind])/(wtdx*wtdy)
+                wt = (labels[0]-self._xgrid[xind])*(labels[1]-self._ygrid[yind])/(wtdx*wtdy)
                 totwt += wt
                 profile += wt*self._grid[xind,yind]
         profile /= totwt
@@ -156,9 +182,13 @@ class PSF(object):
         """ Make a grid of models to be used later."""
 
         # Default values
-        if self.nxgrid is None and nx is None:
+        if nx is None and self._nxgrid is not None:
+            nx = self._nxgrid
+        if ny is None and self._nygrid is not None:
+            ny = self._nygrid 
+        if nx is None:
             nx = 20
-        if self.nygrid is None and ny is None:
+        if ny is None:
             ny = 50
 
         # Limits and steps
@@ -172,24 +202,30 @@ class PSF(object):
         xgrid = np.linspace(self.xmin[0],self.xmax[0],nx)
         ygrid = np.linspace(self.xmin[1],self.xmax[1],ny)
         grid = np.zeros((nx,ny,self.npix),float)
-        for x1,i in enumerate(xgrid):
-            for y1,j in enumerate(ygrid): 
+        for i,x1 in enumerate(xgrid):
+            for j,y1 in enumerate(ygrid):
                 m1 = self.model([x1,y1])
                 grid[i,j,:] = m1
 
         # Save the information
         self._xgrid = xgrid
+        self._nxgrid = nx
         self._ygrid = ygrid
+        self._nygrid = ny 
         self._grid = grid
     
-    @cls
-    def read(infile):
+    @classmethod
+    def read(cls,infile):
         # Load the file and return a PSF object
-        coeffs = []
+        coeffs = {}
+        hdu = fits.open(infile)
         for i in range(9):
-            coeffs.append( fits.getdata(infile,i) )
+            coeffs[hdu[i].header['type']] = hdu[i].data
         # coeffs = (w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y)
-        return PSF(coeffss)
+        return PSF(coeffs)
+
+    
+#####  GET EMPIRICAL PSF #######
     
 
 def getprofdata(fibs,cols,hdulist,fiber2hdu):
@@ -437,6 +473,18 @@ def getprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
     import pdb; pdb.set_trace()
 
     return data,mnx,mny,profiles
+
+
+#####  EXTRACTION #######
+
+def loadframe(infile):
+    """ Load a 2D APOGEE image."""
+    head = fits.getheader(infile,0)
+    flux = fits.getdata(infile,1)
+    err = fits.getdata(infile,2)
+    mask = fits.getdata(infile,3)    
+    frame = {'flux':flux, 'err':err, 'mask':mask, 'header':head}
+    return frame
 
 
 def scat_remove(a,scat=None,mask=None):
@@ -759,41 +807,141 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
             
     return outstr,back,model
 
-def getoffset(imfile,tracefile):
+def func_poly2d(inp,*args):
+    """ 2D polynomial surface"""
+    x = inp[0]
+    y = inp[1]
+    p = args
+    np = len(p)
+    if np==0:
+        a = p[0]
+    elif np==3:
+        a = p[0] + p[1]*x + p[2]*y
+    elif np==4:
+        a = p[0] + p[1]*x + p[2]*x*y + p[3]*y
+    else:
+        raise Exception('Only 0, 3, and 4 parameters supported')
+    return a
+    
+def getoffset(frame,traceim):
     """
     Measure the offset of an object exposure and the PSF model/traces.
     """
-
-    # Load the files
-    flux = fits.getdata(imfile,1)         # [2048,2048]
-    tracestr = fits.getdata(tracefile,0)  # [Nfibers,2048]
     
     # Find bright fibers and measure the centroid
-    medflux = np.median(flux[:,900:1100],axis=1)
-    medcent = np.median(tracestr[:,900:1100],axis=1)
-    nfibers = tracestr.shape[0]
+    nfibers = traceim.shape[0]
+    flux = frame['flux']
     
-    # Loop over bright fibers
-    x = np.arange(2048)
-    gcent = np.zeros(nfibers,float)
-    offset = np.zeros(nfibers,float)
+    # Loop over X locations
+    xx = [512, 1024, 1536]
+    coef = np.zeros((len(xx),2),float)
+    for i,x in enumerate(xx):
+        # Get median flux/centers
+        medflux = np.median(flux[:,x-100:x+100],axis=1)
+        medcent = np.median(traceim[:,x-100:x+100],axis=1)
+        # Measure rough flux in each fiber
+        boxflux = np.zeros(nfibers,float)
+        fiberycen = np.zeros(nfibers,float)
+        for j in range(nfibers):
+            fiberycen[j] = medcent[j]
+            boxflux[j] = np.sum(medflux[int(np.round(medcent[j]))-1:int(np.round(medcent[j]))+1])
+        # Find bright fibers
+        bright, = np.where(boxflux > 1000)
+        nbright = len(bright)
+        
+        # Loop over bright fibers
+        y = np.arange(2048)
+        gcent = np.zeros(nbright,float)
+        offset = np.zeros(nbright,float)
+        ycen = fiberycen[bright]
+        for j in range(nbright):
+            ind = bright[j]
+            # Fit Gaussian
+            lo = int(np.floor(medcent[ind]-3))
+            hi = int(np.ceil(medcent[ind]+3))
+            yy = np.arange(hi-lo+1)+lo
+            ff = medflux[lo:hi+1]
+            initpar = [ff[3],medcent[j],1.0,0.0]
+            try:
+                pars,perror = dln.gaussfit(yy,ff,initpar=initpar)
+                gcent[j] = pars[1]
+                offset[j] = pars[1]-medcent[j]                
+            except:
+                gcent[j] = np.nan
+                offset[j] = np.nan
+
+
+        # Fit line to it
+        medoff = np.nanmedian(offset)
+        sigoff = dln.mad(offset[np.isfinite(offset)])
+        gd, = np.where(np.isfinite(offset) & (np.abs(offset-medoff) < 3*sigoff))
+        coef1 = np.polyfit(ycen[gd],offset[gd],1)
+        coef[i,:] = coef1
+
+    # Fit 2D linear model
+    xvals = np.zeros((len(xx),2048),float)
+    yvals = np.zeros((len(xx),2048),float)
+    zvals = np.zeros((len(xx),2048),float)    
+    for i,x in enumerate(xx):
+        xvals[i,:] = x
+        yvals[i,:] = np.arange(2048)
+        zvals[i,:] = np.polyval(coef[i,:],np.arange(2048))
+        
+    initpar = np.zeros(4)
+    coef2,cov2 = curve_fit(func_poly2d,[xvals.ravel(),yvals.ravel()],zvals.ravel(),p0=initpar)
+    coeferr2 = np.sqrt(np.diag(cov2))
+
+    return coef2
+
+
+def fullepsfgrid(psf,traceim,offcoef):
+    """ Generate a full EPSF grid for all fibers and columns and dealing with offsets."""
+
+    
+    nfibers = traceim.shape[0]
+    
+    ## Loop over X locations
+    #xx = [512, 1024, 1536]
+    #coef = np.zeros((len(xx),2),float)
+    #for i,x in enumerate(xx):
+    #    # Get median flux/centers
+    #    medflux = np.median(flux[:,x-100:x+100],axis=1)
+    #    medcent = np.median(traceim[:,x-100:x+100],axis=1)
+
+    # It should be possible to do linear interpolation of all 2048 profiles
+    # at once without using a loop
+    
+    epsf = []
+    # Fiber loop
     for i in range(nfibers):
-        # Fit Gaussian
-        lo = int(np.floor(medcent[i]-3))
-        hi = int(np.ceil(medcent[i]+3))
-        xx = np.arange(hi-lo+1)+lo
-        yy = medflux[lo:hi+1]
-        initpar = [yy[3],medcent[i],1.0,0.0]
-        pars,perror = dln.gaussfit(xx,yy,initpar=initpar)
-        gcent[i] = pars[1]
-        offset[i] = pars[1]-medcent[i]
+        print('fiber = ',i)
+        off = func_poly2d([np.arange(2048),traceim[i,:]],*offcoef)
+        ycen = traceim[i,:]+off
+        ylo = int(np.min(np.round(ycen)))-14
+        yhi = int(np.max(np.round(ycen)))+14
+        ny = yhi-ylo+1
+        y = np.arange(ny)+ylo        
+        img = np.zeros((ny,2048),float)
+        #ylo = np.zeros(2048,int)
+        #yhi = np.zeros(2048,int)
+        # Column loop
+        for j in range(2048):
+            m1 = psf([j,ycen[j]],y=y,ycen=ycen[j])
+            m1 /= np.sum(m1)
+            img[:,j] = m1
+            #ylo[j] = y[0]
+            #yhi[j] = y[-1]
+                        
+        data = {'fiber':i, 'lo':ylo, 'hi':yhi, 'img':img, 'ycen':ycen}
+        #data = {'fiber':i, 'lo':ylo, 'hi':yhi, 'img':img, 'ycen':ycen}        
+        #data = {'fiber':i, 'lo':np.min(ycen)-14, 'hi':np.max(ycen)+14, 'img':img, 'ycen':ycen}        
+        #p = {'fiber': ptmp['FIBER'], 'lo': ptmp['LO'], 'hi': ptmp['HI'], img: ptmp['IMG']
+        epsf.append(data)
+        
+    return epsf
+        
 
-    # Fit line to it
-    coef = np.polyfit(np.arange(nfibers),offset,1)
-
-    return coef
-    
-def extractwing(frame,epsf):
+def extractwing(frame,psf,tracefile):
     """ Extract taking wings into account."""
 
     # ideas for extraction with wings if I can't fit fiber and 4 neighbors simultaneously:
@@ -805,11 +953,38 @@ def extractwing(frame,epsf):
     # -can iterate if wanted
     # -could do this just around bright stars?
 
-    # Step 1) Regular fiber+2 neighbor extraction
+    # Load PSF
+    if type(psf) is not PSF:
+        psffile = psf
+        psf = PSF.read(psffile)
 
-    # Step 2) Create model using the broad profile and find the residual of data-model.
+    # Load the data
+    if type(frame) is str:
+        framefile = frame
+        frame = loadframe(framefile)
+    # Load the trace imformation
+    traceim = fits.getdata(tracefile,0)  # [Nfibers,2048]
+        
+    # Step 1) Measure the offset
+    #  returns 2D linear of the offset
+    #  c0 + c1*x + c2*x*y + c3*y
+    offcoef =  getoffset(frame,traceim)
 
-    # Step 3) Subtract all neighbor profiles and refit fiber
+    # Step 2) Generate full PSFs for this image
+    # Generate the input that extract() expects
+    # this currently takes about 176 sec. to run
+    #epsf = fullepsgrid(psf,traceim,offcoef)
+    #np.savez('fullepsfgrid.npz',epsf=epsf)
+    epsf = np.load('fullepsfgrid.npz',allow_pickle=True)['epsf']
+    
+    # Step 3) Regular fiber+2 neighbor extraction
+    out1,back1,model1 = extract(frame,epsf)
+    
+    # Step 4) Create model using the broad profile and find the residual of data-model.
+    import pdb; pdb.set_trace()
+
+    
+    # Step 5) Subtract all neighbor profiles and refit fiber
 
     
     
