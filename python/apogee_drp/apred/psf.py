@@ -486,6 +486,19 @@ def loadframe(infile):
     frame = {'flux':flux, 'err':err, 'mask':mask, 'header':head}
     return frame
 
+def loadepsf(infile):
+    # Load Empirical PSF data
+    # this takes a while
+    phead = fits.getheader(infile,0)
+    ntrace = phead['ntrace']
+    epsf = []
+    hdu = fits.open(infile)
+    for itrace in range(ntrace):
+        ptmp = hdu[itrace+1].data
+        data = {'fiber': ptmp['FIBER'][0], 'lo': ptmp['LO'][0], 'hi': ptmp['HI'][0], 'img': ptmp['IMG'][0]}
+        epsf.append(data)
+    hdu.close()
+    return epsf
 
 def scat_remove(a,scat=None,mask=None):
     """
@@ -568,15 +581,15 @@ def scat_remove(a,scat=None,mask=None):
 def extract_pmul(p1lo,p1hi,img,p2):
     """ Helper function for extract()."""
     
-    lo = np.max([p1lo,p2['lo'][0]])
+    lo = np.max([p1lo,p2['lo']])
     k1 = lo-p1lo
-    l1 = lo-p2['lo'][0]
-    hi = np.min([p1hi,p2['hi'][0]])
+    l1 = lo-p2['lo']
+    hi = np.min([p1hi,p2['hi']])
     k2 = hi-p1lo
-    l2 = hi-p2['lo'][0]
+    l2 = hi-p2['lo']
     if lo>hi:
         out = np.zeros(2048,float)
-    img2 = p2['img'][0].T  # transpose
+    img2 = p2['img'].T  # transpose
     if lo==hi:
         out = img[:,k1:k2+1]*img2[:,l1:l2+1]
     else:
@@ -629,10 +642,10 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     nframe = len(frame)
     ntrace = len(epsf)
 
-    fibers = np.array([e['fiber'][0] for e in epsf])
-    red = frame['flux'].T
-    var = frame['err'].T**2
-    inmask = frame['mask'].T
+    fibers = np.array([e['fiber'] for e in epsf])
+    red = np.copy(frame['flux'].T)
+    var = np.copy(frame['err'].T**2)
+    inmask = np.copy(frame['mask'].T)
     # use the transposes
     
     if scat:
@@ -669,12 +682,12 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
         else:
             # get EPSF and set bad pixels to NaN
             p1 = epsf[k]
-            lo = epsf[k]['lo'][0]
-            hi = epsf[k]['hi'][0]
+            lo = epsf[k]['lo']
+            hi = epsf[k]['hi']
             bad = (~np.isfinite(red[:,lo:hi+1]) | (red[:,lo:hi+1] == 0) |
                    ((inmask[:,lo:hi+1] & BADMASK) > 0) )
             nbad = np.sum(bad)
-            img = p1['img'][0].T   # transpose
+            img = np.copy(p1['img'].T)   # transpose
             if nbad > 0:
                 img[bad] = np.nan
                 
@@ -693,14 +706,14 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
         if k==0:
             ll = 1
             for l in np.arange(k,k+2):
-                tridiag[ll,k,:] = extract_pmul(p1['lo'][0],p1['hi'][0],img,epsf[l])
+                tridiag[ll,k,:] = extract_pmul(p1['lo'],p1['hi'],img,epsf[l])
                 ll += 1
 
         # Last fiber (on top edge)
         elif k == ntrace-1:
             ll = 0
             for l in np.arange(k-1,k+1):
-                tridiag[ll,k,:] = extract_pmul(p1['lo'][0],p1['hi'][0],img,epsf[l])
+                tridiag[ll,k,:] = extract_pmul(p1['lo'],p1['hi'],img,epsf[l])
                 ll += 1
 
         # Background terms
@@ -711,7 +724,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
         else:
             ll = 0
             for l in np.arange(k-1,k+2):
-                tridiag[ll,k,:] = extract_pmul(p1['lo'][0],p1['hi'][0],img,epsf[l])
+                tridiag[ll,k,:] = extract_pmul(p1['lo'],p1['hi'],img,epsf[l])
                 ll += 1
 
     for i in np.arange(4,2044):
@@ -796,11 +809,11 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
             ns = len(junk)
         if nf > 0 and ns==0:
             p1 = epsf[k]
-            lo = epsf[k]['lo'][0]
-            hi = epsf[k]['hi'][0]
-            img = p1['img'][0].T
+            lo = epsf[k]['lo']
+            hi = epsf[k]['hi']
+            img = p1['img'].T
             rows = np.ones(hi-lo+1,int)
-            fiber = epsf[k]['fiber'][0]
+            fiber = epsf[k]['fiber']
             #model[:,lo:hi] += img[:,:]*(rows##t[:,fiber])
             model[:,lo:hi+1] += img[:,:]*(rows.reshape(-1,1)*t[:,fiber]).T                                    
     model = model.T
