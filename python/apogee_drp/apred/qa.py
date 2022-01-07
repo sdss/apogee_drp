@@ -350,7 +350,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
 
     # Normal plates:
-    pdb.set_trace()
     if platetype == 'normal': 
 
         # Make the apPlateSum file if it doesn't already exist.
