@@ -354,7 +354,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the apPlateSum file if it doesn't already exist.
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
-        pdb.set_trace()
         if makeplatesum == True:
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
@@ -617,11 +616,11 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         dateobs = dhdr['DATE-OBS']
         tt = Time(dateobs, format='fits')
         pdb.set_trace()
-        moonpos = get_moon(tt)
-        moonra = moonpos.ra.deg
-        moondec = moonpos.dec.deg
-        c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
-        c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
+        #moonpos = get_moon(tt)
+        #moonra = moonpos.ra.deg
+        #moondec = moonpos.dec.deg
+        #c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
+        #c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
         sep = c1.separation(c2)
         moondist = sep.deg
         moonphase = moon_illumination(tt)
