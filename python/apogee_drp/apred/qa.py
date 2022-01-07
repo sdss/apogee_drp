@@ -615,10 +615,10 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         # Get moon distance and phase.
         dateobs = dhdr['DATE-OBS']
         tt = Time(dateobs, format='fits')
+        pdb.set_trace()
         moonpos = get_moon(tt)
         moonra = moonpos.ra.deg
         moondec = moonpos.dec.deg
-        pdb.set_trace()
         c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
         c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
         sep = c1.separation(c2)
