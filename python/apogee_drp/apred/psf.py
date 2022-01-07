@@ -13,6 +13,7 @@ from scipy.optimize import curve_fit
 import statsmodels.api as sm
 from apogee_drp.utils import peakfit, mmm
 from numba import njit
+import copy
 
 WARNMASK = -16640
 BADMASK = 16639
@@ -26,6 +27,149 @@ def leaky_relu(z):
     """ This is the activation function used by default in all our neural networks. """
     return z*(z > 0) + 0.01*z*(z < 0)
 
+class PSFProfile(object):
+    """ This holds an oversampled PSF profile and interpolation coefficients
+         for fast interplation."""
+
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+        self.n = len(x)
+        self._xrange = [np.min(x),np.max(x)]
+        self._dx = self.x[1]-self.x[0]  # assuming constant steps
+        self._xcoefind = None
+        self._xcoefsteps = 2
+        self._coef = None
+
+        # Make the coefficients
+        self.makecoefs(steps=self._xcoefsteps)
+        
+    def __call__(self,x):
+        """ Interpolate onto x"""
+        return self.interpolate(x)
+
+
+    def __str__(self):
+        """ String representation of the PSFProfile."""
+        return self.__class__.__name__+'(%.2f<X<%.2f, Npix=%d)' % \
+                                        (self._xrange[0],self._xrange[1],self.n)
+
+    def __repr__(self):
+        """ String representation of the PSFProfile."""
+        return self.__class__.__name__+'(%.2f<X<%.2f, Npix=%d)' % \
+                                        (self._xrange[0],self._xrange[1],self.n)
+    
+    def interpolate(self,x):
+        """ Fast interpolation."""        
+        newy = np.zeros(len(x),float)
+        xind = np.floor((x-self._xrange[0])/(self._dx*self._xcoefsteps)).astype(int)
+        #good, = np.where((xind >= 0) & (xind <= self.n))
+        good, = np.where((x >= self._xrange[0]) & (x <= self._xrange[1]))
+        ngood = len(good)
+        if ngood>0:
+            newy[good] = self._coef[xind[good],0]*x[good]**2 + self._coef[xind[good],1]*x[good] + self._coef[xind[good],2]
+        # points outside of the range are zero by default
+        return newy
+
+
+    def makecoefs(self,kind=2,steps=2):
+        """ Make the polynomial coefficients."""
+        ncoef = self.n//steps
+        coef = np.zeros((ncoef,3),float)        
+        xcoefind = np.arange(1,self.n,steps)
+        for i,ind in enumerate(xcoefind):
+            lo = ind-1
+            hi = ind+2
+            if hi>self.n:
+                hi = self.n
+                lo = hi-3
+            # a*x^2+b*x+c
+            coef[i,:] = dln.quadratic_coefficients(self.x[lo:hi],self.y[lo:hi])  # a,b,c
+        self._xcoefind = xcoefind
+        self._coef = coef
+
+    def copy(self):
+        """ Make a copy of self."""
+        return copy.deepcopy(self)
+        
+    def __add__(self, other):
+        # Add number to profile
+        if isinstance(other,int) or isinstance(other,float):
+            new = self.copy()
+            new.y += other
+            new._coef += other
+            return new
+        # Add two profiles
+        if isinstance(other,PSFProfile) is False:
+            raise Exception('Other object must also be a PSFProfile')
+        if self.n != other.n:
+            raise Exception('Array lengths must be the same')
+        if self.x[0] != other.x[0] or self.x[-1] != other.x[-1]:
+            raise Exception('X arrays must be the same')
+        new = self.copy()
+        new.y = self.y + other.y
+        new._coef = self._coef + other._coef
+        return new
+
+    def __sub__(self, other):
+        # Subtract number to profile
+        if isinstance(other,int) or isinstance(other,float):
+            new = self.copy()
+            new.y -= other
+            new._coef -= other
+            return new        
+        if isinstance(other,PSFProfile) is False:
+            raise Exception('Other object must also be a PSFProfile')
+        if self.n != other.n:
+            raise Exception('Array lengths must be the same')
+        if self.x[0] != other.x[0] or self.x[-1] != other.x[-1]:
+            raise Exception('X arrays must be the same')
+        new = self.copy()
+        new.y = self.y - other.y
+        new._coef = self._coef - other._coef
+        return new        
+
+    def __mul__(self, other):
+        # Multiply profile by number
+        if isinstance(other,int) or isinstance(other,float):
+            new = self.copy()
+            new.y *= other
+            new._coef *= other
+            return new        
+        if isinstance(other,PSFProfile) is False:
+            raise Exception('Other object must also be a PSFProfile')
+        if self.n != other.n:
+            raise Exception('Array lengths must be the same')
+        if self.x[0] != other.x[0] or self.x[-1] != other.x[-1]:
+            raise Exception('X arrays must be the same')
+        new = self.copy()
+        new.y = self.y * other.y
+        new._coef = self._coef * other._coef
+        return new
+
+    def __truediv__(self, other):
+        # Divide profile by number
+        if isinstance(other,int) or isinstance(other,float):
+            new = self.copy()
+            new.y /= other
+            new._coef /= other
+            return new        
+        if isinstance(other,PSFProfile) is False:
+            raise Exception('Other object must also be a PSFProfile')
+        if self.n != other.n:
+            raise Exception('Array lengths must be the same')
+        if self.x[0] != other.x[0] or self.x[-1] != other.x[-1]:
+            raise Exception('X arrays must be the same')
+        new = self.copy()
+        new.y = self.y / other.y
+        new._coef = self._coef / other._coef
+        return new
+    
+        
+    # add some arithemtic so that you can ADD profiles together
+    # this will also add the coefficients
+        
+    
 class PSF(object):
 
     def __init__(self,coeffs,nxgrid=20,nygrid=50):
@@ -66,10 +210,7 @@ class PSF(object):
                 ycen = labels[1]
             yfine = np.arange(self.npix)
             fullprofile = profile
-            profile = interp1d(self.y,fullprofile,kind='quadratic',bounds_error=False,fill_value=np.nan)(y-ycen)
-            # Set values beyond the range to 0.0
-            if np.sum(~np.isfinite(profile))>0:
-                profile[~np.isfinite(profile)] = 0.0
+            profile = np.interp(y-ycen,self.y,fullprofile,left=0.0,right=0.0)
                 
         return profile
         
@@ -604,8 +745,49 @@ def solvefibers(x,xvar,ngood,v,b,c,vvar):
         x[j] = (v[j]-c[j]*x[j+1])/b[j]
         xvar[j] = (vvar[j]+c[j]**2*xvar[j+1])/b[j]**2            
     return x,xvar
-        
-def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
+
+def epsfmodel(epsf,spec,skip=False,subonly=False,fibers=None,yrange=[0,2048]):
+    """ Create model image using EPSF and best-fit values."""
+    # spec [2048,300], best-fit flux values
+    
+    ntrace = len(epsf)
+    if fibers is None:
+        fibers = np.arange(ntrace)
+    
+    # Create the Model 2D image
+    if yrange is not None:
+        model = np.zeros((2048,yrange[1]-yrange[0]),float)
+        ylo = yrange[0]
+    else:
+        ylo = 0
+        model = np.zeros((2048,2048),float)
+    t = np.copy(spec)
+    bad = (t<=0)
+    if np.sum(bad)>0:
+        t[bad] = 0
+    for k in fibers:
+        nf = 1
+        ns = 0
+        if subonly:
+            junk, = np.where(subonly==k)
+            nf = len(junk)
+        if skip:
+            junk, = np.where(skip==k)
+            ns = len(junk)
+        if nf > 0 and ns==0:
+            p1 = epsf[k]
+            lo = epsf[k]['lo']
+            hi = epsf[k]['hi']
+            img = p1['img'].T
+            rows = np.ones(hi-lo+1,int)
+            fiber = epsf[k]['fiber']
+            model[:,lo-ylo:hi+1-ylo] += img[:,:]*(rows.reshape(-1,1)*t[:,fiber]).T                                    
+    model = model.T
+
+    return model
+
+
+def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=None):
     """
     This extracts spectra using an empirical PSF.
 
@@ -620,6 +802,9 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
        A list with the empirical PSF.
     doback : boolean, optional
        Subtract the background.  False by default.
+    guess : dict
+       Initial guess of the fluxes.  This is used to subtract out the contribution
+         of fibers farther away.
 
     Returns
     -------
@@ -643,14 +828,21 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     ntrace = len(epsf)
 
     fibers = np.array([e['fiber'] for e in epsf])
-    red = np.copy(frame['flux'].T)
+    flux = np.copy(frame['flux'].T)
+    red = np.copy(frame['flux'].T)    
     var = np.copy(frame['err'].T**2)
     inmask = np.copy(frame['mask'].T)
     # use the transposes
     
     if scat:
         red = scat_remove(red,scat=scat,mask=inmask)
-    
+
+    # Guess input
+    if guess is not None:
+        gmodel = epsfmodel(epsf,guess)
+        # subtract the initial best-fit model from the data
+        red -= gmodel.T
+        
     # Initialize output arrays
     spec = np.zeros((2048,300),float)
     err = np.zeros((2048,300),float)+999999.09 #+baderr()
@@ -671,7 +863,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     inmask_warn = (inmask & WARNMASK) > 0
     inmask_bad = (inmask & BADMASK) > 0
 
-    for k in np.arange(0,ntrace+nback):
+    for k in np.arange(0,ntrace+nback):        
         # Background
         if k > ntrace-1:
             beta[k,:] = np.nansum(red[:,lo:hi+1],axis=1)
@@ -680,11 +872,29 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
 
         # Fibers
         else:
+            # Initial guess, add flux back in for this fiber and neighbors
+            if guess is not None:
+                if k==0:
+                    fibs = [k,k+1]
+                elif k==ntrace-1:
+                    fibs = [k-1,k]
+                else:
+                    fibs = [k-1,k,k+1]
+                ylo = 2048
+                yhi = 0
+                for j in fibs:
+                    ylo = np.minimum(epsf[j]['lo'],ylo)
+                    yhi = np.maximum(epsf[j]['hi'],yhi)
+                yhi += 1
+                gmodel1 = epsfmodel(epsf,guess,fibers=fibs,yrange=[ylo,yhi])
+                gmodel1 = gmodel1.T
+                red[:,ylo:yhi] += gmodel1
+                    
             # get EPSF and set bad pixels to NaN
             p1 = epsf[k]
             lo = epsf[k]['lo']
             hi = epsf[k]['hi']
-            bad = (~np.isfinite(red[:,lo:hi+1]) | (red[:,lo:hi+1] == 0) |
+            bad = (~np.isfinite(flux[:,lo:hi+1]) | (flux[:,lo:hi+1] == 0) |
                    ((inmask[:,lo:hi+1] & BADMASK) > 0) )
             nbad = np.sum(bad)
             img = np.copy(p1['img'].T)   # transpose
@@ -698,10 +908,15 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
             badmasked[k,:] = np.sum(inmask_bad[:,lo:hi+1],axis=1)
             badtot = np.maximum(badmasked[k,:],1)
             badmasked[k,:] = badmasked[k,:] / badtot
+            
             psftot[k,:] = np.nansum(img,axis=1)
             beta[k,:] = np.nansum(red[:,lo:hi+1]*img,axis=1)
             betavar[k,:] = np.nansum(var[:,lo:hi+1]*img**2,axis=1)
-
+            
+            # Initial guess, subtract model back out
+            if guess is not None:
+                red[:,ylo:yhi] -= gmodel1                
+                
         # First fiber (on the bottom edge)
         if k==0:
             ll = 1
@@ -793,31 +1008,9 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False):
     outstr = {'flux':spec, 'err':err, 'mask':outmask}
 
     # Create the Model 2D image
-    model = np.zeros(red.shape,float)
-    t = np.copy(spec)
-    bad = (t<=0)
-    if np.sum(bad)>0:
-        t[bad] = 0
-    for k in range(ntrace):
-        nf = 1
-        ns = 0
-        if subonly:
-            junk, = np.where(subonly==k)
-            nf = len(junk)
-        if skip:
-            junk, = np.where(skip==k)
-            ns = len(junk)
-        if nf > 0 and ns==0:
-            p1 = epsf[k]
-            lo = epsf[k]['lo']
-            hi = epsf[k]['hi']
-            img = p1['img'].T
-            rows = np.ones(hi-lo+1,int)
-            fiber = epsf[k]['fiber']
-            #model[:,lo:hi] += img[:,:]*(rows##t[:,fiber])
-            model[:,lo:hi+1] += img[:,:]*(rows.reshape(-1,1)*t[:,fiber]).T                                    
-    model = model.T
-            
+    model = epsfmodel(epsf,spec,subonly=subonly,skip=skip)
+
+    
     return outstr,back,model
 
 def func_poly2d(inp,*args):
@@ -876,7 +1069,7 @@ def getoffset(frame,traceim):
             ff = medflux[lo:hi+1]
             initpar = [ff[3],medcent[j],1.0,0.0]
             try:
-                pars,perror = dln.gaussfit(yy,ff,initpar=initpar)
+                pars,perror = dln.gaussfit(yy,ff,initpar=initpar,binned=True)
                 gcent[j] = pars[1]
                 offset[j] = pars[1]-medcent[j]                
             except:
@@ -993,16 +1186,12 @@ def extractwing(frame,psf,tracefile):
     # Step 3) Regular fiber+2 neighbor extraction
     out1,back1,model1 = extract(frame,epsf)
     
-    # Step 4) Create model using the broad profile and find the residual of data-model.
-    import pdb; pdb.set_trace()
-
-    
-    # Step 5) Subtract all neighbor profiles and refit fiber
-
-    
-    
+    # Step 4) Subtract all profiles except the fibers+2 neighbors and refit
+    out,back,model = extract(frame,epsf,guess=out1['flux'])
     
     import pdb; pdb.set_trace()
+    
+    return out,back,model
 
       
 if __name__ == '__main__' :
