@@ -13,6 +13,7 @@ from scipy.optimize import curve_fit
 import statsmodels.api as sm
 from apogee_drp.utils import peakfit, mmm
 from numba import njit
+import copy
 
 WARNMASK = -16640
 BADMASK = 16639
@@ -26,6 +27,149 @@ def leaky_relu(z):
     """ This is the activation function used by default in all our neural networks. """
     return z*(z > 0) + 0.01*z*(z < 0)
 
+class PSFProfile(object):
+    """ This holds an oversampled PSF profile and interpolation coefficients
+         for fast interplation."""
+
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+        self.n = len(x)
+        self._xrange = [np.min(x),np.max(x)]
+        self._dx = self.x[1]-self.x[0]  # assuming constant steps
+        self._xcoefind = None
+        self._xcoefsteps = 2
+        self._coef = None
+
+        # Make the coefficients
+        self.makecoefs(steps=self._xcoefsteps)
+        
+    def __call__(self,x):
+        """ Interpolate onto x"""
+        return self.interpolate(x)
+
+
+    def __str__(self):
+        """ String representation of the PSFProfile."""
+        return self.__class__.__name__+'(%.2f<X<%.2f, Npix=%d)' % \
+                                        (self._xrange[0],self._xrange[1],self.n)
+
+    def __repr__(self):
+        """ String representation of the PSFProfile."""
+        return self.__class__.__name__+'(%.2f<X<%.2f, Npix=%d)' % \
+                                        (self._xrange[0],self._xrange[1],self.n)
+    
+    def interpolate(self,x):
+        """ Fast interpolation."""        
+        newy = np.zeros(len(x),float)
+        xind = np.floor((x-self._xrange[0])/(self._dx*self._xcoefsteps)).astype(int)
+        #good, = np.where((xind >= 0) & (xind <= self.n))
+        good, = np.where((x >= self._xrange[0]) & (x <= self._xrange[1]))
+        ngood = len(good)
+        if ngood>0:
+            newy[good] = self._coef[xind[good],0]*x[good]**2 + self._coef[xind[good],1]*x[good] + self._coef[xind[good],2]
+        # points outside of the range are zero by default
+        return newy
+
+
+    def makecoefs(self,kind=2,steps=2):
+        """ Make the polynomial coefficients."""
+        ncoef = self.n//steps
+        coef = np.zeros((ncoef,3),float)        
+        xcoefind = np.arange(1,self.n,steps)
+        for i,ind in enumerate(xcoefind):
+            lo = ind-1
+            hi = ind+2
+            if hi>self.n:
+                hi = self.n
+                lo = hi-3
+            # a*x^2+b*x+c
+            coef[i,:] = dln.quadratic_coefficients(self.x[lo:hi],self.y[lo:hi])  # a,b,c
+        self._xcoefind = xcoefind
+        self._coef = coef
+
+    def copy(self):
+        """ Make a copy of self."""
+        return copy.deepcopy(self)
+        
+    def __add__(self, other):
+        # Add number to profile
+        if isinstance(other,int) or isinstance(other,float):
+            new = self.copy()
+            new.y += other
+            new._coef += other
+            return new
+        # Add two profiles
+        if isinstance(other,PSFProfile) is False:
+            raise Exception('Other object must also be a PSFProfile')
+        if self.n != other.n:
+            raise Exception('Array lengths must be the same')
+        if self.x[0] != other.x[0] or self.x[-1] != other.x[-1]:
+            raise Exception('X arrays must be the same')
+        new = self.copy()
+        new.y = self.y + other.y
+        new._coef = self._coef + other._coef
+        return new
+
+    def __sub__(self, other):
+        # Subtract number to profile
+        if isinstance(other,int) or isinstance(other,float):
+            new = self.copy()
+            new.y -= other
+            new._coef -= other
+            return new        
+        if isinstance(other,PSFProfile) is False:
+            raise Exception('Other object must also be a PSFProfile')
+        if self.n != other.n:
+            raise Exception('Array lengths must be the same')
+        if self.x[0] != other.x[0] or self.x[-1] != other.x[-1]:
+            raise Exception('X arrays must be the same')
+        new = self.copy()
+        new.y = self.y - other.y
+        new._coef = self._coef - other._coef
+        return new        
+
+    def __mul__(self, other):
+        # Multiply profile by number
+        if isinstance(other,int) or isinstance(other,float):
+            new = self.copy()
+            new.y *= other
+            new._coef *= other
+            return new        
+        if isinstance(other,PSFProfile) is False:
+            raise Exception('Other object must also be a PSFProfile')
+        if self.n != other.n:
+            raise Exception('Array lengths must be the same')
+        if self.x[0] != other.x[0] or self.x[-1] != other.x[-1]:
+            raise Exception('X arrays must be the same')
+        new = self.copy()
+        new.y = self.y * other.y
+        new._coef = self._coef * other._coef
+        return new
+
+    def __truediv__(self, other):
+        # Divide profile by number
+        if isinstance(other,int) or isinstance(other,float):
+            new = self.copy()
+            new.y /= other
+            new._coef /= other
+            return new        
+        if isinstance(other,PSFProfile) is False:
+            raise Exception('Other object must also be a PSFProfile')
+        if self.n != other.n:
+            raise Exception('Array lengths must be the same')
+        if self.x[0] != other.x[0] or self.x[-1] != other.x[-1]:
+            raise Exception('X arrays must be the same')
+        new = self.copy()
+        new.y = self.y / other.y
+        new._coef = self._coef / other._coef
+        return new
+    
+        
+    # add some arithemtic so that you can ADD profiles together
+    # this will also add the coefficients
+        
+    
 class PSF(object):
 
     def __init__(self,coeffs,nxgrid=20,nygrid=50):
@@ -66,10 +210,7 @@ class PSF(object):
                 ycen = labels[1]
             yfine = np.arange(self.npix)
             fullprofile = profile
-            profile = interp1d(self.y,fullprofile,kind='quadratic',bounds_error=False,fill_value=np.nan)(y-ycen)
-            # Set values beyond the range to 0.0
-            if np.sum(~np.isfinite(profile))>0:
-                profile[~np.isfinite(profile)] = 0.0
+            profile = np.interp(y-ycen,self.y,fullprofile,left=0.0,right=0.0)
                 
         return profile
         
@@ -928,7 +1069,7 @@ def getoffset(frame,traceim):
             ff = medflux[lo:hi+1]
             initpar = [ff[3],medcent[j],1.0,0.0]
             try:
-                pars,perror = dln.gaussfit(yy,ff,initpar=initpar)
+                pars,perror = dln.gaussfit(yy,ff,initpar=initpar,binned=True)
                 gcent[j] = pars[1]
                 offset[j] = pars[1]-medcent[j]                
             except:
