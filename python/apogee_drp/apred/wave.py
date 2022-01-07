@@ -70,6 +70,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
 
     load = apload.ApLoad(apred=vers,instrument=inst)
 
+    nums = np.array(nums)
     if name is None : name = nums[0]
     if test : name = int(name/10000)*10000+9999
     mjd = (nums[0]-nums[0]%10000)/10000 + 55562
@@ -476,6 +477,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
     if str(name).isnumeric()==False or len(str(name))<8:  # non-ID input
         out = os.path.dirname(out)+'/apWave-'+str(name)+'.fits'
+    print('Saving to ',out)
     save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,framesgroup=framesgroup,
                 rms=rms,sig=sig,allpars=allpars,linestr=linestr)
 

@@ -32,7 +32,8 @@ for i=0,n_elements(flats)-1 do begin
   flatlog = mrdfits(flats[i],1)
   for ichip=0,2 do begin
     if keyword_set(plots) then begin
-      file = flatdir+'/'+flats[i].name
+      file = flatdir+file_basename(flatlog[ichip].name)
+      if file_test(file) eq 0 then goto,BOMB
       flat = mrdfits(file+'.fits',1)
       FLATPLOT,flat,file
     endif
@@ -42,6 +43,7 @@ for i=0,n_elements(flats)-1 do begin
     endif
     file = string(format='("apFlat-",a,"-",i8.8)',chips[ichip],flatlog[ichip].num) 
     printf,lun,'<TD><center><a href=../plots/'+file+'.jpg><img src=../plots/'+file+'.jpg width=100></a>'
+    BOMB:
   endfor
 endfor
 printf,lun,'</table></body></html>'
