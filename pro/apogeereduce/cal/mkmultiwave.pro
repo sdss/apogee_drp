@@ -59,11 +59,19 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,unlo
   free_lun,lock
 
   ;; Process the frames and find lines
-  for i=0,n_elements(waveid)-1,2 do $
+  print,''
+  print,'***** Processing the frames and finding the lines *****'
+  print,''
+  for i=0,n_elements(waveid)-1,2 do begin
+    print,''
+    print,'--- Frame ',strtrim(i+1,2),':  ',waveid[i],' ---'
     MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock
+  endfor
 
   ;; New Python version!
-  cmd = ['apmultiwavecal','--name',name,'--vers',dirs.apred,'--plot','--hard','--inst',dirs.instrument]
+  print,'Running apmultiwavecal'
+  ;;cmd = ['apmultiwavecal','--name',name,'--vers',dirs.apred,'--plot','--hard','--inst',dirs.instrument]
+  cmd = ['apmultiwavecal','--name',name,'--vers',dirs.apred,'--hard','--inst',dirs.instrument,'--verbose']
   for i=0,n_elements(waveid)-1 do cmd=[cmd,string(waveid[i])]
   spawn,cmd,/noshell
   if file_test(apogee_filename('Wave',num=waveid[0],chip='a')) then begin
