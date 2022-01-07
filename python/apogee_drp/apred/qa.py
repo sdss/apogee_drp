@@ -354,6 +354,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the apPlateSum file if it doesn't already exist.
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
+        pdb.set_trace()
         if makeplatesum == True:
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
