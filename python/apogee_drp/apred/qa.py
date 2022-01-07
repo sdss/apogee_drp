@@ -349,7 +349,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
 
-    # Normal plates:.
+    # Normal plates:
     if platetype == 'normal': 
 
         # Make the apPlateSum file if it doesn't already exist.
@@ -618,11 +618,15 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         moonpos = get_moon(tt)
         moonra = moonpos.ra.deg
         moondec = moonpos.dec.deg
-        c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
-        c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
-        sep = c1.separation(c2)
-        moondist = sep.deg
-        moonphase = moon_illumination(tt)
+        try:
+            c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
+            c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
+            sep = c1.separation(c2)
+            moondist = sep.deg
+            moonphase = moon_illumination(tt)
+        except:
+            moondist = 0
+            moonphase = 0
 
         obs = np.zeros((nfiber,nchips), dtype=np.float64)
         sn  = np.zeros((nfiber,nchips), dtype=np.float64)
