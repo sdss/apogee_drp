@@ -63,10 +63,13 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
   i1 = ims[0]
   files = apogee_filename('1D',num=i1,chip=['a','b','c'])
   if total(file_test(files),/int) gt 0 then file_delete,files,/allow
-  if keyword_set(cmjd) then $
-    d = approcess(ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,littrowid=littrowid,persistid=persistid,/nocr,nfs=1,/doproc) $
-  else $
-    d = approcess(ims,darkid=darkid,flatid=flatid,psfid=psfid,littrowid=littrowid,persistid=persistid,/nocr,nfs=1,/doproc)
+  if keyword_set(cmjd) then begin
+    d = approcess(ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,littrowid=littrowid,$
+                  persistid=persistid,/nocr,nfs=1,/doproc,unlock=unlock)
+  endif else begin
+    d = approcess(ims,darkid=darkid,flatid=flatid,psfid=psfid,littrowid=littrowid,$
+                  persistid=persistid,/nocr,nfs=1,/doproc,unlock=unlock)
+  endelse
   cmjd = getcmjd(i1)
   inpfile = apogee_filename('1D',num=i1,chip='a',/dir)+string(format='(i8.8)',i1)
   ;inpfile = dirs.expdir+cmjd+'/'+string(format='(i8.8)',i1)

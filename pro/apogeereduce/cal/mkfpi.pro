@@ -60,7 +60,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;; Process the frames
   cmjd = getcmjd(psfid)
   MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
-  w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc)
+  w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc,unlock=unlock)
 
   ;; New Python version! 
   cmd = ['mkfpiwave',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--verbose']

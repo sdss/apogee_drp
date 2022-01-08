@@ -61,6 +61,7 @@
 ;  /verbose     Print a lot of information to the screen
 ;  /silent      Don't print anything to the screen
 ;  /stp         Stop at the end of the prrogram
+;  /unlock      Delete lock file and start fresh
 ;
 ; OUTPUTS:
 ;  1D extracted spectra are output.  One file for each frame.
@@ -78,7 +79,8 @@ pro ap2dproc,inpfile,psffile,extract_type,outdir=outdir,clobber=clobber,fixbadpi
              plugmap=plugmap,highrej=highrej,lowrej=lowrej,$
              verbose=verbose,silent=silent,recenterfit=recenterfit,recenterln2=recenterln2,$
              fitsigma=fitsigma,refpixzero=refpixzero,outlong=outlong,output=output,outmodel=outmodel,$
-             nowrite=nowrite,npolyback=npolyback,chips=chips,fibers=fibers,stp=stp,compress=compress
+             nowrite=nowrite,npolyback=npolyback,chips=chips,fibers=fibers,stp=stp,compress=compress,$
+             unlock=unlock
 
 common savedepsf, savedepsffiles, epsfchip
 if n_elements(savedepsfiles) eq 0 then savedepsffiles=[' ',' ',' ']  ; initialize if needed
@@ -287,7 +289,11 @@ lockfile = outdir+dirs.prefix+'1D-'+framenum ; lock file
 if getlocaldir() then lockfile=getlocaldir()+'/'+dirs.prefix+'1D-'+framenum+'.lock' $
 else lockfile=outdir+dirs.prefix+'1D-'+framenum+'.lock'
 
-while file_test(lockfile) do apwait,lockfile,10
+if not keyword_set(unlock) then begin
+  while file_test(lockfile) do apwait,lockfile,10
+endif else begin
+  if file_test(lockfile) then file_delete,lockfile,/allow
+endelse
 
 err=1
 while err ne 0 do begin

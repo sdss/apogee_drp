@@ -67,6 +67,7 @@
 ;                 that option was set) and gives more verbose output.
 ;  /verbose     Verbose output to the screen.
 ;  /silent      Don't print anything to the screen
+;  /unlock      Delete lock file and start fresh
 ;
 ; OUTPUTS;
 ;  The output is a [Nx,Ny,3] datacube written to "outfile".  The 3
@@ -651,7 +652,8 @@ pro ap3dproc,files0,outfile,detcorr=detcorr,bpmcorr=bpmcorr,darkcorr=darkcorr,li
          nfowler=nfowler,uptheramp=uptheramp,verbose=verbose,debug=debug,error=error,silent=silent,$
          cube=cube,head=head,output=output,crstr=crstr,satmask=satmask,criter=criter,$
          clobber=clobber,stp=stp,cleanuprawfile=cleanuprawfile,outlong=outlong,refonly=refonly,$
-         outelectrons=outelectrons,nocr=nocr,logfile=logfile,fitsdir=fitsdir,maxread=maxread,q3fix=q3fix,usereference=usereference,seq=seq
+         outelectrons=outelectrons,nocr=nocr,logfile=logfile,fitsdir=fitsdir,maxread=maxread,q3fix=q3fix,$
+         usereference=usereference,seq=seq,unlock=unlock
 
 ; This is the main program
 
@@ -732,7 +734,11 @@ FOR f=0,nfiles-1 do begin
   if n_elements(outfile) gt 0 then begin
     if getlocaldir() then lockfile=getlocaldir()+'/'+file_basename(outfile[f])+'.lock' $
     else lockfile=outfile[f]+'.lock'
-    while file_test(lockfile) do apwait,lockfile,10
+    if not keyword_set(unlock) then begin
+      while file_test(lockfile) do apwait,lockfile,10
+    endif else begin
+      if file_test(lockfile) then file_delete,lockfile,/allow
+    endelse
 
     ; Test if the output file already exists
     ;if n_elements(outfile) gt 0 then begin

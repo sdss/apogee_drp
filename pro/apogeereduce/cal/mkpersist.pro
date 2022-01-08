@@ -58,9 +58,9 @@ pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
   free_lun,lock
 
   if keyword_set(cmjd) then begin
-    d = approcess([dark,flat],cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,nfs=1,/doap3dproc) 
+    d = approcess([dark,flat],cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,nfs=1,/doap3dproc,unlock=unlock) 
   endif else begin
-    d = approcess([dark,flat],darkid=darkid,flatid=flatid,psfid=psfid,nfs=1,/doap3dproc)
+    d = approcess([dark,flat],darkid=darkid,flatid=flatid,psfid=psfid,nfs=1,/doap3dproc,unlock=unlock)
   endelse
 
   d = apread('2D',num=dark)

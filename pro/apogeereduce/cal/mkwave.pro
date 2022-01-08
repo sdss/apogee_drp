@@ -64,7 +64,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;; Process the frames
   cmjd = getcmjd(psfid)
   MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
-  w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc)
+  w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc,unlock=unlock)
 
   ;; New Python version! 
   cmd = ['apmultiwavecal','--name',strtrim(name,2),'--vers',dirs.apred]

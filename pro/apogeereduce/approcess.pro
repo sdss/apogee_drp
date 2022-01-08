@@ -54,7 +54,7 @@ function approcess,nums,cmjd=cmjd,clobber=clobber,onedclobber=onedclobber,detid=
                    waveid=waveid,littrowid=littrowid,persistid=persistid,nocr=nocr,stp=stp,$
                    jchip=jchip,nfs=nfs,nofs=nofs,doproc=doproc,doap3dproc=doap3dproc,$
                    doap2dproc=doap2dproc,logfile=logfile,outdir=outdir,maxread=maxread,$
-                   skywave=skywave,step=step
+                   skywave=skywave,step=step,unlock=unlock
 
 common savedepsf, savedepsffiles, epsfchip
 savedepsffiles = [' ',' ',' ']
@@ -121,7 +121,7 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
       AP3DPROC,ifile,ofile,flatcorr=flatcorr,darkcorr=darkcorr,bpmcorr=bpmcorr,$
                littrowcorr=littrowcorr,persistcorr=persistcorr,nocr=nocr,$
                uptheramp=uptheramp,nfowler=nfs,fitsdir=getlocaldir(),$
-               clobber=clobber,maxread=maxread[ichip]
+               clobber=clobber,maxread=maxread[ichip],unlock=unlock
     endfor
   endfor
 
@@ -138,7 +138,8 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
       wavedir = apogee_filename('Wave',num=0,chip='a',/dir)
       expdir = apogee_filename('2D',num=num,chip='a',/dir)
       AP2DPROC,expdir+'/'+string(format='(i8.8)',num),$
-               tracefile,4,outdir=outdir,wavefile=wavefile,clobber=clobber,skywave=skywave
+               tracefile,4,outdir=outdir,wavefile=wavefile,$
+               clobber=clobber,skywave=skywave,unlock=unlock
 
       chiptag = ['a','b','c']
       files = apogee_filename('2D',num=num,chip=chiptag)
