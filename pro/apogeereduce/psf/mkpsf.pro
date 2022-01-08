@@ -45,7 +45,13 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
     if file_test(lockfile) then file_delete,lockfile,/allow
   endelse
   ;; Does product already exist?
-  if file_test(psfdir+file) and not keyword_set(clobber) then begin
+  ;; check all three chips and the EPSF and ETrace files
+  tracedir = apogee_filename('ETrace',num=psfid[0],chip='c',/dir)
+  chips = ['a','b','c']
+  spsfid = string(psfid[0],format='(i08)')
+  allfiles = psfdir+['apPSF-'+chips+'-'+spsfid,'apEPSF-'+chips+'-'+spsfid]+'.fits'
+  allfiles = [allfiles,tracedir+'apETrace-'+chips+'-'+spsfid+'.fits']
+  if total(file_test(allfiles)) eq 9 and not keyword_set(clobber) then begin
     print,' PSF file: ', psfdir+file, ' already made'
     return
   endif
