@@ -52,7 +52,7 @@ if __name__ == '__main__' :
     start = time.time()
     print ("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
     # Sky lines
-    if args.fpi == None:
+    if args.fpiid == None:
         if args.frameid == None:
             wave.skycal(args.planfile,waveid=args.waveid,skyfile=args.skyfile,nosky=args.nosky)
         else :
