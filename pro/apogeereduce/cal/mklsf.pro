@@ -80,7 +80,7 @@ pro mklsf,lsfid,waveid,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,$
 
   lsffile = apogee_filename('1D',num=lsfid[0],chip='c')
 
-  MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,/clobber,/unlock
+  MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,/clobber,/unlock  ;; why is clobber set??
   w = approcess(lsfid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc,/skywave,/clobber)
   cmd = ['apskywavecal','dummy','--frameid',string(lsfid),'--waveid',string(waveid),'--apred',dirs.apred,'--telescope',dirs.telescope]
   spawn,cmd,/noshell

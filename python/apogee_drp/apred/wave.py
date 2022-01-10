@@ -704,7 +704,7 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],fram
     if linestr is not None:
         Table(linestr).write(out.replace('.fits','_lines.fits'),overwrite=True)
     # Generate empty .dat file
-    open(out.replace('.fits','.dat'),'a').close()
+    if out is not None: open(out.replace('.fits','.dat'),'a').close()
     return allhdu
 
 def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False):
@@ -1278,7 +1278,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
             nuse = 0
             fact = 1.
             niter = 0
-            while (nuse < 0.9*len(gd)) & (niter < 0.75*len(skyrows)) :
+            while (nuse < 0.9*len(gd)) & (niter < 5) :
                 linestr = findlines(frame,skyrows,waves,skylines,out=f,estsig=1.*fact)
                 use = []
                 nuse = 0
@@ -1292,6 +1292,11 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
                 print('fact : {:f} nuse: {:d}  ngd: {:d}'.format(fact,nuse,len(gd)))
                 fact *= 1.15
                 niter += 1
+
+            # Not enough lines to use
+            if nuse < 0.9*len(gd):
+                print('Not enough lines to use for frame ',name)
+                continue
 
             # Remove persistence affected fibers
             if int(p['mjd']) < 56860 and inst == 'apogee-n' :
@@ -1427,8 +1432,6 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
         try: os.mkdir(dirname+'/html')
         except: pass
         html.htmltab(grid,file=dirname+'/html/skywavecal.html',ytitle=ytit)
-
-    import pdb; pdb.set_trace()
 
     return linestr
 

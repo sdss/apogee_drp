@@ -56,7 +56,7 @@ lockfile=cal_dir+'telluric/'+dirs.prefix+'Telluric-'+waveid+'-'+lsfid+'.lock'
 while file_test(lockfile) do apwait,lockfile,10
 
 ; does convolved telluric file already exist? If not, make it!
-if keyword_set(clobber) or (not file_test(outfile[2])) then begin
+if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
 
   openw,lock,/get_lun,lockfile
   free_lun,lock

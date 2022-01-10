@@ -472,7 +472,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
 
     if lsf gt 1 then begin
       i = where(lsfstr.name eq lsf,nlsf)
-      if nlsfz le 0 then begin
+      if nlsf le 0 then begin
         print,'No matching calibration line for ', lsf
         stop
       endif
@@ -493,7 +493,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
           cmjd = getcmjd(ims[0],mjd=mjd)
           GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,multiwaveid=waveid,fiberid=fiberid
           MAKECAL,multiwave=waveid
-          print,'caling mklsf'
+          print,'calling mklsf'
           MKLSF,ims,waveid,darkid=darkid,flatid=flatid,psfid=lsfstr[i].psfid,fiberid=fiberid,$
                 full=full,newwave=newwave,clobber=clobber,pl=pl,unlock=unlock,/nowait
         endfor
