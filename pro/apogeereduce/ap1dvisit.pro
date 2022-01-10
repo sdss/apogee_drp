@@ -343,7 +343,7 @@ FOR i=0L,nplanfiles-1 do begin
         shifterr = 0.0 & ashifterr=0.0
         if dither_commanded ne 0 then ref_dither_commanded = dither_commanded
         print,'Shift = 0.0'
-        shiftout = {shiftfit:fltarr(2),chipshift:fltarr(3,2),chipfit:fltarr(4)}
+        shiftout = {type:'xcorr',shiftfit:fltarr(2),shfiterr:shifterr,chipshift:fltarr(3,2),chipfit:fltarr(4)}
       endelse
       apaddpar,frame,'APDITHERSHIFT: Measuring the dither shift',/history
       if shift[0] eq 0.0 then apaddpar,frame,'APDITHERSHIFT: This is the REFERENCE FRAME',/history

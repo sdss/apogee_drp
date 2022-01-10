@@ -399,6 +399,15 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     if bmask.is_bit_set(fiber['target2'][i],9) == 1: fiber['objtype'][i]='HOT_STD'
                     if bmask.is_bit_set(fiber['target2'][i],4) == 1: fiber['objtype'][i]='SKY'
                 else:
+                    # FPS object type from CATEGORY
+                    if fps:
+                        # objtype: STAR, HOT_STD, or SKY
+                        objtype = 'STAR'
+                        if plugmap['fiberdata']['category'][m].astype(str).upper() == 'SCIENCE': objtype='STAR'
+                        if plugmap['fiberdata']['category'][m].astype(str).upper() == 'SKY_APOGEE': objtype='SKY'
+                        if plugmap['fiberdata']['category'][m].astype(str).upper() == 'STANDARD_APOGEE': objtype='HOT_STD'
+                        fiber['objtype'][i] = objtype
+
                     # Get matching stars using catalogid for FPS
                     if fps:
                         match, = np.where(fiber['catalogid'][i]==ph['catalogid'])
@@ -467,8 +476,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                     fiber[n][i] = ph[n][match]
 
                         # APOGEE-1/2 target types
-                        if (plate < 15000):
-                            objtype = 'OBJECT'
+                        if (plate < 15000) and not fps:
+                            objtype = 'STAR'
                             if bmask.is_bit_set(fiber['target2'][i],9)==1: objtype='HOT_STD'
                             if bmask.is_bit_set(fiber['target2'][i],4)==1: objtype='SKY'
                         # SKY's

@@ -67,7 +67,6 @@ for i=0,2 do begin
   end
 end
 
-
 sz = size(frame.chipa.flux)
 npix = sz[1]
 pix = findgen(npix)
@@ -75,7 +74,6 @@ nfibers = sz[2]
 ; Is this a dither-combined spectrum?
 xscale = 1    ; assume original non-dither combined spectrum
 if npix eq 4096 then xscale = 2
-
 
 chiptag = ['a','b','c']
 
@@ -106,9 +104,11 @@ For i=0,2 do begin
     outframe = CREATE_STRUCT(outframe,'chip'+chiptag[i],chstr)
   endelse
 
-end
+endfor
 outframe = CREATE_STRUCT(outframe,'shift',frame.shift)
 
+;; FPS
+if long(plugmap.mjd) ge 59556 then fps=1 else fps=0
 
 ; Load the AIRGLOW linelist
 ;---------------------------
@@ -124,10 +124,17 @@ nairstr = n_elements(airstr)
 nplug=n_elements(plugmap.fiberdata.target1)
 sky=intarr(nplug)
 sci=intarr(nplug)
-for i=0,nplug-1 do begin
-  sky[i]=issky(plugmap.fiberdata[i].target1,plugmap.fiberdata[i].target2) 
-  sci[i]=isscience(plugmap.fiberdata[i].target1,plugmap.fiberdata[i].target2) 
-endfor
+if not keyword_set(fps) then begin
+  for i=0,nplug-1 do begin
+    sky[i] = issky(plugmap.fiberdata[i].target1,plugmap.fiberdata[i].target2) 
+    sci[i] = isscience(plugmap.fiberdata[i].target1,plugmap.fiberdata[i].target2) 
+  endfor
+endif else begin
+  gstar = where(plugmap.fiberdata.objtype eq 'STAR',ngstar)
+  if ngstar gt 0 then sci[gstar] = 1
+  gsky = where(plugmap.fiberdata.objtype eq 'SKY',ngsky)
+  if ngsky gt 0 then sky[gsky] = 1
+endelse
 
 skyplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
                    plugmap.fiberdata.holetype eq 'OBJECT' and $

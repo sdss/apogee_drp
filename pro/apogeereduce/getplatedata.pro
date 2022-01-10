@@ -416,6 +416,16 @@ for i=0,299 do begin
         if is_bit_set(fiber[i].sectarget,9) eq 1 then fiber[i].objtype='HOT_STD'
         if is_bit_set(fiber[i].sectarget,4) eq 1 then fiber[i].objtype='SKY'
       endif else begin
+        ;; FPS object type from CATEGORY
+        if keyword_set(fps) then begin
+          ;; objtype: STAR, HOT_STD, or SKY
+          objtype = 'STAR'
+          if strupcase(plugmap.fiberdata[m].category) eq 'SCIENCE' then objtype='STAR'
+          if strupcase(plugmap.fiberdata[m].category) eq 'SKY_APOGEE' then objtype='SKY'
+          if strupcase(plugmap.fiberdata[m].category) eq 'STANDARD_APOGEE' then objtype='HOT_STD'             
+          fiber[i].objtype = objtype
+        endif
+
         ;; Get matching stars from coordinate match
         match = where(abs(p.target_ra-fiber[i].ra) lt 0.00002 and $
                       abs(p.target_dec-fiber[i].dec) lt 0.00002,nmatch)
@@ -458,8 +468,8 @@ for i=0,299 do begin
               fiber[i].firstcarton = p[match].firstcarton
               fiber[i].pmra = p[match].pmra
               fiber[i].pmdec = p[match].pmdec
-              ;; objtype: OBJECT, HOT_STD, or SKY
-              objtype = 'OBJECT'
+              ;; objtype: STAR, HOT_STD, or SKY
+              objtype = 'STAR'
               if is_bit_set(fiber[i].sdssv_apogee_target0,0) then objtype='SKY'
               if is_bit_set(fiber[i].sdssv_apogee_target0,1) then objtype='HOT_STD'
             ;; SDSS-V FPS data
@@ -492,7 +502,7 @@ for i=0,299 do begin
             endelse
           endif
           ;; APOGEE-1/2 target types
-          if platenum lt 15000 then begin
+          if platenum lt 15000 and not keyword_set(fps) then begin
             objtype = 'OBJECT'
             if is_bit_set(fiber[i].target2,9) eq 1 then objtype='HOT_STD'
             if is_bit_set(fiber[i].target2,4) eq 1 then objtype='SKY'
