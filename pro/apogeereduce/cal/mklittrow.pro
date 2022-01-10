@@ -44,10 +44,12 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   endelse
 
   ;; Does product already exist?
+  ;;  we only use the b detector file
   if file_test(litdir+file) and not keyword_set(clobber) then begin
     print,' littrow file: ',litdir+file,' already made'
     return
   endif
+  file_delete,allfiles,/allow  ;; delete any existing files to start fresh
   ;; Open .lock file
   openw,lock,/get_lun,lockfile
   free_lun,lock

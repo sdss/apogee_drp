@@ -60,10 +60,17 @@ pro mklsf,lsfid,waveid,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,$
   endelse
 
   ; does product already exist?
-  if file_test(file+'.sav') and not keyword_set(clobber) then begin
+  ;; check all three chip files and .sav file exist
+  slsfid = string(lsfid[0],format='(i08)')
+  chips = ['a','b','c']
+  lsfdir = apogee_filename('LSF',num=lsfid[0],chip='c',/dir)
+  allfiles = lsfdir+dirs.prefix+'LSF-'+chips+'-'+slsfid+'.fits'
+  allfiles = [allfiles,lsfdir+dirs.prefix+'LSF-'+slsfid+'.sav']
+  if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
     print,' LSF file: ',file+'.sav',' already made'
     return
   endif
+  file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
   ;; Open .lock file
   openw,lock,/get_lun,lockfile

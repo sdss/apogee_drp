@@ -47,10 +47,15 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   endelse
 
   ;; Does product already exist?
-  if file_test(wavedir+file+'.fits') and not keyword_set(clobber) then begin
+  ;; check all three chip files
+  sfpiid = string(fpiid,format='(i08)')
+  chips = ['a','b','c']
+  allfiles = wavedir+dirs.prefix+'WaveFPI-'+chips+'-'+sfpiid+'.fits'
+  if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
     print,' Wavecal file: ', wavedir+file+'.fits', ' already made'
     return
   endif
+  file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
   print,'Making fpi: ', fpiid
   ;; Open .lock file

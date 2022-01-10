@@ -276,6 +276,8 @@ fpiid = 0
 
   Endfor ; frame loop
 
+;;stop
+
   ;; Now add in wavelength calibration information, with shift from
   ;;  fpi or sky lines
   ;; This used to call "apskywavecal", "ap1dwavecal" now handles

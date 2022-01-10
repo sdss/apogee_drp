@@ -48,7 +48,11 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,unlo
   endelse
 
   ;; Does product already exist?
-  if file_test(wavedir+file+'py.dat') and not keyword_set(clobber) then begin
+  chips = ['a','b','c']
+  swaveid = string(name,format='(i08)')
+  allfiles = wavedir+dirs.prefix+'Wave-'+chips+'-'+swaveid+'.fits'
+  allfiles = [allfiles,wavedir+dirs.prefix+'Wave-'+swaveid+'py.dat']
+  if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
     print,' Wavecal file: ', wavedir+file+'py.dat', ' already made'
     return
   endif
@@ -74,7 +78,10 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,unlo
   cmd = ['apmultiwavecal','--name',name,'--vers',dirs.apred,'--hard','--inst',dirs.instrument,'--verbose']
   for i=0,n_elements(waveid)-1 do cmd=[cmd,string(waveid[i])]
   spawn,cmd,/noshell
-  if file_test(apogee_filename('Wave',num=waveid[0],chip='a')) then begin
+  ;; Check that all three chip files exist
+  swaveid = string(name,format='(i08)')
+  allfiles = wavedir+dirs.prefix+'Wave-'+chips+'-'+swaveid+'.fits'
+  if total(file_test(allfiles)) eq 3 then begin
     openw,1,wavedir+file+'py.dat'
     close,1
   endif else stop,'HALT:  failed to make wavecal',waveid

@@ -49,10 +49,16 @@ pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
   endelse
 
   ;; Does product already exist?
-  if file_test(perdir+file) and not keyword_set(clobber) then begin
+  ;; check all three chip files
+  spersistid = string(persistid,format='(i08)')
+  chip = ['a','b','c']
+  allfiles = perdir+dirs.prefix+'Persist-'+chip+'-'+spersistid+'.fits'
+  if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
     print,' persist file: ',perdir+file,' already made'
     return
   endif
+  file_delete,allfiles,/allow  ;; delete any existing files to start fresh
+
   ;; Open .lock file
   openw,lock,/get_lun,lockfile
   free_lun,lock
@@ -67,7 +73,6 @@ pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
   f = apread('2D',num=flat)
 
   ;; Write out an integer mask
-  chip = ['a','b','c']
   for ichip=0,2 do begin
     persist = intarr(2048,2048)
     r = d[ichip].flux/f[ichip].flux

@@ -703,6 +703,8 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],fram
     # Save table of line measurements
     if linestr is not None:
         Table(linestr).write(out.replace('.fits','_lines.fits'),overwrite=True)
+    # Generate empty .dat file
+    open(out.replace('.fits','.dat'),'a').close()
     return allhdu
 
 def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False):
@@ -1425,6 +1427,9 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
         try: os.mkdir(dirname+'/html')
         except: pass
         html.htmltab(grid,file=dirname+'/html/skywavecal.html',ytitle=ytit)
+
+    import pdb; pdb.set_trace()
+
     return linestr
 
 def getskywave(frame,waveid,group=-1,fpiid=None,vers='test',telescope='apo25m',plugmap=None) :

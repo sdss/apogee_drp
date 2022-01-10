@@ -49,12 +49,13 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
   tracedir = apogee_filename('ETrace',num=psfid[0],chip='c',/dir)
   chips = ['a','b','c']
   spsfid = string(psfid[0],format='(i08)')
-  allfiles = psfdir+['apPSF-'+chips+'-'+spsfid,'apEPSF-'+chips+'-'+spsfid]+'.fits'
+  allfiles = psfdir+[dirs.prefix+'PSF-'+chips+'-'+spsfid,dirs.prefix+'EPSF-'+chips+'-'+spsfid]+'.fits'
   allfiles = [allfiles,tracedir+'apETrace-'+chips+'-'+spsfid+'.fits']
   if total(file_test(allfiles)) eq 9 and not keyword_set(clobber) then begin
     print,' PSF file: ', psfdir+file, ' already made'
     return
   endif
+  file_delete,allfiles,/allow  ;; delete any existing files to start fresh
   if not keyword_set(fiberid) then fiberid=0
   if not keyword_set(sparseid) then sparseid=0
 

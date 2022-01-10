@@ -34,12 +34,17 @@ darkdir = file_dirname(adarkfile)
 prefix = strmid(file_basename(adarkfile),0,2)
 darkfile = darkdir+'/'+prefix+string(format='("Dark-",i8.8)',i1) +'.tab'
 lockfile = darkfile+'.lock'
+chips = ['a','b','c']
 
 ;; Does file already exist?
-if file_test(darkfile) and ~keyword_set(clobber) then begin
+;; check all three chip files and the .tab file
+sdarkid = string(ims[0],format='(i08)')
+allfiles = darkdir+'/'+[dirs.prefix+'Dark-'+chips+'-'+sdarkid+'.fits',dirs.prefix+'Dark-'+sdarkid+'.tab']
+if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
   print,' Dark file: ', darkfile, ' already made'
   return
 endif
+file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
 ;; Is another process already creating file
 if not keyword_set(unlock) then begin
@@ -58,7 +63,6 @@ darklog = REPLICATE(sum,3)
 
 if not keyword_set(step) then step=0
 ;; Loop over the chips
-chips = ['a','b','c']
 for ichip=0,n_elements(chips)-1 do begin
   chip = chips[ichip]
 
@@ -249,7 +253,7 @@ file = prefix+string(format='("Dark-",i8.8)',i1)
 MWRFITS,darklog,darkdir+'/'+file+'.tab',/create
 
 ;; Remove lock file
-file_delete,lockfile
+file_delete,lockfile,/allow
 
 ;; Compile summary web page
 DARKHTML,darkdir

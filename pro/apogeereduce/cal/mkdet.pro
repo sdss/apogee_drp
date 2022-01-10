@@ -35,10 +35,16 @@ pro mkdet,detid,linid,unlock=unlock
 
  ;; Does product already exist?
  print,'testing detector file: ',detfile
- if file_test(detfile) and not keyword_set(clobber) then begin
+ ;; check all three chip files
+ sdetid = string(detid,format='(i08)')
+ chips = ['a','b','c']
+ detdir = apogee_filename('Detector',num=detid,chip='c',/dir)
+ allfiles = detdir+dirs.prefix+'Detector-'+chips+'-'+sdetid+'.fits'
+ if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
    print,' Detector file: ', detfile, ' already made'
    return
  endif
+ file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
  print,'Making Detector: ', detid
  ; open .lock file
@@ -74,7 +80,6 @@ pro mkdet,detid,linid,unlock=unlock
    ;;dark current (e-/sec): 0.011, 0.014, 0.008
  endelse
 
- chips = ['a','b','c']
  for ichip=0,2 do begin
    gain = [g,g,g,g]
    rn = [r[ichip],r[ichip],r[ichip],r[ichip]]*gain

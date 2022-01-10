@@ -51,6 +51,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   if not keyword_set(full) then full=0
   if not keyword_set(newwave) then newwave=0
   if not keyword_set(nskip) then nskip=1
+  chips = ['a','b','c']
 
   ;; Read calibration master file into calibration structures
   READCAL,file,darkstr,flatstr,sparsestr,fiberstr,badfiberstr,fixfiberstr,wavestr,lsfstr,bpmstr,$
@@ -75,7 +76,10 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     if dark gt 1 then begin
       file = apogee_filename('Dark',num=dark,/nochip)
       file = file_dirname(file)+'/'+file_basename(file,'.fits')
-      if file_test(file+'.tab') and not keyword_set(clobber) then begin
+      darkdir = apogee_filename('Dark',num=dark,chip='a',/dir)
+      sdarkid = string(dark,format='(i08)')
+      allfiles = darkdir+'/'+[dirs.prefix+'Dark-'+chips+'-'+sdarkid+'.fits',dirs.prefix+'Dark-'+sdarkid+'.tab']
+      if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
         print,' dark file: ',file+'.tab',' already made'
         return
       endif
@@ -112,7 +116,11 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     if flat gt 1 then begin
       file = apogee_filename('Flat',num=flat,/nochip)
       file = file_dirname(file)+'/'+file_basename(file,'.fits')
-      if file_test(file+'.tab') and not keyword_set(clobber) then begin
+      sflatid = string(flat,format='(i08)')
+      flatdir = apogee_filename('Flat',num=flat,chip='c',/dir)
+      allfiles = flatdir+dirs.prefix+'Flat-'+chips+'-'+sflatid+'.fits'
+      allfiles = [allfiles,flatdir+dirs.prefix+'Flat-'+sflatid+'.tab']
+      if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
         print,' flat file: ',file+'.tab',' already made'
         return
       endif
@@ -147,8 +155,11 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   if keyword_set(bpm) then begin
     print,'makecal bpm: ', bpm
     if bpm gt 1 then begin
+      sbpmid = string(bpm,format='(i08)')
+      bpmdir = apogee_filename('BPM',num=bpm,chip='c',/dir)
+      allfiles = bpmdir+dirs.prefix+'BPM-'+chips+'-'+sbpmid+'.fits'
       file = apogee_filename('BPM',num=bpm,chip='c')
-      if file_test(file) and not keyword_set(clobber) then begin
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
         print,' BPM file: ',file, ' already made'
         return
       endif
@@ -416,7 +427,11 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     if multiwave gt 1 then begin
       file = apogee_filename('Wave',num=multiwave,/nochip)
       file = file_dirname(file)+'/'+file_basename(file,'.fits')
-      if file_test(file+'.dat') and not keyword_set(clobber) then begin
+      swaveid = string(multiwave,format='(i08)')
+      wavedir = apogee_filename('Wave',num=multiwave,chip='a',/dir)
+      allfiles = wavedir+dirs.prefix+'Wave-'+chips+'-'+swaveid+'.fits'
+      allfiles = [allfiles,wavedir+dirs.prefix+'Wave-'+swaveid+'py.dat']
+      if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
         print,' multiwave file: ',file+'.dat',' already made'
         return
       endif
@@ -446,7 +461,11 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     print,'makecal lsf: ', lsf
     file = apogee_filename('LSF',num=lsf,/nochip)
     file = file_dirname(file)+'/'+file_basename(file,'.fits')
-    if file_test(file+'.sav') and not keyword_set(clobber) then begin
+    slsfid = string(lsf,format='(i08)')
+    lsfdir = apogee_filename('LSF',num=lsf,chip='c',/dir)
+    allfiles = lsfdir+dirs.prefix+'LSF-'+chips+'-'+slsfid+'.fits'
+    allfiles = [allfiles,lsfdir+dirs.prefix+'LSF-'+slsfid+'.sav']
+    if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
       print,' LSF file: ',file+'.sav',' already made'
       return
     endif

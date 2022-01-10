@@ -43,10 +43,16 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
   endelse
 
   ;: Does file already exist?
-  if file_test(flatfile) and not keyword_set(clobber) then begin
+  ;; check all three chip files
+  sflatid = string(ims[0],format='(i08)')
+  chip = ['a','b','c']
+  allfiles = flatdir+dirs.prefix+'Flat-'+chip+'-'+sflatid+'.fits'
+  allfiles = [allfiles,flatdir+dirs.prefix+'Flat-'+sflatid+'.tab']
+  if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
     print,' Flat file: ', flatfile, ' already made'
     return
   endif
+  file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
   ;; Open lock file
   openw,lock,/get_lun,lockfile
@@ -62,7 +68,6 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
   x1norm = 800 & x2norm=1200  ; region for getting normalization 
   y1norm = 800 & y2norm=1000
   filter = [50,1]             ; filter size for smoothing for large scale structure
-  chip = ['a','b','c']
  
   outdir = flatdir
   if file_test(outdir,/directory) eq 0 then file_mkdir,outdir

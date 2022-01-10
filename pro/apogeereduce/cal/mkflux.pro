@@ -48,11 +48,18 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
   endelse
 
   ;; Does product already exist?
-  if file_test(fluxdir+file) and not keyword_set(clobber) then begin
+  ;; check all three chip files
+  sfluxid = string(ims[0],format='(i08)')
+  chips = ['a','b','c']
+  fluxdir = apogee_filename('Flux',num=ims[0],chip='c',/dir)
+  allfiles = fluxdir+dirs.prefix+'Flux-'+chips+'-'+sfluxid+'.fits'
+  if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
     print,' flux file: ',fluxdir+file,' already made'
     if n_elements(temp) ne 0 then goto,response
     return
   endif
+  file_delete,allfiles,/allow  ;; delete any existing files to start fresh
+
   ;; Open .lock file
   openw,lock,/get_lun,fluxlockfile
   free_lun,lock

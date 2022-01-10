@@ -51,10 +51,16 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   endelse
 
   ;; Does product already exist?
-  if file_test(wavedir+file+'.dat') and not keyword_set(clobber) then begin
+  ;; check all three chips and .dat file
+  chips = ['a','b','c']
+  swaveid = string(waveid[0],format='(i08)')
+  allfiles = wavedir+dirs.prefix+'Wave-'+chips+'-'+swaveid+'.fits'
+  ;;allfiles = [allfiles,wavedir+file+'.dat']
+  if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
     print,' Wavecal file: ', wavedir+file+'.dat', ' already made'
     return
   endif
+  file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
   print,'Making wave: ', waveid
   ;; Open .lock file

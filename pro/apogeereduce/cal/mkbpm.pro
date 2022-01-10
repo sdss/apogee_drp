@@ -37,17 +37,21 @@ pro mkbpm,bpmid,darkid=darkid,flatid=flatid,badrow=badrow,clobber=clobber,unlock
  endelse
 
  ;; Does product already exist?
- if file_test(file) and not keyword_set(clobber) then begin
+ ;; check all three chip files
+ sbpmid = string(bpmid,format='(i08)')
+ chips = ['a','b','c']
+ bpmdir = apogee_filename('BPM',num=bpmid,chip='c',/dir)
+ allfiles = bpmdir+dirs.prefix+'BPM-'+chips+'-'+sbpmid+'.fits'
+ if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
    print,' BPM file: ', file, ' already made'
    return
  endif
+ file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
  print,'Making BPM: ', bpmid
  ;; Open .lock file
  openw,lock,/get_lun,lockfile
  free_lun,lock
-
- chips = ['a','b','c']
 
  for ichip=0,2 do begin
    chip = chips[ichip]
