@@ -349,6 +349,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
 
+    pdb.set_trace()
     # Normal plates:
     if platetype == 'normal': 
 
