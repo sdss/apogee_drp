@@ -489,7 +489,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     rows = 300 - fiber['fiberid']
     guide = plug['guidedata']
 
-    pdb.set_trace()
     # Add sn and obsmag columns to fiber structure
     dtype =        np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
     snColumn =     np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
@@ -1835,7 +1834,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             if objtype == 'SKY': color = '#D6EAF8'
 
             # Get target flag strings
-            pdb.set_trace()
             if 'apogee' in survey:
                 targflagtxt = bitmask.targflags(jdata['TARGET1'],jdata['TARGET2'],jdata['TARGET3'],
                                                 jdata['TARGET4'],survey=survey)
