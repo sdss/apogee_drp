@@ -349,7 +349,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
 
-    pdb.set_trace()
     # Normal plates:
     if platetype == 'normal': 
 
@@ -490,6 +489,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     rows = 300 - fiber['fiberid']
     guide = plug['guidedata']
 
+    pdb.set_trace()
     # Add sn and obsmag columns to fiber structure
     dtype =        np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
     snColumn =     np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
