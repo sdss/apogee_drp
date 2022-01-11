@@ -1834,6 +1834,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             if objtype == 'SKY': color = '#D6EAF8'
 
             # Get target flag strings
+            pdb.set_trace()
             if 'apogee' in survey:
                 targflagtxt = bitmask.targflags(jdata['TARGET1'],jdata['TARGET2'],jdata['TARGET3'],
                                                 jdata['TARGET4'],survey=survey)
