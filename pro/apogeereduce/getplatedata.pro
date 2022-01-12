@@ -384,6 +384,7 @@ for i=0,299 do begin
     fiber[i].zeta = plugmap.fiberdata[m].zeta
     if keyword_set(fps) then begin
       fiber[i].sdssv_apogee_target0 = plugmap.fiberdata[m].sdssv_apogee_target0
+      fiber[i].catalogid = plugmap.fiberdata[m].catalogid
     endif else begin
       fiber[i].target1 = plugmap.fiberdata[m].primTarget
       fiber[i].target2 = plugmap.fiberdata[m].secTarget
@@ -426,9 +427,14 @@ for i=0,299 do begin
           fiber[i].objtype = objtype
         endif
 
+        ;; Use CatalogID for FPS
+        if keyword_set(fps) then begin
+          match = where(p.catalogid eq fiber[i].catalogid,nmatch)
         ;; Get matching stars from coordinate match
-        match = where(abs(p.target_ra-fiber[i].ra) lt 0.00002 and $
-                      abs(p.target_dec-fiber[i].dec) lt 0.00002,nmatch)
+        endif else begin
+          match = where(abs(p.target_ra-fiber[i].ra) lt 0.00002 and $
+                        abs(p.target_dec-fiber[i].dec) lt 0.00002,nmatch)
+        endelse
         if nmatch gt 0 then begin
           ;; APOGEE-2 plate
           if tag_exist(p,'apogee2_target1') and platenum gt 7500 and platenum lt 15000 and not keyword_set(fps) then begin
