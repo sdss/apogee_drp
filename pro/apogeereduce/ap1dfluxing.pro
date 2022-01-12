@@ -62,22 +62,64 @@ nstars=ngd
 
 ; need tellurics to do relative flux cal
 if nstars gt 0 then begin
-  ; do polynomial fit to log(flux), with 4th order plus offset fo each star,
+  ; do polynomial fit to log(flux), with 4th order plus offset for each star,
   ; using every 10th pixel in each chip, so we have 190 pixels * 3 chips * ntelluric data points
   ; and 4 + ntellurics parameters
-  npix=190
-  design=fltarr(3L*npix*nstars,4+nstars)
-  y=fltarr(3L*npix*nstars)
+  ;; DLN 1/11/2022.  Had to switch to 5th order because the 4th order
+  ;; was providing a good enough fit.
+  xlo = 100
+  xhi = (npix/10*10)-100
+  nppix = ((npix/10*10)-200)/10+1
+  ;;nppix = 190
+
+  ;; Initial guess using median across all telluric stars
+  flux1 = outframe.(0).flux[xlo:xhi+9,300-tell]
+  medflux1 = median(reform(flux1,10,nppix,nstars),dim=1)
+  flux2 = outframe.(1).flux[xlo:xhi+9,300-tell]
+  medflux2 = median(reform(flux2,10,nppix,nstars),dim=1)
+  flux3 = outframe.(2).flux[xlo:xhi+9,300-tell]
+  medflux3 = median(reform(flux3,10,nppix,nstars),dim=1)
+  medflux = fltarr(3,nppix,nstars)
+  medflux[0,*,*] = medflux1
+  medflux[1,*,*] = medflux2
+  medflux[2,*,*] = medflux3
+  logmedflux = alog10(medflux)
+  ;; get offset for each star
+  staroff = fltarr(nstars)
+  for istar=0,nstars-1 do staroff[istar]=median(logmedflux[*,*,istar])
+  ;; offset the stars and take median over all stars
+  deltalogmedflux = logmedflux
+  for istar=0,nstars-1 do deltalogmedflux[*,*,istar]-=staroff[istar]
+  f = median(deltalogmedflux,dim=3)
+  x1 = outframe.(0).wavelength[xlo:xhi:10,150] - 16000.
+  x2 = outframe.(1).wavelength[xlo:xhi:10,150] - 16000.
+  x3 = outframe.(2).wavelength[xlo:xhi:10,150] - 16000.
+  x = transpose([[x1],[x2],[x3]])
+  coef = robust_poly_fit(x,f,5)
+  sigf = mad(f-poly(x,coef))
+
+  ;; Now perform the full solution with all stars
+  design = fltarr(3L*nppix*nstars,5+nstars)
+  y = fltarr(3L*nppix*nstars)
   for ichip=0,2 do begin
     x=outframe.(ichip).wavelength - 16000.
     for irow=0L,nstars-1 do begin
       row=300-tell[irow]
-      design[irow*3*npix+ichip*npix:irow*3*npix+ichip*npix+npix-1,0] = x[100:1990:10,row]^4
-      design[irow*3*npix+ichip*npix:irow*3*npix+ichip*npix+npix-1,1] = x[100:1990:10,row]^3
-      design[irow*3*npix+ichip*npix:irow*3*npix+ichip*npix+npix-1,2] = x[100:1990:10,row]^2
-      design[irow*3*npix+ichip*npix:irow*3*npix+ichip*npix+npix-1,3] = x[100:1990:10,row]
-      design[irow*3*npix+ichip*npix:irow*3*npix+ichip*npix+npix-1,4+irow] = 1.
-      y[irow*3*npix+ichip*npix:irow*3*npix+ichip*npix+npix-1] = alog10(outframe.(ichip).flux[100:1990:10,row])
+      design[irow*3*nppix+ichip*nppix:irow*3*nppix+ichip*nppix+nppix-1,0] = x[xlo:xhi:10,row]^5
+      design[irow*3*nppix+ichip*nppix:irow*3*nppix+ichip*nppix+nppix-1,1] = x[xlo:xhi:10,row]^4
+      design[irow*3*nppix+ichip*nppix:irow*3*nppix+ichip*nppix+nppix-1,2] = x[xlo:xhi:10,row]^3
+      design[irow*3*nppix+ichip*nppix:irow*3*nppix+ichip*nppix+nppix-1,3] = x[xlo:xhi:10,row]^2
+      design[irow*3*nppix+ichip*nppix:irow*3*nppix+ichip*nppix+nppix-1,4] = x[xlo:xhi:10,row]
+      design[irow*3*nppix+ichip*nppix:irow*3*nppix+ichip*nppix+nppix-1,5+irow] = 1.
+      ;; Outlier rejection
+      flx = alog10(outframe.(ichip).flux[xlo:xhi:10,row])
+      modelflx = poly(x[xlo:xhi:10,row],coef)+staroff[irow]
+      sig = mad(flx-modelflx)
+      thresh = 3*sig > 0.1
+      bad = where(abs(flx-modelflx) gt thresh,nbad)
+      if nbad gt 0 then flx[bad]=!values.f_nan
+      y[irow*3*nppix+ichip*nppix:irow*3*nppix+ichip*nppix+nppix-1] = flx
+      ;;y[irow*3*nppix+ichip*nppix:irow*3*nppix+ichip*nppix+nppix-1] = alog10(outframe.(ichip).flux[xlo:xhi:10,row])
     endfor
   endfor
   gd=where(finite(y) eq 1)
@@ -87,27 +129,33 @@ if nstars gt 0 then begin
   a=matrix_multiply(design,design,/atranspose)
   b=matrix_multiply(design,y,/atranspose)
   pars=invert(a)#b
+
   
   ; with plot option, show results for tellurics
   pl=0
   if keyword_set(pl) then begin
    for irow=0,nstars-1 do begin
     row=300-tell[irow]
+    yr = [0,20000.]
+    med = [median(outframe.(0).flux[*,row]),median(outframe.(1).flux[*,row]),median(outframe.(2).flux[*,row])]
+    yr[1] = max(med)*1.5
     for ichip=0,2 do begin
       w=outframe.(ichip).wavelength[*,row]
       spec=outframe.(ichip).flux[*,row]
       x = w-16000.
-      logflux = pars[0]*x^4 + pars[1]*x^3 + pars[2]*x^2 + pars[3]*x
+      ;;logflux = pars[0]*x^4 + pars[1]*x^3 + pars[2]*x^2 + pars[3]*x
+      logflux = pars[0]*x^5 + pars[1]*x^4 + pars[2]*x^3 + pars[3]*x^2 + pars[4]*x
       logflux += 4*alog10(w/16000.)
       resp= 10.^logflux
-      if ichip eq 0 then plot,w,spec,xr=[15100,17000],yr=[0,10000] else oplot,w,spec
-      oplot,w,10.^(logflux+pars[4+irow]),color=128
-      oplot,w,spec/resp,color=255
-  
+      if ichip eq 0 then plot,w,spec,xr=[15100,17000],yr=yr,xs=1,ys=1 else oplot,w,spec
+      ;;oplot,w,10.^(logflux+pars[4+irow]),color=128
+      oplot,w,10.^(logflux+pars[5+irow]),color=128
+      oplot,w,spec/resp,color=250  ;;255
     endfor
     stop
    endfor
   endif
+
   
   ; apply the fit. Note that a term is added so that response gives 1/lambda**-4 shape
   for ichip=0,2 do begin
@@ -115,7 +163,8 @@ if nstars gt 0 then begin
       w=outframe.(ichip).wavelength[*,row]
       spec=outframe.(ichip).flux[*,row]
       x = w-16000.
-      logflux = pars[0]*x^4 + pars[1]*x^3 + pars[2]*x^2 + pars[3]*x
+      ;;logflux = pars[0]*x^4 + pars[1]*x^3 + pars[2]*x^2 + pars[3]*x
+      logflux = pars[0]*x^5 + pars[1]*x^4 + pars[2]*x^3 + pars[3]*x^2 + pars[4]*x
       logflux += 4*alog10(w/16000.)
       resp= 10.^logflux
       outframe.(ichip).flux[*,irow] /= resp
@@ -126,6 +175,19 @@ if nstars gt 0 then begin
       outframe.(ichip).skyerr[*,irow] /= resp
     endfor
   endfor
+
+  ;; Put the coefficients in the header
+  headstr = 'AP1DFLUXING: '
+  APADDPAR,outframe,headstr+'5th order polynomial fit to telluric stars',/history
+  APADDPAR,outframe,headstr,'fit to log10 flux',/history
+  APADDPAR,outframe,headstr,'x = wavelength(A) - 16000.0',/history
+  APADDPAR,outframe,headstr+strtrim(nstars,2)+' telluric stars',/history
+  APADDPAR,outframe,headstr+strjoin(strtrim(tell,2),','),/history
+  APADDPAR,outframe,'FLXPAR1',pars[0],'x^5 term'
+  APADDPAR,outframe,'FLXPAR2',pars[1],'x^4 term'
+  APADDPAR,outframe,'FLXPAR3',pars[2],'x^3 term'
+  APADDPAR,outframe,'FLXPAR4',pars[3],'x^2 term'
+  APADDPAR,outframe,'FLXPAR5',pars[4],'x term'
   
 endif
 
