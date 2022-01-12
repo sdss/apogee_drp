@@ -17,7 +17,8 @@ Introduction
    install
    gettingstarted
    modules
-	      
+   fluxcal
+      
 *****
 Index
 *****
