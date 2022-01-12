@@ -1898,17 +1898,25 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             if os.path.exists(allVpath):
                 gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
                 if len(gd) == 1:
-                    vhelio = allV['VHELIOBARY'][gd][0]
-                    if type(vhelio) != str: vhelio = str("%.3f" % round(vhelio,3))
-                    ncomp = str(allV['N_COMPONENTS'][gd][0])
-                    rvteff = allV['RV_TEFF'][gd][0]
-                    if type(rvteff) != str: rvteff = str(int(round(rvteff)))
-                    rvlogg = allV['RV_LOGG'][gd][0]
-                    if type(rvlogg) != str: rvlogg = str("%.3f" % round(rvlogg,3))
-                    rvfeh = allV['RV_FEH'][gd][0]
-                    if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
-                    vcol = 'black'
-                    if np.absolute(float(vhelio)) > 400: vcol = 'red'
+                    try:
+                        vhelio = allV['VHELIOBARY'][gd][0]
+                        if type(vhelio) != str: vhelio = str("%.3f" % round(vhelio,3))
+                        ncomp = str(allV['N_COMPONENTS'][gd][0])
+                        rvteff = allV['RV_TEFF'][gd][0]
+                        if type(rvteff) != str: rvteff = str(int(round(rvteff)))
+                        rvlogg = allV['RV_LOGG'][gd][0]
+                        if type(rvlogg) != str: rvlogg = str("%.3f" % round(rvlogg,3))
+                        rvfeh = allV['RV_FEH'][gd][0]
+                        if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
+                        vcol = 'black'
+                        if np.absolute(float(vhelio)) > 400: vcol = 'red'
+                    except:
+                        vhelio = '???'
+                        ncomp = '?'
+                        rvteff = '???'
+                        rvlogg = '???'
+                        rvfeh = '???'
+                        vcol = 'red'
                     vishtml.write('<TD align ="center">' + snratio)
                     vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
                     vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
