@@ -1490,7 +1490,7 @@ def getExpStruct(data=None):
                    ('NFRAMES',   np.int16),
                    ('IMAGETYP',  np.str, 30),
                    ('PLATEID',   np.int16),
-                   ('CARTID',    np.star, 5),
+                   ('CARTID',    np.str, 5),
                    ('RA',        np.float64),
                    ('DEC',       np.float64),
                    ('SEEING',    np.float32),
