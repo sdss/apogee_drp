@@ -15,12 +15,11 @@ Introduction
    :maxdepth: 1
 
    install
-   gettingstarted
    overview
-   fluxcal
-   fpi
    rv
    qa
+   fpi
+   fluxcal
    access
    modules
    
