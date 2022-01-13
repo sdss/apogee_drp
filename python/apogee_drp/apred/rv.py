@@ -22,7 +22,7 @@ from scipy.ndimage.filters import median_filter, gaussian_filter
 import doppler 
 import multiprocessing as mp
 from astropy.table import Table, Column
-from apogee_drp.apred import bc
+from apogee_drp.apred import bc, qa
 
 
 colors = ['r','g','b','c','m','y','k']
@@ -228,7 +228,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         raise
 
 
-    # Now load the the Doppler the results
+    # Now load the Doppler results
     visits = []
     ncomponents = 0
     for i,(v,g) in enumerate(zip(dopvisitstr,gaussout)) :
@@ -378,6 +378,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                            apstar_vers=apstar_vers,apred=apred,nres=nres,logger=logger)
     else:
         logger.info('No good visits for '+star)
+
+    # Run QA code to make final plot and HTML page
+    qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
+    qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
 
     return
 
