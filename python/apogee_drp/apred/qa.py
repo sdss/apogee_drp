@@ -111,7 +111,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
 ###################################################################################################
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
-            makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True,
+            makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False,
             makenightqa=True, makemasterqa=True, makeqafits=True, makemonitor=True, clobber=True):
 
     # Establish telescope
@@ -139,8 +139,8 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
 ###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
-            makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, 
-            makestarplots=True, makemasterqa=True, makenightqa=True, makeqafits=True, 
+            makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, 
+            makestarplots=False, makemasterqa=True, makenightqa=True, makeqafits=True, 
             makemonitor=True, clobber=True):
 
     # Establish telescope and instrument
@@ -280,7 +280,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 ###################################################################################################
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
-         makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True, 
+         makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False, 
          makemasterqa=True, makenightqa=True, makemonitor=True, clobber=True):
 
     start_time = time.time()
