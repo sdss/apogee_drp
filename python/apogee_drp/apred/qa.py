@@ -2322,6 +2322,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     print("----> apStarPlots: Running plate "+plate+", MJD "+mjd)
 
     apodir = os.environ.get('APOGEE_REDUX') + '/'
+    load = apload.ApLoad(apred=apred, telescope=telescope)
 
     # Setup doppler cannon models
     models = doppler.cannon.models
@@ -2357,6 +2358,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     # Loop over the fibers
     for j in range(nfib):
         jdata = data[j]
+        pdb.set_trace()
         fiber = jdata['FIBERID']
         objtype = jdata['OBJTYPE']
         objid = jdata['OBJECT']
