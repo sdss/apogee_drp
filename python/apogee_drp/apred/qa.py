@@ -3259,8 +3259,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     color = '#B3E5FC'
             else:
                 if iprogram[i][0:2] == 'RM': color = '#B3E5FC'
-                if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
-                if iprogram[i] == 'AQMES-Medium': color = '#AED581'
+                if iprogram[i][0:5] == 'AQMES': color = '#DCEDC8'
                 if iprogram[i] == 'halo_dsph': color = '#D39FE4'
                 if iprogram[i][0:3] == 'MWM': color = '#D39FE4'
                 if iprogram[i][0:5] == 'eFEDS': color='#FFF9C4'
