@@ -3,8 +3,9 @@ Data
 ****
 
 There are a large number of APOGEE data products and directores.  The structure of the data products themselves
-is called the "data model".  There is a new SDSS-V data model product that is now used to describe all of the
-data files.
+is called the "data model".  There is a new `SDSS-V data model product <https://wiki.sdss.org/pages/viewpage.action?spaceKey=DATAMODEL&title=.Datamodel+vsdsswork>`_
+product (you need SDSS-V wiki authentication to access this) that is now used to describe all of the data files.
+This is still incomplete, but the older `SDSS data model <https://data.sdss.org/datamodel/files/>`_ is still useful during the transition period 
 
 The directory structure and file names are set by the ``tree`` product.  The SDSS-V settings are available
 `here <https://github.com/sdss/tree/blob/sdss5/data/sdss5.cfg>`_.  Some examples are::
