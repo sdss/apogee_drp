@@ -2180,7 +2180,12 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                     starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
                 starHTML.write('<BR><BR><BR><BR>\n')
                 starHTML.close()
-    print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
+
+    if objid is None:
+        print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    else:
+        print("----> makeStarHTML: Done with " + objid)
+
 
 ###################################################################################################
 ''' APVISITPLOTS: plots of the apVisit spectra '''
