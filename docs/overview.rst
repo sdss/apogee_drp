@@ -54,7 +54,7 @@ we are planning to use a domeflat "library" or a more sophisticated model of the
 calibration file (generated from a domeflat) is applied to remove fiber-to-fiber throughput and relative spectral response (see
 `fluxcal <fluxcal.html>`_ for more details). At the end of AP2D, a wavelength solution is "attached"
 to the output ap1D file.  The wavelengths are correct/shifted using night sky emission lines if the exposure was taken on sky.  
-See `fpi <fpi.html>`_ for more information on how the new
+See `FPI <fpi.html>`_ for more information on how the new
 `Fabry-Perot Interferometer <https://en.wikipedia.org/wiki/Fabry%E2%80%93P%C3%A9rot_interferometer>`_
 is used to improve the wavelength solutions.
 
@@ -65,13 +65,13 @@ Because APOGEE spectra are slightly undersampled, observations are taken at two 
 in the spectral dimension) to recover good sampling.  To combine these two sets of exposures, a precise dither shift is calculated between
 the exposures using the data themselves.  The spectra are then combined on a fiber-by-fiber basis using the measured shifts and
 sinc interpolation.  Finally, the spectra are flux calibrated using a 5th order polynomial fit to the telluric stars to get the correct
-spectral shape, and the 2MASS H-magnitudes to set the absolute flux scale (see `fluxcal <fluxcal.html>`_ for more details).
+spectral shape, and the 2MASS H-magnitudes to set the absolute flux scale (see `Flux Calibration <fluxcal.html>`_ for more details).
 The final product is apVisit files for each star.
 
 4. Radial Velocities
 --------------------
 
-Radial velocities (RV) are determined on a star-by-star basis using the `Doppler <https://github.com/dnidever/doppler>`_ software.
+Radial velocities (RV) are determined on a star-by-star basis using the `Doppler <https://doppler.readthedocs.io/en/latest/>`_ software.
 This fits a Cannon model to the data,
 determining Teff, logg, [Fe/H] and radial velocity in the process.  It actually fits all of the visit spectra simultaneously, using
 a single set of stellar parameters, but a separate radial velocity for each spectrum.  The model spectrum is convolved with the
