@@ -2052,7 +2052,6 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                 cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                 cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                 cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
-                pdb.set_trace()
                 hmag = vcat['hmag'][0]
                 cjmag = str("%.3f" % round(vcat['jmag'][0], 3))
                 chmag = str("%.3f" % round(vcat['hmag'][0], 3))
