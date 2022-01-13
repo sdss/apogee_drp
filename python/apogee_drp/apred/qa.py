@@ -2937,8 +2937,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Find all .log.html files, get all MJDs with data
         print("----> makeMasterQApages: Finding log files. Please wait.")
         logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
+        hemN = np.full(len(logsN), 'N').astype(str)
         logsS = np.array(glob.glob(datadirS+'/*/*.log.html'))
+        hemS = np.full(len(logsN), 'S').astype(str)
         logs = np.concatenate([logsN,logsS]) 
+        hem = np.concatenate([hemN,hemS]) 
         nlogs = len(logs)
         print("----> makeMasterQApages: Found "+str(nlogs)+" log files.")
 
@@ -2950,11 +2953,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Reverse sort the logs and MJDs so that newest MJD will be at the top
         order = np.argsort(mjd)
         logs = logs[order[::-1]]
+        hem = hem[order[::-1]]
         mjd = mjd[order[::-1]]
 
         # Limit to MJDs within mjdmin-mjdmax range
         gd = np.where((mjd >= mjdmin) & (mjd <= mjdmax))
         logs = logs[gd]
+        hem = hem[gd]
         mjd = mjd[gd]
         nmjd = len(mjd)
 
@@ -2995,7 +3000,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             datadir = datadirN
             datadir1 = 'data'
             color = 'FFFFF8A'
-            if 'lco' in logs[i]: 
+            if hem[i] == 'S': 
                 telescope = 'lco25m'
                 instrument = 'apogee-s'
                 datadir = datadirS
@@ -3205,15 +3210,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 c_icrs = SkyCoord(ra=tra*u.degree, dec=tdec*u.degree, frame='icrs')
                 ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
                 ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
+                load = apload.ApLoad(apred=apred, telescope=itel[i])
                 platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
                 if os.path.exists(platesumfile) is False:
                     tmp = glob.glob(platesumfile.replace('None','*'))
                     if len(tmp) > 0: 
                         platesumfile = tmp[0]
-                    else:
-                        tmp = glob.glob(platesumfile.replace('None','*').replace('asPlate','apPlate'))
-                        if len(tmp) > 0: 
-                            platesumfile = tmp[0]
                 if os.path.exists(platesumfile):
                     tmp = fits.open(platesumfile)
                     plsum1 = tmp[1].data
