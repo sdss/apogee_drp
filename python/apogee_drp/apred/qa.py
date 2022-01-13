@@ -3360,7 +3360,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#B3E5FC', label='RM ('+str(len(p))+')')
 
             p, = np.where((iprogram == 'AQMES-Wide') | (iprogram == 'AQMES-Medium') | (iprogram == 'AQMES-Bonus'))
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='AQMES-Wide ('+str(len(p))+')')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='AQMES ('+str(len(p))+')')
 
             p, = np.where((iprogram == 'MWM') | (iprogram == 'MWM_30min') | (iprogram == 'halo_dsph') | (iprogram == 'MWM2') | (iprogram == 'MWM2_sky')
                                               | (iprogram == 'MWM3') | (iprogram == 'MWM_30min2') | (iprogram == 'MWM_30min3'))
@@ -3371,7 +3371,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
             p, = np.where((iprogram != 'RM') & (iprogram != 'RMv2') & (iprogram != 'AQMES-Wide') & (iprogram != 'AQMES-Medium') & (iprogram != 'AQMES-Bonus') & 
                           (iprogram != 'MWM') & (iprogram != 'eFEDS1') & (iprogram != 'eFEDS2') & (iprogram != 'eFEDS3'))
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='P', s=msz, edgecolors='k', alpha=alf, c='#ffb3b3', label='other ('+str(len(p))+')')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='P', s=msz*0.7, edgecolors='k', alpha=alf, c='#ffb3b3', label='other ('+str(len(p))+')')
 
             ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
             ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
