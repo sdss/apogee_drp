@@ -7,13 +7,24 @@ can be used to ascertain the quality of the data and the reduction.
 
 Note, you need the sdss username and password to access the online QA pages.
 
-MJD List
+MJD and Fields Lists
 --------
 
-A good starting point is the
+One good starting points is the
 `MJD view <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/qa/mjd.html>`_
-page that lists all of the nights and observations.  There are columns for the raw exposure lists, the observers
-log, and visit level pages.  There are also links to the allVisit and allStar summary files.
+page. Each row of the table pertains to a particular night of observing, providing links to the
+on-site observers' logs, a list of the APOGEE exposures, the raw data directory, a nightly
+Q/A page giving information about the observations and data reduction, a Q/A page for each 
+observation, and links to allVisit and allStar summary files specific to the night in question. 
+Links to instrument monitoring plots and full-survey allVisit and allStar files are provided 
+at the top of the page. 
+
+Another good starting point is the `Fields view <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/qa/fields.html>`_ page.
+Each row of table pertains to an observation (normally multiple exosures, combined) of a 
+particular field center. The columns of the table provide information about the field, the
+observation of it, and the achieved S/N. Plots of all of the field centers observed to date
+are provided at the top of the page (Note: these plots is probably not being updated properly!) 
+along with links to instrument monitoring plots and full-survey allVisit and allStar files.
 
 Visit level
 -----------
