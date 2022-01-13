@@ -53,6 +53,9 @@ we are planning to use a domeflat "library" or a more sophisticated model of the
 calibration file (generated from a domeflat) is applied to remove fiber-to-fiber throughput and relative spectral response (see
 `fluxcal <fluxcal.html>`_ for more details). At the end of AP2D, a wavelength solution is "attached"
 to the output ap1D file.  The wavelengths are correct/shifted using night sky emission lines if the exposure was taken on sky.  
+See `fpi <fpi.html>`_ for more information on how the new
+`Fabry-Perot Interferometer <https://en.wikipedia.org/wiki/Fabry%E2%80%93P%C3%A9rot_interferometer>`_
+is used to improve the wavelength solutions.
 
 **AP1DVISIT** first performs corrections on each exposure and then combines multiple exposure at the end.  Sky fibers are used to remove
 the sky continuum and line emission from each fiber.  Hot star ("telluric") spectra are used to fit a model of the telluric absorption
