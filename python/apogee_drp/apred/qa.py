@@ -2011,8 +2011,6 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
             if (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
                 print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
 
-                pdb.set_trace()
-
                 # Find which healpix this star is in
                 healpix = apload.obj2healpix(objid)
                 healpixgroup = str(healpix // 1000)
@@ -2054,6 +2052,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                 cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                 cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                 cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
+                pdb.set_trace()
                 hmag = vcat['HMAG'][0]
                 cjmag = str("%.3f" % round(vcat['JMAG'][0], 3))
                 chmag = str("%.3f" % round(vcat['HMAG'][0], 3))
