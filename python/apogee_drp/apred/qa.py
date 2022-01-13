@@ -3208,8 +3208,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
                 if os.path.exists(platesumfile) is False:
                     tmp = glob.glob(platesumfile.replace('None','*'))
-                    if len(tmp) > 0: platesumfile = tmp[0]
-                    pdb.set_trace()
+                    if len(tmp) > 0: 
+                        platesumfile = tmp[0]
+                    else:
+                        tmp = glob.glob(platesumfile.replace('None','*').replace('asPlate','apPlate'))
+                        if len(tmp) > 0: 
+                            platesumfile = tmp[0]
                 if os.path.exists(platesumfile):
                     tmp = fits.open(platesumfile)
                     plsum1 = tmp[1].data
