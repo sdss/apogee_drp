@@ -2319,7 +2319,10 @@ def apVisitPlots(load=None, plate=None, mjd=None):
 ''' APSTARPLOTS: plots of the apStar spectra + best fitting Cannon model '''
 def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telescope=None):
 
-    print("----> apStarPlots: Running plate "+plate+", MJD "+mjd)
+    if objid is None:
+        print("----> apStarPlots: Running plate "+plate+", MJD "+mjd)
+    else:
+        print("----> apStarPlots: Running on single star:" + objid)
 
     apodir = os.environ.get('APOGEE_REDUX') + '/'
     load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -2502,7 +2505,10 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
                 plt.savefig(starPlotFilePath)
                 plt.close('all')
 
-    print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    if objid is None:
+        print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    else:
+        print("----> apStarPlots: Done with " + objid)
 
 ###################################################################################################
 '''  MAKENIGHTQA: makes nightly QA pages '''
