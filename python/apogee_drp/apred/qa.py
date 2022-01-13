@@ -111,7 +111,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
 ###################################################################################################
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
-            makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True,
+            makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False,
             makenightqa=True, makemasterqa=True, makeqafits=True, makemonitor=True, clobber=True):
 
     # Establish telescope
@@ -139,8 +139,8 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
 ###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
-            makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, 
-            makestarplots=True, makemasterqa=True, makenightqa=True, makeqafits=True, 
+            makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, 
+            makestarplots=False, makemasterqa=True, makenightqa=True, makeqafits=True, 
             makemonitor=True, clobber=True):
 
     # Establish telescope and instrument
@@ -280,7 +280,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 ###################################################################################################
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
-         makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True, 
+         makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False, 
          makemasterqa=True, makenightqa=True, makemonitor=True, clobber=True):
 
     start_time = time.time()
@@ -1962,17 +1962,17 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
-def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None): 
+def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None): 
 
-    print("----> makeStarHTML: Running plate " + plate + ", MJD " + mjd)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+
+    if objid is None:
+        print("----> makeStarHTML: Running plate "+plate+", MJD "+mjd)
+    else:
+        print("----> makeStarHTML: Running on single star:" + objid)
 
     # HTML header background color
     thcolor = '#DCDCDC'
-
-    if int(mjd)>59556:
-        fps = True
-    else:
-        fps = False
 
     # Setup doppler cannon models
     models = doppler.cannon.models
@@ -1982,39 +1982,34 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
-    # Load in the apPlate file
-    apPlate = load.apPlate(int(plate), mjd)
-    data = apPlate['a'][11].data[::-1]
-    nfiber = len(data)
-    cnfiber = str(nfiber)
+    nfiber = 300
+    if objid is None: 
+        # Load in the apPlate file
+        apPlate = load.apPlate(int(plate), mjd)
+        data = apPlate['a'][11].data[::-1]
+        cnfiber = str(nfiber)
+    else:
+        nfiber = 1
+        cnfiber = '1'
 
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
 
     # Loop over the fibers
-    for j in range(300):
-        jdata = data[j]
-        fiber = jdata['FIBERID']
+    for j in range(nfiber):
+        if objid is None:
+            jdata = data[j]
+            fiber = jdata['FIBERID']
+        else:
+            fiber = 100
         if fiber > 0:
-            objtype = jdata['OBJTYPE']
-            objid = jdata['OBJECT']
+            if objid is None:
+                objtype = jdata['OBJTYPE']
+                objid = jdata['OBJECT']
+            else:
+                objtype = 'SCI'
             if (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
                 print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
-
-                cfiber = str(fiber).zfill(3)
-                cblock = str(np.ceil(fiber / 30).astype(int))
-                hmag = jdata['HMAG']
-                cjmag = str("%.3f" % round(jdata['JMAG'], 3))
-                chmag = str("%.3f" % round(jdata['HMAG'], 3))
-                ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
-                jkcolor = jdata['JMAG'] - jdata['KMAG']
-                if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
-                cjkcolor = str("%.3f" % round(jkcolor, 3))
-                cra = str("%.5f" % round(jdata['RA'], 5))
-                cdec = str("%.5f" % round(jdata['DEC'], 5))
-                txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
-                txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
-                simbadlink = txt1 + txt2
 
                 # Find which healpix this star is in
                 healpix = apload.obj2healpix(objid)
@@ -2057,6 +2052,18 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                 cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                 cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
+                hmag = vcat['hmag'][0]
+                cjmag = str("%.3f" % round(vcat['jmag'][0], 3))
+                chmag = str("%.3f" % round(vcat['hmag'][0], 3))
+                ckmag = str("%.3f" % round(vcat['kmag'][0],3 ))
+                jkcolor = vcat['jmag'][0] - vcat['kmag'][0]
+                if (vcat['jmag'][0] < 0) | (vcat['kmag'][0] < 0): jkcolor = -9.999
+                cjkcolor = str("%.3f" % round(jkcolor, 3))
+                cra = str("%.5f" % round(vcat['ra'][0], 5))
+                cdec = str("%.5f" % round(vcat['dec'][0], 5))
+                txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
+                txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
+                simbadlink = txt1 + txt2
 
                 nvis = len(vcat)
                 cvhelio = '----';  cvscatter = '----'
@@ -2117,7 +2124,10 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 starHTML.write('<TR bgcolor="'+thcolor+'">')
                 starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
                 for k in range(nvis):
-                    cmjd = str(vcat['mjd'][k])
+                    mjd = vcat['mjd'][k]
+                    fps = True
+                    if mjd < 59556: fps = False
+                    cmjd = str(mjd)
                     dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
                     cplate = vcat['plate'][k]
                     cfield = vcat['field'][k]
@@ -2129,6 +2139,7 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                         platehdus = fits.open(platefile)
                         platetab = platehdus[1].data
                         ccart = str(platetab['CART'][0])
+                    
                     csnr = str("%.1f" % round(vcat['snr'][k],1))
                     cvhelio = str("%.2f" % round(vcat['vheliobary'][k],2))
                     visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
@@ -2169,7 +2180,12 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                     starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
                 starHTML.write('<BR><BR><BR><BR>\n')
                 starHTML.close()
-    print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
+
+    if objid is None:
+        print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    else:
+        print("----> makeStarHTML: Done with " + objid)
+
 
 ###################################################################################################
 ''' APVISITPLOTS: plots of the apVisit spectra '''
@@ -2317,14 +2333,21 @@ def apVisitPlots(load=None, plate=None, mjd=None):
 
 ###################################################################################################
 ''' APSTARPLOTS: plots of the apStar spectra + best fitting Cannon model '''
-def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
+def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telescope=None):
 
-    print("----> apStarPlots: Running plate "+plate+", MJD "+mjd)
+    if objid is None:
+        print("----> apStarPlots: Running plate "+plate+", MJD "+mjd)
+    else:
+        print("----> apStarPlots: Running on single star:" + objid)
 
     apodir = os.environ.get('APOGEE_REDUX') + '/'
+    load = apload.ApLoad(apred=apred, telescope=telescope)
 
     # Setup doppler cannon models
     models = doppler.cannon.models
+
+    # Base directory where star-level stuff goes
+    starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
 
     # Basic plotting parameters
     fontsize = 24;   fsz = fontsize * 0.75
@@ -2337,23 +2360,27 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
     xmin = np.array([15130, 15845, 16460])
     xmax = np.array([15825, 16448, 16968])
 
-    # Load in the apPlate file
-    apPlate = load.apPlate(int(plate), mjd)
-    data = apPlate['a'][11].data[::-1]
-    objtype = data['OBJTYPE']
-    nfiber = len(data)
-    cnfiber = str(nfiber)
-    
-    # Base directory where star-level stuff goes
-    starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
+    nfib = 300
+    if objid is None: 
+        # Load in the apPlate file
+        apPlate = load.apPlate(int(plate), mjd)
+        data = apPlate['a'][11].data[::-1]
+        objtype = data['OBJTYPE']
+        nfiber = len(data)
+        cnfiber = str(nfiber)
+    else:
+        nfib = 1
 
     # Loop over the fibers
-    for j in range(300):
-        jdata = data[j]
-        fiber = jdata['FIBERID']
-        objtype = jdata['OBJTYPE']
-        objid = jdata['OBJECT']
-        chmag = str("%.3f" % round(jdata['HMAG'], 3))
+    for j in range(nfib):
+        if objid is None:
+            jdata = data[j]
+            fiber = jdata['FIBERID']
+            objtype = jdata['OBJTYPE']
+            objid = jdata['OBJECT']
+        else:
+            objtype = 'SCI'
+            fiber = 100
 
         # Only run it for valid stars
         if (fiber > 0) & (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
@@ -2372,12 +2399,17 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
             if len(apStarCheck) < 1: 
                 print("----> apStarPlots:    apStar file not found for " + objid)
             else:
-                print("----> apStarPlots:    making plot for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
+                if objid is None:
+                    print("----> apStarPlots:    making plot for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
+                else:
+                    print("----> apStarPlots:    making plot for " + objid)
                 # Find the newest apStar file
                 apStarCheck.sort()
                 apStarCheck = np.array(apStarCheck)
                 apStarNewest = os.path.basename(apStarCheck[-1])
                 apStarPath = starDir + apStarNewest
+                hdr = fits.getheader(apStarPath)
+                chmag = str("%.3f" % round(hdr['HMAG'], 3))
                 apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
                 # Set up plot directories and plot file name
@@ -2492,7 +2524,10 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
                 plt.savefig(starPlotFilePath)
                 plt.close('all')
 
-    print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    if objid is None:
+        print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    else:
+        print("----> apStarPlots: Done with " + objid)
 
 ###################################################################################################
 '''  MAKENIGHTQA: makes nightly QA pages '''
@@ -2937,8 +2972,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Find all .log.html files, get all MJDs with data
         print("----> makeMasterQApages: Finding log files. Please wait.")
         logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
+        hemN = np.full(len(logsN), 'N').astype(str)
         logsS = np.array(glob.glob(datadirS+'/*/*.log.html'))
+        hemS = np.full(len(logsN), 'S').astype(str)
         logs = np.concatenate([logsN,logsS]) 
+        hem = np.concatenate([hemN,hemS]) 
         nlogs = len(logs)
         print("----> makeMasterQApages: Found "+str(nlogs)+" log files.")
 
@@ -2950,11 +2988,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Reverse sort the logs and MJDs so that newest MJD will be at the top
         order = np.argsort(mjd)
         logs = logs[order[::-1]]
+        hem = hem[order[::-1]]
         mjd = mjd[order[::-1]]
 
         # Limit to MJDs within mjdmin-mjdmax range
         gd = np.where((mjd >= mjdmin) & (mjd <= mjdmax))
         logs = logs[gd]
+        hem = hem[gd]
         mjd = mjd[gd]
         nmjd = len(mjd)
 
@@ -2976,15 +3016,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
-        html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
+        html.write('<p> <b>Summary files:</b> <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
         #html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
         html.write( 'Yellow: APO 2.5m, Green: LCO 2.5m <BR>\n')
         #html.write('<br>Click on column headings to sort\n')
 
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#eaeded"><TH>Date <TH>Observer Log <TH>Exposure Log <TH>Raw Data <TH>Night QA')
-        html.write('<TH>Observed Plate QA <TH>Summary Files <TH>Moon Phase\n')
+        html.write('<TR bgcolor="#eaeded"><TH>(1)<BR>Date <TH>(2)<BR>Observer Log <TH>(3)<BR>Exposure Log <TH>(4)<BR>Raw Data <TH>(5)<BR>Night QA')
+        html.write('<TH>(6)<BR>Observed Plate QA <TH>(7)<BR>Summary Files <TH>(8)<BR> Phase\n')
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
@@ -2995,7 +3035,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             datadir = datadirN
             datadir1 = 'data'
             color = 'FFFFF8A'
-            if 'lco' in logs[i]: 
+            if hem[i] == 'S': 
                 telescope = 'lco25m'
                 instrument = 'apogee-s'
                 datadir = datadirS
@@ -3152,9 +3192,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<br><br>Click on column headings to sort<br>\n')
 
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASPCAP <TH>PLATE <TH>MJD <TH>LOC <TH>RA <TH>DEC <TH>S/N(red) <TH>S/N(green) <TH>S/N(blue)')
+        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASPCAP <TH>PLATE<BR>OR<BR>CONFIG <TH>MJD')
+        html.write('<TH>LOC <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>S/N(red) <TH>S/N(green) <TH>S/N(blue)')
         html.write('<TH>N<BR>EXP. <TH>TOTAL<BR>EXPTIME <TH>CART <TH>ZERO <TH>MOON<BR>PHASE\n')
     #    html.write('<TR><TD>FIELD<TD>Program<TD>ASPCAP<br>'+apred_vers+'/'+aspcap_vers+'<TD>PLATE<TD>MJD<TD>LOCATION<TD>RA<TD>DEC<TD>S/N(red)<TD>S/N(green)<TD>S/N(blue)\n')
+
 
         plates = np.array(glob.glob(apodir+apred+'/visit/*/*/*/*/'+'*PlateSum*.fits'))
         nplates = len(plates)
@@ -3170,6 +3212,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         iloc = np.zeros(nplates).astype(str)
         ira = np.zeros(nplates).astype(str)
         idec = np.zeros(nplates).astype(str)
+        ilon = np.zeros(nplates).astype(str)
+        ilat = np.zeros(nplates).astype(str)
         inexposures = np.zeros(nplates).astype(str)
         iexptime = np.zeros(nplates).astype(str)
         icart = np.zeros(nplates).astype(str)
@@ -3194,9 +3238,19 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if len(gd)>0:
                 iprogram[i] = plans['PLATEPLANS']['programname'][gd][0].astype(str)
                 iloc[i] = str(int(round(plans['PLATEPLANS']['locationid'][gd][0])))
-                ira[i] = str("%.6f" % round(plans['PLATEPLANS']['raCen'][gd][0],6))
-                idec[i] = str("%.6f" % round(plans['PLATEPLANS']['decCen'][gd][0],6))
+                tra = plans['PLATEPLANS']['raCen'][gd][0]
+                tdec = plans['PLATEPLANS']['decCen'][gd][0]
+                ira[i] = str("%.6f" % round(tra,6))
+                idec[i] = str("%.6f" % round(tdec,6))
+                c_icrs = SkyCoord(ra=tra*u.degree, dec=tdec*u.degree, frame='icrs')
+                ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
+                ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
+                load = apload.ApLoad(apred=apred, telescope=itel[i])
                 platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
+                if os.path.exists(platesumfile) is False:
+                    tmp = glob.glob(platesumfile.replace('None','*'))
+                    if len(tmp) > 0: 
+                        platesumfile = tmp[0]
                 if os.path.exists(platesumfile):
                     tmp = fits.open(platesumfile)
                     plsum1 = tmp[1].data
@@ -3205,6 +3259,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     icart[i] = str(plsum1['CART'][0])
                     izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
                     imoonphase[i] = np.mean(plsum1['MOONPHASE'])
+                else:
+                    print('----> makeMasterQApages: Problem with plate/config ' + iplate[i] + ', MJD ' + imjd[i] + '. PlateSum not found.')
 
         # Sort by MJD
         order = np.argsort(imjd)
@@ -3217,6 +3273,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         iloc = iloc[order]
         ira = ira[order]
         idec = idec[order]
+        ilon = ilon[order]
+        ilat = ilat[order]
         inexposures = inexposures[order]
         icart = icart[order]
         izero = izero[order]
@@ -3235,11 +3293,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 if iprogram[i] == 'RM': 
                     color = '#B3E5FC'
             else:
-                if iprogram[i][0:2] == 'RM': color = '#B3E5FC'
-                if iprogram[i] == 'AQMES-Wide': color = '#DCEDC8'
-                if iprogram[i] == 'AQMES-Medium': color = '#AED581'
+                if iprogram[i][0:2] == 'RM': color = '#D39FE4'
+                if iprogram[i][0:5] == 'AQMES': color = '#DCEDC8'
                 if iprogram[i] == 'halo_dsph': color = '#D39FE4'
-                if iprogram[i][0:3] == 'MWM': color = '#D39FE4'
+                if iprogram[i][0:3] == 'MWM': color = '#B3E5FC'
                 if iprogram[i][0:5] == 'eFEDS': color='#FFF9C4'
 
             html.write('<TR bgcolor=' + color + '><TD>' + iname[i]) 
@@ -3251,6 +3308,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD align="center">' + iloc[i])
             html.write('<TD align="right">' + ira[i]) 
             html.write('<TD align="right">' + idec[i])
+            html.write('<TD align="right">' + ilon[i]) 
+            html.write('<TD align="right">' + ilat[i])
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][0],1))) 
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][1],1))) 
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][2],1))) 
@@ -3332,20 +3391,23 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 y = dec * (math.pi/180)
 
             p, = np.where((iprogram == 'RM') | (iprogram == 'RMv2'))
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#B3E5FC', label='RM ('+str(len(p))+')')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='P', s=msz, edgecolors='k', alpha=alf, c='#D39FE4', label='RM ('+str(len(p))+')')
 
-            p, = np.where(iprogram == 'AQMES-Wide')
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='AQMES-Wide ('+str(len(p))+')')
-
-            p, = np.where(iprogram == 'AQMES-Medium')
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='v', s=msz, edgecolors='k', alpha=alf, c='#AED581', label='AQMES-Medium ('+str(len(p))+')')
+            p, = np.where((iprogram == 'AQMES-Wide') | (iprogram == 'AQMES-Medium') | (iprogram == 'AQMES-Bonus'))
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='AQMES ('+str(len(p))+')')
 
             p, = np.where((iprogram == 'MWM') | (iprogram == 'MWM_30min') | (iprogram == 'halo_dsph') | (iprogram == 'MWM2') | (iprogram == 'MWM2_sky')
                                               | (iprogram == 'MWM3') | (iprogram == 'MWM_30min2') | (iprogram == 'MWM_30min3'))
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='*', s=msz*2, edgecolors='k', alpha=alf, c='#E5ADF7', label='MWM ('+str(len(p))+')')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='*', s=msz*2, edgecolors='k', alpha=alf, c='#B3E5FC', label='MWM ('+str(len(p))+')')
 
             p, = np.where((iprogram == 'eFEDS1') | (iprogram == 'eFEDS2') | (iprogram == 'eFEDS3'))
-            if len(p) > 0: ax1.scatter(x[p], y[p], marker='s', s=msz, edgecolors='k', alpha=alf, c='#FFF9C4', label='eFEDS ('+str(len(p))+')')
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='s', s=msz*0.8, edgecolors='k', alpha=alf, c='#FFF9C4', label='eFEDS ('+str(len(p))+')')
+
+            p, = np.where((iprogram != 'RM') & (iprogram != 'RMv2') & (iprogram != 'AQMES-Wide') & (iprogram != 'AQMES-Medium') & (iprogram != 'AQMES-Bonus') & 
+                          (iprogram != 'MWM') & (iprogram != 'MWM_30min') & (iprogram != 'halo_dsph') & (iprogram != 'MWM2') & (iprogram != 'MWM2_sky') & 
+                          (iprogram != 'MWM3') & (iprogram != 'MWM_30min2') & (iprogram != 'MWM_30min3') & (iprogram != 'eFEDS1') & (iprogram != 'eFEDS2') & 
+                          (iprogram != 'eFEDS3'))
+            if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz*0.9, edgecolors='k', alpha=alf, c='#ffb3b3', label='other ('+str(len(p))+')')
 
             ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
             ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
