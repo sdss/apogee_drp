@@ -2383,7 +2383,10 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
             if len(apStarCheck) < 1: 
                 print("----> apStarPlots:    apStar file not found for " + objid)
             else:
-                print("----> apStarPlots:    making plot for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
+                if objid is None:
+                    print("----> apStarPlots:    making plot for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
+                else:
+                    print("----> apStarPlots:    making plot for " + objid)
                 # Find the newest apStar file
                 apStarCheck.sort()
                 apStarCheck = np.array(apStarCheck)
