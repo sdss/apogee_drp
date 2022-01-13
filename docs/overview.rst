@@ -2,7 +2,8 @@
 Overview
 ********
 
-This is an overview of the APOGEE reduction pipeline.
+This is an overview of the APOGEE reduction pipeline.  The software is a combination of IDL and python programs as well as some shell scripts
+written By David Nidever, Jon Holtzman, Drew Chojnowski and others from 2010 onward.
 
 Types of Processing
 ===================
