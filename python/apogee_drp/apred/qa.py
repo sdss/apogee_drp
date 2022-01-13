@@ -3206,6 +3206,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
                 ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
                 platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
+                if os.path.exists(platesumfile) is False:
+                    tmp = glob.glob(platesumfile.replace('None','*'))
+                    if len(tmp) > 0: platesumfile = tmp[0]
                 if os.path.exists(platesumfile):
                     tmp = fits.open(platesumfile)
                     plsum1 = tmp[1].data
@@ -3214,6 +3217,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     icart[i] = str(plsum1['CART'][0])
                     izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
                     imoonphase[i] = np.mean(plsum1['MOONPHASE'])
+                else:
+                    print('----> makeMasterQApages: Problem with plate/config ' + plate + ', MJD ' + imjd + '. PlateSum not found.')
 
         # Sort by MJD
         order = np.argsort(imjd)
