@@ -1990,7 +1990,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
         cnfiber = str(nfiber)
     else:
         nfiber = 1
-        cnfiber = '100'
+        cnfiber = '1'
 
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
