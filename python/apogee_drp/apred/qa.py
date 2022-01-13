@@ -3218,7 +3218,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
                     imoonphase[i] = np.mean(plsum1['MOONPHASE'])
                 else:
-                    print('----> makeMasterQApages: Problem with plate/config ' + plate + ', MJD ' + imjd + '. PlateSum not found.')
+                    print('----> makeMasterQApages: Problem with plate/config ' + iplate[i] + ', MJD ' + imjd[i] + '. PlateSum not found.')
 
         # Sort by MJD
         order = np.argsort(imjd)
