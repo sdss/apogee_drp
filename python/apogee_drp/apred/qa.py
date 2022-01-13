@@ -1974,11 +1974,6 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
     # HTML header background color
     thcolor = '#DCDCDC'
 
-    if int(mjd)>59556:
-        fps = True
-    else:
-        fps = False
-
     # Setup doppler cannon models
     models = doppler.cannon.models
     
@@ -2017,20 +2012,6 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                 print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
 
                 pdb.set_trace()
-                cfiber = str(fiber).zfill(3)
-                cblock = str(np.ceil(fiber / 30).astype(int))
-                hmag = jdata['HMAG']
-                cjmag = str("%.3f" % round(jdata['JMAG'], 3))
-                chmag = str("%.3f" % round(jdata['HMAG'], 3))
-                ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
-                jkcolor = jdata['JMAG'] - jdata['KMAG']
-                if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
-                cjkcolor = str("%.3f" % round(jkcolor, 3))
-                cra = str("%.5f" % round(jdata['RA'], 5))
-                cdec = str("%.5f" % round(jdata['DEC'], 5))
-                txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
-                txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
-                simbadlink = txt1 + txt2
 
                 # Find which healpix this star is in
                 healpix = apload.obj2healpix(objid)
@@ -2073,6 +2054,18 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                 cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
                 cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
                 cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
+                hmag = vcat['HMAG'][0]
+                cjmag = str("%.3f" % round(vcat['JMAG'][0], 3))
+                chmag = str("%.3f" % round(vcat['HMAG'][0], 3))
+                ckmag = str("%.3f" % round(vcat['KMAG'][0],3 ))
+                jkcolor = vcat['JMAG'][0] - vcat['KMAG'][0]
+                if (vcat['JMAG'][0] < 0) | (vcat['KMAG'][0] < 0): jkcolor = -9.999
+                cjkcolor = str("%.3f" % round(jkcolor, 3))
+                cra = str("%.5f" % round(vcat['RA'][0], 5))
+                cdec = str("%.5f" % round(vcat['DEC'][0], 5))
+                txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
+                txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
+                simbadlink = txt1 + txt2
 
                 nvis = len(vcat)
                 cvhelio = '----';  cvscatter = '----'
@@ -2133,7 +2126,10 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                 starHTML.write('<TR bgcolor="'+thcolor+'">')
                 starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
                 for k in range(nvis):
-                    cmjd = str(vcat['mjd'][k])
+                    mjd = vcat['mjd'][k]
+                    fps = True
+                    if mjd < 59556: fps = False
+                    cmjd = str(mjd)
                     dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
                     cplate = vcat['plate'][k]
                     cfield = vcat['field'][k]
@@ -2145,6 +2141,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                         platehdus = fits.open(platefile)
                         platetab = platehdus[1].data
                         ccart = str(platetab['CART'][0])
+                    
                     csnr = str("%.1f" % round(vcat['snr'][k],1))
                     cvhelio = str("%.2f" % round(vcat['vheliobary'][k],2))
                     visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
