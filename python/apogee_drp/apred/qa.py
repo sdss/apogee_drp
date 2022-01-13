@@ -3359,7 +3359,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             p, = np.where((iprogram == 'RM') | (iprogram == 'RMv2'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='o', s=msz, edgecolors='k', alpha=alf, c='#B3E5FC', label='RM ('+str(len(p))+')')
 
-            p, = np.where((iprogram == 'AQMES-Wide') | (iprogram == 'AQMES-Medium') | (iprogram == 'AQMES-Bonus'):
+            p, = np.where((iprogram == 'AQMES-Wide') | (iprogram == 'AQMES-Medium') | (iprogram == 'AQMES-Bonus'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='^', s=msz, edgecolors='k', alpha=alf, c='#DCEDC8', label='AQMES-Wide ('+str(len(p))+')')
 
             p, = np.where((iprogram == 'MWM') | (iprogram == 'MWM_30min') | (iprogram == 'halo_dsph') | (iprogram == 'MWM2') | (iprogram == 'MWM2_sky')
