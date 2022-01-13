@@ -1996,7 +1996,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
     db = apogeedb.DBSession()
 
     # Loop over the fibers
-    for j in range(300):
+    for j in range(nfiber):
         if objid is None:
             jdata = data[j]
             fiber = jdata['FIBERID']
