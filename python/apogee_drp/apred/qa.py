@@ -2983,8 +2983,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#eaeded"><TH>(1)\nDate <TH>(2)\nObserver Log <TH>(3)\nExposure Log <TH>(4)\nRaw Data <TH>(5)\nNight QA')
-        html.write('<TH>(6)\nObserved Plate QA <TH>(7)\nSummary Files <TH>(8)\nMoon Phase\n')
+        html.write('<TR bgcolor="#eaeded"><TH>(1)<BR>Date <TH>(2)<BR>Observer Log <TH>(3)<BR>Exposure Log <TH>(4)<BR>Raw Data <TH>(5)<BR>Night QA')
+        html.write('<TH>(6)<BR>Observed Plate QA <TH>(7)<BR>Summary Files <TH>(8)<BR> Phase\n')
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
@@ -3232,6 +3232,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         icart = icart[order]
         izero = izero[order]
         imoonphase = imoonphase[order]
+
+        pdb.set_trace()
 
         for i in range(nplates):
             tmp = fits.open(plates[i])
