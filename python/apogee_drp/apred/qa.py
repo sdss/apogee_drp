@@ -2327,6 +2327,9 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     # Setup doppler cannon models
     models = doppler.cannon.models
 
+    # Base directory where star-level stuff goes
+    starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
+
     # Basic plotting parameters
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
@@ -2338,31 +2341,27 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     xmin = np.array([15130, 15845, 16460])
     xmax = np.array([15825, 16448, 16968])
 
-    # Load in the apPlate file
-    apPlate = load.apPlate(int(plate), mjd)
-    data = apPlate['a'][11].data[::-1]
-    objtype = data['OBJTYPE']
-    nfiber = len(data)
-    cnfiber = str(nfiber)
-    
-    # Base directory where star-level stuff goes
-    starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
-
     nfib = 300
-    if objid is not None: 
-        gd, = np.where(data['OBJECT'] == objid)
-        if len(gd) < 1: pdb.set_trace()
+    if objid is None: 
+        # Load in the apPlate file
+        apPlate = load.apPlate(int(plate), mjd)
+        data = apPlate['a'][11].data[::-1]
+        objtype = data['OBJTYPE']
+        nfiber = len(data)
+        cnfiber = str(nfiber)
+    else:
         nfib = 1
-        data = data[gd]
 
     # Loop over the fibers
     for j in range(nfib):
-        jdata = data[j]
-        pdb.set_trace()
-        fiber = jdata['FIBERID']
-        objtype = jdata['OBJTYPE']
-        objid = jdata['OBJECT']
-        chmag = str("%.3f" % round(jdata['HMAG'], 3))
+        if objid is None:
+            jdata = data[j]
+            fiber = jdata['FIBERID']
+            objtype = jdata['OBJTYPE']
+            objid = jdata['OBJECT']
+        else:
+            objtype = 'SCI'
+            fiber = 100
 
         # Only run it for valid stars
         if (fiber > 0) & (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
@@ -2387,6 +2386,8 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
                 apStarCheck = np.array(apStarCheck)
                 apStarNewest = os.path.basename(apStarCheck[-1])
                 apStarPath = starDir + apStarNewest
+                hdr = fits.getheader(apStarPath)
+                chmag = str("%.3f" % round(hdr['HMAG'], 3))
                 apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
                 # Set up plot directories and plot file name
