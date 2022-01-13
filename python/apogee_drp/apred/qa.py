@@ -3372,6 +3372,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             p, = np.where((iprogram == 'eFEDS1') | (iprogram == 'eFEDS2') | (iprogram == 'eFEDS3'))
             if len(p) > 0: ax1.scatter(x[p], y[p], marker='s', s=msz, edgecolors='k', alpha=alf, c='#FFF9C4', label='eFEDS ('+str(len(p))+')')
 
+            p, = np.where((iprogram == 'RM') | (iprogram == 'RMv2') | (iprogram == 'AQMES-Wide') | (iprogram == 'AQMES-Medium') | (iprogram == 'MWM') | 
+                          (iprogram == 'eFEDS1') | (iprogram == 'eFEDS2') | (iprogram == 'eFEDS3'))
+            if len(p) < 1: ax1.scatter(x[p], y[p], marker='P', s=msz, edgecolors='k', alpha=alf, c='#ffb3b3', label='other ('+str(len(p))+')')
+
             ax1.text(0.5,1.04,ptype.capitalize(),transform=ax1.transAxes,ha='center')
             ax1.legend(loc=[-0.24,-0.06], labelspacing=0.5, handletextpad=-0.1, facecolor='white', fontsize=fsz, borderpad=0.3)
 
