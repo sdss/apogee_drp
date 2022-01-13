@@ -1962,9 +1962,14 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
-def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None): 
+def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None): 
 
-    print("----> makeStarHTML: Running plate " + plate + ", MJD " + mjd)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+
+    if objid is None:
+        print("----> makeStarHTML: Running plate "+plate+", MJD "+mjd)
+    else:
+        print("----> makeStarHTML: Running on single star:" + objid)
 
     # HTML header background color
     thcolor = '#DCDCDC'
@@ -1982,25 +1987,36 @@ def makeStarHTML(load=None, plate=None, mjd=None, survey=None, apred=None, teles
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
-    # Load in the apPlate file
-    apPlate = load.apPlate(int(plate), mjd)
-    data = apPlate['a'][11].data[::-1]
-    nfiber = len(data)
-    cnfiber = str(nfiber)
+    nfiber = 300
+    if objid is None: 
+        # Load in the apPlate file
+        apPlate = load.apPlate(int(plate), mjd)
+        data = apPlate['a'][11].data[::-1]
+        cnfiber = str(nfiber)
+    else:
+        nfiber = 1
+        cnfiber = '100'
 
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
 
     # Loop over the fibers
     for j in range(300):
-        jdata = data[j]
-        fiber = jdata['FIBERID']
+        if objid is None:
+            jdata = data[j]
+            fiber = jdata['FIBERID']
+        else:
+            fiber = 100
         if fiber > 0:
-            objtype = jdata['OBJTYPE']
-            objid = jdata['OBJECT']
+            if objid is None:
+                objtype = jdata['OBJTYPE']
+                objid = jdata['OBJECT']
+            else:
+                objtype = 'SCI'
             if (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
                 print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
 
+                pdb.set_trace()
                 cfiber = str(fiber).zfill(3)
                 cblock = str(np.ceil(fiber / 30).astype(int))
                 hmag = jdata['HMAG']
