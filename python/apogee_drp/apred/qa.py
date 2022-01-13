@@ -2317,7 +2317,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
 
 ###################################################################################################
 ''' APSTARPLOTS: plots of the apStar spectra + best fitting Cannon model '''
-def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
+def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telescope=None):
 
     print("----> apStarPlots: Running plate "+plate+", MJD "+mjd)
 
@@ -2347,8 +2347,15 @@ def apStarPlots(load=None, plate=None, mjd=None, apred=None, telescope=None):
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
 
+    nfib = 300
+    if objid is not None: 
+        gd, = np.where(data['OBJECT'] == objid)
+        if len(gd) < 1: pdb.set_trace()
+        nfib = 1
+        data = data[gd]
+
     # Loop over the fibers
-    for j in range(300):
+    for j in range(nfib):
         jdata = data[j]
         fiber = jdata['FIBERID']
         objtype = jdata['OBJTYPE']
