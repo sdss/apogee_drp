@@ -3209,6 +3209,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 if os.path.exists(platesumfile) is False:
                     tmp = glob.glob(platesumfile.replace('None','*'))
                     if len(tmp) > 0: platesumfile = tmp[0]
+                    pdb.set_trace()
                 if os.path.exists(platesumfile):
                     tmp = fits.open(platesumfile)
                     plsum1 = tmp[1].data
@@ -3237,8 +3238,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         icart = icart[order]
         izero = izero[order]
         imoonphase = imoonphase[order]
-
-        pdb.set_trace()
 
         for i in range(nplates):
             tmp = fits.open(plates[i])
