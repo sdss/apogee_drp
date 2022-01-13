@@ -3152,9 +3152,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<br><br>Click on column headings to sort<br>\n')
 
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASPCAP <TH>PLATE <TH>MJD <TH>LOC <TH>RA <TH>DEC <TH>S/N(red) <TH>S/N(green) <TH>S/N(blue)')
+        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASPCAP <TH>PLATE\nOR\nCONFIG <TH>MJD')
+        html.write('<TH>LOC <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>S/N(red) <TH>S/N(green) <TH>S/N(blue)')
         html.write('<TH>N<BR>EXP. <TH>TOTAL<BR>EXPTIME <TH>CART <TH>ZERO <TH>MOON<BR>PHASE\n')
     #    html.write('<TR><TD>FIELD<TD>Program<TD>ASPCAP<br>'+apred_vers+'/'+aspcap_vers+'<TD>PLATE<TD>MJD<TD>LOCATION<TD>RA<TD>DEC<TD>S/N(red)<TD>S/N(green)<TD>S/N(blue)\n')
+
 
         plates = np.array(glob.glob(apodir+apred+'/visit/*/*/*/*/'+'*PlateSum*.fits'))
         nplates = len(plates)
@@ -3170,6 +3172,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         iloc = np.zeros(nplates).astype(str)
         ira = np.zeros(nplates).astype(str)
         idec = np.zeros(nplates).astype(str)
+        ilon = np.zeros(nplates).astype(str)
+        ilat = np.zeros(nplates).astype(str)
         inexposures = np.zeros(nplates).astype(str)
         iexptime = np.zeros(nplates).astype(str)
         icart = np.zeros(nplates).astype(str)
@@ -3194,8 +3198,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if len(gd)>0:
                 iprogram[i] = plans['PLATEPLANS']['programname'][gd][0].astype(str)
                 iloc[i] = str(int(round(plans['PLATEPLANS']['locationid'][gd][0])))
-                ira[i] = str("%.6f" % round(plans['PLATEPLANS']['raCen'][gd][0],6))
-                idec[i] = str("%.6f" % round(plans['PLATEPLANS']['decCen'][gd][0],6))
+                tra = plans['PLATEPLANS']['raCen'][gd][0]
+                tdec = plans['PLATEPLANS']['decCen'][gd][0]
+                ira[i] = str("%.6f" % round(tra,6))
+                idec[i] = str("%.6f" % round(tdec,6))
+                c_icrs = SkyCoord(ra=tra*u.degree, dec=tdec*u.degree, frame='icrs')
+                ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
+                ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
                 platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
                 if os.path.exists(platesumfile):
                     tmp = fits.open(platesumfile)
@@ -3217,6 +3226,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         iloc = iloc[order]
         ira = ira[order]
         idec = idec[order]
+        ilon = ilon[order]
+        ilat = ilat[order]
         inexposures = inexposures[order]
         icart = icart[order]
         izero = izero[order]
@@ -3251,6 +3262,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD align="center">' + iloc[i])
             html.write('<TD align="right">' + ira[i]) 
             html.write('<TD align="right">' + idec[i])
+            html.write('<TD align="right">' + ilon[i]) 
+            html.write('<TD align="right">' + ilat[i])
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][0],1))) 
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][1],1))) 
             html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][2],1))) 
