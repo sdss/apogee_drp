@@ -18,7 +18,8 @@ Introduction
    gettingstarted
    modules
    fluxcal
-      
+   fpi
+
 *****
 Index
 *****

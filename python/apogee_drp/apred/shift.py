@@ -10,7 +10,7 @@ files=glob.glob('*/*/5[789]??[0-9]/apPlate-a*.fits')
 mjd=[]
 dith=[]
 print(len(files))
-pdb.set_trace()
+#pdb.set_trace()
 for ifile,file in enumerate(files) :
     print(ifile,file)
     try:
@@ -22,4 +22,4 @@ for ifile,file in enumerate(files) :
 plt.scatter(mjd,dith,marker='o',color='r',s=10)
 np.savetxt('dither.dat',np.vstack([mjd,dith]).T)
 
-pdb.set_trace()
+#pdb.set_trace()
