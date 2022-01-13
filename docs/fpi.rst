@@ -1,27 +1,26 @@
-********************************
-Fabry-Perot Interferometer (FPI)
-********************************
+**************************
+Fabry-Perot Interferometer
+**************************
 
-.. role:: red
+A Fabry-Perot Interferometer (FPI) was recently installed for the APOGEE instruments to help improve our wavelengths and radial velocity precision.
 
-An example of using :red:`interpreted text`
 
 APOGEE Wavelength Calibration with the FPI
 ==========================================
 
 There are several processing steps to take advantage of the FPI to improve our wavelength calibration.
 
-1. Determine precise wavelength solutions using a week of arclamp exposures and full-frame FPI exposure at beginning of the night
----------------------------------------------------------------------------------------------------------------------------------
-
+1. Redetermine precise FPI wavewlengths and wavelength solutions
+----------------------------------------------------------------
+- Determine precise wavelength solutions using a week of arclamp exposures and full-frame FPI exposure at beginning of the night.
 - Fit wavelength solutions to many arclamp exposures (over a week) simultaneously
 - Determine median wavelength of each FPI line using wavelength solutions and Gaussian position over the 300 fibers
 - Refit wavelength solution of each fiber using the wavelengths of the FPI lines
 - This is created by the ``mkfpiwave`` which calls ``fpi.dailyfpiwave)``.  This should be run every day with the daily calibration products.  **The code still needs to be finished and tested.**
   
-2. For each science exposure use 2 FPI fibers to measure pixel shift and correct the wavelength solution
---------------------------------------------------------------------------------------------------------
-
+2. Correct wavelength solution using 2-fiber FPI data
+-----------------------------------------------------
+- For each science exposure use 2 FPI fibers to measure pixel shift and correct the wavelength solution
 - Use 2 FPI fibers to fit linear surface and find pixel shift correction for each fiber
 - Correct the wavelength solution for each fiber by offseting the x-values of each pixel and refitting the wavelengths (maybe holding the higher-order terms fixed).
   
@@ -33,8 +32,8 @@ There are several processing steps to take advantage of the FPI to improve our w
 - Currently we use the sky lines to do this, so maybe add the FPI part to the same program, or write a similar one that is called if we have FPI data.
 - This is run by the ``ap1dwavecal`` script which calls ``fpi.fpi1dwavecal()`` which is called at the end of ``ap2dproc.pro``.  **The code still needs to be fully developed and tested.**
   
-3. Dither shift
----------------
+3. Measure Dither shift
+-----------------------
 
 - Measure dither shift between science frames like we have always done, by cross-correlating the two science spectra.
 - Fit linear or quadratic polynomial to the dither shifts vs. fiber.
