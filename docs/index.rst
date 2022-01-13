@@ -11,16 +11,20 @@ Introduction
 ============
 |apogee_drp| is the SDSS APOGEE data reduction pipeline.
 
+- `Installation <install.html>`_
+- `Overview <overview.html>`_
+- `Data <data.html>`_
+- `Calibration Files <cal.html>`_    
+- `Radial Velocities <rv.html>`_
+- `Fabry-Perot Interferometer <fpi.html>`_
+- `Flux Calibration <fluxcal.html>`_
+- `Quality Assurance <qa.html>`_
+- `Data Access <access.html>`_
+
+
 .. toctree::
    :maxdepth: 1
 
-   install
-   overview
-   rv
-   qa
-   fpi
-   fluxcal
-   access
    modules
    
 *****

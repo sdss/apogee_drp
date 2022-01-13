@@ -20,6 +20,8 @@ All of the data files can be accessed directly from the Utah server by logging i
 
 `daily directory <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/>`_
 
+Note, you need the sdss username and password to access the data online.
+
 Database
 --------
 
