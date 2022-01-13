@@ -1543,7 +1543,7 @@ def getSciStruct(data=None):
                    ('SEEING',    np.float64),
                    ('FWHM',      np.float64),
                    ('GDRMS',     np.float64),
-                   ('CART',      np.str),
+                   ('CART',      np.str, 5),
                    ('PLUGID',    np.str, 30),
                    ('DITHER',    np.float64),
                    ('MJD',       np.int32),
