@@ -2976,15 +2976,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
-        html.write('<p> Summary files: <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
+        html.write('<p> <b>Summary files:</b> <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
         #html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
         html.write( 'Yellow: APO 2.5m, Green: LCO 2.5m <BR>\n')
         #html.write('<br>Click on column headings to sort\n')
 
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#eaeded"><TH>Date <TH>Observer Log <TH>Exposure Log <TH>Raw Data <TH>Night QA')
-        html.write('<TH>Observed Plate QA <TH>Summary Files <TH>Moon Phase\n')
+        html.write('<TR bgcolor="#eaeded"><TH>(1)\nDate <TH>(2)\nObserver Log <TH>(3)\nExposure Log <TH>(4)\nRaw Data <TH>(5)\nNight QA')
+        html.write('<TH>(6)\nObserved Plate QA <TH>(7)\nSummary Files <TH>(8)\nMoon Phase\n')
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
