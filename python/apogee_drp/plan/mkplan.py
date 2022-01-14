@@ -893,7 +893,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                 plate = info['configid'][i]
                 try:
                     plate = int(plate)
-                else:
+                except:
                     plate = 0
                 # Get PSF calibration file
                 #  use quartz flats if possible
