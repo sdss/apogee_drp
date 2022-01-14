@@ -13,14 +13,18 @@ Catalogs of summary information are available here:
 
 `allVisit-daily-apo25m.fits <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/summary/allVisit-daily-apo25m.fits>`_
 
+The allStar file has summary information for each star, while the allVisit file has summary information for each star visit.
+
 SAS Access
 ----------
 
-All of the data files can be accessed directly from the Utah server by logging in or by using the SAS webpage online:
-
+All of the data files can be accessed directly from the Utah server by logging in or by using the SAS webpage online.  This is the
+base directory for the daily reduction:
 `daily directory <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/>`_
 
 Note, you need the sdss username and password to access the data online.
+
+See the `data <data.html>`_ for more information about the data products and directory structure.
 
 Database
 --------
@@ -36,7 +40,7 @@ The 13 tables are:
 - star: Summary information for each unique star.
 - star_latest: The latest information for each star.
 - rv_visit: RV summary information for each visit spectrum.
-- version: 
+- version: The reduction versions.
 
 These 5 tables gives the status of the different processing steps:
 - exposure_status: Status of exposure processing.

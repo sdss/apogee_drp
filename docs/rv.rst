@@ -2,7 +2,7 @@
 Radial Velocities
 *****************
 
-The APOGEE radial velocities (RVs) are determined with `Doppler <https://github.com/dnidever/doppler>`_ software.
+The APOGEE radial velocities (RVs) are determined with `Doppler <https://doppler.readthedocs.io/en/latest/>`_ software.
 
 Radial velocities (RV) are determined on a star-by-star basis using Doppler which fits a Cannon model to the data,
 determining Teff, logg, [Fe/H] and radial velocity in the process.  It actually fits all of the visit spectra simultaneously, using

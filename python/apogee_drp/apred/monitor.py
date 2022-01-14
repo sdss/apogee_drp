@@ -1490,7 +1490,7 @@ def getExpStruct(data=None):
                    ('NFRAMES',   np.int16),
                    ('IMAGETYP',  np.str, 30),
                    ('PLATEID',   np.int16),
-                   ('CARTID',    np.int16),
+                   ('CARTID',    np.str, 5),
                    ('RA',        np.float64),
                    ('DEC',       np.float64),
                    ('SEEING',    np.float32),
@@ -1513,7 +1513,7 @@ def getExpStruct(data=None):
     outstr['NFRAMES'] =   data['NFRAMES']
     outstr['IMAGETYP'] =  data['IMAGETYP']
     outstr['PLATEID'] =   data['PLATEID']
-    outstr['CARTID'] =    data['CARTID']
+    outstr['CARTID'] =    str(data['CARTID'])
     outstr['RA'] =        data['RA']
     outstr['DEC'] =       data['DEC']
     outstr['SEEING'] =    data['SEEING']
@@ -1543,7 +1543,7 @@ def getSciStruct(data=None):
                    ('SEEING',    np.float64),
                    ('FWHM',      np.float64),
                    ('GDRMS',     np.float64),
-                   ('CART',      np.int32),
+                   ('CART',      np.str, 5),
                    ('PLUGID',    np.str, 30),
                    ('DITHER',    np.float64),
                    ('MJD',       np.int32),
@@ -1575,7 +1575,7 @@ def getSciStruct(data=None):
     outstr['SEEING'] =    data['SEEING']
     outstr['FWHM'] =      data['FWHM']
     outstr['GDRMS'] =     data['GDRMS']
-    outstr['CART'] =      data['CART']
+    outstr['CART'] =      str(data['CART'])
     outstr['PLUGID'] =    data['PLUGID']
     outstr['DITHER'] =    data['DITHER']
     outstr['MJD'] =       data['MJD']
