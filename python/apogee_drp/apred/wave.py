@@ -111,6 +111,8 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     for inum,num in enumerate(nums) :
         print(str(inum+1)+'/'+str(len(nums))+' '+str(num))
         # load 1D frame
+        filename = load.filename('1D',num=num,mjd=load.cmjd(num),chips=True)
+        print(filename)
         frame = load.ap1D(num)
         out = load.filename('Wave',num=num,chips=True)
         print(num,frame)

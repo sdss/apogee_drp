@@ -68,7 +68,7 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,unlo
   print,''
   for i=0,n_elements(waveid)-1,2 do begin
     print,''
-    print,'--- Frame ',strtrim(i+1,2),':  ',waveid[i],' ---'
+    print,'--- Frame ',strtrim(i+1,2),':  ',strtrim(waveid[i],2),' ---'
     MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock
   endfor
 

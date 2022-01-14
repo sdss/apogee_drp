@@ -385,14 +385,25 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
           pname = apogee_filename('PSF',num=strmid(strtrim(ims[0],2),0,4)+'????',chip='a')
           psffiles = file_search(pname,count=npsffiles)
           if npsffiles eq 0 then begin
-            print,'No PSF calibration file found for MJD=',cmjd
-            return
-          endif
-          ;; Find closest one
-          psfids = lonarr(npsffiles)
-          for j=0,npsffiles-1 do psfids[j]=strmid(file_basename(psffiles[j]),8,8)
-          si = sort(abs(long(psfids-long(ims[0]))))         
-          psfid = psfids[si[0]]
+            print,'No PSF calibration file found for MJD=',cmjd,'. Trying to make one.'
+            ;; Try to make a PSF file
+            psfinfo = dbquery("select * from apogee_drp.exposure where mjd="+cmjd+$
+                              " and exptype='DOMEFLAT' or exptype='QUARTZFLAT'",count=npsfinfo)
+            if npsfinfo eq 0 then begin
+              print,'No DOMEFLAT or QUARTZFLAT exposure for MJD=',cmjd
+              return
+            endif
+            ;; Find quartzflat/domeflat that is closest to the waveid
+            si = sort(abs(long(psfinfo.num-long(ims[0]))))         
+            psfid = psfinfo[si[0]].num
+            MAKECAL,psf=psfid
+          endif else begin
+            ;; Find closest one
+            psfids = lonarr(npsffiles)
+            for j=0,npsffiles-1 do psfids[j]=strmid(file_basename(psffiles[j]),8,8)
+            si = sort(abs(long(psfids-long(ims[0]))))         
+            psfid = psfids[si[0]]
+          endelse
         endelse
       endelse
 

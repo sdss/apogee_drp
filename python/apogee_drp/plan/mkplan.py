@@ -712,7 +712,7 @@ def getexpinfo(observatory=None,mjd5=None,files=None):
     nfiles = len(files)
     dtype = np.dtype([('num',int),('nread',int),('exptype',np.str,20),('arctype',np.str,20),('plateid',np.str,20),
                       ('configid',np.str,50),('designid',np.str,50),('fieldid',np.str,50),('exptime',float),('dateobs',np.str,50),
-                      ('mjd',int),('observatory',(np.str,10))])
+                      ('mjd',int),('observatory',(np.str,10)),('dithpix',float)])
     cat = np.zeros(nfiles,dtype=dtype)
     # Loop over the files
     for i in range(nfiles):
@@ -748,6 +748,9 @@ def getexpinfo(observatory=None,mjd5=None,files=None):
         # FPI
         if cat['exptype'][i]=='ARCLAMP' and cat['arctype'][i]=='None' and head.get('OBSCMNT')=='FPI':
             cat['exptype'][i] = 'FPI'
+
+        # Dither position
+        cat['dithpix'][i] = head['dithpix']
 
     return cat
 
@@ -888,10 +891,10 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             # Object plate visit
             if fps:
                 plate = info['configid'][i]
-                if plate=='None':
-                    plate = 0
-                else:
+                try:
                     plate = int(plate)
+                else:
+                    plate = 0
                 # Get PSF calibration file
                 #  use quartz flats if possible
                 if len(quartz)>0:

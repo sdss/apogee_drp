@@ -15,4 +15,8 @@ if __name__ == "__main__":
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     args = parser.parse_args()
 
-    fpi.dailyfpiwave(mjd=args.mjd,observatory=args.observatory,apred=args.apred,clobber=args.clobber,verbose=args.verbose)
+    mjd = args.mjd[0]
+    apred = args.apred[0]
+    observatory = args.observatory[0]
+
+    fpi.dailyfpiwave(mjd,observatory=observatory,apred=apred,clobber=args.clobber,verbose=args.verbose)

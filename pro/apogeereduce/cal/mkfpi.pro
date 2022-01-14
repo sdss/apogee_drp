@@ -8,7 +8,7 @@
 ;
 ; INPUT:
 ;  fpiid       The ID8 numbers of the FPI arc lamp exposures to use.
-;  =name       Output filename base.  By default waveid[0] is used.
+;  =name       Output filename base.  By default fpiid is used.
 ;  =darkid     Dark frame to be used if images are reduced.
 ;  =flatid     Flat frame to be used if images are reduced.
 ;  =psfid      PSF frame to be used if images are reduced.
@@ -64,8 +64,30 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
 
   ;; Process the frames
   cmjd = getcmjd(psfid)
+  mjd = long(cmjd)
   MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
   w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc,unlock=unlock)
+  
+  ;; Get the individual arclamp exposures and make sure they have been processed
+  expinfo = dbquery("select * from apogee_drp.exposure where mjd>="+strtrim(mjd-7,2)+" and mjd<="+strtrim(mjd,2)+" and exptype='ARCLAMP'")
+  expinfo.arctype = strtrim(expinfo.arctype,2)
+  gdarc = where(expinfo.arctype eq 'UNE' or expinfo.arctype eq 'THAR',ngdarc)
+  if ngdarc eq 0 then begin
+    print,'No good arclamp exposures for '+strtrim(mjd-7,2)+'<=MJD<='+strtrim(mjd,2)
+    return
+  endif
+  waveid = expinfo[gdarc].num
+  print,strtrim(ngdarc,2),' good arclamp exposures'
+
+  ;; Process the frames and find lines
+  print,''
+  print,'***** Processing the frames and finding the lines *****'
+  print,''
+  for i=0,n_elements(waveid)-1 do begin
+    print,''
+    print,'--- Frame ',strtrim(i+1,2),':  ',strtrim(waveid[i],2),' ---'
+    MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock
+  endfor
 
   ;; New Python version! 
   cmd = ['mkfpiwave',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--verbose']

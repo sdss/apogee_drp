@@ -33,7 +33,7 @@ matplotlib.use('Qt5Agg')
 
 chips = ['a','b','c']
 
-def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True):
+def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,verbose=True):
     """
     Function to run daily that generates a wavelength solution using a week's worth of
     arclamp data simultaneously fit with "apmultiwavecal" then we use the FPI full-frame exposure
@@ -67,13 +67,16 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
             expinfo = expinfo1
         else:
             expinfo = np.hstack((expinfo,expinfo1))
-
+    # Sort them
+    si = np.argsort(expinfo['num'])
+    expinfo = expinfo[si]
 
     # Step 1: Find the arclamp frames for the last week
     #--------------------------------------------------
 
     # Get arclamp exposures
-    arc, = np.where((expinfo['exptype']=='ARCLAMP') & ((expinfo['arctype']=='UNE') | (expinfo['arctype']=='THAR')))
+    arc, = np.where((expinfo['exptype']=='ARCLAMP') & ((expinfo['arctype']=='UNE') | (expinfo['arctype']=='THAR')) &
+                    (expinfo['mjd']>=mjd5-7) & (expinfo['mjd']<=mjd5))
     narc = len(arc)
     if narc==0:
         print('No arclamp exposures for these nights')
@@ -82,10 +85,21 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
     print(len(arcframes),' arclamp exposures for these nights')
 
     # Get full frame FPI exposure to use
-    #fpi, = np.where(expinfo['exptype']=='FPI')
-    fpi, = np.where((expinfo['exptype']=='ARCLAMP') & (expinfo['arctype']=='None'))
-    fpinum = 38310023
-    print('KLUDGE!!!  Hardcoding FPI full-frame exposure number')
+    fpi, = np.where((expinfo['exptype']=='FPI') & (expinfo['mjd']==mjd5))
+    if num is None:
+        if len(fpi)==0:
+            raise ValueError('No FPI exposures for MJD='+str(mjd5))
+        # Take the first one this night
+        fpinum = expinfo['num'][fpi][0]
+        # Make sure that the FPI exposure has arclamp exposures at the same dither position?
+    else:
+        # Check that the input NUM is an FPI exposure
+        g, = np.where(expinfo['num']==num)
+        if len(g)==0:
+            raise ValueError(str(num)+' not found')
+        if expinfo['exptype'][g][0] != 'FPI':
+            raise ValueError(str(num)+' is not a FPI exposure')
+        fpi = num
     print('FPI full-frame exposure ',fpinum)
 
 
@@ -106,10 +120,16 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',clobber=False,verbose=True
         pars,arclinestr = wave.wavecal(arcframes,rows=np.arange(300),name=str(mjd5),npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
         # npoly=4 gives lower RMS values
         # Check that it's there
+
+        import pdb; pdb.set_trace()
+
         if os.path.exists(wavefile) is False:
             raise Exception(wfile+' not found')
     else:
         print(wfile,' wavelength calibration file already exists')
+
+
+    import pdb; pdb.set_trace()
 
     # Load the wavelength solution from today
     daynum = mjd2day(mjd5)

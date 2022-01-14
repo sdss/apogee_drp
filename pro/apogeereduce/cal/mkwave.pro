@@ -67,6 +67,12 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   openw,lock,/get_lun,lockfile
   free_lun,lock
 
+  cmjd = getcmjd(waveid[0],mjd=mjd)
+  expinfo = dbquery("select * from apogee_drp.exposure where mjd>="+strtrim(mjd-7,2)+" and mjd<="+strtrim(mjd,2)+" and exptype='ARCLAMP'")
+  expinfo.arctype = strtrim(expinfo.arctype,2)
+  gdarc = where(expinfo.arctype eq 'UNE' or expinfo.arctype eq 'THAR',ngdarc)
+
+
   ;; Process the frames
   cmjd = getcmjd(psfid)
   MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
