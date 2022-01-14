@@ -3,7 +3,7 @@
 # Make APOGEE daily FPI wavelength solutions
 
 from argparse import ArgumentParser
-from .apred import fpi
+from apogee_drp.apred import fpi
 
 # Main command-line program
 if __name__ == "__main__":
