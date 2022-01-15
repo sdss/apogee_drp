@@ -123,13 +123,13 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False or clobber is True:
         # The previously measured lines in the apLines files will be reused if they exist
         npoly = 4 # 5
-        print('KLUDGE!! only using existing frames!!')
+        #print('KLUDGE!! only using existing frames!!')
         #arcframes = arcframes[0:4]
-        afiles = ['/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-'+str(e)+'_lines.fits' for e in arcframes]
-        exists = dln.exists(afiles)
-        arcframes = arcframes[exists]
+        #afiles = ['/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-'+str(e)+'_lines.fits' for e in arcframes]
+        #exists = dln.exists(afiles)
+        #arcframes = arcframes[exists]
         #import pdb; pdb.set_trace()
-        arcframes = arcframes[-12:]
+        #arcframes = arcframes[-12:]
         pars,arclinestr = wave.wavecal(arcframes,rows=np.arange(300),name=str(mjd5),npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
         # npoly=4 gives lower RMS values
         # Check that it's there
