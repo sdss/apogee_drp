@@ -162,9 +162,8 @@ FOR i=0L,nplanfiles-1 do begin
   if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' or planstr.platetype eq 'extra' then waveid=0
   if waveid gt 0 then MAKECAL,multiwave=waveid
 
-;; FOR SDSS-V, NEED TO MAKE apFlux and apResponse FILES FROM THE
-;; DOMEFLAT AT THE BEGINNING OF THE NIGHT!!
-fpiid = 0
+  ; FPI calibration file
+  if tag_exist(planstr,'fpi') then fpiid = planstr.fpi else fpiid=0
 
   ; apFlux files : since individual frames are usually made per plate
   if planstr.fluxid ne 0 then begin
@@ -179,6 +178,7 @@ fpiid = 0
   endif else fluxtest=0
 
   ; apResponse files 
+  ;  these aren't used anymore
   if tag_exist(planstr,'responseid') eq 0 then add_tag,planstr,'responseid',0,planstr
   if planstr.responseid ne 0 then begin
     MAKECAL,response=planstr.responseid
