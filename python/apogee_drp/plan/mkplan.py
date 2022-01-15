@@ -961,8 +961,16 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         platechange = info['plateid'][i] != info['plateid'][np.minimum(i+1,nfiles-1)]
         # We don't need a domeflat with each field visit in the SDSS-V FPS era since
         #   we will use the domeflat lookup table
-        if (platechange or i==nfiles-1) and len(exp)>0 and (len(dome)>0 or fps):
+        if (platechange or i==nfiles-1) and info['plateid'][i]!='' and len(exp)>0 and (len(dome)>0 or fps):
             # Object plate visit
+            if fps:
+                plate = info['configid'][i]
+                try:
+                    plate = int(plate)
+                except:
+                    plate = 0
+            else:
+                plate = int(info['plateid'][i])
 
             # Get PSF calibration file
             #  use quartz flats if possible, make sure they exist
@@ -999,11 +1007,6 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                     flux1 = None
             # Put everything together for this configuration/plate
             if fps:
-                plate = info['configid'][i]
-                try:
-                    plate = int(plate)
-                except:
-                    plate = 0
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
                 if len(fpi)>0:
@@ -1014,7 +1017,6 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                 print('Setting force=True for now')
                 objplan['force'] = True
             else:  # plates
-                plate = int(info['plateid'][i])
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
             out.append(objplan)

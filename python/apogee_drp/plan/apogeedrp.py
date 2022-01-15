@@ -580,6 +580,8 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
                 rootLogger.info('No '+str(calnames[j])+' calibration files to run')
              
 
+    # Make plan files for all nights!
+
     # 4) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
     rootLogger.info('')
