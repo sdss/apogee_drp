@@ -795,6 +795,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     db.ingest('exposure',expinfo)  # insert into database
     expinfo0 = expinfo.copy()
     expinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (mjd5,observatory))
+    si = np.argsort(expinfo['num'])
+    expinfo = expinfo[si]
 
     # Make MJD5 and plan files
     #--------------------------
@@ -843,6 +845,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
             rootLogger.info('')
             cind, = np.where((np.array(calcode) & ccode) > 0)
             if len(cind)>0:
+                if ccode==8: cind = cind[[0]] # Only run first FPI exposure
                 rootLogger.info(str(len(cind))+' files to run')
                 queue = pbsqueue(verbose=True)
                 queue.create(label='makecal-'+shcalnames[j], nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(cind)),
