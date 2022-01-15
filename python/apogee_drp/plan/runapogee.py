@@ -284,7 +284,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         # cal: ap3d and ap2d (apCalPlan)
 
         # Load the plugmap information
-        if platetype=='normal':
+        if platetype=='normal' and str(plate) != '0':
             plugmap = platedata.getdata(plate,mjd,apred_vers,telescope,plugid=planstr['plugmap'])
             fiberdata = plugmap['fiberdata']
         else:
@@ -798,31 +798,6 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]
 
-    # Make MJD5 and plan files
-    #--------------------------
-    rootLogger.info('Making plan files')
-    plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
-    dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'.yaml'
-    planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
-    nplanfiles = len(planfiles)
-    if nplanfiles>0:
-        dbload_plans(planfiles)  # load plans into db
-        # Write planfiles to MJD5.plans
-        dln.writelines(logdir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
-    else:
-        dln.writelines(logdir+str(mjd5)+'.plans','')   # write blank file
-
-    # Start entry in daily_status table
-    daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
-                                        ('nexposures',int),('begtime',(np.str,50)),('success',bool)]))
-    daycat['mjd'] = mjd5
-    daycat['telescope'] = telescope
-    daycat['nplanfiles'] = len(planfiles)
-    daycat['nexposures'] = len(expinfo)
-    daycat['begtime'] = begtime
-    daycat['success'] = False
-    db.ingest('daily_status',daycat)
-
     # Run calibration files using "pbs" packages
     #-------------------------------------------
     # First we need to run domeflats and quartzflats so there are apPSF files
@@ -888,6 +863,32 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                 del queue
             else:
                 rootLogger.info('No '+str(calnames[j])+' calibration files to run')
+
+    # Make MJD5 and plan files
+    #--------------------------
+    # Check that the necessary daily calibration files exist
+    rootLogger.info('Making plan files')
+    plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
+    dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'.yaml'
+    planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
+    nplanfiles = len(planfiles)
+    if nplanfiles>0:
+        dbload_plans(planfiles)  # load plans into db
+        # Write planfiles to MJD5.plans
+        dln.writelines(logdir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
+    else:
+        dln.writelines(logdir+str(mjd5)+'.plans','')   # write blank file
+
+    # Start entry in daily_status table
+    daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
+                                        ('nexposures',int),('begtime',(np.str,50)),('success',bool)]))
+    daycat['mjd'] = mjd5
+    daycat['telescope'] = telescope
+    daycat['nplanfiles'] = len(planfiles)
+    daycat['nexposures'] = len(expinfo)
+    daycat['begtime'] = begtime
+    daycat['success'] = False
+    db.ingest('daily_status',daycat)
 
 
     # Run APRED on all planfiles using "pbs" package

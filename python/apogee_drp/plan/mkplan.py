@@ -801,6 +801,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
     observatory = telescope[0:3]
+    chips = ['a','b','c']
 
     # Output file/directory
     outfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd)+'auto.yaml'
@@ -844,6 +845,58 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     quartzind, = np.where((info['exptype']=='QUARTZFLAT') & (info['nread']>=3))
     quartz = list(info['num'][quartzind].astype(int))
 
+    # Check which apPSF and apFlux files exist and can be used for calibration files
+    # which domeflat apPSF files that exist
+    psfdome_exist = np.zeros(len(dome),bool)
+    for j in range(len(dome)):
+        psffile = load.filename('PSF',num=dome[j],chips=True)
+        psffiles = [psffile.replace('apPSF-','apPSF-'+ch+'-') for ch in chips]
+        exist = [os.path.exists(pf) for pf in psffiles]
+        if np.sum(np.array(exist))==3:
+            psfdome_exist[j] = True
+    gddome, = np.where(psfdome_exist == True)
+    if len(gddome)>0:
+        psfdome = list(np.array(dome)[gddome])
+        logger.info('Available domeflat apPSF: '+str(psfdome))
+    else:
+        psfdome = []
+        logger.info('No domeflat apPSF files exist')
+    # which quartz apPSF files that exist
+    psfquartz_exist = np.zeros(len(quartz),bool)
+    for j in range(len(quartz)):
+        psffile = load.filename('PSF',num=quartz[j],chips=True)
+        psffiles = [psffile.replace('apPSF-','apPSF-'+ch+'-') for ch in chips]
+        exist = [os.path.exists(pf) for pf in psffiles]
+        if np.sum(np.array(exist))==3:
+            psfquartz_exist[j] = True
+    gdquartz, = np.where(psfquartz_exist == True)
+    if len(gdquartz)>0:
+        psfquartz = list(np.array(quartz)[gdquartz])
+        logger.info('Available quartzflat apPSF:: '+str(psfquartz))
+    else:
+        psfquartz = []
+        logger.info('No quartzflat apPSF files exist')
+    # which apFlux files sexit
+    flux_exist = np.zeros(len(dome),bool)
+    for j in range(len(dome)):
+        fluxfile = load.filename('Flux',num=dome[j],chips=True)
+        fluxfiles = [fluxfile.replace('apFlux-','apFlux-'+ch+'-') for ch in chips]
+        exist = [os.path.exists(ff) for ff in fluxfiles]
+        if np.sum(np.array(exist))==3:
+            flux_exist[j] = True
+    gdflux, = np.where(flux_exist == True)
+    if len(gdflux)>0:
+        flux = list(np.array(dome)[gdflux])
+        logger.info('Available apFlux: '+str(flux))
+    else:
+        flux = []
+        logger.info('No quartz apPSF files exist')
+
+    if len(psfdome)==0 and len(psfquartz)==0:
+        logger.info('No apPSF files for this night exist.  They will be created as needed')
+    if len(flux)==0:
+        logger.info('No apFlux files for this night exist.  They will be created as needed')
+
     # Scan through all files, accumulate IDs of the various types
     dark, cal, exp, sky, extra, calpsfid = [], [], [], [], [], None
     domeused, out, planfiles = [], [], []
@@ -877,7 +930,6 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         # Dome flat
         elif (info['exptype'][i]=='DOMEFLAT') and info['nread'][i]>3:
             pass
-            #dome.append(int(info['num'][i]))
         # FPI
         # still need a header card for this
         #elif (info['exptype'][i]=='ARCLAMP') and (info['arctype'][i]=='None') and info['nread'][i]>=3:
@@ -893,49 +945,68 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         #   we will use the domeflat lookup table
         if (platechange or i==nfiles-1) and len(exp)>0 and (len(dome)>0 or fps):
             # Object plate visit
-            if fps:
-                plate = info['configid'][i]
-                try:
-                    plate = int(plate)
-                except:
-                    plate = 0
-                # Get PSF calibration file
-                #  use quartz flats if possible
+
+            # Get PSF calibration file
+            #  use quartz flats if possible, make sure they exist
+            # Try to use ones that exist
+            if len(psfquartz)>0 or len(psfdome)>0:
+                if len(psfquartz)>0:
+                    bestind = np.argsort(np.abs(np.array(psfquartz)-int(exp[0])))
+                    psf1 = int(psfquartz[bestind[0]])
+                elif len(psfdome)>0:
+                    bestind = np.argsort(np.abs(np.array(psfdome)-int(exp[0])))
+                    psf1 = int(psfdome[bestind[0]])
+            # No apPSF files exist, they'll need to be made
+            else:
                 if len(quartz)>0:
                     bestind = np.argsort(np.abs(np.array(quartz)-int(exp[0])))
                     psf1 = int(quartz[bestind[0]])
                 elif len(dome)>0:
                     bestind = np.argsort(np.abs(np.array(dome)-int(exp[0])))
                     psf1 = int(dome[bestind[0]])
-                    #domeused.append(dome1)
                 else:
                     psf1 = None
+            # Flux calibration file
+            # Use existing apFlux calibration file
+            if len(flux)>0:
+                bestind = np.argsort(np.abs(np.array(flux)-int(exp[0])))
+                flux1 = int(flux[bestind[0]])
+            # No apFlux calibration file exists yet, it'll need to be made
+            else:
                 # Use domeflat for flux calibration
                 if len(dome)>0:
                     bestind = np.argsort(np.abs(np.array(dome)-int(exp[0])))
-                    dome1 = int(dome[bestind[0]])
+                    flux1 = int(dome[bestind[0]])
                 else:
-                    dome1 = None
+                    flux1 = None
+            # Put everything together for this configuration/plate
+            if fps:
+                plate = info['configid'][i]
+                try:
+                    plate = int(plate)
+                except:
+                    plate = 0
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                           'plate':plate, 'psfid':psf1, 'fluxid':dome1, 'ims':exp, 'fps':fps}
+                           'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
                 objplan['configid'] = str(info['configid'][i])
                 objplan['designid'] = str(info['designid'][i])
                 objplan['fieldid'] = str(info['fieldid'][i])
                 print('Setting force=True for now')
                 objplan['force'] = True
-            else:
+            else:  # plates
                 plate = int(info['plateid'][i])
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                           'plate':plate, 'psfid':psf1, 'fluxid':dome1, 'ims':exp, 'fps':fps}
+                           'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
             out.append(objplan)
             planfile = load.filename('Plan',plate=plate,field=info['fieldid'][i],mjd=mjd)
             planfiles.append(planfile)
             exp = []
+
             # Sky exposures
             #   use same cals as for object
             if len(sky)>0:
                 skyplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                           'plate':plate, 'psfid':psf1, 'fluxid':dome1, 
+                           'plate':plate, 'psfid':psf1, 'fluxid':flux1, 
                            'ims':sky, 'fps':fps, 'sky':True}
                 if fps:
                     skyplan['configid'] = str(info['configid'][i])
