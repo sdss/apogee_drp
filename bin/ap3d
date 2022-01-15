@@ -25,8 +25,8 @@ if __name__ == '__main__' :
     parser = argparse.ArgumentParser(
         prog=os.path.basename(sys.argv[0]),
         description='Runs apogee ap3D reduction')
-    parser.add_argument('--planfile', type=str, help='Plan file')
-    parser.add_argument('--num', type=str, help='Exposure number')
+    parser.add_argument('--planfile', type=str, nargs=1, help='Plan file')
+    parser.add_argument('--num', type=str, nargs=1, help='Exposure number')
     parser.add_argument('--vers', type=str, nargs=1, help='APOGEE Reduction version')
     parser.add_argument('--telescope', type=str, nargs=1, help='Telescope')
     parser.add_argument('--clobber', help='Overwrite files?',action="store_true")
@@ -44,7 +44,7 @@ if __name__ == '__main__' :
     if args.num is not None:
         if args.vers is None or args.telescope is None:
             raise ValueError('vers and telescope must be input with exposure num')
-        num = args.num[0]
+        num = int(args.num[0])
         vers = args.vers[0]
         telescope = args.telescope[0]
         planfile = mkplan.mk3dplan(num,vers,telescope)

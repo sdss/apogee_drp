@@ -402,6 +402,8 @@ def mk3dplan(num,apred='daily',telescope='apo25m',logger=None):
     out['instrument'] = load.instrument
     out['mjd'] = mjd
     out['planfile'] = os.path.basename(planfile)
+    out['plateid'] = 0
+    out['platetype'] = 'single'
 
     # apred_vers keyword will override strict versioning using the plan file!
     out['apred_vers'] = apred
@@ -420,7 +422,7 @@ def mk3dplan(num,apred='daily',telescope='apo25m',logger=None):
         out[c+'id'] = val
 
     # object frames
-    aplist = {'plateid':0, 'mjd':mjd, 'flavor':'object', 'name':num, 'single':-1, 'singlename':'none'}
+    aplist = [{'plateid':0, 'mjd':mjd, 'flavor':'object', 'name':num, 'single':-1, 'singlename':'none'}]
     out['APEXP'] = aplist
 
     # Write to yaml file
