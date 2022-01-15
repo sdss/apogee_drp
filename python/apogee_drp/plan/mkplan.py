@@ -897,6 +897,25 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     if len(flux)==0:
         logger.info('No apFlux files for this night exist.  They will be created as needed')
 
+    # Check FPI cals for this night
+    fpiind, = np.where((info['exptype']=='FPI') & (info['nread']>=3))
+    fpinum = list(info['num'][fpiind].astype(int))
+    # Check that the FPI calibration file exists
+    fpi_exist = np.zeros(len(fpinum),bool)
+    for j in range(len(fpinum)):
+        fpifile = os.path.dirname(load.filename('Wave',num=0,chips=True))+'/apWaveFPI-%s-%8d.fits' % (str(mjd),fpinum[j])
+        fpifiles = [fpifile.replace('apWaveFPI-','apWaveFPI-'+ch+'-') for ch in chips]
+        exist = [os.path.exists(ff) for ff in fpifiles]
+        if np.sum(np.array(exist))==3:
+            fpi_exist[j] = True
+    gdfpi, = np.where(fpi_exist == True)
+    if len(gdfpi)>0:
+        fpi = list(np.array(fpinum)[gdfpi])
+        logger.info('Available apWaveFPI: '+str(fpi))
+    else:
+        fpi = []
+        logger.info('No apWaveFPI files exist')
+
     # Scan through all files, accumulate IDs of the various types
     dark, cal, exp, sky, extra, calpsfid = [], [], [], [], [], None
     domeused, out, planfiles = [], [], []
@@ -927,13 +946,12 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         # Object exposure, used to be >15
         elif (info['exptype'][i]=='OBJECT') and info['nread'][i]>13:
             exp.append(int(info['num'][i]))
-        # Dome flat
+        # Dome flat, dealt with above
         elif (info['exptype'][i]=='DOMEFLAT') and info['nread'][i]>3:
             pass
-        # FPI
-        # still need a header card for this
-        #elif (info['exptype'][i]=='ARCLAMP') and (info['arctype'][i]=='None') and info['nread'][i]>=3:
-        #    fpi.append(int(info['num'][i]))        # Other exposure
+        # FPI, dealt with above
+        elif (info['exptype'][i]=='FPI') and info['nread'][i]>=3:
+            pass
         else:
             print('Unknown exposure: ',info['num'][i],info['exptype'][i],info['nread'][i],' adding to extra plan file')
             extra.append(int(info['num'][i]))
@@ -988,6 +1006,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                     plate = 0
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
+                if len(fpi)>0:
+                    objplan['fpi'] = str(fpi[0])
                 objplan['configid'] = str(info['configid'][i])
                 objplan['designid'] = str(info['designid'][i])
                 objplan['fieldid'] = str(info['fieldid'][i])
