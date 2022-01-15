@@ -25,6 +25,7 @@ from scipy.optimize import curve_fit
 #from scipy.signal import medfilt, convolve, boxcar
 from ..utils import apload, yanny, plan, peakfit
 from ..plan import mkplan
+from ..database import apogeedb
 from . import wave
 #from holtztools import plots, html
 from astropy.table import Table,hstack,vstack
@@ -41,6 +42,8 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     """
 
     t0 = time.time()
+
+    db = apogeedb.DBSession()
 
     print('Getting daily FPI wavelengths for MJD='+str(mjd5))
     
@@ -73,6 +76,9 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
 
     # Step 1: Find the arclamp frames for the last week
     #--------------------------------------------------
+    print(' ')
+    print('Step 1: Find the arclamp frames for the last week')
+    print('--------------------------------------------------')
 
     # Get arclamp exposures
     arc, = np.where((expinfo['exptype']=='ARCLAMP') & ((expinfo['arctype']=='UNE') | (expinfo['arctype']=='THAR')) &
@@ -101,68 +107,89 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
             raise ValueError(str(num)+' is not a FPI exposure')
         fpi = num
     print('FPI full-frame exposure ',fpinum)
+    fpiframe = load.ap1D(fpinum)
 
 
     # Step 2: Fit wavelength solutions simultaneously
     #------------------------------------------------
+    print(' ')
+    print('Step 2: Fit wavelength solutions simultaneously')
+    print('------------------------------------------------')
     # This is what apmultiwavecal does
     if verbose:
         print('Solving wavelength solutions simultaneously using all arclamp exposures')
     #wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%08d.fits' % mjd5
     wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%s.fits' % str(mjd5)
-    #import pdb; pdb.set_trace()
     if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False or clobber is True:
         # The previously measured lines in the apLines files will be reused if they exist
         npoly = 4 # 5
-        #print('KLUDGE!! only using first four frames!!')
+        print('KLUDGE!! only using existing frames!!')
         #arcframes = arcframes[0:4]
+        afiles = ['/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-'+str(e)+'_lines.fits' for e in arcframes]
+        exists = dln.exists(afiles)
+        arcframes = arcframes[exists]
         #import pdb; pdb.set_trace()
+        arcframes = arcframes[-12:]
         pars,arclinestr = wave.wavecal(arcframes,rows=np.arange(300),name=str(mjd5),npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
         # npoly=4 gives lower RMS values
         # Check that it's there
 
-        import pdb; pdb.set_trace()
-
-        if os.path.exists(wavefile) is False:
+        if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False:
             raise Exception(wfile+' not found')
     else:
         print(wfile,' wavelength calibration file already exists')
 
 
-    import pdb; pdb.set_trace()
-
     # Load the wavelength solution from today
     daynum = mjd2day(mjd5)
-    #import pdb; pdb.set_trace()
-    #wavefiles = glob.glob(reduxdir+'cal/'+instrument+'/wave/apWave-b-%4d????.fits' % daynum)
-    #print('KLUDGE!  hard coding apWave-31690004')
-    #wavefiles = 'apWave-b-31690004.fits'
-    #waveid = os.path.basename(dln.first_el(wavefiles))[9:17]
-    #print('Using wavelength cal file ',waveid)
-    #wavecal = load.apWave(waveid)  # why doesn't this work??
-    #wfile = load.allfile('Wave',num=str(mjd5),chips=True)
     print('Using ',wfile,' wavelength calibration file')
     wavecal = load._readchip(wfile,'Wave')
 
     # The wavelength solutions are fit in groups
-    # find the group for the beginning of this night
+    #  find the group associated with the FPI
     ftable = wavecal['a'][7].data
     wheader = wavecal['a'][0].header
     nframes = wheader['nframes']
     ngroups = wheader['ngroup']
     mjdframeind, = np.where(ftable['frame'].find(str(daynum)) > -1)
-
-
-    ######  MAKE SURE WE GET THE WAVLENGTH SOLUTION AT THE SAME DITHER POSITION AS THE FPI EXPOSURE #####
-
-    print('KLUDGE!!! setting frameind=0')
-    mjdframeind = np.array([0])
     if len(mjdframeind)==0:
         raise Exception('No frames for MJD='+str(mjd5))
-    # pick the group closest to the FPI exposure
-    bestind = np.argmin(np.abs(np.array(ftable['frame'][mjdframeind]).astype(int)-int(fpinum)))
-    group = ftable['group'][mjdframeind[bestind]]
-    # now get the wavelength solution parameters for this group
+
+    # Get dither position for all the arclamp exposures and fpi 
+    # to make sure there hasn't been a dither shift between them
+    # but don't include darks
+    
+    # Get dithering information for this night
+    expinfo = db.query(sql='select * from apogee_drp.exposure where mjd='+str(mjd5))
+    si = np.argsort(expinfo['num'])
+    expinfo = expinfo[si]
+    # Loop over the exposures and mark time periods of constant dither position
+    expinfo = Table(expinfo)
+    expinfo['dithergroup'] = -1
+    currentditherpix = expinfo['dithpix'][0]
+    dithergroup = 1
+    for e in range(len(expinfo)):
+        if np.abs(expinfo['dithpix'][e]-currentditherpix)<0.01:
+            expinfo['dithergroup'][e] = dithergroup
+        else:
+            dithergroup += 1
+            currentditherpix = expinfo['dithpix'][e]
+            expinfo['dithergroup'][e] = dithergroup
+
+    # Pick the group closest to the FPI exposure at the same dither period    
+    arcdithergroup = np.zeros(len(ftable),int)-1
+    ind1,ind2 = dln.match(expinfo['num'],ftable['frame'])    
+    if len(ind1)>0:
+        arcdithergroup[ind2] = expinfo['dithergroup'][ind1]
+    fpiind, = np.where(expinfo['num']==fpinum)
+    fpidithergroup = expinfo['dithergroup'][fpiind][0]
+    bestind, = np.where(arcdithergroup==fpidithergroup)
+    if len(bestind)==0:
+        raise ValueError('No arclamp frames in the same dither group as the FPI exposure')
+    wgroup = ftable['group'][bestind][0]  # the wavelength group associated with the FPI
+    print('Wavelength group ',wgroup,' is associated with the FPI')
+
+    # Get the wavelength solution parameters for this group
     #  allpars has shape [npoly+3*ngroup,300]
     #  the first parameters are the polynomial coefficients, and then
     #  there are three offset values per group [chip1 offset ~ chipgap1, chip2 offset ~ 0, chip3 offset ~ chipgap2]
@@ -170,7 +197,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     allpars = wavecal['a'][6].data
     wpars = np.zeros((npoly+3,300),float)
     wpars[0:npoly,:] = allpars[0:npoly,:]
-    wpars[npoly:,:] = allpars[npoly+group*3:npoly+(group+1)*3,:]
+    wpars[npoly:,:] = allpars[npoly+wgroup*3:npoly+(wgroup+1)*3,:]
     # Now calculate the 2D wavelength arrays
     waves = np.zeros((3,300,2048),float)
     for row in range(300):
@@ -181,22 +208,29 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
             x[2,:] = 0
             waves[ichip,row,:] = wave.func_multi_poly(x,*wpars[:,row],npoly=npoly)
 
+
     # Step 3: Fit peaks to the full-frame FPI data
     # --------------------------------------------
-    print('Finding FPI lines')
+    print(' ')
+    print('Step 3: Fit peaks to the full-frame FPI data')
+    print('--------------------------------------------')
     fpilinesfile = reduxdir+'cal/'+instrument+'/fpi/apFPILines-%8d.fits' % fpinum
     if os.path.exists(fpilinesfile) and clobber is False:
         print('Loading previously measured FPI lines for ',fpinum)
         fpilines = Table.read(fpilinesfile)
     else:
-        fpiframe = load.ap1D(fpinum)
         fpilines = fitlines(fpiframe,verbose=verbose)
         # Save the catalog
         print('Writing FPI lines to ',fpilinesfile)
         fpilines.write(fpilinesfile,overwrite=True)
+    # write out median numbes of lines per chip
+
 
     # Step 4: Determine median wavelength per FPI lines
     # -------------------------------------------------
+    print(' ')
+    print('Step 4: Determine median wavelength per FPI lines')
+    print(' -------------------------------------------------')
     # Load initial guesses
     fpipeaksfile = reduxdir+'cal/'+instrument+'/fpi/fpi_peaks.fits'
     if os.path.exists(fpipeaksfile):
@@ -206,9 +240,14 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         fpipeaks = None
     fpilinestr, fpilines = getfpiwave(fpilines,wpars,fpipeaks)
 
+
     # Step 5: Refit wavelength solutions using FPI lines
     # --------------------------------------------------
+    print(' ')
+    print('Step 5: Refit wavelength solutions using FPI lines')
+    print('--------------------------------------------------')
     fpiwcoef,fpiwaves = fpiwavesol(fpilinestr,fpilines,wpars)
+
 
     # Save the results
     #-----------------
@@ -220,18 +259,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     # wavelength array??
 
     print("elapsed: %0.1f sec." % (time.time()-t0))
-
-
-
-    # make a little python function that generates a wavelength solution using a week's worth of
-    # arclamp data simultaneously fit with "apmultiwavecal" and then we use the FPI full-frame exposure
-    # to get the FPI wavelengths and redo the wavelength solution
-    # -find the arclamp frames for the last week
-    # -run apmultiwavecal on them
-    # -fit peaks in FPI data
-    # -define median wavelengths per FPI line
-    # -refit wavelength solution with FPI lines, maybe holding higher-order coefficients fixed
-
+    db.close()   # close the database connection
 
 
 def fitlines(frame,rows=np.arange(300),chips=['a','b','c'],verbose=False):
@@ -260,7 +288,9 @@ def fitlines(frame,rows=np.arange(300),chips=['a','b','c'],verbose=False):
                     linestr = linestr1
                 else:
                     linestr = vstack((linestr,linestr1))
-
+            else:
+                if verbose:
+                    print(chip,f,0,' lines')
     return linestr
 
 
