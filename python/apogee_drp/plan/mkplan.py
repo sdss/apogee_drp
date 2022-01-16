@@ -362,183 +362,12 @@ def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
                 file.write('lsf      99999 99999   %08i   %08i   %08i\n' % (lsfs[i],lsfs[i],psf))
     file.close()
 
-def mk3dplan(num,apred='daily',telescope='apo25m',logger=None):
-    """
-    Make a simple ap3d plan file for a single exposure.
-    """
 
-    # Logger
-    if logger is None: logger=dln.basiclogger()
-
-    if apred is None:
-        raise ValueError('apred must be input')
-    if telescope is None:
-        raise ValueError('telescope must be input')
-
-    logger.info('Making simple 3D plan for: '+str(num))
-
-    # Set up directories, plate, and MJD variables
-    load = apload.ApLoad(apred=apred,telescope=telescope)
-    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
-    calfile = caldir+load.instrument+'.par' 
-
-    mjd = int(load.cmjd(num))
-
-    # Planfile name and directory
-    planfile = load.filename('2D',num=num,mjd=mjd,chips=True)
-    planfile = planfile.replace('2D','3DPlan').replace('.fits','.yaml')
-    outdir = os.path.dirname(planfile)+'/'
-    if os.path.exists(outdir)==False:
-        os.makedirs(outdir)
-    
-    # Get calibration files for this date
-    caldata = mkcal.getcal(calfile,mjd)
-
-    # open plan file and write header
-    if os.path.exists(planfile): os.remove(planfile)
-    out = {}
-    out['apogee_drp_ver'] = os.environ['APOGEE_DRP_VER']
-    out['telescope'] = telescope
-    out['instrument'] = load.instrument
-    out['mjd'] = mjd
-    out['planfile'] = os.path.basename(planfile)
-    out['plateid'] = 0
-    out['platetype'] = 'single'
-
-    # apred_vers keyword will override strict versioning using the plan file!
-    out['apred_vers'] = apred
-
-    # Use q3fix
-    if 'q3fix' in caldata.keys():
-        if caldata['q3fix'] is not None:
-            if int(caldata['q3fix'])==1:
-                out['q3fix'] = 1
-
-    # Calibration frames to use
-    calnames = ['det','bpm','littrow','persist','persistmodel','dark','flat']
-    for c in calnames:
-        val = caldata[c]
-        if str(val).isdigit(): val=int(val)
-        out[c+'id'] = val
-
-    # object frames
-    aplist = [{'plateid':0, 'mjd':mjd, 'flavor':'object', 'name':num, 'single':-1, 'singlename':'none'}]
-    out['APEXP'] = aplist
-
-    # Write to yaml file
-    logger.info('plan file = '+planfile)
-    with open(planfile,'w') as ofile:
-        dum = yaml.dump(out,ofile,default_flow_style=False, sort_keys=False)
-    os.chmod(planfile, 0o664)
-
-    return planfile
-
-
-def mk2dplan(num,apred='daily',telescope='apo25m',logger=None):
-    """
-    Make a simple ap3d plan file for a single exposure.
-    """
-
-    # Logger
-    if logger is None: logger=dln.basiclogger()
-
-    if apred is None:
-        raise ValueError('apred must be input')
-    if telescope is None:
-        raise ValueError('telescope must be input')
-
-    logger.info('Making simple 2D plan for: '+str(num))
-
-    # Set up directories, plate, and MJD variables
-    load = apload.ApLoad(apred=apred,telescope=telescope)
-    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
-    calfile = caldir+load.instrument+'.par' 
-
-    mjd = int(load.cmjd(num))
-
-    # Planfile name and directory
-    planfile = load.filename('2D',num=num,mjd=mjd,chips=True)
-    planfile = planfile.replace('2D','2DPlan').replace('.fits','.yaml')
-    outdir = os.path.dirname(planfile)+'/'
-    if os.path.exists(outdir)==False:
-        os.makedirs(outdir)
-    
-    # Get calibration files for this date
-    caldata = mkcal.getcal(calfile,mjd)
-
-    # open plan file and write header
-    if os.path.exists(planfile): os.remove(planfile)
-    out = {}
-    out['apogee_drp_ver'] = os.environ['APOGEE_DRP_VER']
-    out['telescope'] = telescope
-    out['instrument'] = load.instrument
-    out['mjd'] = mjd
-    out['planfile'] = os.path.basename(planfile)
-    out['plateid'] = 0
-    out['platetype'] = 'single'
-
-    # apred_vers keyword will override strict versioning using the plan file!
-    out['apred_vers'] = apred
-
-    # Use q3fix
-    if 'q3fix' in caldata.keys():
-        if caldata['q3fix'] is not None:
-            if int(caldata['q3fix'])==1:
-                out['q3fix'] = 1
-
-    # Calibration frames to use
-    calnames = ['det','bpm','littrow','persist','persistmodel','dark','flat',
-                'sparse','fiber','badfiber','fixfiber','response','wave','lsf']
-    for c in calnames:
-        val = caldata[c]
-        if str(val).isdigit(): val=int(val)
-        out[c+'id'] = val
-
-    # We use multiwaveid for waveid
-    waveid = caldata['multiwave']
-    if str(waveid).isdigit(): waveid=int(waveid)
-    out['waveid'] = waveid
-    # Get PSF calibration files
-    psffile = load.filename('PSF',num=0,mjd=mjd,chips=True)
-    psffile = psffile.replace('PSF-','PSF-b-')
-    base = ('%8d' % num)[0:4]
-    psffiles = glob(psffile.replace('-00000000','-'+base+'????'))
-    if len(psffiles)==0:
-        raise ValueError('No PSF files for MJD='+str(mjd))
-    psfnum = [os.path.basename(p)[8:16] for p in psffiles] 
-    si = np.argsort(np.abs(np.array(psfnum).astype(int)-int(num)))
-    psfid = np.array(psfnum)[si][0]
-    out['psfid'] = str(psfid)
-    # Get Flux calibration file
-    fluxfile = load.filename('Flux',num=0,mjd=mjd,chips=True)
-    fluxfile = psffile.replace('Flux-','PSF-b-')
-    base = ('%8d' % num)[0:4]
-    fluxfiles = glob(psffile.replace('-00000000','-'+base+'????'))    
-    if len(fluxfiles)==0:
-        raise ValueError('No Flux files for MJD='+str(mjd))
-    fluxnum = [os.path.basename(f)[8:16] for f in fluxfiles] 
-    si = np.argsort(np.abs(np.array(fluxnum).astype(int)-int(num)))
-    fluxid = np.array(fluxnum)[si][0]
-    out['fluxid'] = str(fluxid)
- 
-    # object frames
-    aplist = [{'plateid':0, 'mjd':mjd, 'flavor':'object', 'name':num, 'single':-1, 'singlename':'none'}]
-    out['APEXP'] = aplist
-
-    # Write to yaml file
-    logger.info('plan file = '+planfile)
-    with open(planfile,'w') as ofile:
-        dum = yaml.dump(out,ofile,default_flow_style=False, sort_keys=False)
-    os.chmod(planfile, 0o664)
-
-    return planfile
-
-
-def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
+def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None,cal=False,
            dark=False,extra=False,sky=False,plugid=None,fixfiberid=None,stars=None,
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False,logger=None,configid=None,designid=None,
-           fieldid=None,fps=False,force=False):
+           fieldid=None,fps=False,force=False,ap3d=False,ap2d=False):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -628,12 +457,27 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
     if telescope is None:
         raise ValueError('telescope must be input')
 
-    logger.info('Making plan for MJD: '+str(mjd))
+    if type(ims) is not list:
+        ims = [ims]
+
+    # First exposure
+    im1 = dln.first_el(ims)
+
+    if ap3d:
+        logger.info('Making simple 3D plan for: '+str(im1))
+    elif ap2d:
+        logger.info('Making simple 2D plan for: '+str(im1))
+    else:
+        logger.info('Making plan for MJD: '+str(mjd))
 
     # Set up directories, plate, and MJD variables
     load = apload.ApLoad(apred=apred,telescope=telescope)
     caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
     calfile = caldir+load.instrument+'.par' 
+
+    # Get MJD from exposure numbers if not input
+    if mjd is None:
+        mjd = int(load.cmjd(im1))
 
     # Mapper directory
     if mapper_data is None:
@@ -642,14 +486,21 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         else:
             mapper_data = os.environ['MAPPER_DATA_S']
 
+
     # Planfile name and directory
-    if cal==True:
+    if cal:
         planfile = load.filename('CalPlan',mjd=mjd)
-    elif dark==True:
+    elif dark:
         planfile = load.filename('DarkPlan',mjd=mjd)
-    elif extra==True:
+    elif extra:
         planfile = load.filename('ExtraPlan',mjd=mjd)
-    elif onem==True:
+    elif ap3d:
+        planfile = load.filename('2D',num=im1,mjd=mjd,chips=True)
+        planfile = planfile.replace('2D','3DPlan').replace('.fits','.yaml')
+    elif ap2d:
+        planfile = load.filename('2D',num=im1,mjd=mjd,chips=True)
+        planfile = planfile.replace('2D','2DPlan').replace('.fits','.yaml')
+    elif onem:
         planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd) 
         if suffix is not None:
             planfile = os.path.dirname(planfile)+'/'+os.path.splitext(os.path.basename(planfile))[0]+suffix+'.yaml'
@@ -701,8 +552,9 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         out['fieldid'] = fieldid
     out['mjd'] = mjd
     out['planfile'] = os.path.basename(planfile)
-    out['logfile'] = 'apDiag-'+str(plate)+'-'+str(mjd)+'.log'
-    out['plotfile'] = 'apDiag-'+str(plate)+'-'+str(mjd)+'.ps'
+    if ap3d==False and ap2d==False:
+        out['logfile'] = 'apDiag-'+str(plate)+'-'+str(mjd)+'.log'
+        out['plotfile'] = 'apDiag-'+str(plate)+'-'+str(mjd)+'.ps'
 
     # apred_vers keyword will override strict versioning using the plan file!
     out['apred_vers'] = apred
@@ -723,7 +575,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
             out['mjdfrac'] = 1
 
     # platetype
-    if stars is not None:
+    if stars is not None or ap3d or ap2d:
         out['platetype'] = 'single'
     elif cal==True:
         out['platetype'] = 'cal'
@@ -739,35 +591,35 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
         out['platetype'] = 'normal'
 
     sdss_path = path.Path()
-    rawfile = sdss_path.full('apR',num=ims[0],chip='a',mjd=mjd)
-    #rawfile = load.filename('R',chip='a',num=ims[0])
+    rawfile = sdss_path.full('apR',num=im1,chip='a',mjd=mjd)
     if os.path.exists(rawfile)==False:
         raise ValueError('Cannot find file '+rawfile)
     head = fits.getheader(rawfile,1)
     plateid = head.get('PLATEID')
     configid = head.get('CONFIGID')
-    if (ignore==False):
+    if (ignore==False) and not ap3d and not ap2d:
         if fps==False & (plate!=0) & (plate!=plateid):
             raise ValueError('plateid in header does not match plate!')
 
     # plugmap
-    logger.info(str(plugid))
-    if plugid is None:
-        rawfile = sdss_path.full('apR',num=ims[0],chip='a',mjd=mjd)
-        #rawfile = load.filename('R',chip='a',num=ims[0])
-        if os.path.exists(rawfile)==True:
-            head = fits.getheader(rawfile,1)
-            if fps==False:
-                plugid = head['NAME']
-                if type(plugid) is not str:
-                    plugid = 'header'
+    if ap3d==False and ap2d==False:
+        logger.info(str(plugid))
+        if plugid is None:
+            rawfile = sdss_path.full('apR',num=ims[0],chip='a',mjd=mjd)
+            #rawfile = load.filename('R',chip='a',num=ims[0])
+            if os.path.exists(rawfile)==True:
+                head = fits.getheader(rawfile,1)
+                if fps==False:
+                    plugid = head['NAME']
+                    if type(plugid) is not str:
+                        plugid = 'header'
+                else:
+                    plugid = 'confSummary-'+str(configid)+'.par'
             else:
-                plugid = 'confSummary-'+str(configid)+'.par'
-        else:
-            plugid = 'header'
-    logger.info(str(ims[0]))
-    logger.info(str(plugid))
-    if (cal==False) & (dark==False) & (extra==False) & (onem==False):
+                plugid = 'header'
+    logger.info(str(im1))
+    if (cal==False) and (dark==False) and (extra==False) and (onem==False) and (ap3d==False) and (ap2d==False):
+        logger.info(str(plugid))
         tmp = plugid.split('-')
         if mjd<59556:
             if os.path.exists(mapper_data+'/'+tmp[1]+'/plPlugMapM-'+plugid+'.par')==False:
@@ -796,7 +648,7 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
             else:
                 print('No plate/configuration information')
                 plugid = 0
-    out['plugmap'] = plugid
+        out['plugmap'] = plugid
 
     # Use q3fix
     if 'q3fix' in caldata.keys():
@@ -805,19 +657,48 @@ def mkplan(ims,plate,mjd,psfid,fluxid,apred=None,telescope=None,cal=False,
                 out['q3fix'] = 1
 
     # Calibration frames to use
-    calnames = ['det','bpm','littrow','persist','persistmodel','dark','flat',
-                'sparse','fiber','badfiber','fixfiber','response','wave','lsf']
+    calnames = ['det','bpm','littrow','persist','persistmodel','dark','flat']
+    if ap3d==False:
+        calnames += ['sparse','fiber','badfiber','fixfiber','response','wave','lsf']
     for c in calnames:
         val = caldata[c]
         if str(val).isdigit(): val=int(val)
         out[c+'id'] = val
     # We use multiwaveid for waveid
-    waveid = caldata['multiwave']
-    if str(waveid).isdigit(): waveid=int(waveid)
-    out['waveid'] = waveid
-    # Input PSFID and FLUXID
-    out['psfid'] = psfid
-    out['fluxid'] = fluxid
+    if ap3d==False:
+        waveid = caldata['multiwave']
+        if str(waveid).isdigit(): waveid=int(waveid)
+        out['waveid'] = waveid
+        # Input PSFID and FLUXID
+        if psfid is not None:
+            out['psfid'] = psfid
+        # Get PSF calibration files
+        else:
+            psffile = load.filename('PSF',num=0,mjd=mjd,chips=True)
+            psffile = psffile.replace('PSF-','PSF-b-')
+            base = ('%8d' % im1)[0:4]
+            psffiles = glob(psffile.replace('-00000000','-'+base+'????'))
+            if len(psffiles)==0:
+                raise ValueError('No PSF files for MJD='+str(mjd))
+            psfnum = [os.path.basename(p)[8:16] for p in psffiles] 
+            si = np.argsort(np.abs(np.array(psfnum).astype(int)-int(im1)))
+            psfid = np.array(psfnum)[si][0]
+            out['psfid'] = str(psfid)
+        # Flux calibration file
+        if fluxid is not None:
+            out['fluxid'] = fluxid
+        # Get Flux calibration file
+        else:
+            fluxfile = load.filename('Flux',num=0,mjd=mjd,chips=True)
+            fluxfile = psffile.replace('Flux-','PSF-b-')
+            base = ('%8d' % im1)[0:4]
+            fluxfiles = glob(psffile.replace('-00000000','-'+base+'????'))    
+            if len(fluxfiles)==0:
+                raise ValueError('No Flux files for MJD='+str(mjd))
+            fluxnum = [os.path.basename(f)[8:16] for f in fluxfiles] 
+            si = np.argsort(np.abs(np.array(fluxnum).astype(int)-int(im1)))
+            fluxid = np.array(fluxnum)[si][0]
+            out['fluxid'] = str(fluxid)
 
     # object frames
     aplist = []
