@@ -367,7 +367,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
            dark=False,extra=False,sky=False,plugid=None,fixfiberid=None,stars=None,
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False,logger=None,configid=None,designid=None,
-           fieldid=None,fps=False,force=False,ap3d=False,ap2d=False):
+           fieldid=None,fps=False,force=False,fpi=None,ap3d=False,ap2d=False):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -430,6 +430,12 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     force : boolean, optional
         Force ap1dvisit to push through sky and tellurics even if there aren't
           any sky or telluric fibers.
+    fpi : int, optional
+        The exposure number for a full-frame FPI exposure.  Default is None.
+    ap3d : boolean, optional
+        This is a simple plan file for a ap3d run.
+    ap2d : boolean, optional
+        This is a simple plan file for a ap2d run.
 
     Returns
     -------
@@ -546,6 +552,10 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     out['plateid'] = plate
     out['fps'] = fps
     out['force'] = force
+    if fpi is not None:
+        out['fpi'] = str(fpi)
+    else:
+        out['fpi'] = 0
     if fps:
         out['configid'] = configid
         out['designid'] = designid
