@@ -880,7 +880,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                      qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
         for num in expinfo['num']:
             outfile = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
-            outfile = os.path.dirnames(outfile)+'/logs/'+os.path.basename(outfile)
+            outfile = os.path.dirname(outfile)+'/logs/'+os.path.basename(outfile)
             if os.path.dirname(outfile)==False:
                 os.makedirs(os.path.dirname(outfile))
             queue.append('ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope),
