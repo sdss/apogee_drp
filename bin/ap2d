@@ -47,7 +47,7 @@ if __name__ == '__main__' :
         num = int(args.num[0])
         vers = args.vers[0]
         telescope = args.telescope[0]
-        planfile = mkplan.mk2dplan(num,vers,telescope)
+        planfile = mkplan.mkplan(num,apred=vers,telescope=telescope,ap3d=True)
     else:
         planfile = args.planfile[0]
 
