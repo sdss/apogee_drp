@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: David Nidever
+# @Date: Jan 2022
+# @Filename: ap2d
+# @License: BSD 3-Clause
+# @Copyright: David Nidever
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import subprocess
+import pdb
+from apogee_drp.plan import mkplan
+
+if __name__ == '__main__' :
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Runs apogee ap2D reduction')
+    parser.add_argument('--planfile', type=str, nargs=1, help='Plan file')
+    parser.add_argument('--num', type=str, nargs=1, help='Exposure number')
+    parser.add_argument('--vers', type=str, nargs=1, help='APOGEE Reduction version')
+    parser.add_argument('--telescope', type=str, nargs=1, help='Telescope')
+    parser.add_argument('--clobber', help='Overwrite files?',action="store_true")
+    args = parser.parse_args()
+
+    if args.clobber:
+        clobber = '1'
+    else:
+        clobber = '0'
+
+    if args.planfile is None and args.num is None:
+        raise ValueError('Must input either planfile or exposure number')
+
+    # Make plan file for single exposure, if necessary
+    if args.num is not None:
+        if args.vers is None or args.telescope is None:
+            raise ValueError('vers and telescope must be input with exposure num')
+        num = int(args.num[0])
+        vers = args.vers[0]
+        telescope = args.telescope[0]
+        planfile = mkplan.mk2dplan(num,vers,telescope)
+    else:
+        planfile = args.planfile[0]
+
+    subprocess.call(["idl","-e","ap2d,'"+planfile+"',clobber='"+clobber+"'"])

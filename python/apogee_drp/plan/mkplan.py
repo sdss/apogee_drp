@@ -364,7 +364,7 @@ def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
 
 def mk3dplan(num,apred='daily',telescope='apo25m',logger=None):
     """
-    Make a simple plan file for a single exposure.
+    Make a simple ap3d plan file for a single exposure.
     """
 
     # Logger
@@ -426,6 +426,107 @@ def mk3dplan(num,apred='daily',telescope='apo25m',logger=None):
     out['APEXP'] = aplist
 
     # Write to yaml file
+    logger.info('plan file = '+planfile)
+    with open(planfile,'w') as ofile:
+        dum = yaml.dump(out,ofile,default_flow_style=False, sort_keys=False)
+    os.chmod(planfile, 0o664)
+
+    return planfile
+
+
+def mk2dplan(num,apred='daily',telescope='apo25m',logger=None):
+    """
+    Make a simple ap3d plan file for a single exposure.
+    """
+
+    # Logger
+    if logger is None: logger=dln.basiclogger()
+
+    if apred is None:
+        raise ValueError('apred must be input')
+    if telescope is None:
+        raise ValueError('telescope must be input')
+
+    logger.info('Making simple 2D plan for: '+str(num))
+
+    # Set up directories, plate, and MJD variables
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
+    calfile = caldir+load.instrument+'.par' 
+
+    mjd = int(load.cmjd(num))
+
+    # Planfile name and directory
+    planfile = load.filename('2D',num=num,mjd=mjd,chips=True)
+    planfile = planfile.replace('2D','2DPlan').replace('.fits','.yaml')
+    outdir = os.path.dirname(planfile)+'/'
+    if os.path.exists(outdir)==False:
+        os.makedirs(outdir)
+    
+    # Get calibration files for this date
+    caldata = mkcal.getcal(calfile,mjd)
+
+    # open plan file and write header
+    if os.path.exists(planfile): os.remove(planfile)
+    out = {}
+    out['apogee_drp_ver'] = os.environ['APOGEE_DRP_VER']
+    out['telescope'] = telescope
+    out['instrument'] = load.instrument
+    out['mjd'] = mjd
+    out['planfile'] = os.path.basename(planfile)
+    out['plateid'] = 0
+    out['platetype'] = 'single'
+
+    # apred_vers keyword will override strict versioning using the plan file!
+    out['apred_vers'] = apred
+
+    # Use q3fix
+    if 'q3fix' in caldata.keys():
+        if caldata['q3fix'] is not None:
+            if int(caldata['q3fix'])==1:
+                out['q3fix'] = 1
+
+    # Calibration frames to use
+    calnames = ['det','bpm','littrow','persist','persistmodel','dark','flat',
+                'sparse','fiber','badfiber','fixfiber','response','wave','lsf']
+    for c in calnames:
+        val = caldata[c]
+        if str(val).isdigit(): val=int(val)
+        out[c+'id'] = val
+
+    # We use multiwaveid for waveid
+    waveid = caldata['multiwave']
+    if str(waveid).isdigit(): waveid=int(waveid)
+    out['waveid'] = waveid
+    # Get PSF calibration files
+    psffile = load.filename('PSF',num=0,mjd=mjd,chips=True)
+    psffile = psffile.replace('PSF-','PSF-b-')
+    base = ('%8d' % num)[0:4]
+    psffiles = glob(psffile.replace('-00000000','-'+base+'????'))
+    if len(psffiles)==0:
+        raise ValueError('No PSF files for MJD='+str(mjd))
+    psfnum = [os.path.basename(p)[8:16] for p in psffiles] 
+    si = np.argsort(np.abs(np.array(psfnum).astype(int)-int(num)))
+    psfid = np.array(psfnum)[si][0]
+    out['psfid'] = str(psfid)
+    # Get Flux calibration file
+    fluxfile = load.filename('Flux',num=0,mjd=mjd,chips=True)
+    fluxfile = psffile.replace('Flux-','PSF-b-')
+    base = ('%8d' % num)[0:4]
+    fluxfiles = glob(psffile.replace('-00000000','-'+base+'????'))    
+    if len(fluxfiles)==0:
+        raise ValueError('No Flux files for MJD='+str(mjd))
+    fluxnum = [os.path.basename(f)[8:16] for f in fluxfiles] 
+    si = np.argsort(np.abs(np.array(fluxnum).astype(int)-int(num)))
+    fluxid = np.array(fluxnum)[si][0]
+    out['fluxid'] = str(fluxid)
+ 
+    # object frames
+    aplist = [{'plateid':0, 'mjd':mjd, 'flavor':'object', 'name':num, 'single':-1, 'singlename':'none'}]
+    out['APEXP'] = aplist
+
+    # Write to yaml file
+    logger.info('plan file = '+planfile)
     with open(planfile,'w') as ofile:
         dum = yaml.dump(out,ofile,default_flow_style=False, sort_keys=False)
     os.chmod(planfile, 0o664)
