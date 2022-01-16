@@ -494,6 +494,76 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
     return chkexp,chkap
 
 
+def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=None):
+    """ Check that ap3d ran okay and load into database."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    db = apogeedb.DBSession()  # open db session
+
+    if verbose==True:
+        logger.info('')
+        logger.info('-----------------')
+        logger.info('Checking ap3D run')
+        logger.info('=================')
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+
+    if verbose:
+        logger.info('')
+        logger.info('%d exposures' % len(expinfo))
+        logger.info(' NUM         SUCCESS')
+
+    # Loop over the stars
+    nexp = len(expinfo)
+
+    dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
+                      ('instrument',(np.str,20)),('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),
+                      ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
+                      ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
+                      ('num',int),('success',bool)])
+    chk3d = np.zeros(nexp,dtype=dtype)
+    chk3d['apred_vers'] = apred
+    chk3d['telescope'] = telescope
+    chk3d['pbskey'] = pbskey
+    chk3d['proctype'] = 'AP3D'
+    chk3d['success'] = False
+    chips = ['a','b','c']
+    for i,num in enumerate(expinfo['num']):
+        chk3d['exposure_pk'] = expinfo['pk'][i]
+        chk3d['num'][i] = num
+        mjd = int(load.cmjd(num))
+        outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
+        planfile = outfile.replace('2D','3DPlan').replace('.fits','.yaml')
+        chk3d['planfile'][i] = planfile
+        outfiles = [outfile.replace('2D-','2D-'+ch+'-') for ch in chips]
+        exist = [os.path.exists(o) for o in outfiles]
+        if exist[0]:
+            head = fits.getheader(outfiles[0])
+            chk3d['v_apred'][i] = head.get('V_APRED')
+            head = fits.getheader(outfiles[0])
+            chk3d['v_apred'][i] = head.get('V_APRED')
+            head = fits.getheader(outfiles[0])
+            chk3d['v_apred'][i] = head.get('V_APRED')
+            head = fits.getheader(outfiles[0])
+            chk3d['v_apred'][i] = head.get('V_APRED')
+        chk3d['checktime'][i] = str(datetime.now())
+        chk3d['success'][i] = np.sum(exist)==3
+
+        if verbose:
+            logger.info('%5d %20s %8d %5d %9s' % (i+1,num,chk3d['success'][i]))
+    success, = np.where(chk3d['success']==True)
+    logger.info('%d/%d succeeded' % (len(success),nexp))
+    
+    # Inset into the database
+    db.ingest('exposure_status',chk3d)
+    db.close()        
+
+    import pdb; pdb.set_trace()
+
+    return chk3d
+
 def check_rv(visits,pbskey,verbose=False,logger=None):
     """ Check that rv ran okay and load into database."""
 
@@ -559,7 +629,6 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
     db.close()        
 
     return chkrv
-
 
 def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     """ Create allVisit/allStar files and summary of objects for this night."""
@@ -797,6 +866,34 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     expinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (mjd5,observatory))
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]
+
+
+    # Process all exposures through ap3D first
+    #-----------------------------------------
+    if len(expinfo)>0:
+        rootLogger.info('')
+        rootLogger.info('-----------------------------')
+        rootLogger.info('Running AP3D on all exposures')
+        rootLogger.info('=============================')
+        rootLogger.info('')
+        queue = pbsqueue(verbose=True)
+        queue.create(label='ap3d', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(expinfo)),
+                     qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
+        for num in expinfo['num']:
+            outfile = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
+            queue.append('ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope),
+                         outfile=outfile.replace('.fits','_pbs.'+logtime+'.log'),
+                         errfile=outfile.replace('.fits','_pbs.'+logtime+'.err'))
+        queue.commit(hard=True,submit=True)
+        rootLogger.info('PBS key is '+queue.key)
+        queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
+        chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=rootLogger)
+        del queue
+    else:
+        rootLogger.info('No exposures to process with ap3D')
+
+    import pdb; pdb.set_trace()
+
 
     # Run calibration files using "pbs" packages
     #-------------------------------------------

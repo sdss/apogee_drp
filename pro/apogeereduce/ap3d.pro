@@ -9,6 +9,7 @@
 ;  planfiles  Input list of plate plan files
 ;  /verbose  Print a lot of information to the screen
 ;  /stp      Stop at the end of the prrogram
+;  /unlock      Delete lock file and start fresh
 ;
 ; OUTPUTS:
 ;  The RAW APOGEE 3D datacube files are processed and 2D 
@@ -21,7 +22,7 @@
 ; Modifications J. Holtzman 2011+
 ;-
 
-pro ap3d,planfiles,verbose=verbose,stp=stp,rogue=rogue,clobber=clobber,refonly=refonly
+pro ap3d,planfiles,verbose=verbose,stp=stp,rogue=rogue,clobber=clobber,refonly=refonly,unlock=unlock
 
 if n_elements(verbose) eq 0 then verbose=0  ; NOT verbose by default
 if not keyword_set(clobber) then clobber=0  ; NOT clobber by default
@@ -441,7 +442,7 @@ FOR i=0L,nplanfiles-1 do begin
                rd3satfix=rd3satfix,nfowler=nfowler,cleanuprawfile=1,$
                uptheramp=uptheramp,verbose=verbose,error=procerror,clobber=clobber,logfile=logfile,$
                fitsdir=getlocaldir(),q3fix=q3fix,maxread=maxread,persistmodelcorr=persistmodelcorr,histcorr=histcorr,$
-               usereference=usereference,refonly=refonly,seq=seq
+               usereference=usereference,refonly=refonly,seq=seq,unlock=unlock
 
       BOMB2:
 

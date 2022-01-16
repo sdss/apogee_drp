@@ -30,12 +30,17 @@ if __name__ == '__main__' :
     parser.add_argument('--vers', type=str, nargs=1, help='APOGEE Reduction version')
     parser.add_argument('--telescope', type=str, nargs=1, help='Telescope')
     parser.add_argument('--clobber', help='Overwrite files?',action="store_true")
+    parser.add_argument('--unlock', help='Remove lock files and start fresh',action="store_true")
     args = parser.parse_args()
 
     if args.clobber:
         clobber = '1'
     else:
         clobber = '0'
+    if args.unlock:
+        unlock = '1'
+    else:
+        unlock = '0'
 
     if args.planfile is None and args.num is None:
         raise ValueError('Must input either planfile or exposure number')
@@ -51,4 +56,4 @@ if __name__ == '__main__' :
     else:
         planfile = args.planfile[0]
 
-    subprocess.call(["idl","-e","ap2d,'"+planfile+"',clobber='"+clobber+"'"])
+    subprocess.call(["idl","-e","ap2d,'"+planfile+"',clobber="+clobber+",unlock="+unlock"])

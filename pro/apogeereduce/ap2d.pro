@@ -13,6 +13,7 @@
 ;  /clobber      Overwrite existing files.
 ;  /domelibrary  Use the domeflat library.
 ;  /stp          Stop at the end of the prrogram
+;  /unlock      Delete lock file and start fresh
 ;
 ; OUTPUTS:
 ;  1D extracted spectra are output.  One file for each frame.
@@ -25,7 +26,7 @@
 ;-
 
 pro ap2d,planfiles,verbose=verbose,stp=stp,clobber=clobber,exttype=exttype,mapper_data=mapper_data,$
-         domelibrary=domelibrary
+         domelibrary=domelibrary,unlock=unlock
 
 common savedepsf, savedepsffiles, epsfchip
 
@@ -261,14 +262,14 @@ FOR i=0L,nplanfiles-1 do begin
     outdir=apogee_filename('1D',num=framenum,chip='a',/dir)
     if file_test(outdir,/directory) eq 0 then FILE_MKDIR,outdir
     if min(fluxtest) eq 0 or planstr.apexp[j].flavor eq 'flux' then $
-      AP2DPROC,inpfile,tracefile,exttype,outdir=outdir,$
+      AP2DPROC,inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,$
                wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,/compress $
     else if waveid gt 0 then begin
-      AP2DPROC,inpfile,tracefile,exttype,outdir=outdir,$
+      AP2DPROC,inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,$
                fluxcalfile=fluxfile,responsefile=responsefile,$
                wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,/compress 
     endif else $
-      AP2DPROC,inpfile,tracefile,exttype,outdir=outdir,$
+      AP2DPROC,inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,$
                fluxcalfile=fluxfile,responsefile=responsefile,$
                clobber=clobber,/compress 
 
