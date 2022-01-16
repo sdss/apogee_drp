@@ -535,6 +535,7 @@ def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=Non
         chk3d['num'][i] = num
         mjd = int(load.cmjd(num))
         outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
+        outfile = os.path.dirname(outfile)+'/logs/'+os.path.basename(outfile)
         planfile = outfile.replace('2D','3DPlan').replace('.fits','.yaml')
         chk3d['planfile'][i] = planfile
         outfiles = [outfile.replace('2D-','2D-'+ch+'-') for ch in chips]
@@ -552,15 +553,13 @@ def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=Non
         chk3d['success'][i] = np.sum(exist)==3
 
         if verbose:
-            logger.info('%5d %20s %8d %5d %9s' % (i+1,num,chk3d['success'][i]))
+            logger.info('%5d %20s %9s' % (i+1,num,chk3d['success'][i]))
     success, = np.where(chk3d['success']==True)
     logger.info('%d/%d succeeded' % (len(success),nexp))
     
     # Inset into the database
     db.ingest('exposure_status',chk3d)
     db.close()        
-
-    import pdb; pdb.set_trace()
 
     return chk3d
 
@@ -881,6 +880,9 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                      qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
         for num in expinfo['num']:
             outfile = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
+            outfile = os.path.dirnames(outfile)+'/logs/'+os.path.basename(outfile)
+            if os.path.dirname(outfile)==False:
+                os.makedirs(os.path.dirname(outfile))
             queue.append('ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope),
                          outfile=outfile.replace('.fits','_pbs.'+logtime+'.log'),
                          errfile=outfile.replace('.fits','_pbs.'+logtime+'.err'))
@@ -891,8 +893,6 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
         del queue
     else:
         rootLogger.info('No exposures to process with ap3D')
-
-    import pdb; pdb.set_trace()
 
 
     # Run calibration files using "pbs" packages
