@@ -535,10 +535,10 @@ def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=Non
         chk3d['num'][i] = num
         mjd = int(load.cmjd(num))
         outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
-        outfile = os.path.dirname(outfile)+'/logs/'+os.path.basename(outfile)
+        outfiles = [outfile.replace('2D-','2D-'+ch+'-') for ch in chips]
+        planfile = os.path.dirname(outfile)+'/logs/'+os.path.basename(outfile)
         planfile = outfile.replace('2D','3DPlan').replace('.fits','.yaml')
         chk3d['planfile'][i] = planfile
-        outfiles = [outfile.replace('2D-','2D-'+ch+'-') for ch in chips]
         exist = [os.path.exists(o) for o in outfiles]
         if exist[0]:
             head = fits.getheader(outfiles[0])
