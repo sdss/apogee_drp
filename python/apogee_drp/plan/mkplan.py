@@ -12,9 +12,9 @@ except ImportError:
     from yaml import Loader, Dumper
 
 from dlnpyutils import utils as dln
-from apogee_drp.utils import spectra,yanny,apload,platedata,utils
-from apogee_drp.plan import mkslurm
-from apogee_drp.apred import mkcal
+from ..utils import spectra,yanny,apload,platedata,utils
+from ..apred import mkcal
+from plan import mkslurm,check
 from sdss_access.path import path
 from astropy.io import fits
 from collections import OrderedDict
@@ -902,6 +902,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         plateindex = dln.create_index(info['plateid'][objind])
         for i in range(len(plateindex['value'])):
             logger.info('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
+
+    # Do QA check of the files
+    qachk = check(expinfo['num'],apred,telescope)
 
     # Get domeflat and quartzflats for this night
     domeind, = np.where((info['exptype']=='DOMEFLAT') & (info['nread']>=3))

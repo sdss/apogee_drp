@@ -54,9 +54,13 @@ def getinfo(num,apred,telescope):
     nread = head.get('nread')
     info['nread'] = nread
     # Gang state
-    info['gangstat'] = head.get('gangstat')
+    #  gangstat wasn't working properly until MJD=59592
+    if mjd>59592:
+        info['gangstat'] = head.get('gangstat')
     # APOGEE Shutter state
-    info['shutter'] = head.get('shutter')
+    #  shutter wasn't working perly until MJD=59592
+    if mjd>=59592:
+        info['shutter'] = head.get('shutter')
     # CalBox shutter status
     info['calshutter'] = head.get('lampshtr')
     # Does 2D file exist
