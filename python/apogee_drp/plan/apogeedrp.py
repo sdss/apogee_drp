@@ -9,7 +9,7 @@ from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email
 from ..apred import mkcal, cal
 from ..database import apogeedb
-from . import mkplan,runapogee
+from . import mkplan,runapogee,check
 from sdss_access.path import path
 from astropy.io import fits
 from astropy.table import Table
@@ -506,11 +506,43 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     # Maybe have an option to copy/symlink them from a previous apred version
 
 
-    # 3) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
+    # 3) Process all exposures through ap3d
+    #---------------------------------------
+    rootLogger.info('')
+    rootLogger.info('--------------------------------')
+    rootLogger.info('3) Running AP3D on all exposures')
+    rootLogger.info('================================')
+    rootLogger.info('')
+    if len(expinfo)>0:
+        queue = pbsqueue(verbose=True)
+        queue.create(label='ap3d', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(expinfo)),
+                     qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
+        for num in expinfo['num']:
+            outfile = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
+            outfile = os.path.dirname(outfile)+'/logs/'+os.path.basename(outfile)
+            if os.path.dirname(outfile)==False:
+                os.makedirs(os.path.dirname(outfile))
+            queue.append('ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope),
+                         outfile=outfile.replace('.fits','_pbs.'+logtime+'.log'),
+                         errfile=outfile.replace('.fits','_pbs.'+logtime+'.err'))
+        queue.commit(hard=True,submit=True)
+        rootLogger.info('PBS key is '+queue.key)
+        queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
+        chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=rootLogger)
+        del queue
+    else:
+        rootLogger.info('No exposures to process with ap3D')
+
+    # Do QA check of the files
+    qachk = check(expinfo['num'],apred,telescope)
+
+
+
+    # 4) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
     #----------------------------------------------------------------
     rootLogger.info('')
     rootLogger.info('----------------------------------------')
-    rootLogger.info('3) Generating daily calibration products')
+    rootLogger.info('4) Generating daily calibration products')
     rootLogger.info('========================================')
     rootLogger.info('')
     # First we need to run domeflats and quartzflats so there are apPSF files
@@ -582,11 +614,11 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
 
     # Make plan files for all nights!
 
-    # 4) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
+    # 5) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
     rootLogger.info('')
     rootLogger.info('----------------')
-    rootLogger.info('4) Running APRED')
+    rootLogger.info('5) Running APRED')
     rootLogger.info('================')
     rootLogger.info('')
 
@@ -604,11 +636,11 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     del queue
 
         
-    # 5) Run "rv" on all unique stars
+    # 6) Run "rv" on all unique stars
     #--------------------------------
     rootLogger.info('')
     rootLogger.info('--------------------------------')
-    rootLogger.info('5) Running RV+Visit Combination')
+    rootLogger.info('6) Running RV+Visit Combination')
     rootLogger.info('================================')
     rootLogger.info('')
     vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope))
@@ -642,11 +674,11 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     runapogee.create_sumfiles(apred,telescope)
 
     
-    # 6) Unified directory structure
+    # 7) Unified directory structure
     #---------------------------------
     rootLogger.info('')
     rootLogger.info('---------------------------------------------')
-    rootLogger.info('6) Generating unified MWM directory structure')
+    rootLogger.info('7) Generating unified MWM directory structure')
     rootLogger.info('=============================================')
     rootLogger.info('')
     queue = pbsqueue(verbose=True)
@@ -667,11 +699,11 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
 
 
-    # 7) Run QA script
+    # 8) Run QA script
     #------------------
     rootLogger.info('')
     rootLogger.info('--------------')
-    rootLogger.info('7) Running QA')
+    rootLogger.info('8) Running QA')
     rootLogger.info('==============')
     rootLogger.info('')
     queue = pbsqueue(verbose=True)

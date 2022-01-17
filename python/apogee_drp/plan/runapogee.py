@@ -9,7 +9,7 @@ from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email
 from ..apred import mkcal
 from ..database import apogeedb
-from . import mkplan
+from . import mkplan, check
 from sdss_access.path import path
 from astropy.io import fits
 from astropy.table import Table
@@ -893,6 +893,9 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
         del queue
     else:
         rootLogger.info('No exposures to process with ap3D')
+
+    # Do QA check of the files
+    qachk = check(expinfo['num'],apred,telescope)
 
 
     # Run calibration files using "pbs" packages
