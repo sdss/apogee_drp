@@ -340,7 +340,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         if len(good) > 0:
             ims = ims[good]
         else:
-            print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
+            print("PROBLEM!!! apCframe files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
             return
     else:
         print("PROBLEM!!! no object images found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
@@ -3024,7 +3024,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#eaeded"><TH>(1)<BR>Date <TH>(2)<BR>Observer Log <TH>(3)<BR>Exposure Log <TH>(4)<BR>Raw Data <TH>(5)<BR>Night QA')
-        html.write('<TH>(6)<BR>Observed Plate QA <TH>(7)<BR>Summary Files <TH>(8)<BR> Phase\n')
+        html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Plots of Spectra <TH>(8)<BR>Summary Files <TH>(9)<BR> Phase\n')
         for i in range(nmjd):
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
@@ -3072,7 +3072,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
                 html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
-                # Column 5-6: Night QA and plates reduced for this night
+                # Column 5: Night QA
                 platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/apPlan-*'+cmjd+'.yaml'
                 platePlanFiles = np.array(glob.glob(platePlanPaths))
                 nplatesall = len(platePlanFiles)
@@ -3084,6 +3084,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
                 else:
                     html.write('<TD>\n')
+
+                # Column 6: Visit QA
                 html.write('<TD align="left">')
                 for j in range(nplatesall):
                     field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
@@ -3096,6 +3098,25 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                         else:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
+                    else:
+                        if j < nplatesall:
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT><BR>\n')
+                        else:
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT>\n')
+
+                # Column 7: Visit spectra plots
+                html.write('<TD align="left">')
+                for j in range(nplatesall):
+                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                    # Check for failed plates
+                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                    if os.path.exists(plateQAfile):
+                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
+                        if j < nplatesall:
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A><BR>\n')
+                        else:
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>\n')
                     else:
                         if j < nplatesall:
                             html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT><BR>\n')
