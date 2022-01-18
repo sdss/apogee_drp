@@ -25,7 +25,7 @@ provide information about the field, the observation of it, and the achieved S/N
 of the field centers observed to date are provided at the top of the page along with links to 
 instrument monitoring plots and full-survey allVisit and allStar files.
 
-Visit level
+Visit Level
 -----------
 
 Each visit has two associated pages. The first is an "apQA" page that summarizes the individual exposures and combined visit, 
@@ -35,10 +35,12 @@ The second is an "apPlate" page that shows plots of the spectra from each visit,
 `apPlate-1279-59584.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/20882/1279/59584/html/apPlate-1279-59584.html>`_.
 Links to these pages are provided in the MJD and Fields summary pages described above.
 
-Star level
+Star Level
 ----------
 
-There is a star-level QA page that lists useful summary information and plots.  Here's an example page:
+Each observed star has its own star-level QA page that gives useful summary information in a table at the top, a plot
+of the combined spectrum and best fitting Doppler Cannon Model, and a table giving information about an a plot of each
+individual observation.  Here's an example page:
 `2M06482624+0357058.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/stars/apo25m/91/91537/html/2M06482624+0357058.html>`_.
-Links to these pages are provided in the apVisit QA pages described above.
+Links to these pages are provided in the "apPlate" QA pages described in the Visit Level section of this page.
 
