@@ -31,7 +31,7 @@ Visit level
 Each visit has two associated pages. The first is an "apQA" page that summarizes the individual exposures and combined visit, 
 with various QA plots included.  Here is an example: 
 `apQA-1279-59584.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/20882/1279/59584/html/apQA-1279-59584.html>`_. 
-The second page shows plots of the spectra from each visit, including skies, telluric standards, and science targets. Here is an example: 
+The second is an "apPlate" page that shows plots of the spectra from each visit, including skies, telluric standards, and science targets. Here is an example: 
 `apPlate-1279-59584.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/20882/1279/59584/html/apPlate-1279-59584.html>`_.
 Links to these pages are provided in the MJD and Fields summary pages described above.
 
