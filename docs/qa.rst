@@ -44,3 +44,14 @@ individual observation.  Here's an example page:
 `2M06482624+0357058.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/stars/apo25m/91/91537/html/2M06482624+0357058.html>`_.
 Links to these pages are provided in the "apPlate" QA pages described in the Visit Level section of this page.
 
+Instrument Level
+----------
+
+Each of the APOGEE instruments has its own QA monitoring page showing plots of the long-term trends in things like quartz lamp
+and dome flat brightness, wavelength calibration line positions, sky brightness, etc. The page for the APOGEE-N instrument is
+here `apogee-n-monitor.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/monitor/apogee-n-monitor.html>`_,
+the page for the APOGEE-S instrument is here 
+`apogee-s-monitor.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/monitor/apogee-s-monitor.html>`_.
+
+
+
