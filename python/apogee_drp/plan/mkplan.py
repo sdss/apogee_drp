@@ -907,16 +907,12 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             logger.info('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
 
     # Do QA check of the files
-    logger.info(' ')
-    logger.info('Doing quality checks on all exposures')
-    qachk = check.check(info['num'],apred,telescope,verbose=True)
-    logger.info(' ')
-
+    qachk = check.check(info['num'],apred,telescope,verbose=False)
 
     # Get domeflat and quartzflats for this night
-    domeind, = np.where((info['exptype']=='DOMEFLAT') & (info['nread']>=3))
+    domeind, = np.where((info['exptype']=='DOMEFLAT') & (qachk['okay']==True) )
     dome = list(info['num'][domeind].astype(int))
-    quartzind, = np.where((info['exptype']=='QUARTZFLAT') & (info['nread']>=3))
+    quartzind, = np.where((info['exptype']=='QUARTZFLAT') & (qachk['okay']==True))
     quartz = list(info['num'][quartzind].astype(int))
 
     # Check which apPSF and apFlux files exist and can be used for calibration files
@@ -972,7 +968,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         logger.info('No apFlux files for this night exist.  They will be created as needed')
 
     # Check FPI cals for this night
-    fpiind, = np.where((info['exptype']=='FPI') & (info['nread']>=3))
+    fpiind, = np.where((info['exptype']=='FPI') & (qachk['okay']==True))
     fpinum = list(info['num'][fpiind].astype(int))
     # Check that the FPI calibration file exists
     fpi_exist = np.zeros(len(fpinum),bool)

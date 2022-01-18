@@ -138,8 +138,8 @@ def check_object(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstat'] is not None:
-        if tab['gangstat']=='Podium':
+    if tab['gangstate'] is not None:
+        if tab['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
     if tab['shutter'] is not None:
@@ -169,7 +169,7 @@ def check_domeflat(num,apred,telescope):
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
-    # exists3d, nread, gangstat, shutter, exists2d
+    # exists3d, nread, gangstate, shutter, exists2d
     tab = getinfo(num,apred,telescope)
 
     # Go over the cases
@@ -184,8 +184,8 @@ def check_domeflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstat'] is not None:
-        if tab['gangstat']=='Podium':
+    if tab['gangstate'] is not None:
+        if tab['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
     if tab['shutter'] is not None:
@@ -212,7 +212,7 @@ def check_quartzflat(num,apred,telescope):
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
-    # exists3d, nread, gangstat, shutter, exists2d
+    # exists3d, nread, gangstate, shutter, exists2d
     tab = getinfo(num,apred,telescope)
 
     # Go over the cases
@@ -227,8 +227,8 @@ def check_quartzflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstat'] is not None:
-        if tab['gangstat']!='Podium':
+    if tab['gangstate'] is not None:
+        if tab['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong APOGEE shutter state
     if tab['shutter'] is not None:
@@ -260,7 +260,7 @@ def check_arclamp(num,apred,telescope):
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
-    # exists3d, nread, gangstat, shutter, exists2d
+    # exists3d, nread, gangstate, shutter, exists2d
     tab = getinfo(num,apred,telescope)
 
     # Go over the cases
@@ -275,8 +275,8 @@ def check_arclamp(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstat'] is not None:
-        if tab['gangstat']!='Podium':
+    if tab['gangstate'] is not None:
+        if tab['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
     if tab['shutter'] is not None:
@@ -323,7 +323,7 @@ def check_fpi(num,apred,telescope):
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
-    # exists3d, nread, gangstat, shutter, exists2d
+    # exists3d, nread, gangstate, shutter, exists2d
     tab = getinfo(num,apred,telescope)
 
     # Go over the cases
@@ -338,8 +338,8 @@ def check_fpi(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstat'] is not None:
-        if tab['gangstat']!='Podium':
+    if tab['gangstate'] is not None:
+        if tab['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
     if tab['shutter'] is not None:
@@ -372,7 +372,7 @@ def check_internalflat(num,apred,telescope):
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
-    # exists3d, nread, gangstat, shutter, exists2d
+    # exists3d, nread, gangstate, shutter, exists2d
     tab = getinfo(num,apred,telescope)
 
     # Go over the cases
@@ -387,8 +387,8 @@ def check_internalflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstat'] is not None:
-        if tab['gangstat']!='Podium':
+    if tab['gangstate'] is not None:
+        if tab['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
     if tab['shutter'] is not None:
@@ -413,7 +413,7 @@ def check_skyflat(num,apred,telescope):
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
-    # exists3d, nread, gangstat, shutter, exists2d
+    # exists3d, nread, gangstate, shutter, exists2d
     tab = getinfo(num,apred,telescope)
 
     # Go over the cases
@@ -428,8 +428,8 @@ def check_skyflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstat'] is not None:
-        if tab['gangstat']=='Podium':
+    if tab['gangstate'] is not None:
+        if tab['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
     if tab['shutter'] is not None:
@@ -470,7 +470,7 @@ def check(nums,apred,telescope,verbose=True):
     for i in range(nexp):
         num = nums[i]
         tab = getinfo(num,apred,telescope) 
-        #print(num,tab['exists3d'],tab['gangstat'],tab['shutter'])
+        #print(num,tab['exists3d'],tab['gangstate'],tab['shutter'])
         out['num'][i] = num
         out['exptype'][i] = tab['exptype']
         mask = None

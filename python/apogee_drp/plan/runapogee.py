@@ -780,6 +780,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     ppn = 64
     cpus = 32
     walltime = '23:00:00'
+    chips = ['a','b','c']
 
     # No version input, use 'daily'
     if apred is None:
@@ -854,7 +855,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
 
     # Get exposure information and load into database
     rootLogger.info('Getting exposure information')
-    expinfo = info.expinfo(observatory=observatory,mjd=mjd5)
+    expinfo = info.expinfo(observatory=observatory,mjd5=mjd5)
     #expinfo = mkplan.getexpinfo(observatory,mjd5)
     nexp = len(expinfo)
     if nexp==0:
@@ -879,33 +880,51 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
         queue = pbsqueue(verbose=True)
         queue.create(label='ap3d', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(expinfo)),
                      qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
-        for num in expinfo['num']:
-            outfile = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
-            outfile = os.path.dirname(outfile)+'/logs/'+os.path.basename(outfile)
-            if os.path.dirname(outfile)==False:
-                os.makedirs(os.path.dirname(outfile))
-            queue.append('ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope),
-                         outfile=outfile.replace('.fits','_pbs.'+logtime+'.log'),
-                         errfile=outfile.replace('.fits','_pbs.'+logtime+'.err'))
-        queue.commit(hard=True,submit=True)
-        rootLogger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
-        chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=rootLogger)
-        del queue
+        do3d = np.zeros(len(expinfo),bool)
+        for i,num in enumerate(expinfo['num']):
+            logfile = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
+            logfile = os.path.dirname(logfile)+'/logs/'+os.path.basename(logfile)
+            logfile = logfile.replace('.fits','_pbs.'+logtime+'.log')
+            if os.path.dirname(logfile)==False:
+                os.makedirs(os.path.dirname(logfile))
+            # Check if files exist already
+            do3d[i] = True
+            if clobber is not True:
+                outfile = load.filename('2D',num=num,mjd=mjd5,chips=True)
+                outfiles = [outfile.replace('2D-','2D-'+ch+'-') for ch in chips]
+                exists = [os.path.exists(o) for o in outfiles]
+                if np.sum(exists)==3:
+                    rootLogger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    do3d[i] = False
+            if do3d[i]:
+                queue.append('ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope),
+                             outfile=logfile,errfile=logfile.replace('.log','.err'))
+        if np.sum(do3d)>0:
+            queue.commit(hard=True,submit=True)
+            rootLogger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
+            chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=rootLogger)
+            del queue
+        else:
+            rootLogger.info('No exposures need AP3D processing')
     else:
-        rootLogger.info('No exposures to process with ap3D')
+        rootLogger.info('No exposures to process with AP3D')
 
     # Do QA check of the files
-    qachk = check(expinfo['num'],apred,telescope)
-
+    rootLogger.info(' ')
+    rootLogger.info('Doing quality checks on all exposures')
+    qachk = check.check(expinfo['num'],apred,telescope,verbose=True)
+    rootLogger.info(' ')
 
     # Run calibration files using "pbs" packages
     #-------------------------------------------
     # First we need to run domeflats and quartzflats so there are apPSF files
     # Then the arclamps
     # Then the FPI exposures last (needs apPSF and apWave files)
-    calind, = np.where((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
-                       (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI'))
+    # Only use calibration exposures that have passed the quality assurance checks
+    calind, = np.where(((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
+                        (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI')) &
+                       (qachk['okay']==True))
     if len(calind)>0:
         # 1: psf, 2: flux, 4: arcs, 8: fpi
         calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':4, 'FPI':8}
