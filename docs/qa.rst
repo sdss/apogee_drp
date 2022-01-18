@@ -28,7 +28,7 @@ instrument monitoring plots and full-survey allVisit and allStar files.
 Visit level
 -----------
 
-Each visit has apQA page that gives a summary and QA plots of the individual exposures as well as on the combined visit. Here is an example: 
+Each visit has apQA page that summarizes the individual exposures and combined visit, with various QA plots included.  Here is an example: 
 `apQA-1279-59584.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/20882/1279/59584/html/apQA-1279-59584.html>`_ . 
 Included on those pages is a link to plots of the spectra from each visit, e.g. 
 `apPlate-1279-59584.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/20882/1279/59584/html/apPlate-1279-59584.html>`_.
