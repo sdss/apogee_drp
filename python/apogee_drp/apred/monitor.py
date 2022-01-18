@@ -744,7 +744,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 50
+            ymax = 80
             ymin = 0
             yspan = ymax - ymin
 
@@ -775,7 +775,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 uplate = np.unique(allsci['PLATE'][gd])
                 nvis[i] = len(uplate)
                 if i < nmjd-1:
-                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='teal')#, label='exposures')
+                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='grey')#, label='exposures')
                     ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='teal')#, label='visits')
                 else:
                     ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='teal', label='exposures')
