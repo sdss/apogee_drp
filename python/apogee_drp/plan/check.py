@@ -452,7 +452,7 @@ def check_skyflat(num,apred,telescope):
     return mask
 
 
-def check(nums,apred,telescope,verbose=True):
+def check(nums,apred,telescope,verbose=True,logger=None):
     """ Check a list of exposures."""
 
     if type(nums) is np.ndarray:
@@ -461,12 +461,15 @@ def check(nums,apred,telescope,verbose=True):
         nums = [nums]
     nexp = len(nums)
 
+    if logger is None:
+        logger = dln.basiclogger()
+
     dt = np.dtype([('num',int),('exptype',(np.str,50)),('mask',int),('okay',bool)])
     out = np.zeros(nexp,dtype=dt)
     out['mask'] = -1
     out['okay'] = False
     if verbose:
-        print('NUM           EXPTYPE      MASK   OKAY')
+        logger.info('NUM           EXPTYPE      MASK   OKAY')
     for i in range(nexp):
         num = nums[i]
         tab = getinfo(num,apred,telescope) 
@@ -492,7 +495,7 @@ def check(nums,apred,telescope,verbose=True):
         elif tab['exptype'].lower()=='skyflat':
             mask = check_skyflat(num,apred,telescope)
         else:
-            print('exptype: ',tab['exptype'],' not known')
+            logger.info('exptype: ',tab['exptype'],' not known')
         if mask is not None:
             out['mask'][i] = mask
             if mask == 0:
@@ -501,6 +504,6 @@ def check(nums,apred,telescope,verbose=True):
             bits,bset = bitmask(mask)
             sbset = ', '.join(bset)
             
-            print('%8d  %13s  %5d  %6s  %-100s' % (out['num'][i],out['exptype'][i],out['mask'][i],out['okay'][i],sbset))
+            logger.info('%8d  %13s  %5d  %6s  %-100s' % (out['num'][i],out['exptype'][i],out['mask'][i],out['okay'][i],sbset))
 
     return out

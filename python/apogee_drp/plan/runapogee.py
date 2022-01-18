@@ -913,7 +913,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     # Do QA check of the files
     rootLogger.info(' ')
     rootLogger.info('Doing quality checks on all exposures')
-    qachk = check.check(expinfo['num'],apred,telescope,verbose=True)
+    qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=rootLogger)
     rootLogger.info(' ')
 
     # Run calibration files using "pbs" packages
