@@ -748,16 +748,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymin = 0
             yspan = ymax - ymin
 
-            umjd = np.unique(allsci['MJD'])
-            nmjd = len(umjd)
-            nexp = np.zeros(nmjd)
-            nvis = np.zeros(nmjd)
-            for i in range(nmjd):
-                gd, = np.where(umjd[i] == allsci['MJD'])
-                nexp[i] = len(gd)
-                uplate = np.unique(allsci['PLATE'][gd])
-                nvis[i] = len(uplate)
-
             ax = plt.subplot2grid((1,1), (0,0))
             ax.set_xlim(xmin, xmax)
             ax.set_ylim(ymin, ymax)
@@ -775,8 +765,24 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                 ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
 
-            ax.scatter(umjd, nexp, marker='o', s=markersz, c='grey', alpha=alf, label='exposures')
-            ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
+            umjd = np.unique(allsci['MJD'])
+            nmjd = len(umjd)
+            nexp = np.zeros(nmjd)
+            nvis = np.zeros(nmjd)
+            for i in range(nmjd):
+                gd, = np.where(umjd[i] == allsci['MJD'])
+                nexp[i] = len(gd)
+                uplate = np.unique(allsci['PLATE'][gd])
+                nvis[i] = len(uplate)
+                if i < nmjd-1:
+                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='teal')#, label='exposures')
+                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='teal')#, label='visits')
+                else:
+                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='teal', label='exposures')
+                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='teal', label='visits')
+
+            #ax.scatter(umjd, nexp, marker='o', s=markersz, c='grey', alpha=alf, label='exposures')
+            #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
 
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                       fontsize=fsz, edgecolor='k', framealpha=1)
