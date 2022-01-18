@@ -25,6 +25,22 @@ provide information about the field, the observation of it, and the achieved S/N
 of the field centers observed to date are provided at the top of the page along with links to 
 instrument monitoring plots and full-survey allVisit and allStar files.
 
+Instrument Level
+----------
+
+Each of the APOGEE instruments has its own QA monitoring page showing plots of the long-term trends in things like quartz lamp
+and dome flat brightness, wavelength calibration line positions, sky brightness, etc. The page for the APOGEE-N instrument is
+here `apogee-n-monitor.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/monitor/apogee-n-monitor.html>`_,
+and the page for the APOGEE-S instrument is here 
+`apogee-s-monitor.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/monitor/apogee-s-monitor.html>`_.
+
+Night Level
+----------
+
+For each night an APOGEE instrument observes, there is a Nightly QA page that summarizes all of the exposures and their
+reduction status, e.g. `59591.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59591/html/59591.html>`_. 
+These pages are linked in the MJD view page described above.
+
 Visit Level
 -----------
 
@@ -44,14 +60,7 @@ individual observation.  Here's an example:
 `2M06482624+0357058.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/stars/apo25m/91/91537/html/2M06482624+0357058.html>`_.
 Links to these pages are provided in the "apPlate" QA pages described in the Visit Level section of this page.
 
-Instrument Level
-----------
 
-Each of the APOGEE instruments has its own QA monitoring page showing plots of the long-term trends in things like quartz lamp
-and dome flat brightness, wavelength calibration line positions, sky brightness, etc. The page for the APOGEE-N instrument is
-here `apogee-n-monitor.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/monitor/apogee-n-monitor.html>`_,
-and the page for the APOGEE-S instrument is here 
-`apogee-s-monitor.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/monitor/apogee-s-monitor.html>`_.
 
 
 
