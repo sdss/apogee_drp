@@ -30,7 +30,8 @@ from . import wave
 #from holtztools import plots, html
 from astropy.table import Table,hstack,vstack
 from dlnpyutils import utils as dln, robust, coords
-matplotlib.use('Qt5Agg')
+#matplotlib.use('Qt5Agg')
+matplotlib.use('Agg')
 
 chips = ['a','b','c']
 
