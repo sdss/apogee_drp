@@ -340,8 +340,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         if len(good) > 0:
             ims = ims[good]
         else:
-            pdb.set_trace()
-            print("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
+            print("PROBLEM!!! apCframe files not found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
             return
     else:
         print("PROBLEM!!! no object images found for plate " + plate + ", MJD " + mjd + ". Skipping.\n")
