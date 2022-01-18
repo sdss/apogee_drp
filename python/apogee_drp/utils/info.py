@@ -10,7 +10,7 @@ from . import apload
 from astropy.io import fits
 
 
-def expinfo(observatory=None,mjd5=None,files=None,expnum=None,apred='daily'):
+def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
     """
     Get header information about raw APOGEE files.
     This program can be run with observatory+mjd5 or
