@@ -6,7 +6,7 @@ from glob import glob
 import pdb
 
 from dlnpyutils import utils as dln
-from ..utils import spectra,yanny,apload,platedata,plan,email
+from ..utils import spectra,yanny,apload,platedata,plan,email,info
 from ..apred import mkcal
 from ..database import apogeedb
 from . import mkplan, check
@@ -854,7 +854,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
 
     # Get exposure information and load into database
     rootLogger.info('Getting exposure information')
-    expinfo = mkplan.getexpinfo(observatory,mjd5)
+    expinfo = info.expinfo(observatory=observatory,mjd=mjd5)
+    #expinfo = mkplan.getexpinfo(observatory,mjd5)
     nexp = len(expinfo)
     if nexp==0:
         rootLogger.error('No raw APOGEE files found.')

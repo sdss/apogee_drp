@@ -14,7 +14,7 @@ except ImportError:
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,utils
 from ..apred import mkcal
-from plan import mkslurm,check
+from . import mkslurm,check
 from sdss_access.path import path
 from astropy.io import fits
 from collections import OrderedDict
@@ -877,12 +877,15 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         return
 
     # Get the exposures and info about them
-    info = getexpinfo(observatory,mjd)
+    info = info.expinfo(observatory=observatory,mjd5=mjd)
     if info is None:
         logger.info('No exposures for MJD='+str(mjd))
         return
     nfiles = len(info)
     logger.info(str(nfiles)+' exposures found')
+    # No exposures
+    if nfiles==0:
+        return None
 
     # SDSS-V FPS, use configid for plateid
     fps = False
@@ -904,7 +907,11 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             logger.info('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
 
     # Do QA check of the files
-    qachk = check(expinfo['num'],apred,telescope)
+    logger.info(' ')
+    logger.info('Doing quality checks on all exposures')
+    qachk = check.check(info['num'],apred,telescope,verbose=True)
+    logger.info(' ')
+
 
     # Get domeflat and quartzflats for this night
     domeind, = np.where((info['exptype']=='DOMEFLAT') & (info['nread']>=3))
