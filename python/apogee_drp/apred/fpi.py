@@ -23,7 +23,7 @@ from astropy.io import ascii, fits
 from scipy.optimize import curve_fit
 #from scipy.special import erf, erfc
 #from scipy.signal import medfilt, convolve, boxcar
-from ..utils import apload, yanny, plan, peakfit
+from ..utils import apload, yanny, plan, peakfit, info
 from ..plan import mkplan
 from ..database import apogeedb
 from . import wave
@@ -62,7 +62,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     if verbose:
         print('Getting exposure information')
     for i,m in enumerate(mjds):
-        expinfo1 = mkplan.getexpinfo(observatory,m)
+        expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
         nexp = len(expinfo1)
         if verbose:
             print(m,' ',nexp,' exposures')
@@ -609,8 +609,8 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
     x = np.arange(2048).astype(float)
     for iframe,name in enumerate(p['APEXP']['name']) :
         name = str(name)  # make sure it's a string
-        print('KLUDGE! hard-coding frame name')
-        name = '38310023'
+        #print('KLUDGE! hard-coding frame name')
+        #name = '38310023'
         print('frame: ', name)
         frame = load.ap1D(int(name))
         plot = dirname+'/plots/fpipixshift-'+name+'-'+str(fpiid)

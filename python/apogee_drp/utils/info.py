@@ -79,7 +79,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None,apred='daily'):
                       ('configid',np.str,50),('designid',np.str,50),('fieldid',np.str,50),('exptime',float),
                       ('dateobs',np.str,50),('gangstate',np.str,20),('shutter',np.str,20),('calshutter',np.str,20),
                       ('mjd',int),('observatory',(np.str,10)),('dithpix',float)])
-    info = np.zeros(nfiles,dtype=dtype)
+    tab = np.zeros(nfiles,dtype=dtype)
     # Loop over the files
     for i in range(nfiles):
         if os.path.exists(files[i]):
@@ -87,52 +87,56 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None,apred='daily'):
             base,ext = os.path.splitext(os.path.basename(files[i]))
             # apR-c-12345678.apz
             num = base.split('-')[2]
-            info['num'][i] = num
-            info['nread'][i] = head['nread']
-            info['exptype'][i] = head['exptype']
-            info['plateid'][i] = head['plateid']
-            info['configid'][i] = head.get('configid')
-            info['designid'][i] = head.get('designid')
-            info['fieldid'][i] = head.get('fieldid')
-            info['exptime'][i] = head['exptime']
-            info['dateobs'][i] = head['date-obs']
+            tab['num'][i] = num
+            tab['nread'][i] = head['nread']
+            tab['exptype'][i] = head['exptype']
+            tab['plateid'][i] = head['plateid']
+            tab['configid'][i] = head.get('configid')
+            tab['designid'][i] = head.get('designid')
+            tab['fieldid'][i] = head.get('fieldid')
+            tab['exptime'][i] = head['exptime']
+            tab['dateobs'][i] = head['date-obs']
             mjd = int(load.cmjd(int(num)))
-            info['mjd'] = mjd
-            #    info['mjd'] = utils.getmjd5(head['date-obs'])
+            tab['mjd'] = mjd
+            #    tab['mjd'] = utils.getmjd5(head['date-obs'])
             if observatory is not None:
-                info['observatory'] = observatory
+                tab['observatory'] = observatory
             else:
-                info['observatory'] = {'p':'apo','s':'lco'}[base[1]]
+                tab['observatory'] = {'p':'apo','s':'lco'}[base[1]]
             # arc types
-            if info['exptype'][i]=='ARCLAMP':
+            if tab['exptype'][i]=='ARCLAMP':
                 if head['lampune']==1:
-                    info['arctype'][i] = 'UNE'
+                    tab['arctype'][i] = 'UNE'
                 elif head['lampthar']==1:
-                    info['arctype'][i] = 'THAR'
+                    tab['arctype'][i] = 'THAR'
                 else:
-                    info['arctype'][i] = 'None'
+                    tab['arctype'][i] = 'None'
             # FPI
-            if info['exptype'][i]=='ARCLAMP' and info['arctype'][i]=='None' and head.get('OBSCMNT')=='FPI':
-                info['exptype'][i] = 'FPI'
+            if tab['exptype'][i]=='ARCLAMP' and tab['arctype'][i]=='None' and head.get('OBSCMNT')=='FPI':
+                tab['exptype'][i] = 'FPI'
+
+            # Sky flat
+            if tab['exptype'][i]=='OBJECT' and tab['nread'][i]>10 and tab['nread'][i]<13 and head.get('OBSCMNT').lower().replace(' ','')[0:3]=='sky':
+                tab['exptype'][i] = 'SKYFLAT'
 
             # Dither position
-            info['dithpix'][i] = head['dithpix']
+            tab['dithpix'][i] = head['dithpix']
             # Gang state
             #  gangstat wasn't working properly until MJD=59592
             if mjd>=59592:
-                info['gangstate'][i] = head.get('gangstat')
+                tab['gangstate'][i] = head.get('gangstat')
             # APOGEE Shutter state
             #  shutter wasn't working perly until MJD=59592
             if mjd>=59592:
-                info['shutter'][i] = head.get('shutter')
+                tab['shutter'][i] = head.get('shutter')
             # CalBox shutter status
             lampshtr = head.get('lampshtr')
             if lampshtr is not None:
                 if lampshtr:
-                    info['calshutter'][i] = 'Open'
+                    tab['calshutter'][i] = 'Open'
                 else:
-                    info['calshutter'][i] = 'Closed'
+                    tab['calshutter'][i] = 'Closed'
 
-    return info
+    return tab
 
 

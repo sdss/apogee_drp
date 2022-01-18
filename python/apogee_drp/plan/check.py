@@ -51,32 +51,32 @@ def getinfo(num,apred,telescope):
     """ Get the info needed to check various things."""
 
     observatory = telescope[0:3]
-    tab = info.expinfo(observatory=observatory,expnum=num)
+    expinfo = info.expinfo(observatory=observatory,expnum=num)
     # convert to dictionary
-    tab = dict((key, tab[key][0]) for key in tab.dtype.names) # all CAPS
+    expinfo = dict((key, expinfo[key][0]) for key in expinfo.dtype.names) # all CAPS
     # add some more fields
-    tab.update({'filename3d':'', 'exists3d':False,'filename2d':'', 'exists2d':False})
+    expinfo.update({'filename3d':'', 'exists3d':False,'filename2d':'', 'exists2d':False})
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
 
     # Does 3D file exist
     filename3d = load.filename('R',num=num,chips=True).replace('R-','R-b-')
-    tab['filename3d'] = filename3d
+    expinfo['filename3d'] = filename3d
     if os.path.exists(filename3d)==False:
-        tab['exists3d'] = False
-        return tab
+        expinfo['exists3d'] = False
+        return expinfo
     else:
-        tab['exists3d'] = True
+        expinfo['exists3d'] = True
     # Does 2D file exist
     mjd = int(load.cmjd(num))
     filename2d = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D-','2D-b-')
-    tab['filename2d'] = filename2d
+    expinfo['filename2d'] = filename2d
     if os.path.exists(filename2d)==False:
-        tab['exists2d'] = False
+        expinfo['exists2d'] = False
     else:
-        tab['exists2d'] = True
+        expinfo['exists2d'] = True
 
-    return tab
+    return expinfo
 
 
 def check_dark(num,apred,telescope):
@@ -86,32 +86,32 @@ def check_dark(num,apred,telescope):
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
     # exists3d, nread, gangstat, shutter, exists2d
-    tab = getinfo(num,apred,telescope)
+    expinfo = getinfo(num,apred,telescope)
 
     # Go over the cases
     #------------------
 
     # 0 - 3D file does not exist 
-    if tab['exists3d']==False:
+    if expinfo['exists3d']==False:
         mask |= 2**0
         return mask
     # 1 - Less than 3 reads
-    if tab['nread']<3 or tab['nread'] is None:
+    if expinfo['nread']<3 or expinfo['nread'] is None:
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
     #   gang state doesn't matter for dark
     # 3 - Wrong shutter state
-    if tab['shutter'] is not None:
+    if expinfo['shutter'] is not None:
         # shutter must be closed for dark
-        if tab['shutter']=='Open':
+        if expinfo['shutter']=='Open':
             mask |= 2**3
     # 4 - Wrong flux
-    if tab['exists2d']==True:
-        im = fits.getdata(tab['filename2d'],1)
+    if expinfo['exists2d']==True:
+        im = fits.getdata(expinfo['filename2d'],1)
         med = np.median(im[:,900:1100])
         # Check the flux
-        if med/tab['nread']>100:
+        if med/expinfo['nread']>100:
             mask |= 2**4
 
     return mask
@@ -124,31 +124,31 @@ def check_object(num,apred,telescope):
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
     # exists3d, nread, gangstat, shutter, exists2d
-    tab = getinfo(num,apred,telescope)
+    expinfo = getinfo(num,apred,telescope)
 
     # Go over the cases
     #------------------
 
     # 0 - 3D file does not exist 
-    if tab['exists3d']==False:
+    if expinfo['exists3d']==False:
         mask |= 2**0
         return mask
     # 1 - Less than 3 reads
-    if tab['nread']<3 or tab['nread'] is None:
+    if expinfo['nread']<3 or expinfo['nread'] is None:
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstate'] is not None:
-        if tab['gangstate']=='Podium':
+    if expinfo['gangstate'] is not None:
+        if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if tab['shutter'] is not None:
+    if expinfo['shutter'] is not None:
         # shutter must be open for object exposures
-        if tab['shutter']=='Closed':
+        if expinfo['shutter']=='Closed':
             mask |= 2**3
     # 4 - Wrong flux
-    if tab['exists2d']==True:
-        im = fits.getdata(tab['filename2d'],1)
+    if expinfo['exists2d']==True:
+        im = fits.getdata(expinfo['filename2d'],1)
         # There's a bright sky line around X=1117
         sub = im[:,1117-100:1117+100]
         smsub = medfilt2d(sub,(1,7))  # smooth in spectral axis
@@ -156,9 +156,9 @@ def check_object(num,apred,telescope):
         peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
         avgpeakflux = np.nanmean(peakflux)
         # Check skyline flux
-        if avgpeakflux/tab['nread']<200:
+        if avgpeakflux/expinfo['nread']<200:
             mask |= 2**4
-        #print('object',med/tab['nread'])
+        #print('object',med/expinfo['nread'])
 
     return mask
 
@@ -170,38 +170,38 @@ def check_domeflat(num,apred,telescope):
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
     # exists3d, nread, gangstate, shutter, exists2d
-    tab = getinfo(num,apred,telescope)
+    expinfo = getinfo(num,apred,telescope)
 
     # Go over the cases
     #------------------
 
     # 0 - 3D file does not exist 
-    if tab['exists3d']==False:
+    if expinfo['exists3d']==False:
         mask |= 2**0
         return mask
     # 1 - Less than 3 reads
-    if tab['nread']<3 or tab['nread'] is None:
+    if expinfo['nread']<3 or expinfo['nread'] is None:
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstate'] is not None:
-        if tab['gangstate']=='Podium':
+    if expinfo['gangstate'] is not None:
+        if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if tab['shutter'] is not None:
+    if expinfo['shutter'] is not None:
         # shutter must be open for domeflat exposures
-        if tab['shutter']=='Closed':
+        if expinfo['shutter']=='Closed':
             mask |= 2**3
     # 4 - Wrong flux
-    if tab['exists2d']==True:
-        im = fits.getdata(tab['filename2d'],1)
+    if expinfo['exists2d']==True:
+        im = fits.getdata(expinfo['filename2d'],1)
         medim = np.nanmedian(im[:,900:1100],axis=1)
         remedim = dln.rebin(medim,2048//8,tot=True) # rebin in spatial axis
         avgpeakflux = np.nanmean(remedim)
         # Check the flux
-        if avgpeakflux/tab['nread']<500:
+        if avgpeakflux/expinfo['nread']<500:
             mask |= 2**4
-        #print('domeflat',med/tab['nread'])
+        #print('domeflat',med/expinfo['nread'])
 
     return mask
 
@@ -213,43 +213,43 @@ def check_quartzflat(num,apred,telescope):
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
     # exists3d, nread, gangstate, shutter, exists2d
-    tab = getinfo(num,apred,telescope)
+    expinfo = getinfo(num,apred,telescope)
 
     # Go over the cases
     #------------------
 
     # 0 - 3D file does not exist 
-    if tab['exists3d']==False:
+    if expinfo['exists3d']==False:
         mask |= 2**0
         return mask
     # 1 - Less than 3 reads
-    if tab['nread']<3 or tab['nread'] is None:
+    if expinfo['nread']<3 or expinfo['nread'] is None:
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstate'] is not None:
-        if tab['gangstate']!='Podium':
+    if expinfo['gangstate'] is not None:
+        if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong APOGEE shutter state
-    if tab['shutter'] is not None:
+    if expinfo['shutter'] is not None:
         # shutter must be open for quartzflat exposures
-        if tab['shutter']=='Closed':
+        if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
-    if tab['calshutter'] is not None:
+    if expinfo['calshutter'] is not None:
         # shutter must be open for quartzflat exposures
-        if tab['calshutter']==False:
+        if expinfo['calshutter']==False:
             mask |= 2**3            
     # 4 - Wrong flux
-    if tab['exists2d']==True:
-        im = fits.getdata(tab['filename2d'],1)
+    if expinfo['exists2d']==True:
+        im = fits.getdata(expinfo['filename2d'],1)
         medim = np.nanmedian(im[:,900:1100],axis=1)
         remedim = dln.rebin(medim,2048//8,tot=True) # rebin in spatial axis
         avgpeakflux = np.nanmean(remedim)
         # Check the flux
-        if avgpeakflux/tab['nread']<500:
+        if avgpeakflux/expinfo['nread']<500:
             mask |= 2**4
-        #print('quartzflat',med/tab['nread'])
+        #print('quartzflat',med/expinfo['nread'])
 
     return mask
 
@@ -261,37 +261,37 @@ def check_arclamp(num,apred,telescope):
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
     # exists3d, nread, gangstate, shutter, exists2d
-    tab = getinfo(num,apred,telescope)
+    expinfo = getinfo(num,apred,telescope)
 
     # Go over the cases
     #------------------
 
     # 0 - 3D file does not exist 
-    if tab['exists3d']==False:
+    if expinfo['exists3d']==False:
         mask |= 2**0
         return mask
     # 1 - Less than 3 reads
-    if tab['nread']<3 or tab['nread'] is None:
+    if expinfo['nread']<3 or expinfo['nread'] is None:
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstate'] is not None:
-        if tab['gangstate']!='Podium':
+    if expinfo['gangstate'] is not None:
+        if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if tab['shutter'] is not None:
+    if expinfo['shutter'] is not None:
         # shutter must be open for arclamp exposures
-        if tab['shutter']=='Closed':
+        if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
-    if tab['calshutter'] is not None:
+    if expinfo['calshutter'] is not None:
         # shutter must be open for arclamp exposures
-        if tab['calshutter']==False:
+        if expinfo['calshutter']==False:
             mask |= 2**3            
     # 4 - Wrong flux
-    if tab['exists2d']==True:
-        im = fits.getdata(tab['filename2d'],1)
-        head = fits.getheader(tab['filename2d'])
+    if expinfo['exists2d']==True:
+        im = fits.getdata(expinfo['filename2d'],1)
+        head = fits.getheader(expinfo['filename2d'])
         # UNE
         #  bright line at X=1452
         if head.get('LAMPUNE')==True:
@@ -310,9 +310,9 @@ def check_arclamp(num,apred,telescope):
         peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
         avgpeakflux = np.nanmean(peakflux)
         # Check the line flux
-        if avgpeakflux/tab['nread']<thresh:
+        if avgpeakflux/expinfo['nread']<thresh:
             mask |= 2**4
-        #print('arclamp',med/tab['nread'])
+        #print('arclamp',med/expinfo['nread'])
 
     return mask
 
@@ -324,43 +324,43 @@ def check_fpi(num,apred,telescope):
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
     # exists3d, nread, gangstate, shutter, exists2d
-    tab = getinfo(num,apred,telescope)
+    expinfo = getinfo(num,apred,telescope)
 
     # Go over the cases
     #------------------
 
     # 0 - 3D file does not exist 
-    if tab['exists3d']==False:
+    if expinfo['exists3d']==False:
         mask |= 2**0
         return mask
     # 1 - Less than 3 reads
-    if tab['nread']<3 or tab['nread'] is None:
+    if expinfo['nread']<3 or expinfo['nread'] is None:
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstate'] is not None:
-        if tab['gangstate']!='Podium':
+    if expinfo['gangstate'] is not None:
+        if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if tab['shutter'] is not None:
+    if expinfo['shutter'] is not None:
         # shutter must be open for FPI exposures
-        if tab['shutter']=='Closed':
+        if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
-    if tab['calshutter'] is not None:
+    if expinfo['calshutter'] is not None:
         # shutter must be open for fpi exposures
-        if tab['calshutter']==False:
+        if expinfo['calshutter']==False:
             mask |= 2**3            
     # 4 - Wrong flux
-    if tab['exists2d']==True:
-        im = fits.getdata(tab['filename2d'],1)
+    if expinfo['exists2d']==True:
+        im = fits.getdata(expinfo['filename2d'],1)
         sub = im[:,900:1100]
         smsub = medfilt2d(sub,(1,7))  # smooth in spectral axis
         resmsub = dln.rebin(smsub,(2048//8,200),tot=True) # rebin in spatial axis
         peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
         avgpeakflux = np.nanmean(peakflux)
         # Check the flux
-        if avgpeakflux/tab['nread']<70:
+        if avgpeakflux/expinfo['nread']<70:
             mask |= 2**4
 
     return mask
@@ -373,36 +373,36 @@ def check_internalflat(num,apred,telescope):
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
     # exists3d, nread, gangstate, shutter, exists2d
-    tab = getinfo(num,apred,telescope)
+    expinfo = getinfo(num,apred,telescope)
 
     # Go over the cases
     #------------------
 
     # 0 - 3D file does not exist 
-    if tab['exists3d']==False:
+    if expinfo['exists3d']==False:
         mask |= 2**0
         return mask
     # 1 - Less than 3 reads
-    if tab['nread']<3 or tab['nread'] is None:
+    if expinfo['nread']<3 or expinfo['nread'] is None:
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstate'] is not None:
-        if tab['gangstate']!='Podium':
+    if expinfo['gangstate'] is not None:
+        if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if tab['shutter'] is not None:
+    if expinfo['shutter'] is not None:
         # shutter must be open good internalflat exposures
-        if tab['shutter']=='Closed':
+        if expinfo['shutter']=='Closed':
             mask |= 2**3
     # 4 - Wrong flux
-    if tab['exists2d']==True:
-        im = fits.getdata(tab['filename2d'],1)
+    if expinfo['exists2d']==True:
+        im = fits.getdata(expinfo['filename2d'],1)
         med = np.nanmedian(im)
         # Check the flux
-        if med/tab['nread']<300:
+        if med/expinfo['nread']<300:
             mask |= 2**4
-        #print('internalflat',med/tab['nread'])
+        #print('internalflat',med/expinfo['nread'])
 
     return mask
 
@@ -414,31 +414,31 @@ def check_skyflat(num,apred,telescope):
     load = apload.ApLoad(apred=apred,telescope=telescope)
     # Get information
     # exists3d, nread, gangstate, shutter, exists2d
-    tab = getinfo(num,apred,telescope)
+    expinfo = getinfo(num,apred,telescope)
 
     # Go over the cases
     #------------------
 
     # 0 - 3D file does not exist 
-    if tab['exists3d']==False:
+    if expinfo['exists3d']==False:
         mask |= 2**0
         return mask
     # 1 - Less than 3 reads
-    if tab['nread']<3 or tab['nread'] is None:
+    if expinfo['nread']<3 or expinfo['nread'] is None:
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if tab['gangstate'] is not None:
-        if tab['gangstate']=='Podium':
+    if expinfo['gangstate'] is not None:
+        if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if tab['shutter'] is not None:
+    if expinfo['shutter'] is not None:
         # shutter must be open for skyflat exposures
-        if tab['shutter']=='Closed':
+        if expinfo['shutter']=='Closed':
             mask |= 2**3
     # 5 - Wrong flux
-    if tab['exists2d']==True:
-        im = fits.getdata(tab['filename2d'],1)
+    if expinfo['exists2d']==True:
+        im = fits.getdata(expinfo['filename2d'],1)
         # There's a bright sky line around X=1117
         sub = im[:,1117-100:1117+100]
         smsub = medfilt2d(sub,(1,7))  # smooth in spectral axis
@@ -446,7 +446,7 @@ def check_skyflat(num,apred,telescope):
         peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
         avgpeakflux = np.nanmean(peakflux)
         # Check skyline flux
-        if avgpeakflux/tab['nread']<200:
+        if avgpeakflux/expinfo['nread']<200:
             mask |= 2**4
 
     return mask
@@ -455,10 +455,11 @@ def check_skyflat(num,apred,telescope):
 def check(nums,apred,telescope,verbose=True,logger=None):
     """ Check a list of exposures."""
 
-    if type(nums) is np.ndarray:
-        nums = list(nums)
-    if type(nums) is not list:
+    # Convert to list
+    if hasattr(nums,'__iter__')==False or type(nums)==str:
         nums = [nums]
+    if hasattr(nums,'__iter__')==True and type(nums) != str:
+        nums = list(nums)
     nexp = len(nums)
 
     if logger is None:
@@ -472,30 +473,30 @@ def check(nums,apred,telescope,verbose=True,logger=None):
         logger.info('NUM           EXPTYPE      MASK   OKAY')
     for i in range(nexp):
         num = nums[i]
-        tab = getinfo(num,apred,telescope) 
-        #print(num,tab['exists3d'],tab['gangstate'],tab['shutter'])
+        expinfo = getinfo(num,apred,telescope) 
+        #print(num,expinfo['exists3d'],expinfo['gangstate'],expinfo['shutter'])
         out['num'][i] = num
-        out['exptype'][i] = tab['exptype']
+        out['exptype'][i] = expinfo['exptype']
         mask = None
         # Exposure types
-        if tab['exptype'].lower()=='dark':
+        if expinfo['exptype'].lower()=='dark':
             mask = check_dark(num,apred,telescope)
-        elif tab['exptype'].lower()=='object':
+        elif expinfo['exptype'].lower()=='object':
             mask = check_object(num,apred,telescope)
-        elif tab['exptype'].lower()=='domeflat':
+        elif expinfo['exptype'].lower()=='domeflat':
             mask = check_domeflat(num,apred,telescope)
-        elif tab['exptype'].lower()=='quartzflat':
+        elif expinfo['exptype'].lower()=='quartzflat':
             mask = check_quartzflat(num,apred,telescope)
-        elif tab['exptype'].lower()=='arclamp':
+        elif expinfo['exptype'].lower()=='arclamp':
             mask = check_arclamp(num,apred,telescope)
-        elif tab['exptype'].lower()=='fpi':
+        elif expinfo['exptype'].lower()=='fpi':
             mask = check_fpi(num,apred,telescope)
-        elif tab['exptype'].lower()=='internalflat':
+        elif expinfo['exptype'].lower()=='internalflat':
             mask = check_internalflat(num,apred,telescope)
-        elif tab['exptype'].lower()=='skyflat':
+        elif expinfo['exptype'].lower()=='skyflat':
             mask = check_skyflat(num,apred,telescope)
         else:
-            logger.info('exptype: ',tab['exptype'],' not known')
+            logger.info('exptype: ',expinfo['exptype'],' not known')
         if mask is not None:
             out['mask'][i] = mask
             if mask == 0:
@@ -503,7 +504,8 @@ def check(nums,apred,telescope,verbose=True,logger=None):
         if verbose:
             bits,bset = bitmask(mask)
             sbset = ', '.join(bset)
-            
-            logger.info('%8d  %13s  %5d  %6s  %-100s' % (out['num'][i],out['exptype'][i],out['mask'][i],out['okay'][i],sbset))
+            lensbset = len(sbset)
+            fmt = '%8d  %13s  %5d  %6s  %-'+str(len(sbset)+2)+'s'
+            logger.info(fmt % (out['num'][i],out['exptype'][i],out['mask'][i],out['okay'][i],sbset))
 
     return out

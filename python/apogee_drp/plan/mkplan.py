@@ -12,11 +12,12 @@ except ImportError:
     from yaml import Loader, Dumper
 
 from dlnpyutils import utils as dln
-from ..utils import spectra,yanny,apload,platedata,utils
+from ..utils import spectra,yanny,apload,platedata,utils,info
 from ..apred import mkcal
 from . import mkslurm,check
 from sdss_access.path import path
 from astropy.io import fits
+from astropy.table import Table
 from collections import OrderedDict
 
 
@@ -735,94 +736,6 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     return planfile
 
 
-def getexpinfo(observatory=None,mjd5=None,files=None):
-    """
-    Get header information about raw APOGEE files.
-    This program can be run with observatory+mjd5 or
-    by giving a list of files.
-
-    Parameters
-    ----------
-    observatory : str, optional
-        APOGEE observatory (apo or lco).
-    mjd5 : int, optional
-        The MJD5 night to get exposure information for.
-    files : list of str, optional
-        List of APOGEE apz filenames.
-
-    Returns
-    -------
-    cat : numpy structured array
-        Table with information for each file grabbed from the header.
-
-    Examples
-    --------
-    cat = getexpinfo(files)
-
-    By D.Nidever,  Oct 2020
-    """
-
-    if (observatory is None or mjd5 is None) and files is None:
-        raise ValueError('observatory+mjd5 or list of files must be input')
-
-    # Get the exposures info for this MJD5        
-    if files is None:
-        if observatory not in ['apo','lco']:
-            raise ValueError('observatory must be apo or lco')
-        datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
-        files = glob(datadir+'/'+str(mjd5)+'/a?R-c*.apz')
-        files = np.array(files)
-        nfiles = len(files)
-        if nfiles==0:
-            return []
-        files = files[np.argsort(files)]  # sort        
-
-    nfiles = len(files)
-    dtype = np.dtype([('num',int),('nread',int),('exptype',np.str,20),('arctype',np.str,20),('plateid',np.str,20),
-                      ('configid',np.str,50),('designid',np.str,50),('fieldid',np.str,50),('exptime',float),('dateobs',np.str,50),
-                      ('mjd',int),('observatory',(np.str,10)),('dithpix',float)])
-    cat = np.zeros(nfiles,dtype=dtype)
-    # Loop over the files
-    for i in range(nfiles):
-        head = fits.getheader(files[i],1)
-        base,ext = os.path.splitext(os.path.basename(files[i]))
-        # apR-c-12345678.apz
-        num = base.split('-')[2]
-        cat['num'][i] = num
-        cat['nread'][i] = head['nread']
-        cat['exptype'][i] = head['exptype']
-        cat['plateid'][i] = head['plateid']
-        cat['configid'][i] = head.get('configid')
-        cat['designid'][i] = head.get('designid')
-        cat['fieldid'][i] = head.get('fieldid')
-        cat['exptime'][i] = head['exptime']
-        cat['dateobs'][i] = head['date-obs']
-        if mjd5 is not None:
-            cat['mjd'] = mjd5
-        else:
-            cat['mjd'] = utils.getmjd5(head['date-obs'])
-        if observatory is not None:
-            cat['observatory'] = observatory
-        else:
-            cat['observatory'] = {'p':'apo','s':'lco'}[base[1]]
-        # arc types
-        if cat['exptype'][i]=='ARCLAMP':
-            if head['lampune']==1:
-                cat['arctype'][i] = 'UNE'
-            elif head['lampthar']==1:
-                cat['arctype'][i] = 'THAR'
-            else:
-                cat['arctype'][i] = 'None'
-        # FPI
-        if cat['exptype'][i]=='ARCLAMP' and cat['arctype'][i]=='None' and head.get('OBSCMNT')=='FPI':
-            cat['exptype'][i] = 'FPI'
-
-        # Dither position
-        cat['dithpix'][i] = head['dithpix']
-
-    return cat
-
-
 def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     """
     Make a MJD5 yaml file that can be used to create plan files.
@@ -877,11 +790,13 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         return
 
     # Get the exposures and info about them
-    info = info.expinfo(observatory=observatory,mjd5=mjd)
-    if info is None:
+    expinfo = info.expinfo(observatory=observatory,mjd5=mjd)
+    if expinfo is None:
         logger.info('No exposures for MJD='+str(mjd))
         return
-    nfiles = len(info)
+    expinfo = expinfo[np.argsort(expinfo['num'])]   # sort
+    expinfo = Table(expinfo)
+    nfiles = len(expinfo)
     logger.info(str(nfiles)+' exposures found')
     # No exposures
     if nfiles==0:
@@ -891,32 +806,52 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     fps = False
     if int(mjd)>=59556:
         logger.info('SDSS-V FPS data.  Using configid for plateid')
-        info['plateid'] = info['configid']
+        expinfo['plateid'] = expinfo['configid']
         fps = True
 
     # Print summary information about the data
-    expindex = dln.create_index(info['exptype'])
+    expindex = dln.create_index(expinfo['exptype'])
     for i in range(len(expindex['value'])):
         logger.info('  '+expindex['value'][i]+': '+str(expindex['num'][i]))
-    objind, = np.where(info['exptype']=='OBJECT')
+    objind, = np.where(expinfo['exptype']=='OBJECT')
     if len(objind)>0:
-        plates = np.unique(info['plateid'][objind])
+        plates = np.unique(expinfo['plateid'][objind])
         logger.info('Observations of '+str(len(plates))+' plates/configs')
-        plateindex = dln.create_index(info['plateid'][objind])
+        plateindex = dln.create_index(expinfo['plateid'][objind])
         for i in range(len(plateindex['value'])):
             logger.info('  '+plateindex['value'][i]+': '+str(plateindex['num'][i])) 
 
     # Do QA check of the files
-    qachk = check.check(info['num'],apred,telescope,verbose=False)
+    qachk = check.check(expinfo['num'],apred,telescope,verbose=False)
+
+    # Get gang connector plugging groups
+    # Loop over the exposures and mark time periods of constant dither position
+    expinfo['pluggroup'] = -1
+    currentgangstate = expinfo['gangstate'][0]
+    pluggroup = 0
+    for e in range(len(expinfo)):
+        if expinfo['gangstate'][e] == currentgangstate:
+            if expinfo['gangstate'][e]=='FPS':
+                expinfo['pluggroup'][e] = pluggroup
+        else:
+            # Podium -> FPS, new plugging group
+            if currentgangstate=='Podium':
+                pluggroup += 1
+                currentgangstate = expinfo['gangstate'][e]
+                expinfo['pluggroup'][e] = pluggroup
+            # FPS -> Podium
+            else:
+                expinfo['pluggroup'][e] = -1
 
     # Get domeflat and quartzflats for this night
-    domeind, = np.where((info['exptype']=='DOMEFLAT') & (qachk['okay']==True) )
-    dome = list(info['num'][domeind].astype(int))
-    quartzind, = np.where((info['exptype']=='QUARTZFLAT') & (qachk['okay']==True))
-    quartz = list(info['num'][quartzind].astype(int))
+    domeind, = np.where((expinfo['exptype']=='DOMEFLAT') & (qachk['okay']==True) )
+    dome = list(expinfo['num'][domeind].astype(int))
+    domepluggroup = expinfo['pluggroup'][domeind]
+    quartzind, = np.where((expinfo['exptype']=='QUARTZFLAT') & (qachk['okay']==True))
+    quartz = list(expinfo['num'][quartzind].astype(int))
 
     # Check which apPSF and apFlux files exist and can be used for calibration files
-    # which domeflat apPSF files that exist
+    # Which domeflat apPSF files exist
     psfdome_exist = np.zeros(len(dome),bool)
     for j in range(len(dome)):
         psffile = load.filename('PSF',num=dome[j],chips=True)
@@ -931,7 +866,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     else:
         psfdome = []
         logger.info('No domeflat apPSF files exist')
-    # which quartz apPSF files that exist
+    # Which quartz apPSF files exist
     psfquartz_exist = np.zeros(len(quartz),bool)
     for j in range(len(quartz)):
         psffile = load.filename('PSF',num=quartz[j],chips=True)
@@ -946,7 +881,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     else:
         psfquartz = []
         logger.info('No quartzflat apPSF files exist')
-    # which apFlux files sexit
+    # Which apFlux files exist
     flux_exist = np.zeros(len(dome),bool)
     for j in range(len(dome)):
         fluxfile = load.filename('Flux',num=dome[j],chips=True)
@@ -957,9 +892,11 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     gdflux, = np.where(flux_exist == True)
     if len(gdflux)>0:
         flux = list(np.array(dome)[gdflux])
+        fluxpluggroup = domepluggroup[gdflux]
         logger.info('Available apFlux: '+str(flux))
     else:
         flux = []
+        fluxpluggroup = []
         logger.info('No quartz apPSF files exist')
 
     if len(psfdome)==0 and len(psfquartz)==0:
@@ -968,8 +905,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         logger.info('No apFlux files for this night exist.  They will be created as needed')
 
     # Check FPI cals for this night
-    fpiind, = np.where((info['exptype']=='FPI') & (qachk['okay']==True))
-    fpinum = list(info['num'][fpiind].astype(int))
+    fpiind, = np.where((expinfo['exptype']=='FPI') & (qachk['okay']==True))
+    fpinum = list(expinfo['num'][fpiind].astype(int))
     # Check that the FPI calibration file exists
     fpi_exist = np.zeros(len(fpinum),bool)
     for j in range(len(fpinum)):
@@ -987,60 +924,62 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         logger.info('No apWaveFPI files exist')
 
     # Scan through all files, accumulate IDs of the various types
-    dark, cal, exp, sky, extra, calpsfid = [], [], [], [], [], None
+    dark, cal, exp, exppluggroup, sky, extra, calpsfid = [], [], [], [], [], [], None
     domeused, out, planfiles = [], [], []
     for i in range(nfiles):
         # Load image number in variable according to exptype and nreads
-        #   discard images with nread<3
-        if info['nread'][i]<3:
-            logger.info(str(info['num'][i])+' has less than the required 3 reads')
-
+        #  discard images that have problems
+        if qachk['okay'][i]==False:
+            badbits = ', '.join(check.bitmask(qachk['mask'][i])[1])
+            logger.info(str(expinfo['num'][i])+' %-13s has QA problems:  %-s ' % (expinfo['exptype'][i],badbits))
         # Dark
-        elif (info['exptype'][i]=='DARK') and info['nread'][i]>=3:
-            dark.append(int(info['num'][i]))
+        elif (expinfo['exptype'][i]=='DARK') and (qachk['okay'][i]==True):
+            dark.append(int(expinfo['num'][i]))
         # Internal flat
         #   reduced only to 2D, hence treated like darks
-        elif (info['exptype'][i]=='INTERNALFLAT') and info['nread'][i]>=3:
-            dark.append(int(info['num'][i]))
+        elif (expinfo['exptype'][i]=='INTERNALFLAT') and (qachk['okay'][i]==True):
+            dark.append(int(expinfo['num'][i]))
         # Quartz flat
-        elif (info['exptype'][i]=='QUARTZFLAT') and info['nread'][i]>=3:
-            cal.append(int(info['num'][i]))
-            calpsfid = int(info['num'][i])
+        elif (expinfo['exptype'][i]=='QUARTZFLAT') and (qachk['okay'][i]==True):
+            cal.append(int(expinfo['num'][i]))
+            calpsfid = int(expinfo['num'][i])
         # Arc lamps
-        elif (info['exptype'][i]=='ARCLAMP') and info['nread'][i]>=3:
-            cal.append(int(info['num'][i]))
+        elif (expinfo['exptype'][i]=='ARCLAMP') and (qachk['okay'][i]==True):
+            cal.append(int(expinfo['num'][i]))
         # Sky frame
         #   identify sky frames as object frames with 10<nread<13
-        elif (info['exptype'][i]=='OBJECT') and (info['nread'][i]<13 and info['nread'][i]>10):
-            sky.append(int(info['num'][i]))
+        #elif (expinfo['exptype'][i]=='OBJECT') and (expinfo['nread'][i]<13 and expinfo['nread'][i]>10) and (qachk['okay'][i]==True):
+        elif (expinfo['exptype'][i]=='SKYFLAT') and (qachk['okay'][i]==True):
+            sky.append(int(expinfo['num'][i]))
         # Object exposure, used to be >15
-        elif (info['exptype'][i]=='OBJECT') and info['nread'][i]>13:
-            exp.append(int(info['num'][i]))
+        elif (expinfo['exptype'][i]=='OBJECT') and (expinfo['nread'][i]>13) and (qachk['okay'][i]==True):
+            exp.append(int(expinfo['num'][i]))
+            exppluggroup.append(expinfo['pluggroup'][i])
         # Dome flat, dealt with above
-        elif (info['exptype'][i]=='DOMEFLAT') and info['nread'][i]>3:
+        elif (expinfo['exptype'][i]=='DOMEFLAT'):
             pass
         # FPI, dealt with above
-        elif (info['exptype'][i]=='FPI') and info['nread'][i]>=3:
+        elif (expinfo['exptype'][i]=='FPI'):
             pass
         else:
-            print('Unknown exposure: ',info['num'][i],info['exptype'][i],info['nread'][i],' adding to extra plan file')
-            extra.append(int(info['num'][i]))
+            print('Unknown exposure: ',expinfo['num'][i],expinfo['exptype'][i],expinfo['nread'][i],' adding to extra plan file')
+            extra.append(int(expinfo['num'][i]))
 
         # End of this plate block
         #  if plateid changed or last exposure
-        platechange = info['plateid'][i] != info['plateid'][np.minimum(i+1,nfiles-1)]
+        platechange = expinfo['plateid'][i] != expinfo['plateid'][np.minimum(i+1,nfiles-1)]
         # We don't need a domeflat with each field visit in the SDSS-V FPS era since
         #   we will use the domeflat lookup table
-        if (platechange or i==nfiles-1) and info['plateid'][i]!='' and len(exp)>0 and (len(dome)>0 or fps):
+        if (platechange or i==nfiles-1) and expinfo['plateid'][i]!='' and len(exp)>0 and (len(dome)>0 or fps):
             # Object plate visit
             if fps:
-                plate = info['configid'][i]
+                plate = expinfo['configid'][i]
                 try:
                     plate = int(plate)
                 except:
                     plate = 0
             else:
-                plate = int(info['plateid'][i])
+                plate = int(expinfo['plateid'][i])
 
             # Get PSF calibration file
             #  use quartz flats if possible, make sure they exist
@@ -1065,14 +1004,32 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             # Flux calibration file
             # Use existing apFlux calibration file
             if len(flux)>0:
-                bestind = np.argsort(np.abs(np.array(flux)-int(exp[0])))
-                flux1 = int(flux[bestind[0]])
+                # Use apFlux for this gang connector plugging
+                samegroup, = np.where(np.array(fluxpluggroup)==exppluggroup[0])
+                # Some apFlux for this plugging group
+                if len(samegroup)>0:
+                    bestind = np.argsort(np.abs(np.array(flux)[samegroup]-int(exp[0])))
+                    flux1 = int(np.array(flux)[samegroup][bestind[0]])
+                # No apFlux for this plugging, use closest apFlux
+                else:
+                    logger.info('No apFlux for this gang connector plugging. Using closest apFlux')
+                    bestind = np.argsort(np.abs(np.array(flux)-int(exp[0])))
+                    flux1 = int(flux[bestind[0]])
             # No apFlux calibration file exists yet, it'll need to be made
             else:
                 # Use domeflat for flux calibration
                 if len(dome)>0:
-                    bestind = np.argsort(np.abs(np.array(dome)-int(exp[0])))
-                    flux1 = int(dome[bestind[0]])
+                    # Use apFlux for this gang connector plugging
+                    samegroup, = np.where(np.array(domepluggroup)==exppluggroup[0])
+                    # Some dome for this plugging group
+                    if len(samegroup)>0:
+                        bestind = np.argsort(np.abs(np.array(dome)[samegroup]-int(exp[0])))
+                        flux1 = int(np.array(dome)[samegroup][bestind[0]])
+                    # No domeflat for this plugging, use closest domeflat
+                    else:
+                        logger.info('No domeflat for this gang connector plugging. Using closest domeflat')
+                        bestind = np.argsort(np.abs(np.array(dome)-int(exp[0])))
+                        flux1 = int(dome[bestind[0]])
                 else:
                     flux1 = None
             # Put everything together for this configuration/plate
@@ -1081,16 +1038,16 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
                 if len(fpi)>0:
                     objplan['fpi'] = str(fpi[0])
-                objplan['configid'] = str(info['configid'][i])
-                objplan['designid'] = str(info['designid'][i])
-                objplan['fieldid'] = str(info['fieldid'][i])
-                print('Setting force=True for now')
+                objplan['configid'] = str(expinfo['configid'][i])
+                objplan['designid'] = str(expinfo['designid'][i])
+                objplan['fieldid'] = str(expinfo['fieldid'][i])
+                #print('Setting force=True for now')
                 objplan['force'] = True
             else:  # plates
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
             out.append(objplan)
-            planfile = load.filename('Plan',plate=plate,field=info['fieldid'][i],mjd=mjd)
+            planfile = load.filename('Plan',plate=plate,field=expinfo['fieldid'][i],mjd=mjd)
             planfiles.append(planfile)
             exp = []
 
@@ -1101,9 +1058,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 
                            'ims':sky, 'fps':fps, 'sky':True}
                 if fps:
-                    skyplan['configid'] = str(info['configid'][i])
-                    skyplan['designid'] = str(info['designid'][i])
-                    skyplan['fieldid'] = str(info['fieldid'][i])
+                    skyplan['configid'] = str(expinfo['configid'][i])
+                    skyplan['designid'] = str(expinfo['designid'][i])
+                    skyplan['fieldid'] = str(expinfo['fieldid'][i])
                 out.append(skyplan)
                 skyplanfile = planfile.replace('.yaml','sky.yaml')
                 planfiles.append(skyplanfile)
@@ -1111,7 +1068,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
 
     # Some object exposures not used in visit plan files
     if len(exp)>0:
-        print(str(len(exp))+' unused object exposures in visit plan files.  Adding them to ExtraPlan')
+        logger.info(str(len(exp))+' unused object exposures in visit plan files.  Adding them to ExtraPlan')
         extra += exp
         exp = []
     # Some domeflat exposures not used in visit plan files
@@ -1131,9 +1088,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         darkplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                     'plate':0, 'psfid':0, 'fluxid':0, 'ims':dark, 'fps':fps, 'dark':True}
         if fps:
-            darkplan['configid'] = str(info['configid'][i])
-            darkplan['designid'] = str(info['designid'][i])
-            darkplan['fieldid'] = str(info['fieldid'][i])
+            darkplan['configid'] = str(expinfo['configid'][i])
+            darkplan['designid'] = str(expinfo['designid'][i])
+            darkplan['fieldid'] = str(expinfo['fieldid'][i])
         out.append(darkplan)
         planfile = load.filename('DarkPlan',mjd=mjd)
         planfiles.append(planfile)
@@ -1143,9 +1100,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                    'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':cal, 'fps':fps,
                    'cal':True}
         if fps:
-            calplan['configid'] = str(info['configid'][i])
-            calplan['designid'] = str(info['designid'][i])
-            calplan['fieldid'] = str(info['fieldid'][i])
+            calplan['configid'] = str(expinfo['configid'][i])
+            calplan['designid'] = str(expinfo['designid'][i])
+            calplan['fieldid'] = str(expinfo['fieldid'][i])
         out.append(calplan)
         planfile = load.filename('CalPlan',mjd=mjd)
         planfiles.append(planfile)
@@ -1155,9 +1112,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                      'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':extra, 'fps':fps,
                      'extra':True}
         if fps:
-            extraplan['configid'] = str(info['configid'][i])
-            extraplan['designid'] = str(info['designid'][i])
-            extraplan['fieldid'] = str(info['fieldid'][i])
+            extraplan['configid'] = str(expinfo['configid'][i])
+            extraplan['designid'] = str(expinfo['designid'][i])
+            extraplan['fieldid'] = str(expinfo['fieldid'][i])
         out.append(extraplan)
         planfile = load.filename('ExtraPlan',mjd=mjd)
         planfiles.append(planfile)
