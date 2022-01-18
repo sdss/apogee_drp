@@ -787,7 +787,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=0.3, markerscale=1, 
                       fontsize=fsz, edgecolor='k', framealpha=1)
 
-            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.10,top=0.94,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.08,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
