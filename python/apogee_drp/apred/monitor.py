@@ -775,16 +775,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 uplate = np.unique(allsci['PLATE'][gd])
                 nvis[i] = len(uplate)
                 if i < nmjd-1:
-                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='grey')#, label='exposures')
-                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='teal')#, label='visits')
+                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='k')#, label='exposures')
+                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='r')#, label='visits')
                 else:
-                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='teal', label='exposures')
-                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='teal', label='visits')
+                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='k', label='exposures')
+                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='r', label='visits')
 
             #ax.scatter(umjd, nexp, marker='o', s=markersz, c='grey', alpha=alf, label='exposures')
             #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
 
-            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=0.1, markerscale=4, 
                       fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
