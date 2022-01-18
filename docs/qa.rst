@@ -39,7 +39,7 @@ Night Level
 
 For each night an APOGEE instrument observes, there is a Nightly QA page that summarizes all of the exposures and their
 reduction status, e.g. `59591.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59591/html/59591.html>`_. 
-These pages are linked in the MJD view page described above.
+These pages are linked in the `MJD view <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/qa/mjd.html>`_ page.
 
 Visit Level
 -----------
@@ -49,7 +49,8 @@ with various QA plots included.  Here is an example:
 `apQA-1279-59584.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/20882/1279/59584/html/apQA-1279-59584.html>`_. 
 The second is an "apPlate" page that shows plots of the spectra from each visit, including skies, telluric standards, and science targets. Here is an example: 
 `apPlate-1279-59584.html <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/20882/1279/59584/html/apPlate-1279-59584.html>`_.
-Links to these pages are provided in the MJD and Fields summary pages described above.
+Links to these pages are provided in the `MJD view <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/qa/mjd.html>`_ and 
+`Fields view <https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/daily/qa/fields.html>`_ pages.
 
 Star Level
 ----------
