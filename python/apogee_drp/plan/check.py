@@ -206,11 +206,11 @@ def check_object(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for object exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
@@ -275,11 +275,11 @@ def check_domeflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for domeflat exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
@@ -341,16 +341,16 @@ def check_quartzflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong APOGEE shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for quartzflat exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
-    if expinfo['calshutter'] is not None:
+    if expinfo['calshutter'] != '':
         # shutter must be open for quartzflat exposures
         if expinfo['calshutter']==False:
             mask |= 2**3            
@@ -412,16 +412,16 @@ def check_arclamp(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for arclamp exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
-    if expinfo['calshutter'] is not None:
+    if expinfo['calshutter'] != '':
         # shutter must be open for arclamp exposures
         if expinfo['calshutter']==False:
             mask |= 2**3            
@@ -498,16 +498,16 @@ def check_fpi(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for FPI exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
-    if expinfo['calshutter'] is not None:
+    if expinfo['calshutter'] != '':
         # shutter must be open for fpi exposures
         if expinfo['calshutter']==False:
             mask |= 2**3            
@@ -570,11 +570,11 @@ def check_internalflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open good internalflat exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
@@ -634,11 +634,11 @@ def check_skyflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for skyflat exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
