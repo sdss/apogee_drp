@@ -400,6 +400,13 @@ For i=0,2 do begin
   ; set bad pixels to NaN
   bd=where(frame.(i).mask and badmask())
   ratio[bd]=!values.f_nan
+
+  ;; Use average of neighbors for FPI fibers 75 and 225
+  if mjd5 ge 59556 then begin
+    ratio[*,75] = 0.5*(ratio[*,74]+ratio[*,76])
+    ratio[*,225] = 0.5*(ratio[*,224]+ratio[*,226])
+  endif
+
   ; interpolate over the Littrow ghost using a low order polynomial fit to the region around it
   for j=0,nfibers-1 do begin
     bd=where(frame.(i).mask[*,j] and maskval('LITTROW_GHOST'),nbd)
