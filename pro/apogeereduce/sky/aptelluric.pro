@@ -127,6 +127,9 @@ For i=0,2 do begin
 endfor
 outframe = CREATE_STRUCT(outframe,'shift',frame.shift)
 
+;; FPS
+if long(plugmap.mjd) ge 59556 then fps=1 else fps=0
+
 species = ['CH4','CO2','H2O']
 nspecies = n_elements(species)
 maxpars=6
@@ -704,6 +707,8 @@ for i=0,nfibers-1 do begin
     ;print,'No information for Fiber=',strtrim(i+1,2),' in the plugmap file'
     goto,BOMB
   endif
+  ;; Don't correct dedicated FPI fibers
+  if keyword_set(fps) and (i eq 75 or i eq 225) then goto,BOMB
 
   ; Getting the spectrum, concatenate them
   spec = [frame.(0).flux[*,i], frame.(1).flux[*,i], $

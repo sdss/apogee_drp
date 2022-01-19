@@ -282,8 +282,8 @@ CASE suboption of
     ptarg  = plugmap.fiberdata[iplugind].target1
     starg  = plugmap.fiberdata[iplugind].target2
 
-    ; Only correct non-sky fibers
-;    If objtype ne 'SKY' then begin
+    ;; Don't correct dedicated FPI fibers
+    if not keyword_set(fps) or (i ne 75 and i ne 225) then begin
 
       ; Loop through the chips
       For j=0,2 do begin
@@ -594,7 +594,7 @@ CASE suboption of
 
       ;stop
 
-;    endif ; not SKY type
+    endif ; not dedicated FPI fibers
 
     BOMB0:
 
