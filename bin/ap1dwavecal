@@ -60,7 +60,7 @@ if __name__ == '__main__' :
     # FPI lines
     else:
         if args.frameid == None:
-            fpi.fpi1dwavecal(planfile=args.planfile,waveid=args.waveid,fpiid=args.fpiid,verbose=args.verbose)
+            fpi.fpi1dwavecal(planfile=args.planfile,fpiid=args.fpiid,verbose=args.verbose)
         else :
             fpi.fpi1dwavecal(frameid=args.frameid,fpiid=args.fpiid,vers=args.apred,telescope=args.telescope,verbose=args.verbose)
     now = datetime.datetime.now()

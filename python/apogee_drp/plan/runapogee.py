@@ -882,11 +882,11 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                      qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
         do3d = np.zeros(len(expinfo),bool)
         for i,num in enumerate(expinfo['num']):
-            logfile = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
-            logfile = os.path.dirname(logfile)+'/logs/'+os.path.basename(logfile)
-            logfile = logfile.replace('.fits','_pbs.'+logtime+'.log')
-            if os.path.dirname(logfile)==False:
-                os.makedirs(os.path.dirname(logfile))
+            logfile1 = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
+            logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
+            logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
+            if os.path.dirname(logfile1)==False:
+                os.makedirs(os.path.dirname(logfile1))
             # Check if files exist already
             do3d[i] = True
             if clobber is not True:
@@ -898,7 +898,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                     do3d[i] = False
             if do3d[i]:
                 queue.append('ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope),
-                             outfile=logfile,errfile=logfile.replace('.log','.err'))
+                             outfile=logfile1,errfile=logfile1.replace('.log','.err'))
         if np.sum(do3d)>0:
             queue.commit(hard=True,submit=True)
             rootLogger.info('PBS key is '+queue.key)
