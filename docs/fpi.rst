@@ -16,7 +16,7 @@ There are several processing steps to take advantage of the FPI to improve our w
 - Fit wavelength solutions to many arclamp exposures (over a week) simultaneously
 - Determine median wavelength of each FPI line using wavelength solutions and Gaussian position over the 300 fibers
 - Refit wavelength solution of each fiber using the wavelengths of the FPI lines
-- This is created by the ``mkfpiwave`` which calls ``fpi.dailyfpiwave)``.  This should be run every day with the daily calibration products.  **The code still needs to be finished and tested.**
+- This is created by the ``mkfpiwave`` which calls ``fpi.dailyfpiwave)``.  This should be run every day with the daily calibration products.  **The code still needs to be tested.**
   
 2. Correct wavelength solution using 2-fiber FPI data
 -----------------------------------------------------
@@ -30,7 +30,7 @@ There are several processing steps to take advantage of the FPI to improve our w
     
 - The FPI lines allow us to make a precise shift measurement relative to the FPI lines at the beginning of the night.
 - Currently we use the sky lines to do this, so maybe add the FPI part to the same program, or write a similar one that is called if we have FPI data.
-- This is run by the ``ap1dwavecal`` script which calls ``fpi.fpi1dwavecal()`` which is called at the end of ``ap2dproc.pro``.  **The code still needs to be fully developed and tested.**
+- This is run by the ``ap1dwavecal`` script which calls ``fpi.fpi1dwavecal()`` which is called at the end of ``ap2dproc.pro``.  **The code still needs to be tested.**
   
 3. Measure Dither shift
 -----------------------
