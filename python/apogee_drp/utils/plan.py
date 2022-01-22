@@ -66,6 +66,20 @@ def load(planfile,verbose=False,np=False,expand=False,plugmapm=False):
         if 'APEXP' not in plandata.keys():
             raise ValueError('No APEXP structure in plan file '+planfile)
 
+        # Convert APEXP to numpy structured array with correct strings
+        apexp = plandata['APEXP']
+        dt = numpy.dtype([('plateid',int),('mjd',int),('flavor',numpy.str,30),
+                          ('name',int),('single',int),('singlename',numpy.str,50)])
+        new = numpy.zeros(len(apexp),dtype=dt)
+        for i in range(len(apexp)):
+            for n in dt.names:
+                new[n][i] = apexp[i][n]
+        plandata['APEXP'] = new
+        # Fix strings
+        for k in plandata.keys():
+            if type(plandata[k]) is str:
+                plandata[k] = plandata[k].replace("'",'')
+
     # Yaml file
     if planfile.endswith('.yaml')==True:
         # Read the file

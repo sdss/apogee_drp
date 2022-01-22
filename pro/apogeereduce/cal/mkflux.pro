@@ -80,7 +80,7 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
   cmjd = getcmjd(i1)
   inpfile = apogee_filename('1D',num=i1,chip='a',/dir)+string(format='(i8.8)',i1)
   ;inpfile = dirs.expdir+cmjd+'/'+string(format='(i8.8)',i1)
-  APMKFLUXCAL,inpfile,outdir=fluxdir,/clobber
+  APMKFLUXCAL,inpfile,outdir=fluxdir,/clobber,unlock=unlock
 
   ;; Clean up in case someone might want to reduce these files with flux calibration
   ;files = apogee_filename('1D',num=i1,chip=['a','b','c'])

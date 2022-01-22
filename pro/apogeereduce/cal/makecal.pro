@@ -91,7 +91,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       ims = getnums(darkstr[i].frames)
       cmjd = getcmjd(ims[0],mjd=mjd)
       GETCAL,mjd,calfile,detid=detid
-      MAKECAL,det=detid
+      MAKECAL,det=detid,unlock=unlock
       MKDARK,ims,clobber=clobber,unlock=unlock
     endif else begin
       if keyword_set(mjd) then  begin
@@ -103,7 +103,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
           ims = getnums(darkstr[red[i]].frames)
           cmjd = getcmjd(ims[0],mjd=mjd)
           GETCAL,mjd,calfile,detid=detid
-          MAKECAL,det=detid
+          MAKECAL,det=detid,unlock=unlock
           MKDARK,ims,clobber=clobber,unlock=unlock
         endfor
       endif
@@ -132,7 +132,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       ims = getnums(flatstr[i].frames)
       cmjd = getcmjd(ims[0],mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid
-      MAKECAL,dark=darkid
+      MAKECAL,dark=darkid,unlock=unlock
       MKFLAT,ims,darkid=darkid,nrep=flatstr[i].nrep,dithered=flatstr[i].dithered,clobber=clobber,unlock=unlock
     endif else begin
       if keyword_set(mjd) then  begin
@@ -144,7 +144,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
           ims = getnums(flatstr[red[i]].frames)
           cmjd = getcmjd(ims[0],mjd=mjd)
           GETCAL,mjd,calfile,darkid=darkid
-          MAKECAL,dark=darkid
+          MAKECAL,dark=darkid,unlock=unlock
           MKFLAT,ims,darkid=darkid,nrep=flatstr[i].nrep,dithered=flatstr[i].dithered,clobber=clobber,unlock=unlock
         endfor
       endif
@@ -168,8 +168,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         print,'No matching calibration line for ', bpm
         stop
       endif
-      MAKECAL,dark=bpmstr[i].darkid
-      MAKECAL,flat=bpmstr[i].flatid
+      MAKECAL,dark=bpmstr[i].darkid,unlock=unlock
+      MAKECAL,flat=bpmstr[i].flatid,unlock=unlock
       MKBPM,bpmstr[i].name,darkid=bpmstr[i].darkid,flatid=bpmstr[i].flatid,clobber=clobber,unlock=unlock
     endif else begin
       if keyword_set(mjd) then  begin
@@ -178,8 +178,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       endif else red=indgen(n_elements(bpmstr))
       if (red[0] ge 0) then begin
         for i=0,n_elements(red)-1 do begin
-          MAKECAL,dark=bpmstr[i].darkid,clobber=clobber
-          MAKECAL,flat=bpmstr[i].flatid,clobber=clobber
+          MAKECAL,dark=bpmstr[i].darkid,clobber=clobber,unlock=unlock
+          MAKECAL,flat=bpmstr[i].flatid,clobber=clobber,unlock=unlock
           MKBPM,bpmstr[red[i]].name,darkid=bpmstr[i].darkid,flatid=bpmstr[i].flatid,clobber=clobber,unlock=unlock
         endfor
       endif
@@ -204,9 +204,9 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       ims = getnums(sparsestr[i].frames)
       cmjd = getcmjd(ims[0],mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid
-      MAKECAL,dark=darkid
-      MAKECAL,flat=flatid
-      MAKECAL,bpm=bpmid
+      MAKECAL,dark=darkid,unlock=unlock
+      MAKECAL,flat=flatid,unlock=unlock
+      MAKECAL,bpm=bpmid,unlock=unlock
       darkims = getnums(sparsestr[i].darkframes)
       maxread = getnums(sparsestr[i].maxread)
       if n_elements(maxread) ne 3 then begin
@@ -234,7 +234,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     if psf gt 1 then begin
       cmjd = getcmjd(psf,mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid
-      MAKECAL,littrow=littrowid
+      MAKECAL,littrow=littrowid,unlock=unlock
       MKPSF,psf,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid,clobber=clobber,unlock=unlock
     endif
   endif
@@ -262,9 +262,9 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         si = sort(abs(long(psfids-long(fpi[0]))))
         psfid = psfids[si[0]]
       endelse
-      MAKECAL,psf=psfid
+      MAKECAL,psf=psfid,unlock=unlock
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
-      MAKECAL,fiber=fiberid
+      MAKECAL,fiber=fiberid,unlock=unlock
       MKFPI,fpi,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
             fiberid=fiberid,clobber=clobber,unlock=unlock
     endif
@@ -276,7 +276,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     if littrow gt 1 then begin
       cmjd = getcmjd(littrow,mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid
-      MAKECAL,flat=flatid
+      MAKECAL,flat=flatid,unlock=unlock
       MKLITTROW,littrow,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,clobber=clobber,unlock=unlock
     endif
   endif
@@ -322,9 +322,9 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     print,'makecal flux: ', flux
     if flux gt 1 then begin
       cmjd = getcmjd(flux,mjd=mjd)
-      MAKECAL,psf=psf
+      MAKECAL,psf=psf,unlock=unlock
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,littrowid=littrowid,waveid=waveid
-      MAKECAL,littrow=littrowid
+      MAKECAL,littrow=littrowid,unlock=unlock
       MKFLUX,flux,darkid=darkid,flatid=flatid,psfid=psf,littrowid=littrowid,waveid=waveid,$
              clobber=clobber,unlock=unlock
     endif
@@ -354,10 +354,10 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
 
       cmjd = getcmjd(response,mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,littrowid=littrowid,waveid=waveid,fiberid=fiberid
-      MAKECAL,psf=responsestr[i].psf
-      MAKECAL,wave=waveid
-      MAKECAL,fiber=fiberid
-      MAKECAL,littrow=littrowid
+      MAKECAL,psf=responsestr[i].psf,unlock=unlock
+      MAKECAL,wave=waveid,unlock=unlock
+      MAKECAL,fiber=fiberid,unlock=unlock
+      MAKECAL,littrow=littrowid,unlock=unlock
       MKFLUX,response,darkid=darkid,flatid=flatid,psfid=responsestr[i].psf,littrowid=littrowid,$
              waveid=waveid,temp=responsestr[i].temp,clobber=clobber,unlock=unlock
     endif
@@ -396,7 +396,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
             ;; Find quartzflat/domeflat that is closest to the waveid
             si = sort(abs(long(psfinfo.num-long(ims[0]))))         
             psfid = psfinfo[si[0]].num
-            MAKECAL,psf=psfid
+            MAKECAL,psf=psfid,unlock=unlock
           endif else begin
             ;; Find closest one
             psfids = lonarr(npsffiles)
@@ -409,8 +409,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
 
       cmjd = getcmjd(ims[0],mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
-      MAKECAL,bpm=bpmid
-      MAKECAL,fiber=fiberid
+      MAKECAL,bpm=bpmid,unlock=unlock
+      MAKECAL,fiber=fiberid,unlock=unlock
       MKWAVE,ims,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
              fiberid=fiberid,clobber=clobber,nofit=nofit,unlock=unlock
     endif else begin
@@ -423,8 +423,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
           ims = getnums(wavestr[red[i]].frames)
           cmjd = getcmjd(ims[0],mjd=mjd)
           GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
-          MAKECAL,bpm=bpmid
-          MAKECAL,fiber=fiberid
+          MAKECAL,bpm=bpmid,unlock=unlock
+          MAKECAL,fiber=fiberid,unlock=unlock
           MKWAVE,ims,name=wavestr[red[i]].name,darkid=darkid,flatid=flatid,psfid=wavestr[red[i]].psfid,$
                  fiberid=fiberid,clobber=clobber,/nowait,nofit=nofit,unlock=unlock
         endfor
@@ -490,7 +490,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       ims = getnums(lsfstr[i[0]].frames)
       cmjd = getcmjd(ims[0],mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,multiwaveid=waveid,fiberid=fiberid
-      MAKECAL,multiwave=waveid
+      MAKECAL,multiwave=waveid,unlock=unlock
       MKLSF,ims,waveid,darkid=darkid,flatid=flatid,psfid=lsfstr[i[0]].psfid,fiberid=fiberid,$
             full=full,newwave=newwave,clobber=clobber,pl=pl,unlock=unlock
     endif else begin
@@ -503,7 +503,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
           ims = getnums(lsfstr[red[i]].frames)
           cmjd = getcmjd(ims[0],mjd=mjd)
           GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,multiwaveid=waveid,fiberid=fiberid
-          MAKECAL,multiwave=waveid
+          MAKECAL,multiwave=waveid,unlock=unlock
           print,'calling mklsf'
           MKLSF,ims,waveid,darkid=darkid,flatid=flatid,psfid=lsfstr[i].psfid,fiberid=fiberid,$
                 full=full,newwave=newwave,clobber=clobber,pl=pl,unlock=unlock,/nowait

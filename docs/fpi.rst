@@ -37,15 +37,15 @@ There are several processing steps to take advantage of the FPI to improve our w
 
 - Measure dither shift between science frames like we have always done, by cross-correlating the two science spectra.
 - Fit linear or quadratic polynomial to the dither shifts vs. fiber.
-- These should be more accurate (on a fiber by fiber basis) than the FPI shifts which they are interpolated/extrapolated to many of the fibers.
+- These should be more accurate (on a fiber by fiber basis) than the FPI shifts which are interpolated/extrapolated to most of the fibers.
 - This should be very similar to what we are already doing.
-- This is done in ``apdithershif.pro``.  **This uses existing code.**
+- This is done in ``apdithershift.pro``.  **This uses existing code.**
   
 4. Dither combination/final wavelengths
 ---------------------------------------
 
-- Use the dither shifts from #3 to perform the dither combination
-- Shift the wavelengths using the same dither shift as the spectra
-- For each fiber, average the wavelengths of the multiple exposures
-- The wavelength part of this is new code that can be written into the dither combination program
+- Use the dither shifts from #3 to perform the dither combination.
+- Shift the wavelengths using the same dither shift as the spectra.
+- For each fiber, average the wavelengths of the multiple exposures.
+- The wavelength part of this is new code that can be written into the dither combination program.
 - This is done in ``apdithercomb.pro``.  **This still needs to be implemented and tested.**

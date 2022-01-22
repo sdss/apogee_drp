@@ -1,5 +1,3 @@
-function apdithershift,frame1,frame2,xcorr=xcorr,lines=lines,object=object,plot=plot,pfile=pfile,stp=stp,shiftarr=shiftarr,plugmap=plugmap,nofit=nofit,mjd=mjd
-
 ;+
 ;
 ; APDITHERSHIFT
@@ -31,6 +29,9 @@ function apdithershift,frame1,frame2,xcorr=xcorr,lines=lines,object=object,plot=
 ;
 ; By D. Nidever  March 2010
 ;-
+
+function apdithershift,frame1,frame2,xcorr=xcorr,lines=lines,object=object,plot=plot,pfile=pfile,$
+                       stp=stp,shiftarr=shiftarr,plugmap=plugmap,nofit=nofit,mjd=mjd
 
 apgundef,shift,shifterr,shiftstr
 
