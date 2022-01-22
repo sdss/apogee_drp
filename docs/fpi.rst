@@ -48,4 +48,4 @@ There are several processing steps to take advantage of the FPI to improve our w
 - Shift the wavelengths using the same dither shift as the spectra.
 - For each fiber, average the wavelengths of the multiple exposures.
 - The wavelength part of this is new code that can be written into the dither combination program.
-- This is done in ``apdithercomb.pro``.  **This still needs to be implemented and tested.**
+- This is done in ``apdithercomb.pro``.  **This still needs to be tested.**
