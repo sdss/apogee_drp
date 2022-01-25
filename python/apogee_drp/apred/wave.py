@@ -665,7 +665,7 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],fram
             polypars=pars[0:npoly,row]*3000**pow
             chippars[:,row] = np.append([ -1023.5+(ichip-1)*2048 + pars[npoly+ichip,row],0., 0., 1., 0., 0.], 
                               np.flip( np.append(np.zeros(8-npoly),polypars)))
-
+            chipwaves[row,:] = func_multi_poly(x,*pars[:,row],npoly=npoly)
         hdu.append(fits.PrimaryHDU())
         hdu[0].header['NFRAMES']=(len(frames),'number of frames in fit')
         for i in range(len(frames)) : hdu[0].header['FRAME{:d}'.format(i)] = frames[i]
@@ -715,6 +715,7 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],fram
         Table(linestr).write(out.replace('.fits','_lines.fits'),overwrite=True)
     # Generate empty .dat file
     if out is not None: open(out.replace('.fits','.dat'),'a').close()
+    
     return allhdu
 
 def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False):
@@ -1361,8 +1362,8 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
                 hdu.append(frame[chip][1])    # 1-flux
                 hdu.append(frame[chip][2])    # 2-error
                 hdu.append(frame[chip][3])    # 3-mask
-                hdu.append(allhdu[ichip][2])  # 4-chipwave [14,300]
-                hdu.append(allhdu[ichip][1])  # 5-chippars [300,2048]
+                hdu.append(allhdu[ichip][2])  # 4-chipwave [300,2048]
+                hdu.append(allhdu[ichip][1])  # 5-chippars [14,300]
                 hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
 
         # Plots
