@@ -891,9 +891,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
             do3d[i] = True
             if clobber is not True:
                 outfile = load.filename('2D',num=num,mjd=mjd5,chips=True)
-                outfiles = [outfile.replace('2D-','2D-'+ch+'-') for ch in chips]
-                exists = [os.path.exists(o) for o in outfiles]
-                if np.sum(exists)==3:
+                if load.exists('2D',num=num):
                     rootLogger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     do3d[i] = False
             if do3d[i]:
@@ -904,9 +902,9 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
             rootLogger.info('PBS key is '+queue.key)
             queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
             chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=rootLogger)
-            del queue
         else:
             rootLogger.info('No exposures need AP3D processing')
+        del queue
     else:
         rootLogger.info('No exposures to process with AP3D')
 
@@ -931,6 +929,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
         calcode = [calcodedict[etype] for etype in expinfo['exptype'][calind]]
         calnames = ['DOMEFLAT/QUARTZFLAT','FLUX','ARCLAMP','FPI']
         shcalnames = ['psf','flux','arcs','fpi']
+        filecodes = ['PSF','Flux','Wave','WaveFPI']
         chkcal = []
         for j,ccode in enumerate([1,2,4,8]):
             rootLogger.info('')
@@ -941,45 +940,57 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
             cind, = np.where((np.array(calcode) & ccode) > 0)
             if len(cind)>0:
                 if ccode==8: cind = cind[[0]] # Only run first FPI exposure
-                rootLogger.info(str(len(cind))+' files to run')
+                rootLogger.info(str(len(cind))+' file(s)')
                 queue = pbsqueue(verbose=True)
                 queue.create(label='makecal-'+shcalnames[j], nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(cind)),
                              qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
                 calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd5))
                 logfiles = []
+                docal = np.zeros(len(cind),bool)
                 for k in range(len(cind)):
                     num1 = expinfo['num'][calind[cind[k]]]
                     exptype1 = expinfo['exptype'][calind[cind[k]]]
                     arctype1 = expinfo['arctype'][calind[cind[k]]]
-                    rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
-                    if ccode==1:   # psfs                    
-                        cmd1 = 'makecal --psf '+str(num1)+' --unlock'
-                        if clobber: cmd1 += ' --clobber'
-                        logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
-                    elif ccode==2:  # flux
-                        cmd1 = 'makecal --psf '+str(num1)+' --flux '+str(num1)+' --unlock'
-                        if clobber: cmd1 += ' --clobber'
-                        logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
-                    elif ccode==4: # and exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):  # arcs
-                        cmd1 = 'makecal --wave '+str(num1)+' --unlock'
-                        if clobber: cmd1 += ' --clobber'
-                        logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
-                    elif ccode==8: # and exptype1=='ARCLAMP' and arctype1=='FPI':    # fpi
-                        cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
-                        if clobber: cmd1 += ' --clobber'
-                        logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
-                    rootLogger.info(logfile1)
-                    logfiles.append(logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-                queue.commit(hard=True,submit=True)
-                rootLogger.info('PBS key is '+queue.key)
-                queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
-                calinfo = expinfo[calind[cind]]
-                chkcal1 = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
-                if len(chkcal)==0:
-                    chkcal = chkcal1
+                    # Check if files exist already
+                    docal[k] = True
+                    if clobber is not True:
+                        outfile = load.filename(filecodes[j],num=num1,mjd=mjd5,chips=True)
+                        if load.exists(filecodes[j],num=num1,mjd=mjd5):
+                            rootLogger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                            docal[k] = False
+                    if docal[k]:
+                        rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
+                        if ccode==1:   # psfs                    
+                            cmd1 = 'makecal --psf '+str(num1)+' --unlock'
+                            if clobber: cmd1 += ' --clobber'
+                            logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
+                        elif ccode==2:  # flux
+                            cmd1 = 'makecal --psf '+str(num1)+' --flux '+str(num1)+' --unlock'
+                            if clobber: cmd1 += ' --clobber'
+                            logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
+                        elif ccode==4: # and exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):  # arcs
+                            cmd1 = 'makecal --wave '+str(num1)+' --unlock'
+                            if clobber: cmd1 += ' --clobber'
+                            logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
+                        elif ccode==8: # and exptype1=='ARCLAMP' and arctype1=='FPI':    # fpi
+                            cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
+                            if clobber: cmd1 += ' --clobber'
+                            logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+                        rootLogger.info(logfile1)
+                        logfiles.append(logfile1)
+                        queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+                if np.sum(docal)>0:
+                    queue.commit(hard=True,submit=True)
+                    rootLogger.info('PBS key is '+queue.key)
+                    queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
+                    calinfo = expinfo[calind[cind]]
+                    chkcal1 = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
+                    if len(chkcal)==0:
+                        chkcal = chkcal1
+                    else:
+                        chkcal = np.hstack((chkcal,chkcal1))
                 else:
-                    chkcal = np.hstack((chkcal,chkcal1))
+                    rootLogger.info('No '+str(calnames[j])+' calibration files need to be run') 
                 del queue
             else:
                 rootLogger.info('No '+str(calnames[j])+' calibration files to run')
