@@ -221,6 +221,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         # Final calibration file
         #-----------------------
         if caltype.lower()=='fpi':
+            # Should should really check fpi/apFPILines-EXPNUM8.fits
             base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-')
         else:
             base = load.filename(caltype,num=num,chips=True)
@@ -951,6 +952,23 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                     num1 = expinfo['num'][calind[cind[k]]]
                     exptype1 = expinfo['exptype'][calind[cind[k]]]
                     arctype1 = expinfo['arctype'][calind[cind[k]]]
+                    if ccode==1:   # psfs                    
+                        cmd1 = 'makecal --psf '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
+                    elif ccode==2:  # flux
+                        cmd1 = 'makecal --psf '+str(num1)+' --flux '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
+                    elif ccode==4: # and exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):  # arcs
+                        cmd1 = 'makecal --wave '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
+                    elif ccode==8: # and exptype1=='ARCLAMP' and arctype1=='FPI':    # fpi
+                        cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
+                        if clobber: cmd1 += ' --clobber'
+                        logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+                    logfiles.append(logfile1)
                     # Check if files exist already
                     docal[k] = True
                     if clobber is not True:
@@ -960,40 +978,24 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                             docal[k] = False
                     if docal[k]:
                         rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
-                        if ccode==1:   # psfs                    
-                            cmd1 = 'makecal --psf '+str(num1)+' --unlock'
-                            if clobber: cmd1 += ' --clobber'
-                            logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
-                        elif ccode==2:  # flux
-                            cmd1 = 'makecal --psf '+str(num1)+' --flux '+str(num1)+' --unlock'
-                            if clobber: cmd1 += ' --clobber'
-                            logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
-                        elif ccode==4: # and exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):  # arcs
-                            cmd1 = 'makecal --wave '+str(num1)+' --unlock'
-                            if clobber: cmd1 += ' --clobber'
-                            logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
-                        elif ccode==8: # and exptype1=='ARCLAMP' and arctype1=='FPI':    # fpi
-                            cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
-                            if clobber: cmd1 += ' --clobber'
-                            logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
                         rootLogger.info(logfile1)
-                        logfiles.append(logfile1)
                         queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
                 if np.sum(docal)>0:
                     queue.commit(hard=True,submit=True)
                     rootLogger.info('PBS key is '+queue.key)
                     queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
-                    calinfo = expinfo[calind[cind]]
-                    chkcal1 = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
-                    if len(chkcal)==0:
-                        chkcal = chkcal1
-                    else:
-                        chkcal = np.hstack((chkcal,chkcal1))
                 else:
                     rootLogger.info('No '+str(calnames[j])+' calibration files need to be run') 
+                calinfo = expinfo[calind[cind]]
+                chkcal1 = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
+                if len(chkcal)==0:
+                    chkcal = chkcal1
+                else:
+                    chkcal = np.hstack((chkcal,chkcal1))
                 del queue
             else:
                 rootLogger.info('No '+str(calnames[j])+' calibration files to run')
+
 
     # Make MJD5 and plan files
     #--------------------------
