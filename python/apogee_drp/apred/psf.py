@@ -172,18 +172,37 @@ class PSFProfile(object):
     
 class PSF(object):
 
-    def __init__(self,coeffs,nxgrid=20,nygrid=50):
-        # coeffs = (w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y)
-        self._coeffs = coeffs
-        self.xmin = coeffs['xmin']
-        self.xmax = coeffs['xmax']
-        self.y = coeffs['y']
+    def __init__(self,data,nxgrid=20,nygrid=50,kind='ann',labels=None):
+        # kind can be 'ann' or 'grid'
+        if kind=='ann':
+            # coeffs = (w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y)
+            self.kind = kind
+            coefs = data
+            self._coeffs = coeffs
+            self.xmin = coeffs['xmin']
+            self.xmax = coeffs['xmax']
+            self.y = coeffs['y']
+            self._grid = None
+        elif kind=='grid':
+            # data should be (grid,labels,y)
+            # grid should be [Ncols,Nrows,Npix]
+            # labels should be [Ncols,Nrows,2]
+            # y should be [Npix]
+            self.kind = kind
+            grid,labels,y = data
+            self._grid = grid
+            self._labels = labels
+            self.y = y
+            self.xmin = [np.min(labels[:,:,0]),np.max(labels[:,:,0])]
+            self.xmax = [np.min(labels[:,:,1]),np.max(labels[:,:,1])]
+            nxgrid,nygrid,npix = grid.shape
+        else:
+            raise ValueError('Only "ann" and "grid" supported at this time')
         self.npix = len(self.y)
         self._xgrid = None
         self._nxgrid = nxgrid
-        self._ygrid = None        
+        self._ygrid = None     
         self._nygrid = nygrid
-        self._grid = None
 
     def __str__(self):
         """ String representation of the PSF."""
