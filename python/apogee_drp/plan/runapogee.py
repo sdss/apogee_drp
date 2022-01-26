@@ -1053,16 +1053,19 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     rootLogger.info('')
     vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
     if len(vcat)>0:
-        queue = pbsqueue(verbose=True)
-        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
-                     walltime=walltime, notification=False)
         # Get unique stars
         objects,ui = np.unique(vcat['apogee_id'],return_index=True)
         vcat = vcat[ui]
-        # remove ones with missing or blank apogee_ids
+        # Remove ones with missing or blank apogee_ids
         bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone') | (vcat['apogee_id']=='2M'))
         if len(bd)>0:
             vcat = np.delete(vcat,bd)
+        else:
+            vcat = []
+    if len(vcat)>0:
+        queue = pbsqueue(verbose=True)
+        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
+                     walltime=walltime, notification=False)
         for obj in vcat['apogee_id']:
             apstarfile = load.filename('Star',obj=obj)
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
