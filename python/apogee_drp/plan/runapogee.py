@@ -392,7 +392,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkap1['configid'] = planstr['configid']
             chkap1['designid'] = planstr['designid']
             chkap1['fieldid'] = planstr['fieldid']
-        if platetype=='normal':
+        if platetype=='normal' and fiberdata is not None:
             chkap1['nobj'] = np.sum(fiberdata['objtype']!='SKY')  # stars and tellurics
         chkap1['pbskey'] = pbskey
         chkap1['checktime'] = str(datetime.now())
