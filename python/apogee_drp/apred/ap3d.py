@@ -584,8 +584,8 @@ def loaddark(darkcorr,silent=True):
     # Check that it has enough reads
     #nreads_dark = sxpar(darkhead,'NAXIS3')
     if nreads_dark < nreads:
-        error = 'SUPERDARK file '+darkcorr+' does not have enough READS. Have '+str(nreads_dark,2)+\\
-                ' but need '+str(nreads,2)
+        error = 'SUPERDARK file '+darkcorr+' does not have enough READS. Have '+str(nreads_dark)+\\
+                ' but need '+str(nreads)
         raise ValueError(error)
     
     # Load the dark correction file
@@ -2239,7 +2239,7 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
   sxaddhist,leadstr+'        8 - unfixable',head
   if len(pmodelim) > 0:
       sxaddhist,leadstr+' HDU4 - persistence correction (ADU)',head
-  sxaddhist,leadstr+'Global fractional variability = '+str(string(global_variability,format='(F5.3)'),2),head
+  sxaddhist,leadstr+'Global fractional variability = '+str(string(global_variability,format='(F5.3)')),head
   maxlen = 72-strlen(leadstr)
   # Bad pixel mask file
   if len(bpmim) > 0:
@@ -2324,29 +2324,29 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
   # Bad pixels 
   bpmmask = int((int(mask) & maskval('BADPIX')) == maskval('BADPIX'))
   totbpm = total(bpmmask)
-  sxaddhist,leadstr+str(int(totbpm),2)+' pixels are bad',head
+  sxaddhist,leadstr+str(int(totbpm))+' pixels are bad',head
   # Cosmic Rays
   crmask, = np.where(int(mask) & maskval('CRPIX'),totcr)
   if nreads > 2:
-      sxaddhist,leadstr+str(int(totcr),2)+' pixels have cosmic rays',head
+      sxaddhist,leadstr+str(int(totcr))+' pixels have cosmic rays',head
   if crfix and nreads>2:
       sxaddhist,leadstr+'Cosmic Rays FIXED',head
   # Saturated pixels
   satmask, = np.where(int(mask) & maskval('SATPIX'),totsat)
   unfmask, = np.where(int(mask) & maskval('UNFIXABLE'),totunf)
   totfix = totsat-totunf
-  sxaddhist,leadstr+str(int(totsat),2)+' pixels are saturated',head
-  if keyword_set(satfix) and nreads > 2 then sxaddhist,leadstr+str(int(totfix),2)+' saturated pixels FIXED',head
+  sxaddhist,leadstr+str(int(totsat))+' pixels are saturated',head
+  if keyword_set(satfix) and nreads > 2 then sxaddhist,leadstr+str(int(totfix))+' saturated pixels FIXED',head
   # Unfixable pixels
-  sxaddhist,leadstr+str(int(totunf),2)+' pixels are unfixable',head
+  sxaddhist,leadstr+str(int(totunf))+' pixels are unfixable',head
   # Sampling
   if uptheramp:
       sxaddhist,leadstr+'UP-THE-RAMP Sampling',head
   else:
-    sxaddhist,leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used),2),head 
+    sxaddhist,leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used)),head 
   # Persistence correction factor
   if len(pmodelim) > 0 and len(ppar) > 0:
-    sxaddhist,leadstr+'Persistence correction: '+strjoin(str(string(ppar,format='(G7.3)'),2),' '),head
+    sxaddhist,leadstr+'Persistence correction: '+' '.join(str(string(ppar,format='(G7.3)'))),head
   
   
   # Fix EXPTIME if necessary
@@ -2458,21 +2458,21 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
   if silent==False:
       print('')
       print('BAD/CR/Saturated Pixels:')
-      print(str(int(totbpm),2),' pixels are bad')
-      print(str(int(totcr),2),' pixels have cosmic rays')
-      print(str(int(totsat),2),' pixels are saturated')
-      print(str(int(totunf),2),' pixels are unfixable')
+      print(str(int(totbpm)),' pixels are bad')
+      print(str(int(totcr)),' pixels have cosmic rays')
+      print(str(int(totsat)),' pixels are saturated')
+      print(str(int(totunf)),' pixels are unfixable')
       print('')
 
   os.remove(lockfile)
   
   dt = systime(1)-t0
   if silent==False:
-      print('dt = ',str(string(dt,format='(F10.1)'),2),' sec')
+      print('dt = ',str(string(dt,format='(F10.1)')),' sec')
   if logfile is not None:
       writelog,logfile,os.path.basename((file)+string(format='(f10.2,1x,i8,1x,i8,1x,i8,i8)',dt,totbpm,totcr,totsat,totunf)
 
 if nfiles > 1:
   dt = systime(1)-t00
   if silent==False:
-    print('dt = ',str(string(dt,format='(F10.1)'),2),' sec')
+    print('dt = ',str(string(dt,format='(F10.1)')),' sec')
