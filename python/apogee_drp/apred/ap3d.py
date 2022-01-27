@@ -11,6 +11,7 @@ __authors__ = 'David Nidever <dnidever@montana.edu>'
 __version__ = '20200404'  # yyyymmdd                                                                                                                           
 
 import os
+import sys
 import numpy as np
 import warnings
 from astropy.io import fits
@@ -26,7 +27,7 @@ from scipy.interpolate import interp1d
 #from lmfit import Model
 #from apogee.utils import yanny, apload
 #from sdss_access.path import path
-import bindata
+from dlnpyutils import bindata
 
 # Ignore these warnings, it's a bug
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
@@ -799,7 +800,7 @@ def aprefcorr(cube,head,mask,indiv=3,vert=1,horz=1,noflip=False,silent=False,
         if nbad > 0:
             mask[bad] = (mask[bad] or maskval('BADPIX'))
         if silent==False:
-            print(format='(%"Ref processing: %3d  nsat: %5d\r",$)',iread+1,len(sat))
+            print('Ref processing: %3d  nsat: %5d' % (iread+1,len(sat)))
         if readmask[iread] > 0:
             red = np.nan
             goto,nextread
@@ -2025,7 +2026,7 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
         # Beginning sample
         gd_beg = gdreads[0:nfowler_used]
         if len(gd_beg) == 1:
-            im_beg = cube[:,:,gd_beg]/Nfowler_used).astype(float)
+            im_beg = cube[:,:,gd_beg]/Nfowler_used.astype(float)
         else:
             im_beg = np.sum(cube[:,:,gd_beg],axis=3)/Nfowler_used.astype(float)
 
@@ -2085,7 +2086,7 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
         #slope = (nread*sumts - sumt*sums)/(nread*sumt2 - sumt^2)
         slope = (sum*sumts - sumt*sums)/(sum*sumt2 - sumt**2)
         # To get the total counts just multiply by nread
-        im = slope * (ngdreads-1L)
+        im = slope * (ngdreads-1)
         # the first read doesn't really add any signal, just a zero-point
   
         # See Equation 1 in Rauscher et al.(2007), SPIE
@@ -2145,323 +2146,328 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
         else:
             varim += np.maximum(im/gainim,0)
      
-  # 2. Poisson Noise from dark current
-  if len(darkcube) > 0:
-      darkim = darkcube[:,:,nreads-1]
-      varim += np.maximum(darkim/gainim,0)
+    # 2. Poisson Noise from dark current
+    if len(darkcube) > 0:
+        darkim = darkcube[:,:,nreads-1]
+        varim += np.maximum(darkim/gainim,0)
   
-  # 3. Sample/read noise
-  varim += sample_noise**2         # rdnoise reduced by the sampling
+    # 3. Sample/read noise
+    varim += sample_noise**2         # rdnoise reduced by the sampling
   
-  # 4. Saturation error
-  #      We used median(dCounts) to extrapolate the saturated pixels
-  #      Use the variability in dCounts to estimate the error of doing this
-  if satfix:
-      varim += sat_extrap_error     # add saturation extrapolation error
-  else:
-      varim = varim*(1-satmask[:,:,0]) + satmask[:,:,0]*99999999.   # saturated pixels are bad!
-  # Unfixable pixels
-  unfmask = int((int(mask) AND maskval('UNFIXABLE')) == maskval('UNFIXABLE'))  # unfixable
-  varim = varim*(1-unfmask) + unfmask*99999999.         # unfixable pixels are bad!
+    # 4. Saturation error
+    #      We used median(dCounts) to extrapolate the saturated pixels
+    #      Use the variability in dCounts to estimate the error of doing this
+    if satfix:
+        varim += sat_extrap_error     # add saturation extrapolation error
+    else:
+        varim = varim*(1-satmask[:,:,0]) + satmask[:,:,0]*99999999.   # saturated pixels are bad!
+    # Unfixable pixels
+    unfmask = int((int(mask) & maskval('UNFIXABLE')) == maskval('UNFIXABLE'))  # unfixable
+    varim = varim*(1-unfmask) + unfmask*99999999.         # unfixable pixels are bad!
   
-  # 5. CR error
-  #     We use median of neighboring dCounts to "fix" reads with CRs
-  crmask = int((int(mask) & maskval('CRPIX')) == maskval('CRPIX'))
-  if crfix == True:
-      # loop in case there are multiple CRs per pixel
-      for i in range(crstr.ncr):
-          if crstr.data[i].x < 2048:
-              varim[crstr.data[i].x,crstr.data[i].y]+=crstr.data[i].fixerror
-          else:
-              varim = varim*(1-crmask) + crmask*99999999.               # pixels with CRs are bad!
+    # 5. CR error
+    #     We use median of neighboring dCounts to "fix" reads with CRs
+    crmask = int((int(mask) & maskval('CRPIX')) == maskval('CRPIX'))
+    if crfix == True:
+        # loop in case there are multiple CRs per pixel
+        for i in range(crstr.ncr):
+            if crstr.data[i].x < 2048:
+                varim[crstr.data[i].x,crstr.data[i].y]+=crstr.data[i].fixerror
+            else:
+                varim = varim*(1-crmask) + crmask*99999999.               # pixels with CRs are bad!
   
-  # Bad pixels
-  bpmmask = int(int(mask) & maskval('BADPIX')) == maskval('BADPIX'))
-  varim = varim*(1-bpmmask) + bpmmask*99999999.               # bad pixels are bad!
+    # Bad pixels
+    bpmmask = int((int(mask) & maskval('BADPIX')) == maskval('BADPIX'))
+    varim = varim*(1-bpmmask) + bpmmask*99999999.               # bad pixels are bad!
 
-  # Flat field  
-  if len(flatim) > 0:
-      varim /= flatim**2
-      im /= flatim
+    # Flat field  
+    if len(flatim) > 0:
+        varim /= flatim**2
+        im /= flatim
 
-  # Now convert to ELECTRONS
-  if len(detcorr) > 0 and outelectrons==False:
-      varim *= gainim**2
-      im *= gainim
+    # Now convert to ELECTRONS
+    if len(detcorr) > 0 and outelectrons==False:
+        varim *= gainim**2
+        im *= gainim
 
-  #----------------------------
-  # Construct output datacube
-  #  [image, error, mask]
-  #----------------------------
-  if len(pmodelim) > 0:
-      output = np.zeros((nx,ny,4),float)
-  else:
-      output = np.zeros((nx,ny,3),float)
-  output[:,:,0] = im
-  output[:,:,1] = np.maximum(np.sqrt(varim),1)  # must be greater than zero
-  output[:,:,2] = mask
-  if len(pmodelim)>0:
-      output[:,:,3] = pmodelim  # persistence model in ADU
+    #----------------------------
+    # Construct output datacube
+    #  [image, error, mask]
+    #----------------------------
+    if len(pmodelim) > 0:
+        output = np.zeros((nx,ny,4),float)
+    else:
+        output = np.zeros((nx,ny,3),float)
+    output[:,:,0] = im
+    output[:,:,1] = np.maximum(np.sqrt(varim),1)  # must be greater than zero
+    output[:,:,2] = mask
+    if len(pmodelim)>0:
+        output[:,:,3] = pmodelim  # persistence model in ADU
   
-  #-----------------------------
-  # Update header
-  #-----------------------------
-  leadstr = 'AP3D: '
-  sxaddpar,head,'V_APRED',getvers()
-  sxaddhist,leadstr+systime(0),head
-  info = GET_LOGIN_INFO()
-  sxaddhist,leadstr+info.user_name+' on '+info.machine_name,head
-  sxaddhist,leadstr+'IDL '+!version.release+' '+!version.os+' '+!version.arch,head
-  sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+getvers(),head
-  sxaddhist,leadstr+'Output File:',head
-  if len(detcorr) > 0 and keyword_set(outelectrons):
-      sxaddhist,leadstr+' HDU1 - image (electrons)',head
-      sxaddhist,leadstr+' HDU2 - error (electrons)',head
-  else:
-      sxaddhist,leadstr+' HDU1 - image (ADU)',head
-      sxaddhist,leadstr+' HDU2 - error (ADU)',head
+    #-----------------------------
+    # Update header
+    #-----------------------------
+    leadstr = 'AP3D: '
+    pyvers = sys.version.split()[0]
+    sxaddpar,head,'V_APRED',getvers()
+    sxaddhist,leadstr+systime(0),head
+    info = GET_LOGIN_INFO()
+    import socket
+    sxaddhist,leadstr+os.getlogin()+' on '+socket.gethostname(),head
+    import platform
+    sxaddhist,leadstr+'python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0],head
+    sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+getvers(),head
+    sxaddhist,leadstr+'Output File:',head
+    if len(detcorr) > 0 and keyword_set(outelectrons):
+        sxaddhist,leadstr+' HDU1 - image (electrons)',head
+        sxaddhist,leadstr+' HDU2 - error (electrons)',head
+    else:
+        sxaddhist,leadstr+' HDU1 - image (ADU)',head
+        sxaddhist,leadstr+' HDU2 - error (ADU)',head
 
-  sxaddhist,leadstr+' HDU3 - flag mask',head
-  sxaddhist,leadstr+'        1 - bad pixels',head
-  sxaddhist,leadstr+'        2 - cosmic ray',head
-  sxaddhist,leadstr+'        4 - saturated',head
-  sxaddhist,leadstr+'        8 - unfixable',head
-  if len(pmodelim) > 0:
-      sxaddhist,leadstr+' HDU4 - persistence correction (ADU)',head
-  sxaddhist,leadstr+'Global fractional variability = '+str(string(global_variability,format='(F5.3)')),head
-  maxlen = 72-strlen(leadstr)
-  # Bad pixel mask file
-  if len(bpmim) > 0:
-      line = 'BAD PIXEL MASK file="'+bpmcorr+'"'
-      if strlen(line) > maxlen:
-          line1 = strmid(line,0,maxlen)
-          line2 = strmid(line,maxlen,100)
-          sxaddhist,leadstr+line1,head
-          sxaddhist,leadstr+line2,head
-      else:
-          sxaddhist,leadstr+line,head
-  # Detector file
-  if len(detcorr) > 0:
-      line = 'DETECTOR file="'+detcorr+'"'
-      if strlen(line) > maxlen:
-          line1 = strmid(line,0,maxlen)
-          line2 = strmid(line,maxlen,100)
-          sxaddhist,leadstr+line1,head
-          sxaddhist,leadstr+line2,head
-      else:
-          sxaddhist,leadstr+line,head
-  # Dark Correction File
-  if len(darkcube) > 0:
-      line = 'Dark Current Correction file="'+darkcorr+'"'
-      if strlen(line) > maxlen:
-          line1 = strmid(line,0,maxlen)
-          line2 = strmid(line,maxlen,100)
-          sxaddhist,leadstr+line1,head
-          sxaddhist,leadstr+line2,head
-      else:
-          sxaddhist,leadstr+line,head
-  # Flat field Correction File
-  if len(flatim) > 0:
-      line = 'Flat Field Correction file="'+flatcorr+'"'
-      if strlen(line) > maxlen:
-          line1 = strmid(line,0,maxlen)
-          line2 = strmid(line,maxlen,100)
-          sxaddhist,leadstr+line1,head
-          sxaddhist,leadstr+line2,head
-      else:
-          sxaddhist,leadstr+line,head
-  # Littrow ghost mask File
-  if len(littrowim) > 0:
-      line = 'Littrow ghost mask file="'+littrowcorr+'"'
-      if strlen(line) > maxlen:
-          line1 = strmid(line,0,maxlen)
-          line2 = strmid(line,maxlen,100)
-          sxaddhist,leadstr+line1,head
-          sxaddhist,leadstr+line2,head
-      else:
-          sxaddhist,leadstr+line,head
-  # Persistence mask File
-  if len(persistim) > 0:
-      line = 'Persistence mask file="'+persistcorr+'"'
-      if strlen(line) > maxlen:
-          line1 = strmid(line,0,maxlen)
-          line2 = strmid(line,maxlen,100)
-          sxaddhist,leadstr+line1,head
-          sxaddhist,leadstr+line2,head
-      else:
-          sxaddhist,leadstr+line,head
-  # Persistence model file
-  if len(persistmodelcorr) > 0:
-      line = 'Persistence model file="'+persistmodelcorr+'"'
-      if strlen(line) > maxlen:
-          line1 = strmid(line,0,maxlen)
-          line2 = strmid(line,maxlen,100)
-          sxaddhist,leadstr+line1,head
-          sxaddhist,leadstr+line2,head
-      else:
-          sxaddhist,leadstr+line,head
-  # History file
-  if len(histcorr) > 0:
-      line = 'Exposure history file="'+histcorr+'"'
-      if strlen(line) > maxlen:
-          line1 = strmid(line,0,maxlen)
-          line2 = strmid(line,maxlen,100)
-          sxaddhist,leadstr+line1,head
-          sxaddhist,leadstr+line2,head
-      else:
-          sxaddhist,leadstr+line,head
-  # Bad pixels 
-  bpmmask = int((int(mask) & maskval('BADPIX')) == maskval('BADPIX'))
-  totbpm = total(bpmmask)
-  sxaddhist,leadstr+str(int(totbpm))+' pixels are bad',head
-  # Cosmic Rays
-  crmask, = np.where(int(mask) & maskval('CRPIX'),totcr)
-  if nreads > 2:
-      sxaddhist,leadstr+str(int(totcr))+' pixels have cosmic rays',head
-  if crfix and nreads>2:
-      sxaddhist,leadstr+'Cosmic Rays FIXED',head
-  # Saturated pixels
-  satmask, = np.where(int(mask) & maskval('SATPIX'),totsat)
-  unfmask, = np.where(int(mask) & maskval('UNFIXABLE'),totunf)
-  totfix = totsat-totunf
-  sxaddhist,leadstr+str(int(totsat))+' pixels are saturated',head
-  if keyword_set(satfix) and nreads > 2 then sxaddhist,leadstr+str(int(totfix))+' saturated pixels FIXED',head
-  # Unfixable pixels
-  sxaddhist,leadstr+str(int(totunf))+' pixels are unfixable',head
-  # Sampling
-  if uptheramp:
-      sxaddhist,leadstr+'UP-THE-RAMP Sampling',head
-  else:
-    sxaddhist,leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used)),head 
-  # Persistence correction factor
-  if len(pmodelim) > 0 and len(ppar) > 0:
-    sxaddhist,leadstr+'Persistence correction: '+' '.join(str(string(ppar,format='(G7.3)'))),head
+    sxaddhist,leadstr+' HDU3 - flag mask',head
+    sxaddhist,leadstr+'        1 - bad pixels',head
+    sxaddhist,leadstr+'        2 - cosmic ray',head
+    sxaddhist,leadstr+'        4 - saturated',head
+    sxaddhist,leadstr+'        8 - unfixable',head
+    if len(pmodelim) > 0:
+        sxaddhist,leadstr+' HDU4 - persistence correction (ADU)',head
+    sxaddhist,leadstr+'Global fractional variability = '+str(string(global_variability,format='(F5.3)')),head
+    maxlen = 72-strlen(leadstr)
+    # Bad pixel mask file
+    if len(bpmim) > 0:
+        line = 'BAD PIXEL MASK file="'+bpmcorr+'"'
+        if strlen(line) > maxlen:
+            line1 = strmid(line,0,maxlen)
+            line2 = strmid(line,maxlen,100)
+            sxaddhist,leadstr+line1,head
+            sxaddhist,leadstr+line2,head
+        else:
+            sxaddhist,leadstr+line,head
+    # Detector file
+    if len(detcorr) > 0:
+        line = 'DETECTOR file="'+detcorr+'"'
+        if strlen(line) > maxlen:
+            line1 = strmid(line,0,maxlen)
+            line2 = strmid(line,maxlen,100)
+            sxaddhist,leadstr+line1,head
+            sxaddhist,leadstr+line2,head
+        else:
+            sxaddhist,leadstr+line,head
+    # Dark Correction File
+    if len(darkcube) > 0:
+        line = 'Dark Current Correction file="'+darkcorr+'"'
+        if strlen(line) > maxlen:
+            line1 = strmid(line,0,maxlen)
+            line2 = strmid(line,maxlen,100)
+            sxaddhist,leadstr+line1,head
+            sxaddhist,leadstr+line2,head
+        else:
+            sxaddhist,leadstr+line,head
+    # Flat field Correction File
+    if len(flatim) > 0:
+        line = 'Flat Field Correction file="'+flatcorr+'"'
+        if strlen(line) > maxlen:
+            line1 = strmid(line,0,maxlen)
+            line2 = strmid(line,maxlen,100)
+            sxaddhist,leadstr+line1,head
+            sxaddhist,leadstr+line2,head
+        else:
+            sxaddhist,leadstr+line,head
+    # Littrow ghost mask File
+    if len(littrowim) > 0:
+        line = 'Littrow ghost mask file="'+littrowcorr+'"'
+        if strlen(line) > maxlen:
+            line1 = strmid(line,0,maxlen)
+            line2 = strmid(line,maxlen,100)
+            sxaddhist,leadstr+line1,head
+            sxaddhist,leadstr+line2,head
+        else:
+            sxaddhist,leadstr+line,head
+    # Persistence mask File
+    if len(persistim) > 0:
+        line = 'Persistence mask file="'+persistcorr+'"'
+        if strlen(line) > maxlen:
+            line1 = strmid(line,0,maxlen)
+            line2 = strmid(line,maxlen,100)
+            sxaddhist,leadstr+line1,head
+            sxaddhist,leadstr+line2,head
+        else:
+            sxaddhist,leadstr+line,head
+    # Persistence model file
+    if len(persistmodelcorr) > 0:
+        line = 'Persistence model file="'+persistmodelcorr+'"'
+        if strlen(line) > maxlen:
+            line1 = strmid(line,0,maxlen)
+            line2 = strmid(line,maxlen,100)
+            sxaddhist,leadstr+line1,head
+            sxaddhist,leadstr+line2,head
+        else:
+            sxaddhist,leadstr+line,head
+    # History file
+    if len(histcorr) > 0:
+        line = 'Exposure history file="'+histcorr+'"'
+        if strlen(line) > maxlen:
+            line1 = strmid(line,0,maxlen)
+            line2 = strmid(line,maxlen,100)
+            sxaddhist,leadstr+line1,head
+            sxaddhist,leadstr+line2,head
+        else:
+            sxaddhist,leadstr+line,head
+    # Bad pixels 
+    bpmmask = int((int(mask) & maskval('BADPIX')) == maskval('BADPIX'))
+    totbpm = total(bpmmask)
+    sxaddhist,leadstr+str(int(totbpm))+' pixels are bad',head
+    # Cosmic Rays
+    crmask, = np.where(int(mask) & maskval('CRPIX'),totcr)
+    if nreads > 2:
+        sxaddhist,leadstr+str(int(totcr))+' pixels have cosmic rays',head
+    if crfix and nreads>2:
+        sxaddhist,leadstr+'Cosmic Rays FIXED',head
+    # Saturated pixels
+    satmask, = np.where(int(mask) & maskval('SATPIX'),totsat)
+    unfmask, = np.where(int(mask) & maskval('UNFIXABLE'),totunf)
+    totfix = totsat-totunf
+    sxaddhist,leadstr+str(int(totsat))+' pixels are saturated',head
+    if satfix and nreads>2:
+        sxaddhist,leadstr+str(int(totfix))+' saturated pixels FIXED',head
+    # Unfixable pixels
+    sxaddhist,leadstr+str(int(totunf))+' pixels are unfixable',head
+    # Sampling
+    if uptheramp:
+        sxaddhist,leadstr+'UP-THE-RAMP Sampling',head
+    else:
+        sxaddhist,leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used)),head 
+    # Persistence correction factor
+    if len(pmodelim) > 0 and len(ppar) > 0:
+        sxaddhist,leadstr+'Persistence correction: '+' '.join(str(string(ppar,format='(G7.3)'))),head
   
-  
-  # Fix EXPTIME if necessary
-  if head['NFRAMES'] != nreads:
-      # NFRAMES is from ICC, NREAD is from bundler which should be correct
-      exptime = nreads*10.647  # secs
-      sxaddpar,head,'EXPTIME',exptime
-      print('not halting, but NFRAMES does not match NREADS, NFRAMES: ', head['NFRAMES'], ' NREADS: ',string(format='(i8)',nreads),'  ', seq)
-      #print('halt: NFRAMES does not match NREADS, NFRAMES: ', sxpar(head,'NFRAMES'), ' NREADS: ',string(format='(i8)',nreads),'  ', seq
+    # Fix EXPTIME if necessary
+    if head['NFRAMES'] != nreads:
+        # NFRAMES is from ICC, NREAD is from bundler which should be correct
+        exptime = nreads*10.647  # secs
+        sxaddpar,head,'EXPTIME',exptime
+        print('not halting, but NFRAMES does not match NREADS, NFRAMES: ', head['NFRAMES'], ' NREADS: ',str(nreads),'  ', seq)
+        #print('halt: NFRAMES does not match NREADS, NFRAMES: ', sxpar(head,'NFRAMES'), ' NREADS: ',string(format='(i8)',nreads),'  ', seq
 
-  # Add UT-MID/JD-MID to the header
-  jd = date2jd(head['DATE-OBS'])
-  exptime = head['EXPTIME']
-  jdmid = jd + (0.5*exptime)/24./3600.d0
-  utmid = jd2date(jdmid)
-  sxaddpar,head,'UT-MID',utmid,' Date at midpoint of exposure'
-  sxaddpar,head,'JD-MID',jdmid,' JD at midpoint of exposure'
+    # Add UT-MID/JD-MID to the header
+    jd = date2jd(head['DATE-OBS'])
+    exptime = head['EXPTIME']
+    jdmid = jd + (0.5*exptime)/24/3600
+    utmid = jd2date(jdmid)
+    sxaddpar,head,'UT-MID',utmid,' Date at midpoint of exposure'
+    sxaddpar,head,'JD-MID',jdmid,' JD at midpoint of exposure'
 
-  # remove CHECKSUM
-  sxdelpar,head,'CHECKSUM'
+    # remove CHECKSUM
+    sxdelpar,head,'CHECKSUM'
   
-  #----------------------------------
-  # Output the final image and mask
-  #----------------------------------
-  if len(outfile) > 0:
-    ioutfile = outfile[f]
+    #----------------------------------
+    # Output the final image and mask
+    #----------------------------------
+    if outfile is not None:
+        ioutfile = outfile[f]
   
-    # Does the output directory exist?
-    if os.path.exists(os.path.dirname(ioutfile),/directory)==False:
-      print('Creating ',os.path.dirname(ioutfile))
-      os.makedirs(os.path.dirname(ioutfile))
+        # Does the output directory exist?
+        if os.path.exists(os.path.dirname(ioutfile))==False:
+            print('Creating ',os.path.dirname(ioutfile))
+            os.makedirs(os.path.dirname(ioutfile))
   
-    # Test if the output file already exists
-    test = os.path.exists(ioutfile)
+        # Test if the output file already exists
+        test = os.path.exists(ioutfile)
 
-    if silent==False:
-        print('')
-    if test == 1 and clobber:
-        print('OUTFILE = ',ioutfile,' ALREADY EXISTS.  OVERWRITING')
-    if test == 1 and clobber==False:
-        print('OUTFILE = ',ioutfile,' ALREADY EXISTS. ')
+        if silent==False:
+            print('')
+        if test == 1 and clobber:
+            print('OUTFILE = ',ioutfile,' ALREADY EXISTS.  OVERWRITING')
+        if test == 1 and clobber==False:
+            print('OUTFILE = ',ioutfile,' ALREADY EXISTS. ')
     
     # Writing file
     if test == 0 or clobber:
         if silent==False:
             print('Writing output to: ',ioutfile)
         if outlong:
-            print('Saving FLUX/ERR as LONG instead of FLOAT'))
-      # HDU0 - header only
-      FITS_WRITE,ioutfile,0,head,/no_abort,message=write_error    
-      # HDU1 - flux
-      flux = output[:,:,0]
-      # replace NaNs with zeros
-      bad, = np.where(finite(flux) == 0)
-      nbad = len(bad)
-      if nbad > 0:
-          flux[bad] = 0.
-      if outlong:
-          flux = np.round(flux)
-      MKHDR,head1,flux,/image
-      sxaddpar,head1,'CTYPE1','Pixel'
-      sxaddpar,head1,'CTYPE2','Pixel'
-      sxaddpar,head1,'BUNIT','Flux (ADU)'
-      MWRFITS,flux,ioutfile,head1,/silent
+            print('Saving FLUX/ERR as LONG instead of FLOAT')
+        # HDU0 - header only
+        hdu = fits.HDUList()
+        hdu.append(fits.ImageHDU(0,head))
+        #FITS_WRITE,ioutfile,0,head,message=write_error    
+        # HDU1 - flux
+        flux = output[:,:,0]
+        # replace NaNs with zeros
+        bad, = np.where(finite(flux) == 0)
+        nbad = len(bad)
+        if nbad > 0:
+            flux[bad] = 0.
+        if outlong:
+            flux = np.round(flux)
+        MKHDR,head1,flux #,/image
+        sxaddpar,head1,'CTYPE1','Pixel'
+        sxaddpar,head1,'CTYPE2','Pixel'
+        sxaddpar,head1,'BUNIT','Flux (ADU)'
+        MWRFITS,flux,ioutfile,head1
 
-      # HDU2 - error
-      #err = sqrt(reform(output[:,:,1])) > 1  # must be greater than zero
-      err = errout(output[:,:,1])
-      if outlong:
-          err = np.round(err)
-      MKHDR,head2,err,/image
-      sxaddpar,head2,'CTYPE1','Pixel'
-      sxaddpar,head2,'CTYPE2','Pixel'
-      sxaddpar,head2,'BUNIT','Error (ADU)'
-      MWRFITS,err,ioutfile,head2,/silent
+        # HDU2 - error
+        #err = sqrt(reform(output[:,:,1])) > 1  # must be greater than zero
+        err = errout(output[:,:,1])
+        if outlong:
+            err = np.round(err)
+        MKHDR,head2,err #,/image
+        sxaddpar,head2,'CTYPE1','Pixel'
+        sxaddpar,head2,'CTYPE2','Pixel'
+        sxaddpar,head2,'BUNIT','Error (ADU)'
+        MWRFITS,err,ioutfile,head2
 
+        # HDU3 - mask
+        #flagmask = fix(reform(output[:,:,2]))
+        # don't go through conversion to float and back!
+        flagmask = mask.astype(int)
+        MKHDR,head3,flagmask #,/image
+        sxaddpar,head3,'CTYPE1','Pixel'
+        sxaddpar,head3,'CTYPE2','Pixel'
+        sxaddpar,head3,'BUNIT','Flag Mask (bitwise)'
+        sxaddhist,'Explanation of BITWISE flag mask',head3
+        sxaddhist,' 1 - bad pixels',head3
+        sxaddhist,' 2 - cosmic ray',head3
+        sxaddhist,' 4 - saturated',head3
+        sxaddhist,' 8 - unfixable',head3
+        MWRFITS,flagmask,ioutfile,head3
+        #FITS_WRITE,ioutfile,output,head,/no_abort,message=write_error
+        #if write_error != '' then print('Error writing file '+write_error)
 
-      # HDU3 - mask
-      #flagmask = fix(reform(output[:,:,2]))
-      # don't go through conversion to float and back!
-      flagmask = mask.astype(int)
-      MKHDR,head3,flagmask,/image
-      sxaddpar,head3,'CTYPE1','Pixel'
-      sxaddpar,head3,'CTYPE2','Pixel'
-      sxaddpar,head3,'BUNIT','Flag Mask (bitwise)'
-      sxaddhist,'Explanation of BITWISE flag mask',head3
-      sxaddhist,' 1 - bad pixels',head3
-      sxaddhist,' 2 - cosmic ray',head3
-      sxaddhist,' 4 - saturated',head3
-      sxaddhist,' 8 - unfixable',head3
-      MWRFITS,flagmask,ioutfile,head3,/silent
-      #FITS_WRITE,ioutfile,output,head,/no_abort,message=write_error
-      #if write_error != '' then print('Error writing file '+write_error)
-
-      # HDU4 - persistence model
-      if len(pmodelim) > 0:
-          MKHDR,head4,pmodelim,/image
-          sxaddpar,head4,'CTYPE1','Pixel'
-          sxaddpar,head4,'CTYPE2','Pixel'
-          sxaddpar,head4,'BUNIT','Persistence correction (ADU)'
-          MWRFITS,pmodelim,ioutfile,head4,/silent
+        # HDU4 - persistence model
+        if len(pmodelim) > 0:
+            MKHDR,head4,pmodelim #,/image
+            sxaddpar,head4,'CTYPE1','Pixel'
+            sxaddpar,head4,'CTYPE2','Pixel'
+            sxaddpar,head4,'BUNIT','Persistence correction (ADU)'
+            MWRFITS,pmodelim,ioutfile,head4
   
-  # Remove the recently Decompressed file
-  if extension == 'apz' and keyword_set(cleanuprawfile) and doapunzip == 1:
-      print('Deleting recently decompressed file ',file)
-      if os.path.exists(file): os.remove(file)
+    # Remove the recently Decompressed file
+    if extension == 'apz' and cleanuprawfile and doapunzip:
+        print('Deleting recently decompressed file ',file)
+        if os.path.exists(file): os.remove(file)
     
-  # Number of saturated and CR pixels
-  if silent==False:
-      print('')
-      print('BAD/CR/Saturated Pixels:')
-      print(str(int(totbpm)),' pixels are bad')
-      print(str(int(totcr)),' pixels have cosmic rays')
-      print(str(int(totsat)),' pixels are saturated')
-      print(str(int(totunf)),' pixels are unfixable')
-      print('')
+    # Number of saturated and CR pixels
+    if silent==False:
+        print('')
+        print('BAD/CR/Saturated Pixels:')
+        print(str(int(totbpm)),' pixels are bad')
+        print(str(int(totcr)),' pixels have cosmic rays')
+        print(str(int(totsat)),' pixels are saturated')
+        print(str(int(totunf)),' pixels are unfixable')
+        print('')
 
-  os.remove(lockfile)
+    if os.path.exists(lockfile): os.remove(lockfile)
   
-  dt = systime(1)-t0
-  if silent==False:
-      print('dt = ',str(string(dt,format='(F10.1)')),' sec')
-  if logfile is not None:
-      writelog,logfile,os.path.basename((file)+string(format='(f10.2,1x,i8,1x,i8,1x,i8,i8)',dt,totbpm,totcr,totsat,totunf)
+    dt = time.time()-t0
+    if silent==False:
+        print('dt = %10.f1 sec ' % dt)
+    if logfile is not None:
+        name = os.path.basename(file)+('%f10.2 %1x %i8 %1x %i8 %1x %i8 %i8' % (dt,totbpm,totcr,totsat,totunf))
+        writelog(logfile,name)
 
-if nfiles > 1:
-  dt = systime(1)-t00
-  if silent==False:
-    print('dt = ',str(string(dt,format='(F10.1)')),' sec')
+    if nfiles > 1:
+        dt = systime(1)-t00
+        if silent==False:
+            print('dt = ',str(string(dt,format='(F10.1)')),' sec')
