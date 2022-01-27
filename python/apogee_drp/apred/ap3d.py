@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 
 
-def ap3dproc_lincorr(slice_in,lindata,linhead):
+def ap3dproc_lincorr(slc_in,lindata,linhead):
     """
     This subroutine does the Linearity Correction for a slice
 
@@ -48,7 +48,7 @@ def ap3dproc_lincorr(slice_in,lindata,linhead):
 
     readtime = 10.0   # the time between reads
 
-    lny,lnx = slice_in.shape
+    lny,lnx = slc_in.shape
     nreads = sz[1]
 
     szlin = lindata.shape
@@ -78,7 +78,7 @@ def ap3dproc_lincorr(slice_in,lindata,linhead):
         coef0 = lindata[:,0].repeat(nreads).reshape(2048,nreads)
         coef1 = lindata[:,1].repeat(nreads).reshape(2048,nreads)
         coef2 = lindata[:,2].repeat(nreads).reshape(2048,nreads)        
-        slice_out = coef0 + coef1*slice_in + coef2*slice_in**2
+        slc_out = coef0 + coef1*slc_in + coef2*slc_in**2
 
     # Each output separately
     #------------------------
@@ -90,42 +90,42 @@ def ap3dproc_lincorr(slice_in,lindata,linhead):
         corr = np.zeros((2048,nreads),float)
         npar = szlin[1]
         # loop over quadrants
-        slice_out = slice_in.copy()
+        slc_out = slc_in.copy()
         for i in range(4):
             corr[512*i:512*i+512,:] = lindata[i,0]
-            x = slice_in[512*i:512*i+512,:]
+            x = slc_in[512*i:512*i+512,:]
             for j in range(npar-1):
                 corr[512*i:512*i+512,:] += lindata[i,j+1]*x
-                x *= slice_in[512*i:512*i+512,:]
-        slice_out = slice_in*corr
+                x *= slc_in[512*i:512*i+512,:]
+        slc_out = slc_in*corr
         for i in range(4):
             coef0[512*i:512*i+512,:] = lindata[i,0]
             coef1[512*i:512*i+512,:] = lindata[i,1]
             coef2[512*i:512*i+512,:] = lindata[i,2]
-        slice_out = coef0 + coef1*slice_in + coef2*slice_in**2
+        slc_out = coef0 + coef1*slc_in + coef2*slc_in**2
     
-    return slice_out
+    return slc_out
 
 
 
-def ap3dproc_darkcorr(slice_in,darkslice,darkhead):
+def ap3dproc_darkcorr(slc_in,darkslc,darkhead):
     """
     This subroutine does the Dark correction for a slice
-    darkslice is a 2048xNreads array that gives the dark counts
+    darkslc is a 2048xNreads array that gives the dark counts
 
     To get the dark current just multiply the dark count rate
     by the time for each read
     """
 
-    nreads = slice_in.shape[1]
+    nreads = slc_in.shape[1]
 
-    # Just subtract the darkslice
+    # Just subtract the darkslc
     # subtract each read at a time in case we still have the reference pixels
-    slice_out = slice_in.copy()
+    slc_out = slc_in.copy()
     for i in range(nreads):
-        slice_out[0:2048,i] -= darkslice[:,i]
+        slc_out[0:2048,i] -= darkslc[:,i]
 
-    return slice_out
+    return slc_out
 
 
 def ap3dproc_crfix(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,crfix=False):
@@ -259,8 +259,8 @@ def ap3dproc_crfix(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,cr
     nsig_thresh = np.maximum(nsig_thresh, 3)    # 3 at a minimum
 
     # Saturated dCounts (NANs) are automatically ignored
-    nsigma_slice = (dCounts-sm_dCounts)/sig_dCounts2D
-    bd1D, = np.where( ( nsigma_slice > nsig_thresh ) &
+    nsigma_slc = (dCounts-sm_dCounts)/sig_dCounts2D
+    bd1D, = np.where( ( nsigma_slc > nsig_thresh ) &
                       ( dCounts > noise*nsig_thresh ))
     nbd1D = len(bd1D)
     
@@ -372,7 +372,7 @@ def ap3dproc_crfix(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,cr
             crstr['data'][crstr.ncr].x = ibdx
             crstr['data'][crstr.ncr].read = ibdr+1  # ibdr is dCounts index, +1 to get read
             crstr['data'][crstr.ncr].counts = dCounts[ibdx,ibdr] - sm_dCounts[ibdx,ibdr]
-            crstr['data'][crstr.ncr].nsigma = nsigma_slice[ibdx,ibdr]
+            crstr['data'][crstr.ncr].nsigma = nsigma_slc[ibdx,ibdr]
             crstr['data'][crstr.ncr].globalsigma = sig_dCounts[ibdx]
             if crfix:
                 crstr['data'][crstr.ncr].fixed = 1
@@ -1597,12 +1597,12 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
   
         # Figure out at which Read (NOT dCounts) each column saturated
         rindex = np.ones(nx,int).reshape(-1,1) * np.arange(nreads).reshape(1,-1)     # each pixels read index
-        satmask_slice = np.zeros((nx,nreads),int)          # sat mask
-        satmask_slice[bdsatx,bdsatr] = 1                   # set saturated reads to 1
-        rindexsat = rindex*satmask_slice + \
-                    (1-satmask_slice)*999999               # okay pixels ahve 999999, sat pixels have their read index
+        satmask_slc = np.zeros((nx,nreads),int)          # sat mask
+        satmask_slc[bdsatx,bdsatr] = 1                   # set saturated reads to 1
+        rindexsat = rindex*satmask_slc + \
+                    (1-satmask_slc)*999999               # okay pixels ahve 999999, sat pixels have their read index
         minsatread = np.min(rindexsat,axis=2)              # now find the minimum for each column
-        nsatreads = np.sum(satmask_slice,axis=2)           # number of sat reads
+        nsatreads = np.sum(satmask_slc,axis=2)           # number of sat reads
   
         # Make sure that all subsequent reads to a saturated read are
         # considered "bad" and set to NAN
@@ -1653,31 +1653,31 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
     #----------------------------
     # Detect and Fix cosmic rays
     #----------------------------
-    slice_prefix = slc
+    slc_prefix = slc
     if nocr==False and nreads>2:
         dCounts_orig = dCounts  # temporary copy since we'll be overwriting it
         dCounts = None
         satmask_slc = satmask[:,i,:]
         out = ap3dproc_crfix(dCounts_orig,satmask_slc,noise=noise,crfix=crfix)
-        crstr_slc, dCounts, med_dCounts, mask, crindex, crnum, variability_slice = out
+        crstr_slc, dCounts, med_dCounts, mask, crindex, crnum, variability_slc = out
   
-        variability_im[:,i] = variability_slice
+        variability_im[:,i] = variability_slc
   
     # Only 2 reads, CANNOT detect or fix CRs
     else:
         med_dCounts = dCounts
-        crstr_slice = {'ncr':0}
+        crstr_slc = {'ncr':0}
   
     # Some CRs detected, add to CRSTR structure
-    if crstr_slice['ncr'] > 0:
+    if crstr_slc['ncr'] > 0:
   
-        crstr_slice['data'].y = i  # add the row information
+        crstr_slc['data']['y'] = i  # add the row information
   
         # Add to MASK
-        maskpix, = np.where(crstr_slice['data'].x < 2048)
+        maskpix, = np.where(crstr_slc['data']['x'] < 2048)
         nmaskpix = len(maskpix)
         if nmaskpix > 0:
-            mask[crstr_slice.data[maskpix].x,i] = (mask[crstr_slice.data[maskpix].x,i] | maskval('CRPIX'))
+            mask[crstr_slc['data'][maskpix]['x'],i] = (mask[crstr_slc['data'][maskpix]['x'],i] | maskval('CRPIX'))
   
         # Starting global structure
         if len(crstr) == 0:
@@ -1685,9 +1685,9 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
   
         # Add to global structure
         else:
-            ncrtot = crstr['ncr'] + crstr_slice['ncr']
+            ncrtot = crstr['ncr'] + crstr_slc['ncr']
             old_crstr = crstr
-            crstr = {'ncr':ncrtot,'data':[old_crstr.data, crstr_slice.data]}
+            crstr = {'ncr':ncrtot,'data':[old_crstr.data, crstr_slc.data]}
             crstr = None
   
     #----------------------
@@ -1768,8 +1768,8 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
     if nreads > 2:
         slc_fixed[:,1:] += np.cumsum(dCounts,axis=2)
     else:
-        slc_fixed[:,0] = slice0
-        slc_fixed[:,1] = slice0+dCounts
+        slc_fixed[:,0] = slc0
+        slc_fixed[:,1] = slc0+dCounts
     
   
     #--------------------------------
@@ -1788,7 +1788,7 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
         #  Leave unfixable pixels at 0.0
         temp_dCounts = dCounts
         if satfix==False:
-            bdsat, = np.where((satmask[:,i,0] == 1) & (unfmask_slice == 0))
+            bdsat, = np.where((satmask[:,i,0] == 1) & (unfmask_slc == 0))
             nbdsat = len(bdsat)
             for j in range(bdsat):
                 temp_dCounts[bdsat[j],satmask[bdsat[j],i,1]-1:] = np.nan
@@ -1805,13 +1805,13 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
         med_dCounts_im[:,i] = dCounts
     
     if verbose or debug:
-        nsatslice = np.sum(satmask[:,i,0])
+        nsatslc = np.sum(satmask[:,i,0])
         if len(crstr) == 0:
-            ncrslice = 0
+            ncrslc = 0
         else:
             dum, = np.where(crstr['data'].y == i)
-            ncrslice = len(dum)
-        print('Nsat/NCR = ',str(int(nsatslice)),'/',str(int(ncrslice)),' this row')
+            ncrslc = len(dum)
+        print('Nsat/NCR = ',str(int(nsatslc)),'/',str(int(ncrslc)),' this row')
     
   
     #----------
@@ -1821,7 +1821,7 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
     pltpix, = np.where(mask[:,i] > 1)
     npltpix = len(pltpix)
     if keyword_set(debueg) and npltpix > 0:
-        ap3dproc_plotting(dcounts,slice_prefix,slice_fixed,mask,crstr,i,saturation)
+        ap3dproc_plotting(dcounts,slc_prefix,slc_fixed,mask,crstr,i,saturation)
   
     if len(crstr) == 0:
         crstr = {'ncr':0}
@@ -1860,8 +1860,8 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
                 nnei = (xhi-xlo+1)*(yhi-ylo+1) - 1
   
                 # Create a fake "slice" of the neighboring pixels
-                nei_slice = np.zeros((nnei,nreads),float)
-                nei_slice_orig = np.zeros((nnei,nreads),float)  # original slice if saturated
+                nei_slc = np.zeros((nnei,nreads),float)
+                nei_slc_orig = np.zeros((nnei,nreads),float)  # original slc if saturated
                 nei_cols = np.zeros(nnei,float)  # x
                 nei_rows = np.zeros(nnei,float)  # y
                 nei_satmask = np.zeros((nnei,3),int)
@@ -1881,7 +1881,7 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
                             nei_rows[count] = k
                             nei_satmask[count,:] = satmask[j,k,:]
                             # if this pixel is saturated then we need to make the saturated
-                            #   reads NAN again.  The "fixed" values are in nei_slice_orig
+                            #   reads NAN again.  The "fixed" values are in nei_slc_orig
                             if satmask[j,k,0] == 1:
                                 nei_slc[count,satmask[j,k,1]:nreads] = np.nan
                             count += 1
@@ -1907,23 +1907,23 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
                     for j in range(nbdsat):
                         lr = nei_satmask[bdsat[j],1]-1
                         hr = nreads-2
-                        nei_dCounts_orig = nei_slice_orig[:,1:nreads-1] - nei_slice_orig[:,0:nreads-2]  # get "original" dCounts
+                        nei_dCounts_orig = nei_slc_orig[:,1:nreads-1] - nei_slc_orig[:,0:nreads-2]  # get "original" dCounts
                         nei_dCounts_fixed[bdsat[j],lr:hr] = nei_dCounts_orig[bdsat[j],lr:hr]            # put the original fixed valued back in
                     
                     # Reconstruct the SLICE from dCounts
-                    nei_slice0 = nei_slice[:,0]  # first read
-                    bdsat, = np.where(finite(nei_slice0) == 0)  # set NAN in first read to 0.0
+                    nei_slc0 = nei_slc[:,0]  # first read
+                    bdsat, = np.where(finite(nei_slc0) == 0)  # set NAN in first read to 0.0
                     nbdsat = len(bdsat)
                     if nbdsat > 0:
-                        nei_slice0[bdsat] = 0.0
-                    nei_slice_fixed = nei_slice0 # (fltarr(nreads)+1.0)
+                        nei_slc0[bdsat] = 0.0
+                    nei_slc_fixed = nei_slc0 # (fltarr(nreads)+1.0)
                     if nreads > 2:
                         nei_slc_fixed[:,1:] += np.cumsum(nei_dCounts_fixed,axis=2)
                     else:
                         nei_slc_fixed[:,0] = nei_slc0
                         nei_slc_fixed[:,1] = nei_slc0+nei_dCounts_fixed
   
-                    # Put fixed slice back into cube
+                    # Put fixed slc back into cube
                     #  only update new CR pixels
                     for j in range(nei_crstr.ncr):
                         cube[nei_crstr.data[j].x,nei_crstr.data[j].y,:] = np.round( nei_slc_fixed[ind[j],:] )  # round to integer
@@ -2065,7 +2065,7 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
         #  we will use the read index for t
         sumts = np.zeros((sz[1],sz[2]),float)   # SUM t*s
         sums = np.zeros((sz[1],sz[2]),float)    # SUM s
-        sum = np.zeros((sz[1],sz[2]),int)    # SUM s
+        sumn = np.zeros((sz[1],sz[2]),int)    # SUM s
         sumt = np.zeros((sz[1],sz[2]),float)   # SUM t*s
         sumt2 = np.zeros((sz[1],sz[2]),float)   # SUM t*s
         for k in range(ngdreads):
@@ -2074,17 +2074,17 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
                 good, = np.where((satmask[:,:,0] == 0) | ((satmask[:,:,0] == 1) & (satmask[:,:,1] > i)))
             else:
                 good, = np.where(np.finite(slc))
-        #good = np.where(finite(slice))
+        #good = np.where(finite(slc))
         sumts[good] += gdreads[k]*reform(slc[good])
         sums[good] += reform(slc[good])
-        sum[good] += 1
+        sumn[good] += 1
         sumt[good] += gdreads[k]
         sumt2[good] += gdreads[k]**2
         #sumt = total(findgen(nread))     # SUM t
         #sumt2 = total(findgen(nread)^2)  # SUM t^2
         # The slope in Counts per read, similar to med_dCounts_im
         #slope = (nread*sumts - sumt*sums)/(nread*sumt2 - sumt^2)
-        slope = (sum*sumts - sumt*sums)/(sum*sumt2 - sumt**2)
+        slope = (sumn*sumts - sumt*sums)/(sumn*sumt2 - sumt**2)
         # To get the total counts just multiply by nread
         im = slope * (ngdreads-1)
         # the first read doesn't really add any signal, just a zero-point
@@ -2093,7 +2093,8 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
         #  with m=1
         #  noise and image/flux should be in electrons, sample_noise is in electrons
         #sample_noise = sqrt( 12*(ngdreads-1.)/(nreads*(ngdreads+1.))*(noise*gainim)^2 + 6.*(ngdreads^2+1)/(5.*ngdreads*(ngdreads+1))*im*gainim )
-        sample_noise = np.sqrt( 12*(ngdreads-1.)/(nreads*(ngdreads+1.))*noise**2 + 6.*(ngdreads**2+1)/(5.*ngdreads*(ngdreads+1))*im[0:2048,:]*gainim )
+        sample_noise = np.sqrt( 12*(ngdreads-1.)/(nreads*(ngdreads+1.))*noise**2 +
+                                6.*(ngdreads**2+1)/(5.*ngdreads*(ngdreads+1))*im[0:2048,:]*gainim )
         sample_noise /= gainim  # convert to ADU
   
         # Noise contribution to the variance
@@ -2209,144 +2210,142 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
     #-----------------------------
     leadstr = 'AP3D: '
     pyvers = sys.version.split()[0]
-    sxaddpar,head,'V_APRED',getvers()
-    sxaddhist,leadstr+systime(0),head
-    info = GET_LOGIN_INFO()
+    head['V_APRED'] = getvers()
+    head['HISTORY'] = leadstr+time.time()  # need better time output
     import socket
-    sxaddhist,leadstr+os.getlogin()+' on '+socket.gethostname(),head
+    head['HISTORY'] = leadstr+os.getlogin()+' on '+socket.gethostname()
     import platform
-    sxaddhist,leadstr+'python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0],head
-    sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+getvers(),head
-    sxaddhist,leadstr+'Output File:',head
+    head['HISTORY'] = leadstr+'python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
+    head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+getvers()
+    head['HISTORY'] = leadstr+'Output File:'
     if len(detcorr) > 0 and keyword_set(outelectrons):
-        sxaddhist,leadstr+' HDU1 - image (electrons)',head
-        sxaddhist,leadstr+' HDU2 - error (electrons)',head
+        head['HISTORY'] = leadstr+' HDU1 - image (electrons)'
+        head['HISTORY'] = leadstr+' HDU2 - error (electrons)'
     else:
-        sxaddhist,leadstr+' HDU1 - image (ADU)',head
-        sxaddhist,leadstr+' HDU2 - error (ADU)',head
-
-    sxaddhist,leadstr+' HDU3 - flag mask',head
-    sxaddhist,leadstr+'        1 - bad pixels',head
-    sxaddhist,leadstr+'        2 - cosmic ray',head
-    sxaddhist,leadstr+'        4 - saturated',head
-    sxaddhist,leadstr+'        8 - unfixable',head
+        head['HISTORY'] = leadstr+' HDU1 - image (ADU)'
+        head['HISTORY'] = leadstr+' HDU2 - error (ADU)'
+    head['HISTORY'] = leadstr+' HDU3 - flag mask'
+    head['HISTORY'] = leadstr+'        1 - bad pixels'
+    head['HISTORY'] = leadstr+'        2 - cosmic ray'
+    head['HISTORY'] = leadstr+'        4 - saturated'
+    head['HISTORY'] = leadstr+'        8 - unfixable'
     if len(pmodelim) > 0:
-        sxaddhist,leadstr+' HDU4 - persistence correction (ADU)',head
-    sxaddhist,leadstr+'Global fractional variability = '+str(string(global_variability,format='(F5.3)')),head
+        head['HISTORY'] = leadstr+' HDU4 - persistence correction (ADU)'
+    head['HISTORY'] = leadstr+'Global fractional variability = '+str(string(global_variability,format='(F5.3)'))
     maxlen = 72-strlen(leadstr)
     # Bad pixel mask file
     if len(bpmim) > 0:
         line = 'BAD PIXEL MASK file="'+bpmcorr+'"'
         if strlen(line) > maxlen:
-            line1 = strmid(line,0,maxlen)
-            line2 = strmid(line,maxlen,100)
-            sxaddhist,leadstr+line1,head
-            sxaddhist,leadstr+line2,head
+            line1 = line[0:maxlen]
+            line2 = line[maxlen:]
+            head['HISTORY'] = leadstr+line1
+            head['HISTORY'] = leadstr+line2
         else:
-            sxaddhist,leadstr+line,head
+            head['HISTORY'] = leadstr+line
     # Detector file
     if len(detcorr) > 0:
         line = 'DETECTOR file="'+detcorr+'"'
         if strlen(line) > maxlen:
-            line1 = strmid(line,0,maxlen)
-            line2 = strmid(line,maxlen,100)
-            sxaddhist,leadstr+line1,head
-            sxaddhist,leadstr+line2,head
+            line1 = line[0:maxlen]
+            line2 = line[maxlen:]
+            head['HISTORY'] = leadstr+line1
+            head['HISTORY'] = leadstr+line2
         else:
-            sxaddhist,leadstr+line,head
+            head['HISTORY'] = leadstr+line
     # Dark Correction File
     if len(darkcube) > 0:
         line = 'Dark Current Correction file="'+darkcorr+'"'
         if strlen(line) > maxlen:
-            line1 = strmid(line,0,maxlen)
-            line2 = strmid(line,maxlen,100)
-            sxaddhist,leadstr+line1,head
-            sxaddhist,leadstr+line2,head
+            line1 = line[0:maxlen]
+            line2 = line[maxlen:]
+            head['HISTORY'] = leadstr+line1
+            head['HISTORY'] = leadstr+line2
         else:
-            sxaddhist,leadstr+line,head
+            head['HISTORY'] = leadstr+line
     # Flat field Correction File
     if len(flatim) > 0:
         line = 'Flat Field Correction file="'+flatcorr+'"'
         if strlen(line) > maxlen:
-            line1 = strmid(line,0,maxlen)
-            line2 = strmid(line,maxlen,100)
-            sxaddhist,leadstr+line1,head
-            sxaddhist,leadstr+line2,head
+            line1 = line[0:maxlen]
+            line2 = line[maxlen:]
+            head['HISTORY'] = leadstr+line1
+            head['HISTORY'] = leadstr+line2
         else:
-            sxaddhist,leadstr+line,head
+            head['HISTORY'] = leadstr+line
     # Littrow ghost mask File
     if len(littrowim) > 0:
         line = 'Littrow ghost mask file="'+littrowcorr+'"'
         if strlen(line) > maxlen:
-            line1 = strmid(line,0,maxlen)
-            line2 = strmid(line,maxlen,100)
-            sxaddhist,leadstr+line1,head
-            sxaddhist,leadstr+line2,head
+            line1 = line[0:maxlen]
+            line2 = line[maxlen:]
+            head['HISTORY'] = leadstr+line1
+            head['HISTORY'] = leadstr+line2
         else:
-            sxaddhist,leadstr+line,head
+            head['HISTORY'] = leadstr+line
     # Persistence mask File
     if len(persistim) > 0:
         line = 'Persistence mask file="'+persistcorr+'"'
         if strlen(line) > maxlen:
-            line1 = strmid(line,0,maxlen)
-            line2 = strmid(line,maxlen,100)
-            sxaddhist,leadstr+line1,head
-            sxaddhist,leadstr+line2,head
+            line1 = line[0:maxlen]
+            line2 = line[maxlen:]
+            head['HISTORY'] = leadstr+line1
+            head['HISTORY'] = leadstr+line2
         else:
-            sxaddhist,leadstr+line,head
+            head['HISTORY'] = leadstr+line
     # Persistence model file
     if len(persistmodelcorr) > 0:
         line = 'Persistence model file="'+persistmodelcorr+'"'
         if strlen(line) > maxlen:
-            line1 = strmid(line,0,maxlen)
-            line2 = strmid(line,maxlen,100)
-            sxaddhist,leadstr+line1,head
-            sxaddhist,leadstr+line2,head
+            line1 = line[0:maxlen]
+            line2 = line[maxlen:]
+            head['HISTORY'] = leadstr+line1
+            head['HISTORY'] = leadstr+line2
         else:
-            sxaddhist,leadstr+line,head
+            head['HISTORY'] = leadstr+line
     # History file
     if len(histcorr) > 0:
         line = 'Exposure history file="'+histcorr+'"'
         if strlen(line) > maxlen:
-            line1 = strmid(line,0,maxlen)
-            line2 = strmid(line,maxlen,100)
-            sxaddhist,leadstr+line1,head
-            sxaddhist,leadstr+line2,head
+            line1 = line[0:maxlen]
+            line2 = line[maxlen:]
+            head['HISTORY'] = leadstr+line1
+            head['HISTORY'] = leadstr+line2
         else:
-            sxaddhist,leadstr+line,head
+            head['HISTORY'] = leadstr+line
     # Bad pixels 
     bpmmask = int((int(mask) & maskval('BADPIX')) == maskval('BADPIX'))
-    totbpm = total(bpmmask)
-    sxaddhist,leadstr+str(int(totbpm))+' pixels are bad',head
+    totbpm = np.sum(bpmmask)
+    head['HISTORY'] = leadstr+str(int(totbpm))+' pixels are bad'
     # Cosmic Rays
     crmask, = np.where(int(mask) & maskval('CRPIX'),totcr)
     if nreads > 2:
-        sxaddhist,leadstr+str(int(totcr))+' pixels have cosmic rays',head
+        head['HISTORY'] = leadstr+str(int(totcr))+' pixels have cosmic rays'
     if crfix and nreads>2:
-        sxaddhist,leadstr+'Cosmic Rays FIXED',head
+        head['HISTORY'] = leadstr+'Cosmic Rays FIXED'
     # Saturated pixels
     satmask, = np.where(int(mask) & maskval('SATPIX'),totsat)
     unfmask, = np.where(int(mask) & maskval('UNFIXABLE'),totunf)
     totfix = totsat-totunf
-    sxaddhist,leadstr+str(int(totsat))+' pixels are saturated',head
+    head['HISTORY'] = leadstr+str(int(totsat))+' pixels are saturated'
     if satfix and nreads>2:
-        sxaddhist,leadstr+str(int(totfix))+' saturated pixels FIXED',head
+        head['HISTORY'] = leadstr+str(int(totfix))+' saturated pixels FIXED'
     # Unfixable pixels
-    sxaddhist,leadstr+str(int(totunf))+' pixels are unfixable',head
+    head['HISTORY'] = leadstr+str(int(totunf))+' pixels are unfixable'
     # Sampling
     if uptheramp:
-        sxaddhist,leadstr+'UP-THE-RAMP Sampling',head
+        head['HISTORY'] = leadstr+'UP-THE-RAMP Sampling',head
     else:
-        sxaddhist,leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used)),head 
+        head['HISTORY'] = leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used)),head 
     # Persistence correction factor
     if len(pmodelim) > 0 and len(ppar) > 0:
-        sxaddhist,leadstr+'Persistence correction: '+' '.join(str(string(ppar,format='(G7.3)'))),head
+        head['HISTORY'] = leadstr+'Persistence correction: '+' '.join(str(string(ppar,format='(G7.3)'))),head
   
     # Fix EXPTIME if necessary
     if head['NFRAMES'] != nreads:
         # NFRAMES is from ICC, NREAD is from bundler which should be correct
         exptime = nreads*10.647  # secs
-        sxaddpar,head,'EXPTIME',exptime
+        head['EXPTIME'] = exptime
         print('not halting, but NFRAMES does not match NREADS, NFRAMES: ', head['NFRAMES'], ' NREADS: ',str(nreads),'  ', seq)
         #print('halt: NFRAMES does not match NREADS, NFRAMES: ', sxpar(head,'NFRAMES'), ' NREADS: ',string(format='(i8)',nreads),'  ', seq
 
@@ -2355,11 +2354,11 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
     exptime = head['EXPTIME']
     jdmid = jd + (0.5*exptime)/24/3600
     utmid = jd2date(jdmid)
-    sxaddpar,head,'UT-MID',utmid,' Date at midpoint of exposure'
-    sxaddpar,head,'JD-MID',jdmid,' JD at midpoint of exposure'
+    head['UT-MID'] = utmid,' Date at midpoint of exposure'
+    head['JD-MID'] = jdmid,' JD at midpoint of exposure'
 
     # remove CHECKSUM
-    sxdelpar,head,'CHECKSUM'
+    del head['CHECKSUM']
   
     #----------------------------------
     # Output the final image and mask
@@ -2395,53 +2394,50 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
         # HDU1 - flux
         flux = output[:,:,0]
         # replace NaNs with zeros
-        bad, = np.where(finite(flux) == 0)
+        bad, = np.where(np.isfinite(flux)==False)
         nbad = len(bad)
         if nbad > 0:
             flux[bad] = 0.
         if outlong:
             flux = np.round(flux)
-        MKHDR,head1,flux #,/image
-        sxaddpar,head1,'CTYPE1','Pixel'
-        sxaddpar,head1,'CTYPE2','Pixel'
-        sxaddpar,head1,'BUNIT','Flux (ADU)'
-        MWRFITS,flux,ioutfile,head1
+        hdu.append(fits.ImageHDU(flux,head1))
+        hdu[1].header['CTYPE1'] = 'Pixel'
+        hdu[1].header['CTYPE2'] = 'Pixel'
+        hdu[1].header['BUNIT'] = 'Flux (ADU)'
 
         # HDU2 - error
         #err = sqrt(reform(output[:,:,1])) > 1  # must be greater than zero
         err = errout(output[:,:,1])
         if outlong:
             err = np.round(err)
-        MKHDR,head2,err #,/image
-        sxaddpar,head2,'CTYPE1','Pixel'
-        sxaddpar,head2,'CTYPE2','Pixel'
-        sxaddpar,head2,'BUNIT','Error (ADU)'
-        MWRFITS,err,ioutfile,head2
+        hdu.append(fits.ImageHDU(err,head2))
+        hdu[2].header['CTYPE1'] = 'Pixel'
+        hdu[2].header['CTYPE2'] = 'Pixel'
+        hdu[2].header['BUNIT'] = 'Error (ADU)'
 
         # HDU3 - mask
         #flagmask = fix(reform(output[:,:,2]))
         # don't go through conversion to float and back!
         flagmask = mask.astype(int)
-        MKHDR,head3,flagmask #,/image
-        sxaddpar,head3,'CTYPE1','Pixel'
-        sxaddpar,head3,'CTYPE2','Pixel'
-        sxaddpar,head3,'BUNIT','Flag Mask (bitwise)'
-        sxaddhist,'Explanation of BITWISE flag mask',head3
-        sxaddhist,' 1 - bad pixels',head3
-        sxaddhist,' 2 - cosmic ray',head3
-        sxaddhist,' 4 - saturated',head3
-        sxaddhist,' 8 - unfixable',head3
-        MWRFITS,flagmask,ioutfile,head3
+        hdu.append(fits.ImageHDU(flagmask,head3))
+        hdu[3].header['CTYPE1'] = 'Pixel'
+        hdu[3].header['CTYPE2'] = 'Pixel'
+        hdu[3].header['BUNIT'] = 'Flag Mask (bitwise)'
+        hdu[3].header['HISTORY'] = 'Explanation of BITWISE flag mask'
+        hdu[3].header['HISTORY'] = ' 1 - bad pixels'
+        hdu[3].header['HISTORY'] = ' 2 - cosmic ray'
+        hdu[3].header['HISTORY'] = ' 4 - saturated'
+        hdu[3].header['HISTORY'] = ' 8 - unfixable'
+        #MWRFITS,flagmask,ioutfile,head3
         #FITS_WRITE,ioutfile,output,head,/no_abort,message=write_error
         #if write_error != '' then print('Error writing file '+write_error)
 
         # HDU4 - persistence model
         if len(pmodelim) > 0:
-            MKHDR,head4,pmodelim #,/image
-            sxaddpar,head4,'CTYPE1','Pixel'
-            sxaddpar,head4,'CTYPE2','Pixel'
-            sxaddpar,head4,'BUNIT','Persistence correction (ADU)'
-            MWRFITS,pmodelim,ioutfile,head4
+            hdu.append(fits.ImageHDU(pmodelim))
+            hdu[4].header['CTYPE1'] = 'Pixel'
+            hdu[4].header['CTYPE2'] = 'Pixel'
+            hdu[4].header['BUNIT'] = 'Persistence correction (ADU)'
   
     # Remove the recently Decompressed file
     if extension == 'apz' and cleanuprawfile and doapunzip:
@@ -2471,3 +2467,414 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
         dt = systime(1)-t00
         if silent==False:
             print('dt = ',str(string(dt,format='(F10.1)')),' sec')
+
+def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=False):
+    """
+    This program processes all of the APOGEE RAW datacubes for
+    a single night.
+
+    INPUTS:
+    planfiles  Input list of plate plan files
+    /verbose  Print a lot of information to the screen
+    /stp      Stop at the end of the prrogram
+    /unlock      Delete lock file and start fresh
+
+    OUTPUTS:
+    The RAW APOGEE 3D datacube files are processed and 2D 
+    images are output.
+
+    USAGE:
+    IDL>ap3d,planfiles
+
+    Written by D.Nidever  Feb. 2010
+    Modifications J. Holtzman 2011+
+    """
+
+    if n_elements(verbose) eq 0 then verbose=0  ; NOT verbose by default
+    if not keyword_set(clobber) then clobber=0  ; NOT clobber by default
+    t0 = systime(1)
+
+    nplanfiles = n_elements(planfiles)
+    # Not enough inputs
+    if nplanfiles eq 0:
+        print,'Syntax - ap3d,planfiles'
+        return
+
+    print,''
+    print,'RUNNING AP3D'
+    print,''
+    print,strtrim(nplanfiles,2),' PLAN files'
+
+    chiptag = ['a','b','c']
+
+    #--------------------------------------------
+    # Loop through the unique PLATE Observations
+    #--------------------------------------------
+    for i in range(planfiles):
+        t1 = time.time()
+
+        planfile = planfiles[i]
+
+        print,''
+        print,'========================================================================='
+        print,strtrim(i+1,2),'/',strtrim(nplanfiles,2),'  Processing Plan file ',planfile
+        print,'========================================================================='
+        
+        # Load the plan file
+        #--------------------
+        print,'' & print,'Plan file information:'
+        #APLOADPLAN,planfile,planstr,/verbose,error=planerror,/expand,/newlog
+        APLOADPLAN,planfile,planstr,/verbose,error=planerror,/newlog
+        if n_elements(planerror) gt 0 then goto,BOMB
+        dirs=getdir(apogee_dir,caldir,spectro_dir,apred_vers)
+        prefix=dirs.prefix
+        logfile=apogee_filename('Diag',plate=planstr.plateid,mjd=planstr.mjd)
+        
+        # Try to make the required calibration files (if not already made)
+        # Then check if the calibration files exist
+        #--------------------------------------
+        # Det, BPM, Dark, Flat calib files
+        #apgundef,detfiles,bpmfiles,darkfiles,flatfiles,littrowfiles,persistfiles
+        #apgundef,persistmodelfiles,histfiles
+
+        # apDetector file : sets gain and readout noise
+        if planstr.detid ne 0:
+            mkdet,planstr.detid
+            detfiles = apogee_filename('Detector',num=planstr.detid,chip=chiptag)
+            dettest = FILE_TEST(detfiles)
+            if min(dettest) eq 0:
+                bd = where(dettest eq 0,nbd)
+                if nbd gt 0 then stop,'halt: ', detfiles[bd],' NOT FOUND'
+
+        # apDark file  : dark frame
+        if planstr.darkid ne 0:
+            makecal,dark=planstr.darkid
+            darkfiles = apogee_filename('Dark',num=planstr.darkid,chip=chiptag)
+            darktest = FILE_TEST(darkfiles)
+            if min(darktest) eq 0:
+                bd = where(darktest eq 0,nbd)
+                if nbd gt 0 then stop,'halt: ',darkfiles[bd],' NOT FOUND'
+
+        # apFlat file : flat field
+        if planstr.flatid ne 0:
+            makecal,flat=planstr.flatid
+            flatfiles = apogee_filename('Flat',num=planstr.flatid,chip=chiptag)
+            flattest = FILE_TEST(flatfiles)
+            if min(flattest) eq 0:
+                bd = where(flattest eq 0,nbd)
+                if nbd gt 0 then stop,'halt: ',flatfiles[bd],' NOT FOUND'
+
+        # apBPM file : bad pixel mask
+        if planstr.bpmid ne 0:
+            makecal,bpm=planstr.bpmid
+            bpmfiles = apogee_filename('BPM',num=planstr.bpmid,chip=chiptag)
+            bpmtest = FILE_TEST(bpmfiles)
+            if min(bpmtest) eq 0:
+                bd = where(bpmtest eq 0,nbd)
+                if nbd gt 0 then stop,'halt: ',bpmfiles[bd],' NOT FOUND'
+
+        # apLittrow file : littrow ghost pixel mask
+        if tag_exist(planstr,'littrowid') eq 0 then add_tag,planstr,'littrowid',0,planstr
+        if planstr.littrowid ne 0:
+            makecal,littrow=planstr.littrowid
+            littrowfiles = apogee_filename('Littrow',num=planstr.littrowid,chip='b')
+            littrowtest = FILE_TEST(littrowfiles)
+            if min(littrowtest) eq 0:
+                bd = where(littrowtest eq 0,nbd)
+                if nbd gt 0 then stop,'halt: ',littrowfiles[bd],' NOT FOUND'
+
+        # apPersist file : persistence pixel mask
+        if tag_exist(planstr,'persistid') eq 0 then add_tag,planstr,'persistid',0,planstr
+        if planstr.persistid ne 0:
+            makecal,persist=planstr.persistid
+            persistfiles = apogee_filename('Persist',num=planstr.persistid,chip=chiptag)
+            persisttest = FILE_TEST(persistfiles)
+            if min(persisttest) eq 0:
+                bd = where(persisttest eq 0,nbd)
+                if nbd gt 0 then stop,'halt: ',persistfiles[bd],' NOT FOUND'
+
+        # apPersistModel file : persistence model parameters
+        if tag_exist(planstr,'persistmodelid') eq 0 then add_tag,planstr,'persistmodelid',0,planstr
+        if planstr.persistmodelid ne 0:
+            #makecal,modelpersist=persistmodelid
+            # The apPersistModel calibration files are created separately
+            #  corrections exist only for "b" (green) and "c" (blue) for now
+            persistmodelfiles = apogee_filename('PersistModel',mjd=planstr.persistmodelid,chip=['b','c'])
+            persistmodeltest = FILE_TEST(persistmodelfiles)
+            if min(persistmodeltest) eq 0:
+                bd = where(persistmodeltest eq 0,nbd)
+                if nbd gt 0 then stop,'halt: ',persistmodelfiles[bd],' NOT FOUND'
+            makehist,planstr.mjd,dark=planstr.darkid
+            histfiles = apogee_filename('Hist',mjd=planstr.mjd,chip=chiptag)
+            histtest = FILE_TEST(histfiles)
+            if min(histtest) eq 0:
+                bd = where(histtest eq 0,nbd)
+                if nbd gt 0 then stop,'halt: ',histfiles[bd],' NOT FOUND'
+  
+        # Are there enough files
+        nframes = n_elements(planstr.apexp)
+        if nframes lt 1:
+            print,'No frames to process'
+            goto,BOMB
+
+        if rogue:
+            # rogue option uses alternate reduction routines as
+            #   an independent test
+            objs=where(planstr.apexp.flavor eq 'object')
+            ims=lonarr(n_elements(objs))
+            single=-1 & singlename='' & mapname='header'
+            if objs[0] ge 0:
+                for iframe=0,n_elements(objs)-1:
+                    #reads,strmid(planstr.apexp[objs[iframe]].name[0],6,8),im
+                    reads,planstr.apexp[objs[iframe]].name[0],im
+                    ims[iframe]=im
+                single=planstr.apexp[objs].single
+                singlename=planstr.apexp[objs].singlename
+                #mapname=planstr.apexp[objs].mapname
+                mapname=strmid(file_basename(planstr.plugmap),11)
+                mapname=strmid(mapname,0,strlen(mapname)-4)
+
+            plateid=0 & darkid=0L & flatid=0L & psfid=0L & fluxid=0L & waveid=0L
+            reads,planstr.plateid,plateid
+            reads,file_basename(planstr.darkid),darkid
+            reads,file_basename(planstr.flatid),flatid
+            reads,file_basename(planstr.psfid),psfid
+            reads,file_basename(planstr.fluxid),fluxid
+            reads,file_basename(planstr.waveid),waveid
+            apred_holtz(ims,plateid,darkid,flatid,psfid,fluxid,waveid,clobber=clobber,platetype=planstr.platetype,
+                        starfiber=single,starnames=singlename,mapname=mapname,logfile=logfile)
+
+        else:
+
+        # Process each frame
+        #-------------------
+        for j in range(nframes):
+
+            # Make the filenames and check the files
+            chipfiles = apogee_filename('R',chip=chiptag,num=planstr.apexp[j].name,mjd=planstr.mjd)
+            info = APFILEINFO(chipfiles,/silent)
+            framenum = info[0].fid8   # the frame number
+            #okay = (info.exists AND info.rawfmt AND info.allchips AND (info.mjd5 eq planstr.mjd) AND $
+            okay = (info.exists AND info.rawfmt AND info.allchips AND
+                    ((info.naxis eq 3) OR (info.exten eq 1)))
+            #  must be 3D or have extensions
+            if min(okay) lt 1:
+                bd = where(okay eq 0,nbd)
+                print,'halt: There is a problem with files: ',strjoin((chipfiles)(bd),' ')
+                goto,BOMB1
+
+            print,''
+            print,'------------------------------------------------------'
+            print,strtrim(j+1,2),'/',strtrim(nframes,2),'  Processing files for Frame Number >>',strtrim(framenum,2),'<<'
+            seq=strtrim(j+1,2)+'/'+strtrim(nframes,2)
+            print,'------------------------------------------------------'
+            
+            # Determine file TYPE
+            #----------------------
+            # dark - should be processed with 
+            # flat
+            # lamps
+            # object frame
+            #exptype = strtrim(info[0].exptype,2)
+            exptype = planstr.apexp[j].flavor
+
+            #obstype = SXPAR(head,'OBSTYPE',count=nobs)
+            if exptype eq '' or exptype eq '0':
+                error = 'NO OBSTYPE keyword found for '+base1
+                print,error
+                goto,BOMB1
+            exptype = strlowcase(strtrim(exptype,2))
+
+            # This is a DARK frame
+            #----------------------
+            if exptype eq 'dark':
+                stop,'halt: This is a DARK frame.  This should be processed with APMKSUPERDARK.PRO'
+
+            # LOOP through the file types
+
+            #------------
+            # FLAT FRAME
+            #------------
+            if exptype=='psf':
+                print,'This is a FLAT frame'
+
+                # Settings to use
+                #-----------------
+                usedet = 1
+                usebpm = 1
+                usedark = 1
+                useflat = 1
+                uselittrow = 1
+                usepersist = 1
+                dopersistcorr = 0
+ 	        nocr = 1
+                crfix = 0
+                criter = 0
+                satfix = 1
+                uptheramp = 0
+                nfowler =  1
+                rd3satfix = 0
+                #if nreads eq 3 then rd3satfix=1
+
+            #------------
+            # LAMP FRAME
+            #------------
+            elif exptype=='lamp':
+                print,'This is a LAMP frame'
+
+                # Settings to use
+                #-----------------
+                usedet = 1
+                usebpm = 1
+                usedark = 1
+                useflat = 1
+                uselittrow = 1
+                usepersist = 1
+                dopersistcorr = 0
+                nocr = 0
+                crfix = 1
+                satfix = 1
+                uptheramp = 0
+                nfowler = 1
+                rd3satfix = 0
+                #if nreads eq 3 then rd3satfix=1
+
+            elif exptype=='wave':
+                print,'This is a WAVE frame'
+                
+                # Settings to use
+                #-----------------
+                usedet = 1
+                usebpm = 1
+                usedark = 1
+                useflat = 1
+                uselittrow = 1
+                usepersist = 1
+                dopersistcorr = 0
+                nocr = 0
+                crfix = 1
+                criter = 0
+                satfix = 1
+                uptheramp = 0
+                nfowler = 1
+                rd3satfix = 0
+                #if nreads eq 3 then rd3satfix=1
+
+            #--------------
+            # OBJECT FRAME
+            #--------------
+            elif exptype=='object':
+                print,'This is an OBJECT frame'
+                
+                # Settings to use
+                #-----------------
+                usedet = 1
+                usebpm = 1
+                usedark = 1
+                useflat = 1
+                uselittrow = 1
+                usepersist = 1
+                dopersistcorr = 1
+                nocr = 0
+                if planstr.platetype eq 'single' then nocr=1
+                crfix = 1
+                criter = 0
+                satfix = 1
+                uptheramp = 1
+                nfowler = 0
+                rd3satfix = 0
+
+            elif exptype=='flux':
+                print,'This is an FLUX frame'
+
+                # Settings to use
+                #-----------------
+                usedet = 1
+                usebpm = 1
+                usedark = 1
+                useflat = 1
+                uselittrow = 1
+                usepersist = 1
+                dopersistcorr = 0
+                nocr = 1
+                crfix = 0
+                criter = 0
+                satfix = 1
+                uptheramp = 0
+                nfowler = 1
+                rd3satfix = 0
+
+            else:
+                print(exptype+' NOT SUPPORTED')
+                goto,BOMB1
+
+            #----------------------------------
+            # Looping through the three chips
+            #----------------------------------
+            for k in range(3):
+                file = chipfiles[k]
+
+                # Check header
+                head = headfits(file,errmsg=errmsg)
+                if errmsg ne '':
+                    error = 'There was an error loading the HEADER for '+file
+                    print,error
+                    goto,BOMB2
+
+                # Check that this is a data CUBE OR has extensions
+                naxis = sxpar(head,'NAXIS')
+                FITS_READ,file,dumim,dumhead,exten_no=1,message=read_message,/no_abort
+                if naxis ne 3 and read_message ne '':
+                    error = 'FILE must contain a 3D DATACUBE OR image extensions'
+                    print,error
+                    goto,BOMB2
+
+                # Chip specific calibration filenames
+                apgundef,detcorr,bpmcorr,darkcorr,flatcorr,littrowcorr,persistcorr
+                if usedet and planstr.detid ne 0 then detcorr = detfiles[k]
+                if usebpm and planstr.bpmid ne 0 then bpmcorr = bpmfiles[k]
+                if usedark and planstr.darkid ne 0 then darkcorr = darkfiles[k]
+                if useflat and planstr.flatid ne 0 then flatcorr = flatfiles[k]
+                if uselittrow and planstr.littrowid ne 0 and k eq 1 then littrowcorr = littrowfiles
+                if usepersist and planstr.persistid ne 0 then persistcorr = persistfiles[k]
+                if dopersistcorr and (planstr.persistmodelid ne 0) and (chiptag[k] eq 'c'):
+                    #        and (chiptag[k] eq 'b' or (chiptag[k] eq 'c' and planstr.mjd lt 56860L)):
+                    persistmodelcorr = persistmodelfiles[k-1]
+                    histcorr = histfiles[k]
+                    endif else apgundef,persistmodelcorr
+                # note this q3fix still fails for apo1m flat/PSF processing, which calls ap3dproc directly
+                q3fix=0
+                if tag_exist(planstr,'q3fix') then if k eq 2 and planstr.q3fix eq 1 then q3fix=1 
+                if k eq 2 and planstr.mjd gt 56930L and planstr.mjd lt 57600L then q3fix=1 
+
+                if tag_exist(planstr,'usereference') then usereference=planstr.usereference else usereference = 1
+                if tag_exist(planstr,'maxread') then maxread=planstr.maxread else undefine,maxread
+
+                print,''
+                print,'-----------------------------------------'
+                print,' Processing chip '+chiptag[k]+' - '+file_basename(file)
+                print,'-----------------------------------------'
+                print,''
+
+                # Output file
+                outfile = apogee_filename('2D',chip=chiptag[k],num=framenum)
+                # Does the output directory exist?
+                if file_test(file_dirname(outfile),/directory) eq 0 then FILE_MKDIR,file_dirname(outfile)
+
+                # PROCESS the file
+                #-------------------
+                #satfix = 0
+                ap3dproc(file,outfile,detcorr=detcorr,bpmcorr=bpmcorr,darkcorr=darkcorr,littrowcorr=littrowcorr,
+                         persistcorr=persistcorr,flatcorr=flatcorr,nocr=nocr,crfix=crfix,criter=criter,satfix=satfix,
+                         rd3satfix=rd3satfix,nfowler=nfowler,cleanuprawfile=1,
+                         uptheramp=uptheramp,verbose=verbose,error=procerror,clobber=clobber,logfile=logfile,
+                         fitsdir=getlocaldir(),q3fix=q3fix,maxread=maxread,persistmodelcorr=persistmodelcorr,histcorr=histcorr,
+                         usereference=usereference,refonly=refonly,seq=seq,unlock=unlock)
+
+    writelog,logfile,'AP3D: '+file_basename(planfile)+string(format='(f8.2)',systime(1)-t1)
+
+    print('AP3D finished')
+    dt = time.time()-t0
+    print('dt = %10.1f sec ' % dt)
+
+            
