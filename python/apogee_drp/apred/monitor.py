@@ -28,6 +28,7 @@ from astropy.convolution import convolve, Box1DKernel
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, MaxNLocator
 import matplotlib.ticker as ticker
 import matplotlib.colors as mplcolors
+from matplotlib import cm as cmaps
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
@@ -49,6 +50,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     nfibers = len(fibers)
     nlines = 2
     nquad = 4
+
+    load = apload.ApLoad(apred=apred, telescope=telescope)
 
     # Establish  directories... hardcode sdss4/apogee2 for now
     specdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
@@ -737,6 +740,75 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
 
     if makeplots is True:
+        ###########################################################################################
+        # dillum.png
+        # Time series plot of median dome flat flux from cross sections across fibers
+        plotfile = specdir5 + 'monitor/' + instrument + '/dillum.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,16))
+            ymax = 13000
+            ymin = 0 - ymax*0.05
+            yspan = ymax - ymin
+            xarr = np.arange(0, 300, 1) + 1
+
+            umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
+            gdcal = allexp[dome][uind]
+            gd, = np.where(gdcal['MJD'] >= 59247)
+            gdcal = gdcal[gd]
+            umjd = umjd[gd]
+            ndome = len(gdcal)
+
+            mycmap = 'inferno_r'
+            cmap = cmaps.get_cmap(mycmap, ndome)
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
+
+            #pdb.set_trace()
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+                ax = plt.subplot2grid((nchips, 1), (ichip, 0))
+                ax.set_xlim(0, 301)
+                #ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                if ichip == 0:
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("top", size="7%", pad="2%")
+                    cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+                    cax.xaxis.set_ticks_position("top")
+
+                for idome in range(ndome):
+                    chp = 'c'
+                    if ichip == 1: chp = 'b'
+                    if ichip == 2: chp = 'a'
+                    file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
+                    file1d = file1d.replace('1D-', '1D-' + chp + '-')
+                    if os.path.exists(file1d):
+                        #pdb.set_trace()
+                        oned = fits.getdata(file1d)
+                        onedflux = np.nanmedian(oned, axis=1)[::-1]
+                        mycolor = cmap(idome)
+                        gd, = np.where(onedflux > 100)
+                        ax.scatter(xarr[gd], onedflux[gd], c=mycolor, marker='o', s=10)
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.92,hspace=0.08,wspace=0.1)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        return
+
         ###########################################################################################
         # sciobs.png
         plotfile = specdir5 + 'monitor/' + instrument + '/sciobs.png'
