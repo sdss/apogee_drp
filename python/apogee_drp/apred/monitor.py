@@ -754,9 +754,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
             gdcal = allexp[dome][uind]
+            gd, = np.where(gdcal['MJD'] >= 59146)
+            gdcal = gdcal[gd]
             ndome = len(gdcal)
 
-            pdb.set_trace()
+            #pdb.set_trace()
 
             for ichip in range(nchips):
                 chip = chips[ichip]
