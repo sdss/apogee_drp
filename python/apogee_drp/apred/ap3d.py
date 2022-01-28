@@ -2473,37 +2473,38 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
     This program processes all of the APOGEE RAW datacubes for
     a single night.
 
-    INPUTS:
+    Parameters
+    ----------
     planfiles  Input list of plate plan files
+    apred      
     /verbose  Print a lot of information to the screen
     /stp      Stop at the end of the prrogram
     /unlock      Delete lock file and start fresh
 
-    OUTPUTS:
+    Returns
+    -------
     The RAW APOGEE 3D datacube files are processed and 2D 
     images are output.
 
-    USAGE:
-    IDL>ap3d,planfiles
+    Example
+    -------
+    ap3d(planfiles,'apred')
 
     Written by D.Nidever  Feb. 2010
     Modifications J. Holtzman 2011+
+    Translated to python by D.Nidever  Jan 2022
     """
 
-    if n_elements(verbose) eq 0 then verbose=0  ; NOT verbose by default
-    if not keyword_set(clobber) then clobber=0  ; NOT clobber by default
-    t0 = systime(1)
+    t0 = time.time()
 
-    nplanfiles = n_elements(planfiles)
-    # Not enough inputs
-    if nplanfiles eq 0:
-        print,'Syntax - ap3d,planfiles'
-        return
+    if type(planfiles) is str:
+        planfiles = [planfiles]
+    nplanfiles = len(planfiles)
 
-    print,''
-    print,'RUNNING AP3D'
-    print,''
-    print,strtrim(nplanfiles,2),' PLAN files'
+    print('')
+    print('RUNNING AP3D')
+    print('')
+    print(str(nplanfiles),' PLAN files')
 
     chiptag = ['a','b','c']
 
@@ -2515,159 +2516,143 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
 
         planfile = planfiles[i]
 
-        print,''
-        print,'========================================================================='
-        print,strtrim(i+1,2),'/',strtrim(nplanfiles,2),'  Processing Plan file ',planfile
-        print,'========================================================================='
+        print('')
+        print('=========================================================================')
+        print(str(i+1),'/',str(nplanfiles),'  Processing Plan file ',planfile)
+        print('=========================================================================')
         
         # Load the plan file
         #--------------------
-        print,'' & print,'Plan file information:'
-        #APLOADPLAN,planfile,planstr,/verbose,error=planerror,/expand,/newlog
-        APLOADPLAN,planfile,planstr,/verbose,error=planerror,/newlog
-        if n_elements(planerror) gt 0 then goto,BOMB
-        dirs=getdir(apogee_dir,caldir,spectro_dir,apred_vers)
-        prefix=dirs.prefix
-        logfile=apogee_filename('Diag',plate=planstr.plateid,mjd=planstr.mjd)
+        print('')
+        print('Plan file information:')
+        planstr = plan.load(planfile,np=True,verbose=True)
+        logfile = plan.load('Diag',plate=planstr['plateid'],mjd=planstr['mjd'])
+        if 'apred_ver' not in planstr:
+            print('apred_ver not found in planfile')
+            continue
+        if 'telescope' not in planstr:
+            print('telescope not found in planfile')
+            continue
+        load = apload.ApLoad(apred=planstr['apred_ver'],telescope=planstr['telescope'])
+        
+        # Check that we have all of the calibration IDs in the plan file
+        ids = ['detid','darkid','flatid','bpmid','littrowid','persistid','persistmodelid']
+        calid = ['Detector','Dark','Flat','BPM','Littrow','Persist','Persistmodel']
+        for id1,calid1 in zip(ids,calid):
+            if id1 not in planstr:
+                print(id1+' not in planstr')
+                continue
+            # Does the file exist
+            calfile = load.filename(calid1,num=planstr[id1],chips=True)
+            if load.exists(calid1,num=planstr[id1])==False:
+                print(calfile+' NOT found')
+                continue
+            
+        import pdb; pdb.set_trace()        
+
         
         # Try to make the required calibration files (if not already made)
         # Then check if the calibration files exist
         #--------------------------------------
-        # Det, BPM, Dark, Flat calib files
-        #apgundef,detfiles,bpmfiles,darkfiles,flatfiles,littrowfiles,persistfiles
-        #apgundef,persistmodelfiles,histfiles
 
         # apDetector file : sets gain and readout noise
-        if planstr.detid ne 0:
-            mkdet,planstr.detid
-            detfiles = apogee_filename('Detector',num=planstr.detid,chip=chiptag)
-            dettest = FILE_TEST(detfiles)
-            if min(dettest) eq 0:
-                bd = where(dettest eq 0,nbd)
-                if nbd gt 0 then stop,'halt: ', detfiles[bd],' NOT FOUND'
+        #if planstr['detid'] != 0:
+        #    mkdet,planstr.detid
+        #    detfiles = apogee_filename('Detector',num=planstr.detid,chip=chiptag)
+        #    dettest = FILE_TEST(detfiles)
+        #    if min(dettest) == 0:
+        #        bd = where(dettest == 0,nbd)
+        #        if nbd > 0 then stop,'halt: ', detfiles[bd],' NOT FOUND'
 
         # apDark file  : dark frame
-        if planstr.darkid ne 0:
-            makecal,dark=planstr.darkid
-            darkfiles = apogee_filename('Dark',num=planstr.darkid,chip=chiptag)
-            darktest = FILE_TEST(darkfiles)
-            if min(darktest) eq 0:
-                bd = where(darktest eq 0,nbd)
-                if nbd gt 0 then stop,'halt: ',darkfiles[bd],' NOT FOUND'
+        #if planstr['darkid'] != 0:
+        #    makecal,dark=planstr.darkid
+        #    darkfiles = apogee_filename('Dark',num=planstr.darkid,chip=chiptag)
+        #    darktest = FILE_TEST(darkfiles)
+        #    if min(darktest) == 0:
+        #        bd = where(darktest == 0,nbd)
+        #        if nbd > 0 then stop,'halt: ',darkfiles[bd],' NOT FOUND'
 
         # apFlat file : flat field
-        if planstr.flatid ne 0:
-            makecal,flat=planstr.flatid
-            flatfiles = apogee_filename('Flat',num=planstr.flatid,chip=chiptag)
-            flattest = FILE_TEST(flatfiles)
-            if min(flattest) eq 0:
-                bd = where(flattest eq 0,nbd)
-                if nbd gt 0 then stop,'halt: ',flatfiles[bd],' NOT FOUND'
+        #if planstr['flatid'] != 0:
+        #    makecal,flat=planstr.flatid
+        #    flatfiles = apogee_filename('Flat',num=planstr.flatid,chip=chiptag)
+        #    flattest = FILE_TEST(flatfiles)
+        #    if min(flattest) == 0:
+        #        bd = where(flattest == 0,nbd)
+        #        if nbd > 0 then stop,'halt: ',flatfiles[bd],' NOT FOUND'
 
         # apBPM file : bad pixel mask
-        if planstr.bpmid ne 0:
-            makecal,bpm=planstr.bpmid
-            bpmfiles = apogee_filename('BPM',num=planstr.bpmid,chip=chiptag)
-            bpmtest = FILE_TEST(bpmfiles)
-            if min(bpmtest) eq 0:
-                bd = where(bpmtest eq 0,nbd)
-                if nbd gt 0 then stop,'halt: ',bpmfiles[bd],' NOT FOUND'
+        #if planstr['bpmid'] != 0:
+        #    makecal,bpm=planstr.bpmid
+        #    bpmfiles = apogee_filename('BPM',num=planstr.bpmid,chip=chiptag)
+        #    bpmtest = FILE_TEST(bpmfiles)
+        #    if min(bpmtest) == 0:
+        #        bd = where(bpmtest == 0,nbd)
+        #        if nbd > 0 then stop,'halt: ',bpmfiles[bd],' NOT FOUND'
 
         # apLittrow file : littrow ghost pixel mask
-        if tag_exist(planstr,'littrowid') eq 0 then add_tag,planstr,'littrowid',0,planstr
-        if planstr.littrowid ne 0:
-            makecal,littrow=planstr.littrowid
-            littrowfiles = apogee_filename('Littrow',num=planstr.littrowid,chip='b')
-            littrowtest = FILE_TEST(littrowfiles)
-            if min(littrowtest) eq 0:
-                bd = where(littrowtest eq 0,nbd)
-                if nbd gt 0 then stop,'halt: ',littrowfiles[bd],' NOT FOUND'
+        #if tag_exist(planstr,'littrowid') == 0 then add_tag,planstr,'littrowid',0,planstr
+        #if planstr['littrowid'] != 0:
+        #    makecal,littrow=planstr.littrowid
+        #    littrowfiles = apogee_filename('Littrow',num=planstr.littrowid,chip='b')
+        #    littrowtest = FILE_TEST(littrowfiles)
+        #    if min(littrowtest) == 0:
+        #        bd = where(littrowtest == 0,nbd)
+        #        if nbd > 0 then stop,'halt: ',littrowfiles[bd],' NOT FOUND'
 
         # apPersist file : persistence pixel mask
-        if tag_exist(planstr,'persistid') eq 0 then add_tag,planstr,'persistid',0,planstr
-        if planstr.persistid ne 0:
-            makecal,persist=planstr.persistid
-            persistfiles = apogee_filename('Persist',num=planstr.persistid,chip=chiptag)
-            persisttest = FILE_TEST(persistfiles)
-            if min(persisttest) eq 0:
-                bd = where(persisttest eq 0,nbd)
-                if nbd gt 0 then stop,'halt: ',persistfiles[bd],' NOT FOUND'
+        #if tag_exist(planstr,'persistid') == 0 then add_tag,planstr,'persistid',0,planstr
+        #if planstr['persistid'] != 0:
+        #    makecal,persist=planstr.persistid
+        #    persistfiles = apogee_filename('Persist',num=planstr.persistid,chip=chiptag)
+        #    persisttest = FILE_TEST(persistfiles)
+        #    if min(persisttest) == 0:
+        #        bd = where(persisttest == 0,nbd)
+        #        if nbd > 0 then stop,'halt: ',persistfiles[bd],' NOT FOUND'
 
         # apPersistModel file : persistence model parameters
-        if tag_exist(planstr,'persistmodelid') eq 0 then add_tag,planstr,'persistmodelid',0,planstr
-        if planstr.persistmodelid ne 0:
-            #makecal,modelpersist=persistmodelid
-            # The apPersistModel calibration files are created separately
-            #  corrections exist only for "b" (green) and "c" (blue) for now
-            persistmodelfiles = apogee_filename('PersistModel',mjd=planstr.persistmodelid,chip=['b','c'])
-            persistmodeltest = FILE_TEST(persistmodelfiles)
-            if min(persistmodeltest) eq 0:
-                bd = where(persistmodeltest eq 0,nbd)
-                if nbd gt 0 then stop,'halt: ',persistmodelfiles[bd],' NOT FOUND'
-            makehist,planstr.mjd,dark=planstr.darkid
-            histfiles = apogee_filename('Hist',mjd=planstr.mjd,chip=chiptag)
-            histtest = FILE_TEST(histfiles)
-            if min(histtest) eq 0:
-                bd = where(histtest eq 0,nbd)
-                if nbd gt 0 then stop,'halt: ',histfiles[bd],' NOT FOUND'
+        #if tag_exist(planstr,'persistmodelid') == 0 then add_tag,planstr,'persistmodelid',0,planstr
+        #if planstr['persistmodelid'] != 0:
+        #    #makecal,modelpersist=persistmodelid
+        #    # The apPersistModel calibration files are created separately
+        #    #  corrections exist only for "b" (green) and "c" (blue) for now
+        #    persistmodelfiles = apogee_filename('PersistModel',mjd=planstr.persistmodelid,chip=['b','c'])
+        #    persistmodeltest = FILE_TEST(persistmodelfiles)
+        #    if min(persistmodeltest) == 0:
+        #        bd = where(persistmodeltest == 0,nbd)
+        #        if nbd > 0 then stop,'halt: ',persistmodelfiles[bd],' NOT FOUND'
+        #    makehist,planstr.mjd,dark=planstr.darkid
+        #    histfiles = apogee_filename('Hist',mjd=planstr.mjd,chip=chiptag)
+        #    histtest = FILE_TEST(histfiles)
+        #    if min(histtest) == 0:
+        #        bd = where(histtest == 0,nbd)
+        #        if nbd > 0 then stop,'halt: ',histfiles[bd],' NOT FOUND'
   
         # Are there enough files
-        nframes = n_elements(planstr.apexp)
-        if nframes lt 1:
-            print,'No frames to process'
-            goto,BOMB
-
-        if rogue:
-            # rogue option uses alternate reduction routines as
-            #   an independent test
-            objs=where(planstr.apexp.flavor eq 'object')
-            ims=lonarr(n_elements(objs))
-            single=-1 & singlename='' & mapname='header'
-            if objs[0] ge 0:
-                for iframe=0,n_elements(objs)-1:
-                    #reads,strmid(planstr.apexp[objs[iframe]].name[0],6,8),im
-                    reads,planstr.apexp[objs[iframe]].name[0],im
-                    ims[iframe]=im
-                single=planstr.apexp[objs].single
-                singlename=planstr.apexp[objs].singlename
-                #mapname=planstr.apexp[objs].mapname
-                mapname=strmid(file_basename(planstr.plugmap),11)
-                mapname=strmid(mapname,0,strlen(mapname)-4)
-
-            plateid=0 & darkid=0L & flatid=0L & psfid=0L & fluxid=0L & waveid=0L
-            reads,planstr.plateid,plateid
-            reads,file_basename(planstr.darkid),darkid
-            reads,file_basename(planstr.flatid),flatid
-            reads,file_basename(planstr.psfid),psfid
-            reads,file_basename(planstr.fluxid),fluxid
-            reads,file_basename(planstr.waveid),waveid
-            apred_holtz(ims,plateid,darkid,flatid,psfid,fluxid,waveid,clobber=clobber,platetype=planstr.platetype,
-                        starfiber=single,starnames=singlename,mapname=mapname,logfile=logfile)
-
-        else:
+        if 'apexp' not in planstr:
+            print('APEXP not found in planstr')
+            continue
+        nframes = len(planstr['apexp'])
+        if nframes < 1:
+            print('No frames to process')
+            continue
 
         # Process each frame
         #-------------------
         for j in range(nframes):
+            framenum = planstr['apex']['name'][j]
+            rawfile = load.filename('R',num=planstr['apex']['name'][j],chips=True)
+            chipfiles = [rawfile.replace('R-','R-'+ch) for ch in chips]
+            if load.exists('R',num=framenum)==False:
+                print(rawfile+' NOT found')
+                continue
 
-            # Make the filenames and check the files
-            chipfiles = apogee_filename('R',chip=chiptag,num=planstr.apexp[j].name,mjd=planstr.mjd)
-            info = APFILEINFO(chipfiles,/silent)
-            framenum = info[0].fid8   # the frame number
-            #okay = (info.exists AND info.rawfmt AND info.allchips AND (info.mjd5 eq planstr.mjd) AND $
-            okay = (info.exists AND info.rawfmt AND info.allchips AND
-                    ((info.naxis eq 3) OR (info.exten eq 1)))
-            #  must be 3D or have extensions
-            if min(okay) lt 1:
-                bd = where(okay eq 0,nbd)
-                print,'halt: There is a problem with files: ',strjoin((chipfiles)(bd),' ')
-                goto,BOMB1
-
-            print,''
-            print,'------------------------------------------------------'
-            print,strtrim(j+1,2),'/',strtrim(nframes,2),'  Processing files for Frame Number >>',strtrim(framenum,2),'<<'
-            seq=strtrim(j+1,2)+'/'+strtrim(nframes,2)
-            print,'------------------------------------------------------'
+            print('')
+            print('------------------------------------------------------')
+            print(str(j+1),'/',str(nframes),'  Processing files for Frame Number >>',str(framenum),'<<')
+            seq = str(j+1)+'/'+str(nframes)
+            print('------------------------------------------------------')
             
             # Determine file TYPE
             #----------------------
@@ -2675,31 +2660,29 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
             # flat
             # lamps
             # object frame
-            #exptype = strtrim(info[0].exptype,2)
-            exptype = planstr.apexp[j].flavor
+            #exptype = str(info[0].exptype,2)
+            exptype = planstr['apexp']['flavor'][j]
 
             #obstype = SXPAR(head,'OBSTYPE',count=nobs)
-            if exptype eq '' or exptype eq '0':
-                error = 'NO OBSTYPE keyword found for '+base1
-                print,error
-                goto,BOMB1
-            exptype = strlowcase(strtrim(exptype,2))
+            if exptype == '' or exptype == '0':
+                error = 'NO OBSTYPE keyword found for '+str(framenum)
+                print(error)
+                continue
+            exptype = str(exptype).lower()
 
             # This is a DARK frame
             #----------------------
-            if exptype eq 'dark':
-                stop,'halt: This is a DARK frame.  This should be processed with APMKSUPERDARK.PRO'
+            if exptype == 'dark':
+                print('This is a DARK frame.  This should be processed with APMKSUPERDARK.PRO')
+                continue
 
             # LOOP through the file types
 
-            #------------
-            # FLAT FRAME
-            #------------
+            # Settings to use for each
+            
+            # Flat
             if exptype=='psf':
-                print,'This is a FLAT frame'
-
-                # Settings to use
-                #-----------------
+                print('This is a FLAT frame')
                 usedet = 1
                 usebpm = 1
                 usedark = 1
@@ -2707,23 +2690,17 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 uselittrow = 1
                 usepersist = 1
                 dopersistcorr = 0
- 	        nocr = 1
+                nocr = 1
                 crfix = 0
                 criter = 0
                 satfix = 1
                 uptheramp = 0
                 nfowler =  1
                 rd3satfix = 0
-                #if nreads eq 3 then rd3satfix=1
-
-            #------------
-            # LAMP FRAME
-            #------------
+                #if nreads == 3 then rd3satfix=1
+            # Lamp
             elif exptype=='lamp':
-                print,'This is a LAMP frame'
-
-                # Settings to use
-                #-----------------
+                print('This is a LAMP frame')
                 usedet = 1
                 usebpm = 1
                 usedark = 1
@@ -2737,13 +2714,10 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 uptheramp = 0
                 nfowler = 1
                 rd3satfix = 0
-                #if nreads eq 3 then rd3satfix=1
-
+                #if nreads == 3 then rd3satfix=1
+            # Wave
             elif exptype=='wave':
-                print,'This is a WAVE frame'
-                
-                # Settings to use
-                #-----------------
+                print('This is a WAVE frame')
                 usedet = 1
                 usebpm = 1
                 usedark = 1
@@ -2758,16 +2732,10 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 uptheramp = 0
                 nfowler = 1
                 rd3satfix = 0
-                #if nreads eq 3 then rd3satfix=1
-
-            #--------------
-            # OBJECT FRAME
-            #--------------
+                #if nreads == 3 then rd3satfix=1
+            # Object
             elif exptype=='object':
-                print,'This is an OBJECT frame'
-                
-                # Settings to use
-                #-----------------
+                print('This is an OBJECT frame')
                 usedet = 1
                 usebpm = 1
                 usedark = 1
@@ -2776,19 +2744,16 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 usepersist = 1
                 dopersistcorr = 1
                 nocr = 0
-                if planstr.platetype eq 'single' then nocr=1
+                if planstr['platetype'] == 'single': nocr=1
                 crfix = 1
                 criter = 0
                 satfix = 1
                 uptheramp = 1
                 nfowler = 0
                 rd3satfix = 0
-
+            # Flux
             elif exptype=='flux':
-                print,'This is an FLUX frame'
-
-                # Settings to use
-                #-----------------
+                print('This is an FLUX frame')
                 usedet = 1
                 usebpm = 1
                 usedark = 1
@@ -2803,75 +2768,90 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 uptheramp = 0
                 nfowler = 1
                 rd3satfix = 0
-
             else:
                 print(exptype+' NOT SUPPORTED')
-                goto,BOMB1
+                continue
 
             #----------------------------------
             # Looping through the three chips
             #----------------------------------
             for k in range(3):
-                file = chipfiles[k]
+                chfile = chipfiles[k]
 
                 # Check header
-                head = headfits(file,errmsg=errmsg)
-                if errmsg ne '':
-                    error = 'There was an error loading the HEADER for '+file
-                    print,error
-                    goto,BOMB2
-
+                head = fits.getheader(chfile)
                 # Check that this is a data CUBE OR has extensions
-                naxis = sxpar(head,'NAXIS')
-                FITS_READ,file,dumim,dumhead,exten_no=1,message=read_message,/no_abort
-                if naxis ne 3 and read_message ne '':
+                naxis = head.get('NAXIS')
+                try:
+                    dumim,dumhead = fits.getdata(chfile,1,header=True)
+                except:
+                    read_message = 'problem'
+                if naxis != 3 and read_message != '':
                     error = 'FILE must contain a 3D DATACUBE OR image extensions'
-                    print,error
-                    goto,BOMB2
+                    print(error)
+                    continue
 
-                # Chip specific calibration filenames
-                apgundef,detcorr,bpmcorr,darkcorr,flatcorr,littrowcorr,persistcorr
-                if usedet and planstr.detid ne 0 then detcorr = detfiles[k]
-                if usebpm and planstr.bpmid ne 0 then bpmcorr = bpmfiles[k]
-                if usedark and planstr.darkid ne 0 then darkcorr = darkfiles[k]
-                if useflat and planstr.flatid ne 0 then flatcorr = flatfiles[k]
-                if uselittrow and planstr.littrowid ne 0 and k eq 1 then littrowcorr = littrowfiles
-                if usepersist and planstr.persistid ne 0 then persistcorr = persistfiles[k]
-                if dopersistcorr and (planstr.persistmodelid ne 0) and (chiptag[k] eq 'c'):
-                    #        and (chiptag[k] eq 'b' or (chiptag[k] eq 'c' and planstr.mjd lt 56860L)):
+                # Chip specific calibration filenames      
+                detcorr,bpmcorr,darkcorr,flatcorr,littrowcorr,persistcorr = None,None,None,None,None,None
+                if usedet and planstr['detid'] != 0:
+                      detcorr = detfiles[k]
+                if usebpm and planstr['bpmid'] != 0:
+                      bpmcorr = bpmfiles[k]
+                if usedark and planstr['darkid'] != 0:
+                      darkcorr = darkfiles[k]
+                if useflat and planstr['flatid'] != 0:
+                      flatcorr = flatfiles[k]
+                if uselittrow and planstr['littrowid'] != 0 and k == 1:
+                      littrowcorr = littrowfiles
+                if usepersist and planstr['persistid'] != 0:
+                      persistcorr = persistfiles[k]
+                if dopersistcorr and (planstr['persistmodelid'] != 0) and (chips[k] == 'c'):
+                    #        and (chiptag[k] == 'b' or (chiptag[k] == 'c' and planstr.mjd < 56860L)):
                     persistmodelcorr = persistmodelfiles[k-1]
                     histcorr = histfiles[k]
-                    endif else apgundef,persistmodelcorr
+                else:
+                    persistmodelcorr = None
                 # note this q3fix still fails for apo1m flat/PSF processing, which calls ap3dproc directly
-                q3fix=0
-                if tag_exist(planstr,'q3fix') then if k eq 2 and planstr.q3fix eq 1 then q3fix=1 
-                if k eq 2 and planstr.mjd gt 56930L and planstr.mjd lt 57600L then q3fix=1 
+                q3fix = False
+                if 'q3fix' in planstr:
+                    if k == 2 and planstr.q3fix == 1:
+                        q3fix = True
+                if k == 2 and planstr['mjd'] > 56930 and planstr['mjd'] < 57600:
+                    q3fix = True
 
-                if tag_exist(planstr,'usereference') then usereference=planstr.usereference else usereference = 1
-                if tag_exist(planstr,'maxread') then maxread=planstr.maxread else undefine,maxread
+                if 'usereference' in planstr:
+                      usereference = planstr['usereference']
+                else:
+                      usereference = True
+                if 'maxread' in planstr:
+                      maxread = planstr['maxread']
+                else:
+                      maxread = None
 
-                print,''
-                print,'-----------------------------------------'
-                print,' Processing chip '+chiptag[k]+' - '+file_basename(file)
-                print,'-----------------------------------------'
-                print,''
+                print('')
+                print('-----------------------------------------')
+                print(' Processing chip '+chips[k]+' - '+file_basename(file))
+                print('-----------------------------------------')
+                print('')
 
                 # Output file
-                outfile = apogee_filename('2D',chip=chiptag[k],num=framenum)
+                outfile = load.filename('2D',num=framenum,chips=True)
+                outfile = outfile.replace('2D-','2D-'+chips[k])
                 # Does the output directory exist?
-                if file_test(file_dirname(outfile),/directory) eq 0 then FILE_MKDIR,file_dirname(outfile)
+                if os.path.exists(os.path.dirname(outfile))==False:
+                    os.makedirs(os.path.dirname(outfile))
 
                 # PROCESS the file
                 #-------------------
                 #satfix = 0
-                ap3dproc(file,outfile,detcorr=detcorr,bpmcorr=bpmcorr,darkcorr=darkcorr,littrowcorr=littrowcorr,
+                ap3dproc(chfile,outfile,detcorr=detcorr,bpmcorr=bpmcorr,darkcorr=darkcorr,littrowcorr=littrowcorr,
                          persistcorr=persistcorr,flatcorr=flatcorr,nocr=nocr,crfix=crfix,criter=criter,satfix=satfix,
                          rd3satfix=rd3satfix,nfowler=nfowler,cleanuprawfile=1,
                          uptheramp=uptheramp,verbose=verbose,error=procerror,clobber=clobber,logfile=logfile,
                          fitsdir=getlocaldir(),q3fix=q3fix,maxread=maxread,persistmodelcorr=persistmodelcorr,histcorr=histcorr,
                          usereference=usereference,refonly=refonly,seq=seq,unlock=unlock)
 
-    writelog,logfile,'AP3D: '+file_basename(planfile)+string(format='(f8.2)',systime(1)-t1)
+    writelog(logfile,'AP3D: '+os.path.basename(planfile)+('%8.2f' % time.time()))
 
     print('AP3D finished')
     dt = time.time()-t0
