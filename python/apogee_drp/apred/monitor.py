@@ -28,6 +28,7 @@ from astropy.convolution import convolve, Box1DKernel
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, MaxNLocator
 import matplotlib.ticker as ticker
 import matplotlib.colors as mplcolors
+from matplotlib import cm as cmaps
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
@@ -754,16 +755,19 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
             gdcal = allexp[dome][uind]
-            gd, = np.where(gdcal['MJD'] >= 59146)
+            gd, = np.where(gdcal['MJD'] >= 59247)
             gdcal = gdcal[gd]
             umjd = umjd[gd]
             ndome = len(gdcal)
+
+            mycmap = 'CMRmap_r'
+            cmap = cmaps.get_cmap(mycmap, ndome)
 
             #pdb.set_trace()
 
             for ichip in range(nchips):
                 chip = chips[ichip]
-                ax = plt.subplot2grid((1,nchips), (0,ichip))
+                ax = plt.subplot2grid((nchips, 1), (ichip, 0))
                 ax.set_xlim(0, 301)
                 #ax.set_ylim(ymin, ymax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
@@ -772,9 +776,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
-                ax.set_xlabel(r'Fiber Index')
-                if ichip == 0: ax.set_ylabel(r'Median Flux')
-                if ichip > 0: ax.axes.yaxis.set_ticklabels([])
+                if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
                 for idome in range(ndome):
                     chp = 'c'
@@ -786,7 +790,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         #pdb.set_trace()
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
-                        ax.plot(xarr, onedflux)
+                        color = cmap(idome)
+                        ax.plot(xarr, onedflux, color)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
