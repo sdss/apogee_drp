@@ -783,7 +783,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == 0:
                     ax_divider = make_axes_locatable(ax)
                     cax = ax_divider.append_axes("top", size="7%", pad="2%")
-                    cb2 = ax.colorbar(sm, cax=cax, orientation="horizontal")
+                    cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
 
                 for idome in range(ndome):
                     chp = 'c'
