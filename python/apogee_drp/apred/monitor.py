@@ -747,7 +747,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(30,16))
+            fig = plt.figure(figsize=(30,20))
             ymax = 13000
             ymin = 0 - ymax*0.05
             yspan = ymax - ymin
@@ -789,6 +789,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cax.minorticks_on()
                     cax.xaxis.set_major_locator(ticker.MultipleLocator(50))
                     cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+                    cax.set_xlabel('MJD')
 
                 for idome in range(ndome):
                     chp = 'c'
@@ -802,8 +803,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
                         mycolor = cmap(idome)
                         gd, = np.where(onedflux > 100)
-                        #ax.plot(xarr[gd], onedflux[gd], color=mycolor)
-                        ax.hist(onedflux, 300, color=mycolor, fill=False)
+                        ax.plot(xarr[gd], onedflux[gd], color=mycolor)
+                        #ax.hist(onedflux, 300, color=mycolor, fill=False)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
