@@ -776,14 +776,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == 0: ax.set_ylabel(r'Median Flux')
                 if ichip > 0: ax.axes.yaxis.set_ticklabels([])
 
-                for idome in range(20):
+                for idome in range(ndome):
                     chp = 'c'
                     if ichip == 1: chp = 'b'
                     if ichip == 2: chp = 'a'
                     file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
-                    pdb.set_trace()
                     if os.path.exists(file1d):
+                        pdb.set_trace()
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
                         ax.plot(xarr, onedflux)
