@@ -747,7 +747,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(30,14))
+            fig = plt.figure(figsize=(30,16))
             ymax = 13000
             ymin = 0 - ymax*0.05
             yspan = ymax - ymin
@@ -760,7 +760,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             umjd = umjd[gd]
             ndome = len(gdcal)
 
-            mycmap = 'inferno'
+            mycmap = 'inferno_r'
             cmap = cmaps.get_cmap(mycmap, ndome)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
 
@@ -784,6 +784,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax_divider = make_axes_locatable(ax)
                     cax = ax_divider.append_axes("top", size="7%", pad="2%")
                     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+                    cax.xaxis.set_ticks_position("top")
 
                 for idome in range(ndome):
                     chp = 'c'
@@ -801,7 +802,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
 
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.92,hspace=0.08,wspace=0.1)
             plt.savefig(plotfile)
             plt.close('all')
 
