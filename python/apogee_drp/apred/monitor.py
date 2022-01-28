@@ -823,7 +823,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             xarr = np.arange(0, 300, 1) + 1
 
             gd, = np.where(allexp[dome]['MJD'] == 59557)
-            gdcal = gdcal[gd]
+            gdcal = allexp[dome][gd]
             ndome = len(gdcal)
 
             mycmap = 'inferno_r'
