@@ -762,7 +762,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             mycmap = 'inferno'
             #cmap = cmaps.get_cmap(mycmap, ndome)
-            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.normalize(min=np.min(umjd), max=np.max(umjd)))
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(min=np.min(umjd), max=np.max(umjd)))
 
             #pdb.set_trace()
 
