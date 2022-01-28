@@ -761,6 +761,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #pdb.set_trace()
 
             for ichip in range(nchips):
+                chip = chips[ichip]
                 ax = plt.subplot2grid((1,nchips), (0,ichip))
                 ax.set_xlim(xmin, xmax)
                 ax.set_ylim(ymin, ymax)
@@ -775,9 +776,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip > 0: ax.axes.yaxis.set_ticklabels([])
 
                 for idome in range(10):
-                    chp = 'a'
+                    chp = 'c'
                     if ichip == 1: chp = 'b'
-                    if ichip == 2: chp = 'c'
+                    if ichip == 2: chp = 'a'
                     file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
                     #pdb.set_trace
