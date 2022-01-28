@@ -766,7 +766,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             #pdb.set_trace()
 
-            dillum = np.zeros(ndome, nchips, 300)
+            dillum = np.zeros((ndome, nchips, 300), dtype=np.float64)
             colors = np.empty(ndome)
             for idome in range(ndome):
                 colors[idome] = cmap(idome)
