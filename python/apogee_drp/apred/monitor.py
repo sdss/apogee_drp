@@ -789,6 +789,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cax.minorticks_on()
                     cax.xaxis.set_major_locator(ticker.MultipleLocator(50))
                     cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+                    cax.xaxis.set_label_position('top') 
                     cax.set_xlabel('MJD')
 
                 for idome in range(ndome):
