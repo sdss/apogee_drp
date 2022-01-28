@@ -1,5 +1,6 @@
 from astropy.time import Time
 import numpy as np
+import os
 
 def getmjd5(dateobs):
     """ Convert a DATE-OBS string to 5-digit MJD number."""
@@ -26,3 +27,11 @@ def writelog(logfile,line):
     # Append to the file
     with open(logfile,'a') as f:
         f.writelines(lines)
+
+def localdir():
+    """ Get local APOGEE directory."""
+    local = os.environ['APOGEE_LOCALDIR']
+    if local=='':
+        return None
+    else:
+        return local+'/'
