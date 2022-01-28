@@ -791,6 +791,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
+        return
+
         ###########################################################################################
         # sciobs.png
         plotfile = specdir5 + 'monitor/' + instrument + '/sciobs.png'
