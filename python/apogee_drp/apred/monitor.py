@@ -776,7 +776,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == 0: ax.set_ylabel(r'Median Flux')
                 if ichip > 0: ax.axes.yaxis.set_ticklabels([])
 
-                for idome in range(80):
+                for idome in range(200):
                     file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chip[:1] + '-')
                     if os.path.exists(file1d):
