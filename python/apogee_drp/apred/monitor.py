@@ -776,12 +776,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == 0: ax.set_ylabel(r'Median Flux')
                 if ichip > 0: ax.axes.yaxis.set_ticklabels([])
 
-                for idome in range(5):
+                for idome in range(80):
                     file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chip[:1] + '-')
-                    oned = fits.getdata(file1d)
-                    onedflux = np.nanmedian(oned, axis=1)[::-1]
-                    ax.plot(xarr, onedflux)
+                    if os.path.exists(file1d):
+                        oned = fits.getdata(file1d)
+                        onedflux = np.nanmedian(oned, axis=1)[::-1]
+                        ax.plot(xarr, onedflux)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
