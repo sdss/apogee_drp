@@ -797,7 +797,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
                         mycolor = cmap(idome)
-                        ax.plot(xarr, onedflux, color=mycolor)
+                        gd, = np.where(onedflux > 100)
+                        ax.scatter(xarr, onedflux, c=mycolor, marker='s', s=10)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
