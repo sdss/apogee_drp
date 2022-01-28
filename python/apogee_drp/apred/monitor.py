@@ -760,7 +760,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             umjd = umjd[gd]
             ndome = len(gdcal)
 
-            mycmap = 'CMRmap_r'
+            mycmap = 'inferno'
             cmap = cmaps.get_cmap(mycmap, ndome)
 
             #pdb.set_trace()
