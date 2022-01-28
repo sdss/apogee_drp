@@ -738,6 +738,61 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makeplots is True:
         ###########################################################################################
+        # dillum.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/dflux.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 13000
+            ymin = 0 - ymax*0.05
+            yspan = ymax - ymin
+
+            gdcal = allexp[dome]
+            caljd = gdcal['JD'] - 2.4e6
+            pdb.set_trace()
+
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                w = np.nanmedian(gdcal['MED'][:, ichip, :])
+                ax.axhline(y=w, color='k', linewidth=3, zorder=1)
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['MED'][:, ichip, fibers[ifib]]
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='Fiber ' + str(fibers[ifib]), zorder=3)
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
         # sciobs.png
         plotfile = specdir5 + 'monitor/' + instrument + '/sciobs.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
