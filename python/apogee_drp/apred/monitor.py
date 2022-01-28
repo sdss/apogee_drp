@@ -742,7 +742,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # dillum.png
         # Time series plot of median dome flat flux from cross sections across fibers
-        plotfile = specdir5 + 'monitor/' + instrument + '/dflux.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/dillum.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
