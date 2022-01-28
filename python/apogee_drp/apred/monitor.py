@@ -880,6 +880,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
+        return
 
         ###########################################################################################
         # sciobs.png
