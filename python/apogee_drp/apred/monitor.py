@@ -780,11 +780,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cax = ax_divider.append_axes("top", size="7%", pad="2%")
                     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
                     cax.xaxis.set_ticks_position("top")
-                    cax.minorticks_on()
-                    cax.xaxis.set_major_locator(ticker.MultipleLocator(50))
-                    cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+                    #cax.minorticks_on()
+                    cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+                    #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
                     cax.xaxis.set_label_position('top') 
-                    cax.set_xlabel('MJD')
+                    cax.set_xlabel('Exposure')
 
                 for idome in range(ndome):
                     chp = 'c'
