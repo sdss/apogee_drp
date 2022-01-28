@@ -771,7 +771,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 chip = chips[ichip]
                 ax = plt.subplot2grid((nchips, 1), (ichip, 0))
                 ax.set_xlim(0, 301)
-                ax.set_ylim(0, 27000)
+                #ax.set_ylim(0, 27000)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
                 ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
                 ax.minorticks_on()
@@ -811,7 +811,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
 
-            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.05,top=0.955,hspace=0.08,wspace=0.1)
+            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
             plt.savefig(plotfile)
             plt.close('all')
 
