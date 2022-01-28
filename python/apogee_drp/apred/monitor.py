@@ -754,7 +754,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             gdcal = allexp[dome][gd]
             ndome = len(gdcal)
 
-            mycmap = 'inferno_r'
+            mycmap = 'viridis_r'
             cmap = cmaps.get_cmap(mycmap, ndome)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
 
