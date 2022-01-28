@@ -783,7 +783,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
                     if os.path.exists(file1d):
-                        pdb.set_trace()
+                        #pdb.set_trace()
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
                         ax.plot(xarr, onedflux)
