@@ -264,3 +264,7 @@ def flatplot(apred='r14',telescope='apo25m'):
 
     html.htmltab(grid,file='{:s}/plots/{:s}_flats.html'.format(flatdir,inst))
 
+
+def makehist(mjd,dark=None):
+    """ Make history file for an MJD """
+    mjdcube.mjdcube(mjd,darkid=dark)

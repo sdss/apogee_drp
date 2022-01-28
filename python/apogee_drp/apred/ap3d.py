@@ -29,7 +29,8 @@ from scipy.interpolate import interp1d
 #from apogee.utils import yanny, apload
 #from sdss_access.path import path
 from dlnpyutils import bindata
-from ..utils import plan,apload
+from ..utils import plan,apload,utils
+from . import mjdcube
 
 # Ignore these warnings, it's a bug
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
@@ -919,7 +920,7 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
              cube=None,head=None,output=None,crstr=None,satmask=None,criter=False,
              clobber=False,cleanuprawfile=True,outlong=False,refonly=False,
              outelectrons=False,nocr=False,logfile=None,fitsdir=None,maxread=None,
-             q3fix=False,usereference=False,seq=None):
+             q3fix=False,usereference=False,seq=None,unlock=False,**kwargs):
     """
     Process a single APOGEE 3D datacube.
 
@@ -2463,7 +2464,7 @@ def ap3dproc(files0,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=
         print('dt = %10.f1 sec ' % dt)
     if logfile is not None:
         name = os.path.basename(file)+('%f10.2 %1x %i8 %1x %i8 %1x %i8 %i8' % (dt,totbpm,totcr,totsat,totunf))
-        writelog(logfile,name)
+        utils.writelog(logfile,name)
 
     if nfiles > 1:
         dt = systime(1)-t00
@@ -2624,13 +2625,16 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
         #        bd = where(histtest == 0,nbd)
         #        if nbd > 0 then stop,'halt: ',histfiles[bd],' NOT FOUND'
 
-
-        makehist(planstr'mjd'],dark=planstr['darkid'])
-        histfiles = apogee_filename('Hist',mjd=planstr.mjd,chip=chiptag)
-        histtest = FILE_TEST(histfiles)
-        if min(histtest) == 0:
-            bd = where(histtest == 0,nbd)
-            if nbd > 0 then stop,'halt: ',histfiles[bd],' NOT FOUND'
+        # Make apHistory file
+        if 'persistmodelid' in planstr:
+            if planstr['persistmodelid'] != 0 and kws['dopersistcorr']:
+                if load.exists('Hist',mjd=planstr['mjd']):
+                    mjdcube.mjdcube(planstr['mjd'],dark=planstr['darkid'])
+                    histfile = load.filename('Hist',mjd=planstr['mjd'],chips=True)
+                    histfiles = [histfile.replace('Hist-','Hist-'+ch+'-') for ch in chips]
+                    if load.exists('Hist',mjd=planstr['mjd'])==False:
+                        print(histfile,' NOT FOUND')
+                        continue
   
         # Are there enough files
         if 'APEXP' not in planstr:
@@ -2731,8 +2735,8 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                     print(error)
                     continue
 
-                # Chip specific calibration filenames      
-                detcorr,bpmcorr,darkcorr,flatcorr,littrowcorr,persistcorr = None,None,None,None,None,None
+                # Chip specific calibration filenames
+                kws['histcorr'] = None
                 ids = ['detid','darkid','flatid','bpmid','littrowid','persistid','persistmodelid']
                 calid = ['Detector','Dark','Flat','BPM','Littrow','Persist','PersistModel']
                 calflag = ['usedet','usedark','useflat','usebpm','uselittrow','usepersist','dopersistcorr']
@@ -2743,8 +2747,10 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                     if kws[calflag1] and planstr[id1]!=0:
                         if calid1=='Littrow' and chips[k]!='b':
                             continue
-                        if calid1=='PersistMode' and chips[k]!='c':
+                        if calid1=='PersistModel' and chips[k]!='c':
                             continue
+                        if calid1=='PersistModel' and chips[k]=='c':
+                            kws['histcorr'] = histfiles[k]
                         calfile = load.filename(calid1,num=planstr[id1],chips=True)
                         calfile = calfile.replace(calid1+'-',calid1+'-'+chips[k]+'-')
                         # Does the file exist
@@ -2757,8 +2763,6 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 if gotcals==False:
                     print('Do not have all the calibration files that we need')
                     continue
-
-                import pdb; pdb.set_trace()
 
                 # Do not have all the cals
                 
@@ -2800,31 +2804,32 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
 
                 print('')
                 print('-----------------------------------------')
-                print(' Processing chip '+chips[k]+' - '+file_basename(file))
+                print(' Processing chip '+chips[k]+' - '+os.path.basename(chfile))
                 print('-----------------------------------------')
                 print('')
 
                 # Output file
-                outfile = load.filename('2D',num=framenum,chips=True)
-                outfile = outfile.replace('2D-','2D-'+chips[k])
+                outfile = load.filename('2D',num=framenum,mjd=planstr['mjd'],chips=True)
+                outfile = outfile.replace('2D-','2D-'+chips[k]+'-')
                 # Does the output directory exist?
+                fitsdir = os.path.dirname(outfile)
                 if os.path.exists(os.path.dirname(outfile))==False:
                     os.makedirs(os.path.dirname(outfile))
+                # Does the file exist already
+                #if os.path.exists(outfile) and clobber==False:
+                #    print(outfile,' exists already and clobber not set')
+                #    continue
 
                 # PROCESS the file
                 #-------------------
-                #satfix = 0
-                ap3dproc(chfile,outfile,detcorr=detcorr,bpmcorr=bpmcorr,darkcorr=darkcorr,littrowcorr=littrowcorr,
-                         persistcorr=persistcorr,flatcorr=flatcorr,nocr=nocr,crfix=crfix,criter=criter,satfix=satfix,
-                         rd3satfix=rd3satfix,nfowler=nfowler,cleanuprawfile=1,
-                         uptheramp=uptheramp,verbose=verbose,error=procerror,clobber=clobber,logfile=logfile,
-                         fitsdir=getlocaldir(),q3fix=q3fix,maxread=maxread,persistmodelcorr=persistmodelcorr,histcorr=histcorr,
-                         usereference=usereference,refonly=refonly,seq=seq,unlock=unlock)
+                ap3dproc(chfile,outfile,cleanuprawfile=1,verbose=verbose,clobber=clobber,
+                         logfile=logfile,q3fix=q3fix,maxread=maxread,
+                         usereference=usereference,refonly=refonly,seq=seq,unlock=unlock,**kws)
 
-    writelog(logfile,'AP3D: '+os.path.basename(planfile)+('%8.2f' % time.time()))
+    utils.writelog(logfile,'AP3D: '+os.path.basename(planfile)+('%8.2f' % time.time()))
 
     print('AP3D finished')
     dt = time.time()-t0
-    print('dt = %10.1f sec ' % dt)
+    print('dt = %.1f sec ' % dt)
 
             
