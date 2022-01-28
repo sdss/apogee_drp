@@ -790,8 +790,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         #pdb.set_trace()
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
-                        color = cmap(idome)
-                        ax.plot(xarr, onedflux, color)
+                        mycolor = cmap(idome)
+                        ax.plot(xarr, onedflux, color=mycolor)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
