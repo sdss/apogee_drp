@@ -802,7 +802,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
                         mycolor = cmap(idome)
                         gd, = np.where(onedflux > 100)
-                        ax.plot(xarr[gd], onedflux[gd], mycolor)
+                        ax.plot(xarr[gd], onedflux[gd], color=mycolor)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
