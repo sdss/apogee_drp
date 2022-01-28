@@ -766,6 +766,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             #pdb.set_trace()
 
+            dillum = np.zeros((ndome, nchips, 300), dtype=np.float64)
+            colors = np.empty(ndome)
+            for idome in range(ndome):
+                colors[idome] = cmap(idome)
+                for ichip in range(nchips):
+                    chp = 'c'
+                    if ichip == 1: chp = 'b'
+                    if ichip == 2: chp = 'a'
+                    file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
+                    file1d = file1d.replace('1D-', '1D-' + chp + '-')
+                    if os.path.exists(file1d):
+                        oned = fits.getdata(file1d)
+                        dillum[idome, ichip] = np.nanmedian(oned, axis=1)[::-1]
+
             for ichip in range(nchips):
                 chip = chips[ichip]
                 ax = plt.subplot2grid((nchips, 1), (ichip, 0))
@@ -785,20 +799,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cax = ax_divider.append_axes("top", size="7%", pad="2%")
                     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
                     cax.xaxis.set_ticks_position("top")
+                    cax.minorticks_on()
+                    cax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                    cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
 
-                for idome in range(ndome):
-                    chp = 'c'
-                    if ichip == 1: chp = 'b'
-                    if ichip == 2: chp = 'a'
-                    file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
-                    file1d = file1d.replace('1D-', '1D-' + chp + '-')
-                    if os.path.exists(file1d):
-                        #pdb.set_trace()
-                        oned = fits.getdata(file1d)
-                        onedflux = np.nanmedian(oned, axis=1)[::-1]
-                        mycolor = cmap(idome)
-                        gd, = np.where(onedflux > 100)
-                        ax.scatter(xarr[gd], onedflux[gd], c=mycolor, marker='o', s=10)
+                gd, = np.where(onedflux > 100)
+                ax.scatter(xarr[gd], onedflux[gd], c=mycolor, cmap=mycmap, marker='o', s=10)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
