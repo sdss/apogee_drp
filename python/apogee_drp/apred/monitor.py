@@ -753,7 +753,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             gd, = np.where(allexp[dome]['MJD'] == 59557)
             gdcal = allexp[dome][gd]
             ndome = len(gdcal)
-            pdb.set_trace()
 
             mycmap = 'inferno_r'
             cmap = cmaps.get_cmap(mycmap, ndome)
