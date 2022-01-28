@@ -775,7 +775,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == 0: ax.set_ylabel(r'Median Flux')
                 if ichip > 0: ax.axes.yaxis.set_ticklabels([])
 
-                for idome in range(10):
+                for idome in range(50):
                     chp = 'c'
                     if ichip == 1: chp = 'b'
                     if ichip == 2: chp = 'a'
