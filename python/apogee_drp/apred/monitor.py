@@ -741,28 +741,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makeplots is True:
         ###########################################################################################
-        # dillum.png
-        # Time series plot of median dome flat flux from cross sections across fibers
-        plotfile = specdir5 + 'monitor/' + instrument + '/dillum.png'
+        # dillum59557.png
+        # Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
+        plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(30,16))
-            ymax = 13000
-            ymin = 0 - ymax*0.05
-            yspan = ymax - ymin
+            fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
-            gdcal = allexp[dome][uind]
-            gd, = np.where(gdcal['MJD'] >= 59247)
-            gdcal = gdcal[gd]
-            umjd = umjd[gd]
+            gd, = np.where(allexp[dome]['MJD'] == 59557)
+            gdcal = allexp[dome][gd]
             ndome = len(gdcal)
 
             mycmap = 'inferno_r'
             cmap = cmaps.get_cmap(mycmap, ndome)
-            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
 
             #pdb.set_trace()
 
@@ -770,8 +764,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 chip = chips[ichip]
                 ax = plt.subplot2grid((nchips, 1), (ichip, 0))
                 ax.set_xlim(0, 301)
-                #ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                #ax.set_ylim(0, 27000)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+                ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
@@ -788,6 +783,83 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cax.minorticks_on()
                     cax.xaxis.set_major_locator(ticker.MultipleLocator(50))
                     cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+                    cax.xaxis.set_label_position('top') 
+                    cax.set_xlabel('MJD')
+
+                for idome in range(ndome):
+                    chp = 'c'
+                    if ichip == 1: chp = 'b'
+                    if ichip == 2: chp = 'a'
+                    file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
+                    file1d = file1d.replace('1D-', '1D-' + chp + '-')
+                    pdb.set_trace()
+                    if os.path.exists(file1d):
+
+                        oned = fits.getdata(file1d)
+                        onedflux = np.nanmedian(oned, axis=1)[::-1]
+                        mycolor = cmap(idome)
+                        gd, = np.where(onedflux > 100)
+                        ax.plot(xarr[gd], onedflux[gd], color=mycolor)
+                        #ax.hist(onedflux, 300, color=mycolor, fill=False)
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+
+            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        return
+
+        ###########################################################################################
+        # dillum.png
+        # Time series plot of median dome flat flux from cross sections across fibers
+        plotfile = specdir5 + 'monitor/' + instrument + '/dillum.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,22))
+            xarr = np.arange(0, 300, 1) + 1
+
+            umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
+            gdcal = allexp[dome][uind]
+            gd, = np.where(gdcal['MJD'] >= 59247)
+            gdcal = gdcal[gd]
+            umjd = umjd[gd]
+            umjdfrac = umjd / np.max(umjd)
+            ndome = len(gdcal)
+
+            mycmap = 'inferno_r'
+            cmap = cmaps.get_cmap(mycmap, ndome)
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
+
+            #pdb.set_trace()
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+                ax = plt.subplot2grid((nchips, 1), (ichip, 0))
+                ax.set_xlim(0, 301)
+                #ax.set_ylim(0, 27000)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+                ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                if ichip == 0:
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("top", size="7%", pad="2%")
+                    cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+                    cax.xaxis.set_ticks_position("top")
+                    cax.minorticks_on()
+                    cax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                    cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+                    cax.xaxis.set_label_position('top') 
+                    cax.set_xlabel('MJD')
 
                 for idome in range(ndome):
                     chp = 'c'
@@ -801,16 +873,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
                         mycolor = cmap(idome)
                         gd, = np.where(onedflux > 100)
-                        ax.scatter(xarr[gd], onedflux[gd], c=mycolor, cmap=mycmap, marker='o', s=10)
+                        ax.plot(xarr[gd], onedflux[gd], color=mycolor)
+                        #ax.hist(onedflux, 300, color=mycolor, fill=False)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
 
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.92,hspace=0.08,wspace=0.1)
+            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
             plt.savefig(plotfile)
             plt.close('all')
-
-        return
 
         ###########################################################################################
         # sciobs.png
