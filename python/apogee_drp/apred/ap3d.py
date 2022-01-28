@@ -14,6 +14,7 @@ import os
 import sys
 import numpy as np
 import warnings
+import time
 from astropy.io import fits
 from astropy.table import Table, Column
 from astropy import modeling
@@ -28,6 +29,7 @@ from scipy.interpolate import interp1d
 #from apogee.utils import yanny, apload
 #from sdss_access.path import path
 from dlnpyutils import bindata
+from ..utils import plan,apload
 
 # Ignore these warnings, it's a bug
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
@@ -2506,12 +2508,12 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
     print('')
     print(str(nplanfiles),' PLAN files')
 
-    chiptag = ['a','b','c']
+    chips = ['a','b','c']
 
     #--------------------------------------------
     # Loop through the unique PLATE Observations
     #--------------------------------------------
-    for i in range(planfiles):
+    for i in range(nplanfiles):
         t1 = time.time()
 
         planfile = planfiles[i]
@@ -2526,30 +2528,23 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
         print('')
         print('Plan file information:')
         planstr = plan.load(planfile,np=True,verbose=True)
-        logfile = plan.load('Diag',plate=planstr['plateid'],mjd=planstr['mjd'])
-        if 'apred_ver' not in planstr:
-            print('apred_ver not found in planfile')
+        if 'apred_vers' not in planstr:
+            print('apred_vers not found in planfile')
             continue
         if 'telescope' not in planstr:
             print('telescope not found in planfile')
             continue
-        load = apload.ApLoad(apred=planstr['apred_ver'],telescope=planstr['telescope'])
-        
+        load = apload.ApLoad(apred=planstr['apred_vers'],telescope=planstr['telescope'])
+        logfile = load.filename('Diag',plate=planstr['plateid'],mjd=planstr['mjd'])        
+
         # Check that we have all of the calibration IDs in the plan file
         ids = ['detid','darkid','flatid','bpmid','littrowid','persistid','persistmodelid']
-        calid = ['Detector','Dark','Flat','BPM','Littrow','Persist','Persistmodel']
+        calid = ['Detector','Dark','Flat','BPM','Littrow','Persist','PersistModel']
         for id1,calid1 in zip(ids,calid):
             if id1 not in planstr:
                 print(id1+' not in planstr')
                 continue
-            # Does the file exist
-            calfile = load.filename(calid1,num=planstr[id1],chips=True)
-            if load.exists(calid1,num=planstr[id1])==False:
-                print(calfile+' NOT found')
-                continue
-            
-        import pdb; pdb.set_trace()        
-
+            print('%-10s %s' % (str(id1)+':',planstr[id1]))
         
         # Try to make the required calibration files (if not already made)
         # Then check if the calibration files exist
@@ -2628,12 +2623,20 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
         #    if min(histtest) == 0:
         #        bd = where(histtest == 0,nbd)
         #        if nbd > 0 then stop,'halt: ',histfiles[bd],' NOT FOUND'
+
+
+        makehist(planstr'mjd'],dark=planstr['darkid'])
+        histfiles = apogee_filename('Hist',mjd=planstr.mjd,chip=chiptag)
+        histtest = FILE_TEST(histfiles)
+        if min(histtest) == 0:
+            bd = where(histtest == 0,nbd)
+            if nbd > 0 then stop,'halt: ',histfiles[bd],' NOT FOUND'
   
         # Are there enough files
-        if 'apexp' not in planstr:
+        if 'APEXP' not in planstr:
             print('APEXP not found in planstr')
             continue
-        nframes = len(planstr['apexp'])
+        nframes = len(planstr['APEXP'])
         if nframes < 1:
             print('No frames to process')
             continue
@@ -2641,18 +2644,18 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
         # Process each frame
         #-------------------
         for j in range(nframes):
-            framenum = planstr['apex']['name'][j]
-            rawfile = load.filename('R',num=planstr['apex']['name'][j],chips=True)
-            chipfiles = [rawfile.replace('R-','R-'+ch) for ch in chips]
+            framenum = planstr['APEXP']['name'][j]
+            rawfile = load.filename('R',num=planstr['APEXP']['name'][j],chips=True)
+            chipfiles = [rawfile.replace('R-','R-'+ch+'-') for ch in chips]
             if load.exists('R',num=framenum)==False:
                 print(rawfile+' NOT found')
                 continue
 
             print('')
-            print('------------------------------------------------------')
+            print('--------------------------------------------------------')
             print(str(j+1),'/',str(nframes),'  Processing files for Frame Number >>',str(framenum),'<<')
             seq = str(j+1)+'/'+str(nframes)
-            print('------------------------------------------------------')
+            print('--------------------------------------------------------')
             
             # Determine file TYPE
             #----------------------
@@ -2660,10 +2663,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
             # flat
             # lamps
             # object frame
-            #exptype = str(info[0].exptype,2)
-            exptype = planstr['apexp']['flavor'][j]
-
-            #obstype = SXPAR(head,'OBSTYPE',count=nobs)
+            exptype = planstr['APEXP']['flavor'][j]
             if exptype == '' or exptype == '0':
                 error = 'NO OBSTYPE keyword found for '+str(framenum)
                 print(error)
@@ -2676,98 +2676,37 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 print('This is a DARK frame.  This should be processed with APMKSUPERDARK.PRO')
                 continue
 
-            # LOOP through the file types
-
-            # Settings to use for each
-            
+            # Settings to use for each exposure type            
+            kws = {'usedet':True,'usebpm':True,'usedark':True,'useflat':True,'uselittrow':True,
+                   'usepersist':True,'dopersistcorr':False,'nocr':True,'crfix':False,'criter':False,
+                   'satfix':True,'uptheramp':False,'nfowler':1,'rd3satfix':False}
             # Flat
             if exptype=='psf':
                 print('This is a FLAT frame')
-                usedet = 1
-                usebpm = 1
-                usedark = 1
-                useflat = 1
-                uselittrow = 1
-                usepersist = 1
-                dopersistcorr = 0
-                nocr = 1
-                crfix = 0
-                criter = 0
-                satfix = 1
-                uptheramp = 0
-                nfowler =  1
-                rd3satfix = 0
-                #if nreads == 3 then rd3satfix=1
+                # default settings
             # Lamp
             elif exptype=='lamp':
                 print('This is a LAMP frame')
-                usedet = 1
-                usebpm = 1
-                usedark = 1
-                useflat = 1
-                uselittrow = 1
-                usepersist = 1
-                dopersistcorr = 0
-                nocr = 0
-                crfix = 1
-                satfix = 1
-                uptheramp = 0
-                nfowler = 1
-                rd3satfix = 0
-                #if nreads == 3 then rd3satfix=1
+                kws['nocr'] = False
+                kws['crfix'] = True
             # Wave
             elif exptype=='wave':
                 print('This is a WAVE frame')
-                usedet = 1
-                usebpm = 1
-                usedark = 1
-                useflat = 1
-                uselittrow = 1
-                usepersist = 1
-                dopersistcorr = 0
-                nocr = 0
-                crfix = 1
-                criter = 0
-                satfix = 1
-                uptheramp = 0
-                nfowler = 1
-                rd3satfix = 0
-                #if nreads == 3 then rd3satfix=1
+                kws['nocr'] = False
+                kws['crfix'] = True
             # Object
             elif exptype=='object':
                 print('This is an OBJECT frame')
-                usedet = 1
-                usebpm = 1
-                usedark = 1
-                useflat = 1
-                uselittrow = 1
-                usepersist = 1
-                dopersistcorr = 1
-                nocr = 0
-                if planstr['platetype'] == 'single': nocr=1
-                crfix = 1
-                criter = 0
-                satfix = 1
-                uptheramp = 1
-                nfowler = 0
-                rd3satfix = 0
+                kws['dopersistcorr'] = True
+                kws['nocr'] = False
+                kws['crfix'] = True
+                if planstr['platetype'] == 'single': kws['nocr']=True
+                kws['uptheramp'] = True
+                kws['nflower'] = 0
             # Flux
             elif exptype=='flux':
                 print('This is an FLUX frame')
-                usedet = 1
-                usebpm = 1
-                usedark = 1
-                useflat = 1
-                uselittrow = 1
-                usepersist = 1
-                dopersistcorr = 0
-                nocr = 1
-                crfix = 0
-                criter = 0
-                satfix = 1
-                uptheramp = 0
-                nfowler = 1
-                rd3satfix = 0
+                # default settings
             else:
                 print(exptype+' NOT SUPPORTED')
                 continue
@@ -2784,6 +2723,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 naxis = head.get('NAXIS')
                 try:
                     dumim,dumhead = fits.getdata(chfile,1,header=True)
+                    read_message = ''
                 except:
                     read_message = 'problem'
                 if naxis != 3 and read_message != '':
@@ -2793,34 +2733,64 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
 
                 # Chip specific calibration filenames      
                 detcorr,bpmcorr,darkcorr,flatcorr,littrowcorr,persistcorr = None,None,None,None,None,None
-                if usedet and planstr['detid'] != 0:
-                      detcorr = detfiles[k]
-                if usebpm and planstr['bpmid'] != 0:
-                      bpmcorr = bpmfiles[k]
-                if usedark and planstr['darkid'] != 0:
-                      darkcorr = darkfiles[k]
-                if useflat and planstr['flatid'] != 0:
-                      flatcorr = flatfiles[k]
-                if uselittrow and planstr['littrowid'] != 0 and k == 1:
-                      littrowcorr = littrowfiles
-                if usepersist and planstr['persistid'] != 0:
-                      persistcorr = persistfiles[k]
-                if dopersistcorr and (planstr['persistmodelid'] != 0) and (chips[k] == 'c'):
-                    #        and (chiptag[k] == 'b' or (chiptag[k] == 'c' and planstr.mjd < 56860L)):
-                    persistmodelcorr = persistmodelfiles[k-1]
-                    histcorr = histfiles[k]
-                else:
-                    persistmodelcorr = None
+                ids = ['detid','darkid','flatid','bpmid','littrowid','persistid','persistmodelid']
+                calid = ['Detector','Dark','Flat','BPM','Littrow','Persist','PersistModel']
+                calflag = ['usedet','usedark','useflat','usebpm','uselittrow','usepersist','dopersistcorr']
+                gotcals = True
+                for id1,calid1,calflag1 in zip(ids,calid,calflag):
+                    caltype1 = id1[:-2]
+                    calfile = None
+                    if kws[calflag1] and planstr[id1]!=0:
+                        if calid1=='Littrow' and chips[k]!='b':
+                            continue
+                        if calid1=='PersistMode' and chips[k]!='c':
+                            continue
+                        calfile = load.filename(calid1,num=planstr[id1],chips=True)
+                        calfile = calfile.replace(calid1+'-',calid1+'-'+chips[k]+'-')
+                        # Does the file exist
+                        if load.exists(calid1,num=planstr[id1])==False:
+                            print(calfile+' NOT found')
+                            gotcals = False
+                            continue
+                    kws[caltype1+'corr'] = calfile
+                # Do not have all the cals
+                if gotcals==False:
+                    print('Do not have all the calibration files that we need')
+                    continue
+
+                import pdb; pdb.set_trace()
+
+                # Do not have all the cals
+                
+                #if usedet and planstr['detid'] != 0:
+                #      detcorr = detfiles[k]
+                #if usebpm and planstr['bpmid'] != 0:
+                #      bpmcorr = bpmfiles[k]
+                #if usedark and planstr['darkid'] != 0:
+                #      darkcorr = darkfiles[k]
+                #if useflat and planstr['flatid'] != 0:
+                #      flatcorr = flatfiles[k]
+                #if uselittrow and planstr['littrowid'] != 0 and k == 1:
+                #      littrowcorr = littrowfiles
+                #if usepersist and planstr['persistid'] != 0:
+                #      persistcorr = persistfiles[k]
+                #if dopersistcorr and (planstr['persistmodelid'] != 0) and (chips[k] == 'c'):
+                #    #        and (chiptag[k] == 'b' or (chiptag[k] == 'c' and planstr.mjd < 56860L)):
+                #    persistmodelcorr = persistmodelfiles[k-1]
+                #    histcorr = histfiles[k]
+                #else:
+                #    persistmodelcorr = None
+
                 # note this q3fix still fails for apo1m flat/PSF processing, which calls ap3dproc directly
                 q3fix = False
                 if 'q3fix' in planstr:
-                    if k == 2 and planstr.q3fix == 1:
+                    if k==2 and planstr['q3fix']==1:
                         q3fix = True
-                if k == 2 and planstr['mjd'] > 56930 and planstr['mjd'] < 57600:
+                if k==2 and planstr['mjd'] > 56930 and planstr['mjd'] < 57600:
                     q3fix = True
 
                 if 'usereference' in planstr:
-                      usereference = planstr['usereference']
+                      usereference = bool(planstr['usereference'])
                 else:
                       usereference = True
                 if 'maxread' in planstr:

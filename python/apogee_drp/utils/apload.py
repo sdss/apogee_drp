@@ -769,7 +769,7 @@ class ApLoad:
             mjd = int(self.cmjd(num))
         lroot = root.lower()
 
-        if lroot=='r' or lroot=='2d' or lroot=='1d' or lroot=='dark' or lroot=='flat' or lroot=='bpm' or lroot=='lsf':
+        if lroot=='r' or lroot=='2d' or lroot=='1d' or lroot=='bpm' or lroot=='lsf':
             prefix = lroot.upper()
         elif lroot=='detector':
             prefix = 'Detector'
@@ -791,6 +791,9 @@ class ApLoad:
         for p in prefix:
             outfile = self.filename(p,num=num,mjd=mjd,chips=True,**kwargs)
             outfiles += [outfile.replace(p+'-',p+'-'+ch+'-') for ch in chips]
+        # Only chip b for Littrow
+        if lroot=='littrow':
+            outfiles = [outfiles[1]]
         # Check that all of the necesary files exist
         files_exists = [os.path.exists(o) for o in outfiles]
         if np.sum(files_exists)==len(files_exists):
