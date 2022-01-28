@@ -761,7 +761,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ndome = len(gdcal)
 
             mycmap = 'inferno'
-            cmap = cmaps.get_cmap(mycmap, ndome)
+            #cmap = cmaps.get_cmap(mycmap, ndome)
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.normalize(min=np.min(umjd), max=np.max(umjd)))
 
             #pdb.set_trace()
 
@@ -779,6 +780,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                if ichip == 0:
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("top", size="7%", pad="2%")
+                    cb2 = ax.colorbar(sm, cax=cax, orientation="horizontal")
 
                 for idome in range(ndome):
                     chp = 'c'
