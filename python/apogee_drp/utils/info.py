@@ -10,7 +10,7 @@ from . import apload
 from astropy.io import fits
 
 
-def expinfo(observatory=None,mjd5=None,files=None,expnum=None,apred='daily'):
+def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
     """
     Get header information about raw APOGEE files.
     This program can be run with observatory+mjd5 or
@@ -46,7 +46,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None,apred='daily'):
     if (mjd5 is not None and expnum is not None):
         raise ValueError('Input either observatory+mjd5 or observatory+expnum')
 
-    load = apload.ApLoad(apred=apred,telescope='apo25m')
+    load = apload.ApLoad(apred='daily',telescope='apo25m')
 
     # Get the exposures info for this MJD5        
     if files is None and expnum is None:

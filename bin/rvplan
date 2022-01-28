@@ -80,7 +80,9 @@ if __name__ == '__main__' :
     visitsum = Table(fits.getdata(apvisitsumfile,1))
     # Remove rows with missing/blank apogee_ids
     bd, = np.where((np.char.array(visitsum['APOGEE_ID']).strip()=='') | 
-                   (np.char.array(visitsum['APOGEE_ID']).strip()=='None'))
+                   (np.char.array(visitsum['APOGEE_ID']).strip()=='None') | 
+                   (np.char.array(visitsum['APOGEE_ID']).strip()=='2MNone') |
+                   (np.char.array(visitsum['APOGEE_ID']).strip()=='2M'))
     if len(bd)>0:
         visitsum = np.delete(visitsum,bd)
     nstar = len(visitsum)

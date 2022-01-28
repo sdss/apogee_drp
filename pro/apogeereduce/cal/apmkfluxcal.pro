@@ -19,6 +19,7 @@
 ;  /reproc    Reprocess the raw and 2D files if they already exist.
 ;  /clobber   Overwrite the previous apFlux calibration file if it
 ;               exists.
+;  /unlock    Delete lock file and start fresh.
 ;  /pl        Plot the data.
 ;
 ; OUTPUTS:
@@ -30,7 +31,8 @@
 ;-
 
 pro apmkfluxcal,flatid,outdir=outdir0,bbtemp=bbtemp,waveid=waveid,reproc=reproc,$
-                clobber=clobber,absolute=absolute,pl=pl,error=error,collapse=collapse
+                clobber=clobber,absolute=absolute,pl=pl,error=error,collapse=collapse,$
+                unlock=unlock
 
 t0 = systime(1)
 
@@ -178,7 +180,8 @@ if keyword_set(collapse) then begin
       ;  up the ramp sampling
       apgundef,output,head
       AP3DPROC,file,outfile,detcorr=detcorr,bpmcorr=bpmcorr,darkcorr=darkcorr,flatcorr=flatcorr,$
-               /crfix,criter=0,/satfix,/uptheramp,error=procerror,/clobber,rd3satfix=rd3satfix
+               /crfix,criter=0,/satfix,/uptheramp,error=procerror,/clobber,rd3satfix=rd3satfix,$
+               unlock=unlock
 
     ; Already processed
     endif else begin
@@ -219,7 +222,7 @@ if total(file_test(outfiles1d)) ne 3 or keyword_set(reproc) then begin
   inpfile = outdir1d+'/'+info[0].fid8
 
   extract_type = 3  ; Gaussian PSF fitting for now
-  AP2DPROC,inpfile,psffile,extract_type,outdir=outdir1d
+  AP2DPROC,inpfile,psffile,extract_type,outdir=outdir1d,unlock=unlock
 
 ; Previously processed
 endif else begin
@@ -400,6 +403,13 @@ For i=0,2 do begin
   ; set bad pixels to NaN
   bd=where(frame.(i).mask and badmask())
   ratio[bd]=!values.f_nan
+
+  ;; Use average of neighbors for FPI fibers 75 and 225
+  if mjd5 ge 59556 then begin
+    ratio[*,75] = 0.5*(ratio[*,74]+ratio[*,76])
+    ratio[*,225] = 0.5*(ratio[*,224]+ratio[*,226])
+  endif
+
   ; interpolate over the Littrow ghost using a low order polynomial fit to the region around it
   for j=0,nfibers-1 do begin
     bd=where(frame.(i).mask[*,j] and maskval('LITTROW_GHOST'),nbd)

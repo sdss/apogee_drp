@@ -111,11 +111,11 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     for inum,num in enumerate(nums) :
         print(str(inum+1)+'/'+str(len(nums))+' '+str(num))
         # load 1D frame
-        filename = load.filename('1D',num=num,mjd=load.cmjd(num),chips=True)
-        print(filename)
+        #filename = load.filename('1D',num=num,mjd=load.cmjd(num),chips=True)
+        #print(filename)
         frame = load.ap1D(num)
         out = load.filename('Wave',num=num,chips=True)
-        print(num,frame)
+        #print(num,frame)
         if frame is not None and frame != 0 :
             # get correct arclines
             if frame['a'][0].header['LAMPUNE']:
@@ -298,6 +298,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
 
     # loop over requested rows
     for irow,row in enumerate(rows) :
+        print('---',str(irow+1)+'/'+str(len(rows)),'row='+str(row),'---')
         # set up independent variable array with pixel, chip, groupid, and dependent variable (wavelength)
         thisrow = np.where((linestr['row'] == row) & (linestr['peak'] > 100) & (linestr['pixel']>=0) &
                            (linestr['pixel']<=2047) & (linestr['bad']==0))[0]
@@ -325,7 +326,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             # Run all exposures of first group
             group0, = np.where(np.array(framesgroup)==0)
             num0 = nums[group0]
-            print('running wavecal for: ', num0,maxgroup,ngroup,' row: ',row)
+            print('running wavecal for first group: ', num0,maxgroup,ngroup,' row: ',row)
             pars0,linestr1 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,reject=reject,init=init,verbose=verbose)
             pars[:npoly] = pars0[:npoly]
             for igroup in range(ngroup): pars[npoly+igroup*3:npoly+(igroup+1)*3] = pars0[npoly:npoly+3]
@@ -449,6 +450,10 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 if not hard :
                     import pdb; pdb.set_trace()
 
+        # Final fit values
+        print('res: ',np.median(res),res[gd].std())
+        print('pars: ',pars)
+
         # Save quality information
         if len(gd)>0:
             linestr['used'][thisrow[gd]] = 1
@@ -469,7 +474,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             j = np.where(x[2,gd] == igroup)[0]
             rms[row,igroup] = res[gd[j]].std()
             sig[row,igroup] = np.median(np.abs(res[gd[j]]))
-    
+
     # now refine the solution by averaging zeropoint across all groups and
     # by fitting across different rows to require a smooth solution
     if ngroup > 1: newpars,newwaves = refine(allpars)
@@ -481,7 +486,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         out = os.path.dirname(out)+'/apWave-'+str(name)+'.fits'
     print('Saving to ',out)
     save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,framesgroup=framesgroup,
-                rms=rms,sig=sig,allpars=allpars,linestr=linestr)
+                framesdithpix=framesdithpix,rms=rms,sig=sig,allpars=allpars,linestr=linestr)
 
     if plot: 
         plot_apWave([name],apred=vers,inst=inst,hard=hard)
@@ -643,7 +648,7 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
 
 
 def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],framesgroup=[],
-                rms=None,sig=None,allpars=None,linestr=None):
+                framesdithpix=[],rms=None,sig=None,allpars=None,linestr=None):
     """ Write the apWave files in standard format given the wavecal parameters
     """
     x = np.zeros([3,2048])
@@ -693,10 +698,13 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],fram
             hdu.append(fits.ImageHDU(allpars))
         else:
             hdu.append(fits.ImageHDU(None))
-        if len(frames)>0 and len(framesgroup)>0:
-            ftable = np.zeros(len(frames),dtype=np.dtype([('frame',np.str,8),('group',int)]))
+        if len(frames)>0:
+            ftable = np.zeros(len(frames),dtype=np.dtype([('frame',np.str,8),('group',int),('dithpix',float)]))
             ftable['frame'] = frames
-            ftable['group'] = framesgroup
+            if len(framesgroup)>0:
+                ftable['group'] = framesgroup
+            if len(framesdithpix)>0:
+                ftable['dithpix'] = framesdithpix
             hdu.append(fits.table_to_hdu(Table(ftable)))
         else:
             hdu.append(fits.ImageHDU(None))
@@ -707,6 +715,7 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],fram
         Table(linestr).write(out.replace('.fits','_lines.fits'),overwrite=True)
     # Generate empty .dat file
     if out is not None: open(out.replace('.fits','.dat'),'a').close()
+    
     return allhdu
 
 def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False):
@@ -1349,12 +1358,12 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
                 frame[chip][0].header['WAVEFILE'] = load.allfile('Wave',num=waveid,chips=True)
                 frame[chip][0].header['WAVEHDU'] = 5
 
-                hdu.append(frame[chip][0])
-                hdu.append(frame[chip][1])
-                hdu.append(frame[chip][2])
-                hdu.append(frame[chip][3])
-                hdu.append(allhdu[ichip][2])
-                hdu.append(allhdu[ichip][1])
+                hdu.append(frame[chip][0])    # 0-header only
+                hdu.append(frame[chip][1])    # 1-flux
+                hdu.append(frame[chip][2])    # 2-error
+                hdu.append(frame[chip][3])    # 3-mask
+                hdu.append(allhdu[ichip][2])  # 4-chipwave [300,2048]
+                hdu.append(allhdu[ichip][1])  # 5-chippars [14,300]
                 hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
 
         # Plots

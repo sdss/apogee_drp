@@ -48,7 +48,29 @@ def bitmask(mask):
 
 
 def getinfo(num,apred,telescope):
-    """ Get the info needed to check various things."""
+    """
+    Get the info needed to check various things.
+
+    Parameters
+    ----------
+    num : int
+       APOGEE 8-digit exposure number.
+    apred : str
+       APOGEE reduction version, e.g. 'daily'.
+    telescope : str
+       Telescope name: 'apo25m' or 'lco25m'.
+
+    Returns
+    -------
+    expinfo : dict
+       Dictionary with information about an exposure.
+
+    Usage
+    -----
+    
+    expinfo = getinfo(40300010,'daily','apo25m')
+
+    """
 
     observatory = telescope[0:3]
     expinfo = info.expinfo(observatory=observatory,expnum=num)
@@ -80,7 +102,30 @@ def getinfo(num,apred,telescope):
 
 
 def check_dark(num,apred,telescope):
-    """ check DARK exposure."""
+    """
+    Perform quality checks on a DARK exposure.
+
+    Parameters
+    ----------
+    num : int
+       APOGEE 8-digit exposure number.
+    apred : str
+       APOGEE reduction version, e.g. 'daily'.
+    telescope : str
+       Telescope name: 'apo25m' or 'lco25m'.
+
+    Returns
+    -------
+    mask : int
+       Bitmask of "bad" QA values (see bitmask()) for what
+        the values mean.  A "good" exposure will have mask=0.
+
+    Usage
+    -----
+    
+    mask = check_dark(40300010,'daily','apo25m')
+
+    """
 
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -118,7 +163,30 @@ def check_dark(num,apred,telescope):
 
 
 def check_object(num,apred,telescope):
-    """ check OBJECT exposure."""
+    """
+    Perform quality checks on a OBJECT exposure.
+
+    Parameters
+    ----------
+    num : int
+       APOGEE 8-digit exposure number.
+    apred : str
+       APOGEE reduction version, e.g. 'daily'.
+    telescope : str
+       Telescope name: 'apo25m' or 'lco25m'.
+
+    Returns
+    -------
+    mask : int
+       Bitmask of "bad" QA values (see bitmask()) for what
+        the values mean.  A "good" exposure will have mask=0.
+
+    Usage
+    -----
+    
+    mask = check_object(40300010,'daily','apo25m')
+
+    """
 
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -138,11 +206,11 @@ def check_object(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for object exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
@@ -164,7 +232,30 @@ def check_object(num,apred,telescope):
 
 
 def check_domeflat(num,apred,telescope):
-    """ check DOMEFLAT exposure."""
+    """
+    Perform quality checks on a DOMEFLAT exposure.
+
+    Parameters
+    ----------
+    num : int
+       APOGEE 8-digit exposure number.
+    apred : str
+       APOGEE reduction version, e.g. 'daily'.
+    telescope : str
+       Telescope name: 'apo25m' or 'lco25m'.
+
+    Returns
+    -------
+    mask : int
+       Bitmask of "bad" QA values (see bitmask()) for what
+        the values mean.  A "good" exposure will have mask=0.
+
+    Usage
+    -----
+    
+    mask = check_domeflat(40300010,'daily','apo25m')
+
+    """
 
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -184,11 +275,11 @@ def check_domeflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for domeflat exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
@@ -207,7 +298,30 @@ def check_domeflat(num,apred,telescope):
 
 
 def check_quartzflat(num,apred,telescope):
-    """ check QUARTZFLAT exposure."""
+    """
+    Perform quality checks on a QUARTZFLAT exposure.
+
+    Parameters
+    ----------
+    num : int
+       APOGEE 8-digit exposure number.
+    apred : str
+       APOGEE reduction version, e.g. 'daily'.
+    telescope : str
+       Telescope name: 'apo25m' or 'lco25m'.
+
+    Returns
+    -------
+    mask : int
+       Bitmask of "bad" QA values (see bitmask()) for what
+        the values mean.  A "good" exposure will have mask=0.
+
+    Usage
+    -----
+    
+    mask = check_quartzflat(40300010,'daily','apo25m')
+
+    """
 
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -227,16 +341,16 @@ def check_quartzflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong APOGEE shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for quartzflat exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
-    if expinfo['calshutter'] is not None:
+    if expinfo['calshutter'] != '':
         # shutter must be open for quartzflat exposures
         if expinfo['calshutter']==False:
             mask |= 2**3            
@@ -255,7 +369,30 @@ def check_quartzflat(num,apred,telescope):
 
 
 def check_arclamp(num,apred,telescope):
-    """ check ARCLAMP exposure."""
+    """
+    Perform quality checks on a ARCLAMP exposure.
+
+    Parameters
+    ----------
+    num : int
+       APOGEE 8-digit exposure number.
+    apred : str
+       APOGEE reduction version, e.g. 'daily'.
+    telescope : str
+       Telescope name: 'apo25m' or 'lco25m'.
+
+    Returns
+    -------
+    mask : int
+       Bitmask of "bad" QA values (see bitmask()) for what
+        the values mean.  A "good" exposure will have mask=0.
+
+    Usage
+    -----
+    
+    mask = check_arclamp(40300010,'daily','apo25m')
+
+    """
 
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -275,16 +412,16 @@ def check_arclamp(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for arclamp exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
-    if expinfo['calshutter'] is not None:
+    if expinfo['calshutter'] != '':
         # shutter must be open for arclamp exposures
         if expinfo['calshutter']==False:
             mask |= 2**3            
@@ -318,7 +455,30 @@ def check_arclamp(num,apred,telescope):
 
 
 def check_fpi(num,apred,telescope):
-    """ check FPI exposure."""
+    """
+    Perform quality checks on a FPI exposure.
+
+    Parameters
+    ----------
+    num : int
+       APOGEE 8-digit exposure number.
+    apred : str
+       APOGEE reduction version, e.g. 'daily'.
+    telescope : str
+       Telescope name: 'apo25m' or 'lco25m'.
+
+    Returns
+    -------
+    mask : int
+       Bitmask of "bad" QA values (see bitmask()) for what
+        the values mean.  A "good" exposure will have mask=0.
+
+    Usage
+    -----
+    
+    mask = check_fpi(40300010,'daily','apo25m')
+
+    """
 
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -338,16 +498,16 @@ def check_fpi(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for FPI exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
-    if expinfo['calshutter'] is not None:
+    if expinfo['calshutter'] != '':
         # shutter must be open for fpi exposures
         if expinfo['calshutter']==False:
             mask |= 2**3            
@@ -367,7 +527,30 @@ def check_fpi(num,apred,telescope):
 
 
 def check_internalflat(num,apred,telescope):
-    """ check INTERNALFLAT exposure."""
+    """
+    Perform quality checks on a INTERNALFLAT exposure.
+
+    Parameters
+    ----------
+    num : int
+       APOGEE 8-digit exposure number.
+    apred : str
+       APOGEE reduction version, e.g. 'daily'.
+    telescope : str
+       Telescope name: 'apo25m' or 'lco25m'.
+
+    Returns
+    -------
+    mask : int
+       Bitmask of "bad" QA values (see bitmask()) for what
+        the values mean.  A "good" exposure will have mask=0.
+
+    Usage
+    -----
+    
+    mask = check_internalflat(40300010,'daily','apo25m')
+
+    """
 
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -387,11 +570,11 @@ def check_internalflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open good internalflat exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
@@ -408,7 +591,30 @@ def check_internalflat(num,apred,telescope):
 
 
 def check_skyflat(num,apred,telescope):
-    """ check SKYFLAT exposure."""
+    """
+    Perform quality checks on a SKYFLAT exposure.
+
+    Parameters
+    ----------
+    num : int
+       APOGEE 8-digit exposure number.
+    apred : str
+       APOGEE reduction version, e.g. 'daily'.
+    telescope : str
+       Telescope name: 'apo25m' or 'lco25m'.
+
+    Returns
+    -------
+    mask : int
+       Bitmask of "bad" QA values (see bitmask()) for what
+        the values mean.  A "good" exposure will have mask=0.
+
+    Usage
+    -----
+    
+    mask = check_skyflat(40300010,'daily','apo25m')
+
+    """
 
     mask = 0
     load = apload.ApLoad(apred=apred,telescope=telescope)
@@ -428,11 +634,11 @@ def check_skyflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] is not None:
+    if expinfo['gangstate'] != '':
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '':
         # shutter must be open for skyflat exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
@@ -453,6 +659,36 @@ def check_skyflat(num,apred,telescope):
 
 
 def check(nums,apred,telescope,verbose=True,logger=None):
+    """
+    Perform quality checks on a list of exposures.
+
+    Parameters
+    ----------
+    nums : list
+       List of APOGEE 8-digit exposure numbers.
+    apred : str
+       APOGEE reduction version, e.g. 'daily'.
+    telescope : str
+       Telescope name: 'apo25m' or 'lco25m'.
+    verbose : bool, optional
+       Verbose output to the screen.  Default is True.
+    logger : logger, optional
+       Logging object.
+
+    Returns
+    -------
+    mask : int
+       Bitmask of "bad" QA values (see bitmask()) for what
+        the values mean.  A "good" exposure will have mask=0.
+
+    Usage
+    -----
+    
+    mask = check_dark(40300010,'daily','apo25m')
+
+    """
+
+
     """ Check a list of exposures."""
 
     # Convert to list

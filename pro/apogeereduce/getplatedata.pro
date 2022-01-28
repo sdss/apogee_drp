@@ -265,12 +265,14 @@ if not keyword_set(mapa) and not keyword_set(fps) then begin
   ;; overflow.  We need to add 2^32 to them.
   ;; Use the minimum catalogid in the v0 cross-match
   ;; (version_id=21). That number is 4204681993.
-  bdcatid = where(stregex(p.holetype,'APOGEE',/boolean,/fold_case) eq 1 and $
-                  p.catalogid gt 0 and p.catalogid lt 4204681993LL,nbdcatid)
-  if nbdcatid gt 0 then begin
-    print,'KLUDGE!!!  Fixing overflow catalogIDs for ',strtrim(nbdcatid,2),' telluric stars'
-    print,p[bdcatid].catalogid
-    p[bdcatid].catalogid += 2LL^32
+  if tag_exist(p,'catalogid') then begin
+    bdcatid = where(stregex(p.holetype,'APOGEE',/boolean,/fold_case) eq 1 and $
+                    p.catalogid gt 0 and p.catalogid lt 4204681993LL,nbdcatid)
+    if nbdcatid gt 0 then begin
+      print,'KLUDGE!!!  Fixing overflow catalogIDs for ',strtrim(nbdcatid,2),' telluric stars'
+      print,p[bdcatid].catalogid
+      p[bdcatid].catalogid += 2LL^32
+    endif
   endif
 
   ;; Read flag correction data

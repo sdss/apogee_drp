@@ -221,6 +221,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         # Final calibration file
         #-----------------------
         if caltype.lower()=='fpi':
+            # Should should really check fpi/apFPILines-EXPNUM8.fits
             base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-')
         else:
             base = load.filename(caltype,num=num,chips=True)
@@ -392,7 +393,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkap1['configid'] = planstr['configid']
             chkap1['designid'] = planstr['designid']
             chkap1['fieldid'] = planstr['fieldid']
-        if platetype=='normal':
+        if platetype=='normal' and fiberdata is not None:
             chkap1['nobj'] = np.sum(fiberdata['objtype']!='SKY')  # stars and tellurics
         chkap1['pbskey'] = pbskey
         chkap1['checktime'] = str(datetime.now())
@@ -882,31 +883,29 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                      qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
         do3d = np.zeros(len(expinfo),bool)
         for i,num in enumerate(expinfo['num']):
-            logfile = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
-            logfile = os.path.dirname(logfile)+'/logs/'+os.path.basename(logfile)
-            logfile = logfile.replace('.fits','_pbs.'+logtime+'.log')
-            if os.path.dirname(logfile)==False:
-                os.makedirs(os.path.dirname(logfile))
+            logfile1 = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
+            logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
+            logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
+            if os.path.dirname(logfile1)==False:
+                os.makedirs(os.path.dirname(logfile1))
             # Check if files exist already
             do3d[i] = True
             if clobber is not True:
                 outfile = load.filename('2D',num=num,mjd=mjd5,chips=True)
-                outfiles = [outfile.replace('2D-','2D-'+ch+'-') for ch in chips]
-                exists = [os.path.exists(o) for o in outfiles]
-                if np.sum(exists)==3:
+                if load.exists('2D',num=num):
                     rootLogger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     do3d[i] = False
             if do3d[i]:
                 queue.append('ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope),
-                             outfile=logfile,errfile=logfile.replace('.log','.err'))
+                             outfile=logfile1,errfile=logfile1.replace('.log','.err'))
         if np.sum(do3d)>0:
             queue.commit(hard=True,submit=True)
             rootLogger.info('PBS key is '+queue.key)
             queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
             chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=rootLogger)
-            del queue
         else:
             rootLogger.info('No exposures need AP3D processing')
+        del queue
     else:
         rootLogger.info('No exposures to process with AP3D')
 
@@ -931,6 +930,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
         calcode = [calcodedict[etype] for etype in expinfo['exptype'][calind]]
         calnames = ['DOMEFLAT/QUARTZFLAT','FLUX','ARCLAMP','FPI']
         shcalnames = ['psf','flux','arcs','fpi']
+        filecodes = ['PSF','Flux','Wave','WaveFPI']
         chkcal = []
         for j,ccode in enumerate([1,2,4,8]):
             rootLogger.info('')
@@ -941,17 +941,17 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
             cind, = np.where((np.array(calcode) & ccode) > 0)
             if len(cind)>0:
                 if ccode==8: cind = cind[[0]] # Only run first FPI exposure
-                rootLogger.info(str(len(cind))+' files to run')
+                rootLogger.info(str(len(cind))+' file(s)')
                 queue = pbsqueue(verbose=True)
                 queue.create(label='makecal-'+shcalnames[j], nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(cind)),
                              qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
                 calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd5))
                 logfiles = []
+                docal = np.zeros(len(cind),bool)
                 for k in range(len(cind)):
                     num1 = expinfo['num'][calind[cind[k]]]
                     exptype1 = expinfo['exptype'][calind[cind[k]]]
                     arctype1 = expinfo['arctype'][calind[cind[k]]]
-                    rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
                     if ccode==1:   # psfs                    
                         cmd1 = 'makecal --psf '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
@@ -968,12 +968,24 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                         cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
-                    rootLogger.info(logfile1)
                     logfiles.append(logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-                queue.commit(hard=True,submit=True)
-                rootLogger.info('PBS key is '+queue.key)
-                queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
+                    # Check if files exist already
+                    docal[k] = True
+                    if clobber is not True:
+                        outfile = load.filename(filecodes[j],num=num1,mjd=mjd5,chips=True)
+                        if load.exists(filecodes[j],num=num1,mjd=mjd5):
+                            rootLogger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                            docal[k] = False
+                    if docal[k]:
+                        rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
+                        rootLogger.info(logfile1)
+                        queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+                if np.sum(docal)>0:
+                    queue.commit(hard=True,submit=True)
+                    rootLogger.info('PBS key is '+queue.key)
+                    queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
+                else:
+                    rootLogger.info('No '+str(calnames[j])+' calibration files need to be run') 
                 calinfo = expinfo[calind[cind]]
                 chkcal1 = check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
                 if len(chkcal)==0:
@@ -984,9 +996,11 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
             else:
                 rootLogger.info('No '+str(calnames[j])+' calibration files to run')
 
+
     # Make MJD5 and plan files
     #--------------------------
     # Check that the necessary daily calibration files exist
+    rootLogger.info(' ')
     rootLogger.info('Making plan files')
     plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
     dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'.yaml'
@@ -1042,16 +1056,19 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     rootLogger.info('')
     vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
     if len(vcat)>0:
-        queue = pbsqueue(verbose=True)
-        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
-                     walltime=walltime, notification=False)
         # Get unique stars
         objects,ui = np.unique(vcat['apogee_id'],return_index=True)
         vcat = vcat[ui]
-        # remove ones with missing or blank apogee_ids
-        bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone'))
+        # Remove ones with missing or blank apogee_ids
+        bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone') | (vcat['apogee_id']=='2M'))
         if len(bd)>0:
             vcat = np.delete(vcat,bd)
+        else:
+            vcat = []
+    if len(vcat)>0:
+        queue = pbsqueue(verbose=True)
+        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
+                     walltime=walltime, notification=False)
         for obj in vcat['apogee_id']:
             apstarfile = load.filename('Star',obj=obj)
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist

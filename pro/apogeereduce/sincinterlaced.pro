@@ -1,5 +1,3 @@
-function sincinterlaced,arr1,arr2,shift,outshift,err1=err1,err2=err2,errout=err,tp=stp
-
 ;+
 ;
 ; SINCINTERLACED
@@ -28,6 +26,8 @@ function sincinterlaced,arr1,arr2,shift,outshift,err1=err1,err2=err2,errout=err,
 ;
 ; By D.Nidever  March 2010
 ;-
+
+function sincinterlaced,arr1,arr2,shift,outshift,err1=err1,err2=err2,errout=err,tp=stp
 
 narr1 = n_elements(arr1)
 narr2 = n_elements(arr2)

@@ -548,8 +548,7 @@ FOR i=0L,nplanfiles-1 do begin
   ; STEP 5:  Dither Combining
   ;----------------------------------
   print,'STEP 5: Combining DITHER FRAMES with APDITHERCOMB'
-;  APDITHERCOMB,allframes,shiftstr,pairstr,plugmap,combframe
-  APDITHERCOMB,allframes,shiftstr,pairstr,plugmap,combframe,/median,/newerr,npad=50,nodither=nodither,/verbose
+  APDITHERCOMB,allframes,shiftstr,pairstr,plugmap,combframe,/median,/newerr,npad=50,nodither=nodither,/avgwave,/verbose
 
   writelog,logfile,' dithercomb '+file_basename(planfile)+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
   if n_elements(pairstr) eq 0 and nodither eq 0 then begin

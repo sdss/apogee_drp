@@ -1808,7 +1808,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             simbadlink = txt1 + txt2
 
             apStarRelPath = None
-            if (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
+            if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
                 # Find which healpix this star is in
                 healpix = apload.obj2healpix(objid)
                 healpixgroup = str(healpix // 1000)
@@ -2008,7 +2008,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                 objid = jdata['OBJECT']
             else:
                 objtype = 'SCI'
-            if (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
+            if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
                 print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
 
                 # Find which healpix this star is in
@@ -2383,7 +2383,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
             fiber = 100
 
         # Only run it for valid stars
-        if (fiber > 0) & (objtype != 'SKY') & (objid != '2MNone') & (objid != ''):
+        if (fiber > 0) & (objtype != 'SKY') & (objid != '2MNone') &  (objid != '2M') & (objid != ''):
 
             # Find which healpix this star is in
             healpix = apload.obj2healpix(objid)

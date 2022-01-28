@@ -283,11 +283,24 @@ FOR i=0L,nplanfiles-1 do begin
   ;; both cases (sky lines and FPI lines)
   if waveid gt 0 or fpiid gt 0 then begin
     cmd = ['ap1dwavecal',planfile]
-    if fpiid gt 0 then begin  ;; use FPI lines
-       cmd = [cmd,'--fpiid',strtrim(fpiid,2)]
-    endif else begin  ;; use sky lines
-       if not keyword_set(skywave) then cmd=[cmd,'--nosky']
-    endelse
+
+    ;;;; Check if there is FPI flux in the 2 fibers
+    ;;if fpiid gt 0 then begin
+    ;;  outfile1 = apogee_filename('1D',num=framenum,chip='b')
+    ;;  if file_test(outfile1) eq 0 then begin
+    ;;    print,outfile1,' NOT FOUND'
+    ;;    return
+    ;;  endif
+    ;;  ;;fits_read,outfile1,flux,head,exten=0
+    ;;  ;;stop
+    ;;endif
+
+    ;; Don't use FPI fibers until we are using it routinely!!!
+    ;;if fpiid gt 0 then begin  ;; use FPI lines
+    ;;   cmd = [cmd,'--fpiid',strtrim(fpiid,2)]
+    ;;endif else begin  ;; use sky lines
+    if not keyword_set(skywave) then cmd=[cmd,'--nosky']
+    ;;endelse
     spawn,cmd,/noshell
     ;; if skywave then spawn,['apskywavecal',planfile],/noshell $
     ;; else  spawn,['apskywavecal',planfile,'--nosky'],/noshell
