@@ -50,6 +50,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     nlines = 2
     nquad = 4
 
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+
     # Establish  directories... hardcode sdss4/apogee2 for now
     specdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
     sdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/' + instrument + '/'
@@ -739,6 +741,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     if makeplots is True:
         ###########################################################################################
         # dillum.png
+        # Time series plot of median dome flat flux from cross sections across fibers
         plotfile = specdir5 + 'monitor/' + instrument + '/dflux.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
@@ -747,16 +750,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymax = 13000
             ymin = 0 - ymax*0.05
             yspan = ymax - ymin
+            xarr = np.arange(0, 300, 1) + 1
 
-            gdcal = allexp[dome]
-            caljd = gdcal['JD'] - 2.4e6
+            umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
+            gdcal = allexp[dome][uind]
+            ndome = len(gdcal)
+
             pdb.set_trace()
-
 
             for ichip in range(nchips):
                 chip = chips[ichip]
 
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax = plt.subplot2grid((1,nchips), (0,ichip))
                 ax.set_xlim(xmin, xmax)
                 ax.set_ylim(ymin, ymax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
@@ -765,28 +770,19 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Median Flux')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.set_xlabel(r'Fiber Index')
+                if ichip == 0: ax.set_ylabel(r'Median Flux')
+                if ichip > 0: ax.axes.yaxis.set_ticklabels([])
 
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-                w = np.nanmedian(gdcal['MED'][:, ichip, :])
-                ax.axhline(y=w, color='k', linewidth=3, zorder=1)
-
-                for ifib in range(nplotfibs):
-                    yvals = gdcal['MED'][:, ichip, fibers[ifib]]
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]), zorder=3)
+                for idome in range(5):
+                    file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
+                    file1d = file1d.replace('1D-', '1D-' + chip[:1] + '-')
+                    oned = fits.getdata(file1d)
+                    onedflux = np.nanmedian(oned, axis=1)[::-1]
+                    ax.plot(xarr, onedflux)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
