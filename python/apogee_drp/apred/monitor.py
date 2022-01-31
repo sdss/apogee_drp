@@ -282,6 +282,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     une, =  np.where(allcal['UNE'] == 1)
     qrtz, = np.where(allcal['QRTZ'] == 1)
     dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
+    qrtzexp, = np.where(allexp['IMAGETYP'] == 'QuartzFlat')
     dark, = np.where(alldark['EXPTYPE'] == 'DARK')
 
     ###############################################################################################
@@ -750,10 +751,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            gd, = np.where(allexp['MJD'][qrtz] == 59567)
-            gdcal = allexp[qrtz][gd]
+            gd, = np.where(allexp['MJD'][qrtzexp] == 59567)
+            gdcal = allexp[qrtzexp][gd]
             nqtz = len(gdcal)
-            pdb.set_trace()
 
             mycmap = 'viridis_r'
             cmap = cmaps.get_cmap(mycmap, nqtz)
