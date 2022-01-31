@@ -750,8 +750,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            pdb.set_trace()
-            gd, = np.where(allcal[qrtz]['JD'] == 59567)
+            gd, = np.where(allcal['MJD'][qrtz] == '59567')
             gdcal = allcal[qrtz][gd]
             nqtz = len(gdcal)
 
@@ -820,7 +819,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            gd, = np.where(allexp[dome]['MJD'] == 59557)
+            gd, = np.where(allexp['MJD'][dome] == 59557)
             gdcal = allexp[dome][gd]
             ndome = len(gdcal)
 
