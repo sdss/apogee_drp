@@ -372,6 +372,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              clobber=clobber)
 
         if qcheck == 'bad': return
+        pdb.set_trace()
 
         # Make the observation QA page
         if makeobshtml == True:
