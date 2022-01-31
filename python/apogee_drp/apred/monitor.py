@@ -935,6 +935,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         #pdb.set_trace()
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
+                        print(str(umjd[idome])+'   '+str(int(round(np.max(onedflux)))))
                         mycolor = cmap(idome)
                         gd, = np.where(onedflux > 100)
                         ax.plot(xarr[gd], onedflux[gd], color=mycolor)
