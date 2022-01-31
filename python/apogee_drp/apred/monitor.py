@@ -750,8 +750,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            gd, = np.where(allcal['MJD'][qrtz] == '59567')
-            gdcal = allcal[qrtz][gd]
+            gd, = np.where(allexp['MJD'][qrtz] == '59567')
+            gdcal = allexp[qrtz][gd]
             nqtz = len(gdcal)
 
             mycmap = 'viridis_r'
