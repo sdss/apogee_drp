@@ -753,6 +753,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             gd, = np.where(allexp['MJD'][qrtz] == 59567)
             gdcal = allexp[qrtz][gd]
             nqtz = len(gdcal)
+            pdb.set_trace()
 
             mycmap = 'viridis_r'
             cmap = cmaps.get_cmap(mycmap, nqtz)
