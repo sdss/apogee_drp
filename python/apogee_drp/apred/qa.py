@@ -364,6 +364,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              clobber=clobber)
 
         if q == 'bad': return
+        pdb.set_trace()
 
         if makeplatesum == True:
             tmpims = np.array([0,ims[0]])
