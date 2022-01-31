@@ -933,6 +933,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
     # Read the plateSum file
     tmp = fits.open(platesum)
+    pdb.set_trace()
     tab1 = tmp[1].data
     tab2 = tmp[2].data
     tab3 = tmp[3].data
