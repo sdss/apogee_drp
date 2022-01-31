@@ -750,16 +750,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            gd, = np.where(allexp[qrtz]['MJD'] == 59567)
-            gdcal = allexp[qrtz][gd]
+            gd, = np.where(allcal[qrtz]['MJD'] == 59567)
+            gdcal = allcal[qrtz][gd]
             nqtz = len(gdcal)
-            pdb.set_trace()
 
             mycmap = 'viridis_r'
             cmap = cmaps.get_cmap(mycmap, nqtz)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=nqtz))
-
-            #pdb.set_trace()
 
             for ichip in range(nchips):
                 chip = chips[ichip]
