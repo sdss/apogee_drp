@@ -901,7 +901,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         hdulist.close()
 
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
-    return qcheck
+    return
 
 
 ###################################################################################################
