@@ -69,6 +69,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     # Read in the master summary files
     allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
+    pdb.set_trace()
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
     allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
