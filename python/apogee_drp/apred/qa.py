@@ -364,7 +364,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              clobber=clobber)
 
             tmpims = np.array([0,ims[0]])
-            q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
+            qcheck = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=tmpims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
                              apred=apred, onem=None, starfiber=None, starnames=None, 
@@ -593,6 +593,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
     #pdb.set_trace()
     # Loop over the exposures.
+    qcheck 'good'
     for i in range(n_exposures):
         if ims[0] == 0: 
             pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
@@ -604,7 +605,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                 dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
             else:
                 print("----> makePlateSum: Problem with apPlate!")
-                return 'bad'
+                qcheck = 'bad'
         else:
             pfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True))
             dfile = load.filename('1D', num=ims[i], mjd=mjd, chips=True)
@@ -615,7 +616,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                 dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
             else:
                 print("----> makePlateSum: Problem with ap1D!")
-                return 'bad'
+                qcheck = 'bad'
 
         ind = 1
         if len(ims) < 2: ind = 0
@@ -901,7 +902,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         hdulist.close()
 
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
-    return 'good'
+    return qcheck
 
 
 ###################################################################################################
