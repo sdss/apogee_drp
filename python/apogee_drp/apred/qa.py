@@ -363,34 +363,35 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-        if q == 'good':
-            if makeplatesum == True:
-                tmpims = np.array([0,ims[0]])
-                q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
-                                 instrument=instrument, ims=tmpims, imsReduced=imsReduced,
-                                 plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
-                                 apred=apred, onem=None, starfiber=None, starnames=None, 
-                                 starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
-                                 clobber=clobber)
+        if q == 'bad': return
 
-            # Make the observation QA page
-            if makeobshtml == True:
-                q = makeObsHTML(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
-                                   fluxid=fluxid, telescope=telescope)
+        if makeplatesum == True:
+            tmpims = np.array([0,ims[0]])
+            q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
+                             instrument=instrument, ims=tmpims, imsReduced=imsReduced,
+                             plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
+                             apred=apred, onem=None, starfiber=None, starnames=None, 
+                             starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
+                             clobber=clobber)
 
-            # Make plots for the observation QA pages
-            if makeobsplots == True:
-                q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
-                                 survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
+        # Make the observation QA page
+        if makeobshtml == True:
+            q = makeObsHTML(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
+                               fluxid=fluxid, telescope=telescope)
 
-            # Make the visit level pages
-            if makevishtml == True:
-                q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                                fluxid=fluxid)
+        # Make plots for the observation QA pages
+        if makeobsplots == True:
+            q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
+                             survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
-            # Make the visit plots
-            if makevisplots == True:
-                q = apVisitPlots(load=load, plate=plate, mjd=mjd)
+        # Make the visit level pages
+        if makevishtml == True:
+            q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
+                            fluxid=fluxid)
+
+        # Make the visit plots
+        if makevisplots == True:
+            q = apVisitPlots(load=load, plate=plate, mjd=mjd)
 
         # Make mjd.html and fields.html
         if makemasterqa == True: 
