@@ -597,7 +597,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             d = load.apPlate(int(plate), mjd) 
             cframe = load.apPlate(int(plate), mjd)
             if type(d)!=dict: print("----> makePlateSum: Problem with apPlate!")
-            if os.path.exists(dfile.replace('apPlate-','apPlate-a-'))
+            if os.path.exists(dfile.replace('apPlate-','apPlate-a-')):
                 dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
             else:
                 print("----> makePlateSum: Problem with apPlate!")
