@@ -857,7 +857,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     chp = 'c'
                     if ichip == 1: chp = 'b'
                     if ichip == 2: chp = 'a'
-                    file1d = load.filename('1D', mjd='59567', num=gdcal['NUM'][idome], chips='c')
+                    file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
                     #pdb.set_trace()
                     if os.path.exists(file1d):
