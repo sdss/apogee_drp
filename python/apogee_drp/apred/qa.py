@@ -593,7 +593,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
     #pdb.set_trace()
     # Loop over the exposures.
-    qcheck 'good'
+    qcheck = 'good'
     for i in range(n_exposures):
         if ims[0] == 0: 
             pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
