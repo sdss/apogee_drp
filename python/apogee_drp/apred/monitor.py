@@ -751,12 +751,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             xarr = np.arange(0, 300, 1) + 1
 
             gd, = np.where(allexp[qrtz]['MJD'] == 59567)
-            gdcal = allexp[dome][gd]
-            ndome = len(gdcal)
+            gdcal = allexp[qrtz][gd]
+            nqtz = len(gdcal)
 
             mycmap = 'viridis_r'
-            cmap = cmaps.get_cmap(mycmap, ndome)
-            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
+            cmap = cmaps.get_cmap(mycmap, nqtz)
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=nqtz))
 
             #pdb.set_trace()
 
@@ -786,18 +786,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cax.xaxis.set_label_position('top') 
                     cax.set_xlabel('Exposure')
 
-                for idome in range(ndome):
+                for iqtz in range(nqtz):
                     chp = 'c'
                     if ichip == 1: chp = 'b'
                     if ichip == 2: chp = 'a'
-                    file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
+                    file1d = load.filename('1D', mjd='59567', num=gdcal['NUM'][iqtz], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
                     #pdb.set_trace()
                     if os.path.exists(file1d):
 
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
-                        mycolor = cmap(idome)
+                        mycolor = cmap(iqtz)
                         gd, = np.where(onedflux > 100)
                         ax.plot(xarr[gd], onedflux[gd], color=mycolor)
                         #ax.hist(onedflux, 300, color=mycolor, fill=False)
@@ -809,6 +809,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
+            return
 
         ###########################################################################################
         # dillum59557.png
@@ -860,7 +861,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     chp = 'c'
                     if ichip == 1: chp = 'b'
                     if ichip == 2: chp = 'a'
-                    file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
+                    file1d = load.filename('1D', mjd='59567', num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
                     #pdb.set_trace()
                     if os.path.exists(file1d):
