@@ -353,17 +353,17 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     if platetype == 'normal': 
 
         # Make the apPlateSum file if it doesn't already exist.
-        q = 'good'
+        qcheck = 'good'
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
         if makeplatesum == True:
-            q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
+            qcheck = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
                              apred=apred, onem=None, starfiber=None, starnames=None, 
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-        if q == 'bad': return
+        if qcheck == 'bad': return
         pdb.set_trace()
 
         if makeplatesum == True:
