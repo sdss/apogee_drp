@@ -792,8 +792,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 2: chp = 'a'
                     file1d = load.filename('1D', mjd='59567', num=gdcal['NUM'][iqtz], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
+                    pdb.set_trace()
                     if os.path.exists(file1d):
-                        print('not found')
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
                         mycolor = cmap(iqtz)
