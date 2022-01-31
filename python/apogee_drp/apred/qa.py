@@ -353,6 +353,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     if platetype == 'normal': 
 
         # Make the apPlateSum file if it doesn't already exist.
+        q = 'good'
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
         if makeplatesum == True:
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
@@ -362,6 +363,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
+        if q == 'good':
+            if makeplatesum == True:
             tmpims = np.array([0,ims[0]])
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=tmpims, imsReduced=imsReduced,
@@ -370,7 +373,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-        if os.path.exists(platesum):
             # Make the observation QA page
             if makeobshtml == True:
                 q = makeObsHTML(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
@@ -601,7 +603,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                 dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
             else:
                 print("----> makePlateSum: Problem with apPlate!")
-                return
+                return 'bad'
         else:
             pfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True))
             dfile = load.filename('1D', num=ims[i], mjd=mjd, chips=True)
@@ -612,7 +614,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                 dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
             else:
                 print("----> makePlateSum: Problem with ap1D!")
-                return
+                return 'bad'
 
         ind = 1
         if len(ims) < 2: ind = 0
@@ -898,6 +900,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         hdulist.close()
 
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
+    return 'good'
+
 
 ###################################################################################################
 ''' MAKEOBSHTML: mkhtmlplate translation '''
@@ -929,18 +933,13 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     if os.path.exists(platesum) == False:
         err1 = "----> makeObsHTML: PROBLEM!!! " + os.path.basename(platesum) + " does not exist. Halting execution.\n"
         err2 = "----> makeObsHTML: You need to run MAKEPLATESUM first to make the file."
-        print(err1 + err2)
-        return
+        sys.exit(err1 + err2)
 
     # Read the plateSum file
     tmp = fits.open(platesum)
-    try:
-        tab1 = tmp[1].data
-        tab2 = tmp[2].data
-        tab3 = tmp[3].data
-    except:
-        print("----> makeObsHTML: Problem with apPlateSum! Missing extension.")
-        return
+    tab1 = tmp[1].data
+    tab2 = tmp[2].data
+    tab3 = tmp[3].data
 
     # Make the html directory if it doesn't already exist
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
@@ -1218,10 +1217,6 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     # PLOTS 1-2: HMAG versus S/N for the exposure-combined apVisit, second version colored by fiber block
     #----------------------------------------------------------------------------------------------
     Vsum = load.apVisitSum(int(plate), mjd)
-    if Vsum is None:
-        print("----> makeObsPlots: Problem with apVisitSum!")
-        return
-
     Vsumfile = Vsum.filename()
     Vsum = Vsum[1].data
     block = np.floor((Vsum['FIBERID'] - 1) / 30) #[::-1]
