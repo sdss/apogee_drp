@@ -363,10 +363,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-        if qcheck == 'bad': return
-        pdb.set_trace()
-
-        if makeplatesum == True:
             tmpims = np.array([0,ims[0]])
             q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=tmpims, imsReduced=imsReduced,
@@ -374,6 +370,8 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              apred=apred, onem=None, starfiber=None, starnames=None, 
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
+
+        if qcheck == 'bad': return
 
         # Make the observation QA page
         if makeobshtml == True:
