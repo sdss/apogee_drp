@@ -1218,6 +1218,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     # PLOTS 1-2: HMAG versus S/N for the exposure-combined apVisit, second version colored by fiber block
     #----------------------------------------------------------------------------------------------
     Vsum = load.apVisitSum(int(plate), mjd)
+    if Vsum is None:
+        print("----> makeObsPlots: Problem with apVisitSum!")
+        return
+
     Vsumfile = Vsum.filename()
     Vsum = Vsum[1].data
     block = np.floor((Vsum['FIBERID'] - 1) / 30) #[::-1]
