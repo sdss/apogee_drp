@@ -809,8 +809,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
-        return
-
         ###########################################################################################
         # dillum.png
         # Time series plot of median dome flat flux from cross sections across fibers
