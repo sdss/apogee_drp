@@ -593,7 +593,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
     #pdb.set_trace()
     # Loop over the exposures.
-    qcheck = 'good'
     for i in range(n_exposures):
         if ims[0] == 0: 
             pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
@@ -605,7 +604,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                 dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
             else:
                 print("----> makePlateSum: Problem with apPlate!")
-                qcheck = 'bad'
+                return 'bad'
         else:
             pfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True))
             dfile = load.filename('1D', num=ims[i], mjd=mjd, chips=True)
@@ -616,7 +615,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                 dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
             else:
                 print("----> makePlateSum: Problem with ap1D!")
-                qcheck = 'bad'
+                return 'bad'
 
         ind = 1
         if len(ims) < 2: ind = 0
