@@ -929,14 +929,18 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     if os.path.exists(platesum) == False:
         err1 = "----> makeObsHTML: PROBLEM!!! " + os.path.basename(platesum) + " does not exist. Halting execution.\n"
         err2 = "----> makeObsHTML: You need to run MAKEPLATESUM first to make the file."
-        sys.exit(err1 + err2)
+        print(err1 + err2)
+        return
 
     # Read the plateSum file
     tmp = fits.open(platesum)
-    pdb.set_trace()
-    tab1 = tmp[1].data
-    tab2 = tmp[2].data
-    tab3 = tmp[3].data
+    try:
+        tab1 = tmp[1].data
+        tab2 = tmp[2].data
+        tab3 = tmp[3].data
+    except:
+        print("----> makeObsHTML: Problem with apPlateSum! Missing extension.")
+        return
 
     # Make the html directory if it doesn't already exist
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
