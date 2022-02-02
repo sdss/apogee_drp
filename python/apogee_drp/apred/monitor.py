@@ -896,7 +896,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             expstop  = int(flxfiles[-1:][0].split('-c-')[1].split('.')[0])
             mjdstop  = int((expstop - expstop % 10000 ) / 10000) + 55562
 
-            mycmap = 'gist_stern_r'
+            mycmap = 'plasma_r'
             cmap = cmaps.get_cmap(mycmap, nflx)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=mjdstart, vmax=mjdstop))
 
@@ -908,7 +908,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for ax in axes:
                 chip = chips[ichip]
                 ax.set_xlim(0, 301)
-                ax.set_ylim(0, 2)
+                ax.set_ylim(0, 1.6)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
                 ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
                 ax.minorticks_on()
