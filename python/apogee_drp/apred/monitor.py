@@ -798,9 +798,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 2: chp = 'a'
                     file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
-                    hdr = fits.getheader(file1d)
                     if os.path.exists(file1d):
-                        #pdb.set_trace()
+                        hdr = fits.getheader(file1d)
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
                         print(str(umjd[idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(hdr['exptime'])+'  nread='+str(hdr['nread']))
