@@ -878,7 +878,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # apflux.png
         # Time series plot of median apFlux flux
-        plotfile = specdir5 + 'monitor/' + instrument + '/apflux.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/apflux1.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
@@ -913,6 +913,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     yarr = np.nanmedian(d, axis=1)[::-1]
                     ax = plt.subplot2grid((nchips, 1), (ichip, 0))
                     ax.set_xlim(0, 301)
+                    ax.set_xlim(0, 6)
                     ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
                     ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
                     ax.minorticks_on()
@@ -937,10 +938,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         cax.set_xlabel('MJD')
 
                     mycolor = cmap(iflx)
-                    ax.plot(xarr, yarr, color=mycolor)
-                    if ichip == 1:
-                        if np.nanmax(yarr) > 12: print('Bad apFlux: ' + str(expnum))
-
+                    if np.nanmax(yarr) > 12: 
+                        if ichip == 1: print('Bad apFlux: ' + str(expnum))
+                    else:
+                        ax.plot(xarr, yarr, color=mycolor)
 
             fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
             plt.savefig(plotfile)
