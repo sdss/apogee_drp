@@ -913,7 +913,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     yarr = np.nanmedian(d, axis=1)[::-1]
                     ax = plt.subplot2grid((nchips, 1), (ichip, 0))
                     ax.set_xlim(0, 301)
-                    ax.set_ylim(0, 6)
+                    #ax.set_ylim(0, 6)
                     ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
                     ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
                     ax.minorticks_on()
