@@ -745,7 +745,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # dillum.png
         # Time series plot of median dome flat flux from cross sections across fibers
-        plotfile = specdir5 + 'monitor/' + instrument + '/dillum1.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/dillum_FPSonly.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
@@ -755,6 +755,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
             gdcal = allexp[dome][uind]
             gd, = np.where(gdcal['MJD'] >= 59247)
+            gd, = np.where(gdcal['MJD'] >= 59599)
             gdcal = gdcal[gd]
             umjd = umjd[gd]
             umjdfrac = umjd / np.max(umjd)
