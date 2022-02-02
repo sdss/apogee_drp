@@ -755,7 +755,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             flxfiles = glob.glob(specdir5 + 'cal/apogee-n/flux/apFlux-c*fits')
             flxfiles.sort()
             flxfiles = np.array(flxfiles)
-            flxfiles = flxfiles[1257:]
+            flxfiles = flxfiles[1:]
             nflx = len(flxfiles)
 
             expstart = int(flxfiles[0].split('-c-')[1].split('.')[0])
@@ -820,7 +820,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             flxfiles = glob.glob(specdir5 + 'cal/apogee-n/flux/apFlux-c*fits')
             flxfiles.sort()
             flxfiles = np.array(flxfiles)
-            flxfiles = flxfiles[1:]
+            flxfiles = flxfiles[1257:]
             nflx = len(flxfiles)
 
             expstart = int(flxfiles[0].split('-c-')[1].split('.')[0])
