@@ -754,13 +754,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             gd, = np.where(allexp[dome]['MJD'] >= 59599)
             gdcal = allexp[dome][gd]
-            mjd = gdcal['MJD']
+            umjd = gdcal['MJD']
             ndome = len(gdcal)
 
             mycmap = 'inferno_r'
             mycmap = 'brg_r'
             cmap = cmaps.get_cmap(mycmap, ndome)
-            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(mjd), vmax=np.max(mjd)))
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
 
             for ichip in range(nchips):
                 chip = chips[ichip]
