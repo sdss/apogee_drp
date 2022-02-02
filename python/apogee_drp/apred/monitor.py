@@ -911,10 +911,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 2: chp = 'a'
                     d = d0[chp][1].data
                     yarr = np.nanmedian(d, axis=1)[::-1]
-                    pdb.set_trace()
                     ax = plt.subplot2grid((nchips, 1), (ichip, 0))
                     ax.set_xlim(0, 301)
-                    ax.set_xlim(0, 6)
+                    ax.set_ylim(0, 6)
                     ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
                     ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
                     ax.minorticks_on()
@@ -942,6 +941,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if np.nanmax(yarr) > 12: 
                         if ichip == 1: print('Bad apFlux: ' + str(expnum))
                     else:
+                        pdb.set_trace()
                         ax.plot(xarr, yarr, color=mycolor)
 
             fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
