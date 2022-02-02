@@ -900,7 +900,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             cmap = cmaps.get_cmap(mycmap, nflx)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=mjdstart, vmax=mjdstop))
 
-            for iflx in range(5):
+            for iflx in range(15):
                 expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
                 d0 = load.apFlux(expnum)
                 print(iflx)
