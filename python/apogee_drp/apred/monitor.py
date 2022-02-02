@@ -798,15 +798,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 2: chp = 'a'
                     file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
+                    hdr = fits.getheader(file1d)
                     if os.path.exists(file1d):
                         #pdb.set_trace()
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
-                        print(str(umjd[idome])+'   '+str(int(round(np.max(onedflux)))))
+                        print(str(umjd[idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(hdr['exptime'])+'  nread='+str(hdr['nread']))
                         mycolor = cmap(idome)
                         #gd, = np.where(onedflux > 100)
                         ax.plot(xarr, onedflux, color=mycolor)
-                        if (chp == 'c') & (np.nanmax(onedflux) > 30000): pdb.set_trace()
+                        #if (chp == 'c') & (np.nanmax(onedflux) > 30000): pdb.set_trace()
                         #ax.hist(onedflux, 300, color=mycolor, fill=False)
 
                 ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
