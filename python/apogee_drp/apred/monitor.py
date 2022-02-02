@@ -900,7 +900,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             cmap = cmaps.get_cmap(mycmap, nflx)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=mjdstart, vmax=mjdstop))
 
-            for iflx in range(nflx):
+            for iflx in range(5):
                 expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
                 d0 = load.apFlux(expnum)
                 print(iflx)
@@ -941,7 +941,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if np.nanmax(yarr) > 12: 
                         if ichip == 1: print('Bad apFlux: ' + str(expnum))
                     else:
-                        pdb.set_trace()
+                        #pdb.set_trace()
                         ax.plot(xarr, yarr, color=mycolor)
 
             fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
