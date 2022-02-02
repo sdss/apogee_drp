@@ -891,11 +891,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             flxfiles = flxfiles[1:]
             nflx = len(flxfiles)
 
+            pdb.set_trace()
             expstart = int(flxfiles[0].split('-a-')[1].split('.')[0])
             mjdstart = '{:05d}'.format(int((expstart - expstart % 10000 ) / 10000) + 55562)
             expstop  = int(flxfiles[:-1].split('-a-')[1].split('.')[0])
             mjdstop  = '{:05d}'.format(int((expstart - expstart % 10000 ) / 10000) + 55562)
-            pdb.set_trace()
+
 
             mycmap = 'inferno_r'
             cmap = cmaps.get_cmap(mycmap, nflx)
