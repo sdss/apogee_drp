@@ -745,7 +745,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # dillum.png
         # Time series plot of median dome flat flux from cross sections across fibers
-        plotfile = specdir5 + 'monitor/' + instrument + '/dillum.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/dillum1.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
@@ -801,7 +801,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
                         print(str(umjd[idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(hdr['exptime'])+'  nread='+str(hdr['nread']))
-                        #if np.max(onedflux) > 17000: continue
+                        if np.max(onedflux) > 17000: continue
                         mycolor = cmap(idome)
                         #gd, = np.where(onedflux > 100)
                         ax.plot(xarr, onedflux, color=mycolor)
