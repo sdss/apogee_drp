@@ -908,7 +908,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for ax in axes:
                 chip = chips[ichip]
                 ax.set_xlim(0, 301)
-                ax.set_ylim(0, 4)
+                ax.set_ylim(0, 2)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
                 ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
                 ax.minorticks_on()
