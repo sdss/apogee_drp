@@ -902,8 +902,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             for iflx in range(20):
                 d1 = fits.getdata(flxfiles[iflx])
-                d2 = fits.getdata(flxfiles[iflx].replace('-c-','-b-')
-                d3 = fits.getdata(flxfiles[iflx].replace('-b-','-a-')
+                d2 = fits.getdata(flxfiles[iflx].replace('-c-','-b-'))
+                d3 = fits.getdata(flxfiles[iflx].replace('-b-','-a-'))
                 dall = [d1,d2,d3]
                 #expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
                 #d0 = load.apFlux(expnum)
