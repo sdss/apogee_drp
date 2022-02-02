@@ -942,6 +942,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #    if ichip == 1: print('Bad apFlux: ' + str(expnum))
                     #else:
                         #pdb.set_trace()
+                    print(str(np.nanmax(yarr)) + '  ' + str(np.nanmin(yarr)))
                     ax.plot(xarr, yarr, color=mycolor)
 
             fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
