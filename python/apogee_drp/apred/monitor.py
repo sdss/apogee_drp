@@ -891,12 +891,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             flxfiles = flxfiles[1:]
             nflx = len(flxfiles)
 
-            pdb.set_trace()
-            expstart = int(flxfiles[0].split('-a-')[1].split('.')[0])
-            mjdstart = '{:05d}'.format(int((expstart - expstart % 10000 ) / 10000) + 55562)
-            expstop  = int(flxfiles[:-1].split('-a-')[1].split('.')[0])
-            mjdstop  = '{:05d}'.format(int((expstart - expstart % 10000 ) / 10000) + 55562)
-
+            expstart = int(flxfiles[0].split('-c-')[1].split('.')[0])
+            mjdstart = int((expstart - expstart % 10000 ) / 10000) + 55562
+            expstop  = int(flxfiles[-1:][0].split('-c-')[1].split('.')[0])
+            mjdstop  = int((expstop - expstop % 10000 ) / 10000) + 55562
 
             mycmap = 'inferno_r'
             cmap = cmaps.get_cmap(mycmap, nflx)
@@ -935,8 +933,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     data = fits.getdata(infile)
                     onedflux = np.nanmedian(data, axis=1)[::-1]
                     mycolor = cmap(iflx)
-                    gd, = np.where(onedflux > 100)
+                    #gd, = np.where(onedflux > 100)
                     ax.plot(xarr[gd], onedflux[gd], color=mycolor)
+                    ax.plot(xarr, onedflux, color=mycolor)
                     #ax.hist(onedflux, 300, color=mycolor, fill=False)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
