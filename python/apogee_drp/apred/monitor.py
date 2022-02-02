@@ -896,7 +896,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             expstop  = int(flxfiles[-1:][0].split('-c-')[1].split('.')[0])
             mjdstop  = int((expstop - expstop % 10000 ) / 10000) + 55562
 
-            mycmap = 'inferno'
+            mycmap = 'inferno_r'
             cmap = cmaps.get_cmap(mycmap, nflx)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=mjdstart, vmax=mjdstop))
 
@@ -933,7 +933,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cax.set_xlabel('MJD')
                 ichip += 1
 
-            for iflx in range(100):
+            for iflx in range(nflx):
                 expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
                 d0 = load.apFlux(expnum)
                 print(iflx)
