@@ -885,7 +885,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            flxfiles = glob.glob(specdir5 + 'cal/apogee-n/apFlux-c*fits')
+            flxfiles = glob.glob(specdir5 + 'cal/apogee-n/flux/apFlux-c*fits')
             flxfiles.sort()
             flxfiles = np.array(flxfiles)
             flxfiles = flxfiles[1:]
