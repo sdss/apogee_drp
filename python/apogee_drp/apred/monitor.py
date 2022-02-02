@@ -749,7 +749,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(30,12))
+            fig = plt.figure(figsize=(30,16))
             xarr = np.arange(0, 300, 1) + 1
 
             flxfiles = glob.glob(specdir5 + 'cal/apogee-n/flux/apFlux-c*fits')
@@ -797,11 +797,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 y2 = np.nanmedian(d0['b'][1].data, axis=1)[::-1]
                 y3 = np.nanmedian(d0['c'][1].data, axis=1)[::-1]
                 yall = np.nanmean(np.array([y1,y2,y3]), axis=0)
-                #if np.nanmax(np.nanmedian(d0['a'][1].data, axis=1)[::-1]) > 4: continue
+                if np.nanmax(np.nanmedian(d0['a'][1].data, axis=1)[::-1]) > 2: continue
                 mycolor = cmap(iflx)
                 ax.plot(xarr, yall, color=mycolor)
 
-            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.065,top=0.935,hspace=0.08,wspace=0.1)
             plt.savefig(plotfile)
             plt.close('all')
 
