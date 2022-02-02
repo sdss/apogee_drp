@@ -764,8 +764,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             cmap = cmaps.get_cmap(mycmap, ndome)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
 
-            #pdb.set_trace()
-
             for ichip in range(nchips):
                 chip = chips[ichip]
                 ax = plt.subplot2grid((nchips, 1), (ichip, 0))
@@ -803,7 +801,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
                         print(str(umjd[idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(hdr['exptime'])+'  nread='+str(hdr['nread']))
-                        if np.max(onedflux) > 30000: continue
+                        if np.max(onedflux) > 17000: continue
                         mycolor = cmap(idome)
                         #gd, = np.where(onedflux > 100)
                         ax.plot(xarr, onedflux, color=mycolor)
