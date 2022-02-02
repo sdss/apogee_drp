@@ -908,7 +908,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for ax in axes:
                 chip = chips[ichip]
                 ax.set_xlim(0, 301)
-                ax.set_ylim(0, 1.6)
+                ax.set_ylim(0, 1.4)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
                 ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
                 ax.minorticks_on()
@@ -918,7 +918,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
                 ax.set_ylabel(r'apFlux Median Flux')
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 if ichip == 0:
