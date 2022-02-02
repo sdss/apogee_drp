@@ -931,7 +931,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 1: infile = infile.replace('-c-', '-b-')
                     if ichip == 2: infile = infile.replace('-b-', '-a-')
                     data = fits.getdata(infile)
-                    pdb.set_trace()
+                    #pdb.set_trace()
                     onedflux = np.nanmedian(data, axis=1)[::-1]
                     mycolor = cmap(iflx)
                     #gd, = np.where(onedflux > 100)
