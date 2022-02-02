@@ -937,6 +937,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
                 d0 = load.apFlux(expnum)
                 print(iflx)
+                if np.nanmax(np.nanmedian(d0['a'][1].data, axis=1)[::-1]) > 4: continue
                 ichip = 0
                 for ax in axes:
                     chp = 'c'
@@ -944,10 +945,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 2: chp = 'a'
                     mycolor = cmap(iflx)
                     yarr = np.nanmedian(d0[chp][1].data, axis=1)[::-1]
-                    if np.nanmax(yarr) > 12: 
-                        if ichip == 1: print('Bad apFlux: ' + str(expnum))
-                    else:
-                        ax.plot(xarr, yarr, color=mycolor)
+                    ax.plot(xarr, yarr, color=mycolor)
                     ichip += 1
 
             fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
