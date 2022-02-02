@@ -745,7 +745,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # apflux_chipcomb.png
         # Time series plot of median apFlux flux
-        plotfile = specdir5 + 'monitor/' + instrument + '/apflux_chipcomb.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/apflux_chipsmean.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
@@ -769,7 +769,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             ax = plt.subplot2grid((1, 1), (0, 0))
             ax.set_xlim(0, 301)
-            ax.set_ylim(0, 1.4)
+            #ax.set_ylim(0, 1.4)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
             ax.minorticks_on()
@@ -810,7 +810,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # apflux_chipcomb_FPSonly.png
         # Time series plot of median apFlux flux
-        plotfile = specdir5 + 'monitor/' + instrument + '/apflux_chipcomb_FPSonly.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/apflux_chipsmean_FPSonly.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
