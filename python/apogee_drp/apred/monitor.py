@@ -900,53 +900,55 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             cmap = cmaps.get_cmap(mycmap, nflx)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=mjdstart, vmax=mjdstop))
 
-            for iflx in range(20):
-                d1 = fits.getdata(flxfiles[iflx])
-                d2 = fits.getdata(flxfiles[iflx].replace('-c-','-b-'))
-                d3 = fits.getdata(flxfiles[iflx].replace('-b-','-a-'))
-                dall = [d1,d2,d3]
-                #expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
-                #d0 = load.apFlux(expnum)
-                print(iflx)
-                for ichip in range(nchips):
-                    chip = chips[ichip]
-                    #chp = 'c'
-                    #if ichip == 1: chp = 'b'
-                    #if ichip == 2: chp = 'a'
-                    ax = plt.subplot2grid((nchips, 1), (ichip, 0))
-                    ax.set_xlim(0, 301)
-                    #ax.set_ylim(0, 15)
-                    ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
-                    ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-                    ax.minorticks_on()
-                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                    ax.tick_params(axis='both',which='major',length=axmajlen)
-                    ax.tick_params(axis='both',which='minor',length=axminlen)
-                    ax.tick_params(axis='both',which='both',width=axwidth)
-                    if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
-                    ax.set_ylabel(r'apFlux Median Flux')
-                    ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                            ha='center', va='top', color=chip, bbox=bboxpar)
-                    if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                    if ichip == 0:
-                        ax_divider = make_axes_locatable(ax)
-                        cax = ax_divider.append_axes("top", size="7%", pad="2%")
-                        cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
-                        cax.xaxis.set_ticks_position("top")
-                        cax.minorticks_on()
-                        cax.xaxis.set_major_locator(ticker.MultipleLocator(50))
-                        cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
-                        cax.xaxis.set_label_position('top') 
-                        cax.set_xlabel('MJD')
+            ax1 = plt.subplot2grid((nchips, 1), (0, 0))
+            ax2 = plt.subplot2grid((nchips, 1), (1, 0))
+            ax3 = plt.subplot2grid((nchips, 1), (2, 0))
+            axes = [ax1,ax2,ax3]
+            ichip = 0
+            for ax in axes:
+                ax.set_xlim(0, 301)
+                #ax.set_ylim(0, 15)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+                ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+                ax.set_ylabel(r'apFlux Median Flux')
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                if ichip == 0:
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("top", size="7%", pad="2%")
+                    cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+                    cax.xaxis.set_ticks_position("top")
+                    cax.minorticks_on()
+                    cax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                    cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+                    cax.xaxis.set_label_position('top') 
+                    cax.set_xlabel('MJD')
+                ichip += 1
 
+            for iflx in range(20):
+                expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
+                d0 = load.apFlux(expnum)
+                print(iflx)
+                ichip = 0
+                for ax in axes:
+                    chp = 'c'
+                    if ichip == 1: chp = 'b'
+                    if ichip == 2: chp = 'a'
                     mycolor = cmap(iflx)
                     #if np.nanmax(yarr) > 12: 
                     #    if ichip == 1: print('Bad apFlux: ' + str(expnum))
                     #else:
                         #pdb.set_trace()
-                    yarr = np.nanmedian(dall[ichip], axis=1)[::-1]
-                    print(str(np.nanmax(yarr)) + '  ' + str(np.nanmin(yarr)))
+                    yarr = np.nanmedian(d0[chp][1].data, axis=1)[::-1]
                     ax.plot(xarr, yarr, color=mycolor)
+                    ichip += 1
 
             fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
             plt.savefig(plotfile)
