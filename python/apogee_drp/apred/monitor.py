@@ -793,9 +793,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 print(iflx)
                 expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
                 d0 = load.apFlux(expnum)
-                y1 = np.nanmedian(d0['a'][1].data, axis=1)[::-1]
-                y2 = np.nanmedian(d0['b'][1].data, axis=1)[::-1]
-                y3 = np.nanmedian(d0['c'][1].data, axis=1)[::-1]
+                y1 = np.nanmedian(d0['a'][1].data[:, 924:1124], axis=1)[::-1]
+                y2 = np.nanmedian(d0['b'][1].data[:, 924:1124], axis=1)[::-1]
+                y3 = np.nanmedian(d0['c'][1].data[:, 924:1124], axis=1)[::-1]
                 yall = np.nanmean(np.array([y1,y2,y3]), axis=0)
                 if np.nanmax(np.nanmedian(d0['a'][1].data, axis=1)[::-1]) > 2: continue
                 mycolor = cmap(iflx)
@@ -856,9 +856,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 print(iflx)
                 expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
                 d0 = load.apFlux(expnum)
-                y1 = np.nanmedian(d0['a'][1].data, axis=1)[::-1]
-                y2 = np.nanmedian(d0['b'][1].data, axis=1)[::-1]
-                y3 = np.nanmedian(d0['c'][1].data, axis=1)[::-1]
+                y1 = np.nanmedian(d0['a'][1].data[:, 924:1124], axis=1)[::-1]
+                y2 = np.nanmedian(d0['b'][1].data[:, 924:1124], axis=1)[::-1]
+                y3 = np.nanmedian(d0['c'][1].data[:, 924:1124], axis=1)[::-1]
                 yall = np.nanmean(np.array([y1,y2,y3]), axis=0)
                 if np.nanmax(np.nanmedian(d0['a'][1].data, axis=1)[::-1]) > 2: continue
                 mycolor = cmap(iflx)
