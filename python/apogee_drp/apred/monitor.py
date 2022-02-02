@@ -752,7 +752,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            pdb.set_trace()
             umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
             gdcal = allexp[dome][uind]
             gd, = np.where(gdcal['MJD'] >= 59247)
