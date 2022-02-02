@@ -825,12 +825,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
-            gdcal = allexp[dome][uind]
-            gd, = np.where(gdcal['MJD'] >= 59247)
-            gdcal = gdcal[gd]
-            umjd = umjd[gd]
-            umjdfrac = umjd / np.max(umjd)
+            #umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
+            #gdcal = allexp[dome][uind]
+            gd, = np.where(allexp[dome]['MJD'] >= 59247)
+            gdcal = allexp[dome][gd]
+            umjd = gdcal['MJD']
             ndome = len(gdcal)
 
             mycmap = 'inferno_r'
@@ -876,8 +875,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         print(str(umjd[idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(hdr['exptime'])+'  nread='+str(hdr['nread']))
                         if (umjd[idome] == 59557) | (umjd[idome] == 59566): continue
                         mycolor = cmap(idome)
-                        #gd, = np.where(onedflux > 100)
-                        ax.plot(xarr, onedflux, color=mycolor)
+                        gd, = np.where(onedflux > 100)
+                        ax.plot(xarr[gd], onedflux[gd], color=mycolor)
                         #if (chp == 'c') & (np.nanmax(onedflux) > 30000): pdb.set_trace()
                         #ax.hist(onedflux, 300, color=mycolor, fill=False)
 
