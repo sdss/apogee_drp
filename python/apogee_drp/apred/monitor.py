@@ -797,6 +797,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 y2 = np.nanmedian(d0['b'][1].data, axis=1)[::-1]
                 y3 = np.nanmedian(d0['c'][1].data, axis=1)[::-1]
                 yall = np.mean([y1,y2,y3])
+                pdb.set_trace()
                 #if np.nanmax(np.nanmedian(d0['a'][1].data, axis=1)[::-1]) > 4: continue
                 mycolor = cmap(iflx)
                 ax.plot(xarr, yall, color=mycolor)
