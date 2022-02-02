@@ -934,7 +934,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     onedflux = np.nanmedian(data, axis=1)[::-1]
                     mycolor = cmap(iflx)
                     #gd, = np.where(onedflux > 100)
-                    ax.plot(xarr[gd], onedflux[gd], color=mycolor)
+                    #ax.plot(xarr[gd], onedflux[gd], color=mycolor)
                     ax.plot(xarr, onedflux, color=mycolor)
                     #ax.hist(onedflux, 300, color=mycolor, fill=False)
 
