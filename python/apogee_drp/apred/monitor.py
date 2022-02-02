@@ -891,8 +891,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             flxfiles = flxfiles[1256:]
             nflx = len(flxfiles)
 
-            pdb.set_trace()
-
             expstart = int(flxfiles[0].split('-c-')[1].split('.')[0])
             mjdstart = int((expstart - expstart % 10000 ) / 10000) + 55562
             expstop  = int(flxfiles[-1:][0].split('-c-')[1].split('.')[0])
