@@ -806,7 +806,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         mycolor = cmap(idome)
                         #gd, = np.where(onedflux > 100)
                         ax.plot(xarr, onedflux, color=mycolor)
-                        if (chp = 'c') & (np.nanmax(onedflux) > 30000): pdb.set_trace()
+                        if (chp == 'c') & (np.nanmax(onedflux) > 30000): pdb.set_trace()
                         #ax.hist(onedflux, 300, color=mycolor, fill=False)
 
                 ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
