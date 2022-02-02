@@ -896,7 +896,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             expstop  = int(flxfiles[-1:][0].split('-c-')[1].split('.')[0])
             mjdstop  = int((expstop - expstop % 10000 ) / 10000) + 55562
 
-            mycmap = 'brg'
+            mycmap = 'brg_r'
             cmap = cmaps.get_cmap(mycmap, nflx)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=mjdstart, vmax=mjdstop))
 
