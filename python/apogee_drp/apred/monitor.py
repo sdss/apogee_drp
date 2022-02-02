@@ -911,6 +911,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 2: chp = 'a'
                     d = d0[chp][1].data
                     yarr = np.nanmedian(d, axis=1)[::-1]
+                    pdb.set_trace()
                     ax = plt.subplot2grid((nchips, 1), (ichip, 0))
                     ax.set_xlim(0, 301)
                     ax.set_xlim(0, 6)
