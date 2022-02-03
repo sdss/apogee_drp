@@ -59,22 +59,40 @@ if __name__ == '__main__' :
     start = time.time()
     logger.info("Start: "+now.strftime("%Y-%m-%d %H:%M:%S"))
 
-    # Code copied from rv.dopple_rv()
-    mjd = args.mjd[0]
-    observatory = args.observatory[0]
-    apred = args.apred
-    
+    # Make kwargs
+    adict = vars(args)
+    kws = {}
+    for k in adict.keys():
+        if adict[k] is not None:
+            # strip outer list
+            if type(adict[k]) is list:
+                val = adict[k][0]
+            else:
+                val = adict[k]
+            # Convert 'True' to True and 'False' to False                    
+            if type(val) is str:
+                if val.lower()=='false':
+                    val = False
+                elif val.lower()=='true':
+                    val = True
+            kws[k] = val
+
+    # Fix the "make" flags names
+    flags = ['platesum','obshtml','obsplots','vishtml','starhtml','visplots','starplots','masterqa','nightqa','monitor']
+    for f in flags:
+        if f in kws.keys():
+            val = kws.pop(f)
+            kws['make'+f] = val
+
     # Run plate QA code
     if args.plate is not None:
-        # apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
-        #      makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False,
-        #      makemasterqa=True, makenightqa=True, makemonitor=True, clobber=True)
-        import pdb; pdb.set_trace()
-        qa.apqa(**kws)
-        
+        # Remove observatory
+        if 'observatory' in kws.keys():
+            kws.pop('observatory')
+        qa.apqa(**kws)        
     # Run nightly QA code
     else:
-        qa.apqaMJD(mjd=mjd, observatory=observatory, apred=apred)
+        qa.apqaMJD(**kws)
     
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
