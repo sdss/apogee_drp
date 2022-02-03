@@ -813,8 +813,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
-        pdb.set_trace()
-        return 
+        #pdb.set_trace()
+        #return 
 
         ###########################################################################################
         # apflux_chipsmean.png
@@ -1021,7 +1021,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
-        return
+        #return
 
         ###########################################################################################
         # apflux.png
