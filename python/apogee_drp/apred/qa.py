@@ -3301,15 +3301,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
                 ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
 
-                # Read planfile
-                planfile = load.filename('Plan', plate=int(iplate[i]), mjd=imjd[i], fps=fps)
-                planstr = plan.load(planfile, np=True)
-                # Get values from plan file.
-                badfiberid = planstr['badfiberid']
-                plugmap =    planstr['plugmap']
-                plug = platedata.getdata(int(iplate[i]), int(imjd[i]), apred, tel, plugid=plugmap, badfiberid=badfiberid)
-                iprogram[i] = plug['programname']
-                iloc[i] = plug['locationid']
+                ## Read planfile
+                #planfile = load.filename('Plan', plate=int(iplate[i]), mjd=imjd[i], fps=fps)
+                #planstr = plan.load(planfile, np=True)
+                ## Get values from plan file.
+                #badfiberid = planstr['badfiberid']
+                #plugmap =    planstr['plugmap']
+                #plug = platedata.getdata(int(iplate[i]), int(imjd[i]), apred, tel, plugid=plugmap, badfiberid=badfiberid)
+                iprogram[i] = '???
+                iloc[i] = name
             else:
                 gd, = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
                 if len(gd)>0:
