@@ -752,7 +752,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            gd, = np.where((allexp[dome]['MJD'] >= 59599) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566))
+            gd, = np.where((allexp[dome]['MJD'] >= 59559) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566))
             gdcal = allexp[dome][gd]
             umjd = gdcal['MJD']
             ndome = len(gdcal)
@@ -798,7 +798,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         hdr = fits.getheader(file1d)
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
-                        print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(hdr['exptime'])+'  nread='+str(hdr['nread']))
+                        print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
                         if (umjd[idome] == 59557) | (umjd[idome] == 59566): continue
                         mycolor = cmap(idome)
                         #gd, = np.where(onedflux > 100)
