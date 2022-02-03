@@ -36,6 +36,19 @@ if __name__ == '__main__' :
     parser.add_argument('mjd', type=str, nargs=1,  help='Night MJD5')
     parser.add_argument('observatory', type=str, nargs=1, help='APOGEE observatory (apo or lco)')
     parser.add_argument('--apred', type=str, nargs=1, default='daily', help='APOGEE reduction version')
+    parser.add_argument('--plate', type=str, nargs=1, default='', help='Plate/configuration_id')
+    parser.add_argument('--telescope', type=str, nargs=1, help='Telescope')
+    parser.add_argument('--platesum', type=str, nargs=1, help='Make plate summary files')
+    parser.add_argument('--obshtml', type=str, nargs=1, help='Make observation html pages')
+    parser.add_argument('--obsplots', type=str, nargs=1, help='Make observation plots')
+    parser.add_argument('--vishtml', type=str, nargs=1, help='Make visit-levle HTML pages')
+    parser.add_argument('--starhtml', type=str, nargs=1, help='Make star-level pages')
+    parser.add_argument('--visplots', type=str, nargs=1, help='Make visit-level plots')
+    parser.add_argument('--starplots', type=str, nargs=1, help='Make star-level plots')
+    parser.add_argument('--masterqa', type=str, nargs=1, help='Make master QA pages')
+    parser.add_argument('--nightqa', type=str, nargs=1, help='Make nightly QA pages')
+    parser.add_argument('--monitor', type=str, nargs=1, help='Make monitor pages')
+    parser.add_argument('--clobber', action='store_true', help='Overwriting existing files')
     args = parser.parse_args()
 
     logger = dln.basiclogger()
@@ -50,10 +63,19 @@ if __name__ == '__main__' :
     mjd = args.mjd[0]
     observatory = args.observatory[0]
     apred = args.apred
-
-    # Run the QA code
-    qa.apqaMJD(mjd=mjd, observatory=observatory, apred=apred)
-
+    
+    # Run plate QA code
+    if args.plate is not None:
+        # apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
+        #      makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False,
+        #      makemasterqa=True, makenightqa=True, makemonitor=True, clobber=True)
+        import pdb; pdb.set_trace()
+        qa.apqa(**kws)
+        
+    # Run nightly QA code
+    else:
+        qa.apqaMJD(mjd=mjd, observatory=observatory, apred=apred)
+    
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
     logger.info("elapsed: %0.1f sec." % (time.time()-start))
