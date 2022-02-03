@@ -3308,9 +3308,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 badfiberid = planstr['badfiberid']
                 plugmap =    planstr['plugmap']
                 plug = platedata.getdata(int(iplate[i]), int(imjd[i]), apred, tel, plugid=plugmap, badfiberid=badfiberid)
-                pdb.set_trace()
-                iprogram[i] = plans['PLATEPLANS']['programname'][gd][0].astype(str)
-                iloc[i] = str(int(round(plans['PLATEPLANS']['locationid'][gd][0])))
+                iprogram[i] = plug['programname']
+                iloc[i] = plug['locationid']
             else:
                 gd, = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
                 if len(gd)>0:
