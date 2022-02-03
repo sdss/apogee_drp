@@ -752,7 +752,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            gd, = np.where((allexp[dome]['MJD'] >= 59559) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566))
+            gd, = np.where((allexp[dome]['MJD'] >= 59599) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566))
             gdcal = allexp[dome][gd]
             umjd = gdcal['MJD']
             ndome = len(gdcal)
