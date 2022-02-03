@@ -3288,6 +3288,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             iname[i] = name
 
             if fps:
+                pdb.set_trace()
                 # Read planfile
                 planfile = load.filename('Plan', plate=int(iplate[i]), mjd=imjd[i], fps=fps)
                 planstr = plan.load(planfile, np=True)
