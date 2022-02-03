@@ -3287,14 +3287,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             name = tmp[1].split('/')[0]
             iname[i] = name
 
-            # Read planfile
-            planfile = load.filename('Plan', plate=int(iplate[i]), mjd=imjd[i], fps=fps)
-            planstr = plan.load(planfile, np=True)
-            # Get values from plan file.
-            badfiberid = planstr['badfiberid']
-            plugmap =    planstr['plugmap']
-            plug = platedata.getdata(int(iplate[i]), int(imjd[i]), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
-            pdb.set_trace()
+            if fps:
+                # Read planfile
+                planfile = load.filename('Plan', plate=int(iplate[i]), mjd=imjd[i], fps=fps)
+                planstr = plan.load(planfile, np=True)
+                # Get values from plan file.
+                badfiberid = planstr['badfiberid']
+                plugmap =    planstr['plugmap']
+                plug = platedata.getdata(int(iplate[i]), int(imjd[i]), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
+                pdb.set_trace()
 
             gd, = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
             if len(gd)>0:
