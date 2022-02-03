@@ -88,14 +88,14 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
             # apR-c-12345678.apz
             num = base.split('-')[2]
             tab['num'][i] = num
-            tab['nread'][i] = head['nread']
-            tab['exptype'][i] = head['exptype']
-            tab['plateid'][i] = head['plateid']
+            tab['nread'][i] = head.get('nread')
+            tab['exptype'][i] = head.get('exptype')
+            tab['plateid'][i] = head.get('plateid')
             tab['configid'][i] = head.get('configid')
             tab['designid'][i] = head.get('designid')
             tab['fieldid'][i] = head.get('fieldid')
-            tab['exptime'][i] = head['exptime']
-            tab['dateobs'][i] = head['date-obs']
+            tab['exptime'][i] = head.get('exptime')
+            tab['dateobs'][i] = head.get('date-obs')
             mjd = int(load.cmjd(int(num)))
             tab['mjd'] = mjd
             #    tab['mjd'] = utils.getmjd5(head['date-obs'])
@@ -105,9 +105,9 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
                 tab['observatory'] = {'p':'apo','s':'lco'}[base[1]]
             # arc types
             if tab['exptype'][i]=='ARCLAMP':
-                if head['lampune']==1:
+                if head.get('lampune')==1:
                     tab['arctype'][i] = 'UNE'
-                elif head['lampthar']==1:
+                elif head.get('lampthar')==1:
                     tab['arctype'][i] = 'THAR'
                 else:
                     tab['arctype'][i] = 'None'
@@ -120,7 +120,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
                 tab['exptype'][i] = 'SKYFLAT'
 
             # Dither position
-            tab['dithpix'][i] = head['dithpix']
+            tab['dithpix'][i] = head.get('dithpix')
             # Gang state
             #  gangstat wasn't working properly until MJD=59592
             if mjd>=59592:
