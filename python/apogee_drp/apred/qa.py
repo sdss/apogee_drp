@@ -1909,6 +1909,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
             # Vhelio, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
             if os.path.exists(allVpath):
+                pdb.set_trace()
                 gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
                 if len(gd) == 1:
                     try:
