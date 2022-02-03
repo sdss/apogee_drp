@@ -3271,6 +3271,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         icart = np.zeros(nplates).astype(str)
         izero = np.zeros(nplates).astype(str)
         imoonphase = np.zeros(nplates)
+        inst = np.zeros(nplates).astype(str)
         for i in range(nplates): 
             plate = os.path.basename(plates[i]).split('-')[1]
             iplate[i] = plate
@@ -3286,6 +3287,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             tmp = plates[i].split(tel+'/')
             name = tmp[1].split('/')[0]
             iname[i] = name
+
+            inst[i] = 'apogee-n'
+            if itel[i] != 'apo25m': inst[i] = 'apogee-s'
 
             load = apload.ApLoad(apred=apred, telescope=itel[i])
 
@@ -3356,6 +3360,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         icart = icart[order]
         izero = izero[order]
         imoonphase = imoonphase[order]
+        inst = inst[order]
 
         for i in range(nplates):
             tmp = fits.open(plates[i])
@@ -3381,7 +3386,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD> --- ')
             qalink = '../visit/' + itel[i] + '/' + iname[i] + '/' + iplate[i] + '/' + imjd[i] + '/html/apQA-' + iplate[i] + '-' + imjd[i] + '.html'
             html.write('<TD align="center"><A HREF="' + qalink + '" target="_blank">' + iplate[i] + '</A>')
-            html.write('<TD align="center"><A HREF="../exposures/' + instrument + '/' + imjd[i] + '/html/' + imjd[i] + '.html">' + imjd[i] + '</A>') 
+            html.write('<TD align="center"><A HREF="../exposures/' + inst[i] + '/' + imjd[i] + '/html/' + imjd[i] + '.html">' + imjd[i] + '</A>') 
             html.write('<TD align="center">' + iloc[i])
             html.write('<TD align="right">' + ira[i]) 
             html.write('<TD align="right">' + idec[i])
