@@ -37,7 +37,8 @@ from datetime import date,datetime
 
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True,
-            makeplots=True, makedomeplots=True, makequartzplots=True, fiberdaysbin=20):
+            makeplots=True, makedomeplots=True, makequartzplots=True,
+            makecomplots=False, fiberdaysbin=20):
 
     print("----> monitor starting")
 
@@ -282,6 +283,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     une, =  np.where(allcal['UNE'] == 1)
     qrtz, = np.where(allcal['QRTZ'] == 1)
     dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
+    qrtzexp, = np.where(allexp['IMAGETYP'] == 'QuartzFlat')
     dark, = np.where(alldark['EXPTYPE'] == 'DARK')
 
     ###############################################################################################
@@ -567,7 +569,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         for i in range(300):
             gdcal = allexp[dome]
             caljd = gdcal['JD'] - 2.4e6
-            ymax1 = 13;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
+            ymax1 = 16;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
             ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
@@ -739,26 +741,312 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.close('all')
 
 
-    if makeplots is True:
+    if makecomplots is True:
         ###########################################################################################
-        # dillum59557.png
-        # Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
-        plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
+        # apflux_chipsmean.png
+        # Time series plot of median apFlux flux
+        plotfile = specdir5 + 'monitor/' + instrument + '/apflux_chipsmean.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,16))
+            xarr = np.arange(0, 300, 1) + 1
+
+            flxfiles = glob.glob(specdir5 + 'cal/apogee-n/flux/apFlux-c*fits')
+            flxfiles.sort()
+            flxfiles = np.array(flxfiles)
+            flxfiles = flxfiles[1:]
+            nflx = len(flxfiles)
+
+            expstart = int(flxfiles[0].split('-c-')[1].split('.')[0])
+            mjdstart = int((expstart - expstart % 10000 ) / 10000) + 55562
+            expstop  = int(flxfiles[-1:][0].split('-c-')[1].split('.')[0])
+            mjdstop  = int((expstop - expstop % 10000 ) / 10000) + 55562
+
+            mycmap = 'gist_stern_r'
+            cmap = cmaps.get_cmap(mycmap, nflx)
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=mjdstart, vmax=mjdstop))
+
+            ax = plt.subplot2grid((1, 1), (0, 0))
+            ax.set_xlim(0, 301)
+            #ax.set_ylim(0, 1.4)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_xlabel(r'Fiber Index')
+            ax.set_ylabel(r'apFlux Median Flux (mean across chips)')
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("top", size="7%", pad="2%")
+            cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+            cax.xaxis.set_ticks_position("top")
+            cax.minorticks_on()
+            cax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+            cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+            cax.xaxis.set_label_position('top') 
+            cax.set_xlabel('MJD')
+
+            for iflx in range(nflx):
+                print(iflx)
+                expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
+                d0 = load.apFlux(expnum)
+                y1 = np.nanmedian(d0['a'][1].data[:, 824:1224], axis=1)[::-1]
+                y2 = np.nanmedian(d0['b'][1].data[:, 824:1224], axis=1)[::-1]
+                y3 = np.nanmedian(d0['c'][1].data[:, 824:1224], axis=1)[::-1]
+                yall = np.nanmean(np.array([y1,y2,y3]), axis=0)
+                if np.nanmax(np.nanmedian(d0['a'][1].data, axis=1)[::-1]) > 2: continue
+                mycolor = cmap(iflx)
+                ax.plot(xarr, yall, color=mycolor)
+
+            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.065,top=0.935,hspace=0.08,wspace=0.1)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # apflux_chipsmean_FPSonly.png
+        # Time series plot of median apFlux flux
+        plotfile = specdir5 + 'monitor/' + instrument + '/apflux_chipsmean_FPSonly.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,16))
+            xarr = np.arange(0, 300, 1) + 1
+
+            flxfiles = glob.glob(specdir5 + 'cal/apogee-n/flux/apFlux-c*fits')
+            flxfiles.sort()
+            flxfiles = np.array(flxfiles)
+            flxfiles = flxfiles[1257:]
+            nflx = len(flxfiles)
+
+            expstart = int(flxfiles[0].split('-c-')[1].split('.')[0])
+            mjdstart = int((expstart - expstart % 10000 ) / 10000) + 55562
+            expstop  = int(flxfiles[-1:][0].split('-c-')[1].split('.')[0])
+            mjdstop  = int((expstop - expstop % 10000 ) / 10000) + 55562
+
+            mycmap = 'brg_r'
+            cmap = cmaps.get_cmap(mycmap, nflx)
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=mjdstart, vmax=mjdstop))
+
+            ax = plt.subplot2grid((1, 1), (0, 0))
+            ax.set_xlim(0, 301)
+            #ax.set_ylim(0, 1.4)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_xlabel(r'Fiber Index')
+            ax.set_ylabel(r'apFlux Median Flux (mean across chips)')
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("top", size="7%", pad="2%")
+            cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+            cax.xaxis.set_ticks_position("top")
+            cax.minorticks_on()
+            cax.xaxis.set_major_locator(ticker.MultipleLocator(5))
+            cax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            cax.xaxis.set_label_position('top') 
+            cax.set_xlabel('MJD')
+
+            for iflx in range(nflx):
+                print(iflx)
+                expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
+                d0 = load.apFlux(expnum)
+                y1 = np.nanmedian(d0['a'][1].data[:, 824:1224], axis=1)[::-1]
+                y2 = np.nanmedian(d0['b'][1].data[:, 824:1224], axis=1)[::-1]
+                y3 = np.nanmedian(d0['c'][1].data[:, 824:1224], axis=1)[::-1]
+                yall = np.nanmean(np.array([y1,y2,y3]), axis=0)
+                if np.nanmax(np.nanmedian(d0['a'][1].data, axis=1)[::-1]) > 2: continue
+                mycolor = cmap(iflx)
+                ax.plot(xarr, yall, color=mycolor)
+
+            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.065,top=0.935,hspace=0.08,wspace=0.1)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        return
+
+        ###########################################################################################
+        # apflux_FPSonly.png
+        # Time series plot of median apFlux flux
+        plotfile = specdir5 + 'monitor/' + instrument + '/apflux_FPSonly.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            gd, = np.where(allexp[dome]['MJD'] == 59557)
+            flxfiles = glob.glob(specdir5 + 'cal/apogee-n/flux/apFlux-c*fits')
+            flxfiles.sort()
+            flxfiles = np.array(flxfiles)
+            flxfiles = flxfiles[1257:]
+            nflx = len(flxfiles)
+
+            expstart = int(flxfiles[0].split('-c-')[1].split('.')[0])
+            mjdstart = int((expstart - expstart % 10000 ) / 10000) + 55562
+            expstop  = int(flxfiles[-1:][0].split('-c-')[1].split('.')[0])
+            mjdstop  = int((expstop - expstop % 10000 ) / 10000) + 55562
+
+            mycmap = 'brg_r'
+            cmap = cmaps.get_cmap(mycmap, nflx)
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=mjdstart, vmax=mjdstop))
+
+            ax1 = plt.subplot2grid((nchips, 1), (0, 0))
+            ax2 = plt.subplot2grid((nchips, 1), (1, 0))
+            ax3 = plt.subplot2grid((nchips, 1), (2, 0))
+            axes = [ax1,ax2,ax3]
+            ichip = 0
+            for ax in axes:
+                chip = chips[ichip]
+                ax.set_xlim(0, 301)
+                ax.set_ylim(0, 1.4)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+                ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+                ax.set_ylabel(r'apFlux Median Flux')
+                ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                if ichip == 0:
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("top", size="7%", pad="2%")
+                    cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+                    cax.xaxis.set_ticks_position("top")
+                    cax.minorticks_on()
+                    cax.xaxis.set_major_locator(ticker.MultipleLocator(5))
+                    cax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+                    cax.xaxis.set_label_position('top') 
+                    cax.set_xlabel('MJD')
+                ichip += 1
+
+            for iflx in range(nflx):
+                expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
+                d0 = load.apFlux(expnum)
+                print(iflx)
+                if np.nanmax(np.nanmedian(d0['a'][1].data, axis=1)[::-1]) > 4: continue
+                ichip = 0
+                for ax in axes:
+                    chp = 'c'
+                    if ichip == 1: chp = 'b'
+                    if ichip == 2: chp = 'a'
+                    mycolor = cmap(iflx)
+                    yarr = np.nanmedian(d0[chp][1].data, axis=1)[::-1]
+                    ax.plot(xarr, yarr, color=mycolor)
+                    ichip += 1
+
+            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        return
+
+        ###########################################################################################
+        # apflux.png
+        # Time series plot of median apFlux flux
+        plotfile = specdir5 + 'monitor/' + instrument + '/apflux.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,22))
+            xarr = np.arange(0, 300, 1) + 1
+
+            flxfiles = glob.glob(specdir5 + 'cal/apogee-n/flux/apFlux-c*fits')
+            flxfiles.sort()
+            flxfiles = np.array(flxfiles)
+            flxfiles = flxfiles[1:]
+            nflx = len(flxfiles)
+
+            expstart = int(flxfiles[0].split('-c-')[1].split('.')[0])
+            mjdstart = int((expstart - expstart % 10000 ) / 10000) + 55562
+            expstop  = int(flxfiles[-1:][0].split('-c-')[1].split('.')[0])
+            mjdstop  = int((expstop - expstop % 10000 ) / 10000) + 55562
+
+            mycmap = 'gist_stern_r'
+            cmap = cmaps.get_cmap(mycmap, nflx)
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=mjdstart, vmax=mjdstop))
+
+            ax1 = plt.subplot2grid((nchips, 1), (0, 0))
+            ax2 = plt.subplot2grid((nchips, 1), (1, 0))
+            ax3 = plt.subplot2grid((nchips, 1), (2, 0))
+            axes = [ax1,ax2,ax3]
+            ichip = 0
+            for ax in axes:
+                chip = chips[ichip]
+                ax.set_xlim(0, 301)
+                ax.set_ylim(0, 4)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+                ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+                ax.set_ylabel(r'apFlux Median Flux')
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                if ichip == 0:
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("top", size="7%", pad="2%")
+                    cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+                    cax.xaxis.set_ticks_position("top")
+                    cax.minorticks_on()
+                    cax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                    cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+                    cax.xaxis.set_label_position('top') 
+                    cax.set_xlabel('MJD')
+                ichip += 1
+
+            for iflx in range(nflx):
+                expnum = int(flxfiles[iflx].split('-c-')[1].split('.')[0])
+                d0 = load.apFlux(expnum)
+                print(iflx)
+                if np.nanmax(np.nanmedian(d0['a'][1].data, axis=1)[::-1]) > 4: continue
+                ichip = 0
+                for ax in axes:
+                    chp = 'c'
+                    if ichip == 1: chp = 'b'
+                    if ichip == 2: chp = 'a'
+                    mycolor = cmap(iflx)
+                    yarr = np.nanmedian(d0[chp][1].data, axis=1)[::-1]
+                    ax.plot(xarr, yarr, color=mycolor)
+                    ichip += 1
+
+            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        return
+
+        ###########################################################################################
+        # dillum_FPSonly.png
+        # Time series plot of median dome flat flux from cross sections across fibers
+        plotfile = specdir5 + 'monitor/' + instrument + '/dillum_FPSonly.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,22))
+            xarr = np.arange(0, 300, 1) + 1
+
+            gd, = np.where(allexp[dome]['MJD'] >= 59599)
             gdcal = allexp[dome][gd]
+            umjd = gdcal['MJD']
             ndome = len(gdcal)
 
-            mycmap = 'viridis_r'
+            mycmap = 'inferno_r'
+            mycmap = 'brg_r'
             cmap = cmaps.get_cmap(mycmap, ndome)
-            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
-
-            #pdb.set_trace()
+            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
 
             for ichip in range(nchips):
                 chip = chips[ichip]
@@ -781,59 +1069,58 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
                     cax.xaxis.set_ticks_position("top")
                     #cax.minorticks_on()
-                    cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+                    cax.xaxis.set_major_locator(ticker.MultipleLocator(2))
                     #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
                     cax.xaxis.set_label_position('top') 
-                    cax.set_xlabel('Exposure')
+                    cax.set_xlabel('MJD')
 
                 for idome in range(ndome):
                     chp = 'c'
                     if ichip == 1: chp = 'b'
                     if ichip == 2: chp = 'a'
-                    file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
+                    file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
-                    #pdb.set_trace()
                     if os.path.exists(file1d):
-
+                        hdr = fits.getheader(file1d)
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
+                        print(str(umjd[idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(hdr['exptime'])+'  nread='+str(hdr['nread']))
+                        if (umjd[idome] == 59557) | (umjd[idome] == 59566): continue
                         mycolor = cmap(idome)
-                        gd, = np.where(onedflux > 100)
-                        ax.plot(xarr[gd], onedflux[gd], color=mycolor)
+                        #gd, = np.where(onedflux > 100)
+                        ax.plot(xarr, onedflux, color=mycolor)
+                        #if (chp == 'c') & (np.nanmax(onedflux) > 30000): pdb.set_trace()
                         #ax.hist(onedflux, 300, color=mycolor, fill=False)
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
 
             fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
             plt.savefig(plotfile)
             plt.close('all')
 
-        return
+        #return
 
         ###########################################################################################
-        # dillum.png
+        # dillum1.png
         # Time series plot of median dome flat flux from cross sections across fibers
-        plotfile = specdir5 + 'monitor/' + instrument + '/dillum.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/dillum1.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
-            gdcal = allexp[dome][uind]
-            gd, = np.where(gdcal['MJD'] >= 59247)
-            gdcal = gdcal[gd]
-            umjd = umjd[gd]
-            umjdfrac = umjd / np.max(umjd)
+            #umjd, uind = np.unique(allexp[dome]['MJD'], return_index=True)
+            #gdcal = allexp[dome][uind]
+            gd, = np.where(allexp[dome]['MJD'] >= 59247)
+            gdcal = allexp[dome][gd]
+            umjd = gdcal['MJD']
             ndome = len(gdcal)
 
             mycmap = 'inferno_r'
             cmap = cmaps.get_cmap(mycmap, ndome)
             sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
-
-            #pdb.set_trace()
 
             for ichip in range(nchips):
                 chip = chips[ichip]
@@ -868,21 +1155,163 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
                     if os.path.exists(file1d):
-                        #pdb.set_trace()
+                        hdr = fits.getheader(file1d)
                         oned = fits.getdata(file1d)
                         onedflux = np.nanmedian(oned, axis=1)[::-1]
+                        print(str(umjd[idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(hdr['exptime'])+'  nread='+str(hdr['nread']))
+                        if (umjd[idome] == 59557) | (umjd[idome] == 59566): continue
                         mycolor = cmap(idome)
                         gd, = np.where(onedflux > 100)
                         ax.plot(xarr[gd], onedflux[gd], color=mycolor)
+                        #if (chp == 'c') & (np.nanmax(onedflux) > 30000): pdb.set_trace()
                         #ax.hist(onedflux, 300, color=mycolor, fill=False)
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
 
             fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
             plt.savefig(plotfile)
             plt.close('all')
 
+        return
+
+        ###########################################################################################
+        # qillum59567.png
+        # Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
+        #plotfile = specdir5 + 'monitor/' + instrument + '/qillum59567.png'
+        #if (os.path.exists(plotfile) == False) | (clobber == True):
+        #    print("----> monitor: Making " + os.path.basename(plotfile))
+
+        #    fig = plt.figure(figsize=(30,22))
+        #    xarr = np.arange(0, 300, 1) + 1
+
+        #    gd, = np.where(allexp['MJD'][qrtzexp] == 59567)
+        #    gdcal = allexp[qrtzexp][gd]
+        #    nqtz = len(gdcal)
+        #    #pdb.set_trace()
+
+        #    mycmap = 'viridis_r'
+        #    cmap = cmaps.get_cmap(mycmap, nqtz)
+        #    sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=nqtz))
+
+        #    for ichip in range(nchips):
+        #        chip = chips[ichip]
+        #        ax = plt.subplot2grid((nchips, 1), (ichip, 0))
+        #        ax.set_xlim(0, 301)
+        #        ax.set_ylim(0, 55000)
+        #        ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+        #        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        #        ax.minorticks_on()
+        #        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        #        ax.tick_params(axis='both',which='major',length=axmajlen)
+        #        ax.tick_params(axis='both',which='minor',length=axminlen)
+        #        ax.tick_params(axis='both',which='both',width=axwidth)
+        #        if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+        #        ax.set_ylabel(r'Median Flux')
+        #        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+        #        if ichip == 0:
+        #            ax_divider = make_axes_locatable(ax)
+        #            cax = ax_divider.append_axes("top", size="7%", pad="2%")
+        #            cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+        #            cax.xaxis.set_ticks_position("top")
+        #            #cax.minorticks_on()
+        #            cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        #            #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+        #            cax.xaxis.set_label_position('top') 
+        #            cax.set_xlabel('Exposure')
+
+        #        for iqtz in range(nqtz):
+        #            chp = 'c'
+        #            if ichip == 1: chp = 'b'
+        #            if ichip == 2: chp = 'a'
+        #            file1d = load.filename('1D', mjd='59567', num=gdcal['NUM'][iqtz], chips='c')
+        #            file1d = file1d.replace('1D-', '1D-' + chp + '-')
+        #            if os.path.exists(file1d):
+        #                oned = fits.getdata(file1d)
+        #                onedflux = np.nanmedian(oned, axis=1)[::-1]
+        #                mycolor = cmap(iqtz)
+        #                gd, = np.where(onedflux > 100)
+        #                ax.plot(xarr[gd], onedflux[gd], color=mycolor)
+        #                #ax.hist(onedflux, 300, color=mycolor, fill=False)
+
+        #        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+        #                ha='center', va='top', color=chip, bbox=bboxpar)
+
+        #    fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+        #    plt.savefig(plotfile)
+        #    plt.close('all')
+
+        ###########################################################################################
+        ## dillum59557.png
+        ## Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
+        #plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
+        #if (os.path.exists(plotfile) == False) | (clobber == True):
+        #    print("----> monitor: Making " + os.path.basename(plotfile))
+
+        #    fig = plt.figure(figsize=(30,22))
+        #    xarr = np.arange(0, 300, 1) + 1
+
+        #    gd, = np.where(allexp['MJD'][dome] == 59557)
+        #    gdcal = allexp[dome][gd]
+        #    ndome = len(gdcal)
+
+        #    mycmap = 'viridis_r'
+        #    cmap = cmaps.get_cmap(mycmap, ndome)
+        #    sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
+
+        #    #pdb.set_trace()
+
+        #    for ichip in range(nchips):
+        #        chip = chips[ichip]
+        #        ax = plt.subplot2grid((nchips, 1), (ichip, 0))
+        #        ax.set_xlim(0, 301)
+        #        #ax.set_ylim(0, 27000)
+        #        ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+        #        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        #        ax.minorticks_on()
+        #        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        #        ax.tick_params(axis='both',which='major',length=axmajlen)
+        #        ax.tick_params(axis='both',which='minor',length=axminlen)
+        #        ax.tick_params(axis='both',which='both',width=axwidth)
+        #        if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+        #        ax.set_ylabel(r'Median Flux')
+        #        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+        #        if ichip == 0:
+        #            ax_divider = make_axes_locatable(ax)
+        #            cax = ax_divider.append_axes("top", size="7%", pad="2%")
+        #            cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+        #            cax.xaxis.set_ticks_position("top")
+        #            #cax.minorticks_on()
+        #            cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        #            #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+        #            cax.xaxis.set_label_position('top') 
+        #            cax.set_xlabel('Exposure')
+
+        #        for idome in range(ndome):
+        #            chp = 'c'
+        #            if ichip == 1: chp = 'b'
+        #            if ichip == 2: chp = 'a'
+        #            file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
+        #            file1d = file1d.replace('1D-', '1D-' + chp + '-')
+        #            #pdb.set_trace()
+        #            if os.path.exists(file1d):
+        #                oned = fits.getdata(file1d)
+        #                onedflux = np.nanmedian(oned, axis=1)[::-1]
+        #                mycolor = cmap(idome)
+        #                gd, = np.where(onedflux > 100)
+        #                ax.plot(xarr[gd], onedflux[gd], color=mycolor)
+        #                #ax.hist(onedflux, 300, color=mycolor, fill=False)
+
+        #        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+        #                ha='center', va='top', color=chip, bbox=bboxpar)
+
+        #    fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+        #    plt.savefig(plotfile)
+        #    plt.close('all')
+
+
+
+    if makeplots is True:
         ###########################################################################################
         # sciobs.png
         plotfile = specdir5 + 'monitor/' + instrument + '/sciobs.png'
@@ -1154,7 +1583,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 13000
+            ymax = 35000
             ymin = 0 - ymax*0.05
             yspan = ymax - ymin
 

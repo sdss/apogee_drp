@@ -610,6 +610,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     head = fits.getheader(rawfile,1)
     plateid = head.get('PLATEID')
     configid = head.get('CONFIGID')
+    exptype = head.get('EXPTYPE')
     if (ignore==False) and not ap3d and not ap2d:
         if fps==False & (plate!=0) & (plate!=plateid):
             raise ValueError('plateid in header does not match plate!')
@@ -724,7 +725,18 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             else:
                 star = -1
                 name = 'none'
-        aplist1 = {'plateid':plate, 'mjd':mjd, 'flavor':'object', 'name':ims[i], 'single':star, 'singlename':name}
+        if ap3d:
+            flavor = 'object'
+            rawfile = sdss_path.full('apR',num=im1,chip='a',mjd=mjd)
+            if os.path.exists(rawfile)==False:
+                print(rawfile,' NOT FOUND')
+            head = fits.getheader(rawfile,1)
+            exptype = head.get('EXPTYPE')OB
+            if exptype.lower()=='domeflat':
+                flavor = 'psf'
+        else:
+            flavor = 'object'
+        aplist1 = {'plateid':plate, 'mjd':mjd, 'flavor':flavor, 'name':ims[i], 'single':star, 'singlename':name}
         aplist.append(aplist1)
     out['APEXP'] = aplist
 

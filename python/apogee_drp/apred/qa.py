@@ -353,9 +353,10 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     if platetype == 'normal': 
 
         # Make the apPlateSum file if it doesn't already exist.
+        qcheck = 'good'
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
         if makeplatesum == True:
-            q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
+            qcheck = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
                              apred=apred, onem=None, starfiber=None, starnames=None, 
@@ -363,32 +364,34 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              clobber=clobber)
 
             tmpims = np.array([0,ims[0]])
-            q = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
+            qcheck = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=tmpims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
                              apred=apred, onem=None, starfiber=None, starnames=None, 
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-        if os.path.exists(platesum):
-            # Make the observation QA page
-            if makeobshtml == True:
-                q = makeObsHTML(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
-                                   fluxid=fluxid, telescope=telescope)
+        if qcheck == 'bad': return
+        #pdb.set_trace()
 
-            # Make plots for the observation QA pages
-            if makeobsplots == True:
-                q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
-                                 survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
+        # Make the observation QA page
+        if makeobshtml == True:
+            q = makeObsHTML(load=load, ims=ims, imsReduced=imsReduced, plate=plate, mjd=mjd, field=field,
+                               fluxid=fluxid, telescope=telescope)
 
-            # Make the visit level pages
-            if makevishtml == True:
-                q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
-                                fluxid=fluxid)
+        # Make plots for the observation QA pages
+        if makeobsplots == True:
+            q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
+                             survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
-            # Make the visit plots
-            if makevisplots == True:
-                q = apVisitPlots(load=load, plate=plate, mjd=mjd)
+        # Make the visit level pages
+        if makevishtml == True:
+            q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
+                            fluxid=fluxid)
+
+        # Make the visit plots
+        if makevisplots == True:
+            q = apVisitPlots(load=load, plate=plate, mjd=mjd)
 
         # Make mjd.html and fields.html
         if makemasterqa == True: 
@@ -597,14 +600,22 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             d = load.apPlate(int(plate), mjd) 
             cframe = load.apPlate(int(plate), mjd)
             if type(d)!=dict: print("----> makePlateSum: Problem with apPlate!")
-            dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
+            if os.path.exists(dfile.replace('apPlate-','apPlate-a-')):
+                dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
+            else:
+                print("----> makePlateSum: Problem with apPlate!")
+                return 'bad'
         else:
             pfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True))
             dfile = load.filename('1D', num=ims[i], mjd=mjd, chips=True)
             d = load.ap1D(ims[i])
             cframe = load.apCframe(field, int(plate), mjd, ims[i])
             if type(d)!=dict: print("----> makePlateSum: Problem with ap1D!")
-            dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
+            if os.path.exists(dfile.replace('1D-','1D-a-')):
+                dhdr = fits.getheader(dfile.replace('1D-','1D-a-'))
+            else:
+                print("----> makePlateSum: Problem with ap1D!")
+                return 'bad'
 
         ind = 1
         if len(ims) < 2: ind = 0
@@ -890,6 +901,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         hdulist.close()
 
     print("----> makePlateSum: Done with plate "+plate+", MJD "+mjd+"\n")
+    return
+
 
 ###################################################################################################
 ''' MAKEOBSHTML: mkhtmlplate translation '''
