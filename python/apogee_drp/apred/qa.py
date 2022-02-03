@@ -3293,8 +3293,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 # Get field center RA and DEC from confSummary file
                 plugmapfile = load.filename('confSummary', configid=int(iplate[i]))
                 plans = yanny.yanny(plugmapfile, np=True)
-                tra = plans['raCen']
-                tdec = plans['decCen']
+                tra = float(plans['raCen'])
+                tdec = float(plans['decCen'])
                 ira[i] = str("%.6f" % round(tra,6))
                 idec[i] = str("%.6f" % round(tdec,6))
                 c_icrs = SkyCoord(ra=tra*u.degree, dec=tdec*u.degree, frame='icrs')
