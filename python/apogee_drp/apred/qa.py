@@ -3308,7 +3308,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 #badfiberid = planstr['badfiberid']
                 #plugmap =    planstr['plugmap']
                 #plug = platedata.getdata(int(iplate[i]), int(imjd[i]), apred, tel, plugid=plugmap, badfiberid=badfiberid)
-                iprogram[i] = '???
+                iprogram[i] = '???'
                 iloc[i] = name
             else:
                 gd, = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
