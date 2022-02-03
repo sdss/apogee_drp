@@ -783,7 +783,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
                     cax.xaxis.set_ticks_position("top")
                     #cax.minorticks_on()
-                    cax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+                    cax.xaxis.set_major_locator(ticker.MultipleLocator(5))
                     #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
                     cax.xaxis.set_label_position('top') 
                     cax.set_xlabel('MJD')
