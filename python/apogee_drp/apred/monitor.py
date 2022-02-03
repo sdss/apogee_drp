@@ -752,7 +752,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,22))
             xarr = np.arange(0, 300, 1) + 1
 
-            gd, = np.where((allexp[dome]['MJD'] >= 59599) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566))
+            mjdstart = 59599
+            coltickval = 5
+            if mjdstart> 59590: coltickval = 2
+            gd, = np.where((allexp[dome]['MJD'] >= mjdstart) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566))
             gdcal = allexp[dome][gd]
             umjd = gdcal['MJD']
             ndome = len(gdcal)
@@ -783,7 +786,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
                     cax.xaxis.set_ticks_position("top")
                     #cax.minorticks_on()
-                    cax.xaxis.set_major_locator(ticker.MultipleLocator(5))
+                    cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
                     #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
                     cax.xaxis.set_label_position('top') 
                     cax.set_xlabel('MJD')
