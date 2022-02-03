@@ -731,7 +731,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             if os.path.exists(rawfile)==False:
                 print(rawfile,' NOT FOUND')
             head = fits.getheader(rawfile,1)
-            exptype = head.get('EXPTYPE')OB
+            exptype = head.get('EXPTYPE')
             if exptype.lower()=='domeflat':
                 flavor = 'psf'
         else:

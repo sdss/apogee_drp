@@ -404,6 +404,10 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     telescope = observatory+'25m'
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
 
+    # Reduction steps
+    # The default is to do all
+    steps = ['setup','master','3d','check','cals','plans','rv','unified','qa']
+
     nodes = 1
     alloc = 'sdss-np'
     shared = True
@@ -533,16 +537,21 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     else:
         rootLogger.info('No exposures to process with ap3D')
 
+
+    # 4) Perform initial quality check on all exposures
+    #--------------------------------------------------
     # Do QA check of the files
-    qachk = check(expinfo['num'],apred,telescope)
+    rootLogger.info(' ')
+    rootLogger.info('Doing quality checks on all exposures')
+    qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=rootLogger)
+    rootLogger.info(' ')
 
 
-
-    # 4) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
+    # 5) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
     #----------------------------------------------------------------
     rootLogger.info('')
     rootLogger.info('----------------------------------------')
-    rootLogger.info('4) Generating daily calibration products')
+    rootLogger.info('5) Generating daily calibration products')
     rootLogger.info('========================================')
     rootLogger.info('')
     # First we need to run domeflats and quartzflats so there are apPSF files
@@ -614,11 +623,11 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
 
     # Make plan files for all nights!
 
-    # 5) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
+    # 6) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
     rootLogger.info('')
     rootLogger.info('----------------')
-    rootLogger.info('5) Running APRED')
+    rootLogger.info('6) Running APRED')
     rootLogger.info('================')
     rootLogger.info('')
 
@@ -636,11 +645,11 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     del queue
 
         
-    # 6) Run "rv" on all unique stars
+    # 7) Run "rv" on all unique stars
     #--------------------------------
     rootLogger.info('')
     rootLogger.info('--------------------------------')
-    rootLogger.info('6) Running RV+Visit Combination')
+    rootLogger.info('7) Running RV+Visit Combination')
     rootLogger.info('================================')
     rootLogger.info('')
     vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope))
@@ -674,11 +683,11 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     runapogee.create_sumfiles(apred,telescope)
 
     
-    # 7) Unified directory structure
+    # 8) Unified directory structure
     #---------------------------------
     rootLogger.info('')
     rootLogger.info('---------------------------------------------')
-    rootLogger.info('7) Generating unified MWM directory structure')
+    rootLogger.info('8) Generating unified MWM directory structure')
     rootLogger.info('=============================================')
     rootLogger.info('')
     queue = pbsqueue(verbose=True)
@@ -699,11 +708,11 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
 
 
-    # 8) Run QA script
+    # 9) Run QA script
     #------------------
     rootLogger.info('')
     rootLogger.info('--------------')
-    rootLogger.info('8) Running QA')
+    rootLogger.info('9) Running QA')
     rootLogger.info('==============')
     rootLogger.info('')
     queue = pbsqueue(verbose=True)
@@ -712,6 +721,11 @@ def run(observatory,mjdstart,mjdstop,apred,qos='sdss',fresh=False,links=None):
     qaerrfile = qaoutfile.replace('-qa.log','-qa.'+logtime+'.err')
     if os.path.exists(os.path.dirname(qaoutfile))==False:
         os.makedirs(os.path.dirname(qaoutfile))
+
+    # apqa on each plate/config
+    # nightly QA
+    # monitor ppate
+
     queue.append('apqa {0} {1}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
     queue.commit(hard=True,submit=True)
     queue_wait(queue)  # wait for jobs to complete

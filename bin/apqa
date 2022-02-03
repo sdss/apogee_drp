@@ -36,6 +36,19 @@ if __name__ == '__main__' :
     parser.add_argument('mjd', type=str, nargs=1,  help='Night MJD5')
     parser.add_argument('observatory', type=str, nargs=1, help='APOGEE observatory (apo or lco)')
     parser.add_argument('--apred', type=str, nargs=1, default='daily', help='APOGEE reduction version')
+    parser.add_argument('--plate', type=str, nargs=1, default='', help='Plate/configuration_id')
+    parser.add_argument('--telescope', type=str, nargs=1, help='Telescope')
+    parser.add_argument('--platesum', type=str, nargs=1, help='Make plate summary files')
+    parser.add_argument('--obshtml', type=str, nargs=1, help='Make observation html pages')
+    parser.add_argument('--obsplots', type=str, nargs=1, help='Make observation plots')
+    parser.add_argument('--vishtml', type=str, nargs=1, help='Make visit-levle HTML pages')
+    parser.add_argument('--starhtml', type=str, nargs=1, help='Make star-level pages')
+    parser.add_argument('--visplots', type=str, nargs=1, help='Make visit-level plots')
+    parser.add_argument('--starplots', type=str, nargs=1, help='Make star-level plots')
+    parser.add_argument('--masterqa', type=str, nargs=1, help='Make master QA pages')
+    parser.add_argument('--nightqa', type=str, nargs=1, help='Make nightly QA pages')
+    parser.add_argument('--monitor', type=str, nargs=1, help='Make monitor pages')
+    parser.add_argument('--clobber', action='store_true', help='Overwriting existing files')
     args = parser.parse_args()
 
     logger = dln.basiclogger()
@@ -46,14 +59,41 @@ if __name__ == '__main__' :
     start = time.time()
     logger.info("Start: "+now.strftime("%Y-%m-%d %H:%M:%S"))
 
-    # Code copied from rv.dopple_rv()
-    mjd = args.mjd[0]
-    observatory = args.observatory[0]
-    apred = args.apred
+    # Make kwargs
+    adict = vars(args)
+    kws = {}
+    for k in adict.keys():
+        if adict[k] is not None:
+            # strip outer list
+            if type(adict[k]) is list:
+                val = adict[k][0]
+            else:
+                val = adict[k]
+            # Convert 'True' to True and 'False' to False                    
+            if type(val) is str:
+                if val.lower()=='false':
+                    val = False
+                elif val.lower()=='true':
+                    val = True
+            kws[k] = val
 
-    # Run the QA code
-    qa.apqaMJD(mjd=mjd, observatory=observatory, apred=apred)
+    # Fix the "make" flags names
+    flags = ['platesum','obshtml','obsplots','vishtml','starhtml','visplots','starplots','masterqa','nightqa','monitor']
+    for f in flags:
+        if f in kws.keys():
+            val = kws.pop(f)
+            kws['make'+f] = val
 
+    # Run plate QA code
+    if args.plate is not None:
+        # Remove observatory
+        if 'observatory' in kws.keys():
+            kws.pop('observatory')
+        qa.apqa(**kws)        
+    # Run nightly QA code
+    else:
+        qa.apqaMJD(**kws)
+    
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
     logger.info("elapsed: %0.1f sec." % (time.time()-start))

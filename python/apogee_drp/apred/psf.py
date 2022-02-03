@@ -172,17 +172,20 @@ class PSFProfile(object):
     
 class PSF(object):
 
-    def __init__(self,data,nxgrid=20,nygrid=50,kind='ann',labels=None):
+    def __init__(self,data,nxgrid=20,nygrid=50,kind='ann',log=True):
         # kind can be 'ann' or 'grid'
         if kind=='ann':
             # coeffs = (w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y)
             self.kind = kind
             coefs = data
+            self._log = log
             self._coeffs = coeffs
             self.xmin = coeffs['xmin']
             self.xmax = coeffs['xmax']
             self.y = coeffs['y']
             self._grid = None
+            self._xgrid = None
+            self._ygrid = None        
         elif kind=='grid':
             # data should be (grid,labels,y)
             # grid should be [Ncols,Nrows,Npix]
@@ -191,28 +194,29 @@ class PSF(object):
             self.kind = kind
             grid,labels,y = data
             self._grid = grid
+            self._log = log        
             self._labels = labels
+            self._xgrid = labels[:,:,0]
+            self._ygrid = labels[:,:,1]
             self.y = y
-            self.xmin = [np.min(labels[:,:,0]),np.max(labels[:,:,0])]
-            self.xmax = [np.min(labels[:,:,1]),np.max(labels[:,:,1])]
+            self.xmin = [np.min(labels[:,:,0]),np.min(labels[:,:,1])]
+            self.xmax = [np.max(labels[:,:,0]),np.max(labels[:,:,1])]
             nxgrid,nygrid,npix = grid.shape
         else:
             raise ValueError('Only "ann" and "grid" supported at this time')
         self.npix = len(self.y)
-        self._xgrid = None
         self._nxgrid = nxgrid
-        self._ygrid = None     
         self._nygrid = nygrid
 
     def __str__(self):
         """ String representation of the PSF."""
-        return self.__class__.__name__+'(%.1f<X<%.1f, %.1f<X<%.1f, Npix=%d)' % \
-                                        (self.xmin[0],self.xmax[0],self.xmin[1],self.xmax[1],self.npix)
+        return self.__class__.__name__+'(%.1f<X<%.1f, %.1f<X<%.1f, %s, Npix=%d)' % \
+                                        (self.xmin[0],self.xmax[0],self.xmin[1],self.xmax[1],self,kind,self.npix)
 
     def __repr__(self):
         """ String representation of the PSF."""
-        return self.__class__.__name__+'(%.1f<X<%.1f, %.1f<X<%.1f, Npix=%d)' % \
-                                        (self.xmin[0],self.xmax[0],self.xmin[1],self.xmax[1],self.npix)
+        return self.__class__.__name__+'(%.1f<X<%.1f, %.1f<X<%.1f, %s, Npix=%d)' % \
+                                        (self.xmin[0],self.xmax[0],self.xmin[1],self.xmax[1],self.kind,self.npix)
     
     def __call__(self,labels,y=None,ycen=None):
         """  Make the PSF. """
@@ -229,8 +233,12 @@ class PSF(object):
                 ycen = labels[1]
             yfine = np.arange(self.npix)
             fullprofile = profile
-            profile = np.interp(y-ycen,self.y,fullprofile,left=0.0,right=0.0)
-                
+            profile = np.interp(y-ycen,self.y,fullprofile,left=fullprofile[0],right=fullprofile[-1])
+
+        # Take to the power of
+        if self._log:
+            profile = 10**profile
+            
         return profile
         
     def scaled_labels(self,labels):
@@ -239,9 +247,18 @@ class PSF(object):
             raise ValueError('No label scaling informationl')
         slabels = (labels-self.xmin)/(self.xmax-self.xmin) - 0.5   # scale the labels
         return slabels
-        
+
     def model(self,inlabels):
         """ Make a brand-new full profile model with input labels."""
+        if inlabels[0]<0 or inlabels[0]>2047 or inlabels[1]<0 or inlabels[1]>2047:
+            raise ValueError('X/Y must be between 0 and 2047')
+        if self.kind=='ann':
+            return self.ann_model(inlabels)
+        else:
+            return self.gridinterp(inlabels)
+        
+    def ann_model(self,inlabels):
+        """ Make a brand-new full profile model with input labels and ANN model."""
         if inlabels[0]<0 or inlabels[0]>2047 or inlabels[1]<0 or inlabels[1]>2047:
             raise ValueError('X/Y must be between 0 and 2047')
         labels = self.scaled_labels(inlabels) # scale the labels
@@ -256,8 +273,6 @@ class PSF(object):
         inside = np.einsum('ij,j->i', w_array_0, labels) + b_array_0
         outside = np.einsum('ij,j->i', w_array_1, leaky_relu(inside)) + b_array_1
         m = np.einsum('ij,j->i', w_array_2, leaky_relu(outside)) + b_array_2
-        # This is the log of the model
-        m = 10**m
         return m
 
     def gridinterp(self,labels):
@@ -269,53 +284,77 @@ class PSF(object):
         if self._grid is None:
             self.mkgrid()
 
-        xind = np.searchsorted(self._xgrid,labels[0])
-        yind = np.searchsorted(self._ygrid,labels[1])        
+        if self.kind=='grid':
+            # xgrid/ygrid are 2D [Nx,Ny] and not quite a regular rectangular grid
+            # Find closest X position
+            xind = np.searchsorted(self._xgrid[:,self._nygrid//2],labels[0])
+            yind = np.searchsorted(self._ygrid[np.minimum(xind,self._nxgrid-1),:],labels[1])
+            xind = np.searchsorted(self._xgrid[:,np.minimum(yind,self._nygrid-1)],labels[0])
+            yind = np.searchsorted(self._ygrid[np.minimum(xind,self._nxgrid-1),:],labels[1])            
+        else:
+            xind = np.searchsorted(self._xgrid,labels[0])
+            yind = np.searchsorted(self._ygrid,labels[1])        
         
         # Find the closest points on the grid
         #------------------------------------
         # -- At corners, use corner values --
         # bottom left
-        if labels[0] < self.xmin[0] and labels[1] < self.xmin[1]:
+        if xind==0 and yind==0:
             return self._grid[0,0,:]
         # top left
-        if labels[0] < self.xmin[0] and labels[1] > self.xmax[1]:
+        if xind==0 and yind==self._nygrid:
             return self._grid[0,-1,:]
         # bottom right
-        if labels[0] > self.xmax[0] and labels[1] < self.xmin[1]:
+        if xind==self._nxgrid and yind==0:        
             return self._grid[-1,0,:]
         # top right
-        if labels[0] > self.xmax[0] and labels[1] > self.xmax[1]:
+        if xind==self._nxgrid and yind==self._nygrid:
             return self._grid[-1,-1,:]
-
+        
         # -- Edges, use two points --
         # linearly interpolate so it's smooth        
-        # left
-        if labels[0] < self.xmin[0]:
+        # Left
+        #   use left-most X and interpolate only in Y
+        if xind==0:
             yind1 = yind-1
             yind2 = yind
-            wt = (labels[1]-self._ygrid[yind1])/(self._ygrid[yind2]-self._ygrid[yind1])
+            if self.kind=='grid':
+                wt = (labels[1]-self._ygrid[xind,yind1])/(self._ygrid[xind,yind2]-self._ygrid[xind,yind1])
+            else:
+                wt = (labels[1]-self._ygrid[yind1])/(self._ygrid[yind2]-self._ygrid[yind1])                
             profile = (1-wt)*self._grid[0,yind1,:] + wt*self._grid[0,yind2,:]
             return profile
-        # right
-        if labels[0] > self.xmax[0]:
+        # Right
+        #  use right-most X and interpolate only in Y
+        if xind==self._nxgrid:
             yind1 = yind-1
             yind2 = yind
-            wt = (labels[1]-self._ygrid[yind1])/(self._ygrid[yind2]-self._ygrid[yind1])
+            if self.kind=='grid':
+                wt = (labels[1]-self._ygrid[xind-1,yind1])/(self._ygrid[xind-1,yind2]-self._ygrid[xind-1,yind1])
+            else:
+                wt = (labels[1]-self._ygrid[yind1])/(self._ygrid[yind2]-self._ygrid[yind1])
             profile = (1-wt)*self._grid[-1,yind1,:] + wt*self._grid[-1,yind2,:]
             return profile
-        # bottom
-        if labels[1] < self.xmin[1]:
+        # Bottom
+        #  use Bottom-most Y and interpolate only in X
+        if yind==0:
             xind1 = xind-1
             xind2 = xind
-            wt = (labels[0]-self._xgrid[xind1])/(self._xgrid[xind2]-self._xgrid[xind1])
+            if self.kind=='grid':
+                wt = (labels[0]-self._xgrid[xind1,yind])/(self._xgrid[xind2,yind]-self._xgrid[xind1,yind])
+            else:
+                wt = (labels[0]-self._xgrid[xind1])/(self._xgrid[xind2]-self._xgrid[xind1])
             profile = (1-wt)*self._grid[xind1,0,:] + wt*self._grid[xind2,0,:]
             return profile
-        # top
-        if labels[1] > self.xmax[1]:
+        # Top
+        #  use top-most Y and interpolate only in X
+        if yind==self._nygrid:
             xind1 = xind-1
             xind2 = xind
-            wt = (labels[0]-self._xgrid[xind1])/(self._xgrid[xind2]-self._xgrid[xind1])
+            if self.kind=='grid':
+                wt = (labels[0]-self._xgrid[xind1,yind-1])/(self._xgrid[xind2,yind-1]-self._xgrid[xind1,yind-1])
+            else:
+                wt = (labels[0]-self._xgrid[xind1])/(self._xgrid[xind2]-self._xgrid[xind1])            
             profile = (1-wt)*self._grid[xind1,-1,:] + wt*self._grid[xind2,-1,:]
             return profile
             
@@ -325,18 +364,74 @@ class PSF(object):
         xind2 = xind
         yind1 = yind-1
         yind2 = yind
-        wtdx = (self._xgrid[xind2]-self._xgrid[xind1])
-        wtdy = (self._ygrid[yind2]-self._ygrid[yind1])        
+        if self.kind=='grid':
+            wtdx = (self._xgrid[xind2,yind1]-self._xgrid[xind1,yind1])
+            wtdy = (self._ygrid[xind1,yind2]-self._ygrid[xind1,yind1])
+        else:
+            wtdx = (self._xgrid[xind2]-self._xgrid[xind1])
+            wtdy = (self._ygrid[yind2]-self._ygrid[yind1])                
         profile = np.zeros(self.npix,float)
         totwt = 0.0
         for xind in [xind1,xind2]:
             for yind in [yind1,yind2]:
-                wt = (labels[0]-self._xgrid[xind])*(labels[1]-self._ygrid[yind])/(wtdx*wtdy)
+                if self.kind=='grid':
+                    wt = np.abs(labels[0]-self._xgrid[xind,yind])*np.abs(labels[1]-self._ygrid[xind,yind])/(wtdx*wtdy)
+                else:
+                    wt = np.abs(labels[0]-self._xgrid[xind])*np.abs(labels[1]-self._ygrid[yind])/(wtdx*wtdy)
                 totwt += wt
                 profile += wt*self._grid[xind,yind]
         profile /= totwt
-                
+        
         return profile
+
+    # Make make a new method that does the interpolation for an entire fiber all at once (all 2048 pixels)
+    # might allow for some speedups.  Would need to have y values (trace) input.
+    def fiber(self,y):
+        """ Construct profiles for all columns of a fiber."""
+        # all y-values must be given
+
+        # Just pick ONE y-value
+        x = np.arange(2048)
+        ymn = np.mean(y)
+        profile = np.zeros((2048,self.npix),float)
+
+        if self.kind=='grid':
+            # xgrid/ygrid are 2D [Nx,Ny] and not quite a regular rectangular grid
+            yind = np.searchsorted(self._ygrid[self._nxgrid//2,:],ymn)
+            xarr = self._xgrid[:,yind]
+        else:
+            yind = np.searchsorted(self._ygrid,ymn)
+            xarr = self._xgrid
+
+        yfine = np.arange(self.npix)            
+        for i in range(2048):
+            if self.kind=='grid':
+                xind = np.searchsorted(self._xgrid[:,yind],i)
+            else:
+                xind = np.searchsorted(self._xgrid,i)
+            xind2 = None
+            if xind==0:
+                xind1 = xind
+            elif xind==self._nxgrid-1:
+                xind1 = xind
+            else:
+                xind1 = xind-1
+                xind2 = xind
+            prof1 = self._grid[xind1,yind,:]
+            # Shift and interpolate
+            ycen = y[i]
+            prof = np.interp(y-ycen,y,prof1,left=0.0,right=0.0)
+            if xind2 is not None:
+                prof2 = self._grid[xind2,yind,:]
+                # Shift and interpolate
+                iprof2 = np.interp(y-ycen,y,prof2,left=0.0,right=0.0)
+                wt = (self._xgrid[xind1,yind]-i)/(self._xgrid[xind2,yind]-self._xgrid[xind1,yind])
+                prof = profile*wt + (1-wt)*iprof2
+            profile[:,i] = prof
+            import pdb; pdb.set_trace()
+            
+        import pdb; pdb.set_trace()
+            
         
     def mkgrid(self,nx=None,ny=None):
         """ Make a grid of models to be used later."""
@@ -377,13 +472,29 @@ class PSF(object):
     @classmethod
     def read(cls,infile):
         # Load the file and return a PSF object
-        coeffs = {}
-        hdu = fits.open(infile)
-        for i in range(9):
-            coeffs[hdu[i].header['type']] = hdu[i].data
-        # coeffs = (w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y)
-        return PSF(coeffs)
+        if infile[-4:]=='fits':
+            hdu = fits.open(infile)
+        else:
+            raise ValueError('Only fits files allowed')
 
+        kind = hdu[0].header['type']
+        log = hdu[0].header['log']
+        if log is None: log=True  # True by default
+        if kind=='grid':
+            grid = hdu[0].data
+            labels = hdu[1].data
+            y = hdu[2].data
+            return PSF((grid,labels,y),kind='grid',log=log)
+        elif kind=='ann':
+            coeffs = {}
+            hdu = fits.open(infile)
+            for i in range(9):
+                coeffs[hdu[i].header['type']] = hdu[i].data
+            # coeffs = (w_array_0, w_array_1, w_array_2, b_array_0, b_array_1, b_array_2, x_min, x_max, y)
+            return PSF(coeffs,kind='ann',log=log)
+        else:
+            raise ValueError('Only grid or ann types allowed')
+        
     
 #####  GET EMPIRICAL PSF #######
     
@@ -1119,7 +1230,7 @@ def getoffset(frame,traceim):
     return coef2
 
 
-def fullepsfgrid(psf,traceim,offcoef):
+def fullepsfgrid(psf,traceim,offcoef,verbose=True):
     """ Generate a full EPSF grid for all fibers and columns and dealing with offsets."""
 
     
@@ -1139,7 +1250,8 @@ def fullepsfgrid(psf,traceim,offcoef):
     epsf = []
     # Fiber loop
     for i in range(nfibers):
-        print('fiber = ',i)
+        if verbose:
+            if i % 50==0: print('fiber = ',i)
         off = func_poly2d([np.arange(2048),traceim[i,:]],*offcoef)
         ycen = traceim[i,:]+off
         ylo = int(np.min(np.round(ycen)))-14
@@ -1156,11 +1268,8 @@ def fullepsfgrid(psf,traceim,offcoef):
             img[:,j] = m1
             #ylo[j] = y[0]
             #yhi[j] = y[-1]
-                        
+                
         data = {'fiber':i, 'lo':ylo, 'hi':yhi, 'img':img, 'ycen':ycen}
-        #data = {'fiber':i, 'lo':ylo, 'hi':yhi, 'img':img, 'ycen':ycen}        
-        #data = {'fiber':i, 'lo':np.min(ycen)-14, 'hi':np.max(ycen)+14, 'img':img, 'ycen':ycen}        
-        #p = {'fiber': ptmp['FIBER'], 'lo': ptmp['LO'], 'hi': ptmp['HI'], img: ptmp['IMG']
         epsf.append(data)
         
     return epsf
