@@ -18,9 +18,8 @@ import glob
 import pdb
 import numpy as np
 from astropy.io import fits
-from tools import html
-from tools import plots
-from apogee.utils import apload
+from holtztools import plots, html
+from apogee_drp.utils import apload
 
 def mkpar(mjdstart,mjdend,out='wave',lco=False,yearout='multiwave', append=False,maxsky=41) :
     """ Make calibration file list for wavecals between input dates
