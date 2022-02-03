@@ -3287,43 +3287,58 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             name = tmp[1].split('/')[0]
             iname[i] = name
 
+            load = apload.ApLoad(apred=apred, telescope=itel[i])
+
             if fps:
+                # Get field center RA and DEC from confSummary file
+                plugmapfile = load.filename('confSummary', configid=int(iplate[i]))
+                plans = yanny.yanny(plugmapfile, np=True)
+                tra = plans['raCen']
+                tdec = plans['decCen']
+                ira[i] = str("%.6f" % round(tra,6))
+                idec[i] = str("%.6f" % round(tdec,6))
+                c_icrs = SkyCoord(ra=tra*u.degree, dec=tdec*u.degree, frame='icrs')
+                ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
+                ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
+
                 # Read planfile
                 planfile = load.filename('Plan', plate=int(iplate[i]), mjd=imjd[i], fps=fps)
                 planstr = plan.load(planfile, np=True)
                 # Get values from plan file.
                 badfiberid = planstr['badfiberid']
                 plugmap =    planstr['plugmap']
-                plug = platedata.getdata(int(iplate[i]), int(imjd[i]), apred, tel, plugid=plugmap, badfiberid=badfiberid) 
+                plug = platedata.getdata(int(iplate[i]), int(imjd[i]), apred, tel, plugid=plugmap, badfiberid=badfiberid)
                 pdb.set_trace()
-
-            gd, = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
-            if len(gd)>0:
                 iprogram[i] = plans['PLATEPLANS']['programname'][gd][0].astype(str)
                 iloc[i] = str(int(round(plans['PLATEPLANS']['locationid'][gd][0])))
-                tra = plans['PLATEPLANS']['raCen'][gd][0]
-                tdec = plans['PLATEPLANS']['decCen'][gd][0]
-                ira[i] = str("%.6f" % round(tra,6))
-                idec[i] = str("%.6f" % round(tdec,6))
-                c_icrs = SkyCoord(ra=tra*u.degree, dec=tdec*u.degree, frame='icrs')
-                ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
-                ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
-                load = apload.ApLoad(apred=apred, telescope=itel[i])
-                platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
-                if os.path.exists(platesumfile) is False:
-                    tmp = glob.glob(platesumfile.replace('None','*'))
-                    if len(tmp) > 0: 
-                        platesumfile = tmp[0]
-                if os.path.exists(platesumfile):
-                    tmp = fits.open(platesumfile)
-                    plsum1 = tmp[1].data
-                    inexposures[i] = str(len(plsum1['IM']))
-                    iexptime[i] = str(np.sum(plsum1['EXPTIME']))
-                    icart[i] = str(plsum1['CART'][0])
-                    izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
-                    imoonphase[i] = np.mean(plsum1['MOONPHASE'])
-                else:
-                    print('----> makeMasterQApages: Problem with plate/config ' + iplate[i] + ', MJD ' + imjd[i] + '. PlateSum not found.')
+            else:
+                gd, = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
+                if len(gd)>0:
+                    iprogram[i] = plans['PLATEPLANS']['programname'][gd][0].astype(str)
+                    iloc[i] = str(int(round(plans['PLATEPLANS']['locationid'][gd][0])))
+                    tra = plans['PLATEPLANS']['raCen'][gd][0]
+                    tdec = plans['PLATEPLANS']['decCen'][gd][0]
+                    ira[i] = str("%.6f" % round(tra,6))
+                    idec[i] = str("%.6f" % round(tdec,6))
+                    c_icrs = SkyCoord(ra=tra*u.degree, dec=tdec*u.degree, frame='icrs')
+                    ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
+                    ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
+
+            platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
+            if os.path.exists(platesumfile) is False:
+                tmp = glob.glob(platesumfile.replace('None','*'))
+                if len(tmp) > 0: 
+                    platesumfile = tmp[0]
+            if os.path.exists(platesumfile):
+                tmp = fits.open(platesumfile)
+                plsum1 = tmp[1].data
+                inexposures[i] = str(len(plsum1['IM']))
+                iexptime[i] = str(np.sum(plsum1['EXPTIME']))
+                icart[i] = str(plsum1['CART'][0])
+                izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
+                imoonphase[i] = np.mean(plsum1['MOONPHASE'])
+            else:
+                print('----> makeMasterQApages: Problem with plate/config ' + iplate[i] + ', MJD ' + imjd[i] + '. PlateSum not found.')
 
         # Sort by MJD
         order = np.argsort(imjd)
