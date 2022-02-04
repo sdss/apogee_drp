@@ -1925,6 +1925,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             vishtml.write('<TD align="left">' + targflagtxt)
             vishtml.write('<BR><BR>' + starflagtxt)
 
+            pdb.set_trace()
             # Vhelio, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
             if os.path.exists(allVpath):
                 gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
