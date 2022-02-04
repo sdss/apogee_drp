@@ -1783,7 +1783,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
-    data = apPlate['a'][11].data[::-1]
+    try:
+        data = apPlate['a'][11].data[::-1]
+    except:
+        print("----> makeVisHTML: PROBLEM! apPlate not found for plate " + plate + ", MJD " + mjd)
+        return
     nfiber = len(data)
 
     # Read in flux file to get an idea of throughput
@@ -1791,6 +1795,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     flux = load.apFlux(fluxid)
     medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
     throughput = medflux / np.nanmax(medflux)
+
+    # Read the confSummary file to get first carton values
+    plugmapfile = load.filename('confSummary', configid=int(plate))
+    plug = yanny.yanny(plugmapfile, np=True)['FIBERMAP']
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
@@ -1809,7 +1817,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
     vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
 #    vishtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
-
 
     tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
     tputdat = open(tputfile, 'w')
@@ -1885,6 +1892,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 visitfile = visitfile.replace('-apo25m-', '-')
             if os.path.exists(visitfile):
                 visithdr = fits.getheader(visitfile)
+                catid = visithdr['CATID']
+                pp, = np.where(catid == plug['catalogid'])
+                if len(pp) > 0: targflagtxt = plug['firstcarton'][pp][0].decode('UTF-8')
                 starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
                 if type(visithdr['SNR']) != str:
                     snratio = str("%.2f" % round(visithdr['SNR'],2))
@@ -1910,8 +1920,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align ="center">' + cjkcolor)
                 #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
             else:
-                vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
-                vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
+                vishtml.write('<TD align="right"><FONT COLOR="red">99.999</FONT>')
+                vishtml.write('<TD align="right"><FONT COLOR="red">99.999</FONT>')
                 #vishtml.write('<TD BGCOLOR='+color+'>---\n')
 
             if objtype == 'SKY': 
@@ -1922,6 +1932,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 else:
                     vishtml.write('<TD align="center">SCI')
 
+            if objtype == 'SKY': targflagtxt = 'sky'
             vishtml.write('<TD align="left">' + targflagtxt)
             vishtml.write('<BR><BR>' + starflagtxt)
 
