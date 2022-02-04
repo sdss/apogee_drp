@@ -1783,7 +1783,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
-    data = apPlate['a'][11].data[::-1]
+    try:
+        data = apPlate['a'][11].data[::-1]
+    except:
+        print("----> makeVisHTML: PROBLEM! apPlate not found for plate " + plate + ", MJD " + mjd)
+        return
     nfiber = len(data)
 
     # Read in flux file to get an idea of throughput
