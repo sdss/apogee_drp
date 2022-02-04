@@ -1834,7 +1834,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             hmag = jdata['HMAG']
             cjmag = str("%.3f" % round(jdata['JMAG'], 3))
             chmag = str("%.3f" % round(jdata['HMAG'], 3))
-            if chmag == '
             ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
             jkcolor = jdata['JMAG'] - jdata['KMAG']
             if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
