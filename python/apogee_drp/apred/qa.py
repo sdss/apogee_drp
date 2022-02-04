@@ -1795,7 +1795,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # Read the confSummary file to get first carton values
     plugmapfile = load.filename('confSummary', configid=int(plate))
     plug = yanny.yanny(plugmapfile, np=True)['FIBERMAP']
-    pdb.set_trace()
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
@@ -1889,6 +1888,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 visitfile = visitfile.replace('-apo25m-', '-')
             if os.path.exists(visitfile):
                 visithdr = fits.getheader(visitfile)
+                catid = visithdr['CATID']
+                pp, = np.where(catid == plug['catalogid'])
+                if len(pp) > 0: firstcarton = plug['firstcarton'][pp][0]
                 starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
                 if type(visithdr['SNR']) != str:
                     snratio = str("%.2f" % round(visithdr['SNR'],2))
