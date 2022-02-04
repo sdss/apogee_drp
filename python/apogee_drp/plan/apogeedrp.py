@@ -12,7 +12,7 @@ from ..database import apogeedb
 from . import mkplan,runapogee,check
 from sdss_access.path import path
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table,hstack,vstack
 from collections import OrderedDict
 #from astropy.time import Time
 from datetime import datetime
@@ -110,24 +110,42 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
 
     nmjds = len(mjds)
 
-    # Maybe get this from the data itself and not the database!!!
-
-
+    db = apogeedb.DBSession()
 
     # Get information for all of the exposures
     expinfo = None
     for m in mjds:
-        expinfo1 = info.expinfo(observatory=observatory,mjd5=mjd5)
+        expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
+        # Get data from database
+        dbexpinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))
+        vals,ind1,ind2 = np.intersect1d(expinfo1['num'],dbexpinfo['num'],return_indices=True)
+        # Load new exposures into database
+        if len(ind1) != len(expinfo1):
+            db.ingest('exposure',expinfo1)  # insert into database
+            expinfo1 = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))            
+        else:
+            expinfo1 = Table(dbexpinfo)
         if expinfo is None:
-            expinfo = expinfo1
+            expinfo = Table(expinfo1)
         else:
             if len(expinfo1)>0:
-                expinfo = np.hstack((expinfo,expinfo1))
+                # this might cause issues with some string columsns
+                #  if the lengths don't agree
+                expinfo = vstack((expinfo,expinfo1))
+
     nexp = len(expinfo)
     logger.info(str(nexp)+' exposures')
 
+    # Sort them
+    si = np.argsort(expinfo['num'])
+    expinfo = expinfo[si]
+    expinfo = np.array(expinfo)
 
-def getplanfiles(load,mjds):
+    db.close()
+
+    return expinfo
+
+def getplanfiles(load,mjds,logger=None):
     """
     Get all of the plan files for a list of MJDs.
 
@@ -163,7 +181,7 @@ def getplanfiles(load,mjds):
     plans = db.query('plan',where="mjd>='%s' and mjd<='%s'" % (mjdstart,mjdstop))
     db.close()
     # No plan files for these MJDs
-    if len(ind)==0:
+    if len(plans)==0:
         logger.info('No plan files to process')
         return []
     # Only get plans for the MJDs that we have
@@ -632,7 +650,7 @@ def run3d(load,mjds,slurm,clobber=False,logger=None):
                              outfile=logfile1,errfile=logfile1.replace('.log','.err'))
         if np.sum(do3d)>0:
             queue.commit(hard=True,submit=True)
-                logger.info('PBS key is '+queue.key)
+            logger.info('PBS key is '+queue.key)
             runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
             chk3d = runapogee.check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=rootLogger)
         else:
@@ -908,24 +926,33 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     # No plan files for these MJDs
     if len(planfiles)==0:
         return
+    logger.info(str(len(planfiles))+' plan files')
+
+    # Get exposure information
+    expinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
         
     slurm1 = slurm.copy()
     slurm1['cpus'] = np.minimum(slurm['cpus'],len(planfiles))
     slurm1['numpy_num_threads'] = 2
+
     queue = pbsqueue(verbose=True)
     queue.create(label='apred', **slurm1)
     for pf in planfiles:
-        queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.'+logtime+'.log'),
-                     errfile=pf.replace('.yaml','_pbs.'+logtime+'.err'))
+        logfile = pf.replace('.yaml','_pbs.'+logtime+'.log')
+        errfile = logfile.replace('.log','.err')
+        cmd = 'apred {0}'.format(pf)
+        if clobber:
+            cmd += ' --clobber'
+        queue.append(cmd, outfile=logfile,errfile=errfile)
     queue.commit(hard=True,submit=True)
     logger.info('PBS key is '+queue.key)
     runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    # This also loads the status into the database using the correct APRED version
     chkexp,chkvisit = runapogee.check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
     del queue
-
-    ## UPDATE THE DATABASE!!!
     
     return chkexp,chkvisit
+
 
 def runrv(load,mjds,slurm,clobber=False,logger=None):
     """
@@ -991,6 +1018,9 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
     slurm1 = slurm.copy()
     slurm1['cpus'] = np.minimum(slurm['cpus'],len(vcat))
     slurm1['numpy_num_threads'] = 2
+
+    import pdb; pdb.set_trace()
+
     queue = pbsqueue(verbose=True)
     queue.create(label='rv', **slurm1)
     for obj in vcat['apogee_id']:
@@ -998,19 +1028,58 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
         outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
         if os.path.exists(outdir)==False:
             os.makedirs(outdir)
-        # Run with --verbose and --clobber set
-        queue.append('rv %s %s %s -c -v' % (obj,apred,telescope),outfile=apstarfile.replace('.fits','-'+'_pbs.'+logtime+'.log'),
+        # Run with --verbose
+        cmd = 'rv %s %s %s -v' % (obj,apred,telescope)
+        if clobber:
+            cmd += ' -c'
+        queue.append(cmd,outfile=apstarfile.replace('.fits','-'+'_pbs.'+logtime+'.log'),
                      errfile=apstarfile.replace('.fits','-'+'_pbs.'+logtime+'.err'))
     queue.commit(hard=True,submit=True)
     logger.info('PBS key is '+queue.key)        
     runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     import pdb; pdb.set_trace()
+    # This checks the status and puts it into the database
     chkrv = runapogee.check_rv(vcat,queue.key)
     del queue
-
-    ## UPDATE THE DATABASE!!!
     
     return chkrv
+
+def runsumfiles(load,mjds,logger=None):
+    """
+    Create the MJD summary files for the relevant MJDS and final summary file of
+    all nights.
+
+    Parameters
+    ----------
+    load : ApLoad object
+       ApLoad object that contains "apred" and "telescope".
+    mjds : list
+       List of MJDs to process
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.
+
+    Returns
+    -------
+    Output the summary files for the relevant MJDs.
+
+    Example
+    -------
+
+    runsumfiles(load,mjds)
+
+    """
+
+    if logger is None:
+        logger = dln.basiclogger()
+    
+    apred = load.apred
+    telescope = load.telescope
+
+    # Loop over MJDs and create the MJD-level summary files
+    for m in mjds:
+        runapogee.create_sumfiles_mjd(apred,telescope,m)
+    # Create allStar/allVisit file
+    runapogee.create_sumfiles(apred,telescope)
 
 
 def rununified(load,mjds,slurm,clobber=False,logger=None):
@@ -1165,6 +1234,10 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
          (b) a string with a comma-separated list (e.g. '59610,59610,59650'), (c) a python list of
          MJDs, or (d) a combination of all of the above.
          By default, all SDSS-V MJDs are run.
+    steps : list, optional
+       Processing steps to perform.  The full list is:
+         ['setup','master','3d','check','cals','plans','apred','rv','summary','unified','qa']
+         By default, all steps are run.
     qos : str, optional
        The pbs queue to use.  Default is "sdss".
     clobber : boolean, optional
@@ -1200,7 +1273,6 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
 
     # Reduction steps
     # The default is to do all
-    allsteps = ['setup','master','3d','check','cals','plans','apred','rv','summary','unified','qa']
     steps = loadsteps(steps)
     nsteps = len(steps)
 
@@ -1210,7 +1282,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     ppn = 64
     walltime = '10-00:00:00'
     slurm = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn, 'cpus':cpus,
-             'walltime':walltime, 'notifications':False}
+             'walltime':walltime, 'notification':False}
     
     # Get software version (git hash)
     gitvers = plan.getgitvers()
@@ -1246,7 +1318,6 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     rootLogger.info(str(nmjd)+' MJDs: '+','.join(np.char.array(mjds).astype(str)))
     rootLogger.info(str(nsteps)+' steps: '+','.join(steps))
     rootLogger.info('Clobber is '+str(clobber))
-
 
     # 1) Setup the directory structure
     #----------------------------------
@@ -1347,7 +1418,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('9) Create summary files')
         rootLogger.info('=======================')
         rootLogger.info('')
-        runapogee.create_sumfiles(apred,telescope)
+        runsumfiles(load,mjds,logger=rootLogger)
     
     # 10) Unified directory structure
     #---------------------------------
@@ -1357,7 +1428,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('10) Generating unified MWM directory structure')
         rootLogger.info('=============================================')
         rootLogger.info('')
-        rununified(load,mjds,slurm=slurm,logger=rootLogger)
+        #rununified(load,mjds,slurm=slurm,logger=rootLogger)
 
     # 11) Run QA script
     #------------------
