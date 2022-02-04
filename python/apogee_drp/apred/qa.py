@@ -1794,7 +1794,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
     # Read the confSummary file to get first carton values
     plugmapfile = load.filename('confSummary', configid=int(plate))
-    conf = yanny.yanny(plugmapfile, np=True)
+    plug = yanny.yanny(plugmapfile, np=True)['FIBERMAP']
     pdb.set_trace()
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
