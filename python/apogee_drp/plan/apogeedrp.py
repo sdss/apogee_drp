@@ -562,6 +562,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     del queue    
 
+    ## UPDATE THE DATABASE!!!
+
+    
 def run3d(load,mjds,slurm,clobber=False,logger=None):
     """
     Run AP3D on all exposures for a list of MJDs.
@@ -639,6 +642,8 @@ def run3d(load,mjds,slurm,clobber=False,logger=None):
         logger.info('No exposures to process with AP3D')
         chk3d = None
 
+    ## UPDATE THE DATABASE!!!
+        
     return chk3d
 
 def rundailycals(load,mjds,slurm,clobber=False,logger=None):
@@ -777,6 +782,8 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
         else:
             logger.info('No '+str(calnames[j])+' calibration files to run')
 
+    ## UPDATE THE DATABASE!!!            
+            
     return chkcal
 
 def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
@@ -851,6 +858,7 @@ def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
         #daycat['success'] = False
         #db.ingest('daily_status',daycat)
 
+    ## UPDATE THE DATABASE!!!
 
     return planfiles
 
@@ -915,6 +923,8 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     chkexp,chkvisit = runapogee.check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
     del queue
 
+    ## UPDATE THE DATABASE!!!
+    
     return chkexp,chkvisit
 
 def runrv(load,mjds,slurm,clobber=False,logger=None):
@@ -998,6 +1008,8 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
     chkrv = runapogee.check_rv(vcat,queue.key)
     del queue
 
+    ## UPDATE THE DATABASE!!!
+    
     return chkrv
 
 
@@ -1377,6 +1389,9 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     #daycat['pk'] = dayout['pk'][0]
     #db.update('daily_status',daycat)
 
+
+    ## UPDATE THE DATABASE!!!
+    
     rootLogger.info('Daily APOGEE reduction finished for MJD=%d to MJD=%d and observatory=%s' % (mjdstart,mjdstop,observatory))
 
 
