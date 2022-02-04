@@ -1830,6 +1830,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             hmag = jdata['HMAG']
             cjmag = str("%.3f" % round(jdata['JMAG'], 3))
             chmag = str("%.3f" % round(jdata['HMAG'], 3))
+            if chmag == '
             ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
             jkcolor = jdata['JMAG'] - jdata['KMAG']
             if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
@@ -1916,8 +1917,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align ="center">' + cjkcolor)
                 #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
             else:
-                vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
-                vishtml.write('<TD align="right"><FONT COLOR="red">-99.9</FONT>')
+                vishtml.write('<TD align="right"><FONT COLOR="red">99.999</FONT>')
+                vishtml.write('<TD align="right"><FONT COLOR="red">99.999</FONT>')
                 #vishtml.write('<TD BGCOLOR='+color+'>---\n')
 
             if objtype == 'SKY': 
@@ -1928,6 +1929,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 else:
                     vishtml.write('<TD align="center">SCI')
 
+            if objtype == 'SKY': targflagtxt = 'sky'
             vishtml.write('<TD align="left">' + targflagtxt)
             vishtml.write('<BR><BR>' + starflagtxt)
 
