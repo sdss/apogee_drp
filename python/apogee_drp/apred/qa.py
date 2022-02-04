@@ -1890,7 +1890,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 visithdr = fits.getheader(visitfile)
                 catid = visithdr['CATID']
                 pp, = np.where(catid == plug['catalogid'])
-                if len(pp) > 0: firstcarton = plug['firstcarton'][pp][0]
+                if len(pp) > 0: targflagtxt = plug['firstcarton'][pp][0].decode('UTF-8')
                 starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
                 if type(visithdr['SNR']) != str:
                     snratio = str("%.2f" % round(visithdr['SNR'],2))
@@ -1931,7 +1931,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             vishtml.write('<TD align="left">' + targflagtxt)
             vishtml.write('<BR><BR>' + starflagtxt)
 
-            pdb.set_trace()
             # Vhelio, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
             if os.path.exists(allVpath):
                 gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
