@@ -20,352 +20,6 @@ import logging
 from slurm import queue as pbsqueue
 import time
 
-def mkvers(apred,fresh=False):
-    """
-    Setup APOGEE DRP directory structure.
-   
-    Parameters
-    ----------
-    apred : str
-       Reduction version name.
-    fresh : boolean, optional
-       Start the reduction directory fresh.  The default is continue with what is
-         already there.
-    
-    Returns
-    -------
-    It makes the directory structure for a new DRP reduction version.
-
-    Example
-    -------
-
-    mkvers('v1.0.0')
-
-    """
-
-    apogee_redux = os.environ['APOGEE_REDUX']+'/'
-    apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
-
-    print('Setting up directory structure for APOGEE DRP version = ',vers)
-
-    # Start fresh
-    if args.fresh:
-        print('Starting fresh')
-        if os.path.exists(apogee_redux+vers):
-            shutil.rmtree(apogee_redux+vers)
-
-    # Main directory
-    if os.path.exists(apogee_redux+vers)==False:
-        print('Creating ',apogee_redux+vers)
-        os.makedirs(apogee_redux+vers)
-    else:
-        print(apogee_redux+vers,' already exists')
-    # First level
-    for d in ['cal','exposures','stars','fields','visit','qa','plates','monitor','summary','log']:
-        if os.path.exists(apogee_redux+vers+'/'+d)==False:
-            print('Creating ',apogee_redux+vers+'/'+d)
-            os.makedirs(apogee_redux+vers+'/'+d)
-        else:
-            print(apogee_redux+vers+'/'+d,' already exists')
-    # North/south subdirectories
-    for d in ['cal','exposures','monitor']:
-        for obs in ['apogee-n','apogee-s']:
-            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
-                print('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
-            else:
-                print(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
-    for d in ['visit','stars','fields']:
-        for obs in ['apo25m','lco25m']:
-            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
-                print('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
-            else:
-                print(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
-    for d in ['log']:
-        for obs in ['apo','lco']:
-            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
-                print('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
-            else:
-                print(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
-    # Cal subdirectories
-    for d in ['bpm','darkcorr','detector','flatcorr','flux','fpi','html','littrow','lsf','persist','plans','psf','qa','telluric','trace','wave']:
-        for obs in ['apogee-n','apogee-s']:
-            if os.path.exists(apogee_redux+vers+'/cal/'+obs+'/'+d)==False:
-                print('Creating ',apogee_redux+vers+'/cal/'+obs+'/'+d)
-                os.makedirs(apogee_redux+vers+'/cal/'+obs+'/'+d)
-            else:
-                print(apogee_redux+vers+'/cal/'+obs+'/'+d,' already exists')
-
-    # Webpage files
-    #if os.path.exists(apogee_drp_dir+'etc/htaccess'):
-    #    os.copy(apogee_drp_dir+'etc/htaccess',apogee_redux+vers+'qa/.htaccess'
-    if os.path.exists(apogee_drp_dir+'etc/sorttable.js') and os.path.exists(apogee_redux+vers+'/qa/sorttable.js')==False:
-        print('Copying sorttable.js')
-        shutil.copyfile(apogee_drp_dir+'etc/sorttable.js',apogee_redux+vers+'/qa/sorttable.js')
-
-
-
-def mkmastercals(apred,telescope,clobber=False,links=None,logger=None):
-    """
-    Make the master calibration products for a reduction version.
-
-    Parameters
-    ----------
-    apred : str
-       Reduction version name.
-    telescope : str
-       The telescope name: apo25m or lco25m.
-    clobber : boolean, optional
-       Overwrite any existing files.  Default is False.
-    links : str, optional
-       Name of reduction version to use for symlinks for the calibration files.    
-
-    Returns
-    -------
-    All the master calibration products are made for a reduction version.
-
-    Example
-    -------
-
-    mkmastercals('v1.0.0','telescope')
-
-    """
-
-    if logger is None:
-        logger = dln.basiclogger()
-
-    nodes = 1
-    alloc = 'sdss-np'
-    shared = True
-    ppn = 64
-    cpus = 32
-    walltime = '10-00:00:00'
-
-    load = apload.ApLoad(apred=apred,telescope=telescope)
-    apogee_redux = os.environ['APOGEE_REDUX']+'/'
-    apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
-    
-
-    # Symbolic links to another version
-    if links is not None:
-        linkvers = links
-        logger.info('Creating calibration product symlinks to version >>'+linkvers+'<<')
-        cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','fpi','littrow','lsf','persist','telluric','wave']:
-            for obs in ['apogee-n','apogee-s']:    
-                logger.info('Creating symlinks for '+apogee_redux+vers+'/cal/'+obs+'/'+d)
-                os.chdir(apogee_redux+vers+'/cal/'+obs+'/'+d)
-                subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/*fits .'],shell=True)
-        return
-
-
-    # Read in the master calibration index
-    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
-    calfile = caldir+load.instrument+'.par'
-    allcaldict = mkcal.readcal(calfile)
-
-    # Make calibration frames: darks, waves, LSFs
-    
-    #set host = `hostname -s`
-    #if ( $?UUFSCELL ) then
-    #   setenv APOGEE_LOCALDIR /scratch/local/$USER/$SLURM_JOB_ID 
-    #else
-    #   rm $APOGEE_LOCALDIR/*
-    #endif
-
-
-    # Make darks sequentially
-    #-------------------------
-    # they take too much memory to run in parallel
-    #idl -e "makecal,dark=1,vers='$vers',telescope='$telescope'" >& log/mkdark-$telescope.$host.log
-    #darkplot --apred $vers --telescope $telescope
-    darkdict = allcaldict['dark']
-    logger.info('')
-    logger.info('--------------------------------')
-    logger.info('Making master darks sequentially')
-    logger.info('================================')
-    logger.info(str(len(darkdict))+' Darks to make: '+','.join(darkdict['name']))
-    logger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkdark', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
-    for i in range(len(darkdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkdark-'+str(darkdict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --dark '+str(darkdict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-    del queue    
-    # Make the dark plots
-    cal.darkplot(apred=apred,telescope=telescope)
-
-    # Make flats sequentially
-    #-------------------------
-    #idl -e "makecal,flat=1,vers='$vers',telescope='$telescope'" >& log/mkflat-$telescope.$host.log
-    #flatplot --apred $vers --telescope $telescope
-    flatdict = allcaldict['flat']
-    logger.info('')
-    logger.info('--------------------------------')
-    logger.info('Making master flats sequentially')
-    logger.info('================================')
-    logger.info(str(len(flatdict))+' Flats to make: '+','.join(flatdict['name']))
-    logger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkflat', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
-    for i in range(len(flatdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+str(flatdict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --flat '+str(flatdict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-    del queue    
-    # Make the flat plots
-    cal.flatplot(apred=apred,telescope=telescope)
-
-    # Make BPM sequentially
-    #----------------------
-    #idl -e "makecal,bpm=1,vers='$vers',telescope='$telescope'" >& log/mkbpm-$telescope.$host.log
-    bpmdict = allcaldict['bpm']
-    logger.info('')
-    logger.info('--------------------------------')
-    logger.info('Making master BPMs sequentially')
-    logger.info('================================')
-    logger.info(str(len(bpmdict))+' BPMs to make: '+','.join(bpmdict['name']))
-    logger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkbpm', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
-    for i in range(len(bpmdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkbpm-'+str(bpmdict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --bpm '+str(bpmdict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-    del queue    
-
-    # Make Littrow sequentially
-    #--------------------------
-    #idl -e "makecal,littrow=1,vers='$vers',telescope='$telescope'" >& log/mklittrow-$telescope.$host.log
-    littdict = allcaldict['littrow']
-    logger.info('')
-    logger.info('-----------------------------------')
-    logger.info('Making master Littrows sequentially')
-    logger.info('===================================')
-    logger.info(str(len(littdict))+' Littrows to make: '+','.join(littdict['name']))
-    logger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mklittrow', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
-    for i in range(len(littdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklittrow-'+str(littdict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --littrow '+str(littdict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-    del queue    
-
-    # Make Response sequentially
-    #--------------------------
-    responsedict = allcaldict['response']
-    logger.info('')
-    logger.info('------------------------------------')
-    logger.info('Making master responses sequentially')
-    logger.info('====================================')
-    logger.info(str(len(responsedict))+' Responses to make: '+','.join(responsedict['name']))
-    logger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkresponse', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
-    for i in range(len(responsedict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkresponse-'+str(responsedict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --response '+str(responsedict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-    del queue    
-
-
-    # Make multiwave cals in parallel
-    #--------------------------------
-    #set n = 0
-    #while ( $n < 5 ) 
-    #   idl -e "makecal,multiwave=1,vers='$vers',telescope='$telescope'" >& log/mkwave-$telescope"$n".$host.log &
-    #   sleep 20
-    #   @ n = $n + 1
-    #end
-    #wait
-
-    multiwavedict = allcaldict['multiwave']
-    logger.info('')
-    logger.info('-----------------------------------')
-    logger.info('Making master multiwave in parallel')
-    logger.info('===================================')
-    logger.info(str(len(multiwavedict))+' multiwave to make: '+','.join(multiwavedict['name']))
-    logger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkmultiwave', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=5, shared=shared, walltime=walltime, notification=False)
-    for i in range(len(multiwavedict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkmultiwave-'+str(multiwavedict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --multiwave '+str(multiwavedict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-    del queue    
-
-
-    # Make LSFs in parallel
-    #-----------------------
-    #set n = 0
-    #while ( $n < 5 ) 
-    #   idl -e "makecal,lsf=1,/full,/pl,vers='$vers',telescope='$telescope'" >& log/mklsf-$telescope"$n".$host.log &
-    #   sleep 20
-    #   @ n = $n + 1
-    #end
-    #wait
-
-    lsfdict = allcaldict['lst']
-    logger.info('')
-    logger.info('--------------------------------')
-    logger.info('Making master LSFs in parallel')
-    logger.info('================================')
-    logger.info(str(len(lsfdict))+' LSFs to make: '+','.join(lsfdict['name']))
-    logger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mklsf', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=5, shared=shared, walltime=walltime, notification=False)
-    for i in range(len(littdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklsf-'+str(lsfdict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --lsf '+str(lsfdict['name'][i])+' --full --pl --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-    del queue    
-
 
 def loadmjd(mjd):
     """ Parse and expand input MJD range/list."""
@@ -473,7 +127,442 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     logger.info(str(nexp)+' exposures')
 
 
-def run3d(load,mjds,clobber=False,logger=None):
+def getplanfiles(load,mjds):
+    """
+    Get all of the plan files for a list of MJDs.
+
+    Parameters
+    ----------
+    load : ApLoad object
+       ApLoad object that contains "apred" and "telescope".
+    mjds : list
+       List of MJDs to check for plan files.
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.
+
+    Returns
+    -------
+    planfiles : list
+       The list of plan files.
+
+    Example
+    -------
+
+    planfiles = getplanfiles(load,mjds)
+
+    """
+
+    if logger is None:
+        logger = dln.basiclogger()
+    
+    mjdstart = np.min(mjds)
+    mjdstop = np.max(mjds)
+    
+    # Get plan files from the database
+    db = apogeedb.DBSession()
+    plans = db.query('plan',where="mjd>='%s' and mjd<='%s'" % (mjdstart,mjdstop))
+    db.close()
+    # No plan files for these MJDs
+    if len(ind)==0:
+        logger.info('No plan files to process')
+        return []
+    # Only get plans for the MJDs that we have
+    ind = []
+    for m in mjds:
+        ind1, = np.where(plans['mjd']==m)
+        if len(ind1)>0:
+            ind += list(ind1)
+    ind = np.array(ind)
+    # No plan files for these MJDs
+    if len(ind)==0:
+        logger.info('No plan files to process')
+        return []
+    plans = plans[ind]
+    planfiles = plans['planfile']
+    return planfiles
+
+
+def mkvers(apred,fresh=False,logger=None):
+    """
+    Setup APOGEE DRP directory structure.
+   
+    Parameters
+    ----------
+    apred : str
+       Reduction version name.
+    fresh : boolean, optional
+       Start the reduction directory fresh.  The default is continue with what is
+         already there.
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.
+    
+    Returns
+    -------
+    It makes the directory structure for a new DRP reduction version.
+
+    Example
+    -------
+
+    mkvers('v1.0.0')
+
+    """
+
+    if logger is None:
+        logger = dln.basiclogger()
+    
+    apogee_redux = os.environ['APOGEE_REDUX']+'/'
+    apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
+
+    logger.info('Setting up directory structure for APOGEE DRP version = ',vers)
+
+    # Start fresh
+    if args.fresh:
+        logger.info('Starting fresh')
+        if os.path.exists(apogee_redux+vers):
+            shutil.rmtree(apogee_redux+vers)
+
+    # Main directory
+    if os.path.exists(apogee_redux+vers)==False:
+        logger.info('Creating ',apogee_redux+vers)
+        os.makedirs(apogee_redux+vers)
+    else:
+        logger.info(apogee_redux+vers,' already exists')
+    # First level
+    for d in ['cal','exposures','stars','fields','visit','qa','plates','monitor','summary','log']:
+        if os.path.exists(apogee_redux+vers+'/'+d)==False:
+            logger.info('Creating ',apogee_redux+vers+'/'+d)
+            os.makedirs(apogee_redux+vers+'/'+d)
+        else:
+            logger.info(apogee_redux+vers+'/'+d,' already exists')
+    # North/south subdirectories
+    for d in ['cal','exposures','monitor']:
+        for obs in ['apogee-n','apogee-s']:
+            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
+                logger.info('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
+            else:
+                logger.info(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
+    for d in ['visit','stars','fields']:
+        for obs in ['apo25m','lco25m']:
+            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
+                logger.info('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
+            else:
+                logger.info(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
+    for d in ['log']:
+        for obs in ['apo','lco']:
+            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
+                logger.info('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
+            else:
+                logger.info(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
+    # Cal subdirectories
+    for d in ['bpm','darkcorr','detector','flatcorr','flux','fpi','html','littrow','lsf','persist','plans','psf','qa','telluric','trace','wave']:
+        for obs in ['apogee-n','apogee-s']:
+            if os.path.exists(apogee_redux+vers+'/cal/'+obs+'/'+d)==False:
+                logger.info('Creating ',apogee_redux+vers+'/cal/'+obs+'/'+d)
+                os.makedirs(apogee_redux+vers+'/cal/'+obs+'/'+d)
+            else:
+                logger.info(apogee_redux+vers+'/cal/'+obs+'/'+d,' already exists')
+
+    # Webpage files
+    #if os.path.exists(apogee_drp_dir+'etc/htaccess'):
+    #    os.copy(apogee_drp_dir+'etc/htaccess',apogee_redux+vers+'qa/.htaccess'
+    if os.path.exists(apogee_drp_dir+'etc/sorttable.js') and os.path.exists(apogee_redux+vers+'/qa/sorttable.js')==False:
+        logger.info('Copying sorttable.js')
+        shutil.copyfile(apogee_drp_dir+'etc/sorttable.js',apogee_redux+vers+'/qa/sorttable.js')
+
+
+def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
+    """
+    Make the master calibration products for a reduction version and MJD range.
+
+    Parameters
+    ----------
+    load : ApLoad object
+       ApLoad object that contains "apred" and "telescope".
+    mjds : list
+       List of MJDs to process
+    slurm : dictionary
+       Dictionary of slurm settings.
+    clobber : boolean, optional
+       Overwrite any existing files.  Default is False.
+    links : str, optional
+       Name of reduction version to use for symlinks for the calibration files.    
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.
+
+    Returns
+    -------
+    All the master calibration products are made for a reduction version.
+
+    Example
+    -------
+
+    mkmastercals('v1.0.0','telescope')
+
+    """
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    apred = load.apred
+    telescope = load.telescope
+    observatory = telescope[0:3]
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S") 
+
+    apogee_redux = os.environ['APOGEE_REDUX']+'/'
+    apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
+    
+
+    # Symbolic links to another version
+    if links is not None:
+        linkvers = links
+        logger.info('Creating calibration product symlinks to version >>'+linkvers+'<<')
+        cwd = os.path.abspath(os.curdir)
+        for d in ['bpm','darkcorr','detector','flatcorr','fpi','littrow','lsf','persist','telluric','wave']:
+            for obs in ['apogee-n','apogee-s']:    
+                logger.info('Creating symlinks for '+apogee_redux+vers+'/cal/'+obs+'/'+d)
+                os.chdir(apogee_redux+vers+'/cal/'+obs+'/'+d)
+                subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/*fits .'],shell=True)
+        return
+
+
+    # Read in the master calibration index
+    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
+    calfile = caldir+load.instrument+'.par'
+    allcaldict = mkcal.readcal(calfile)
+
+    # Make calibration frames: darks, waves, LSFs
+    
+    #set host = `hostname -s`
+    #if ( $?UUFSCELL ) then
+    #   setenv APOGEE_LOCALDIR /scratch/local/$USER/$SLURM_JOB_ID 
+    #else
+    #   rm $APOGEE_LOCALDIR/*
+    #endif
+
+
+    # -- Master calibration products made every year or so --
+    # Detector
+    # Dark, sequence of long darks
+    # Flat, sequence of internal flats
+    # BPM, use dark+flat sequence
+    # Sparse, sequence of sparse quartz flats
+    # multiwave, set of arclamp exposures
+    # LSF, sky flat + multiwave
+    # fiber?
+    # -- Other master calibration products made only once ---
+    # Littrow
+    # Persist, PersistModel
+    # telluric, need LSF
+
+    # -- Daily calibration products ---
+    # PSF/EPSF/Trace, from domeflat or quartzflat
+    # Flux, from domeflat or quartzflat
+    # Wave, from arclamps
+
+    # Maybe have an option to copy/symlink them from a previous apred version
+    
+
+    # Make darks sequentially
+    #-------------------------
+    # they take too much memory to run in parallel
+    #idl -e "makecal,dark=1,vers='$vers',telescope='$telescope'" >& log/mkdark-$telescope.$host.log
+    #darkplot --apred $vers --telescope $telescope
+    darkdict = allcaldict['dark']
+    logger.info('')
+    logger.info('--------------------------------')
+    logger.info('Making master darks sequentially')
+    logger.info('================================')
+    logger.info(str(len(darkdict))+' Darks to make: '+','.join(darkdict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkdark', **slurm)
+    for i in range(len(darkdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkdark-'+str(darkdict['name'][i])+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --dark '+str(darkdict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+    # Make the dark plots
+    cal.darkplot(apred=apred,telescope=telescope)
+
+    # Make flats sequentially
+    #-------------------------
+    #idl -e "makecal,flat=1,vers='$vers',telescope='$telescope'" >& log/mkflat-$telescope.$host.log
+    #flatplot --apred $vers --telescope $telescope
+    flatdict = allcaldict['flat']
+    logger.info('')
+    logger.info('--------------------------------')
+    logger.info('Making master flats sequentially')
+    logger.info('================================')
+    logger.info(str(len(flatdict))+' Flats to make: '+','.join(flatdict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    slurm1 = slurm.copy()
+    slurm1['nodes'] = 1
+    slurm1['cpus'] = 1    
+    queue.create(label='mkflat', **slurm1)
+    for i in range(len(flatdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+str(flatdict['name'][i])+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --flat '+str(flatdict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+    # Make the flat plots
+    cal.flatplot(apred=apred,telescope=telescope)
+
+    # Make BPM sequentially
+    #----------------------
+    #idl -e "makecal,bpm=1,vers='$vers',telescope='$telescope'" >& log/mkbpm-$telescope.$host.log
+    bpmdict = allcaldict['bpm']
+    logger.info('')
+    logger.info('--------------------------------')
+    logger.info('Making master BPMs sequentially')
+    logger.info('================================')
+    logger.info(str(len(bpmdict))+' BPMs to make: '+','.join(bpmdict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkbpm', **slurm1)
+    for i in range(len(bpmdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkbpm-'+str(bpmdict['name'][i])+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --bpm '+str(bpmdict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+
+    # Make Littrow sequentially
+    #--------------------------
+    #idl -e "makecal,littrow=1,vers='$vers',telescope='$telescope'" >& log/mklittrow-$telescope.$host.log
+    littdict = allcaldict['littrow']
+    logger.info('')
+    logger.info('-----------------------------------')
+    logger.info('Making master Littrows sequentially')
+    logger.info('===================================')
+    logger.info(str(len(littdict))+' Littrows to make: '+','.join(littdict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mklittrow', **slurm1)
+    for i in range(len(littdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklittrow-'+str(littdict['name'][i])+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --littrow '+str(littdict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+
+    # Make Response sequentially
+    #--------------------------
+    responsedict = allcaldict['response']
+    logger.info('')
+    logger.info('------------------------------------')
+    logger.info('Making master responses sequentially')
+    logger.info('====================================')
+    logger.info(str(len(responsedict))+' Responses to make: '+','.join(responsedict['name']))
+    logger.info('')
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkresponse', **slurm1)
+    for i in range(len(responsedict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkresponse-'+str(responsedict['name'][i])+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --response '+str(responsedict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+
+
+    # Make multiwave cals in parallel
+    #--------------------------------
+    #set n = 0
+    #while ( $n < 5 ) 
+    #   idl -e "makecal,multiwave=1,vers='$vers',telescope='$telescope'" >& log/mkwave-$telescope"$n".$host.log &
+    #   sleep 20
+    #   @ n = $n + 1
+    #end
+    #wait
+
+    multiwavedict = allcaldict['multiwave']
+    logger.info('')
+    logger.info('-----------------------------------')
+    logger.info('Making master multiwave in parallel')
+    logger.info('===================================')
+    logger.info(str(len(multiwavedict))+' multiwave to make: '+','.join(multiwavedict['name']))
+    logger.info('')
+    slurm1['nodes'] = 1
+    slurm1['cpus'] = 5
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkmultiwave', **slurm1)
+    for i in range(len(multiwavedict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkmultiwave-'+str(multiwavedict['name'][i])+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --multiwave '+str(multiwavedict['name'][i])+' --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+
+
+    # Make LSFs in parallel
+    #-----------------------
+    #set n = 0
+    #while ( $n < 5 ) 
+    #   idl -e "makecal,lsf=1,/full,/pl,vers='$vers',telescope='$telescope'" >& log/mklsf-$telescope"$n".$host.log &
+    #   sleep 20
+    #   @ n = $n + 1
+    #end
+    #wait
+
+    lsfdict = allcaldict['lst']
+    logger.info('')
+    logger.info('--------------------------------')
+    logger.info('Making master LSFs in parallel')
+    logger.info('================================')
+    logger.info(str(len(lsfdict))+' LSFs to make: '+','.join(lsfdict['name']))
+    logger.info('')
+    slurm1['nodes'] = 1
+    slurm1['cpus'] = 5
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mklsf', **slurm1)
+    for i in range(len(littdict)):
+        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklsf-'+str(lsfdict['name'][i])+telescope+'.'+logtime+'.log'
+        errfile1 = mkvoutfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile1))==False:
+            os.makedirs(os.path.dirname(outfile1))
+        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+        cmd += ' --lsf '+str(lsfdict['name'][i])+' --full --pl --unlock'
+        queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    queue.commit(hard=True,submit=True)
+    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    del queue    
+
+def run3d(load,mjds,slurm,clobber=False,logger=None):
     """
     Run AP3D on all exposures for a list of MJDs.
 
@@ -483,6 +572,8 @@ def run3d(load,mjds,clobber=False,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
+    slurm : dictionary
+       Dictionary of slurm settings.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -500,18 +591,24 @@ def run3d(load,mjds,clobber=False,logger=None):
 
     """
 
+    if logger is None:
+        logger = dln.basiclogger()
+    
     apred = load.apred
     telescope = load.telescope
     observatory = telescope[0:3]
-
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S")
+    
     # Get exposures
     expinfo = getexpinfo(observatory,mjds,logger=logger)
 
     # Process the files
     if len(expinfo)>0:
+        slurm1 = slurm.copy()
+        slurm1['cpus'] = np.minimum(slurm['cpus'],len(expinfo))
+        slurm1['numpy_num_threads'] = 2
         queue = pbsqueue(verbose=True)
-        queue.create(label='ap3d', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(expinfo)),
-                     qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
+        queue.create(label='ap3d', **slurm1)
         do3d = np.zeros(len(expinfo),bool)
         for i,num in enumerate(expinfo['num']):
             mjd = int(load.cmjd(num))
@@ -544,7 +641,7 @@ def run3d(load,mjds,clobber=False,logger=None):
 
     return chk3d
 
-def rundailycals(load,mjds,clobber=False,logger=None):
+def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     """
     Run daily calibration frames for a list of MJDs.
 
@@ -554,6 +651,8 @@ def rundailycals(load,mjds,clobber=False,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
+    slurm : dictionary
+       Dictionary of slurm settings.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -571,10 +670,14 @@ def rundailycals(load,mjds,clobber=False,logger=None):
 
     """
 
+    if logger is None:
+        logger = dln.basiclogger()
+        
     apred = load.apred
     telescope = load.telescope
     observatory = telescope[0:3]
-
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S")
+    
     # Get exposures
     expinfo = getexpinfo(observatory,mjds,logger=logger,verbose=False)
 
@@ -618,9 +721,11 @@ def rundailycals(load,mjds,clobber=False,logger=None):
         cind, = np.where((np.array(calcode) & ccode) > 0)
         if len(cind)>0:
             logger.info(str(len(cind))+' file(s)')
+            slurm1 = slurm.copy()
+            slurm1['cpus'] = np.minimum(slurm['cpus'],len(cind))
+            slurm1['numpy_num_threads'] = 2
             queue = pbsqueue(verbose=True)
-            queue.create(label='makecal-'+shcalnames[j], nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(cind)),
-                         qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
+            queue.create(label='makecal-'+shcalnames[j], **slurm1)
             logfiles = []
             docal = np.zeros(len(cind),bool)
             for k in range(len(cind)):
@@ -674,7 +779,7 @@ def rundailycals(load,mjds,clobber=False,logger=None):
 
     return chkcal
 
-def makeplanfiles(load,mjds,clobber=False,logger=rootLogger):
+def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
     """
     Make plan files for a list of MJDs.
 
@@ -684,6 +789,8 @@ def makeplanfiles(load,mjds,clobber=False,logger=rootLogger):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
+    slurm : dictionary
+       Dictionary of slurm settings.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -701,12 +808,16 @@ def makeplanfiles(load,mjds,clobber=False,logger=rootLogger):
 
     """
 
+    if logger is None:
+        logger = dln.basiclogger()
+    
     apred = load.apred
     telescope = load.telescope
     observatory = telescope[0:3]
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
-
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S")
+    
     # Reduction logs directory
     logdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'
     if os.path.exists(logdir)==False:
@@ -743,7 +854,7 @@ def makeplanfiles(load,mjds,clobber=False,logger=rootLogger):
 
     return planfiles
 
-def runapred(load,mjds,clobber=False,logger=None):
+def runapred(load,mjds,slurm,clobber=False,logger=None):
     """
     Run APRED on all plan files for a list of MJDs.
 
@@ -753,6 +864,8 @@ def runapred(load,mjds,clobber=False,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
+    slurm : dictionary
+       Dictionary of slurm settings.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -772,39 +885,30 @@ def runapred(load,mjds,clobber=False,logger=None):
 
     """
 
+    if logger is None:
+        logger = dln.basiclogger()
+    
     apred = load.apred
     telescope = load.telescope
     observatory = telescope[0:3]
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
-
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S")
+    
     # Get plan files from the database
-    db = apogeedb.DBSession()
-    plans = db.query('plan',where="mjd>='%s' and mjd<='%s'" % (mjdstart,mjdstop))
-    db.close()
+    planfiles = getplanfiles(load,mjds,logger=logger)
     # No plan files for these MJDs
-    if len(ind)==0:
-        logger.info('No plan files to process')
-        return None
-    # Only get plans for the MJDs that we have
-    ind = []
-    for m in mjds:
-        ind1, = np.where(plans['mjd']==m)
-        if len(ind1)>0:
-            ind += list(ind1)
-    ind = np.array(ind)
-    # No plan files for these MJDs
-    if len(ind)==0:
-        logger.info('No plan files to process')
-        return None
-    plans = plans[ind]
-    planfiles = plans['planfile']
-
+    if len(planfiles)==0:
+        return
+        
+    slurm1 = slurm.copy()
+    slurm1['cpus'] = np.minimum(slurm['cpus'],len(planfiles))
+    slurm1['numpy_num_threads'] = 2
     queue = pbsqueue(verbose=True)
-    queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
-                 qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
+    queue.create(label='apred', **slurm1)
     for pf in planfiles:
-        queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.'+logtime+'.log'), errfile=pf.replace('.yaml','_pbs.'+logtime+'.err'))
+        queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.'+logtime+'.log'),
+                     errfile=pf.replace('.yaml','_pbs.'+logtime+'.err'))
     queue.commit(hard=True,submit=True)
     logger.info('PBS key is '+queue.key)
     runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -813,7 +917,228 @@ def runapred(load,mjds,clobber=False,logger=None):
 
     return chkexp,chkvisit
 
-def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=False,links=None):
+def runrv(load,mjds,slurm,clobber=False,logger=None):
+    """
+    Run RV on all the stars observed from a list of MJDs.
+
+    Parameters
+    ----------
+    load : ApLoad object
+       ApLoad object that contains "apred" and "telescope".
+    mjds : list
+       List of MJDs to process
+    slurm : dictionary
+       Dictionary of slurm settings.
+    clobber : boolean, optional
+       Overwrite existing files.  Default is False.
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.
+
+    Returns
+    -------
+    The unified directory structure software is run on the MJDs and relevant symlinks are generated.
+
+    Example
+    -------
+
+    runrv(load,mjds)
+
+    """
+
+    if logger is None:
+        logger = dln.basiclogger()
+    
+    apred = load.apred
+    telescope = load.telescope
+    observatory = telescope[0:3]
+    mjdstart = np.min(mjds)
+    mjdstop = np.max(mjds)
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S")
+    
+    vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope))
+    if len(vcat)==0:
+        logger.info('No visits found for MJDs')
+        return None
+    # Pick on the MJDs we want
+    ind = []
+    for m in mjds:
+        gd, = np.where(vcat['mjd']==m)
+        if len(gd)>0: ind += list(gd)
+    ind = np.array(ind)
+    if len(ind)==0:
+        logger.info('No visits found for MJDs')
+        return None    
+    vcat = vcat[ind]
+    # Get unique stars
+    objects,ui = np.unique(vcat['apogee_id'],return_index=True)
+    vcat = vcat[ui]
+    # remove ones with missing or blank apogee_ids
+    bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone'))
+    if len(bd)>0:
+        vcat = np.delete(vcat,bd)
+    logger.info(str(len(vcat))+' stars to run')
+
+    slurm1 = slurm.copy()
+    slurm1['cpus'] = np.minimum(slurm['cpus'],len(vcat))
+    slurm1['numpy_num_threads'] = 2
+    queue = pbsqueue(verbose=True)
+    queue.create(label='rv', **slurm1)
+    for obj in vcat['apogee_id']:
+        apstarfile = load.filename('Star',obj=obj)
+        outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
+        if os.path.exists(outdir)==False:
+            os.makedirs(outdir)
+        # Run with --verbose and --clobber set
+        queue.append('rv %s %s %s -c -v' % (obj,apred,telescope),outfile=apstarfile.replace('.fits','-'+'_pbs.'+logtime+'.log'),
+                     errfile=apstarfile.replace('.fits','-'+'_pbs.'+logtime+'.err'))
+    queue.commit(hard=True,submit=True)
+    logger.info('PBS key is '+queue.key)        
+    runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    import pdb; pdb.set_trace()
+    chkrv = runapogee.check_rv(vcat,queue.key)
+    del queue
+
+    return chkrv
+
+
+def rununified(load,mjds,slurm,clobber=False,logger=None):
+    """
+    Create the unified MWM directory structure for the relevant MJDs.
+
+    Parameters
+    ----------
+    load : ApLoad object
+       ApLoad object that contains "apred" and "telescope".
+    mjds : list
+       List of MJDs to process
+    slurm : dictionary
+       Dictionary of slurm settings.
+    clobber : boolean, optional
+       Overwrite existing files.  Default is False.
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.
+
+    Returns
+    -------
+    The unified directory structure software is run on the MJDs and relevant symlinks are generated.
+
+    Example
+    -------
+
+    rununified(load,mjds)
+
+    """
+
+    if logger is None:
+        logger = dln.basiclogger()
+    
+    apred = load.apred
+    telescope = load.telescope
+    observatory = telescope[0:3]
+    mjdstart = np.min(mjds)
+    mjdstop = np.max(mjds)
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S")
+    
+    slurm1 = slurm.copy()
+    slurm1['cpus'] = np.minimum(slurm['cpus'],len(mjds))
+    slurm1['numpy_num_threads'] = 2    
+    queue = pbsqueue(verbose=True)
+    queue.create(label='unidir', **slurm1)
+    # Loop over all MJDs
+    for m in mjds:
+        outfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-unidir.'+logtime+'.log'
+        errfile = outfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(outfile))==False:
+            os.makedirs(os.path.dirname(outfile))
+        queue.append('sas_mwm_healpix --spectro apogee --mjd {0} --telescope {1} --drpver {2} -v'.format(mjd5,telescope,apred),
+                     outfile=outfile, errfile=errfile)
+    queue.commit(hard=True,submit=True)
+    rootLogger.info('PBS key is '+queue.key)        
+    runapogee.queue_wait(queue,sleeptime=60,verbose=True,logg=rootLogger)  # wait for jobs to complete
+    del queue    
+    #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
+
+
+def runqa(load,mjds,slurm,clobber=False,logger=None):
+    """
+    Run QA on a list of MJDs.
+
+    Parameters
+    ----------
+    load : ApLoad object
+       ApLoad object that contains "apred" and "telescope".
+    mjds : list
+       List of MJDs to process
+    clobber : boolean, optional
+       Overwrite existing files.  Default is False.
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.
+
+    Returns
+    -------
+    The QA code is run on the MJDs and relevant plots and HTML pages are created.
+
+    Example
+    -------
+
+    runqa(load,mjds)
+
+    """
+
+    apred = load.apred
+    telescope = load.telescope
+    observatory = telescope[0:3]
+    mjdstart = np.min(mjds)
+    mjdstop = np.max(mjds)
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S")
+    
+    # Get plan files for these MJDs
+    planfiles = getplanfiles(load,mjds,logger=logger)
+    
+    # Run apqa on each plate visit
+    slurm1 = slurm.copy()
+    slurm1['cpus'] = np.minimum(slurm['cpus'],len(planfiles))
+    slurm1['numpy_num_threads'] = 2    
+    queue = pbsqueue(verbose=True)
+    queue.create(label='apqa', **slurm1)
+    for pf in planfiles:
+        fdir = os.path.dirname(pf)
+        base = os.path.basename(pf)
+        dum = base.split('-')
+        plate = dum[1]
+        mjd = dum[2]
+        logfile = fdir+'/apqa-'+plate+'-'+mjd+'_pbs.'+logtime+'.log'
+        errfile = logfile.erplace('.log','.err')
+        cmd = 'apqa {0} apo --plate {1} --telescope apo25m --masterqa False'.format(mjd,plate)
+        cmd += '--starhtml False --starplots False --nightqa False --monitor False'
+        queue.append(cmd, outfile=logfile, errfile=errfile)
+    queue.commit(hard=True,submit=True)
+    print('PBS key is '+queue.key)
+    runapogee.queue_wait(queue,sleeptime=60,verbose=True)  # wait for jobs to complete 
+    queue = pbsqueue(verbose=True)
+
+    # Run nightly QA/summary
+
+    queue = pbsqueue(verbose=True)
+    queue.create(label='qa', **slurm1)
+    for i in enumerate(plates):
+        qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.'+logtime+'.log'
+        qaerrfile = qaoutfile.replace('-qa.log','-qa.'+logtime+'.err')
+        if os.path.exists(os.path.dirname(qaoutfile))==False:
+            os.makedirs(os.path.dirname(qaoutfile))
+        queue.append('apqa {0} {1}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
+    queue.commit(hard=True,submit=True)
+    runapogee.queue_wait(queue)  # wait for jobs to complete
+    del queue
+    
+    # Run final mjd/fields pate
+
+    # Run monitor page
+
+    
+
+def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=False,links=None,
+        nodes=1,cpus=32):
     """
     Perform APOGEE Data Release Processing
 
@@ -867,13 +1192,14 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     steps = loadsteps(steps)
     nsteps = len(steps)
 
-    nodes = 1
+    # Slurm settings
     alloc = 'sdss-np'
     shared = True
     ppn = 64
-    cpus = 32
     walltime = '10-00:00:00'
-
+    slurm = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn, 'cpus':cpus,
+             'walltime':walltime, 'notifications':False}
+    
     # Get software version (git hash)
     gitvers = plan.getgitvers()
 
@@ -884,7 +1210,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     if os.path.exists(logdir)==False:
         os.makedirs(logdir)
 
-    # Make sure the data is there
+    # Data directory 
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
 
     # Set up logging to screen and logfile
@@ -942,30 +1268,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('2) Generating master calibration products')
         rootLogger.info('=========================================')
         rootLogger.info('')
-        # -- Master calibration products made every year or so --
-        # Detector
-        # Dark, sequence of long darks
-        # Flat, sequence of internal flats
-        # BPM, use dark+flat sequence
-        # Sparse, sequence of sparse quartz flats
-        # multiwave, set of arclamp exposures
-        # LSF, sky flat + multiwave
-        # fiber?
-        # -- Other master calibration products made only once ---
-        # Littrow
-        # Persist, PersistModel
-        # telluric, need LSF
-        chk = mkmastercals(load,clobber=clobber,links=links,logger=rootLogger)
-
-
-        # -- Daily calibration products ---
-        # PSF/EPSF/Trace, from domeflat or quartzflat
-        # Flux, from domeflat or quartzflat
-        # Wave, from arclamps
-        
-
-        # Maybe have an option to copy/symlink them from a previous apred version
-
+        chk = mkmastercals(load,slurm=slurm,clobber=clobber,links=links,logger=rootLogger)
 
     # 3) Process all exposures through ap3d
     #---------------------------------------
@@ -975,7 +1278,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('3) Running AP3D on all exposures')
         rootLogger.info('================================')
         rootLogger.info('')
-        chk3d = run3d(load,mjds,clobber=clobber,logger=rootLogger)
+        chk3d = run3d(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
 
     # 4) Perform initial quality check on all exposures
     #--------------------------------------------------
@@ -984,7 +1287,6 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info(' ')
         rootLogger.info('Doing quality checks on all exposures')
         qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=rootLogger)
-        rootLogger.info(' ')
 
     # 5) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
     #----------------------------------------------------------------
@@ -994,7 +1296,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('5) Generating daily calibration products')
         rootLogger.info('========================================')
         rootLogger.info('')
-        chkcal = rundailycals(load,mjds,clobber=clobber,logger=rootLogger)
+        chkcal = rundailycals(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
 
     # 6) Make plan files
     #-------------------
@@ -1004,7 +1306,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('6) Making plan files')
         rootLogger.info('====================')
         rootLogger.info('')
-        planfiles = makeplanfiles(load,mjds,logger=rootLogger)
+        planfiles = makeplanfiles(load,mjds,slurm=slurm,logger=rootLogger)
 
     # 7) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
@@ -1014,19 +1316,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('7) Running APRED')
         rootLogger.info('================')
         rootLogger.info('')
-        chkapred = runapred(load,mjds,clobber=clobber,logger=rootLogger)
-        
-        queue = pbsqueue(verbose=True)
-        queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
-                     qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
-        for pf in planfiles:
-            queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.'+logtime+'.log'), errfile=pf.replace('.yaml','_pbs.'+logtime+'.err'))
-        queue.commit(hard=True,submit=True)
-        rootLogger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-        chkexp,chkvisit = runapogee.check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
-        del queue
-
+        chkapred = runapred(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
         
     # 8) Run "rv" on all unique stars
     #--------------------------------
@@ -1036,54 +1326,16 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('8) Running RV+Visit Combination')
         rootLogger.info('================================')
         rootLogger.info('')
-        vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope))
-        # Pick on the MJDs we want
-        ind = []
-        for m in mjds:
-            gd, = np.where(vcat['mjd']==m)
-            if len(gd)>0: ind += list(gd)
-        ind = np.array(ind)
-        if len(ind)>0:
-            vcat = vcat[ind]
-        # Get unique stars
-        objects,ui = np.unique(vcat['apogee_id'],return_index=True)
-        vcat = vcat[ui]
-        # remove ones with missing or blank apogee_ids
-        bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone'))
-        if len(bd)>0:
-            vcat = np.delete(vcat,bd)
-        rootLogger.info(str(len(vcat))+' stars to run')
-
-        queue = pbsqueue(verbose=True)
-        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
-                     walltime=walltime, notification=False)
-        for obj in vcat['apogee_id']:
-            apstarfile = load.filename('Star',obj=obj)
-            outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
-            if os.path.exists(outdir)==False:
-                os.makedirs(outdir)
-            # Run with --verbose and --clobber set
-            queue.append('rv %s %s %s -c -v' % (obj,apred,telescope),outfile=apstarfile.replace('.fits','-'+'_pbs.'+logtime+'.log'),
-                         errfile=apstarfile.replace('.fits','-'+'_pbs.'+logtime+'.err'))
-        queue.commit(hard=True,submit=True)
-        rootLogger.info('PBS key is '+queue.key)        
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-        import pdb; pdb.set_trace()
-        chkrv = runapogee.check_rv(vcat,queue.key)
-        del queue
-
+        chkrv = runrv(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
 
     # 9) Create full allVisit/allStar files
-    # The QA code needs these
     if 'summary' in steps:
         rootLogger.info('')
         rootLogger.info('-----------------------')
         rootLogger.info('9) Create summary files')
         rootLogger.info('=======================')
         rootLogger.info('')
-
         runapogee.create_sumfiles(apred,telescope)
-
     
     # 10) Unified directory structure
     #---------------------------------
@@ -1093,23 +1345,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('10) Generating unified MWM directory structure')
         rootLogger.info('=============================================')
         rootLogger.info('')
-        queue = pbsqueue(verbose=True)
-        queue.create(label='unidir', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
-                     walltime=walltime, notification=False)
-        # Loop over all MJDs
-        for m in mjds:
-            outfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-unidir.'+logtime+'.log'
-            errfile = outfile.replace('.log','.err')
-            if os.path.exists(os.path.dirname(outfile))==False:
-                os.makedirs(os.path.dirname(outfile))
-            queue.append('sas_mwm_healpix --spectro apogee --mjd {0} --telescope {1} --drpver {2} -v'.format(mjd5,telescope,apred),
-                         outfile=outfile, errfile=errfile)
-        queue.commit(hard=True,submit=True)
-        rootLogger.info('PBS key is '+queue.key)        
-        runapogee.queue_wait(queue,sleeptime=60,verbose=True,logg=rootLogger)  # wait for jobs to complete
-        del queue    
-        #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
-
+        rununified(load,mjds,slurm=slurm,logger=rootLogger)
 
     # 11) Run QA script
     #------------------
@@ -1119,21 +1355,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('11) Running QA')
         rootLogger.info('==============')
         rootLogger.info('')
-        queue = pbsqueue(verbose=True)
-        queue.create(label='qa', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
-        qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.'+logtime+'.log'
-        qaerrfile = qaoutfile.replace('-qa.log','-qa.'+logtime+'.err')
-        if os.path.exists(os.path.dirname(qaoutfile))==False:
-            os.makedirs(os.path.dirname(qaoutfile))
-
-        # apqa on each plate/config
-        # nightly QA
-        # monitor ppate
-
-        queue.append('apqa {0} {1}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
-        queue.commit(hard=True,submit=True)
-        runapogee.queue_wait(queue)  # wait for jobs to complete
-        del queue
+        runqa(load,mjds,slurm=slurm,logger=rootLogger)
 
 
     # Update daily_status table
@@ -1157,7 +1379,6 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
 
     rootLogger.info('Daily APOGEE reduction finished for MJD=%d to MJD=%d and observatory=%s' % (mjdstart,mjdstop,observatory))
 
-    db.close()    # close db session
 
     # Summary email
     # send to apogee_reduction email list
