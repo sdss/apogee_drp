@@ -622,7 +622,8 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
             logger.info('%5d %20s %8d %5d %9s' % (i+1,chkrv['apogee_id'][i],chkrv['healpix'][i],
                                                   chkrv['nvisits'][i],chkrv['success'][i]))
     success, = np.where(chkrv['success']==True)
-    logger.info('%d/%d succeeded' % (len(success),nstars))
+    if verbose:
+        logger.info('%d/%d succeeded' % (len(success),nstars))
     
     # Inset into the database
     db.ingest('rv_status',chkrv)

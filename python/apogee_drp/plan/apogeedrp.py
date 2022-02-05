@@ -651,8 +651,8 @@ def run3d(load,mjds,slurm,clobber=False,logger=None):
         if np.sum(do3d)>0:
             queue.commit(hard=True,submit=True)
             logger.info('PBS key is '+queue.key)
-            runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
-            chk3d = runapogee.check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=rootLogger)
+            runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+            chk3d = runapogee.check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
         else:
             logger.info('No exposures need AP3D processing')
         del queue
@@ -779,11 +779,11 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                 if clobber is not True:
                     outfile = load.filename(filecodes[j],num=num1,mjd=mjd1,chips=True)
                     if load.exists(filecodes[j],num=num1,mjd=mjd1):
-                        rootLogger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[k] = False
                 if docal[k]:
-                    rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
-                    rootLogger.info(logfile1)
+                    logger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
+                    logger.info(logfile1)
                     queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
             if np.sum(docal)>0:
                 queue.commit(hard=True,submit=True)
@@ -1005,11 +1005,20 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
-    
-    vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope))
+
+    # Get the stars that were observed in the MJD range and the MAXIMUM MJD for each star
+    sql = "WITH mv as (SELECT apogee_id, apred_vers, telescope, max(mjd) as maxmjd FROM apogee_drp.visit"
+    sql += " WHERE apred_vers='%s' and telescope='%s'" % (apred,telescope)
+    sql += " GROUP BY apogee_id, apred_vers, telescope)"
+    sql += " SELECT v.*,mv.maxmjd from apogee_drp.visit AS v LEFT JOIN mv on mv.apogee_id=v.apogee_id"
+    sql += " Where v.apred_vers='%s' and v.mjd>=%d and v.mjd<=%d and v.telescope='%s'" % (apred,mjdstart,mjdstop,telescope)
+
+    db = apogeedb.DBSession()
+    vcat = db.query(sql=sql)
+    db.close()
     if len(vcat)==0:
         logger.info('No visits found for MJDs')
-        return None
+        return []
     # Pick on the MJDs we want
     ind = []
     for m in mjds:
@@ -1018,43 +1027,69 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
     ind = np.array(ind)
     if len(ind)==0:
         logger.info('No visits found for MJDs')
-        return None    
+        return []
     vcat = vcat[ind]
     # Get unique stars
     objects,ui = np.unique(vcat['apogee_id'],return_index=True)
     vcat = vcat[ui]
-    # remove ones with missing or blank apogee_ids
+    # Remove rows with missing or blank apogee_ids
     bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone'))
     if len(bd)>0:
         vcat = np.delete(vcat,bd)
     logger.info(str(len(vcat))+' stars to run')
 
+    # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
+    vcat['mjd'] = vcat['maxmjd']    
+
     slurm1 = slurm.copy()
     slurm1['cpus'] = np.minimum(slurm['cpus'],len(vcat))
     slurm1['numpy_num_threads'] = 2
-
-    import pdb; pdb.set_trace()
-
     queue = pbsqueue(verbose=True)
     queue.create(label='rv', **slurm1)
-    for obj in vcat['apogee_id']:
+    dorv = np.zeros(len(vcat),bool)
+    for i,obj in enumerate(vcat['apogee_id']):
+        # We are going to run RV on ALL the visits
+        # Use the MAXMJD in the table, now called MJD
+        mjd = vcat['mjd'][i]
         apstarfile = load.filename('Star',obj=obj)
+        apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
         outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
         if os.path.exists(outdir)==False:
             os.makedirs(outdir)
+        logfile = apstarfile.replace('.fits','_pbs.'+logtime+'.log')
+        errfile = logfile.replace('.log','.err')
         # Run with --verbose
         cmd = 'rv %s %s %s -v' % (obj,apred,telescope)
         if clobber:
             cmd += ' -c'
-        queue.append(cmd,outfile=apstarfile.replace('.fits','-'+'_pbs.'+logtime+'.log'),
-                     errfile=apstarfile.replace('.fits','-'+'_pbs.'+logtime+'.err'))
-    queue.commit(hard=True,submit=True)
-    logger.info('PBS key is '+queue.key)        
-    runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-    import pdb; pdb.set_trace()
-    # This checks the status and puts it into the database
-    chkrv = runapogee.check_rv(vcat,queue.key)
-    del queue
+        # Check if file exists already
+        dorv[i] = True
+        if clobber==False:
+            if os.path.exists(apstarfile):
+                logger.info(os.path.basename(apstarfile)+' already exists and clobber==False')
+                dorv[i] = False
+        if dorv[i]:
+            logger.info('rv %d : %s' % (i+1,obj))
+            logger.info(logfile)
+            queue.append(cmd,outfile=logfile,errfile=errfile)
+    if np.sum(dorv)>0:
+        logger.info('Running RV on '+str(np.sum(dorv))+' stars')
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+        # This checks the status and puts it into the database
+        ind, = np.where(dorv)
+        chkrv = runapogee.check_rv(vcat[ind],queue.key,logger=logger,verbose=False)
+        del queue
+    else:
+        logger.info('No RVs need to be run')
+        chkrv = []
+
+    # -- Summary statistics --
+    # RV status
+    if len(chkrv)>0:
+        indrv, = np.where(chkrv['success']==True)
+        logger.info('%d/%d RV+visit combination successfully processed' % (len(indrv),len(chkrv)))
     
     return chkrv
 
