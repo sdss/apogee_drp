@@ -3013,9 +3013,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     if domjd is True:
         # Find all .log.html files, get all MJDs with data
         print("----> makeMasterQApages: Finding log files. Please wait.")
-        logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
+        #logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
+        mdirsN = glob.glob(datadirN+'/*')
+        logfilesN = [d+'/'+os.path.basename(d)+'.log.html' for d in mdirsN]
+        logsN = np.array([f for f in logfilesN if os.path.exists(f)])
         hemN = np.full(len(logsN), 'N').astype(str)
-        logsS = np.array(glob.glob(datadirS+'/*/*.log.html'))
+        #logsS = np.array(glob.glob(datadirS+'/*/*.log.html'))
+        mdirsS = glob.glob(datadirS+'/*')
+        logfilesS = [d+'/'+os.path.basename(d)+'.log.html' for d in mdirsS]
+        logsS = np.array([f for f in logfilesS if os.path.exists(f)])
         hemS = np.full(len(logsN), 'S').astype(str)
         logs = np.concatenate([logsN,logsS]) 
         hem = np.concatenate([hemN,hemS]) 

@@ -7,7 +7,7 @@ import pdb
 
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email,info
-from ..apred import mkcal, cal
+from ..apred import mkcal,cal,qa
 from ..database import apogeedb
 from . import mkplan,runapogee,check
 from sdss_access.path import path
@@ -19,6 +19,7 @@ from datetime import datetime
 import logging
 from slurm import queue as pbsqueue
 import time
+import traceback
 
 
 def loadmjd(mjd):
@@ -1183,8 +1184,8 @@ def rununified(load,mjds,slurm,clobber=False,logger=None):
         queue.append('sas_mwm_healpix --spectro apogee --mjd {0} --telescope {1} --drpver {2} -v'.format(mjd5,telescope,apred),
                      outfile=outfile, errfile=errfile)
     queue.commit(hard=True,submit=True)
-    rootLogger.info('PBS key is '+queue.key)        
-    runapogee.queue_wait(queue,sleeptime=60,verbose=True,logg=rootLogger)  # wait for jobs to complete
+    logger.info('PBS key is '+queue.key)        
+    runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
     del queue    
     #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
 
@@ -1224,7 +1225,13 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     
     # Get plan files for these MJDs
     planfiles = getplanfiles(load,mjds,logger=logger)
-    
+    # Only want apPlan files
+    if len(planfiles)>0:
+        planfiles = [p for p in planfiles if os.path.basename(p).startswith('apPlan')]
+    if len(planfiles)==0:
+        logger.info('No plan files')
+        return
+
     # Run apqa on each plate visit
     slurm1 = slurm.copy()
     slurm1['cpus'] = np.minimum(slurm['cpus'],len(planfiles))
@@ -1233,35 +1240,34 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     queue.create(label='apqa', **slurm1)
     for pf in planfiles:
         fdir = os.path.dirname(pf)
+        # apPlan-1491-59587.yaml
         base = os.path.basename(pf)
         dum = base.split('-')
         plate = dum[1]
-        mjd = dum[2]
+        mjd = dum[2].split('.')[0]
         logfile = fdir+'/apqa-'+plate+'-'+mjd+'_pbs.'+logtime+'.log'
-        errfile = logfile.erplace('.log','.err')
-        cmd = 'apqa {0} apo --plate {1} --telescope apo25m --masterqa False'.format(mjd,plate)
-        cmd += '--starhtml False --starplots False --nightqa False --monitor False'
+        errfile = logfile.replace('.log','.err')
+        cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjd,observatory,apred,telescope,plate)
+        cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
         queue.append(cmd, outfile=logfile, errfile=errfile)
     queue.commit(hard=True,submit=True)
-    print('PBS key is '+queue.key)
-    runapogee.queue_wait(queue,sleeptime=60,verbose=True)  # wait for jobs to complete 
+    logger.info('PBS key is '+queue.key)
+    runapogee.queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
     queue = pbsqueue(verbose=True)
 
-    # Run nightly QA/summary
-
-    queue = pbsqueue(verbose=True)
-    queue.create(label='qa', **slurm1)
-    for i in enumerate(plates):
-        qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.'+logtime+'.log'
-        qaerrfile = qaoutfile.replace('-qa.log','-qa.'+logtime+'.err')
-        if os.path.exists(os.path.dirname(qaoutfile))==False:
-            os.makedirs(os.path.dirname(qaoutfile))
-        queue.append('apqa {0} {1}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
-    queue.commit(hard=True,submit=True)
-    runapogee.queue_wait(queue)  # wait for jobs to complete
-    del queue
-    
-    # Run final mjd/fields pate
+    # Make nightly QA/summary pages
+    for m in mjds:
+        try:
+            qa.makeNightQA(load=load,mjd=str(m),telescope=telescope,apred=apred)
+        except:
+            traceback.print_exc()    
+    # Make final mjd/fields pages
+    try:
+        qa.makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred,
+                             mjdfilebase='mjd.html',fieldfilebase='fields.html',
+                             domjd=True, dofields=True)
+    except:
+        traceback.print_exc()
 
     # Run monitor page
 
