@@ -1048,7 +1048,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             if fps:
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
-                if len(fpi)>0:
+                if len(fpi)>0 and mjd>=59604:  # two-FPI fibers weren't used routinely until 50604
                     objplan['fpi'] = str(fpi[0])
                 objplan['configid'] = str(expinfo['configid'][i])
                 objplan['designid'] = str(expinfo['designid'][i])

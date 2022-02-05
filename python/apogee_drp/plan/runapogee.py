@@ -221,8 +221,8 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         # Final calibration file
         #-----------------------
         if caltype.lower()=='fpi':
-            # Should should really check fpi/apFPILines-EXPNUM8.fits
-            base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-')
+            # Should really check fpi/apFPILines-EXPNUM8.fits
+            base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-'+str(mjd)+'-')
         else:
             base = load.filename(caltype,num=num,chips=True)
         chkcal['calfile'][i] = base

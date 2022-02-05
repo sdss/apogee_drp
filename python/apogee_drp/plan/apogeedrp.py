@@ -950,6 +950,20 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     # This also loads the status into the database using the correct APRED version
     chkexp,chkvisit = runapogee.check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
     del queue
+
+    # -- Summary statistics --
+    # Exposure status
+    if chkexp is not None:
+        indexp, = np.where(chkexp['success']==True)
+        logger.info('%d/%d exposures successfully processed' % (len(indexp),len(chkexp)))
+    else:
+        logger.info('No exposures')
+    # Visit status
+    if chkvisit is not None:
+        indvisit, = np.where(chkvisit['success']==True)
+        logger.info('%d/%d visits successfully processed' % (len(indvisit),len(chkvisit)))
+    else:
+        logger.info('No visits')
     
     return chkexp,chkvisit
 
@@ -1303,7 +1317,8 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     while rootLogger.hasHandlers(): # some existing loggers, remove them   
         rootLogger.removeHandler(rootLogger.handlers[0]) 
     rootLogger = logging.getLogger()
-    logfile = logdir+str(mjdstart)+'-'+str(mjdstop)+'.log'
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S") 
+    logfile = logdir+'apogeedrp-'+str(mjdstart)+'-'+str(mjdstop)+'.'+logtime+'.log'
     if os.path.exists(logfile): os.remove(logfile)
     fileHandler = logging.FileHandler(logfile)
     fileHandler.setFormatter(logFormatter)
@@ -1312,7 +1327,6 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
     rootLogger.setLevel(logging.NOTSET)
-    logtime = datetime.now().strftime("%Y%m%d%H%M%S") 
 
     rootLogger.info('Running APOGEE DRP for '+str(observatory).upper()+' apred='+apred)
     rootLogger.info(str(nmjd)+' MJDs: '+','.join(np.char.array(mjds).astype(str)))
