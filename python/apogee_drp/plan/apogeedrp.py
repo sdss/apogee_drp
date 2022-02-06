@@ -47,7 +47,7 @@ def loadsteps(steps):
     """ Parse and expand input steps into a list."""
     # Reduction steps
     # The default is to do all
-    allsteps = ['setup','master','3d','check','cals','plans','apred','rv','summary','unified','qa']
+    allsteps = ['setup','master','3d','cals','plans','apred','rv','summary','unified','qa']
     if steps is None:
         steps = allsteps
     else:
@@ -584,7 +584,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     ## UPDATE THE DATABASE!!!
 
     
-def run3d(load,mjds,slurm,clobber=False,logger=None):
+def runap3d(load,mjds,slurm,clobber=False,logger=None):
     """
     Run AP3D on all exposures for a list of MJDs.
 
@@ -609,7 +609,7 @@ def run3d(load,mjds,slurm,clobber=False,logger=None):
     Example
     -------
 
-    run3d(load,mjds)
+    runap3d(load,mjds)
 
     """
 
@@ -625,43 +625,44 @@ def run3d(load,mjds,slurm,clobber=False,logger=None):
     expinfo = getexpinfo(observatory,mjds,logger=logger)
 
     # Process the files
-    if len(expinfo)>0:
-        slurm1 = slurm.copy()
-        slurm1['cpus'] = np.minimum(slurm['cpus'],len(expinfo))
-        slurm1['numpy_num_threads'] = 2
-        queue = pbsqueue(verbose=True)
-        queue.create(label='ap3d', **slurm1)
-        do3d = np.zeros(len(expinfo),bool)
-        for i,num in enumerate(expinfo['num']):
-            mjd = int(load.cmjd(num))
-            logfile1 = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D','3D')
-            logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
-            logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
-            if os.path.dirname(logfile1)==False:
-                os.makedirs(os.path.dirname(logfile1))
-            # Check if files exist already
-            do3d[i] = True
-            if clobber is not True:
-                outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
-                if load.exists('2D',num=num):
-                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    do3d[i] = False
-            if do3d[i]:
-                queue.append('ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope),
-                             outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-        if np.sum(do3d)>0:
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
-            chk3d = runapogee.check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
-        else:
-            logger.info('No exposures need AP3D processing')
-        del queue
-    else:  # no exposures
+    if len(expinfo)==0:
         logger.info('No exposures to process with AP3D')
-        chk3d = None
+        chk3d = []
 
-    ## UPDATE THE DATABASE!!!
+    slurm1 = slurm.copy()
+    slurm1['cpus'] = np.minimum(slurm['cpus'],len(expinfo))
+    slurm1['numpy_num_threads'] = 2
+    queue = pbsqueue(verbose=True)
+    queue.create(label='ap3d', **slurm1)
+    do3d = np.zeros(len(expinfo),bool)
+    for i,num in enumerate(expinfo['num']):
+        mjd = int(load.cmjd(num))
+        logfile1 = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D','3D')
+        logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
+        logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
+        if os.path.dirname(logfile1)==False:
+            os.makedirs(os.path.dirname(logfile1))
+        # Check if files exist already
+        do3d[i] = True
+        if clobber is not True:
+            outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
+            if load.exists('2D',num=num):
+                logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                do3d[i] = False
+        if do3d[i]:
+            cmd1 = 'ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope)
+            if clobber:
+                cmd1 += ' --clobber'
+            queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+    if np.sum(do3d)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+        # This should check if the ap3d ran okay and puts the status in the database
+        chk3d = runapogee.check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
+    else:
+        logger.info('No exposures need AP3D processing')
+    del queue
         
     return chk3d
 
@@ -792,6 +793,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                 runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
             else:
                 logger.info('No '+str(calnames[j])+' calibration files need to be run')
+            # Checks the status and updates the database
             chkcal1 = runapogee.check_calib(expinfo,logfiles,queue.key,apred,verbose=True,logger=logger)
             if len(chkcal)==0:
                 chkcal = chkcal1
@@ -800,8 +802,6 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
             del queue
         else:
             logger.info('No '+str(calnames[j])+' calibration files to run')
-
-    ## UPDATE THE DATABASE!!!            
             
     return chkcal
 
@@ -854,10 +854,14 @@ def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
     for m in mjds:
         logger.info(' ')
         logger.info('Making plan files for MJD='+str(m))
-        plandicts,planfiles = mkplan.make_mjd5_yaml(m,apred,telescope,clobber=clobber,logger=ogger)
+        plandicts,planfiles = mkplan.make_mjd5_yaml(m,apred,telescope,clobber=clobber,logger=logger)
         dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(m)+'.yaml'
-        planfiles1 = mkplan.run_mjd5_yaml(dailyplanfile,logger=logger)
-        nplanfiles1 = len(planfiles1)
+        try:
+            planfiles1 = mkplan.run_mjd5_yaml(dailyplanfile,logger=logger)
+            nplanfiles1 = len(planfiles1)
+        except:
+            traceback.print_exc()
+            nplanfiles1 = 0
         if nplanfiles1>0:
             runapogee.dbload_plans(planfiles1)  # load plans into db
             # Write planfiles to MJD5.plans
@@ -926,11 +930,14 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     planfiles = getplanfiles(load,mjds,logger=logger)
     # No plan files for these MJDs
     if len(planfiles)==0:
-        return
+        return []
     logger.info(str(len(planfiles))+' plan files')
 
     # Get exposure information
     expinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
+    if len(expinfo)==0:
+        logger.info('No exposures')
+        return []
         
     slurm1 = slurm.copy()
     slurm1['cpus'] = np.minimum(slurm['cpus'],len(planfiles))
@@ -1081,10 +1088,10 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
         # This checks the status and puts it into the database
         ind, = np.where(dorv)
         chkrv = runapogee.check_rv(vcat[ind],queue.key,logger=logger,verbose=False)
-        del queue
     else:
         logger.info('No RVs need to be run')
         chkrv = []
+    del queue
 
     # -- Summary statistics --
     # RV status
@@ -1126,10 +1133,10 @@ def runsumfiles(load,mjds,logger=None):
     telescope = load.telescope
 
     # Loop over MJDs and create the MJD-level summary files
-    for m in mjds:
-        runapogee.create_sumfiles_mjd(apred,telescope,m)
+    #for m in mjds:
+    #    runapogee.create_sumfiles_mjd(apred,telescope,m,logger=logger)
     # Create allStar/allVisit file
-    runapogee.create_sumfiles(apred,telescope)
+    runapogee.create_sumfiles(apred,telescope,logger=logger)
 
 
 def rununified(load,mjds,slurm,clobber=False,logger=None):
@@ -1253,7 +1260,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     queue.commit(hard=True,submit=True)
     logger.info('PBS key is '+queue.key)
     runapogee.queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
-    queue = pbsqueue(verbose=True)
+    del queue
 
     # Make nightly QA/summary pages
     for m in mjds:
@@ -1291,7 +1298,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
          By default, all SDSS-V MJDs are run.
     steps : list, optional
        Processing steps to perform.  The full list is:
-         ['setup','master','3d','check','cals','plans','apred','rv','summary','unified','qa']
+         ['setup','master','3d','cals','plans','apred','rv','summary','unified','qa']
          By default, all steps are run.
     qos : str, optional
        The pbs queue to use.  Default is "sdss".
@@ -1416,17 +1423,9 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('3) Running AP3D on all exposures')
         rootLogger.info('================================')
         rootLogger.info('')
-        chk3d = run3d(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
+        chk3d = runap3d(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
 
-    # 4) Perform initial quality check on all exposures
-    #--------------------------------------------------
-    # Do QA check of the files
-    if 'check' in steps:
-        rootLogger.info(' ')
-        rootLogger.info('Doing quality checks on all exposures')
-        qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=rootLogger)
-
-    # 5) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
+    # 4) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
     #----------------------------------------------------------------
     if 'cals' in steps:
         rootLogger.info('')
@@ -1436,7 +1435,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('')
         chkcal = rundailycals(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
 
-    # 6) Make plan files
+    # 5) Make plan files
     #-------------------
     if 'plans' in steps:
         rootLogger.info('')
@@ -1446,7 +1445,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('')
         planfiles = makeplanfiles(load,mjds,slurm=slurm,logger=rootLogger)
 
-    # 7) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
+    # 6) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
     if 'apred' in steps:
         rootLogger.info('')
@@ -1456,7 +1455,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('')
         chkapred = runapred(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
         
-    # 8) Run "rv" on all unique stars
+    # 7) Run "rv" on all unique stars
     #--------------------------------
     if 'rv' in steps:
         rootLogger.info('')
@@ -1466,7 +1465,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('')
         chkrv = runrv(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
 
-    # 9) Create full allVisit/allStar files
+    # 8) Create full allVisit/allStar files
     if 'summary' in steps:
         rootLogger.info('')
         rootLogger.info('-----------------------')
@@ -1475,7 +1474,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('')
         runsumfiles(load,mjds,logger=rootLogger)
     
-    # 10) Unified directory structure
+    # 9) Unified directory structure
     #---------------------------------
     if 'unified' in steps:
         rootLogger.info('')
@@ -1485,7 +1484,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('')
         #rununified(load,mjds,slurm=slurm,logger=rootLogger)
 
-    # 11) Run QA script
+    # 10) Run QA script
     #------------------
     if 'qa' in steps:
         rootLogger.info('')
