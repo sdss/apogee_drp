@@ -10,7 +10,8 @@
 ;  =exttype      
 ;  =mapper_data  Directory for mapper data.
 ;  /verbose      Print a lot of information to the screen
-;  /clobber      Overwrite existing files.
+;  /clobber      Overwrite existing files (ap1D).
+;  /calclobber   Overwrite existing daily calibration files (apPSF, apFlux).
 ;  /domelibrary  Use the domeflat library.
 ;  /stp          Stop at the end of the prrogram
 ;  /unlock      Delete lock file and start fresh
@@ -26,7 +27,7 @@
 ;-
 
 pro ap2d,planfiles,verbose=verbose,stp=stp,clobber=clobber,exttype=exttype,mapper_data=mapper_data,$
-         domelibrary=domelibrary,unlock=unlock
+         calclobber=calclobber,domelibrary=domelibrary,unlock=unlock
 
 common savedepsf, savedepsffiles, epsfchip
 
@@ -35,7 +36,9 @@ epsfchip = 0
 
 ;; Default parameters
 if n_elements(verbose) eq 0 then verbose=0  ; NOT verbose by default
-; clobber will redo PSF, Flux and 1D frames (but not other fundamental calibration frames)
+; calclobber will redo PSF, Flux and 1D frames (but not other fundamental calibration frames)
+if not keyword_set(calclobber) then calclobber=0  ; NOT calclobber by default,
+; clobber will redo 1D frames
 if not keyword_set(clobber) then clobber=0  ; NOT clobber by default,
 if not keyword_set(exttype) then exttype=4
 if n_elements(domelibrary) eq 0 then domelibrary=0
@@ -142,7 +145,7 @@ FOR i=0L,nplanfiles-1 do begin
   if planstr.sparseid ne 0 then makecal,sparse=planstr.sparseid
   if planstr.fiberid ne 0 then makecal,fiber=planstr.fiberid
   if tag_exist(planstr,'psfid') then begin
-    MAKECAL,psf=planstr.psfid,clobber=clobber
+    MAKECAL,psf=planstr.psfid,clobber=calclobber
     tracefiles = apogee_filename('PSF',num=planstr.psfid,chip=chiptag)
     tracefile = file_dirname(tracefiles[0])+'/'+string(format='(i8.8)',planstr.psfid)
     tracetest = FILE_TEST(tracefiles)  
@@ -168,7 +171,7 @@ FOR i=0L,nplanfiles-1 do begin
 
   ; apFlux files : since individual frames are usually made per plate
   if planstr.fluxid ne 0 then begin
-    MAKECAL,flux=planstr.fluxid,psf=planstr.psfid,clobber=clobber
+    MAKECAL,flux=planstr.fluxid,psf=planstr.psfid,clobber=calclobber
     fluxfiles = apogee_filename('Flux',chip=chiptag,num=planstr.fluxid)
     fluxfile = file_dirname(fluxfiles[0])+'/'+string(format='(i8.8)',planstr.fluxid)
     fluxtest = FILE_TEST(fluxfiles)  
@@ -284,23 +287,30 @@ FOR i=0L,nplanfiles-1 do begin
   if waveid gt 0 or fpiid gt 0 then begin
     cmd = ['ap1dwavecal',planfile]
 
-    ;;;; Check if there is FPI flux in the 2 fibers
-    ;;if fpiid gt 0 then begin
-    ;;  outfile1 = apogee_filename('1D',num=framenum,chip='b')
-    ;;  if file_test(outfile1) eq 0 then begin
-    ;;    print,outfile1,' NOT FOUND'
-    ;;    return
-    ;;  endif
-    ;;  ;;fits_read,outfile1,flux,head,exten=0
-    ;;  ;;stop
-    ;;endif
+    ;; Check if there is FPI flux in the 2 fibers
+    if fpiid gt 0 then begin
+      outfile1 = apogee_filename('1D',num=framenum,chip='b')
+      if file_test(outfile1) eq 0 then begin
+        print,outfile1,' NOT FOUND'
+        return
+      endif
+      fits_read,outfile1,flux,head,exten=1
+      flux1 = flux[*,[75,225]]
+      ;; average on the level of the LSF, ~13 pixels
+      bflux1 = rebin(flux1[0:157*13-1],157,2)
+      medbflux = median(bflux1)
+      ;; ~3800 for FPI (chip b)
+      if medbflux lt 2000 then begin
+        print,'FPIId is set but not enough flux in the 2-FPI fibers.  Using sky lines instead!'
+        fpiid = 0
+      endif
+    endif
 
-    ;; Don't use FPI fibers until we are using it routinely!!!
-    ;;if fpiid gt 0 then begin  ;; use FPI lines
-    ;;   cmd = [cmd,'--fpiid',strtrim(fpiid,2)]
-    ;;endif else begin  ;; use sky lines
-    if not keyword_set(skywave) then cmd=[cmd,'--nosky']
-    ;;endelse
+    if fpiid gt 0 then begin  ;; use FPI lines
+       cmd = [cmd,'--fpiid',strtrim(fpiid,2)]
+    endif else begin  ;; use sky lines
+      if not keyword_set(skywave) then cmd=[cmd,'--nosky']
+    endelse
     spawn,cmd,/noshell
     ;; if skywave then spawn,['apskywavecal',planfile],/noshell $
     ;; else  spawn,['apskywavecal',planfile,'--nosky'],/noshell

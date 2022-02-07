@@ -835,7 +835,8 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                         sig0 = np.poly1d(np.flip(sigcoef1))(linestr['xpix0'][nline1])
                         if ~np.isfinite(pix0) or ~np.isfinite(sig0):
                             print('problems with pix0/sig0')
-                            import pdb; pdb.set_trace()
+                            #import pdb; pdb.set_trace()
+                            continue
                         initpars = [np.maximum(medspec[int(round(pix0))],50),pix0,sig0,0.0]
                         try:
                             pars,perror = peakfit(medspec,pix0,estsig=estsig0,sigma=frame[chip][2].data[row,:],

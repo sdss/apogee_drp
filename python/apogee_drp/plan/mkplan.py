@@ -799,20 +799,20 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     # File already exists and clobber not set
     if os.path.exists(outfile) and clobber==False:
         logger.info(outfile+' already EXISTS and clobber==False')
-        return
+        return [],[]
 
     # Get the exposures and info about them
     expinfo = info.expinfo(observatory=observatory,mjd5=mjd)
     if expinfo is None:
         logger.info('No exposures for MJD='+str(mjd))
-        return
+        return [],[]
     expinfo = expinfo[np.argsort(expinfo['num'])]   # sort
     expinfo = Table(expinfo)
     nfiles = len(expinfo)
     logger.info(str(nfiles)+' exposures found')
     # No exposures
     if nfiles==0:
-        return None
+        return [],[]
 
     # SDSS-V FPS, use configid for plateid
     fps = False
@@ -1048,7 +1048,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             if fps:
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
-                if len(fpi)>0:
+                if len(fpi)>0 and mjd>=59604:  # two-FPI fibers weren't used routinely until 50604
                     objplan['fpi'] = str(fpi[0])
                 objplan['configid'] = str(expinfo['configid'][i])
                 objplan['designid'] = str(expinfo['designid'][i])

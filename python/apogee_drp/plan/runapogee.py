@@ -221,8 +221,8 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         # Final calibration file
         #-----------------------
         if caltype.lower()=='fpi':
-            # Should should really check fpi/apFPILines-EXPNUM8.fits
-            base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-')
+            # Should really check fpi/apFPILines-EXPNUM8.fits
+            base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-'+str(mjd)+'-')
         else:
             base = load.filename(caltype,num=num,chips=True)
         chkcal['calfile'][i] = base
@@ -622,13 +622,69 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
             logger.info('%5d %20s %8d %5d %9s' % (i+1,chkrv['apogee_id'][i],chkrv['healpix'][i],
                                                   chkrv['nvisits'][i],chkrv['success'][i]))
     success, = np.where(chkrv['success']==True)
-    logger.info('%d/%d succeeded' % (len(success),nstars))
+    if verbose:
+        logger.info('%d/%d succeeded' % (len(success),nstars))
     
     # Inset into the database
     db.ingest('rv_status',chkrv)
     db.close()        
 
     return chkrv
+
+def create_sumfiles_mjd(apred,telescope,mjd5,logger=None):
+    """ Create allVisit/allStar files and summary of objects for this night."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+
+    # Start db session
+    db = apogeedb.DBSession()
+
+    # Nightly summary files
+
+    # Nightly allStar, allStarMJD
+    allstarmjd = db.query('star',cols='*',where="apred_vers='%s' and telescope='%s' and starver='%s'" % (apred,telescope,mjd5))
+
+    # for visit except that we'll get the multiple visit rows returned for each unique star row
+    #   Get more info by joining with the visit table.
+    vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
+             'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
+             'apogee_target4', 'catalogid', 'gaiadr2_plx', 'gaiadr2_plx_error', 'gaiadr2_pmra', 'gaiadr2_pmra_error',
+             'gaiadr2_pmdec', 'gaiadr2_pmdec_error', 'gaiadr2_gmag', 'gaiadr2_gerr', 'gaiadr2_bpmag', 'gaiadr2_bperr',
+             'gaiadr2_rpmag', 'gaiadr2_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
+             'starflags','dateobs','jd']
+    rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
+              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
+
+    # Nightly allVisit, allVisitMJD
+    cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
+    allvisitmjd = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
+                           "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' and v.mjd="+str(mjd5)+" and rv.starver='"+str(mjd5)+"'")
+
+    # maybe in summary/MJD/ or qa/MJD/ ?
+    #allstarmjdfile = load.filename('allStarMJD')
+    allstarfile = load.filename('allStar').replace('.fits','-'+telescope+'.fits')
+    allstarmjdfile = allstarfile.replace('allStar','allStarMJD').replace('.fits','-'+str(mjd5)+'.fits')
+    mjdsumdir = os.path.dirname(allstarmjdfile)+'/'+str(mjd5)
+    allstarmjdfile = mjdsumdir+'/'+os.path.basename(allstarmjdfile)
+    if os.path.exists(mjdsumdir)==False:
+        os.makedirs(mjdsumdir)
+    logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
+    logger.info(str(len(allstarmjd))+' stars for '+str(mjd5))
+    Table(allstarmjd).write(allstarmjdfile,overwrite=True)
+
+    allvisitfile = load.filename('allVisit').replace('.fits','-'+telescope+'.fits')
+    allvisitmjdfile = allvisitfile.replace('allVisit','allVisitMJD').replace('.fits','-'+str(mjd5)+'.fits')
+    allvisitmjdfile = mjdsumdir+'/'+os.path.basename(allvisitmjdfile)
+    logger.info('Writing Nightly allVisitMJD file to '+allvisitmjdfile)
+    logger.info(str(len(allvisitmjd))+' visits for '+str(mjd5))
+    Table(allvisitmjd).write(allvisitmjdfile,overwrite=True)
+
+    db.close()
+
 
 def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     """ Create allVisit/allStar files and summary of objects for this night."""
@@ -685,35 +741,11 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
         os.makedirs(os.path.dirname(allvisitfile))
     Table(allvisit).write(allvisitfile,overwrite=True)
 
+    db.close()
+
     # Nightly summary files
     if mjd5 is not None:
-
-        # Nightly allStar, allStarMJD
-        allstarmjd = db.query('star',cols='*',where="apred_vers='%s' and telescope='%s' and starver='%s'" % (apred,telescope,mjd5))
-
-        # Nightly allVisit, allVisitMJD
-        cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
-        allvisitmjd = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
-                               "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' and v.mjd="+str(mjd5)+" and rv.starver='"+str(mjd5)+"'")
-
-        # maybe in summary/MJD/ or qa/MJD/ ?
-        #allstarmjdfile = load.filename('allStarMJD')
-        allstarmjdfile = allstarfile.replace('allStar','allStarMJD').replace('.fits','-'+str(mjd5)+'.fits')
-        mjdsumdir = os.path.dirname(allstarmjdfile)+'/'+str(mjd5)
-        allstarmjdfile = mjdsumdir+'/'+os.path.basename(allstarmjdfile)
-        if os.path.exists(mjdsumdir)==False:
-            os.makedirs(mjdsumdir)
-        logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
-        logger.info(str(len(allstarmjd))+' stars for '+str(mjd5))
-        Table(allstarmjd).write(allstarmjdfile,overwrite=True)
-
-        allvisitmjdfile = allvisitfile.replace('allVisit','allVisitMJD').replace('.fits','-'+str(mjd5)+'.fits')
-        allvisitmjdfile = mjdsumdir+'/'+os.path.basename(allvisitmjdfile)
-        logger.info('Writing Nightly allVisitMJD file to '+allvisitmjdfile)
-        logger.info(str(len(allvisitmjd))+' visits for '+str(mjd5))
-        Table(allvisitmjd).write(allvisitmjdfile,overwrite=True)
-
-    db.close()
+        create_sumfiles_mjd(apred,telescope,mjd5,logger=logger)
 
 def summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None):
     """ Send a summary email."""
