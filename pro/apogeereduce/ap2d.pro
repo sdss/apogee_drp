@@ -300,6 +300,10 @@ FOR i=0L,nplanfiles-1 do begin
       bflux1 = rebin(flux1[0:157*13-1],157,2)
       medbflux = median(bflux1)
       ;; ~3800 for FPI (chip b)
+      if medbflux lt 2000 then begin
+        print,'FPIId is set but not enough flux in the 2-FPI fibers.  Using sky lines instead!'
+        fpiid = 0
+      endif
     endif
 
     if fpiid gt 0 then begin  ;; use FPI lines
