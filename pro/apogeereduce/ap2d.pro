@@ -287,23 +287,26 @@ FOR i=0L,nplanfiles-1 do begin
   if waveid gt 0 or fpiid gt 0 then begin
     cmd = ['ap1dwavecal',planfile]
 
-    ;;;; Check if there is FPI flux in the 2 fibers
-    ;;if fpiid gt 0 then begin
-    ;;  outfile1 = apogee_filename('1D',num=framenum,chip='b')
-    ;;  if file_test(outfile1) eq 0 then begin
-    ;;    print,outfile1,' NOT FOUND'
-    ;;    return
-    ;;  endif
-    ;;  ;;fits_read,outfile1,flux,head,exten=0
-    ;;  ;;stop
-    ;;endif
+    ;; Check if there is FPI flux in the 2 fibers
+    if fpiid gt 0 then begin
+      outfile1 = apogee_filename('1D',num=framenum,chip='b')
+      if file_test(outfile1) eq 0 then begin
+        print,outfile1,' NOT FOUND'
+        return
+      endif
+      fits_read,outfile1,flux,head,exten=1
+      flux1 = flux[*,[75,225]]
+      ;; average on the level of the LSF, ~13 pixels
+      bflux1 = rebin(flux1[0:157*13-1],157,2)
+      medbflux = median(bflux1)
+      ;; ~3800 for FPI (chip b)
+    endif
 
-    ;; Don't use FPI fibers until we are using it routinely!!!
-    ;;if fpiid gt 0 then begin  ;; use FPI lines
-    ;;   cmd = [cmd,'--fpiid',strtrim(fpiid,2)]
-    ;;endif else begin  ;; use sky lines
-    if not keyword_set(skywave) then cmd=[cmd,'--nosky']
-    ;;endelse
+    if fpiid gt 0 then begin  ;; use FPI lines
+       cmd = [cmd,'--fpiid',strtrim(fpiid,2)]
+    endif else begin  ;; use sky lines
+      if not keyword_set(skywave) then cmd=[cmd,'--nosky']
+    endelse
     spawn,cmd,/noshell
     ;; if skywave then spawn,['apskywavecal',planfile],/noshell $
     ;; else  spawn,['apskywavecal',planfile,'--nosky'],/noshell

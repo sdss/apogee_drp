@@ -47,7 +47,7 @@ def loadsteps(steps):
     """ Parse and expand input steps into a list."""
     # Reduction steps
     # The default is to do all
-    allsteps = ['setup','master','3d','cals','plans','apred','rv','summary','unified','qa']
+    allsteps = ['setup','master','3d','cal','plan','apred','rv','summary','unified','qa']
     if steps is None:
         steps = allsteps
     else:
@@ -630,7 +630,8 @@ def runap3d(load,mjds,slurm,clobber=False,logger=None):
         chk3d = []
 
     slurm1 = slurm.copy()
-    slurm1['cpus'] = np.minimum(slurm['cpus'],len(expinfo))
+    if len(expinfo)<64:
+        slurm1['cpus'] = len(expinfo)
     slurm1['numpy_num_threads'] = 2
     queue = pbsqueue(verbose=True)
     queue.create(label='ap3d', **slurm1)
@@ -747,7 +748,8 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
         if len(cind)>0:
             logger.info(str(len(cind))+' file(s)')
             slurm1 = slurm.copy()
-            slurm1['cpus'] = np.minimum(slurm['cpus'],len(cind))
+            if len(cind)<64:
+                slurm1['cpus'] = len(cind)
             slurm1['numpy_num_threads'] = 2
             queue = pbsqueue(verbose=True)
             queue.create(label='makecal-'+shcalnames[j], **slurm1)
@@ -854,7 +856,7 @@ def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
     for m in mjds:
         logger.info(' ')
         logger.info('Making plan files for MJD='+str(m))
-        plandicts,planfiles = mkplan.make_mjd5_yaml(m,apred,telescope,clobber=clobber,logger=logger)
+        plandicts,planfiles0 = mkplan.make_mjd5_yaml(m,apred,telescope,clobber=clobber,logger=logger)
         dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(m)+'.yaml'
         try:
             planfiles1 = mkplan.run_mjd5_yaml(dailyplanfile,logger=logger)
@@ -862,10 +864,12 @@ def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
         except:
             traceback.print_exc()
             nplanfiles1 = 0
+
+        logger.info('Writing list of plan files to '+logdir+str(m)+'.plans')
         if nplanfiles1>0:
             runapogee.dbload_plans(planfiles1)  # load plans into db
             # Write planfiles to MJD5.plans
-            dln.writelines(logdir+str(m)+'.plans',[os.path.basename(pf) for pf in planfiles])
+            dln.writelines(logdir+str(m)+'.plans',[os.path.basename(pf) for pf in planfiles1])
             planfiles += planfiles1
         else:
             dln.writelines(logdir+str(m)+'.plans','')   # write blank file
@@ -880,8 +884,6 @@ def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
         #daycat['begtime'] = begtime
         #daycat['success'] = False
         #db.ingest('daily_status',daycat)
-
-    ## UPDATE THE DATABASE!!!
 
     return planfiles
 
@@ -940,7 +942,8 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
         return []
         
     slurm1 = slurm.copy()
-    slurm1['cpus'] = np.minimum(slurm['cpus'],len(planfiles))
+    if len(planfiles)<64:
+        slurm1['cpus'] = len(planfiles)
     slurm1['numpy_num_threads'] = 2
 
     queue = pbsqueue(verbose=True)
@@ -1050,7 +1053,8 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
     vcat['mjd'] = vcat['maxmjd']    
 
     slurm1 = slurm.copy()
-    slurm1['cpus'] = np.minimum(slurm['cpus'],len(vcat))
+    if len(vcat)<64:
+        slurm1['cpus'] = len(vcat)
     slurm1['numpy_num_threads'] = 2
     queue = pbsqueue(verbose=True)
     queue.create(label='rv', **slurm1)
@@ -1178,7 +1182,8 @@ def rununified(load,mjds,slurm,clobber=False,logger=None):
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     
     slurm1 = slurm.copy()
-    slurm1['cpus'] = np.minimum(slurm['cpus'],len(mjds))
+    if len(mjds)<64:
+        slurm1['cpus'] = len(mjds)
     slurm1['numpy_num_threads'] = 2    
     queue = pbsqueue(verbose=True)
     queue.create(label='unidir', **slurm1)
@@ -1241,7 +1246,8 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
 
     # Run apqa on each plate visit
     slurm1 = slurm.copy()
-    slurm1['cpus'] = np.minimum(slurm['cpus'],len(planfiles))
+    if len(planfiles)<64:
+        slurm1['cpus'] = len(planfiles)
     slurm1['numpy_num_threads'] = 2    
     queue = pbsqueue(verbose=True)
     queue.create(label='apqa', **slurm1)
@@ -1281,7 +1287,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     
 
 def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=False,links=None,
-        nodes=1,cpus=32):
+        nodes=10):
     """
     Perform APOGEE Data Release Processing
 
@@ -1298,7 +1304,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
          By default, all SDSS-V MJDs are run.
     steps : list, optional
        Processing steps to perform.  The full list is:
-         ['setup','master','3d','cals','plans','apred','rv','summary','unified','qa']
+         ['setup','master','3d','cal','plan','apred','rv','summary','unified','qa']
          By default, all steps are run.
     qos : str, optional
        The pbs queue to use.  Default is "sdss".
@@ -1342,8 +1348,9 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     alloc = 'sdss-np'
     shared = True
     ppn = 64
-    walltime = '10-00:00:00'
-    slurm = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn, 'cpus':cpus,
+    walltime = '336:00:00'
+    # Only set cpus if you want to use less than 64 cpus
+    slurm = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn,
              'walltime':walltime, 'notification':False}
     
     # Get software version (git hash)
@@ -1381,6 +1388,9 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     rootLogger.info(str(nsteps)+' steps: '+','.join(steps))
     rootLogger.info('Clobber is '+str(clobber))
 
+    # Common keyword arguments
+    kws = {'slurm':slurm, 'clobber':clobber, 'logger':rootLogger}
+
     # 1) Setup the directory structure
     #----------------------------------
     if 'setup' in steps:
@@ -1413,7 +1423,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('2) Generating master calibration products')
         rootLogger.info('=========================================')
         rootLogger.info('')
-        chk = mkmastercals(load,slurm=slurm,clobber=clobber,links=links,logger=rootLogger)
+        chk = mkmastercals(load,links=links,**kws)
 
     # 3) Process all exposures through ap3d
     #---------------------------------------
@@ -1423,27 +1433,27 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('3) Running AP3D on all exposures')
         rootLogger.info('================================')
         rootLogger.info('')
-        chk3d = runap3d(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
+        chk3d = runap3d(load,mjds,**kws)
 
     # 4) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
     #----------------------------------------------------------------
-    if 'cals' in steps:
+    if 'cal' in steps:
         rootLogger.info('')
         rootLogger.info('----------------------------------------')
         rootLogger.info('5) Generating daily calibration products')
         rootLogger.info('========================================')
         rootLogger.info('')
-        chkcal = rundailycals(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
+        chkcal = rundailycals(load,mjds,**kws)
 
     # 5) Make plan files
     #-------------------
-    if 'plans' in steps:
+    if 'plan' in steps:
         rootLogger.info('')
         rootLogger.info('--------------------')
         rootLogger.info('6) Making plan files')
         rootLogger.info('====================')
         rootLogger.info('')
-        planfiles = makeplanfiles(load,mjds,slurm=slurm,logger=rootLogger)
+        planfiles = makeplanfiles(load,mjds,**kws)
 
     # 6) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
@@ -1453,7 +1463,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('7) Running APRED')
         rootLogger.info('================')
         rootLogger.info('')
-        chkapred = runapred(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
+        chkapred = runapred(load,mjds,**kws)
         
     # 7) Run "rv" on all unique stars
     #--------------------------------
@@ -1463,7 +1473,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('8) Running RV+Visit Combination')
         rootLogger.info('================================')
         rootLogger.info('')
-        chkrv = runrv(load,mjds,slurm=slurm,clobber=clobber,logger=rootLogger)
+        chkrv = runrv(load,mjds,**kws)
 
     # 8) Create full allVisit/allStar files
     if 'summary' in steps:
@@ -1482,7 +1492,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('10) Generating unified MWM directory structure')
         rootLogger.info('=============================================')
         rootLogger.info('')
-        #rununified(load,mjds,slurm=slurm,logger=rootLogger)
+        #rununified(load,mjds,**kws)
 
     # 10) Run QA script
     #------------------
@@ -1492,7 +1502,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('11) Running QA')
         rootLogger.info('==============')
         rootLogger.info('')
-        runqa(load,mjds,slurm=slurm,logger=rootLogger)
+        runqa(load,mjds,**kws)
 
 
     # Update daily_status table

@@ -799,20 +799,20 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     # File already exists and clobber not set
     if os.path.exists(outfile) and clobber==False:
         logger.info(outfile+' already EXISTS and clobber==False')
-        return
+        return [],[]
 
     # Get the exposures and info about them
     expinfo = info.expinfo(observatory=observatory,mjd5=mjd)
     if expinfo is None:
         logger.info('No exposures for MJD='+str(mjd))
-        return
+        return [],[]
     expinfo = expinfo[np.argsort(expinfo['num'])]   # sort
     expinfo = Table(expinfo)
     nfiles = len(expinfo)
     logger.info(str(nfiles)+' exposures found')
     # No exposures
     if nfiles==0:
-        return None
+        return [],[]
 
     # SDSS-V FPS, use configid for plateid
     fps = False
