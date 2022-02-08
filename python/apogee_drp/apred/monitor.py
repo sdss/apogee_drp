@@ -750,6 +750,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             gfibers = np.array([10, 45, 80, 115, 150, 185, 220, 255, 290])[::-1]
+            gcolors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange', 'magenta', 'darkgreen', 'seagreen', 'maroon'])[::-1]
             #gfibers = np.array([0, 49, 99, 149, 199, 249, 299])[::-1]
             ngplotfibs = len(gfibers)
 
@@ -788,7 +789,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(ngplotfibs):
                     medcent = np.nanmedian(gcent[:, ichip, ifib])
                     yvals = gcent[:, ichip, ifib] - medcent
-                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=gcolors[ifib], alpha=alf, 
                                label='Fiber ' + str(gfibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
@@ -843,7 +844,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(ngplotfibs):
                     medcent = np.nanmedian(gcent[:, ichip, ifib])
                     yvals = gcent[:, ichip, ifib] - medcent
-                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=gcolors[ifib], alpha=alf, 
                                label='Fiber ' + str(gfibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
