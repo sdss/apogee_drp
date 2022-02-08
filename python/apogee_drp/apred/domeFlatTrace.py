@@ -327,6 +327,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
         print('Running code on ' + nexptr + ' ' + imtype + ' exposures.')
     print('Estimated runtime: ' + str(int(round(3.86*nexp))) + ' seconds.\n')
 
+    pdb.set_trace()
     # Lookup table structure.
     dt = np.dtype([('PSFID',           np.int32),
                    ('PLATEID',         np.int32),
