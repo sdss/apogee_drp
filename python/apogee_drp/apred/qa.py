@@ -2132,6 +2132,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                     apStarNewest = os.path.basename(apStarCheck[-1])
                     apStarRelPath = '../' + starRelPath + apStarNewest
 
+            pdb.set_trace()
             # Write data to HTML table
             vishtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
             if (objtype != 'SKY') & (objid != ''):
