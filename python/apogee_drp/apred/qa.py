@@ -1879,13 +1879,16 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvlogg,3)) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
             else:
-                if objtype != 'SKY': objtype = 'BLANK'
+                snr = '-9.9'
+                if objtype != 'SKY': 
+                    objtype = 'BLANK'
+                    snr = '-99.9
                 vishtml.write('<TD align="center"><FONT COLOR="red">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">99.999</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">99.999</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-99.9</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="red">' + snr + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-999.9</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">0</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-9999</FONT>')
