@@ -2035,8 +2035,8 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
-    # Start db session for getting all visit info
-    db = apogeedb.DBSession()
+#    # Start db session for getting all visit info
+#    db = apogeedb.DBSession()
 
 #    # Load in the allVisitMJD file
 #    allVpath = apodir + apred + '/summary/' + mjd + '/allVisitMJD-' + apred + '-' + telescope + '-' + mjd + '.fits'
@@ -2097,10 +2097,14 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
     vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
 #    vishtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
-    tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
-    tputdat = open(tputfile, 'w')
+    #tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
+    #tputdat = open(tputfile, 'w')
 
+    start_time = time.time()
+    # Start db session for getting all visit info
     db = apogeedb.DBSession()
+    runtime = str("%.2f" % (time.time() - start_time))
+    print("DB session opened after " + runtime + " seconds.\n")
 
     # Loop over the fibers
     for j in range(300):
