@@ -2167,7 +2167,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                         apStarNewest = os.path.basename(apStarCheck[-1])
                         apStarRelPath = '../' + starRelPath + apStarNewest
 
-            pdb.set_trace()
+                pdb.set_trace()
 
             # column 1
             vishtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
