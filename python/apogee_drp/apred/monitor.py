@@ -757,18 +757,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #yspan = ymax - ymin
             dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
             gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 270))
-            pdb.set_trace()
-            gcent = dtrace['GAUSS_CENT'][gd,:,fibers]
-
-
-            caljd = gdcal['JD'] - 2.4e6
+            gdtrace = dtrace[gd]
+            gcent = gdtrace['GAUSS_CENT'][:,:,fibers]
+            xvals = gdtrace['MJD']
 
             for ichip in range(nchips):
                 chip = chips[ichip]
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
+                ax.set_ylim(-4, 4)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -776,7 +774,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Median Flux')
+                if ichip == 1: ax.set_ylabel(r'Trace Pos $-$ Median Trace Pos.')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
 
@@ -785,8 +783,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
-                    yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                    medcent = np.nanmedian(gcent[:, ichip, ifib])
+                    yvals = gcent[:, ichip, ifib] - medcent
+                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
@@ -799,7 +798,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
-        pdb.set_trace()
+        #pdb.set_trace()
         return 
 
         ###########################################################################################
