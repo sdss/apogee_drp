@@ -750,8 +750,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 4
-            ymin = -4
+            ymax = 6
+            ymin = -6
             yspan = ymax - ymin
             dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
             gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 270))
@@ -772,9 +772,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                if ichip == 1: ax.set_ylabel(r'Trace Pos $-$ Median Trace Pos.')
+                if ichip == 1: ax.set_ylabel(r'Trace Pos $-$ Median Trace Pos. (pixels)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
