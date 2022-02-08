@@ -2121,6 +2121,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
 
             if objtype != 'SKY':
                 # DB query to get star and visit info
+                print("----> makeVisHTML2: DB query for " + objid)
                 vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
                 gd, = np.where(vcat['mjd'] == int(mjd))
                 vcat = vcat[gd][0]
