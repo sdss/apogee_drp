@@ -1886,6 +1886,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             visitfilebase = os.path.basename(visitfile)
             vplotfile = visitfile.replace('.fits','.jpg')
 
+            pdb.set_trace()
             snratio = ''
             starflagtxt = ''
             if os.path.exists(visitfile) == False:
@@ -1900,6 +1901,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     snratio = str("%.2f" % round(visithdr['SNR'],2))
                 else:
                     print("----> makeVisHTML: Problem with " + visitfilebase + "... SNR = NaN.")
+
+            pdb.set_trace()
 
             # column 1
             vishtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
