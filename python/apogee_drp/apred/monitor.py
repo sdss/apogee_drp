@@ -777,7 +777,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                if ichip == 1: ax.set_ylabel(r'Dome Flat Trace Position Residuals (pixels)')
+                if ichip == 1: ax.set_ylabel(r'Quartz Lamp Trace Position Residuals (pixels)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
                 ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
