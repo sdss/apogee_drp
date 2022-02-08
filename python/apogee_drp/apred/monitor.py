@@ -752,8 +752,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             gfibers = np.array([5, 10, 80, 150, 220, 290, 295])[::-1]
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 2.5
-            ymin = -2.5
+            ymax = 3.5
+            ymin = -3.5
             yspan = ymax - ymin
             dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
             gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 280))
