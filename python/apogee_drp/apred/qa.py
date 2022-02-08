@@ -2194,9 +2194,9 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
 
             if objtype == 'SKY': 
                 firstcarton = 'sky'
-                starflagtxt = ''
+                starflags = ''
             vishtml.write('<TD align="left">' + firstcarton)
-            vishtml.write('<BR><BR>' + starflagtxt)
+            vishtml.write('<BR><BR>' + starflags)
 
             vcol = 'black'
             if objtype == 'SKY':
