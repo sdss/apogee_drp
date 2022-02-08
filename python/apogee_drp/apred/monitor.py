@@ -784,7 +784,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                for ifib in range(nplotfibs):
+                for ifib in range(ngplotfibs):
                     medcent = np.nanmedian(gcent[:, ichip, ifib])
                     yvals = gcent[:, ichip, ifib] - medcent
                     ax.scatter(xvals, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
@@ -839,7 +839,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                for ifib in range(nplotfibs):
+                for ifib in range(ngplotfibs):
                     medcent = np.nanmedian(gcent[:, ichip, ifib])
                     yvals = gcent[:, ichip, ifib] - medcent
                     ax.scatter(xvals, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
