@@ -98,7 +98,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
     # Create the output fiber structure
     dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),('eta',np.float64),('zeta',np.float64),
-                      ('objtype',np.str,10),('holetype',np.str,10),('object',np.str,30),
+                      ('objtype',np.str,10),('holetype',np.str,10),('object',np.str,30),('assigned',int),('on_target',int),
                       ('tmass_style',np.str,30),('target1',int),('target2',int),('target3',int),('target4',int),
                       ('spectrographid',int),('mag',float,5),('alt_id',np.str,30),('twomass_designation',np.str,30),
                       ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
@@ -172,7 +172,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         fps = True
 
     fiber = np.zeros(300,dtype=dtype)
-    fiber.mag = 99.99  # default to faint magnitudes
+    fiber['mag'] = 99.99  # default to faint magnitudes
+    fiber['jmag'] = 99.99  # default to faint magnitudes
+    fiber['hmag'] = 99.99  # default to faint magnitudes
+    fiber['kmag'] = 99.99  # default to faint magnitudes
     platedata = {'plate':plate, 'mjd':mjd, 'locationid':0, 'field':' ', 'programname':'',
                  'ha':[-99.,-99.,-99.], 'fiberdata':fiber, 'guidedata':guide}
     field, survey, programname = apload.apfield(plate,loc,telescope=load.telescope,fps=fps)
@@ -355,6 +358,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             if len(j)>0:
                 print('fiber index ',i,' declared as bad')
                 nm = 0
+        
         if nm>1:
             print('halt: more than one match for fiber id !! MARVELS??')
             #print(plugmap['fiberdata']['fiberId'][m],plugmap['fiberdata']['primTarget'][m],
@@ -368,13 +372,26 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             fiber['eta'][i] = plugmap['fiberdata']['eta'][m]
             fiber['zeta'][i] = plugmap['fiberdata']['zeta'][m]
             if fps:
+                fiber['assigned'][i] = plugmap['fiberdata']['assigned'][m]
+                fiber['on_target'][i] = plugmap['fiberdata']['on_target'][m]
                 fiber['catalogid'][i] = plugmap['fiberdata']['catalogid'][m]
                 fiber['sdssv_apogee_target0'][i] = plugmap['fiberdata']['sdssv_apogee_target0'][m]
             else:
                 fiber['target1'][i] = plugmap['fiberdata']['primTarget'][m]
                 fiber['target2'][i] = plugmap['fiberdata']['secTarget'][m]
             fiber['spectrographid'][i] = plugmap['fiberdata']['spectrographId'][m]
-            
+
+            # Unassigned fibers
+            if fps:
+                if fiber['assigned'][i]==0 or fiber['on_target'][i]==0:
+                    if fiber['assigned'][i]==0:
+                        print('FiberID '+str(300-i)+' is UNASSIGNED')
+                    if fiber['assigned'][i]==1 and fiber['on_target'][i]==0:
+                        print('FiberID '+str(300-i)+' is assigned but NOT on target')
+                    fiber['hmag'][i] = 99.99
+                    fiber['mag'][i] = 99.99
+                    continue
+
             # Special for asdaf object plates
             if asdaf is not None:
                 # ASDAF fiber
@@ -408,6 +425,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         if plugmap['fiberdata']['category'][m].astype(str).upper() == 'SKY_APOGEE': objtype='SKY'
                         if plugmap['fiberdata']['category'][m].astype(str).upper() == 'STANDARD_APOGEE': objtype='HOT_STD'
                         fiber['objtype'][i] = objtype
+                        if objtype=='SKY': continue
 
                     # Get matching stars using catalogid for FPS
                     if fps:
@@ -510,6 +528,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     else:
                         #raise Exception('no match found in plateHoles!',fiber['ra'][i],fiber['dec'][i], i)
                         print('no match found to photometry',fiber['ra'][i],fiber['dec'][i], 300-i)
+                        import pdb; pdb.set_trace()
                         nomatch += 1
         else:
             fiber['fiberid'][i] = -1

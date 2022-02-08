@@ -133,7 +133,7 @@ if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
 
 ;; Create the output fiber structure
 tmp = create_struct('fiberid',-1, 'ra',999999.d0, 'dec',999999.d0, 'eta',999999.d0, 'zeta',999999.d0, 'objtype','none', $
-                    'holetype','OBJECT', 'object','', 'tmass_style','', 'target1',0L, 'target2',0L,$
+                    'holetype','OBJECT', 'object','', 'assigned',0, 'on_target',0, 'tmass_style','', 'target1',0L, 'target2',0L,$
                     'target3',0L, 'target4',0L, 'spectrographid',2, 'mag',fltarr(5), catalog_info_blank(),$
                     'catalogid',-1LL, 'gaia_g',-9999.99, 'gaia_bp',-9999.99, 'gaia_rp',-9999.99, 'sdssv_apogee_target0',0LL,$
                     'firstcarton','', 'gaiadr2_sourceid','', 'gaiadr2_ra',-9999.99d0, 'gaiadr2_dec',-9999.99d0,$
@@ -142,6 +142,9 @@ tmp = create_struct('fiberid',-1, 'ra',999999.d0, 'dec',999999.d0, 'eta',999999.
                     'gaiadr2_gerr',-9999.99, 'gaiadr2_bpmag',-9999.99, 'gaiadr2_bperr',-9999.99, 'gaiadr2_rpmag',-9999.99,$
                     'gaiadr2_rperr',-9999.99)
 tmp.mag = 99.99 ;; default to faint magnitudes
+tmp.jmag = 99.99 ;; default to faint magnitudes
+tmp.hmag = 99.99 ;; default to faint magnitudes
+tmp.kmag = 99.99 ;; default to faint magnitudes
 
 guide = replicate(tmp,16)
 loc = 0L
@@ -356,8 +359,6 @@ if not keyword_set(fps) then begin
   platedata.guidedata = guide
 endif
 
-stop
-
 ;; Find matching plugged entry for each spectrum and load up the output information from correct source(s)
 for i=0,299 do begin
   fiber[i].spectrographid = -1
@@ -388,6 +389,8 @@ for i=0,299 do begin
     fiber[i].eta = plugmap.fiberdata[m].eta
     fiber[i].zeta = plugmap.fiberdata[m].zeta
     if keyword_set(fps) then begin
+      fiber[i].assigned = plugmap.fiberdata[m].assigned
+      fiber[i].on_target = plugmap.fiberdata[m].on_target
       fiber[i].sdssv_apogee_target0 = plugmap.fiberdata[m].sdssv_apogee_target0
       fiber[i].catalogid = plugmap.fiberdata[m].catalogid
     endif else begin
@@ -395,6 +398,18 @@ for i=0,299 do begin
       fiber[i].target2 = plugmap.fiberdata[m].secTarget
     endelse
     fiber[i].spectrographid = plugmap.fiberdata[m].spectrographid
+
+    ;; Unassigned fibers
+    if keyword_set(fps) then begin
+      if fiber[i].assigned eq 0 or fiber[i].on_target eq 0 then begin
+        if fiber[i].assigned eq 0 then print,'FiberID '+strtrim(300-i,2)+' is UNASSIGNED'
+        if fiber[i].assigned eq 1 and fiber[i].on_target eq 0 then $
+          print,'FiberID '+strtrim(300-i,2)+' is assigned but NOT on target'
+        fiber[i].hmag = 99.99
+        fiber[i].mag = 99.99
+        continue
+       end
+    endif
 
     ;; Special for asdaf object plates
     if keyword_set(asdaf) then begin
@@ -430,6 +445,7 @@ for i=0,299 do begin
           if strupcase(plugmap.fiberdata[m].category) eq 'SKY_APOGEE' then objtype='SKY'
           if strupcase(plugmap.fiberdata[m].category) eq 'STANDARD_APOGEE' then objtype='HOT_STD'             
           fiber[i].objtype = objtype
+          if objtype eq 'SKY' then continue
         endif
 
         ;; Use CatalogID for FPS
