@@ -755,11 +755,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ngplotfibs = len(gfibers)
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 3.2
-            ymin = -3.2
+            ymax = 2.8
+            ymin = -2.8
             yspan = ymax - ymin
             dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
-            gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 290))
+            gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 280))
             gdtrace = dtrace[gd]
             gcent = gdtrace['GAUSS_CENT'][:,:,gfibers]
             xvals = gdtrace['MJD']
@@ -810,8 +810,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 2.5
-            ymin = -2.5
+            ymax = 2.8
+            ymin = -2.8
             yspan = ymax - ymin
             dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
             gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 280))
