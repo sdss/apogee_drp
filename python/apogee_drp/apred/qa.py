@@ -2007,6 +2007,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 ###################################################################################################
 ''' makeVisHTML2: make the plate/visit level html '''
 def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, fluxid=None): 
+    start_time = time.time()
 
     print("----> makeVisHTML2: Running plate " + plate + ", MJD " + mjd)
 
@@ -2121,7 +2122,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
 
             if objtype != 'SKY':
                 # DB query to get star and visit info
-                print("----> makeVisHTML2: DB query for " + objid)
+                print("----> makeVisHTML2: DB query for " + objid + "(" + str(j+1) + "/300)")
                 vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
                 gd, = np.where(vcat['mjd'] == int(mjd))
                 vcat = vcat[gd][0]
@@ -2235,7 +2236,8 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
     vishtml.close()
     #tputdat.close()
 
-    print("----> makeVisHTML2: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    runtime = str("%.2f" % (time.time() - start_time))
+    print("----> makeVisHTML2: Done with plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
