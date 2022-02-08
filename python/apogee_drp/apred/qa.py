@@ -2133,7 +2133,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                     apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
-            vishtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
+            vishtml.write('<TR BGCOLOR=' + color + '><TD align="center">' + cfiber + '<BR>(' + cblock + ')\n')
             if (objtype != 'SKY') & (objid != ''):
                 vishtml.write('<TD>' + objid + '\n')
                 vishtml.write('<BR>' + simbadlink + '\n')
@@ -2150,7 +2150,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                     vishtml.write('<TD align="center">TEL')
                 else:
                     vishtml.write('<TD align="center">SCI')
-                vishtml.write('<TD align="left">' + firstcarton)
+                vishtml.write('<TD align="center">' + firstcarton)
                 vishtml.write('<BR><BR>' + starflags)
                 vcol = 'black'
                 if np.absolute(vhelio) > 400: vcol = 'red'
@@ -2161,12 +2161,12 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvlogg,3)) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
             else:
-                if objtype != 'SKY': objtype = 'blank'
+                if objtype != 'SKY': objtype = 'BLANK'
                 vishtml.write('<TD align="center"><FONT COLOR="red">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">99.999</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">99.999</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red"></FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="red">BLANK</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-99.9</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-999.9</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">0</FONT>')
