@@ -2199,7 +2199,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
             vishtml.write('<BR><BR>' + starflagtxt)
 
             vcol = 'black'
-            if objtype == 'SKY'
+            if objtype == 'SKY':
                 vishtml.write('<TD align="center"><FONT COLOR="red">-99.9')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-1')
