@@ -2005,7 +2005,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     print("----> makeVisHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
 ###################################################################################################
-''' makeVisHTML: make the plate/visit level html '''
+''' makeVisHTML2: make the plate/visit level html '''
 def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, fluxid=None): 
 
     print("----> makeVisHTML2: Running plate " + plate + ", MJD " + mjd)
@@ -2100,12 +2100,8 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
     #tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
     #tputdat = open(tputfile, 'w')
 
-    print("Starting DB session...")
-    start_time = time.time()
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
-    runtime = str("%.2f" % (time.time() - start_time))
-    print("DB session started after " + runtime + " seconds.\n")
 
     # Loop over the fibers
     for j in range(300):
@@ -2116,82 +2112,74 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
             cblock = str(np.ceil(fiber / 30).astype(int))
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
-            if objtype != 'SKY':
-                # DB query to get visit info
-                vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
-                hmag = vcat['hmag'][0]
-                cjmag = str("%.3f" % round(vcat['jmag'][0], 3))
-                chmag = str("%.3f" % round(vcat['hmag'][0], 3))
-                ckmag = str("%.3f" % round(vcat['kmag'][0],3 ))
-                jkcolor = vcat['jmag'][0] - vcat['kmag'][0]
-                if (vcat['jmag'] < 0) | (vcat['kmag'] < 0): jkcolor = -9.999
-                pdb.set_trace()
-
-            hmag = jdata['HMAG']
-            cjmag = str("%.3f" % round(jdata['JMAG'], 3))
-            chmag = str("%.3f" % round(jdata['HMAG'], 3))
-            ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
-            jkcolor = jdata['JMAG'] - jdata['KMAG']
-            if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
-            cjkcolor = str("%.3f" % round(jkcolor, 3))
-    #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
-            cra = str("%.5f" % round(jdata['RA'], 5))
-            cdec = str("%.5f" % round(jdata['DEC'], 5))
-            txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
-            txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
-            simbadlink = txt1 + txt2
-
-            apStarRelPath = None
-            if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
-                # Find which healpix this star is in
-                healpix = apload.obj2healpix(objid)
-                healpixgroup = str(healpix // 1000)
-                healpix = str(healpix)
-
-                # Find the associated healpix html directories
-                starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-                starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
-                apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
-                if len(apStarCheck) > 0:
-                    # Find the newest apStar file
-                    apStarCheck.sort()
-                    apStarCheck = np.array(apStarCheck)
-                    apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = '../' + starRelPath + apStarNewest
-            else:
-                starHTMLrelPath = 'None'
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = '#D2B4DE'
             if objtype == 'SKY': color = '#D6EAF8'
 
-            # Get target flag strings
-            if 'apogee' in survey:
-                targflagtxt = bitmask.targflags(jdata['TARGET1'],jdata['TARGET2'],jdata['TARGET3'],
-                                                jdata['TARGET4'],survey=survey)
-            else:
-                targflagtxt = bitmask.targflags(jdata['SDSSV_APOGEE_TARGET0'], 0, 0, 0, survey=survey)
-                if targflagtxt == '': targflagtxt = 'OPS_STD_BOSS?'
-            if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
-            targflagtxt = targflagtxt.replace(',','<BR>')
+            if objtype != 'SKY':
+                # DB query to get star and visit info
+                vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
+                gd, = np.where(vcat['mjd'] == int(mjd))
+                mjdvcat = vcat[gd][0]
+                hmag = vcat['hmag'][0]
+                cjmag = str("%.3f" % round(vcat['jmag'][0], 3))
+                chmag = str("%.3f" % round(vcat['hmag'][0], 3))
+                ckmag = str("%.3f" % round(vcat['kmag'][0],3 ))
+                jkcolor = vcat['jmag'][0] - vcat['kmag'][0]
+                if (vcat['jmag'] < 0) | (vcat['kmag'] < 0): jkcolor = 99.999
+                cjkcolor = str("%.3f" % round(jkcolor, 3))
 
-            # Find apVisit file
-            visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber, fps=fps)
-            visitfilebase = os.path.basename(visitfile)
-            vplotfile = visitfile.replace('.fits','.jpg')
+                pdb.set_trace()
+                # Create SIMBAD link
+                cra = str("%.5f" % round(vcat['RA'][0], 5))
+                cdec = str("%.5f" % round(vcat['DEC'][0], 5))
+                txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
+                txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
+                simbadlink = txt1 + txt2
 
-            snratio = ''
-            starflagtxt = ''
-            if os.path.exists(visitfile) == False:
-                visitfile = visitfile.replace('-apo25m-', '-')
-            if os.path.exists(visitfile):
-                visithdr = fits.getheader(visitfile)
-                catid = visithdr['CATID']
-                pp, = np.where(catid == plug['catalogid'])
-                if len(pp) > 0: targflagtxt = plug['firstcarton'][pp][0].decode('UTF-8')
-                starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
+                # Find apVisit file
+                visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber, fps=fps)
+                if os.path.exists(visitfile) == False:
+                    visitfile = visitfile.replace('-apo25m-', '-')
+                visitfilebase = os.path.basename(visitfile)
+                vplotfile = visitfile.replace('.fits','.jpg')
+
+                # Get paths to apStar file and star html
+                apStarRelPath = None
+                starhtmlrelpath = None
+                if len(objid) != 18:
+                    print("----> makeVisHTML2: objid length != 18 for " + objid)
+                    # Find which healpix this star is in
+                    healpix = apload.obj2healpix(objid)
+                    healpixgroup = str(healpix // 1000)
+                    healpix = str(healpix)
+
+                    # Find the associated healpix html directories
+                    starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+                    starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                    starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
+                    apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                    if len(apStarCheck) > 0:
+                        # Find the newest apStar file
+                        apStarCheck.sort()
+                        apStarCheck = np.array(apStarCheck)
+                        apStarNewest = os.path.basename(apStarCheck[-1])
+                        apStarRelPath = '../' + starRelPath + apStarNewest
+
+                    ## Get target flags
+                    #if 'apogee' in survey:
+                    #    targflagtxt = bitmask.targflags(jdata['TARGET1'],jdata['TARGET2'],jdata['TARGET3'],
+                    #                                    jdata['TARGET4'],survey=survey)
+                    #else:
+                    #    targflagtxt = bitmask.targflags(jdata['SDSSV_APOGEE_TARGET0'], 0, 0, 0, survey=survey)
+                    #    if targflagtxt == '': targflagtxt = 'OPS_STD_BOSS?'
+                    #if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
+                    #targflagtxt = targflagtxt.replace(',','<BR>')
+
+                    # Get star flags
+                    starflagtxt = bitmask.StarBitMask().getname(vcat['STARFLAG']).replace(',','<BR>')
                 if type(visithdr['SNR']) != str:
                     snratio = str("%.2f" % round(visithdr['SNR'],2))
                 else:
@@ -2286,7 +2274,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 if tput < 0.4: bcolor = '#FF3333'
                 if tput < 0.3: bcolor = '#FF0000'
                 tput = str("%.3f" % round(tput,3))
-                tputdat.write(plate+'   '+mjd+'   '+cfiber+'   '+objid+'   '+tput+'\n')
+                #tputdat.write(plate+'   '+mjd+'   '+cfiber+'   '+objid+'   '+tput+'\n')
                 vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
             else:
                 vishtml.write('<TD align ="center BGCOLOR="white">----\n')
@@ -2294,7 +2282,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
             visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
     vishtml.close()
-    tputdat.close()
+    #tputdat.close()
 
     print("----> makeVisHTML2: Done with plate " + plate + ", MJD " + mjd + ".\n")
 
