@@ -755,7 +755,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #    ymax = 125000
             #ymin = 0 - ymax * 0.05
             #yspan = ymax - ymin
-            dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + '/DomeFlatTrace-all.fits')
+            dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
             gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 270))
             gcent = dtrace['GAUSS_CENT'][gd,:,fibers]
             pdb.set_trace()
