@@ -388,8 +388,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
         # Get values from master exposure table
         outstr['PSFID'][i] =   exp['NUM'][i]
         outstr['PLATEID'][i] = exp['PLATEID'][i]
-        pdb.set_trace()
-        outstr['CARTID'][i] =  exp['CARTID'][i]
+        if type(outstr['CARTID'][i]) != str: outstr['CARTID'][i] =  exp['CARTID'][i]
         outstr['DATEOBS'][i] = exp['DATEOBS'][i]
         outstr['MJD'][i] =     exp['MJD'][i]
 
