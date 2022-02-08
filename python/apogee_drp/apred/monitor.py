@@ -749,7 +749,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gfibers = np.array([1, 50, 100, 150, 200, 250, 300])[::-1]
+            gfibers = np.array([0, 49, 99, 149, 199, 249, 299])[::-1]
             ngplotfibs = len(gfibers)
 
             fig = plt.figure(figsize=(30,14))
