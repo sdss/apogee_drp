@@ -2122,19 +2122,16 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 # DB query to get star and visit info
                 vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
                 gd, = np.where(vcat['mjd'] == int(mjd))
-                mjdvcat = vcat[gd][0]
-                hmag = vcat['hmag'][0]
-                cjmag = str("%.3f" % round(vcat['jmag'][0], 3))
-                chmag = str("%.3f" % round(vcat['hmag'][0], 3))
-                ckmag = str("%.3f" % round(vcat['kmag'][0],3 ))
-                jkcolor = vcat['jmag'][0] - vcat['kmag'][0]
+                vcat = vcat[gd][0]
+                hmag = vcat['hmag']
+                chmag = str("%.3f" % round(vcat['hmag'], 3))
+                jkcolor = vcat['jmag'] - vcat['kmag']
                 if (vcat['jmag'] < 0) | (vcat['kmag'] < 0): jkcolor = 99.999
                 cjkcolor = str("%.3f" % round(jkcolor, 3))
 
-                pdb.set_trace()
                 # Create SIMBAD link
-                cra = str("%.5f" % round(vcat['RA'][0], 5))
-                cdec = str("%.5f" % round(vcat['DEC'][0], 5))
+                cra = str("%.5f" % round(vcat['ra'], 5))
+                cdec = str("%.5f" % round(vcat['dec'], 5))
                 txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
                 txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
                 simbadlink = txt1 + txt2
@@ -2146,6 +2143,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 visitfilebase = os.path.basename(visitfile)
                 vplotfile = visitfile.replace('.fits','.jpg')
 
+                pdb.set_trace()
                 # Get paths to apStar file and star html
                 apStarRelPath = None
                 starhtmlrelpath = None
