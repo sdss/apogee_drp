@@ -2100,11 +2100,12 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
     #tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
     #tputdat = open(tputfile, 'w')
 
+    print("Starting DB session...")
     start_time = time.time()
     # Start db session for getting all visit info
     db = apogeedb.DBSession()
     runtime = str("%.2f" % (time.time() - start_time))
-    print("DB session opened after " + runtime + " seconds.\n")
+    print("DB session started after " + runtime + " seconds.\n")
 
     # Loop over the fibers
     for j in range(300):
