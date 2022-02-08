@@ -2070,8 +2070,9 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
     vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
 
-    # Start db session for getting all visit info
+    # DB query for this visit
     db = apogeedb.DBSession()
+    vcat = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
 
     # Loop over the fibers
     for j in range(300):
@@ -2083,7 +2084,6 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
             visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
-
             # Establish html table row background color and spectrum plot color
             color = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = '#D2B4DE'
@@ -2091,26 +2091,25 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
 
             if (objtype != 'SKY') & (objid != ''):
                 # DB query to get star and visit info
-                print("----> makeVisHTML2: DB query for " + objid + " (" + str(j+1).zfill(3) + "/300)")
-                vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
-                gd, = np.where(vcat['mjd'] == int(mjd))
-                vcat = vcat[gd][0]
-                jmag = vcat['jmag']
-                hmag = vcat['hmag']
-                kmag = vcat['kmag']
-                snr = vcat['snr']
-                vhelio = vcat['vheliobary']
-                ncomp = vcat['n_components']
-                rvteff = vcat['rv_teff']
-                rvlogg = vcat['rv_logg']
-                rvfeh = vcat['rv_feh']
-                starflags = vcat['starflags'].replace(',','<BR>')
-                firstcarton = vcat['firstcarton']
-                visitfile = vcat['file']
+                gd, = np.where(fiber == vcat['fiberid'])
+                if len(gd) < 1: pdb.set_trace()
+                jvcat = vcat[gd][0]
+                jmag = jvcat['jmag']
+                hmag = jvcat['hmag']
+                kmag = jvcat['kmag']
+                snr = jvcat['snr']
+                vhelio = jvcat['vheliobary']
+                ncomp = jvcat['n_components']
+                rvteff = jvcat['rv_teff']
+                rvlogg = jvcat['rv_logg']
+                rvfeh = jvcat['rv_feh']
+                starflags = jvcat['starflags'].replace(',','<BR>')
+                firstcarton = jvcat['firstcarton']
+                visitfile = jvcat['file']
 
                 # Create SIMBAD link
-                cra = str("%.5f" % round(vcat['ra'], 5))
-                cdec = str("%.5f" % round(vcat['dec'], 5))
+                cra = str("%.5f" % round(jvcat['ra'], 5))
+                cdec = str("%.5f" % round(jvcat['dec'], 5))
                 txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
                 txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
                 simbadlink = txt1 + txt2
