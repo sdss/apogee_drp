@@ -1882,7 +1882,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 snr = '-9.9'
                 if objtype != 'SKY': 
                     objtype = 'BLANK'
-                    snr = '-99.9
+                    snr = '-99.9'
                 vishtml.write('<TD align="center"><FONT COLOR="red">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">99.999</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="red">99.999</FONT>')
