@@ -2112,6 +2112,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
             cblock = str(np.ceil(fiber / 30).astype(int))
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
+            visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
 
             # Establish html table row background color and spectrum plot color
             color = 'white'
@@ -2135,7 +2136,6 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 starflags = vcat['starflags'].replace(',','<BR>')
                 firstcarton = vcat['firstcarton']
                 visitfile = vcat['file']
-                vplotfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber, fps=fps).replace('.fits','.jpg')
 
                 # Create SIMBAD link
                 cra = str("%.5f" % round(vcat['ra'], 5))
@@ -2145,29 +2145,22 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 simbadlink = txt1 + txt2
 
                 # Get paths to apStar file and star html
+                healpix = apload.obj2healpix(objid)
+                healpixgroup = str(healpix // 1000)
+                healpix = str(healpix)
+
+                # Find the associated healpix html directories
                 apStarRelPath = None
-                starhtmlrelpath = None
-                if len(objid) != 18:
-                    print("----> makeVisHTML2: objid length != 18 for " + objid)
-                else:
-                    # Find which healpix this star is in
-                    healpix = apload.obj2healpix(objid)
-                    healpixgroup = str(healpix // 1000)
-                    healpix = str(healpix)
-
-                    # Find the associated healpix html directories
-                    starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-                    starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                    starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
-                    apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
-                    if len(apStarCheck) > 0:
-                        # Find the newest apStar file
-                        apStarCheck.sort()
-                        apStarCheck = np.array(apStarCheck)
-                        apStarNewest = os.path.basename(apStarCheck[-1])
-                        apStarRelPath = '../' + starRelPath + apStarNewest
-
-                pdb.set_trace()
+                starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+                starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
+                apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                if len(apStarCheck) > 0:
+                    # Find the newest apStar file
+                    apStarCheck.sort()
+                    apStarCheck = np.array(apStarCheck)
+                    apStarNewest = os.path.basename(apStarCheck[-1])
+                    apStarRelPath = '../' + starRelPath + apStarNewest
 
             # column 1
             vishtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
@@ -2176,7 +2169,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
             vishtml.write('<TD>' + objid + '\n')
             if objtype != 'SKY':
                 vishtml.write('<BR>' + simbadlink + '\n')
-                vishtml.write('<BR><A HREF=../' + visitfilebase + '>apVisit file</A>\n')
+                vishtml.write('<BR><A HREF=../' + visitfile + '>apVisit file</A>\n')
                 if apStarRelPath is not None:
                     vishtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
                 else:
@@ -2184,13 +2177,12 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
 
             if objtype != 'SKY':
-                vishtml.write('<TD align ="center">' + chmag)
-                vishtml.write('<TD align ="center">' + cjkcolor)
-                #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
+                vishtml.write('<TD align ="center">' + str("%.3f" % round(hmag,3)))
+                if (jmag > 0) & (kmag > 0):
+                    vishtml.write('<TD align ="center">' + str("%.3f" % round(jmag-kmag,3)))
             else:
                 vishtml.write('<TD align="right"><FONT COLOR="red">99.999</FONT>')
                 vishtml.write('<TD align="right"><FONT COLOR="red">99.999</FONT>')
-                #vishtml.write('<TD BGCOLOR='+color+'>---\n')
 
             if objtype == 'SKY': 
                 vishtml.write('<TD align="center">SKY')
@@ -2200,53 +2192,28 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 else:
                     vishtml.write('<TD align="center">SCI')
 
-            if objtype == 'SKY': targflagtxt = 'sky'
-            vishtml.write('<TD align="left">' + targflagtxt)
+            if objtype == 'SKY': 
+                firstcarton = 'sky'
+                starflagtxt = ''
+            vishtml.write('<TD align="left">' + firstcarton)
             vishtml.write('<BR><BR>' + starflagtxt)
 
-            # Vhelio, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
-            if os.path.exists(allVpath):
-                gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
-                if len(gd) == 1:
-                    try:
-                        vhelio = allV['VHELIOBARY'][gd][0]
-                        if type(vhelio) != str: vhelio = str("%.3f" % round(vhelio,3))
-                        ncomp = str(allV['N_COMPONENTS'][gd][0])
-                        rvteff = allV['RV_TEFF'][gd][0]
-                        if type(rvteff) != str: rvteff = str(int(round(rvteff)))
-                        rvlogg = allV['RV_LOGG'][gd][0]
-                        if type(rvlogg) != str: rvlogg = str("%.3f" % round(rvlogg,3))
-                        rvfeh = allV['RV_FEH'][gd][0]
-                        if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
-                        vcol = 'black'
-                        if np.absolute(float(vhelio)) > 400: vcol = 'red'
-                    except:
-                        vhelio = '???'
-                        ncomp = '?'
-                        rvteff = '???'
-                        rvlogg = '???'
-                        rvfeh = '???'
-                        vcol = 'red'
-                    vishtml.write('<TD align ="center">' + snratio)
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvteff + '</FONT>')
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvlogg + '</FONT>')
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvfeh + '</FONT>')
-                else:
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-99.9')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-1')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
-            else:
+            vcol = 'black'
+            if objtype == 'SKY'
                 vishtml.write('<TD align="center"><FONT COLOR="red">-99.9')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-1')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
                 vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
+            else:
+                if np.absolute(vhelio) > 400: vcol = 'red'
+                vishtml.write('<TD align ="center">' + str("%.1f" % round(snr,1)))
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.1f" % round(vhelio,1)) + '</FONT>')
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(ncomp) + '</FONT>')
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(int(round(rvteff))) + '</FONT>')
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvlogg,3)) + '</FONT>')
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
 
             # Throughput column
             tput = throughput[j]
@@ -2263,7 +2230,6 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
             else:
                 vishtml.write('<TD align ="center BGCOLOR="white">----\n')
 
-            visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
     vishtml.close()
     #tputdat.close()
