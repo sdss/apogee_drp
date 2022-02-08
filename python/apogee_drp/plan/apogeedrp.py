@@ -7,7 +7,7 @@ import pdb
 
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email,info
-from ..apred import mkcal,cal,qa
+from ..apred import mkcal,cal,qa,monitor
 from ..database import apogeedb
 from . import mkplan,runapogee,check
 from sdss_access.path import path
@@ -1230,6 +1230,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
 
     apred = load.apred
     telescope = load.telescope
+    # instrument = 'apogee-n'
     observatory = telescope[0:3]
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
@@ -1272,6 +1273,11 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     for m in mjds:
         try:
             qa.makeNightQA(load=load,mjd=str(m),telescope=telescope,apred=apred)
+            # Run makeCalFits, makeDarkFits, makeExpFits
+            # check apqaMJD()
+            # qa.makeCalFits(load=load, ims=all_ims, mjd=m, instrument=instrument, clobber=clobber)
+            # qa.makeDarkFits(load=load, ims=all_ims, mjd=m, clobber=clobber)
+            # qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=m, clobber=clobber)
         except:
             traceback.print_exc()    
     # Make final mjd/fields pages
@@ -1283,7 +1289,8 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
         traceback.print_exc()
 
     # Run monitor page
-
+    #  always runs on all MJDs
+    monitor.monitor()
     
 
 def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=False,links=None,

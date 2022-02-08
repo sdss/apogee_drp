@@ -172,6 +172,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         fps = True
 
     fiber = np.zeros(300,dtype=dtype)
+    fiber.mag = 99.99  # default to faint magnitudes
     platedata = {'plate':plate, 'mjd':mjd, 'locationid':0, 'field':' ', 'programname':'',
                  'ha':[-99.,-99.,-99.], 'fiberdata':fiber, 'guidedata':guide}
     field, survey, programname = apload.apfield(plate,loc,telescope=load.telescope,fps=fps)

@@ -141,6 +141,7 @@ tmp = create_struct('fiberid',-1, 'ra',999999.d0, 'dec',999999.d0, 'eta',999999.
                     'gaiadr2_pmra_error',-9999.99, 'gaiadr2_pmdec',-9999.99, 'gaiadr2_pmdec_error',-9999.99, 'gaiadr2_gmag',-9999.99,$
                     'gaiadr2_gerr',-9999.99, 'gaiadr2_bpmag',-9999.99, 'gaiadr2_bperr',-9999.99, 'gaiadr2_rpmag',-9999.99,$
                     'gaiadr2_rperr',-9999.99)
+tmp.mag = 99.99 ;; default to faint magnitudes
 
 guide = replicate(tmp,16)
 loc = 0L
@@ -354,6 +355,8 @@ if not keyword_set(fps) then begin
   endfor
   platedata.guidedata = guide
 endif
+
+stop
 
 ;; Find matching plugged entry for each spectrum and load up the output information from correct source(s)
 for i=0,299 do begin

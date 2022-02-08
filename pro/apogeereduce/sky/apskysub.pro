@@ -156,7 +156,6 @@ if nsky eq 0 and keyword_set(force) then begin
   print,'No sky fibers found and /force set.  Using '+strtrim(nsky,2)+' faint fibers instead.'
 endif
 
-
 if nsky eq 0 then begin
   error = 'halt: NO SKY fibers.  CANNOT do sky subtraction.'
   if not keyword_set(silent) then print,error

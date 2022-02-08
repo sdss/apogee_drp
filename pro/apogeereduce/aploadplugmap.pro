@@ -122,7 +122,6 @@ for i=0,ngdline-1 do begin
   keywords[i] = idl_validname(dum[0],/convert_all)
 endfor
 
-
 ;----------
 ; Find keywords from the header
 ;keywords = ['reddeningMed','tileId','raCen','decCen','plateId','locationId','temp','haMin','haMax']
