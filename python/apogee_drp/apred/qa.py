@@ -386,7 +386,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the visit level pages
         if makevishtml == True:
-            q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
+            q = makeVisHTML2(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
                             fluxid=fluxid)
 
         # Make the visit plots
