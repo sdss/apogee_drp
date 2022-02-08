@@ -386,7 +386,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the visit level pages
         if makevishtml == True:
-            q = makeVisHTML2(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
+            q = makeVisHTML(load=load, plate=plate, mjd=mjd, survey=survey, apred=apred, telescope=telescope,
                             fluxid=fluxid)
 
         # Make the visit plots
@@ -1728,6 +1728,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 ###################################################################################################
 ''' makeVisHTML: make the plate/visit level html '''
 def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, fluxid=None): 
+    start_time = time.time()
 
     print("----> makeVisHTML: Running plate " + plate + ", MJD " + mjd)
 
@@ -1756,31 +1757,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
-    # Start db session for getting all visit info
-    db = apogeedb.DBSession()
-
-    # Load in the allVisitMJD file
-    allVpath = apodir + apred + '/summary/' + mjd + '/allVisitMJD-' + apred + '-' + telescope + '-' + mjd + '.fits'
-    allV = None
-    if os.path.exists(allVpath):
-        allV = fits.getdata(allVpath)
-        if len(allV)==0: allV=None
-    if allV is None:
-        # Try the database, copied from runapogee.create_sumfiles()
-        vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
-                 'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
-                 'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
-                 'apogee_target4', 'catalogid', 'gaiadr2_plx', 'gaiadr2_plx_error', 'gaiadr2_pmra', 'gaiadr2_pmra_error',
-                 'gaiadr2_pmdec', 'gaiadr2_pmdec_error', 'gaiadr2_gmag', 'gaiadr2_gerr', 'gaiadr2_bpmag', 'gaiadr2_bperr',
-                 'gaiadr2_rpmag', 'gaiadr2_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
-                 'starflags','dateobs','jd']
-        rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
-                  'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
-        cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
-        allV = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
-                        "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' and v.mjd="+str(mjd)+" and rv.starver='"+str(mjd)+"'")
-        if len(allV)==0: allV=None
-
     # Load in the apPlate file
     apPlate = load.apPlate(int(plate), mjd)
     try:
@@ -1795,265 +1771,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     flux = load.apFlux(fluxid)
     medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
     throughput = medflux / np.nanmax(medflux)
-
-    # Read the confSummary file to get first carton values
-    plugmapfile = load.filename('confSummary', configid=int(plate))
-    plug = yanny.yanny(plugmapfile, np=True)['FIBERMAP']
-
-    # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
-    vishtml = open(htmldir + htmlfile + '.html', 'w')
-    vishtml.write('<HTML>\n')
-    vishtml.write('<HEAD><script src="../../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
-    vishtml.write('<BODY>\n')
-
-    vishtml.write('<H1>' + htmlfile + '</H1><HR>\n')
-    #vishtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
-    #vishtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
-    vishtml.write('<P><B>Note:</B> the "Dome Flat Throughput" column gives the median dome flat flux in each ')
-    vishtml.write('fiber divided by the maximum median dome flat flux across all fibers. ')
-    vishtml.write('<BR>Low numbers are generally bad, and that column is color-coded accordingly.</P>\n')
-    vishtml.write('<P>Click the column headers to sort.</p>\n')
-    vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
-    vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
-#    vishtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
-
-    tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
-    tputdat = open(tputfile, 'w')
-
-    db = apogeedb.DBSession()
-
-    # Loop over the fibers
-    for j in range(300):
-        jdata = data[j]
-        fiber = jdata['FIBERID']
-        if fiber > 0:
-            cfiber = str(fiber).zfill(3)
-            cblock = str(np.ceil(fiber / 30).astype(int))
-
-            objid = jdata['OBJECT']
-            objtype = jdata['OBJTYPE']
-            hmag = jdata['HMAG']
-            cjmag = str("%.3f" % round(jdata['JMAG'], 3))
-            chmag = str("%.3f" % round(jdata['HMAG'], 3))
-            ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
-            jkcolor = jdata['JMAG'] - jdata['KMAG']
-            if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
-            cjkcolor = str("%.3f" % round(jkcolor, 3))
-    #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
-            cra = str("%.5f" % round(jdata['RA'], 5))
-            cdec = str("%.5f" % round(jdata['DEC'], 5))
-            txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
-            txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
-            simbadlink = txt1 + txt2
-
-            apStarRelPath = None
-            if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
-                # Find which healpix this star is in
-                healpix = apload.obj2healpix(objid)
-                healpixgroup = str(healpix // 1000)
-                healpix = str(healpix)
-
-                # Find the associated healpix html directories
-                starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-                starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
-                apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
-                if len(apStarCheck) > 0:
-                    # Find the newest apStar file
-                    apStarCheck.sort()
-                    apStarCheck = np.array(apStarCheck)
-                    apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = '../' + starRelPath + apStarNewest
-            else:
-                starHTMLrelPath = 'None'
-
-            # Establish html table row background color and spectrum plot color
-            color = 'white'
-            if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = '#D2B4DE'
-            if objtype == 'SKY': color = '#D6EAF8'
-
-            # Get target flag strings
-            if 'apogee' in survey:
-                targflagtxt = bitmask.targflags(jdata['TARGET1'],jdata['TARGET2'],jdata['TARGET3'],
-                                                jdata['TARGET4'],survey=survey)
-            else:
-                targflagtxt = bitmask.targflags(jdata['SDSSV_APOGEE_TARGET0'], 0, 0, 0, survey=survey)
-                if targflagtxt == '': targflagtxt = 'OPS_STD_BOSS?'
-            if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
-            targflagtxt = targflagtxt.replace(',','<BR>')
-
-            # Find apVisit file
-            visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber, fps=fps)
-            visitfilebase = os.path.basename(visitfile)
-            vplotfile = visitfile.replace('.fits','.jpg')
-
-            snratio = ''
-            starflagtxt = ''
-            if os.path.exists(visitfile) == False:
-                visitfile = visitfile.replace('-apo25m-', '-')
-            if os.path.exists(visitfile):
-                visithdr = fits.getheader(visitfile)
-                catid = visithdr['CATID']
-                pp, = np.where(catid == plug['catalogid'])
-                if len(pp) > 0: targflagtxt = plug['firstcarton'][pp][0].decode('UTF-8')
-                starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
-                if type(visithdr['SNR']) != str:
-                    snratio = str("%.2f" % round(visithdr['SNR'],2))
-                else:
-                    print("----> makeVisHTML: Problem with " + visitfilebase + "... SNR = NaN.")
-
-            # column 1
-            vishtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
-
-            # column 2
-            vishtml.write('<TD>' + objid + '\n')
-            if objtype != 'SKY':
-                vishtml.write('<BR>' + simbadlink + '\n')
-                vishtml.write('<BR><A HREF=../' + visitfilebase + '>apVisit file</A>\n')
-                if apStarRelPath is not None:
-                    vishtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
-                else:
-                    vishtml.write('<BR>apStar file??\n')
-                vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
-
-            if objtype != 'SKY':
-                vishtml.write('<TD align ="center">' + chmag)
-                vishtml.write('<TD align ="center">' + cjkcolor)
-                #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
-            else:
-                vishtml.write('<TD align="right"><FONT COLOR="red">99.999</FONT>')
-                vishtml.write('<TD align="right"><FONT COLOR="red">99.999</FONT>')
-                #vishtml.write('<TD BGCOLOR='+color+'>---\n')
-
-            if objtype == 'SKY': 
-                vishtml.write('<TD align="center">SKY')
-            else:
-                if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
-                    vishtml.write('<TD align="center">TEL')
-                else:
-                    vishtml.write('<TD align="center">SCI')
-
-            if objtype == 'SKY': targflagtxt = 'sky'
-            vishtml.write('<TD align="left">' + targflagtxt)
-            vishtml.write('<BR><BR>' + starflagtxt)
-
-            # Vhelio, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
-            if os.path.exists(allVpath):
-                gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
-                if len(gd) == 1:
-                    try:
-                        vhelio = allV['VHELIOBARY'][gd][0]
-                        if type(vhelio) != str: vhelio = str("%.3f" % round(vhelio,3))
-                        ncomp = str(allV['N_COMPONENTS'][gd][0])
-                        rvteff = allV['RV_TEFF'][gd][0]
-                        if type(rvteff) != str: rvteff = str(int(round(rvteff)))
-                        rvlogg = allV['RV_LOGG'][gd][0]
-                        if type(rvlogg) != str: rvlogg = str("%.3f" % round(rvlogg,3))
-                        rvfeh = allV['RV_FEH'][gd][0]
-                        if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
-                        vcol = 'black'
-                        if np.absolute(float(vhelio)) > 400: vcol = 'red'
-                    except:
-                        vhelio = '???'
-                        ncomp = '?'
-                        rvteff = '???'
-                        rvlogg = '???'
-                        rvfeh = '???'
-                        vcol = 'red'
-                    vishtml.write('<TD align ="center">' + snratio)
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvteff + '</FONT>')
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvlogg + '</FONT>')
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvfeh + '</FONT>')
-                else:
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-99.9')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-1')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
-                    vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
-            else:
-                vishtml.write('<TD align="center"><FONT COLOR="red">-99.9')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-1')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
-
-            # Throughput column
-            tput = throughput[j]
-            if np.isnan(tput) == False:
-                bcolor = 'white'
-                if tput < 0.7: bcolor = '#FFFF66'
-                if tput < 0.6: bcolor = '#FF9933'
-                if tput < 0.5: bcolor = '#FF6633'
-                if tput < 0.4: bcolor = '#FF3333'
-                if tput < 0.3: bcolor = '#FF0000'
-                tput = str("%.3f" % round(tput,3))
-                tputdat.write(plate+'   '+mjd+'   '+cfiber+'   '+objid+'   '+tput+'\n')
-                vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
-            else:
-                vishtml.write('<TD align ="center BGCOLOR="white">----\n')
-
-            visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
-            vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
-    vishtml.close()
-    tputdat.close()
-
-    print("----> makeVisHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
-
-###################################################################################################
-''' makeVisHTML2: make the plate/visit level html '''
-def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, fluxid=None): 
-    start_time = time.time()
-
-    print("----> makeVisHTML2: Running plate " + plate + ", MJD " + mjd)
-
-    # HTML header background color
-    thcolor = '#DCDCDC'
-
-    if int(mjd)>59556:
-        fps = True
-    else:
-        fps = False
-
-    apodir = os.environ.get('APOGEE_REDUX') + '/'
-
-    # Make html directory if it doesn't already exist.
-    htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
-    if os.path.exists(htmldir) == False: os.makedirs(htmldir)
-
-    #if os.path.exists(htmldir + 'sorttable.js') == False:
-    #    print("----> makeVisHTML: getting sorttable.js...")
-    #    subprocess.call(['wget', '-q', sort_table_link])
-    #    subprocess.call(['mv', 'sorttable.js', htmldir])
-
-    # Get the HTML file name... apPlate-plate-mjd
-    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)).replace('.fits','')
-    
-    # Base directory where star-level stuff goes
-    starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
-
-    # Load in the apPlate file
-    apPlate = load.apPlate(int(plate), mjd)
-    try:
-        data = apPlate['a'][11].data[::-1]
-    except:
-        print("----> makeVisHTML2: PROBLEM! apPlate not found for plate " + plate + ", MJD " + mjd)
-        return
-    nfiber = len(data)
-
-    # Read in flux file to get an idea of throughput
-    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
-    flux = load.apFlux(fluxid)
-    medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
-    throughput = medflux / np.nanmax(medflux)
-
-    # Read the confSummary file to get first carton values
-    plugmapfile = load.filename('confSummary', configid=int(plate))
-    plug = yanny.yanny(plugmapfile, np=True)['FIBERMAP']
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
@@ -2098,6 +1815,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
                 hmag = jvcat['hmag']
                 kmag = jvcat['kmag']
                 snr = jvcat['snr']
+                if snr < 0: snr = 0
                 vhelio = jvcat['vheliobary']
                 ncomp = jvcat['n_components']
                 rvteff = jvcat['rv_teff']
@@ -2192,7 +1910,7 @@ def makeVisHTML2(load=None, plate=None, mjd=None, survey=None, apred=None, teles
     vishtml.close()
 
     runtime = str("%.2f" % (time.time() - start_time))
-    print("----> makeVisHTML2: Done with plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
+    print("----> makeVisHTML: Done with plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
@@ -4079,3 +3797,282 @@ def getflux(d=None, skyline=None, rows=None):
 
 
 
+
+###################################################################################################
+''' old_makeVisHTML: obsolete version of code for making the plate/visit level html '''
+def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, fluxid=None): 
+
+    print("----> makeVisHTML: Running plate " + plate + ", MJD " + mjd)
+
+    # HTML header background color
+    thcolor = '#DCDCDC'
+
+    if int(mjd)>59556:
+        fps = True
+    else:
+        fps = False
+
+    apodir = os.environ.get('APOGEE_REDUX') + '/'
+
+    # Make html directory if it doesn't already exist.
+    htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
+    if os.path.exists(htmldir) == False: os.makedirs(htmldir)
+
+    #if os.path.exists(htmldir + 'sorttable.js') == False:
+    #    print("----> makeVisHTML: getting sorttable.js...")
+    #    subprocess.call(['wget', '-q', sort_table_link])
+    #    subprocess.call(['mv', 'sorttable.js', htmldir])
+
+    # Get the HTML file name... apPlate-plate-mjd
+    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)).replace('.fits','')
+    
+    # Base directory where star-level stuff goes
+    starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
+
+    # Start db session for getting all visit info
+    db = apogeedb.DBSession()
+
+    # Load in the allVisitMJD file
+    allVpath = apodir + apred + '/summary/' + mjd + '/allVisitMJD-' + apred + '-' + telescope + '-' + mjd + '.fits'
+    allV = None
+    if os.path.exists(allVpath):
+        allV = fits.getdata(allVpath)
+        if len(allV)==0: allV=None
+    if allV is None:
+        # Try the database, copied from runapogee.create_sumfiles()
+        vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
+                 'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+                 'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
+                 'apogee_target4', 'catalogid', 'gaiadr2_plx', 'gaiadr2_plx_error', 'gaiadr2_pmra', 'gaiadr2_pmra_error',
+                 'gaiadr2_pmdec', 'gaiadr2_pmdec_error', 'gaiadr2_gmag', 'gaiadr2_gerr', 'gaiadr2_bpmag', 'gaiadr2_bperr',
+                 'gaiadr2_rpmag', 'gaiadr2_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
+                 'starflags','dateobs','jd']
+        rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
+                  'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
+        cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
+        allV = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
+                        "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' and v.mjd="+str(mjd)+" and rv.starver='"+str(mjd)+"'")
+        if len(allV)==0: allV=None
+
+    # Load in the apPlate file
+    apPlate = load.apPlate(int(plate), mjd)
+    try:
+        data = apPlate['a'][11].data[::-1]
+    except:
+        print("----> makeVisHTML: PROBLEM! apPlate not found for plate " + plate + ", MJD " + mjd)
+        return
+    nfiber = len(data)
+
+    # Read in flux file to get an idea of throughput
+    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    flux = load.apFlux(fluxid)
+    medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
+    throughput = medflux / np.nanmax(medflux)
+
+    # Read the confSummary file to get first carton values
+    plugmapfile = load.filename('confSummary', configid=int(plate))
+    plug = yanny.yanny(plugmapfile, np=True)['FIBERMAP']
+
+    # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
+    vishtml = open(htmldir + htmlfile + '.html', 'w')
+    vishtml.write('<HTML>\n')
+    vishtml.write('<HEAD><script src="../../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
+    vishtml.write('<BODY>\n')
+
+    vishtml.write('<H1>' + htmlfile + '</H1><HR>\n')
+    #vishtml.write('<A HREF=../../../../red/'+mjd+'/html/'+pfile+'.html> 1D frames </A>\n')
+    #vishtml.write('<BR><A HREF=../../../../red/'+mjd+'/html/ap2D-'+str(plSum1['IM'][i])+'.html> 2D frames </A>\n')
+    vishtml.write('<P><B>Note:</B> the "Dome Flat Throughput" column gives the median dome flat flux in each ')
+    vishtml.write('fiber divided by the maximum median dome flat flux across all fibers. ')
+    vishtml.write('<BR>Low numbers are generally bad, and that column is color-coded accordingly.</P>\n')
+    vishtml.write('<P>Click the column headers to sort.</p>\n')
+    vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
+    vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
+    vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
+#    vishtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
+
+    tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
+    tputdat = open(tputfile, 'w')
+
+    db = apogeedb.DBSession()
+
+    # Loop over the fibers
+    for j in range(300):
+        jdata = data[j]
+        fiber = jdata['FIBERID']
+        if fiber > 0:
+            cfiber = str(fiber).zfill(3)
+            cblock = str(np.ceil(fiber / 30).astype(int))
+
+            objid = jdata['OBJECT']
+            objtype = jdata['OBJTYPE']
+            hmag = jdata['HMAG']
+            cjmag = str("%.3f" % round(jdata['JMAG'], 3))
+            chmag = str("%.3f" % round(jdata['HMAG'], 3))
+            ckmag = str("%.3f" % round(jdata['KMAG'],3 ))
+            jkcolor = jdata['JMAG'] - jdata['KMAG']
+            if (jdata['JMAG'] < 0) | (jdata['KMAG'] < 0): jkcolor = -9.999
+            cjkcolor = str("%.3f" % round(jkcolor, 3))
+    #        magdiff = str("%.2f" % round(plSum2['obsmag'][j][0][1] -hmag,2))
+            cra = str("%.5f" % round(jdata['RA'], 5))
+            cdec = str("%.5f" % round(jdata['DEC'], 5))
+            txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
+            txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
+            simbadlink = txt1 + txt2
+
+            apStarRelPath = None
+            if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
+                # Find which healpix this star is in
+                healpix = apload.obj2healpix(objid)
+                healpixgroup = str(healpix // 1000)
+                healpix = str(healpix)
+
+                # Find the associated healpix html directories
+                starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+                starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
+                apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                if len(apStarCheck) > 0:
+                    # Find the newest apStar file
+                    apStarCheck.sort()
+                    apStarCheck = np.array(apStarCheck)
+                    apStarNewest = os.path.basename(apStarCheck[-1])
+                    apStarRelPath = '../' + starRelPath + apStarNewest
+            else:
+                starHTMLrelPath = 'None'
+
+            # Establish html table row background color and spectrum plot color
+            color = 'white'
+            if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = '#D2B4DE'
+            if objtype == 'SKY': color = '#D6EAF8'
+
+            # Get target flag strings
+            if 'apogee' in survey:
+                targflagtxt = bitmask.targflags(jdata['TARGET1'],jdata['TARGET2'],jdata['TARGET3'],
+                                                jdata['TARGET4'],survey=survey)
+            else:
+                targflagtxt = bitmask.targflags(jdata['SDSSV_APOGEE_TARGET0'], 0, 0, 0, survey=survey)
+                if targflagtxt == '': targflagtxt = 'OPS_STD_BOSS?'
+            if targflagtxt[-1:] == ',': targflagtxt = targflagtxt[:-1]
+            targflagtxt = targflagtxt.replace(',','<BR>')
+
+            # Find apVisit file
+            visitfile = load.filename('Visit', plate=int(plate), mjd=mjd, fiber=fiber, fps=fps)
+            visitfilebase = os.path.basename(visitfile)
+            vplotfile = visitfile.replace('.fits','.jpg')
+
+            snratio = ''
+            starflagtxt = ''
+            if os.path.exists(visitfile) == False:
+                visitfile = visitfile.replace('-apo25m-', '-')
+            if os.path.exists(visitfile):
+                visithdr = fits.getheader(visitfile)
+                catid = visithdr['CATID']
+                pp, = np.where(catid == plug['catalogid'])
+                if len(pp) > 0: targflagtxt = plug['firstcarton'][pp][0].decode('UTF-8')
+                starflagtxt = bitmask.StarBitMask().getname(visithdr['STARFLAG']).replace(',','<BR>')
+                if type(visithdr['SNR']) != str:
+                    snratio = str("%.2f" % round(visithdr['SNR'],2))
+                else:
+                    print("----> makeVisHTML: Problem with " + visitfilebase + "... SNR = NaN.")
+
+            # column 1
+            vishtml.write('<TR BGCOLOR=' + color + '><TD>' + cfiber + '<BR>(' + cblock + ')\n')
+
+            # column 2
+            vishtml.write('<TD>' + objid + '\n')
+            if objtype != 'SKY':
+                vishtml.write('<BR>' + simbadlink + '\n')
+                vishtml.write('<BR><A HREF=../' + visitfilebase + '>apVisit file</A>\n')
+                if apStarRelPath is not None:
+                    vishtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
+                else:
+                    vishtml.write('<BR>apStar file??\n')
+                vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
+
+            if objtype != 'SKY':
+                vishtml.write('<TD align ="center">' + chmag)
+                vishtml.write('<TD align ="center">' + cjkcolor)
+                #vishtml.write('<TD BGCOLOR='+color+' align ="right">'+magdiff+'\n')
+            else:
+                vishtml.write('<TD align="right"><FONT COLOR="red">99.999</FONT>')
+                vishtml.write('<TD align="right"><FONT COLOR="red">99.999</FONT>')
+                #vishtml.write('<TD BGCOLOR='+color+'>---\n')
+
+            if objtype == 'SKY': 
+                vishtml.write('<TD align="center">SKY')
+            else:
+                if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
+                    vishtml.write('<TD align="center">TEL')
+                else:
+                    vishtml.write('<TD align="center">SCI')
+
+            if objtype == 'SKY': targflagtxt = 'sky'
+            vishtml.write('<TD align="left">' + targflagtxt)
+            vishtml.write('<BR><BR>' + starflagtxt)
+
+            # Vhelio, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
+            if os.path.exists(allVpath):
+                gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
+                if len(gd) == 1:
+                    try:
+                        vhelio = allV['VHELIOBARY'][gd][0]
+                        if type(vhelio) != str: vhelio = str("%.3f" % round(vhelio,3))
+                        ncomp = str(allV['N_COMPONENTS'][gd][0])
+                        rvteff = allV['RV_TEFF'][gd][0]
+                        if type(rvteff) != str: rvteff = str(int(round(rvteff)))
+                        rvlogg = allV['RV_LOGG'][gd][0]
+                        if type(rvlogg) != str: rvlogg = str("%.3f" % round(rvlogg,3))
+                        rvfeh = allV['RV_FEH'][gd][0]
+                        if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
+                        vcol = 'black'
+                        if np.absolute(float(vhelio)) > 400: vcol = 'red'
+                    except:
+                        vhelio = '???'
+                        ncomp = '?'
+                        rvteff = '???'
+                        rvlogg = '???'
+                        rvfeh = '???'
+                        vcol = 'red'
+                    vishtml.write('<TD align ="center">' + snratio)
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvteff + '</FONT>')
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvlogg + '</FONT>')
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvfeh + '</FONT>')
+                else:
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-99.9')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-1')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
+                    vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
+            else:
+                vishtml.write('<TD align="center"><FONT COLOR="red">-99.9')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-1')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-9999')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
+                vishtml.write('<TD align="center"><FONT COLOR="red">-9.999')
+
+            # Throughput column
+            tput = throughput[j]
+            if np.isnan(tput) == False:
+                bcolor = 'white'
+                if tput < 0.7: bcolor = '#FFFF66'
+                if tput < 0.6: bcolor = '#FF9933'
+                if tput < 0.5: bcolor = '#FF6633'
+                if tput < 0.4: bcolor = '#FF3333'
+                if tput < 0.3: bcolor = '#FF0000'
+                tput = str("%.3f" % round(tput,3))
+                tputdat.write(plate+'   '+mjd+'   '+cfiber+'   '+objid+'   '+tput+'\n')
+                vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
+            else:
+                vishtml.write('<TD align ="center BGCOLOR="white">----\n')
+
+            visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
+            vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
+    vishtml.close()
+    tputdat.close()
+
+    print("----> makeVisHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
