@@ -405,6 +405,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('================================')
     logger.info(str(len(darkdict))+' Darks to make: '+','.join(darkdict['name']))
     logger.info('')
+    logger.info('Slurm settings: '+str(slurm))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkdark', **slurm)
     for i in range(len(darkdict)):
@@ -432,10 +433,11 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('================================')
     logger.info(str(len(flatdict))+' Flats to make: '+','.join(flatdict['name']))
     logger.info('')
-    queue = pbsqueue(verbose=True)
     slurm1 = slurm.copy()
     slurm1['nodes'] = 1
     slurm1['cpus'] = 1    
+    logger.info('Slurm settings: '+str(slurm1))
+    queue = pbsqueue(verbose=True)
     queue.create(label='mkflat', **slurm1)
     for i in range(len(flatdict)):
         outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+str(flatdict['name'][i])+telescope+'.'+logtime+'.log'
@@ -461,6 +463,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('================================')
     logger.info(str(len(bpmdict))+' BPMs to make: '+','.join(bpmdict['name']))
     logger.info('')
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkbpm', **slurm1)
     for i in range(len(bpmdict)):
@@ -485,6 +488,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('===================================')
     logger.info(str(len(littdict))+' Littrows to make: '+','.join(littdict['name']))
     logger.info('')
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklittrow', **slurm1)
     for i in range(len(littdict)):
@@ -508,6 +512,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('====================================')
     logger.info(str(len(responsedict))+' Responses to make: '+','.join(responsedict['name']))
     logger.info('')
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkresponse', **slurm1)
     for i in range(len(responsedict)):
@@ -542,6 +547,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('')
     slurm1['nodes'] = 1
     slurm1['cpus'] = 5
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkmultiwave', **slurm1)
     for i in range(len(multiwavedict)):
@@ -576,6 +582,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('')
     slurm1['nodes'] = 1
     slurm1['cpus'] = 5
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklsf', **slurm1)
     for i in range(len(littdict)):
@@ -642,6 +649,7 @@ def runap3d(load,mjds,slurm,clobber=False,logger=None):
     if len(expinfo)<64:
         slurm1['cpus'] = len(expinfo)
     slurm1['numpy_num_threads'] = 2
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='ap3d', **slurm1)
     do3d = np.zeros(len(expinfo),bool)
@@ -760,6 +768,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
             if len(cind)<64:
                 slurm1['cpus'] = len(cind)
             slurm1['numpy_num_threads'] = 2
+            logger.info('Slurm settings: '+str(slurm1))
             queue = pbsqueue(verbose=True)
             queue.create(label='makecal-'+shcalnames[j], **slurm1)
             logfiles = []
@@ -955,6 +964,7 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
         slurm1['cpus'] = len(planfiles)
     slurm1['numpy_num_threads'] = 2
 
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='apred', **slurm1)
     for pf in planfiles:
@@ -1065,6 +1075,7 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
     if len(vcat)<64:
         slurm1['cpus'] = len(vcat)
     slurm1['numpy_num_threads'] = 2
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='rv', **slurm1)
     dorv = np.zeros(len(vcat),bool)
@@ -1194,6 +1205,7 @@ def rununified(load,mjds,slurm,clobber=False,logger=None):
     if len(mjds)<64:
         slurm1['cpus'] = len(mjds)
     slurm1['numpy_num_threads'] = 2    
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='unidir', **slurm1)
     # Loop over all MJDs
@@ -1260,6 +1272,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     if len(planfiles)<64:
         slurm1['cpus'] = len(planfiles)
     slurm1['numpy_num_threads'] = 2    
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='apqa', **slurm1)
     for pf in planfiles:
