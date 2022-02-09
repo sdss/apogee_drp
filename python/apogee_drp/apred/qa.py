@@ -1789,6 +1789,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
 
     # DB query for this visit
+    pdb.set_trace()
     db = apogeedb.DBSession()
     vcat = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
 
@@ -1806,7 +1807,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             color = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = '#D2B4DE'
             if objtype == 'SKY': color = '#D6EAF8'
-            pdb.set_trace()
             if (objtype != 'SKY') & (objid != ''):
                 # DB query to get star and visit info
                 gd, = np.where(fiber == vcat['fiberid'])
