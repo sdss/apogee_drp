@@ -109,7 +109,9 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     if logger is None:
         logger = dln.basiclogger()
 
-    nmjds = len(mjds)
+    if type(mjds) is str or hasattr(mjds,'__iter__')==False:
+        mjds = [mjds]
+    nmjds = np.array(mjds).size
 
     db = apogeedb.DBSession()
 
@@ -198,6 +200,9 @@ def getplanfiles(load,mjds,logger=None):
         return []
     plans = plans[ind]
     planfiles = plans['planfile']
+
+    # Make sure they are unique
+    planfiles = list(np.unique(np.array(planfiles)))
     return planfiles
 
 
@@ -1230,7 +1235,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
 
     apred = load.apred
     telescope = load.telescope
-    # instrument = 'apogee-n'
+    instrument = load.instrument
     observatory = telescope[0:3]
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
@@ -1244,6 +1249,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     if len(planfiles)==0:
         logger.info('No plan files')
         return
+    logger.info(str(len(planfiles))+' plan file(s)')
 
     # Run apqa on each plate visit
     slurm1 = slurm.copy()
@@ -1272,12 +1278,22 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     # Make nightly QA/summary pages
     for m in mjds:
         try:
+            apodir = os.environ.get('APOGEE_REDUX')+'/'
             qa.makeNightQA(load=load,mjd=str(m),telescope=telescope,apred=apred)
             # Run makeCalFits, makeDarkFits, makeExpFits
-            # check apqaMJD()
-            # qa.makeCalFits(load=load, ims=all_ims, mjd=m, instrument=instrument, clobber=clobber)
-            # qa.makeDarkFits(load=load, ims=all_ims, mjd=m, clobber=clobber)
-            # qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=m, clobber=clobber)
+            # makeCalFits
+            expinfo = getexpinfo(load,m,logger=logger,verbose=False)
+            calind, = np.where((expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='QUARTZFLAT') |
+                               (expinfo['exptype']=='DOMEFLAT'))
+            if len(calind)>0:
+                all_ims = expinfo['num'][calind]
+                qa.makeCalFits(load=load, ims=all_ims, mjd=str(m), instrument=instrument, clobber=clobber)
+            # makeDarkFits
+            darkind, = np.where(expinfo['exptype']=='DARK')
+            if len(darkind)>0:
+                all_ims = expinfo['num'][darkind]
+                qa.makeDarkFits(load=load, ims=all_ims, mjd=str(m), clobber=clobber)
+            qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=str(m), clobber=clobber)
         except:
             traceback.print_exc()    
     # Make final mjd/fields pages
