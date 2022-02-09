@@ -99,7 +99,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     # Create the output fiber structure
     dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),('eta',np.float64),('zeta',np.float64),
                       ('objtype',np.str,10),('holetype',np.str,10),('object',np.str,30),('assigned',int),('on_target',int),
-                      ('tmass_style',np.str,30),('target1',int),('target2',int),('target3',int),('target4',int),
+                      ('valid',int),('tmass_style',np.str,30),('target1',int),('target2',int),('target3',int),('target4',int),
                       ('spectrographid',int),('mag',float,5),('alt_id',np.str,30),('twomass_designation',np.str,30),
                       ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
                       ('phflag',np.str,50),('src_h',np.str,50),('pmra',float),('pmdec',float),('pm_src',np.str,50),
@@ -374,6 +374,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             if fps:
                 fiber['assigned'][i] = plugmap['fiberdata']['assigned'][m]
                 fiber['on_target'][i] = plugmap['fiberdata']['on_target'][m]
+                fiber['valid'][i] = plugmap['fiberdata']['valid'][m]
                 fiber['catalogid'][i] = plugmap['fiberdata']['catalogid'][m]
                 fiber['sdssv_apogee_target0'][i] = plugmap['fiberdata']['sdssv_apogee_target0'][m]
             else:
@@ -381,13 +382,29 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['target2'][i] = plugmap['fiberdata']['secTarget'][m]
             fiber['spectrographid'][i] = plugmap['fiberdata']['spectrographId'][m]
 
-            # Unassigned fibers
+            # Unassigned, off target, invalid targets
             if fps:
-                if fiber['assigned'][i]==0 or fiber['on_target'][i]==0:
-                    if fiber['assigned'][i]==0:
-                        print('FiberID '+str(300-i)+' is UNASSIGNED')
-                    if fiber['assigned'][i]==1 and fiber['on_target'][i]==0:
-                        print('FiberID '+str(300-i)+' is assigned but NOT on target')
+                # ASSIGNED: assigned=1 indicates a science/sky target is
+                #   assigned to that fiber in robostrategy. assigned=0 means no
+                #   target was assigned for this fiber (likely used for BOSS instead).
+                #   There's no targeting information for this fiber.
+                # ON_TARGET: on_target=1 indicates that the fiber actually was
+                #   placed on the target. In some cases you'll find that
+                #   on_target=0 although assigned=1; that usually happens when
+                #   there are collisions or deadlocks that we need to solve.
+                # VALID: valid=0 means there was a problem converting from
+                #   on-sky coordinates to alpha/beta for the robots. Position
+                #   was unreachable.
+                if fiber['assigned'][i]==0 or fiber['on_target'][i]==0 or fiber['valid'][i]==0:
+                    cmt = 'FiberID '+str(300-i)+' is '
+                    badcmt = []
+                    if fiber['assigned'][i]==0: badcmt.append('UNASSIGNED')
+                    if fiber['on_target'][i]==0: badcmt.append('NOT on target')
+                    if fiber['valid'][i]==0: badcmt.append('INVALID')
+                    cmt += ', '.join(badcmt)
+                    print(cmt)
+                # Unassigned, no information for this target
+                if fiber['assigned'][i]==0:
                     fiber['hmag'][i] = 99.99
                     fiber['mag'][i] = 99.99
                     continue

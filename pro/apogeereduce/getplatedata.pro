@@ -133,7 +133,7 @@ if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
 
 ;; Create the output fiber structure
 tmp = create_struct('fiberid',-1, 'ra',999999.d0, 'dec',999999.d0, 'eta',999999.d0, 'zeta',999999.d0, 'objtype','none', $
-                    'holetype','OBJECT', 'object','', 'assigned',0, 'on_target',0, 'tmass_style','', 'target1',0L, 'target2',0L,$
+                    'holetype','OBJECT', 'object','', 'assigned',0, 'on_target',0, 'valid',0, 'tmass_style','', 'target1',0L, 'target2',0L,$
                     'target3',0L, 'target4',0L, 'spectrographid',2, 'mag',fltarr(5), catalog_info_blank(),$
                     'catalogid',-1LL, 'gaia_g',-9999.99, 'gaia_bp',-9999.99, 'gaia_rp',-9999.99, 'sdssv_apogee_target0',0LL,$
                     'firstcarton','', 'gaiadr2_sourceid','', 'gaiadr2_ra',-9999.99d0, 'gaiadr2_dec',-9999.99d0,$
@@ -391,6 +391,7 @@ for i=0,299 do begin
     if keyword_set(fps) then begin
       fiber[i].assigned = plugmap.fiberdata[m].assigned
       fiber[i].on_target = plugmap.fiberdata[m].on_target
+      fiber[i].valid = plugmap.fiberdata[m].valid
       fiber[i].sdssv_apogee_target0 = plugmap.fiberdata[m].sdssv_apogee_target0
       fiber[i].catalogid = plugmap.fiberdata[m].catalogid
     endif else begin
@@ -399,16 +400,34 @@ for i=0,299 do begin
     endelse
     fiber[i].spectrographid = plugmap.fiberdata[m].spectrographid
 
-    ;; Unassigned fibers
+    ;; Unassigned, off target, invalid targets
     if keyword_set(fps) then begin
-      if fiber[i].assigned eq 0 or fiber[i].on_target eq 0 then begin
-        if fiber[i].assigned eq 0 then print,'FiberID '+strtrim(300-i,2)+' is UNASSIGNED'
-        if fiber[i].assigned eq 1 and fiber[i].on_target eq 0 then $
-          print,'FiberID '+strtrim(300-i,2)+' is assigned but NOT on target'
+      ;; ASSIGNED: assigned=1 indicates a science/sky target is
+      ;;   assigned to that fiber in robostrategy. assigned=0 means no
+      ;;   target was assigned for this fiber (likely used for BOSS instead).
+      ;;   There's no targeting information for this fiber.
+      ;; ON_TARGET: on_target=1 indicates that the fiber actually was
+      ;;   placed on the target. In some cases you'll find that
+      ;;   on_target=0 although assigned=1; that usually happens when
+      ;;   there are collisions or deadlocks that we need to solve.
+      ;; VALID: valid=0 means there was a problem converting from
+      ;;   on-sky coordinates to alpha/beta for the robots. Position
+      ;;   was unreachable.
+      if fiber[i].assigned eq 0 or fiber[i].on_target eq 0 or fiber[i].valid eq 0 then begin
+        cmt = 'FiberID '+strtrim(300-i,2)+' is '
+        badcmt = []
+        if fiber[i].assigned eq 0 then push,badcmt,'UNASSIGNED'
+        if fiber[i].on_target eq 0 then push,badcmt,'NOT on target'
+        if fiber[i].valid eq 0 then push,badcmt,'INVALID'
+        cmt += strjoin(badcmt,', ')
+        print,cmt
+      endif
+      ;; Unassigned, no information for this target
+      if fiber[i].assigned eq 0 then begin
         fiber[i].hmag = 99.99
         fiber[i].mag = 99.99
         continue
-       end
+      endif
     endif
 
     ;; Special for asdaf object plates
