@@ -1789,7 +1789,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
 
     # DB query for this visit
-    pdb.set_trace()
     db = apogeedb.DBSession()
     vcat = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
 
