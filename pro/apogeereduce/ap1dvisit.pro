@@ -136,7 +136,7 @@ FOR i=0L,nplanfiles-1 do begin
 
   ; Check if the calibration files exist
   ;--------------------------------------
-  makecal,lsf=planstr.lsfid,/full
+  MAKECAL,lsf=planstr.lsfid,/full
   wavefiles = apogee_filename('Wave',chip=chiptag,num=planstr.waveid)
   wavetest = FILE_TEST(wavefiles)
   lsffiles = apogee_filename('LSF',chip=chiptag,num=planstr.lsfid)
@@ -243,6 +243,7 @@ FOR i=0L,nplanfiles-1 do begin
       ; Load the 1D files
       ;--------------------
       APLOADFRAME,files,frame0,/exthead  ; loading frame 1
+      apaddpar,frame0,'LONGSTRN','OGIP 1.0'  ;; allows us to use long/continued strings
 
       ; Fix INF and NAN
       for k=0,2 do begin
@@ -287,7 +288,6 @@ FOR i=0L,nplanfiles-1 do begin
           chstr = CREATE_STRUCT(temporary(chstr),'LSFFILE',lsffiles[k],'LSFCOEF',$
                                 lsfcoef,'WAVEFILE',wavefiles[k],'WCOEF',wcoef,'WAVE_DIR',plate_dir)
         endelse
-
         ; Now add this to the final FRAME structure
         if k eq 0 then begin
           frame = CREATE_STRUCT('chip'+chiptag[k],chstr)
@@ -636,7 +636,7 @@ FOR i=0L,nplanfiles-1 do begin
     endif
 
     visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',mjd:0L,telescope:'',$
-                survey:'',field:'',programname:'',objtype:'',$
+                survey:'',field:'',programname:'',objtype:'',assigned:0,on_target:0,valid:0,$
                 ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
                 jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
                 pmra:0.0,pmdec:0.0,pm_src:'',$
