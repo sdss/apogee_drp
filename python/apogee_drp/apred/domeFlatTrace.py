@@ -327,6 +327,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
         print('Running code on ' + nexptr + ' ' + imtype + ' exposures.')
     print('Estimated runtime: ' + str(int(round(3.86*nexp))) + ' seconds.\n')
 
+    #pdb.set_trace()
     # Lookup table structure.
     dt = np.dtype([('PSFID',           np.int32),
                    ('PLATEID',         np.int32),
@@ -387,7 +388,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', median
         # Get values from master exposure table
         outstr['PSFID'][i] =   exp['NUM'][i]
         outstr['PLATEID'][i] = exp['PLATEID'][i]
-        outstr['CARTID'][i] =  exp['CARTID'][i]
+        if type(exp['CARTID'][i]) != str: outstr['CARTID'][i] =  exp['CARTID'][i]
         outstr['DATEOBS'][i] = exp['DATEOBS'][i]
         outstr['MJD'][i] =     exp['MJD'][i]
 
