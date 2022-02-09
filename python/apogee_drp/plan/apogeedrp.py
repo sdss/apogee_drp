@@ -119,9 +119,13 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     expinfo = None
     for m in mjds:
         expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
+        expinfo1 = Table(expinfo1)
         # Get data from database
         dbexpinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))
-        vals,ind1,ind2 = np.intersect1d(expinfo1['num'],dbexpinfo['num'],return_indices=True)
+        if len(dbexpinfo)>0:
+            vals,ind1,ind2 = np.intersect1d(expinfo1['num'],dbexpinfo['num'],return_indices=True)
+        else:
+            ind1 = []
         # Load new exposures into database
         if len(ind1) != len(expinfo1):
             db.ingest('exposure',expinfo1)  # insert into database
