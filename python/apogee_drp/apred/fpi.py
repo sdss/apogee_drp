@@ -670,8 +670,10 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
             # Get new wavelength solutions for each fiber using the
             #  shifts in X position
             # loop over rows
-            oldpars = frame[chip][5].data
+            # [14,300]
+            #oldpars = frame[chip][5].data
             x = np.arange(2048)
+            chipoffsets = [-143.8, 0.0, 154.4]  # mean chip offsets
             for irow in np.arange(300):
                 # get wavelengths for the FPI reference frame
                 w1 = waves[ichip][irow,:]
@@ -683,10 +685,32 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
                 newwaves[ichip,irow,:] = newwave1
                 # 14 parameter chip coefficients
                 pw = npoly-1-np.arange(npoly)
-                xoffset1 = oldpars[0,irow]
+                #xoffset1 = oldpars[0,irow]
+                xoffset1 = -1023.5 + (ichip-1)*2048 + chipoffsets[ichip]
                 polypars = np.polyfit((x+xoffset1)/3000.,newwave1,norder)  # refit for (x+xoffset)/3000 values
                 newchippars[ichip,:,irow] = np.append([xoffset1, 0., 0., 1., 0., 0.], 
                                                       np.flip( np.append(np.zeros(8-npoly),polypars)))
+
+            # Fix wavelengths for broken fibers
+            #  just use neighboring good fibers
+            totwave = np.sum(newwaves[ichip,:,:],axis=1)
+            goodwave = (totwave > 1)
+            bdrows, = np.where(totwave < 1)
+            for brow in bdrows:
+                if brow==0:
+                    newcoef[ichip,:,brow] = newcoef[ichip,:,brow+1]
+                    newwaves[ichip,brow,:] = newwaves[ichip,brow+1,:]
+                elif brow==299:
+                    newcoef[ichip,:,brow] = newcoef[ichip,:,brow-1]
+                    newwaves[ichip,brow,:] = newwaves[ichip,brow-1,:]
+                else:
+                    if goodwave[brow+1]:
+                        newcoef[ichip,:,brow] = newcoef[ichip,:,brow+1]
+                        newwaves[ichip,brow,:] = newwaves[ichip,brow+1,:]
+                    else:
+                        newcoef[ichip,:,brow] = newcoef[ichip,:,brow-1]
+                        newwaves[ichip,brow,:] = newwaves[ichip,brow-1,:]
+
             # Update header for this chip
             frame[chip][0].header['HISTORY'] = 'Added wavelengths from FPI cal, fpiid: '+str(fpiid)
             frame[chip][0].header['FPIMETHD'] = fpifitmethod
