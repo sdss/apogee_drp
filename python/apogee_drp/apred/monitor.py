@@ -798,7 +798,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.set_ylabel(r'Start $\lambda-$' + str("%.3f" % round(meanminwave, 3)) + r' $\rm \AA$')
             ax1.set_ylabel(r'Stop $\lambda-$' + str("%.3f" % round(meanmaxwave, 3)) + r' $\rm \AA$')
 
-            ax.scatter(xarr[gdmn][0]-500, minwave[gdmn][0]-meanminwave, marker='>', s=markersz*3, c='k', alpha='Start')
+            ax.scatter(xarr[gdmn][0]-500, minwave[gdmn][0]-meanminwave, marker='>', s=markersz*3, c='k', label='Start')
             ax1.scatter(xarr[gdmx][0]-500, maxwave[gdmx][0]+meanmaxwave, marker='<', s=markersz*3, c='r', label='Stop')
             ax.text(0.97,0.08,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='bottom', color=chip, bbox=bboxpar)
