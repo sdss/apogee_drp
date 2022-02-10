@@ -779,9 +779,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
-            if ichip == 1: 
-                ax.set_ylabel(r'Start $\lambda$ ($\mu$m)')
-                ax1.set_ylabel(r'Stop $\lambda$ ($\mu$m)')
             if ichip < nchips-1: 
                 ax.axes.xaxis.set_ticklabels([])
                 ax1.axes.xaxis.set_ticklabels([])
@@ -797,6 +794,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #ax1.axhline(y=meanmaxwave, linestyle='dashed', color='r')
             ax.scatter(xarr[gdmn], minwave[gdmn]-meanminwave, marker='>', s=markersz*3, c='k', alpha=alf)
             ax1.scatter(xarr[gdmx], maxwave[gdmx]-meanmaxwave, marker='<', s=markersz*3, c='r', alpha=alf)
+
+            if ichip == 1: 
+                ax.set_ylabel(r'Start $\lambda-$' + str("%.7f" % round(meanminwave, 7)) + r' ($\mu$m)')
+                ax1.set_ylabel(r'Stop $\lambda$-$' + str("%.7f" % round(meanmaxwave, 7)) + r' ($\mu$m)')
 
             ax.text(0.97,0.08,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='bottom', color=chip, bbox=bboxpar)
