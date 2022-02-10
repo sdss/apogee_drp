@@ -269,6 +269,9 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
     # Loop over the planfiles
     nplanfiles = len(planfiles)
     for ip,pfile in enumerate(planfiles):
+        if os.path.exists(pfile)==False:
+            logger.info(pfile+' NOT FOUND')
+            continue
         planstr = plan.load(pfile,np=True)
         apred_vers = planstr['apred_vers']
         telescope = planstr['telescope']

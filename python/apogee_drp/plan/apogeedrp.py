@@ -72,6 +72,13 @@ def loadsteps(steps):
                 newsteps.append(s)
         newsteps = list(np.unique(newsteps))
         steps = newsteps
+    # Put them in the correct order
+    fsteps = []
+    for s in allsteps:
+        if s in steps:
+            fsteps.append(s)
+    steps = fsteps
+
     return steps
 
 def getexpinfo(load,mjds,logger=None,verbose=True):
@@ -152,7 +159,7 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
 
     return expinfo
 
-def getplanfiles(load,mjds,logger=None):
+def getplanfiles(load,mjds,exist=False,logger=None):
     """
     Get all of the plan files for a list of MJDs.
 
@@ -162,6 +169,8 @@ def getplanfiles(load,mjds,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to check for plan files.
+    exist : bool, optional
+       Only return the names of plan files that exist.  Default is False.
     logger : logger, optional
        Logging object.  If not is input, then a default one will be created.
 
@@ -207,6 +216,9 @@ def getplanfiles(load,mjds,logger=None):
 
     # Make sure they are unique
     planfiles = list(np.unique(np.array(planfiles)))
+    # Check that they exist
+    if exist:
+        planfiles = [f for f in planfiles if os.path.exists(f)]
     return planfiles
 
 
@@ -947,7 +959,7 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     
     # Get plan files from the database
-    planfiles = getplanfiles(load,mjds,logger=logger)
+    planfiles = getplanfiles(load,mjds,exist=True,logger=logger)
     # No plan files for these MJDs
     if len(planfiles)==0:
         return []
@@ -1063,7 +1075,7 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
     objects,ui = np.unique(vcat['apogee_id'],return_index=True)
     vcat = vcat[ui]
     # Remove rows with missing or blank apogee_ids
-    bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone'))
+    bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone') | (vcat['apogee_id']=='2M'))
     if len(bd)>0:
         vcat = np.delete(vcat,bd)
     logger.info(str(len(vcat))+' stars to run')
