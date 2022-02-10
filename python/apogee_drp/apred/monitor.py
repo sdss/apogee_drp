@@ -777,7 +777,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
 
         for i in range(nv):
-            gd,=np.where(vcat['APOGEE_ID'][i] == allv['APOGEE_ID'])
+            gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
             if len(gd) > 0:
                 ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker='o', s=50, edgecolors='k')
                 ax2.scatter(allv['RV_TEFF'][gd][0], vcat['rv_teff'][i], marker='o', s=50, edgecolors='k')
