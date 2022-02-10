@@ -1791,6 +1791,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     for j in range(300):
         jdata = data[j]
         fiber = jdata['FIBERID']
+        print(j)
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
             cblock = str(np.ceil(fiber / 30).astype(int))
@@ -1811,6 +1812,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 kmag = jvcat['kmag']
                 snr = jvcat['snr']
                 if snr < 0: snr = 0
+                pdb.set_trace()
                 vhelio = jvcat['vheliobary']
                 ncomp = jvcat['n_components']
                 rvteff = jvcat['rv_teff']
