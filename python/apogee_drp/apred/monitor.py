@@ -780,7 +780,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             if ichip < nchips-1: 
                 ax.axes.xaxis.set_ticklabels([])
 
-            plt.axes().yaxis.set_major_locator(MaxNLocator(integer=True))
+            ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
             data = fits.open(plfiles[ichip])[4].data
             minwave = np.nanmin(data, axis=1)
