@@ -748,9 +748,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         plate = '2620'
         field = '16196'
         mjd = '59602'
-        plate = '15002'
-        field = 'RM_XMM-LSS'
-        mjd = '59257'
+        plate = '15252'
+        field = 'RM_COSMOS'
+        mjd = '59278'
         plotfile = specdir5 + 'monitor/' + instrument + '/wavelengths-' + field + '-' + plate + '-' + mjd + '.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
         sdir = specdir5 + 'visit/apo25m/' + field + '/' + plate + '/' + mjd + '/'
