@@ -758,9 +758,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         # DB query for this visit
         db = apogeedb.DBSession()
-        vcat1 = db.query('visit_latest', where="plate='" + plates[0] + "' and mjd='" + mjds[0] + "'", fmt='table')
-        gd1, = np.where(vcat1['snr'] > 20)
-        vcat1 = vcat1[gd]; nv1 = len(vcat1)
+        vcat = db.query('visit_latest', where="plate='" + plates[0] + "' and mjd='" + mjds[0] + "'", fmt='table')
+        gd, = np.where(vcat1['snr'] > 20)
+        vcat = vcat[gd]; nv1 = len(vcat)
 
         fig = plt.figure(figsize=(20,20))
         ax1 = plt.subplot2grid((2,2), (0,0))
@@ -776,13 +776,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
 
-        for i in range(nv1):
-            gd,=np.where(vcat1['APOGEE_ID'][i] == allv['APOGEE_ID'])
+        for i in range(nv):
+            gd,=np.where(vcat['APOGEE_ID'][i] == allv['APOGEE_ID'])
             if len(gd) > 0:
-                ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat1['vheliobary'][i], marker='o', s=50, edgecolors='k')
-                ax2.scatter(allv['RV_TEFF'][gd][0], vcat1['rv_teff'][i], marker='o', s=50, edgecolors='k')
-                ax3.scatter(allv['RV_LOGG'][gd][0], vcat1['rv_LOGG'][i], marker='o', s=50, edgecolors='k')
-                ax4.scatter(allv['RV_FEH'][gd][0], vcat1['rv_FEH'][i], marker='o', c='cyan', s=50, edgecolors='k')
+                ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker='o', s=50, edgecolors='k')
+                ax2.scatter(allv['RV_TEFF'][gd][0], vcat['rv_teff'][i], marker='o', s=50, edgecolors='k')
+                ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_LOGG'][i], marker='o', s=50, edgecolors='k')
+                ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_FEH'][i], marker='o', c='cyan', s=50, edgecolors='k')
 
 
         fig.subplots_adjust(left=0.09,right=0.98,bottom=0.09,top=0.95,hspace=0.08,wspace=0.00)
