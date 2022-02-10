@@ -718,6 +718,7 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
             for ip,p in enumerate(lincoef):
                 frame[chip][0].header['FPIPAR'+str(ip)] = p
             frame[chip][0].header['FPIFILE'] = fpiwavefile
+            frame[chip][0].header['WAVEFILE'] = fpiwavefile
             frame[chip][0].header['WAVEHDU'] = 5
 
         # Rewrite out 1D file with adjusted wavelength information

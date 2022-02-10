@@ -109,7 +109,9 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     if logger is None:
         logger = dln.basiclogger()
 
-    nmjds = len(mjds)
+    if type(mjds) is str or hasattr(mjds,'__iter__')==False:
+        mjds = [mjds]
+    nmjds = np.array(mjds).size
 
     db = apogeedb.DBSession()
 
@@ -117,9 +119,13 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     expinfo = None
     for m in mjds:
         expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
+        expinfo1 = Table(expinfo1)
         # Get data from database
         dbexpinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))
-        vals,ind1,ind2 = np.intersect1d(expinfo1['num'],dbexpinfo['num'],return_indices=True)
+        if len(dbexpinfo)>0:
+            vals,ind1,ind2 = np.intersect1d(expinfo1['num'],dbexpinfo['num'],return_indices=True)
+        else:
+            ind1 = []
         # Load new exposures into database
         if len(ind1) != len(expinfo1):
             db.ingest('exposure',expinfo1)  # insert into database
@@ -198,6 +204,9 @@ def getplanfiles(load,mjds,logger=None):
         return []
     plans = plans[ind]
     planfiles = plans['planfile']
+
+    # Make sure they are unique
+    planfiles = list(np.unique(np.array(planfiles)))
     return planfiles
 
 
@@ -396,6 +405,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('================================')
     logger.info(str(len(darkdict))+' Darks to make: '+','.join(darkdict['name']))
     logger.info('')
+    logger.info('Slurm settings: '+str(slurm))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkdark', **slurm)
     for i in range(len(darkdict)):
@@ -423,10 +433,11 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('================================')
     logger.info(str(len(flatdict))+' Flats to make: '+','.join(flatdict['name']))
     logger.info('')
-    queue = pbsqueue(verbose=True)
     slurm1 = slurm.copy()
     slurm1['nodes'] = 1
     slurm1['cpus'] = 1    
+    logger.info('Slurm settings: '+str(slurm1))
+    queue = pbsqueue(verbose=True)
     queue.create(label='mkflat', **slurm1)
     for i in range(len(flatdict)):
         outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+str(flatdict['name'][i])+telescope+'.'+logtime+'.log'
@@ -452,6 +463,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('================================')
     logger.info(str(len(bpmdict))+' BPMs to make: '+','.join(bpmdict['name']))
     logger.info('')
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkbpm', **slurm1)
     for i in range(len(bpmdict)):
@@ -476,6 +488,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('===================================')
     logger.info(str(len(littdict))+' Littrows to make: '+','.join(littdict['name']))
     logger.info('')
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklittrow', **slurm1)
     for i in range(len(littdict)):
@@ -499,6 +512,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('====================================')
     logger.info(str(len(responsedict))+' Responses to make: '+','.join(responsedict['name']))
     logger.info('')
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkresponse', **slurm1)
     for i in range(len(responsedict)):
@@ -533,6 +547,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('')
     slurm1['nodes'] = 1
     slurm1['cpus'] = 5
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkmultiwave', **slurm1)
     for i in range(len(multiwavedict)):
@@ -567,6 +582,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     logger.info('')
     slurm1['nodes'] = 1
     slurm1['cpus'] = 5
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklsf', **slurm1)
     for i in range(len(littdict)):
@@ -633,6 +649,7 @@ def runap3d(load,mjds,slurm,clobber=False,logger=None):
     if len(expinfo)<64:
         slurm1['cpus'] = len(expinfo)
     slurm1['numpy_num_threads'] = 2
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='ap3d', **slurm1)
     do3d = np.zeros(len(expinfo),bool)
@@ -751,6 +768,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
             if len(cind)<64:
                 slurm1['cpus'] = len(cind)
             slurm1['numpy_num_threads'] = 2
+            logger.info('Slurm settings: '+str(slurm1))
             queue = pbsqueue(verbose=True)
             queue.create(label='makecal-'+shcalnames[j], **slurm1)
             logfiles = []
@@ -946,6 +964,7 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
         slurm1['cpus'] = len(planfiles)
     slurm1['numpy_num_threads'] = 2
 
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='apred', **slurm1)
     for pf in planfiles:
@@ -1056,6 +1075,7 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
     if len(vcat)<64:
         slurm1['cpus'] = len(vcat)
     slurm1['numpy_num_threads'] = 2
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='rv', **slurm1)
     dorv = np.zeros(len(vcat),bool)
@@ -1185,6 +1205,7 @@ def rununified(load,mjds,slurm,clobber=False,logger=None):
     if len(mjds)<64:
         slurm1['cpus'] = len(mjds)
     slurm1['numpy_num_threads'] = 2    
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='unidir', **slurm1)
     # Loop over all MJDs
@@ -1230,7 +1251,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
 
     apred = load.apred
     telescope = load.telescope
-    # instrument = 'apogee-n'
+    instrument = load.instrument
     observatory = telescope[0:3]
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
@@ -1244,12 +1265,14 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     if len(planfiles)==0:
         logger.info('No plan files')
         return
+    logger.info(str(len(planfiles))+' plan file(s)')
 
     # Run apqa on each plate visit
     slurm1 = slurm.copy()
     if len(planfiles)<64:
         slurm1['cpus'] = len(planfiles)
     slurm1['numpy_num_threads'] = 2    
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='apqa', **slurm1)
     for pf in planfiles:
@@ -1272,12 +1295,22 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     # Make nightly QA/summary pages
     for m in mjds:
         try:
+            apodir = os.environ.get('APOGEE_REDUX')+'/'
             qa.makeNightQA(load=load,mjd=str(m),telescope=telescope,apred=apred)
             # Run makeCalFits, makeDarkFits, makeExpFits
-            # check apqaMJD()
-            # qa.makeCalFits(load=load, ims=all_ims, mjd=m, instrument=instrument, clobber=clobber)
-            # qa.makeDarkFits(load=load, ims=all_ims, mjd=m, clobber=clobber)
-            # qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=m, clobber=clobber)
+            # makeCalFits
+            expinfo = getexpinfo(load,m,logger=logger,verbose=False)
+            calind, = np.where((expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='QUARTZFLAT') |
+                               (expinfo['exptype']=='DOMEFLAT'))
+            if len(calind)>0:
+                all_ims = expinfo['num'][calind]
+                qa.makeCalFits(load=load, ims=all_ims, mjd=str(m), instrument=instrument, clobber=clobber)
+            # makeDarkFits
+            darkind, = np.where(expinfo['exptype']=='DARK')
+            if len(darkind)>0:
+                all_ims = expinfo['num'][darkind]
+                qa.makeDarkFits(load=load, ims=all_ims, mjd=str(m), clobber=clobber)
+            qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=str(m), clobber=clobber)
         except:
             traceback.print_exc()    
     # Make final mjd/fields pages

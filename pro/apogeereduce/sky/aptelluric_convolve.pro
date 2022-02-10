@@ -63,7 +63,11 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
 
   ; we'll make the convolved spectrum on a subsampling of the wavecal grid
   for k=0,2 do begin
-    FITS_READ,frame.(k).wavefile,wtmp,whead,exten=1
+    if tag_exist(frame.(k),'wcoef') then begin
+      wtmp = frame.(k).wcoef
+    endif else begin
+      FITS_READ,frame.(k).wavefile,wtmp,whead,exten=1
+    endelse
     if k eq 0 then wcoef=wtmp else wcoef=[[[wcoef]],[[wtmp]]]
   endfor
 
