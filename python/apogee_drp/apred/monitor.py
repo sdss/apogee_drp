@@ -781,8 +781,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             if len(gd) > 0:
                 ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker='o', s=50, edgecolors='k')
                 ax2.scatter(allv['RV_TEFF'][gd][0], vcat['rv_teff'][i], marker='o', s=50, edgecolors='k')
-                ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_LOGG'][i], marker='o', s=50, edgecolors='k')
-                ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_FEH'][i], marker='o', c='cyan', s=50, edgecolors='k')
+                ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_logg'][i], marker='o', s=50, edgecolors='k')
+                ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker='o', c='cyan', s=50, edgecolors='k')
 
 
         fig.subplots_adjust(left=0.09,right=0.98,bottom=0.09,top=0.95,hspace=0.08,wspace=0.00)
