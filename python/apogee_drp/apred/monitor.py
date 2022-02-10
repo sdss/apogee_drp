@@ -772,21 +772,21 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax1.axes.xaxis.set_ticklabels([])
             if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
             if ichip == 1: 
                 ax.set_ylabel(r'Start $\lambda$ ($\mu$m)')
                 ax1.set_ylabel(r'Stop $\lambda$ ($\mu$m)')
             if ichip < nchips-1: 
                 ax.axes.xaxis.set_ticklabels([])
+                ax1.axes.xaxis.set_ticklabels([])
 
             data = fits.open(plfiles[ichip])[4].data
             minwave = np.nanmin(data, axis=1) / 10000
             maxwave = np.nanmax(data, axis=1) / 10000
             gdmn, = np.where(minwave > 0)
             gdmx, = np.where(maxwave > 0)
-            ax.scatter(xarr[gdmn], minwave[gdmn], marker='>', s=markersz, c='k', alpha=alf)
-            ax1.scatter(xarr[gdmx], maxwave[gdmx], marker='<', s=markersz, c='r', alpha=alf)
+            ax.scatter(xarr[gdmn], minwave[gdmn], marker='>', s=markersz*3, c='k', alpha=alf)
+            ax1.scatter(xarr[gdmx], maxwave[gdmx], marker='<', s=markersz*3, c='r', alpha=alf)
 
             ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='top', color=chip, bbox=bboxpar)
@@ -794,7 +794,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
             #              fontsize=fsz*0.8, edgecolor='k', framealpha=1)
 
-        fig.subplots_adjust(left=0.04,right=0.92,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+        fig.subplots_adjust(left=0.08,right=0.92,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
