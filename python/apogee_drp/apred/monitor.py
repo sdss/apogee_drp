@@ -751,12 +751,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         plotfile = specdir5 + 'monitor/' + instrument + '/wavelengths-' + field + '-' + plate + '-' + mjd + '.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
         sdir = specdir5 + 'visit/apo25m/' + field + '/' + plate + '/' + mjd + '/'
-        vspec = glob.glob(sdir + 'apVisit*fits')
-        vspec.sort()
-        vspec = np.array(vspec)
-        nvspec = len(vspec)
+        plfiles = glob.glob(sdir + 'apPlate-*fits')
+        plfiles.sort()
+        plfiles = np.array(plfiles)
+        xarr = np.arange(0, 300, 1) + 1
 
-        fig = plt.figure(figsize=(30,22))
+        fig = plt.figure(figsize=(30,14))
 
         for ichip in range(nchips):
             ax = plt.subplot2grid((nchips,1), (ichip,0))
@@ -777,26 +777,25 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axes.xaxis.set_ticklabels([])
                 ax1.axes.xaxis.set_ticklabels([])
 
-            for ispec in range(nvspec):
-                pdb.set_trace()
-
-
-            for ifib in range(ngplotfibs):
-                medcent = np.nanmedian(gcent[:, ichip, ifib])
-                yvals = gcent[:, ichip, ifib] - medcent
-                ax.scatter(xvals, yvals, marker='o', s=markersz, c=gcolors[ifib], alpha=alf, 
-                           label='fib ' + str(gfibers[ifib]))
+            data = fits.open(plfiles[ichip])[4].data
+            minwave = np.nanmin(data, axis=1)
+            maxwave = np.nanmax(data, axis=1)
+            gdmn, = np.where(minwave > 0)
+            gdmx, = np.where(maxwave > 0)
+            ax.scatter(xarr[gdmn], minwave[gdmn], marker='>', s=markersz, c='k', alpha=alf)
+            ax1.scatter(xarr[gdmx], maxwave[gdmx], marker='<', s=markersz, c='r', alpha=alf)
 
             ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='top', color=chip, bbox=bboxpar)
-            if ichip == 0: 
-                ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                          fontsize=fsz*0.8, edgecolor='k', framealpha=1)
+            #if ichip == 0: 
+            #    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+            #              fontsize=fsz*0.8, edgecolor='k', framealpha=1)
 
         fig.subplots_adjust(left=0.04,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
+        return
 
         ###########################################################################################
         # qtrace.png
