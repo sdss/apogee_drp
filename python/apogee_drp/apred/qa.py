@@ -1747,10 +1747,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
     if os.path.exists(htmldir) == False: os.makedirs(htmldir)
 
-    # Read the confSummary file to get first carton values
-    plugmapfile = load.filename('confSummary', configid=int(plate))
-    plug = yanny.yanny(plugmapfile, np=True)['FIBERMAP']
-
     # Get the HTML file name... apPlate-plate-mjd
     htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)).replace('.fits','')
     
@@ -1790,7 +1786,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # DB query for this visit
     db = apogeedb.DBSession()
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
-    pdb.set_trace()
+
     # Loop over the fibers
     for j in range(300):
         jdata = data[j]
@@ -1802,14 +1798,14 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             objtype = jdata['OBJTYPE']
             visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             # Establish html table row background color and spectrum plot color
-            color = 'white'
-            if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): color = '#D2B4DE'
-            if objtype == 'SKY': color = '#D6EAF8'
+            bgcolor = 'white'
+            if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): bgcolor = '#D2B4DE'
+            if objtype == 'SKY': bgcolor = '#D6EAF8'
             if (objtype != 'SKY') & (objid != ''):
                 # DB query to get star and visit info
-                gd, = np.where(fiber == vcat['fiberid'])
-                if len(gd) < 1: pdb.set_trace()
-                jvcat = vcat[gd][0]
+                vcatind, = np.where(fiber == vcat['fiberid'])
+                if len(vcatind) < 1: pdb.set_trace()
+                jvcat = vcat[vcatind][0]
                 jmag = jvcat['jmag']
                 hmag = jvcat['hmag']
                 kmag = jvcat['kmag']
@@ -1823,6 +1819,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 starflags = jvcat['starflags'].replace(',','<BR>')
                 firstcarton = jvcat['firstcarton']
                 visitfile = jvcat['file']
+
+                # Handle case of unassigned or off target fibers 
+                if (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
+                    bgcolor = 'Gray'
+                    firstcarton = 'OFF TARGET!!!<BR>' + firstcarton
+                    if jvcat['assigned'] == 0: firstcarton = 'UNASSIGNED!!!<BR>' + firstcarton
 
                 # Create SIMBAD link
                 cra = str("%.5f" % round(jvcat['ra'], 5))
@@ -1850,7 +1852,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
-            vishtml.write('<TR BGCOLOR=' + color + '><TD align="center">' + cfiber + '<BR>(' + cblock + ')\n')
+            vishtml.write('<TR style="background=' + bgcolor + '><TD align="center">' + cfiber + '<BR>(' + cblock + ')\n')
             if (objtype != 'SKY') & (objid != ''):
                 vishtml.write('<TD>' + objid + '\n')
                 vishtml.write('<BR>' + simbadlink + '\n')
@@ -1863,6 +1865,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(hmag,3)))
                 if (jmag > 0) & (kmag > 0):
                     vishtml.write('<TD align ="center">' + str("%.3f" % round(jmag-kmag,3)))
+                else:
+                    vishtml.write('<TD align ="center"><FONT COLOR="red">99.999</FONT>')
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
                     vishtml.write('<TD align="center">TEL')
                 else:
