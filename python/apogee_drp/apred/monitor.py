@@ -805,17 +805,23 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             p1 = str("%.3f" % round(meanminwave, 3))
             p2 = str("%.3f" % round(minminwave, 3))
             p3 = str("%.3f" % round(maxminwave, 3))
-            lab1 = r'Start $\lambda$ (mean = ' + p1 + r', min = ' + p2 + r', max = ' + p3 + ')'
+            p4 = str("%.3f" % round(maxminwave-minminwave, 3))
+            lab1 = r'Start $\lambda$ (mean = ' + p1 + r', min = ' + p2 + r', max = ' + p3 + r', max$-$min = ' + p4 + ')'
             p1 = str("%.3f" % round(meanmaxwave, 3))
             p2 = str("%.3f" % round(minmaxwave, 3))
             p3 = str("%.3f" % round(maxmaxwave, 3))
-            lab2 = r'Stop $\lambda$ (mean = ' + p1 + r', min = ' + p2 + r', max = ' + p3 + ')'
+            p4 = str("%.3f" % round(maxmaxwave-minmaxwave, 3))
+            lab2 = r'Stop $\lambda$ (mean = ' + p1 + r', min = ' + p2 + r', max = ' + p3 + r', max$-$min = ' + p4 + ')'
             ax.scatter(xarr[gdmn][0]-500, minwave[gdmn][0]-meanminwave, marker='>', s=markersz*3, c='k', label=lab1)
             ax.scatter(xarr[gdmx][0]-500, maxwave[gdmx][0]+meanmaxwave, marker='<', s=markersz*3, c='r', label=lab2)
             ax.text(0.97,0.08,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='bottom', color=chip, bbox=bboxpar)
             ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, markerscale=3, 
                       edgecolor='k', framealpha=1, fontsize=fsz)
+
+            if ichip == 0:
+                tmp = 'field: ' + field + ',   plate: ' + plate + ',   mjd: ' + mjd
+                ax.text(0.5, 1.02, tmp, transform=ax.transAxes, ha='center')
 
         fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
