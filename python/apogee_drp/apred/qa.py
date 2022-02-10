@@ -1792,7 +1792,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     for j in range(300):
         jdata = data[j]
         fiber = jdata['FIBERID']
-        print(j)
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
             cblock = str(np.ceil(fiber / 30).astype(int))
