@@ -817,13 +817,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.text(0.97,0.08,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='bottom', color=chip, bbox=bboxpar)
             ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, markerscale=3, 
-                      edgecolor='k', framealpha=1, fontsize=fsz)
+                      edgecolor='k', framealpha=1, fontsize=fsz*1.1)
 
             if ichip == 0:
-                tmp = 'field: ' + field + ',   plate: ' + plate + ',   mjd: ' + mjd
-                ax.text(0.5, 1.02, tmp, transform=ax.transAxes, ha='center')
+                tmp = 'field: ' + field + '    plate: ' + plate + '    mjd: ' + mjd
+                ax.text(0.5, 1.03, tmp, transform=ax.transAxes, ha='center')
 
-        fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+        fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.955,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
