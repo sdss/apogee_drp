@@ -753,7 +753,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         sdir = specdir5 + 'visit/apo25m/' + field + '/' + plate + '/' + mjd + '/'
         plfiles = glob.glob(sdir + 'apPlate-*fits')
         plfiles.sort()
-        plfiles = np.array(plfiles)
+        plfiles = np.array(plfiles)[::-1]
         xarr = np.arange(0, 300, 1) + 1
 
         fig = plt.figure(figsize=(30,14))
