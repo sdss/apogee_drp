@@ -742,7 +742,56 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
 
     if makecomplots is True:
-       ###########################################################################################
+        ###########################################################################################
+        # rvparams.png
+        # Plot of stellar parameters, plate vs. FPS
+        allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allStarLite-dr17-synspec.fits'
+        allv = fits.getdata(allvpath)
+
+        fields = np.array(['18956', '19106', '16092'])
+        plates = np.array(['1917', '2573', '2649'])
+        mjds = np.array(['59595', '59601', '59602'])
+        ind = 0
+
+        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams-' + fields[ind] + '-' + plates[ind] + '-' + mjds[ind] + '.png'
+        print("----> monitor: Making " + os.path.basename(plotfile))
+
+        # DB query for this visit
+        db = apogeedb.DBSession()
+        vcat1 = db.query('visit_latest', where="plate='" + plates[0] + "' and mjd='" + mjds[0] + "'", fmt='table')
+        gd1, = np.where(vcat1['snr'] > 20)
+        vcat1 = vcat1[gd]; nv1 = len(vcat1)
+
+        fig = plt.figure(figsize=(20,20))
+        ax1 = plt.subplot2grid((2,2), (0,0))
+        ax2 = plt.subplot2grid((2,2), (0,1))
+        ax3 = plt.subplot2grid((2,2), (1,0))
+        ax4 = plt.subplot2grid((2,2), (1,1))
+        axes = [ax1,ax2,ax3,ax4]
+        for ax in axes:
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
+
+        for i in range(nv1):
+            gd,=np.where(vcat1['APOGEE_ID'][i] == allv['APOGEE_ID'])
+            if len(gd) > 0:
+                ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat1['vheliobary'][i], marker='o', s=50, edgecolors='k')
+                ax2.scatter(allv['RV_TEFF'][gd][0], vcat1['rv_teff'][i], marker='o', s=50, edgecolors='k')
+                ax3.scatter(allv['RV_LOGG'][gd][0], vcat1['rv_LOGG'][i], marker='o', s=50, edgecolors='k')
+                ax4.scatter(allv['RV_FEH'][gd][0], vcat1['rv_FEH'][i], marker='o', c='cyan', s=50, edgecolors='k')
+
+
+        fig.subplots_adjust(left=0.09,right=0.98,bottom=0.09,top=0.95,hspace=0.08,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+        return
+
+        ###########################################################################################
         # wavelengths.png
         # Plot of starting/ending wavelength of each detector
         plate = '2620'
