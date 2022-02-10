@@ -743,6 +743,164 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
+        # rvparams.png
+        # Plot of stellar parameters, plate vs. FPS
+        allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allStarLite-dr17-synspec.fits'
+        allv = fits.getdata(allvpath)
+
+        fields = np.array(['18956', '19106', '16092'])
+        plates = np.array(['1917', '2573', '2649'])
+        mjds = np.array(['59595', '59601', '59602'])
+        ind = 0
+
+        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams-' + fields[ind] + '-' + plates[ind] + '-' + mjds[ind] + '.png'
+        print("----> monitor: Making " + os.path.basename(plotfile))
+
+        # DB query for this visit
+        db = apogeedb.DBSession()
+        vcat = db.query('visit_latest', where="plate='" + plates[0] + "' and mjd='" + mjds[0] + "'", fmt='table')
+        gd, = np.where(vcat['snr'] > 20)
+        vcat = vcat[gd]; nv = len(vcat)
+
+        fig = plt.figure(figsize=(20,20))
+        ax1 = plt.subplot2grid((2,2), (0,0))
+        ax2 = plt.subplot2grid((2,2), (0,1))
+        ax3 = plt.subplot2grid((2,2), (1,0))
+        ax4 = plt.subplot2grid((2,2), (1,1))
+        axes = [ax1,ax2,ax3,ax4]
+        ax1.set_xlim(-150, 150)
+        ax1.set_ylim(-150, 150)
+        ax2.set_xlim(3.5, 10.0)
+        ax2.set_ylim(3.5, 10.0)
+        ax3.set_xlim(0.5, 5.5)
+        ax3.set_ylim(0.5, 5.5)
+        ax4.set_xlim(-3, 1.0)
+        ax4.set_ylim(-3, 1.0)
+        ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
+        ax1.set_ylabel(r'FPS $V_{\rm helio}$ (km$\,$s$^{-1}$)')
+        ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
+        ax2.set_ylabel(r'FPS RV $T_{\rm eff}$ (kK)')
+        ax3.set_xlabel(r'DR17 RV log$\,g$')
+        ax3.set_ylabel(r'FPS RV log$\,g$')
+        ax4.set_xlabel(r'DR17 RV [Fe/H]')
+        ax4.set_ylabel(r'FPS RV [Fe/H]')
+        ax1.plot([-150,150], [-150,150], linestyle='dashed', color='k')
+        ax2.plot([3.5,10.0], [3.5,10.0], linestyle='dashed', color='k')
+        ax3.plot([0.5,5.5], [1.0,5.5], linestyle='dashed', color='k')
+        ax4.plot([-3.0,1.0], [-3.0,1.0], linestyle='dashed', color='k')
+        for ax in axes:
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
+
+        for i in range(nv):
+            gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
+            if len(gd) > 0:
+                ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75)
+                ax2.scatter(allv['RV_TEFF'][gd][0]/1000, vcat['rv_teff'][i]/1000, marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75)
+                ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_logg'][i], marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75)
+                ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75)
+
+
+        fig.subplots_adjust(left=0.09,right=0.98,bottom=0.09,top=0.95,hspace=0.2,wspace=0.2)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+        return
+
+        ###########################################################################################
+        # wavelengths.png
+        # Plot of starting/ending wavelength of each detector
+        plate = '2620'
+        field = '16196'
+        mjd = '59602'
+        plate = '3130'
+        field = '20906'
+        mjd = '59616'
+        plotfile = specdir5 + 'monitor/' + instrument + '/wavelengths-' + field + '-' + plate + '-' + mjd + '.png'
+        print("----> monitor: Making " + os.path.basename(plotfile))
+        sdir = specdir5 + 'visit/apo25m/' + field + '/' + plate + '/' + mjd + '/'
+        plfiles = glob.glob(sdir + 'apPlate-*fits')
+        plfiles.sort()
+        plfiles = np.array(plfiles)[::-1]
+        xarr = np.arange(0, 300, 1) + 1
+
+        fig = plt.figure(figsize=(30,14))
+
+        for ichip in range(nchips):
+            chip = chips[ichip]
+            ax = plt.subplot2grid((nchips,1), (ichip,0))
+            ax.set_xlim(0, 300)
+            ax1 = ax.twinx()
+            ax.set_ylim(-1.1, 1.1)
+            ax1.set_ylim(-1.1, 1.1)
+            ax.minorticks_on()
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(20))
+            ax1.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+            ax1.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            ax1.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
+            if ichip < nchips-1: 
+                ax.axes.xaxis.set_ticklabels([])
+                ax1.axes.xaxis.set_ticklabels([])
+
+            data = fits.open(plfiles[ichip])[4].data
+            minwave = np.nanmin(data, axis=1)
+            maxwave = np.nanmax(data, axis=1)
+            gdmn, = np.where(minwave > 0)
+            gdmx, = np.where(maxwave > 0)
+            meanminwave = np.nanmean(minwave[gdmn])
+            meanmaxwave = np.nanmean(maxwave[gdmx])
+            minminwave = np.nanmin(minwave[gdmn])
+            maxminwave = np.nanmax(minwave[gdmn])
+            minmaxwave = np.nanmin(maxwave[gdmx])
+            maxmaxwave = np.nanmax(maxwave[gdmx])
+            ax.axhline(y=0, linestyle='dashed', color='k')
+            ax.scatter(xarr[gdmn], minwave[gdmn]-meanminwave, marker='>', s=markersz*3, c='k', alpha=alf)
+            ax1.scatter(xarr[gdmx], maxwave[gdmx]-meanmaxwave, marker='<', s=markersz*3, c='r', alpha=alf)
+
+            ax.set_ylabel(r'$\lambda-$mean $\lambda$ ($\rm \AA$)')
+            ax1.set_ylabel(r'$\lambda-$mean $\lambda$ ($\rm \AA$)')
+
+            p1 = str("%.3f" % round(meanminwave, 3))
+            p2 = str("%.3f" % round(minminwave, 3))
+            p3 = str("%.3f" % round(maxminwave, 3))
+            p4 = str("%.3f" % round(maxminwave-minminwave, 3))
+            lab1 = r'Start $\lambda$ (mean = ' + p1 + r', min = ' + p2 + r', max = ' + p3 + r', max$-$min = ' + p4 + ')'
+            p1 = str("%.3f" % round(meanmaxwave, 3))
+            p2 = str("%.3f" % round(minmaxwave, 3))
+            p3 = str("%.3f" % round(maxmaxwave, 3))
+            p4 = str("%.3f" % round(maxmaxwave-minmaxwave, 3))
+            lab2 = r'Stop $\lambda$  (mean = ' + p1 + r', min = ' + p2 + r', max = ' + p3 + r', max$-$min = ' + p4 + ')'
+            ax.scatter(xarr[gdmn][0]-500, minwave[gdmn][0]-meanminwave, marker='>', s=markersz*3, c='k', label=lab1)
+            ax.scatter(xarr[gdmx][0]-500, maxwave[gdmx][0]+meanmaxwave, marker='<', s=markersz*3, c='r', label=lab2)
+            ax.text(0.97,0.08,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                    ha='center', va='bottom', color=chip, bbox=bboxpar)
+            ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, markerscale=3, 
+                      edgecolor='k', framealpha=1, fontsize=fsz*1.1)
+
+            if ichip == 0:
+                tmp = 'field: ' + field + '    plate: ' + plate + '    mjd: ' + mjd
+                ax.text(0.5, 1.03, tmp, transform=ax.transAxes, ha='center')
+
+        fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.955,hspace=0.08,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+        return
+
+        ###########################################################################################
         # qtrace.png
         # Time series plot of median dome flat flux from cross sections across fibers
         plotfile = specdir5 + 'monitor/' + instrument + '/qtrace.png'

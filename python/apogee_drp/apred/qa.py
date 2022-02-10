@@ -1792,7 +1792,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     for j in range(300):
         jdata = data[j]
         fiber = jdata['FIBERID']
-        print(j)
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
             cblock = str(np.ceil(fiber / 30).astype(int))
@@ -1803,7 +1802,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             bgcolor = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): bgcolor = '#D2B4DE'
             if objtype == 'SKY': bgcolor = '#D6EAF8'
-            if objtype != 'SKY':
+            if (objtype != 'SKY') & (objid != '') & (objid != '2M') & (objid != '2MNone'):
                 # DB query to get star and visit info
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 vcatlind, = np.where(fiber == vcatl['fiberid'])
@@ -1818,17 +1817,22 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vhelio = jvcatl['vheliobary']
                 ncomp = jvcatl['n_components']
                 rvteff = jvcatl['rv_teff']
+                if np.isnan(rvteff): rvteff = -9999
                 rvlogg = jvcatl['rv_logg']
+                if np.isnan(rvlogg): rvlogg = -9.999
                 rvfeh = jvcatl['rv_feh']
+                if np.isnan(rvfeh): rvfeh = -9.999
                 starflags = jvcat['starflags'].replace(',','<BR>')
                 firstcarton = jvcat['firstcarton']
                 visitfile = jvcat['file']
 
                 # Handle case of unassigned or off target fibers 
                 if (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
-                    bgcolor = 'Gray'
+                    bgcolor = 'Silver'
                     firstcarton = 'OFF TARGET!!!<BR>' + firstcarton
-                    if jvcat['assigned'] == 0: firstcarton = 'UNASSIGNED!!!<BR>' + firstcarton
+                    if jvcat['assigned'] == 0:
+                        bgcolor = 'Gray'
+                        firstcarton = 'UNASSIGNED!!!<BR>' + firstcarton
 
                 # Create SIMBAD link
                 cra = str("%.5f" % round(jvcat['ra'], 5))
@@ -1856,8 +1860,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
-            vishtml.write('<TR  BGCOLOR=' + bgcolor + '><TD align="center">' + cfiber + '<BR>(' + cblock + ')\n')
-            if (objtype != 'SKY') & (objid != ''):
+            if (objtype != 'SKY') & (objid != '') & (objid != '2M') & (objid != '2MNone'):
+                vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
+                vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD>' + objid + '\n')
                 vishtml.write('<BR>' + simbadlink + '\n')
                 vishtml.write('<BR><A HREF=../' + visitfile + '>apVisit file</A>\n')
@@ -1887,20 +1892,25 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
             else:
                 snr = '-9.9'
+                fcolor = 'red'
                 if objtype != 'SKY': 
                     objtype = 'BLANK'
                     snr = '-99.9'
-                vishtml.write('<TD align="center"><FONT COLOR="red">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">99.999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">99.999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">' + snr + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-999.9</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">0</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-9999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-9.999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="red">-9.999</FONT>')
+                    bgcolor = 'Gray'
+                    fcolor = 'Black'
+                vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + cfiber + '<BR>(' + cblock + ')</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">99.999</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">99.999</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + snr + '</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-999.9</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">0</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9999</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9.999</FONT>')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9.999</FONT>')
 
             # Throughput column
             tput = throughput[j]
