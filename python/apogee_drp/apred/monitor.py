@@ -742,6 +742,62 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
 
     if makecomplots is True:
+       ###########################################################################################
+        # wavelengths.png
+        # Plot of starting/ending wavelength of each detector
+        plate = '2620'
+        field = '16196'
+        mjd = '59602'
+        plotfile = specdir5 + 'monitor/' + instrument + '/wavelengths-' + field + '-' + plate + '-' + mjd + '.png'
+        print("----> monitor: Making " + os.path.basename(plotfile))
+        sdir = specdir5 + 'visit/apo25m/' + field + '/' + plate + '/' + mjd + '/'
+        vspec = glob.glob(sdir + 'apVisit*fits')
+        vspec.sort()
+        vspec = np.array(vspec)
+        nvspec = len(vspec)
+
+        fig = plt.figure(figsize=(30,22))
+
+        for ichip in range(nchips):
+            ax = plt.subplot2grid((nchips,1), (ichip,0))
+            ax.set_xlim(0, 300)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax1 = ax.twinx()
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
+            if ichip == 1: 
+                ax.set_ylabel(r'Start $\lambda$ ($\rm \AA$)')
+                ax1.set_ylabel(r'Stop $\lambda$ ($\rm \AA$)')
+            if ichip < nchips-1: 
+                ax.axes.xaxis.set_ticklabels([])
+                ax1.axes.xaxis.set_ticklabels([])
+
+            for ispec in range(nvspec):
+                pdb.set_trace()
+
+
+            for ifib in range(ngplotfibs):
+                medcent = np.nanmedian(gcent[:, ichip, ifib])
+                yvals = gcent[:, ichip, ifib] - medcent
+                ax.scatter(xvals, yvals, marker='o', s=markersz, c=gcolors[ifib], alpha=alf, 
+                           label='fib ' + str(gfibers[ifib]))
+
+            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                    ha='center', va='top', color=chip, bbox=bboxpar)
+            if ichip == 0: 
+                ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                          fontsize=fsz*0.8, edgecolor='k', framealpha=1)
+
+        fig.subplots_adjust(left=0.04,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+
         ###########################################################################################
         # qtrace.png
         # Time series plot of median dome flat flux from cross sections across fibers
