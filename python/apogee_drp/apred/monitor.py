@@ -784,8 +784,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax1.axes.xaxis.set_ticklabels([])
 
             data = fits.open(plfiles[ichip])[4].data
-            minwave = np.nanmin(data, axis=1) / 10000
-            maxwave = np.nanmax(data, axis=1) / 10000
+            minwave = np.nanmin(data, axis=1)
+            maxwave = np.nanmax(data, axis=1)
             gdmn, = np.where(minwave > 0)
             gdmx, = np.where(maxwave > 0)
             meanminwave = np.nanmean(minwave[gdmn])
@@ -796,8 +796,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax1.scatter(xarr[gdmx], maxwave[gdmx]-meanmaxwave, marker='<', s=markersz*3, c='r', alpha=alf)
 
             if ichip == 1: 
-                ax.set_ylabel(r'Start $\lambda-$' + str("%.7f" % round(meanminwave, 7)) + r' ($\mu$m)')
-                ax1.set_ylabel(r'Stop $\lambda$-$' + str("%.7f" % round(meanmaxwave, 7)) + r' ($\mu$m)')
+                ax.set_ylabel(r'Start $\lambda-$' + str("%.3f" % round(meanminwave, 3)) + r' $\rm \AA$')
+                ax1.set_ylabel(r'Stop $\lambda-$' + str("%.3f" % round(meanmaxwave, 3)) + r' $\rm \AA$')
 
             ax.text(0.97,0.08,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='bottom', color=chip, bbox=bboxpar)
