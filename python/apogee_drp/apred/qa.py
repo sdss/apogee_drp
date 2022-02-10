@@ -1817,8 +1817,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vhelio = jvcatl['vheliobary']
                 ncomp = jvcatl['n_components']
                 rvteff = jvcatl['rv_teff']
+                if np.isnan(rvteff): rvteff = -9999
                 rvlogg = jvcatl['rv_logg']
+                if np.isnan(rvlogg): rvlogg = -9.999
                 rvfeh = jvcatl['rv_feh']
+                if np.isnan(rvfeh): rvfeh = -9.999
                 starflags = jvcat['starflags'].replace(',','<BR>')
                 firstcarton = jvcat['firstcarton']
                 visitfile = jvcat['file']
