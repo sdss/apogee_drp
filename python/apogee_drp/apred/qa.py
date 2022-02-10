@@ -1747,10 +1747,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
     if os.path.exists(htmldir) == False: os.makedirs(htmldir)
 
-    #if os.path.exists(htmldir + 'sorttable.js') == False:
-    #    print("----> makeVisHTML: getting sorttable.js...")
-    #    subprocess.call(['wget', '-q', sort_table_link])
-    #    subprocess.call(['mv', 'sorttable.js', htmldir])
+    # Read the confSummary file to get first carton values
+    plugmapfile = load.filename('confSummary', configid=int(plate))
+    plug = yanny.yanny(plugmapfile, np=True)['FIBERMAP']
 
     # Get the HTML file name... apPlate-plate-mjd
     htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)).replace('.fits','')
