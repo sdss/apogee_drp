@@ -793,7 +793,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
         ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
         tmp = 'field: ' + fields[ind] + '    plate: ' + plates[ind] + '    mjd: ' + mjds[ind]
-        ax1.text(1, 1.03, tmp, transform=ax1.transAxes, ha='center')
+        ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
         for ax in axes:
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
