@@ -758,7 +758,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         # DB query for this visit
         db = apogeedb.DBSession()
-        vcat = db.query('visit_latest', where="plate='" + plates[0] + "' and mjd='" + mjds[0] + "'", fmt='table')
+        vcat = db.query('visit_latest', where="plate='" + plates[ind] + "' and mjd='" + mjds[ind] + "'", fmt='table')
         gd, = np.where(vcat['snr'] > 20)
         vcat = vcat[gd]; nv = len(vcat)
 
