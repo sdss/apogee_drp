@@ -1802,7 +1802,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             bgcolor = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): bgcolor = '#D2B4DE'
             if objtype == 'SKY': bgcolor = '#D6EAF8'
-            if (objtype != 'SKY') & (objid != ''):
+            if (objtype != 'SKY') & (objid != '') & (objid != '2M'):
                 # DB query to get star and visit info
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 vcatlind, = np.where(fiber == vcatl['fiberid'])
@@ -1855,7 +1855,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
-            if (objtype != 'SKY') & (objid != ''):
+            if (objtype != 'SKY') & (objid != '') & (objid != '2M'):
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD>' + objid + '\n')
