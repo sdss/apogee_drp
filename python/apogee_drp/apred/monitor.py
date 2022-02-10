@@ -759,7 +759,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         fig = plt.figure(figsize=(30,14))
 
         for ichip in range(nchips):
-                chip = chips[ichip]
+            chip = chips[ichip]
             ax = plt.subplot2grid((nchips,1), (ichip,0))
             ax.set_xlim(0, 300)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
