@@ -759,8 +759,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         # DB query for this visit
         db = apogeedb.DBSession()
         vcat = db.query('visit_latest', where="plate='" + plates[0] + "' and mjd='" + mjds[0] + "'", fmt='table')
-        gd, = np.where(vcat1['snr'] > 20)
-        vcat = vcat[gd]; nv1 = len(vcat)
+        gd, = np.where(vcat['snr'] > 20)
+        vcat = vcat[gd]; nv = len(vcat)
 
         fig = plt.figure(figsize=(20,20))
         ax1 = plt.subplot2grid((2,2), (0,0))
