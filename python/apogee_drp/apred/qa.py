@@ -1785,7 +1785,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
     # DB query for this visit
     db = apogeedb.DBSession()
-    vcat = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
+    vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
+    vcatl = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
 
     # Loop over the fibers
     for j in range(300):
@@ -1805,19 +1806,20 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             if (objtype != 'SKY') & (objid != ''):
                 # DB query to get star and visit info
                 vcatind, = np.where(fiber == vcat['fiberid'])
-                if len(vcatind) < 1: pdb.set_trace()
+                vcatlind, = np.where(fiber == vcatl['fiberid'])
+                if (len(vcatind) < 1) | (len(vcatlind) < 1): pdb.set_trace()
                 jvcat = vcat[vcatind][0]
+                jvcatl = vcatl[vcatlind][0]
                 jmag = jvcat['jmag']
                 hmag = jvcat['hmag']
                 kmag = jvcat['kmag']
                 snr = jvcat['snr']
                 if snr < 0: snr = 0
-                pdb.set_trace()
-                vhelio = jvcat['vheliobary']
-                ncomp = jvcat['n_components']
-                rvteff = jvcat['rv_teff']
-                rvlogg = jvcat['rv_logg']
-                rvfeh = jvcat['rv_feh']
+                vhelio = jvcatl['vheliobary']
+                ncomp = jvcatl['n_components']
+                rvteff = jvcatl['rv_teff']
+                rvlogg = jvcatl['rv_logg']
+                rvfeh = jvcatl['rv_feh']
                 starflags = jvcat['starflags'].replace(',','<BR>')
                 firstcarton = jvcat['firstcarton']
                 visitfile = jvcat['file']
