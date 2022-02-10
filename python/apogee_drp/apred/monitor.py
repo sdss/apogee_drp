@@ -790,22 +790,32 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             gdmx, = np.where(maxwave > 0)
             meanminwave = np.nanmean(minwave[gdmn])
             meanmaxwave = np.nanmean(maxwave[gdmx])
+            minminwave = np.nanmin(minwave[gdmn])
+            maxminwave = np.nanmax(minwave[gdmn])
+            minmaxwave = np.nanmin(maxwave[gdmx])
+            maxmaxwave = np.nanmax(maxwave[gdmx])
             #ax.axhline(y=meanminwave, linestyle='dashed', color='k')
             #ax1.axhline(y=meanmaxwave, linestyle='dashed', color='r')
             ax.scatter(xarr[gdmn], minwave[gdmn]-meanminwave, marker='>', s=markersz*3, c='k', alpha=alf)
             ax1.scatter(xarr[gdmx], maxwave[gdmx]-meanmaxwave, marker='<', s=markersz*3, c='r', alpha=alf)
 
-            ax.set_ylabel(r'$\lambda-$mean $\lambda \rm \AA$')
-            ax1.set_ylabel(r'$\lambda-$mean $\lambda \rm \AA$')
+            ax.set_ylabel(r'$\lambda-$mean $\lambda$ ($\rm \AA$)')
+            ax1.set_ylabel(r'$\lambda-$mean $\lambda$ ($\rm \AA$)')
 
-            lab1 = r'Start $\lambda$ (mean = ' + str("%.3f" % round(meanminwave, 3)) + r' $\rm \AA$'
-            lab2 = r'Stop $\lambda$ (mean = ' + str("%.3f" % round(meanmaxwave, 3)) + r' $\rm \AA$'
+            p1 = str("%.3f" % round(meanminwave, 3))
+            p2 = str("%.3f" % round(minminwave, 3))
+            p3 = str("%.3f" % round(maxminwave, 3))
+            lab1 = r'Start $\lambda$ (mean = ' + p1 + r', min = ' + p2 + r', max = ' + p3 + ')'
+            p1 = str("%.3f" % round(meanmaxwave, 3))
+            p2 = str("%.3f" % round(minmaxwave, 3))
+            p3 = str("%.3f" % round(maxmaxwave, 3))
+            lab2 = r'Stop $\lambda$ (mean = ' + p1 + r', min = ' + p2 + r', max = ' + p3 + ')'
             ax.scatter(xarr[gdmn][0]-500, minwave[gdmn][0]-meanminwave, marker='>', s=markersz*3, c='k', label=lab1)
             ax.scatter(xarr[gdmx][0]-500, maxwave[gdmx][0]+meanmaxwave, marker='<', s=markersz*3, c='r', label=lab2)
             ax.text(0.97,0.08,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='bottom', color=chip, bbox=bboxpar)
             ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, markerscale=3, 
-                      edgecolor='k', framealpha=1)#,fontsize=fsz*0.8)
+                      edgecolor='k', framealpha=1, fontsize=fsz)
 
         fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
