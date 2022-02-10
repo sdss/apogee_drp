@@ -793,7 +793,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
         ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
         tmp = 'field: ' + fields[ind] + '    plate: ' + plates[ind] + '    mjd: ' + mjds[ind]
-        ax1.text(0.6, 1.03, tmp, transform=ax1.transAxes, ha='center')
+        ax1.text(0.9, 1.03, tmp, transform=ax1.transAxes, ha='center')
         for ax in axes:
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -811,7 +811,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75, zorder=10)
 
 
-        fig.subplots_adjust(left=0.08,right=0.98,bottom=0.07,top=0.95,hspace=0.2,wspace=0.2)
+        fig.subplots_adjust(left=0.08,right=0.98,bottom=0.055,top=0.96,hspace=0.2,wspace=0.2)
         plt.savefig(plotfile)
         plt.close('all')
 
