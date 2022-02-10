@@ -789,8 +789,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             gdmx, = np.where(maxwave > 0)
             meanminwave = np.nanmean(minwave[gdmn])
             meanmaxwave = np.nanmean(maxwave[gdmx])
-            ax.axhline(y=meanminwave, linestyle='dashed', color='k')
-            ax1.axhline(y=meanmaxwave, linestyle='dashed', color='r')
+            #ax.axhline(y=meanminwave, linestyle='dashed', color='k')
+            #ax1.axhline(y=meanmaxwave, linestyle='dashed', color='r')
             ax.scatter(xarr[gdmn], minwave[gdmn]-meanminwave, marker='>', s=markersz*3, c='k', alpha=alf)
             ax1.scatter(xarr[gdmx], maxwave[gdmx]-meanmaxwave, marker='<', s=markersz*3, c='r', alpha=alf)
 
