@@ -798,11 +798,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.set_ylabel(r'Start $\lambda-$' + str("%.3f" % round(meanminwave, 3)) + r' $\rm \AA$')
             ax1.set_ylabel(r'Stop $\lambda-$' + str("%.3f" % round(meanmaxwave, 3)) + r' $\rm \AA$')
 
+            ax.scatter(xarr[gdmn][0]-500, minwave[gdmn]-meanminwave, marker='>', s=markersz*3, c='k', alpha='Start')
+            ax1.scatter(xarr[gdmx][0]-500, maxwave[gdmx]+meanmaxwave, marker='<', s=markersz*3, c='r', label='Stop')
             ax.text(0.97,0.08,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='bottom', color=chip, bbox=bboxpar)
-            #if ichip == 0: 
-            #    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-            #              fontsize=fsz*0.8, edgecolor='k', framealpha=1)
+            ax.legend(loc='upper  left', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                      edgecolor='k', framealpha=1)#,fontsize=fsz*0.8)
 
         fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
