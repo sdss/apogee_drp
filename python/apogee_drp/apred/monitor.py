@@ -768,8 +768,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
             ax1.xaxis.set_major_locator(ticker.MultipleLocator(20))
             ax1.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-            ax.yaxis.set_major_locator(ticker.MultipleLocator(0.0001))
-            ax1.yaxis.set_major_locator(ticker.MultipleLocator(0.0001))
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.0001))
+            #ax1.yaxis.set_major_locator(ticker.MultipleLocator(0.0001))
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
@@ -787,11 +787,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             maxwave = np.nanmax(data, axis=1) / 10000
             gdmn, = np.where(minwave > 0)
             gdmx, = np.where(maxwave > 0)
-            ax.scatter(xarr[gdmn], minwave[gdmn], marker='>', s=markersz*3, c='k', alpha=alf)
-            ax1.scatter(xarr[gdmx], maxwave[gdmx], marker='<', s=markersz*3, c='r', alpha=alf)
+            meanminwave = np.nanmean(minwave[gdmn])
+            meanmaxwave = np.nanmean(maxwave[gdmx])
+            ax.axhline(y=meanminwave, linestyle='dashed', color='k')
+            ax1.axhline(y=meanmaxwave, linestyle='dashed', color='r')
+            ax.scatter(xarr[gdmn], minwave[gdmn]-meanminwave, marker='>', s=markersz*3, c='k', alpha=alf)
+            ax1.scatter(xarr[gdmx], maxwave[gdmx]-meanmaxwave, marker='<', s=markersz*3, c='r', alpha=alf)
 
-            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                    ha='center', va='top', color=chip, bbox=bboxpar)
+            ax.text(0.97,0.08,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                    ha='center', va='bottom', color=chip, bbox=bboxpar)
             #if ichip == 0: 
             #    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
             #              fontsize=fsz*0.8, edgecolor='k', framealpha=1)
