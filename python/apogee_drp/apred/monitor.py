@@ -751,7 +751,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         fields = np.array(['18956', '19106', '16092'])
         plates = np.array(['1917', '2573', '2649'])
         mjds = np.array(['59595', '59601', '59602'])
-        ind = 2
+        ind = 1
 
         plotfile = specdir5 + 'monitor/' + instrument + '/rvparams-' + fields[ind] + '-' + plates[ind] + '-' + mjds[ind] + '.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
