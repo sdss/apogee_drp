@@ -1858,7 +1858,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
             # Write data to HTML table
             if (objtype != 'SKY') & (objid != ''):
-                vishtml.write('<TR  BGCOLOR=' + bgcolor + '><TD align="center">' + cfiber + '<BR>(' + cblock + ')\n')
+                vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
+                vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD>' + objid + '\n')
                 vishtml.write('<BR>' + simbadlink + '\n')
                 vishtml.write('<BR><A HREF=../' + visitfile + '>apVisit file</A>\n')
@@ -1894,7 +1895,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     snr = '-99.9'
                     bgcolor = 'Gray'
                     fcolor = 'Black'
-                vishtml.write('<TR  BGCOLOR=' + bgcolor + '><TD align="center">' + cfiber + '<BR>(' + cblock + ')\n')
+                vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
+                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + cfiber + '<BR>(' + cblock + ')</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">99.999</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">99.999</FONT>')
