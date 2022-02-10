@@ -152,7 +152,7 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
 
     return expinfo
 
-def getplanfiles(load,mjds,logger=None):
+def getplanfiles(load,mjds,exist=False,logger=None):
     """
     Get all of the plan files for a list of MJDs.
 
@@ -162,6 +162,8 @@ def getplanfiles(load,mjds,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to check for plan files.
+    exist : bool, optional
+       Only return the names of plan files that exist.  Default is False.
     logger : logger, optional
        Logging object.  If not is input, then a default one will be created.
 
@@ -207,6 +209,9 @@ def getplanfiles(load,mjds,logger=None):
 
     # Make sure they are unique
     planfiles = list(np.unique(np.array(planfiles)))
+    # Check that they exist
+    if exist:
+        planfiles = [f for f in planfiles if os.path.exists(f)]
     return planfiles
 
 
@@ -947,7 +952,7 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     
     # Get plan files from the database
-    planfiles = getplanfiles(load,mjds,logger=logger)
+    planfiles = getplanfiles(load,mjds,exist=True,logger=logger)
     # No plan files for these MJDs
     if len(planfiles)==0:
         return []
