@@ -774,7 +774,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
+            #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
 
         for i in range(nv):
             gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
