@@ -1828,6 +1828,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     bgcolor = 'Gray'
                     firstcarton = 'OFF TARGET!!!<BR>' + firstcarton
                     if jvcat['assigned'] == 0: firstcarton = 'UNASSIGNED!!!<BR>' + firstcarton
+                    pdb.set_trace()
 
                 # Create SIMBAD link
                 cra = str("%.5f" % round(jvcat['ra'], 5))
