@@ -1075,7 +1075,7 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
     objects,ui = np.unique(vcat['apogee_id'],return_index=True)
     vcat = vcat[ui]
     # Remove rows with missing or blank apogee_ids
-    bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone'))
+    bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone') | (vcat['apogee_id']=='2M'))
     if len(bd)>0:
         vcat = np.delete(vcat,bd)
     logger.info(str(len(vcat))+' stars to run')
