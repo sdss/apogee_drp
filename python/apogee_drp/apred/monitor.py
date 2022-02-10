@@ -762,21 +762,23 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             chip = chips[ichip]
             ax = plt.subplot2grid((nchips,1), (ichip,0))
             ax.set_xlim(0, 300)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
-            ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
             ax1 = ax.twinx()
             ax.minorticks_on()
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(20))
+            ax1.xaxis.set_minor_locator(ticker.MultipleLocator(1))
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
+            ax1.axes.xaxis.set_ticklabels([])
             if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
             if ichip == 1: 
                 ax.set_ylabel(r'Start $\lambda$ ($\rm \AA$)')
                 ax1.set_ylabel(r'Stop $\lambda$ ($\rm \AA$)')
             if ichip < nchips-1: 
                 ax.axes.xaxis.set_ticklabels([])
-                ax1.axes.xaxis.set_ticklabels([])
 
             data = fits.open(plfiles[ichip])[4].data
             minwave = np.nanmin(data, axis=1)
