@@ -1803,8 +1803,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             bgcolor = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): bgcolor = '#D2B4DE'
             if objtype == 'SKY': bgcolor = '#D6EAF8'
-            if (objtype != 'SKY'):# & (objid != ''):
-                if objid == '': pdb.set_trace()
+            if (objtype != 'SKY') & (objid != ''):
                 # DB query to get star and visit info
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 vcatlind, = np.where(fiber == vcatl['fiberid'])
