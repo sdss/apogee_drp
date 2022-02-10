@@ -1825,10 +1825,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
                 # Handle case of unassigned or off target fibers 
                 if (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
-                    bgcolor = 'Gray'
+                    bgcolor = 'Silver'
                     firstcarton = 'OFF TARGET!!!<BR>' + firstcarton
-                    if jvcat['assigned'] == 0: firstcarton = 'UNASSIGNED!!!<BR>' + firstcarton
-                    pdb.set_trace()
+                    if jvcat['assigned'] == 0:
+                        bgcolor = 'Gray'
+                        firstcarton = 'UNASSIGNED!!!<BR>' + firstcarton
 
                 # Create SIMBAD link
                 cra = str("%.5f" % round(jvcat['ra'], 5))
