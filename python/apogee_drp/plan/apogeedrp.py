@@ -72,6 +72,13 @@ def loadsteps(steps):
                 newsteps.append(s)
         newsteps = list(np.unique(newsteps))
         steps = newsteps
+    # Put them in the correct order
+    fsteps = []
+    for s in allsteps:
+        if s in steps:
+            fsteps.append(s)
+    steps = fsteps
+
     return steps
 
 def getexpinfo(load,mjds,logger=None,verbose=True):
