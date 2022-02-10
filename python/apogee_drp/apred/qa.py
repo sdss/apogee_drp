@@ -1785,7 +1785,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
     # DB query for this visit
     db = apogeedb.DBSession()
-    vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
+    vcat = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
 
     # Loop over the fibers
     for j in range(300):
