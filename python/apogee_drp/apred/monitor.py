@@ -770,8 +770,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         axes = [ax1,ax2,ax3,ax4]
         ax1.set_xlim(-140, 140)
         ax1.set_ylim(-140, 140)
-        ax2.set_xlim(3.0, 10.0)
-        ax2.set_ylim(3.0, 10.0)
+        ax2.set_xlim(3.0, 9.5)
+        ax2.set_ylim(3.0, 9.5)
         ax3.set_xlim(0.5, 5.5)
         ax3.set_ylim(0.5, 5.5)
         ax4.set_xlim(-2.5, 1.0)
@@ -785,7 +785,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax4.set_xlabel(r'DR17 RV [Fe/H]')
         ax4.set_ylabel(r'FPS RV [Fe/H]')
         ax1.plot([-140,140], [-140,140], linestyle='dashed', color='k', zorder=1)
-        ax2.plot([3.0,10.0], [3.0,10.0], linestyle='dashed', color='k', zorder=1)
+        ax2.plot([3.0,9.5], [3.0,9.5], linestyle='dashed', color='k', zorder=1)
         ax3.plot([0.5,5.5], [0.5,5.5], linestyle='dashed', color='k', zorder=1)
         ax4.plot([-2.5,1.0], [-2.5,1.0], linestyle='dashed', color='k', zorder=1)
         ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
@@ -793,7 +793,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
         ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
         tmp = 'field: ' + fields[ind] + '    plate: ' + plates[ind] + '    mjd: ' + mjds[ind]
-        ax1.text(0.9, 1.03, tmp, transform=ax1.transAxes, ha='center')
+        ax1.text(1, 1.03, tmp, transform=ax1.transAxes, ha='center')
         for ax in axes:
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
