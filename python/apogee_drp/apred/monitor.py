@@ -775,16 +775,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax1.axes.xaxis.set_ticklabels([])
             if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
             if ichip == 1: 
-                ax.set_ylabel(r'Start $\lambda$ ($\rm \AA$)')
-                ax1.set_ylabel(r'Stop $\lambda$ ($\rm \AA$)')
+                ax.set_ylabel(r'Start $\lambda$ ($\mu$m)')
+                ax1.set_ylabel(r'Stop $\lambda$ ($\mu$m)')
             if ichip < nchips-1: 
                 ax.axes.xaxis.set_ticklabels([])
 
-            ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-
             data = fits.open(plfiles[ichip])[4].data
-            minwave = np.nanmin(data, axis=1)
-            maxwave = np.nanmax(data, axis=1)
+            minwave = np.nanmin(data, axis=1) / 10000
+            maxwave = np.nanmax(data, axis=1) / 10000
             gdmn, = np.where(minwave > 0)
             gdmx, = np.where(maxwave > 0)
             ax.scatter(xarr[gdmn], minwave[gdmn], marker='>', s=markersz, c='k', alpha=alf)
