@@ -2560,6 +2560,7 @@ def getSciStruct(data=None):
 
     outstr = np.zeros(len(data['PLATE']), dtype=dt)
 
+    pdb.set_trace()
     outstr['TELESCOPE'] = data['TELESCOPE']
     outstr['PLATE'] =     data['PLATE']
     outstr['NREADS'] =    data['NREADS']
