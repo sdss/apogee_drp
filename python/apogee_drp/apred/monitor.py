@@ -747,12 +747,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         plotfile = specdir5 + 'monitor/' + instrument + '/snrFPS.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
 
+        ssdir = specdir5 + 'visit/apo25m/'
         fields = np.array(['18956', '19106', '16092', '20914', '20916', '20918'])
         plates = np.array(['1917', '2573', '2649', '3211', '3213', '3216'])
         mjds = np.array(['59595', '59601', '59602', '59619', '59619', '59619'])
+        nfps = len(mjds)
         compfield = 'RM_XMM-LSS'
         compplate = '15002'
-        compdir = specdir5 + 'visit/apo25m/' + compfield + '/' + compplate + '/'
+        compdir = ssdir + compfield + '/' + compplate + '/'
         compsumfiles = glob.glob(compdir + '59*/apPlateSum-*fits')
         compsumfiles.sort()
         compsumfiles = np.array(compsumfiles)
@@ -791,6 +793,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #ax.scatter(d2['hmag'], sn2perMinute, marker='o', s=80, color='cyan', edgecolors='k')
                 ax.semilogy(d2['hmag'], sn2perMinute, marker='o', ms=9, mec='k', alpha=0.7, mfc='dodgerblue', linestyle='')
                 #ax.plot(d2['hmag'], sn2perMinute)#, marker='o', s=80, color='cyan', edgecolors='k')
+
+        for ifps in range(nfps):
+            dfile = ssdir + fields[ifps] + '/' + plates[ifps] + '/' + mjds[ifps] + '/apPlateSum-' + plates[ifps] + '-' + mjds[ifps] + '.fits'
+            d1 = fits.open(dfile)[1].data
+            d2 = fits.open(dfile)[2].data
+            sci, = np.where(d2['objtype'] != 'SKY')
+            d2 = d2[sci]
+            exptimes = d1['exptime']
+            nexp = len(exptimes)
+            for iexp in range(nexp):
+                sn2perMinute = d2['sn'][:, iexp, 1]**2 / exptimes[iexp] / 60
+                sn2perMinute = d2['sn'][:, iexp, 1] / exptimes[iexp]# / 60
+                #ax.scatter(d2['hmag'], sn2perMinute, marker='o', s=80, color='cyan', edgecolors='k')
+                ax.semilogy(d2['hmag'], sn2perMinute, marker='o', ms=9, mec='k', alpha=0.7, mfc='r', linestyle='')
+                #ax.plot(d2['hmag'], sn2perMinute)#, marker='o', s=80, color='cyan', edgecolors='k')
+
 
         fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.955,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
