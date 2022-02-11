@@ -65,14 +65,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #allcal =  fits.open(specdir4 + instrument + 'Cal.fits')[1].data
     #alldark = fits.open(specdir4 + instrument + 'Cal.fits')[2].data
     #allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
-    #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+    allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
     #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
     # Read in the master summary files
     allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
-    allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
+    #allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
     dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
     quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
@@ -2532,7 +2532,7 @@ def getSciStruct(data=None):
                    ('PLATE',     np.int32),
                    ('NREADS',    np.int32),
                    ('DATEOBS',   np.str, 30),
-                   #('EXPTIME',   np.int32),
+                   ('EXPTIME',   np.int32),
                    ('SECZ',      np.float64),
                    ('HA',        np.float64),
                    ('DESIGN_HA', np.float64, 3),
@@ -2564,7 +2564,7 @@ def getSciStruct(data=None):
     outstr['PLATE'] =     data['PLATE']
     outstr['NREADS'] =    data['NREADS']
     outstr['DATEOBS'] =   data['DATEOBS']
-    #outstr['EXPTIME'] =   data['EXPTIME']
+    outstr['EXPTIME'] =   data['EXPTIME']
     outstr['SECZ'] =      data['SECZ']
     outstr['HA'] =        data['HA']
     outstr['DESIGN_HA'] = data['DESIGN_HA']
