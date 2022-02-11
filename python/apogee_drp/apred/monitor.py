@@ -743,6 +743,56 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
+        # snrFPS.png
+        fields = np.array(['18956', '19106', '16092', '20914', '20916', '20918'])
+        plates = np.array(['1917', '2573', '2649', '3211', '3213', '3216'])
+        mjds = np.array(['59595', '59601', '59602', '59619', '59619', '59619'])
+        compfield = 'RM_XMM-LSS'
+        compplate = '15002'
+        compdir = specdir5 + 'visit/apo25m/' + compfield + '/' + compplate + '/'
+        compsumfiles = glob.glob(compdir + '59*/apPlateSum-*fits')
+        compsumfiles.sort()
+        compsumfiles = np.array(compsumfiles)
+        ncomp = len(compsumfiles)
+
+        xarr = np.arange(0, 300, 1) + 1
+
+        fig = plt.figure(figsize=(30,16))
+
+        ax = plt.subplot2grid((1,1), (0,0))
+        ax.set_xlim(6,14)
+        #ax.set_ylim(-1.1, 1.1)
+        ax.minorticks_on()
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.5))
+        #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        ax.set_xlabel(r'H mag')
+        ax.set_ylabel(r'S/N$^{2}$ per minute')
+        #ax.axes.xaxis.set_ticklabels([])
+
+        for icomp in range(ncomp):
+            d1 = fits.open(compsumfiles[icomp])[1].data
+            d2 = fits.open(compsumfiles[icomp])[2].data
+            sci, = np.where(d2['objtype'] != 'SKY')
+            d2 = d2[sci]
+            exptimes = d1['exptime']
+            nexp = len(exptimes)
+            for iexp in range(nexp):
+                sn2perMinute = d2['sn'][:, iexp, ichip]**2 / exptimes[iexp] / 60
+                ax.scatter(d2['hmag'], sn2perMinute, marker='o', s=80, color='cyan', edgecolors='k')
+
+        fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.955,hspace=0.08,wspace=0.00)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+        return
+
+        ###########################################################################################
         # rvparams.png
         # Plot of stellar parameters, plate vs. FPS
         allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allStarLite-dr17-synspec.fits'
