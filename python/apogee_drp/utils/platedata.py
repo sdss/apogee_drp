@@ -545,7 +545,6 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     else:
                         #raise Exception('no match found in plateHoles!',fiber['ra'][i],fiber['dec'][i], i)
                         print('no match found to photometry',fiber['ra'][i],fiber['dec'][i], 300-i)
-                        import pdb; pdb.set_trace()
                         nomatch += 1
         else:
             fiber['fiberid'][i] = -1
