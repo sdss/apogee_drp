@@ -94,6 +94,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
+            pdb.set_trace()
             outstr = getSciStruct(allsci)
 
             files.sort()
