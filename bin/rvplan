@@ -101,6 +101,7 @@ if __name__ == '__main__' :
                           plot=args.plot,logger=logger,mjd=mjd)
         except:
             logger.exception('Error running Doppler on '+star)
+            traceback.print_exc()
 
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))

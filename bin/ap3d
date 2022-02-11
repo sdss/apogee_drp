@@ -56,4 +56,7 @@ if __name__ == '__main__' :
     else:
         planfile = args.planfile[0]
 
-    subprocess.call(["idl","-e","ap3d,'"+planfile+"',clobber="+clobber+",unlock="+unlock])
+    try:
+        subprocess.call(["idl","-e","ap3d,'"+planfile+"',clobber="+clobber+",unlock="+unlock])
+    except:
+        traceback.print_exc()

@@ -18,6 +18,7 @@ import os
 import sys
 import subprocess
 import pdb
+import traceback
 
 if __name__ == '__main__' :
 
@@ -31,4 +32,7 @@ if __name__ == '__main__' :
     args=parser.parse_args()
     if args.clobber: clobber='1'
     else : clobber='0'
-    subprocess.call(["idl","-e","apred,'"+args.planfile+"','"+args.flag+"','"+clobber+"'"])
+    try:
+        subprocess.call(["idl","-e","apred,'"+args.planfile+"','"+args.flag+"','"+clobber+"'"])
+    except:
+        traceback.print_exc()

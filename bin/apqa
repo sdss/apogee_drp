@@ -23,6 +23,7 @@ import glob
 import numpy as np
 from astropy.table import Table,Column
 import logging
+import traceback
 
 from apogee_drp.apred import qa
 from dlnpyutils import utils as dln
@@ -84,16 +85,20 @@ if __name__ == '__main__' :
             val = kws.pop(f)
             kws['make'+f] = val
 
-    # Run plate QA code
-    if args.plate is not None:
-        # Remove observatory
-        if 'observatory' in kws.keys():
-            kws.pop('observatory')
-        qa.apqa(**kws)        
-    # Run nightly QA code
-    else:
-        qa.apqaMJD(**kws)
-    
+    # Run the apqa code
+    try:
+        # Run plate QA code
+        if args.plate is not None:
+            # Remove observatory
+            if 'observatory' in kws.keys():
+                kws.pop('observatory')
+            qa.apqa(**kws)        
+        # Run nightly QA code
+        else:
+            qa.apqaMJD(**kws)
+    except:
+        traceback.print_exc()
+
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
     logger.info("elapsed: %0.1f sec." % (time.time()-start))
