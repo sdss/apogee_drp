@@ -167,8 +167,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
         return [],[]
      
     baseframeid = string(int(base),format='(i08)') 
-    files = dir+'/'+dirs.prefix+'2d-'+chiptag+'-'+baseframeid+'.fits' 
-    info = apfileinfo(files,/silent) 
+    files = fdir+'/'+dirs.prefix+'2d-'+chiptag+'-'+baseframeid+'.fits' 
+    info = apfileinfo(files)
     framenum = info[0].fid8   # the frame number the frame number 
     okay = (info.exists and info.sp2dfmt and info.allchips and ((info.naxis == 3) or (info.exten == 1))) 
     if min(okay) < 1: 
@@ -192,7 +192,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
     psfframeid = string(int(psf_base),format='(i08)') 
     psffiles = apogee_filename('psf',num=psfframeid,chip=chiptag) 
     epsffiles = apogee_filename('epsf',num=psfframeid,chip=chiptag) 
-    pinfo = apfileinfo(psffiles,/silent) 
+    pinfo = apfileinfo(psffiles) 
     pokay = (pinfo.exists and pinfo.allchips) 
     if min(pokay) < 1: 
         pbd , = np.where(pokay == 0,nbd) 
@@ -231,7 +231,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
     # lamps lamps 
     # object frame object frame 
     #obstype = sxpar(head,'obstype',count=nobs)obstype = sxpar(head,'obstype',count=nobs) 
-    imagetyp = head.get'imagetyp')
+    imagetyp = head.get('imagetyp')
     if imagetyp is None:
         error = 'no imagetyp keyword found for '+baseframeid 
         if not silent: 
@@ -295,9 +295,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
     while err != 0: 
         if os.path.exists(os.path.dirname(lockfile))==False:
             os.mkdirs(os.path.dirname(lockfile))
-        openw,lock,/get_lun,lockfile, error=err 
+        openw,lock,lockfile, error=err 
         if (err != 0): 
-            printf, -2, !error_state.msg 
             print(file_search('/scratch/local','*'))
                          
     # Since final ap1dwavecal requires simultaneous fit of all three chips, and
@@ -327,7 +326,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
         ifile = files[ichip] 
              
         # the chip structure the chip structure 
-        chstr = frame.(ichip) 
+        chstr = frame[ichip]
              
         # chip trace filename chip trace filename 
         ipsffile = psffiles[ichip] 
@@ -367,7 +366,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
              
         # measuring the trace shift measuring the trace shift 
         if recenterfit:
-            im = frame.(ichip).flux 
+            im = frame[ichip]['flux']
             sz = size(im) 
             npix = sz[1] 
             nfibers = len(tracestr) 
@@ -410,7 +409,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
                 fitlo = (bestind-2) > 0 
                 fithi = (bestind+2) < 20 
                 estimates = [xc[bestind],lag[bestind],1,np.median(xc)] 
-                yfit = mpfitpeak(lag[fitlo:fithi],xc[fitlo:fithi],par,nterms=4,/gaussian,/positive,estimates=estimates) 
+                yfit = mpfitpeak(lag[fitlo:fithi],xc[fitlo:fithi],par,nterms=4,gaussian=True,positive=True,estimates=estimates) 
                 xshift = par[1] 
                  
                 if not silent: 
@@ -450,38 +449,40 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             medref = np.median( [ chstr.flux[:,0:3], transpose(chstr.flux[0:3,:]), chstr.flux[:,2044:2047], transpose(chstr.flux[2044:2047,:]) ]) 
             if not silent: 
                 print('setting image zeropoint using reference pixels.  subtracting ',str(medref))
-                chstr.flux -= medref 
+                chstr['flux'] -= medref 
                  
         # initialize the output header initialize the output header 
         #------------------------------------------------------------ 
         head = chstr.header 
-        sxaddpar,head,'psffile',ipsffile,' psf file used' 
+        head['psffile'] = ipsffile,' psf file used' 
         leadstr = 'ap2d: ' 
-        sxaddpar,head,'v_apred',getgitvers(),'apogee software version' 
-        sxaddpar,head,'apred',getvers(),'apogee reduction version' 
-        sxaddhist,leadstr+systime(0),head 
-        info = get_login_info() 
-        sxaddhist,leadstr+info.user_name+' on '+info.machine_name,head 
-        sxaddhist,leadstr+'idl '+!version.release+' '+!version.os+' '+!version.arch,head 
+        pyvers = sys.version.split()[0]
+        head['v_apred'] = getgitvers(),'apogee software version' 
+        head['apred'] = getvers(),'apogee reduction version' 
+        head['HISTORY'] = leadstr+time.time()
+        import socket
+        head['HISTORY'] = leadstr+os.getlogin()+' on '+socket.gethostname()
+        import platform
+        head['HISTORY'] = leadstr+'python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
         # add reduction pipeline version to the header add reduction pipeline version to the header 
-        sxaddhist,leadstr+' apogee reduction pipeline version: '+getvers(),head 
-        sxaddhist,leadstr+'output file:',head 
-        sxaddhist,leadstr+' hdu1 - image (adu)',head 
-        sxaddhist,leadstr+' hdu2 - error (adu)',head 
+        head['HISTORY'] = leadstr+' apogee reduction pipeline version: '+getvers()
+        head['HISTORY'] = leadstr+'output file:'
+        head['HISTORY'] = leadstr+' hdu1 - image (adu)'
+        head['HISTORY'] = leadstr+' hdu2 - error (adu)'
         if (extract_type == 1): 
-            sxaddhist,leadstr+' hdu3 - flag mask (bitwise or combined)',head 
-            sxaddhist,leadstr+'        1 - bad pixels',head 
-            sxaddhist,leadstr+'        2 - cosmic ray',head 
-            sxaddhist,leadstr+'        4 - saturated',head 
-            sxaddhist,leadstr+'        8 - unfixable',head 
+            head['HISTORY'] = leadstr+' hdu3 - flag mask (bitwise or combined)'
+            head['HISTORY'] = leadstr+'        1 - bad pixels'
+            head['HISTORY'] = leadstr+'        2 - cosmic ray'
+            head['HISTORY'] = leadstr+'        4 - saturated'
+            head['HISTORY'] = leadstr+'        8 - unfixable'
         else: 
-            sxaddhist,leadstr+' hdu3 - flag mask',head 
-            sxaddhist,leadstr+'        0 - good pixels',head 
-            sxaddhist,leadstr+'        1 - bad pixels',head 
+            head['HISTORY'] = leadstr+' hdu3 - flag mask'
+            head['HISTORY'] = leadstr+'        0 - good pixels'
+            head['HISTORY'] = leadstr+'        1 - bad pixels'
              
         if len(wavefile) > 0: 
-            sxaddhist,leadstr+' hdu4 - wavelengths (ang)',head 
-            sxaddhist,leadstr+' hdu5 - wavelength coefficients',head 
+            head['HISTORY'] = leadstr+' hdu4 - wavelengths (ang)'
+            head['HISTORY'] = leadstr+' hdu5 - wavelength coefficients'
              
         outstr = None
         ymodel = None
@@ -496,17 +497,17 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
                 print('using boxcar extraction')
                  
             # Update header
-            sxaddhist,leadstr+'extract_type=1 - using boxcar extraction',head 
-            sxaddpar,head,'extrtype',1,'extraction type' 
+            head['HISTORY'] = leadstr+'extract_type=1 - using boxcar extraction'
+            head['extrtype'] = 1,'extraction type' 
                      
             # recenter, shift the traces recenter, shift the traces 
-            if keyword_set(recenterfit) or keyword_set(recenterln2): 
-                tracestr.coef[0] += xshift 
-                tracestr.gaussy += xshift 
-                if keyword_set(recenterfit) and not keyword_set(recenterln2) : 
-                    sxaddhist,leadstr+' /recenterfit set, shifting traces by '+stringize(xshift,ndec=3),head
+            if recenterfit or recenterln2: 
+                tracest['coef'][0] += xshift 
+                tracestr['gaussy'] += xshift 
+                if recenterfit and not recenterln2: 
+                    head['HISTORY'] = leadstr+' /recenterfit set, shifting traces by %0.3f' % xshift
                 if keyword_set(recenterln2) : 
-                    sxaddhist,leadstr+' /recenterln2 set, shifting traces by '+stringize(xshift,ndec=3),head 
+                    head['HISTORY'] = leadstr+' /recenterln2 set, shifting traces by %0.3f' % xshift
                      
             # extract the fibers
             outstr = apextract(chstr,tracestr,fibers=fibers)
@@ -521,8 +522,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             psfim,head_psfim = fits.getdata(ipsffile,2,header=True)
                  
             # update header
-            sxaddhist,leadstr+'extract_type=2 - using psf image extraction',head 
-            sxaddpar,head,'extrtype',2,'extraction type' 
+            head['HISTORY'] = leadstr+'extract_type=2 - using psf image extraction'
+            head['extrtype'] = 2,'extraction type' 
                  
             # recenter, shift the traces and the psf image recenter, shift the traces and the psf image 
             if keyword_set(recenterfit) or keyword_set(recenterln2): 
@@ -531,9 +532,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
                 psfim0 = psfim 
                 psfim = imdrizzle(psfim0,0.0,xshift)  # shift the image with imdrizzle shift the image with imdrizzle 
                 if keyword_set(recenterfit) and not keyword_set(recenterln2) : 
-                    sxaddhist,leadstr+' /recenterfit set, shifting traces by '+stringize(xshift,ndec=3),head 
+                    head['HISTORY'] = leadstr+' /recenterfit set, shifting traces by %0.3f' % xshift
                 if keyword_set(recenterln2) : 
-                    sxaddhist,leadstr+' /recenterln2 set, shifting traces by '+stringize(xshift,ndec=3),head 
+                    head['HISTORY'] = leadstr+' /recenterln2 set, shifting traces by %0.3f' % xshift
                  
             # extract the fibers extract the fibers 
             outstr,ymodel = apextractpsf(chstr,tracestr,psfim,model=ymodel,fibers=fibers)
@@ -546,19 +547,19 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
                 print('using gaussian psf fitting extraction')
             
             # update header update header 
-            sxaddhist,leadstr+'extract_type=3 - using gaussian psf fitting extraction',head 
-            sxaddpar,head,'extrtype',3,'extraction type' 
+            head['HISTORY'] = leadstr+'extract_type=3 - using gaussian psf fitting extraction'
+            head['extrtype'] = 3,'extraction type' 
              
             # the idlspec2d programs expect the fibers to run along the y
             # transposing the arrays for now
              
             # Get the idlspec2d-style trace and widthset information get the idlspec2d-style trace and widthset information 
             tset_coeff,tset_head = fits.getdata(ipsffile,3,header=True)
-            tset = {func:str(sxpar(tset_head,'func'),2),xmin:sxpar(tset_head,'xmin'),
-                    xmax:sxpar(tset_head,'xmax'),coeff:tset_coeff} 
+            tset = {'func':str(tset_head['func']),'xmin':tset_head['xmin'],
+                    'xmax':tset_head['xmax'],'coeff':tset_coeff} 
             wset_coeff,wset_head = fits.getdata(ipsffile,4,header=True)
-            widthset = {func:str(sxpar(wset_head,'func'),2),xmin:sxpar(wset_head,'xmin'),
-                        xmax:sxpar(wset_head,'xmax'),coeff:wset_coeff} 
+            widthset = {'func':str(wset_head['func']),'xmin':wset_head['xmin'],
+                        'xmax':wset_head['xmax'],'coeff':wset_coeff} 
             proftype = wset_head.get('proftype') 
              
             # Get the trace and sigma arrays get the trace and sigma arrays 
@@ -567,9 +568,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             traceset2xy, widthset, xx, sigma2 
              
             # Get the images ready get the images ready 
-            img = transpose( float(frame.(ichip).flux) ) 
-            ivar = transpose( 1/float(frame.(ichip).err)**2 ) 
-            mask = transpose( frame.(ichip).mask ) 
+            img = frame[ichip]['flux'].astype(float).T
+            ivar = ( 1.0/frame[ichip]['err'].astype(float)**2 ).T
+            mask = frame[ichip]['mask'].T
             mask = 1-( ((mask and 1) == 1) or ((mask and 4) == 4) or ((mask and 8) == 8) ) 
              
             # Recenter the traces recenter the traces 
@@ -577,9 +578,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
                 # Need to add this to the traces
                 xsol += xshift 
                 if recenterfit and not recenterln2: 
-                    sxaddhist,leadstr+' /recenterfit set, shifting traces by '+stringize(xshift,ndec=3),head 
+                    head['HISTORY'] = leadstr+' /recenterfit set, shifting traces by %0.3f' % xshift
                 if recenterln2: 
-                    sxaddhist,leadstr+' /recenterln2 set, shifting traces by '+stringize(xshift,ndec=3),head 
+                    head['HISTORY'] = leadstr+' /recenterln2 set, shifting traces by %0.3f' % xshift
              
             #------------------------------------------------------------------------------------------------------------------------------------------ 
             # extract the spectra extract the spectra 
@@ -611,8 +612,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             # create outstr create outstr 
             #  bad pixels have fluxivar=0, they are given high err  bad pixels have fluxivar=0, they are given high err 
             #  mask make it: 0-good, 1-bad  mask make it: 0-good, 1-bad 
-            outstr = {flux:flux, err:1/(sqrt(fluxivar>1d-12)), mask:fix(fluxivar*0)} 
-            outstr.mask = (fluxivar == 0)  # pixels with fluxivar=0 are bad pixels with fluxivar=0 are bad 
+            outstr = {'flux':flux, 'err':1/(np.sqrt(np.maximum(fluxivar,1e-12))), 'mask':fluxivar.astype(int)*0} 
+            outstr['mask'] = (fluxivar == 0)  # pixels with fluxivar=0 are bad pixels with fluxivar=0 are bad 
             # negative pixels negative pixels 
             #bd , = np.where(outstr.flux < 0,nbd)bd , = np.where(outstr.flux < 0,nbd) 
             #if nbd > 0:if nbd > 0: 
@@ -621,12 +622,12 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             #  outstr.mask[bd] = 1  # maybe give this a different value  outstr.mask[bd] = 1   maybe give this a different value 
             # 
             # fix reference pixels fix reference pixels 
-            outstr.flux[0:3,:] = 0 
-            outstr.flux[2040:2047,:] = 0 
-            outstr.err[0:3,:] = baderr() 
-            outstr.err[2040:2047,:] = baderr() 
-            outstr.mask[0:3,:] = 1 
-            outstr.mask[2040:2047,:] = 1 
+            outstr['flux'][0:4,:] = 0 
+            outstr['flux'][2040:2048,:] = 0 
+            outstr['err'][0:4,:] = baderr() 
+            outstr['err'][2040:2048,:] = baderr() 
+            outstr['mask'][0:4,:] = 1 
+            outstr['mask'][2040:2048,:] = 1 
          
         # Empirical psf extraction
         #-------------------------
@@ -638,23 +639,25 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             if epsffiles[ichip] != savedepsffiles[ichip]: 
              
                 # load empirical psf data
-                tmp = mrdfits(iepsffile,0,phead,status=status_epsf,/silent) 
-                ntrace = sxpar(phead,'ntrace') 
-                img = ptrarr(ntrace,/allocate_heap) 
+                tmp,phead = fits.getdata(iepsffile,0,header=True)
+                ntrace = phead.get('ntrace')
+                img = ntrace*[None]
                 for itrace in range(ntrace): 
                     ptmp = fits.getdata(iepsffile,itrace+1) 
-                    *img[itrace] = ptmp.img 
-                    p ={fiber: ptmp.fiber, lo: ptmp.lo, hi: ptmp.hi, img: img[itrace]} 
+                    img[itrace] = ptmp['img']
+                    p = {'fiber': ptmp['fiber'], 'lo': ptmp['lo'], 'hi': ptmp['hi'], 'img': img[itrace]} 
                     if itrace == 0: 
-                        epsf=replicate(p,ntrace) 
+                        epsf = ntrace*[None]
+                        for f in range(ntrace):
+                            epsf[f] = pp.copy()
                     epsf[itrace] = p 
      
                 if ichip == 0: 
                     epsfchip = epsf 
-                    sz0 = size(epsf,/dim) 
+                    sz0 = epsf.shape
                     sz = sz0 
                 else: 
-                    sz = size(epsf,/dim) 
+                    sz = epsf.shape
                     if sz == sz0: 
                         epsfchip = [[epsfchip],[epsf]] 
     
@@ -670,8 +673,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
                 epsf = epsfchip[:,ichip]
          
             # update header update header 
-            sxaddhist,leadstr+'extract_type=4 - using empirical psf extraction',head 
-            sxaddpar,head,'extrtype',4,'extraction type' 
+            head['HISTORY'] = leadstr+'extract_type=4 - using empirical psf extraction'
+            head['extrtype'] = 4,'extraction type' 
          
             # recenter, shift the traces and the psf image recenter, shift the traces and the psf image 
             if recenterfit or recenterln2: 
@@ -679,13 +682,12 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
                 for l in range(len(epsf)): 
                     epsf[l].img = imdrizzle(epsf[l].img,0.0,xshift) 
          
-                if keyword_set(recenterfit) and not keyword_set(recenterln2) : 
-                    sxaddhist,leadstr+' /recenterfit set, shifting traces by '+stringize(xshift,ndec=3),head 
+                if recenterfit and not recenterln2: 
+                    head['HISTORY'] = leadstr+' /recenterfit set, shifting traces by %.3f' % xshift
+                if recenterln2: 
+                    head['HISTORY'] = leadstr+' /recenterln2 set, shifting traces by %.3f' % xshift
          
-                if keyword_set(recenterln2) : 
-                    sxaddhist,leadstr+' /recenterln2 set, shifting traces by '+stringize(xshift,ndec=3),head 
-         
-            ymodel = apextract_epsf(frame.(ichip),epsf,outstr,scat=True)
+            ymodel = apextract_epsf(frame[ichip],epsf,outstr,scat=True)
             #import pdb; pdb.set_trace()import pdb; pdb.set_trace() 
      
         # full gaussian-hermite psf fitting full gaussian-hermite psf fitting 
@@ -710,23 +712,23 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
  
             fluxcalfiles = os.path.dirname(fluxcalfile)+'/'+dirs.prefix+'flux-'+chiptag+'-'+os.path.basename(fluxcalfile)+'.fits' 
             fluxcal,fluxcal_head = fits.getdata(fluxcalfiles[ichip],header=True)
-            outstr.flux /= fluxcal          # correct flux correct flux 
+            outstr['flux'] /= fluxcal          # correct flux correct flux 
             bderr, = np.where(outstr.err == baderr()) 
             nbd = len(bderr)
-            outstr.err /= fluxcal           # correct error correct error 
+            outstr['err'] /= fluxcal           # correct error correct error 
             if nbd > 0: 
-                outstr.err[bderr] = baderr() 
+                outstr['err'][bderr] = baderr() 
             bd, = np.where(np.isfinite(outstr.flux) == 0) 
             nbd = len(bd)
             if nbd > 0: 
-                outstr.flux[bd] = 0. 
-                outstr.err[bd] = baderr() 
-                outstr.mask[bd] = 1 
+                outstr['flux'][bd] = 0. 
+                outstr['err'][bd] = baderr() 
+                outstr['mask'][bd] = 1 
  
             # update header update header 
-            sxaddhist,leadstr+'flux calibrating the spectra with:',head 
-            sxaddhist,leadstr+fluxcalfiles[ichip],head 
-            sxaddpar,head,'fluxfile',fluxcalfile,' flux calibration file used' 
+            head['HISTORY'] = leadstr+'flux calibrating the spectra with:'
+            head['HISTORY'] = leadstr+fluxcalfiles[ichip]
+            head['fluxfile'] = fluxcalfile,' flux calibration file used' 
  
         # Response curve calibration
         #---------------------------
@@ -738,17 +740,17 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             responsefiles = os.path.dirname(responsefile)+'/'+dirs.prefix+'response-'+chiptag+'-'+os.path.basename(responsefile)+'.fits' 
             response,response_head = fits.getdata(responsefiles[ichip],header=True)
  
-            sz = size(outstr.flux,/dim) 
-            outstr.flux *= response#replicate(1.,sz[1])         # correct flux correct flux 
+            sz = outstr['flux'].shape
+            outstr['flux'] *= response#replicate(1.,sz[1])         # correct flux correct flux 
             bderr, = np.where(outstr.err == baderr(),nbd) 
-            outstr.err *= response#replicate(1.,sz[1])           # correct error correct error 
+            outstr['err'] *= response#replicate(1.,sz[1])           # correct error correct error 
             if nbd > 0 : 
-                outstr.err[bderr] = baderr() 
+                outstr['err'][bderr] = baderr() 
  
             # Update header
-            sxaddhist,leadstr+'applying response function:',head 
-            sxaddhist,leadstr+responsefiles[ichip],head 
-            sxaddpar,head,'respfile',responsefile,' response file used' 
+            head['HISTORY'] = leadstr+'applying response function:'
+            head['HISTORY'] = leadstr+responsefiles[ichip]
+            head['respfile'] = responsefile,' response file used' 
  
         # Adding wavelengths
         #-------------------
@@ -763,10 +765,10 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             # this is now fixed in the apwave files this is now fixed in the apwave files 
             #wim = transpose(wim)  # want it [npix, nfibers]wim = transpose(wim)   want it [npix, nfibers] 
  
-            sxaddhist,leadstr+'adding wavelengths from',head 
-            sxaddhist,leadstr+wavefiles[ichip],head 
-            sxaddpar,head,'wavefile',wavefile,' wavelength calibration file' 
-            sxaddpar,head,'wavehdu',5,' wavelength coef hdu' 
+            head['HISTORY'] = leadstr+'adding wavelengths from'
+            head['HISTORY'] = leadstr+wavefiles[ichip]
+            head['wavefile'] = wavefile,' wavelength calibration file' 
+            head['wavehdu'] = 5,' wavelength coef hdu' 
     
         # Add header to structure
         head0 = head 
@@ -786,7 +788,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             modelfile = outdir+dirs.prefix+'2dmodel-'+chiptag[ichip]+'-'+framenum+'.fits'  # model output file model output file 
             if not silent: 
                 print('writing 2d model to: ',modelfile)
-            mwrfits,ymodel,modelfile,/create 
+            mwrfits,ymodel,modelfile #,/create 
             #    # compress model and 2d image:ne in ap2d     compress model and 2d image:ne in ap2d 
             #    if keyword_set(compress):    if keyword_set(compress): 
             #      os.remove(modelfile+'.fz',/allow_nonexistent      os.remove(modelfile+'.fz',/allow_nonexistent 
@@ -810,7 +812,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
                 outmodel=create_struct(outmodel,'chip'+chiptag[ichip],{model:ymodel}) 
  
         if logfile is not None:
-            writeline(logfile,os.path.basename(outfile),string(format='(f8.3)',systime(/seconds)-t1))
+            name = os.path.basename(outfile)+('%f8.3' % (time.time()-t1))
+            utils.writelog(logfile,name)
  
         #import pdb; pdb.set_trace()import pdb; pdb.set_trace() 
   
@@ -824,7 +827,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             # Get the wavelength calibration data
             wcoef,whead = fits.getdata(wavefiles[k],1,header=True)
             # Add to the chip structure
-            chstr = output.(k) 
+            chstr = output[k]
             chstr = create_struct(temporary(chstr),'filename',files[k],'wave_dir',outdir,'wavefile',wavefiles[k],'wcoef',wcoef) 
             # now add this to the final frame structure now add this to the final frame structure 
             if k == 0: 
@@ -839,7 +842,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             frame_wave = ap1dwavecal(frame,plugmap=plugmap,verbose=True,plot=True,pfile=plotfile)
         else: 
             frame_wave = ap1dwavecal(frame,verbose=True,noshift=True)
-        del,frame  # free up memory
+        del frame  # free up memory
     else:
         frame_wave = output 
  
@@ -858,71 +861,72 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
                 print('saving flux/err as long instead of float')
  
             # hdu0 - header only hdu0 - header only 
-            fits_write,outfile,0,reform(head_chip[ichip,:]),/no_abort,message=write_error 
+            hdu = fits.open(outfile)
+            #fits_write,outfile,0,reform(head_chip[ichip,:])
  
             # hdu1 - flux hdu1 - flux 
-            flux = frame_wave.(i).flux 
+            flux = frame_wave[i]['flux']
             if outlong:
-                flux=int(np.round(flux))
+                flux = np.round(flux).astype(int)
  
-            mkhdr,head1,flux,/image 
-            sxaddpar,head1,'ctype1','pixel' 
-            sxaddpar,head1,'ctype2','fiber' 
-            sxaddpar,head1,'bunit','flux (adu)' 
-            mwrfits,flux,outfile,head1,/silent 
+            mkhdr,head1,flux #,/image 
+            head1['ctype1'] = 'pixel' 
+            head1['ctype2'] = 'fiber' 
+            head1['bunit'] = 'flux (adu)' 
+            mwrfits,flux,outfile,head1 #,/silent 
  
             # hdu2 - error hdu2 - error 
-            err = errout(frame_wave.(i).err) 
+            err = errout(frame_wave[i]['err']) 
             if outlong:
-                err = int(np.round(err))
+                err = np.round(err).astype(int)
  
             mkhdr,head2,err #,/image 
-            sxaddpar,head2,'ctype1','pixel' 
-            sxaddpar,head2,'ctype2','fiber' 
-            sxaddpar,head2,'bunit','error (adu)' 
-            mwrfits,err,outfile,head2,/silent 
+            head2['ctype1'] = 'pixel' 
+            head2['ctype2'] = 'fiber' 
+            head2['bunit'] = 'error (adu)' 
+            mwrfits,err,outfile,head2
  
             # hdu3 - mask hdu3 - mask 
-            mask = frame_wave.(i).mask 
-            mkhdr,head3,mask,/image 
-            sxaddpar,head3,'ctype1','pixel' 
-            sxaddpar,head3,'ctype2','fiber' 
+            mask = frame_wave[i]['mask']
+            mkhdr,head3,mask #,/image 
+            head3['ctype1'] = 'pixel' 
+            head3['ctype2'] = 'fiber' 
             if (extract_type == 1): 
-                sxaddpar,head3,'bunit','flag mask (bitwise)' 
-                sxaddhist,'explanation of bitwise flag mask (or combined)',head3 
-                sxaddhist,' 1 - bad pixels',head3 
-                sxaddhist,' 2 - cosmic ray',head3 
-                sxaddhist,' 4 - saturated',head3 
-                sxaddhist,' 8 - unfixable',head3 
+                head3['bunit'] = 'flag mask (bitwise)' 
+                head3['HISTORY'] = 'explanation of bitwise flag mask (or combined)'
+                head3['HISTORY'] = ' 1 - bad pixels'
+                head3['HISTORY'] = ' 2 - cosmic ray'
+                head3['HISTORY'] = ' 4 - saturated'
+                head3['HISTORY'] = ' 8 - unfixable'
             else: 
-                sxaddpar,head3,'bunit','flag mask' 
-                sxaddhist,'explanation of flag mask',head3 
-                sxaddhist,' 0 - good pixels',head3 
-                sxaddhist,' 1 - bad pixels',head3 
+                head3['bunit'] = 'flag mask' 
+                head3['HISTORY'] = 'explanation of flag mask'
+                head3['HISTORY'] = ' 0 - good pixels'
+                head3['HISTORY'] = ' 1 - bad pixels'
  
-            mwrfits,mask,outfile,head3,/silent 
+            mwrfits,mask,outfile,head3
  
             if len(wavefiles) > 0: 
                 # hdu4 - wavelengths hdu4 - wavelengths 
-                mkhdr,head4,frame_wave.(i).wavelength,/image 
-                sxaddpar,head4,'ctype1','pixel' 
-                sxaddpar,head4,'ctype2','fiber' 
-                sxaddpar,head4,'bunit','wavelength (angstroms)' 
-                mwrfits,frame_wave.(i).wavelength,outfile,head4,/silent 
+                mkhdr,head4,frame_wave[i]['wavelength'] #,/image 
+                head4['ctype1'] = 'pixel' 
+                head4['ctype2'] = 'fiber' 
+                head4['bunit'] = 'wavelength (angstroms)' 
+                mwrfits,frame_wave[i]['wavelength'],outfile,head4
  
             # hdu5 = wavelength solution coefficients [double] hdu5 = wavelength solution coefficients [double] 
             #---------------------------------------------------------------------------------------------------------- 
-            wcoef = double(frame_wave.(i).wcoef) 
-            mkhdr,head5,wcoef,/image 
-            sxaddpar,head5,'ctype1','fiber' 
-            sxaddpar,head5,'ctype2','parameters' 
-            sxaddpar,head5,'bunit','wavelength coefficients' 
-            sxaddhist,'wavelength coefficients to be used with pix2wave.pro:',head5 
-            sxaddhist,' 1 global additive pixel offset',head5 
-            sxaddhist,' 4 sine parameters',head5 
-            sxaddhist,' 7 polynomial parameters (first is a zero-point offset',head5 
-            sxaddhist,'                     in addition to the pixel offset)',head5 
-            mwrfits,wcoef,outfile,head5,/silent 
+            wcoef = frame_wave[i]['wcoef'].astype(float)
+            mkhdr,head5,wcoef #,/image 
+            head5['ctype1'] = 'fiber' 
+            head5['ctype2'] = 'parameters' 
+            head5['bunit'] = 'wavelength coefficients' 
+            head5['HISTORY'] = 'wavelength coefficients to be used with pix2wave.pro:'
+            head5['HISTORY'] = ' 1 global additive pixel offset'
+            head5['HISTORY'] = ' 4 sine parameters'
+            head5['HISTORY'] = ' 7 polynomial parameters (first is a zero-point offset'
+            head5['HISTORY'] = '                     in addition to the pixel offset)'
+            mwrfits,wcoef,outfile,head5
  
     if os.path.exists(lockfile):
         os.remove(lockfile)
@@ -931,8 +935,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
         print('ap2proc finished')
  
 
-def ap2d(planfiles,verbose=verbose,stp=stp,clobber=clobber,exttype=exttype,mapper_data=mapper_data,
-         calclobber=calclobber,domelibrary=domelibrary,unlock=unlock):  
+def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
+         calclobber=False,domelibrary=False,unlock=False):  
     """
     This program processes 2D APOGEE spectra.  It extracts the
     spectra.
@@ -967,410 +971,316 @@ def ap2d(planfiles,verbose=verbose,stp=stp,clobber=clobber,exttype=exttype,mappe
     savedepsffiles = [' ',' ',' '] 
     epsfchip = 0 
  
-    # default parameters default parameters 
-    if len(verbose) == 0 : not verbose by default 
-    verbose=0  # not verbose by default 
- 
-# calclobber will redo psf, flux and 1d frames (but not other fundamental calibration frames) calclobber will redo psf, flux and 1d frames (but not other fundamental calibration frames) 
-if not keyword_set(calclobber) : not calclobber by default, 
-calclobber=0  # not calclobber by default, 
- 
-# clobber will redo 1d frames clobber will redo 1d frames 
-if not keyword_set(clobber) : not clobber by default, 
-clobber=0  # not clobber by default, 
- 
-if not keyword_set(exttype) : 
-exttype=4 
- 
-if len(domelibrary) == 0 : 
-domelibrary=0 
- 
- 
-t0 = time.time() 
- 
-nplanfiles = len(planfiles) 
-# not enough inputs not enough inputs 
-if nplanfiles == 0: 
-print('syntax - ap2d,planfiles' 
-return 
- 
- 
-print('' 
-print('running ap2d' 
-print('' 
-print(str(nplanfiles,2),' plan files' 
- 
-chiptag = ['a','b','c'] 
-apgundef,wavefile,responsefile 
- 
-#---------------------------------------------------------------------------------------- 
-# loop through the unique plate observations loop through the unique plate observations 
-#---------------------------------------------------------------------------------------- 
-for i in np.arange(0l,nplanfiles): 
-begin 
- 
- 
-t1 = time.time() 
-planfile = planfiles[i] 
- 
-print('' 
-print('=========================================================================' 
-print(str(i+1,2),'/',str(nplanfiles,2),'  processing plan file ',planfile 
-print('=========================================================================' 
- 
-# load the plan file load the plan file 
-#---------------------------------------- 
-print('' & print('plan file information:' 
-aploadplan,planfile,planstr,/verbose,error=planerror 
-if len(planerror) > 0 : 
-goto,bomb 
- 
-logfile = apogee_filename('diag',plate=planstr.plateid,mjd=planstr.mjd) 
- 
-# add psfid tag to planstr apexp structure add psfid tag to planstr apexp structure 
-if tag_exist(planstr.apexp,'psfid') == 0: 
-apexp = planstr.apexp 
-add_tag,apexp,'psfid',0l,apexp 
-old = planstr 
-oldtags = tag_names(old) 
-planstr = create_struct(oldtags[0],old.(0)) 
-for j in np.arange(1,len(oldtags)): 
-begin 
- 
-if oldtags[j] == 'apexp': 
-planstr = create_struct(planstr,'apexp',apexp) 
-else: 
-planstr = create_struct(planstr,oldtags[j],old.(j)) 
- 
- 
-undefine,old,oldtags 
- 
- 
-# use:meflat library use:meflat library 
-#------------------------------------------ 
-# if (1) no:meflat id set in planfile, or (2):melibrary parameter if (1) no:meflat id set in planfile, or (2):melibrary parameter 
-# set in planfile, or (3) /domelibrary keyword is set. set in planfile, or (3) /domelibrary keyword is set. 
-if tag_exist(planstr,'domelibrary') == 1: 
-plandomelibrary=planstr.domelibrary 
-else: 
-plandomelibrary=0 
- 
-if keyword_set(domelibrary) or tag_exist(planstr,'psfid') == 0 or keyword_set(plandomelibrary): 
-print('using:meflat library' 
-# you can: "domeflattrace --mjdplate" where mjdplate could be you can: "domeflattrace --mjdplate" where mjdplate could be 
-# e.g. 59223-9244, or "domeflattrace --planfile", with absolute e.g. 59223-9244, or "domeflattrace --planfile", with absolute 
-# path of planfile path of planfile 
-# force single:meflat if a short visit or:melibrary=='single' force single:meflat if a short visit or:melibrary=='single' 
-if planstr.telescope == 'apo25m' or planstr.telescope == 'apo1m': 
-observatory='apo' 
-else: 
-observatory='lco' 
- 
-if str(domelibrary,2) == 'single' or str(plandomelibrary,2) == 'single' or len(planstr.apexp) <= 3: 
-spawn,['domeflattrace',observatory,'--planfile',planfile,'--s'],out,errout,/noshell 
-else: 
-spawn,['domeflattrace',observatory,'--planfile',planfile],out,errout,/noshell 
- 
-nout = len(out) 
-for f in range(nout): 
-print(out[f] 
- 
-# parse the output parse the output 
-lo , = np.where(stregex(out,'**dome flat results:',/boolean) == 1,nlo) 
-hi = first_el(where(str(out,2) == '' and lindgen(nout) > lo[0])) 
-if lo == -1 or hi == -1: 
-print('problem running:meflattrace for ',planfile,'.  skipping this planfile.' 
-continue 
- 
-outarr = strsplitter(out[lo+1:hi-1],' ',/extract) 
-ims = reform(outarr[0,:]) 
-domeflatims = reform(outarr[1,:]) 
-# update planstr update planstr 
-match,apexp.name,ims,ind1,ind2,/sort 
-planstr.apexp[ind1].psfid =:meflatims[ind2] 
-else: 
-planstr.apexp.psfid = planstr.psfid 
- 
- 
-#:n't extract dark frames:n't extract dark frames 
-if tag_exist(planstr,'platetype') : 
-if planstr.platetype == 'dark' or planstr.platetype == 'intflat' : 
-goto,bomb 
- 
- 
- 
-# try to make the required calibration files (if not already made) try to make the required calibration files (if not already made) 
-#:check if the calibration files exist:check if the calibration files exist 
-#---------------------------------------------------------------------------- 
- 
-# appsf files  appsf files 
-if planstr.sparseid != 0 : 
-makecal,sparse=planstr.sparseid 
- 
-if planstr.fiberid != 0 : 
-makecal,fiber=planstr.fiberid 
- 
-if tag_exist(planstr,'psfid'): 
-makecal,psf=planstr.psfid,clobber=calclobber 
-tracefiles = apogee_filename('psf',num=planstr.psfid,chip=chiptag) 
-tracefile = os.path.dirname(tracefiles[0])+'/'+string(format='(i8.8)',planstr.psfid) 
-tracetest = os.path.exists(tracefiles) 
-if min(tracetest) == 0: 
-bd1 , = np.where(tracetest == 0,nbd1) 
-if nbd1 > 0 : 
-import pdb; pdb.set_trace(),'halt: ',tracefiles[bd1],' not found' 
- 
-for ichip in range(2+1): 
-begin 
- 
-p = mrdfits(tracefiles[ichip],1,/silent) 
-if len(p) != 300: 
-print( 'halt: tracefile ', tracefiles[ichip],':es not have 300 traces' 
- 
- 
- 
- 
- 
-# apwave files : wavelength calibration apwave files : wavelength calibration 
-waveid = planstr.waveid 
-if tag_exist(planstr,'platetype') : 
-if planstr.platetype == 'cal' or planstr.platetype == 'extra' : 
-waveid=0 
- 
- 
-if waveid > 0 : 
-makecal,multiwave=waveid 
- 
- 
-# fpi calibration file fpi calibration file 
-if tag_exist(planstr,'fpi'): 
-fpiid = planstr.fpi 
-else: 
-fpiid=0 
- 
- 
-# apflux files : since individual frames are usually made per plate apflux files : since individual frames are usually made per plate 
-if planstr.fluxid != 0: 
-makecal,flux=planstr.fluxid,psf=planstr.psfid,clobber=calclobber 
-fluxfiles = apogee_filename('flux',chip=chiptag,num=planstr.fluxid) 
-fluxfile = os.path.dirname(fluxfiles[0])+'/'+string(format='(i8.8)',planstr.fluxid) 
-fluxtest = os.path.exists(fluxfiles) 
-if min(fluxtest) == 0: 
-bd1 , = np.where(fluxtest == 0,nbd1) 
-if nbd1 > 0 : 
-import pdb; pdb.set_trace(),'halt: ',fluxfiles[bd1],' not found' 
- 
- 
- else fluxtest=0 
- 
-# apresponse files  apresponse files 
-#  these aren't used anymore  these aren't used anymore 
-if tag_exist(planstr,'responseid') == 0 : 
-add_tag,planstr,'responseid',0,planstr 
- 
-if planstr.responseid != 0: 
-makecal,response=planstr.responseid 
-responsefiles = apogee_filename('response',chip=chiptag,num=planstr.responseid) 
-responsefile = os.path.dirname(responsefiles[0])+'/'+string(format='(i8.8)',planstr.responseid) 
-responsetest = os.path.exists(responsefiles) 
-if min(responsetest) == 0: 
-bd1 , = np.where(responsetest == 0,nbd1) 
-if nbd1 > 0 : 
-import pdb; pdb.set_trace(),'halt: ',responsefiles[bd1],' not found' 
- 
- 
- 
- 
-# load the plug plate map file load the plug plate map file 
-#------------------------------------------------------------ 
-if tag_exist(planstr,'platetype') : 
-if planstr.platetype == 'cal' or planstr.platetype == 'extra' or      planstr.platetype == 'single' : 
-plugmap=0 
-else: 
-if tag_exist(planstr,'platetype') : 
-if planstr.platetype == 'cal' or planstr.platetype == 'extra' or      planstr.platetype == 'single' : 
-plugmap=0 
-else: 
-print('' & print('plug map file information:' 
-plugfile = planstr.plugmap 
-if tag_exist(planstr,'fixfiberid') : 
-fixfiberid=planstr.fixfiberid 
- 
-if size(fixfiberid,/type) == 7 and len(fixfiberid) == 1 : null/none 
-if (str(fixfiberid,2) == 'null' or str(strlowcase(fixfiberid),2) == 'none') : 
-    undefine,fixfiberid  # null/none 
- 
- 
-if tag_exist(planstr,'badfiberid') : 
-badfiberid=planstr.badfiberid 
- 
-if size(badfiberid,/type) == 7 and len(badfiberid) == 1 : null/none 
-if (str(badfiberid,2) == 'null' or str(strlowcase(badfiberid),2) == 'none') : 
-    undefine,badfiberid  # null/none 
- 
- 
-# we only need the information on sky fibers we only need the information on sky fibers 
-plugmap = getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),plugid=planstr.plugmap,fixfiberid=fixfiberid,                           badfiberid=badfiberid,mapper_data=mapper_data,/noobject) 
-if len(plugerror) > 0 : 
-import pdb; pdb.set_trace(),'halt: error with plugmap: ',plugfile 
- 
-plugmap.mjd = planstr.mjd   # enter mjd from the plan file enter mjd from the plan file 
- 
- 
-# are there enough files are there enough files 
-nframes = len(planstr.apexp) 
-if nframes < 1: 
-print('no frames to process' 
-goto,bomb 
- 
- 
-# process each frame process each frame 
-#-------------------------------------- 
-for j in np.arange(0l,nframes): 
-begin 
- 
- 
-# get trace files get trace files 
-tracefiles = apogee_filename('psf',num=planstr.apexp[i].psfid,chip=chiptag) 
-tracefile = os.path.dirname(tracefiles[0])+'/'+string(format='(i8.8)',planstr.apexp[i].psfid) 
-tracetest = os.path.exists(tracefiles) 
-if min(tracetest) == 0: 
-bd1 , = np.where(tracetest == 0,nbd1) 
-if nbd1 > 0 : 
-import pdb; pdb.set_trace(),'halt: ',tracefiles[bd1],' not found' 
- 
-for ichip in range(2+1): 
-begin 
- 
-p = mrdfits(tracefiles[ichip],1,/silent) 
-if len(p) != 300: 
-print( 'halt: tracefile ', tracefiles[ichip],':es not have 300 traces' 
- 
- 
- 
- 
-# make the filenames and check the files make the filenames and check the files 
-rawfiles = apogee_filename('r',chip=chiptag,num=planstr.apexp[j].name) 
-rawinfo = apfileinfo(rawfiles,/silent)        # this returns useful info even if the files:n't exist this returns useful info even if the files:n't exist 
-framenum = rawinfo[0].fid8   # the frame number the frame number 
-files = apogee_filename('2d',chip=chiptag,num=framenum) 
-inpfile = os.path.dirname(files[0])+'/'+framenum 
-info = apfileinfo(files,/silent) 
-okay = (info.exists and info.sp2dfmt and info.allchips and (info.mjd5 == planstr.mjd) and             ((info.naxis == 3) or (info.exten == 1))) 
-if min(okay) < 1: 
-bd , = np.where(okay == 0,nbd) 
-import pdb; pdb.set_trace(),'halt: there is a problem with files: ',strjoin((files)(bd),' ') 
- 
- 
-print('' 
-print('-----------------------------------------' 
-print(str(j+1,2),'/',str(nframes,2),'  processing frame number >>',str(framenum,2),'<<' 
-print('-----------------------------------------' 
- 
-# run ap2dproc run ap2dproc 
-if tag_exist(planstr,'platetype') : 
-if planstr.platetype == 'cal' : 
-skywave=0 
-else: 
-skywave=1 
- 
- 
-if tag_exist(planstr,'platetype') : 
-if planstr.platetype == 'sky' : 
-plugmap=0 
- 
- 
-outdir=apogee_filename('1d',num=framenum,chip='a',/dir) 
-if os.path.exists(outdir,/directory) == 0 : 
-file_mkdir,outdir 
- 
-if min(fluxtest) == 0 or planstr.apexp[j].flavor == 'flux' : 
-ap2dproc,inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,               wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,/compress     else if waveid > 0 : 
-begin 
-else: 
-if min(fluxtest) == 0 or planstr.apexp[j].flavor == 'flux' : 
-ap2dproc,inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,               wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,/compress     else if waveid > 0 : 
-    begin 
-else: 
-    ap2dproc,inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,               fluxcalfile=fluxfile,responsefile=responsefile,               wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,/compress 
- else       ap2dproc,inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,               fluxcalfile=fluxfile,responsefile=responsefile,               clobber=clobber,/compress 
-     
-    bomb1: 
-     
- # frame loop frame loop 
- 
-# now add in wavelength calibration information, with shift from now add in wavelength calibration information, with shift from 
-#  fpi or sky lines  fpi or sky lines 
-# this used to call "apskywavecal", "ap1dwavecal" now handles this used to call "apskywavecal", "ap1dwavecal" now handles 
-# both cases (sky lines and fpi lines) both cases (sky lines and fpi lines) 
-if waveid > 0 or fpiid > 0: 
-    cmd = ['ap1dwavecal',planfile] 
-     
-    # check if there is fpi flux in the 2 fibers check if there is fpi flux in the 2 fibers 
-    if fpiid > 0: 
-        outfile1 = apogee_filename('1d',num=framenum,chip='b') 
-        if os.path.exists(outfile1) == 0: 
-            print(outfile1,' not found' 
-            return 
-     
-        fits.getdata(outfile1,flux,head,exten=1 
-        flux1 = flux[:,[75,225]] 
-        # average on the level of the lsf, ~13 pixels average on the level of the lsf, ~13 pixels 
-        bflux1 = rebin(flux1[0:157*13-1],157,2) 
-        medbflux = np.median(bflux1) 
-        # ~3800 for fpi (chip b) ~3800 for fpi (chip b) 
-        if medbflux < 2000: 
-            print('fpiid is set but not enough flux in the 2-fpi fibers.  using sky lines instead!' 
+    t0 = time.time() 
+ 
+    nplanfiles = len(planfiles) 
+ 
+    print('' )
+    print('Running AP2D')
+    print('')
+    print(str(nplanfiles)+' plan files')
+ 
+    chiptag = ['a','b','c'] 
+    wavefile,responsefile = None,None
+ 
+    #-------------------------------------------
+    # loop through the unique plate observations
+    #-------------------------------------------
+    for i in range(nplanfiles): 
+        t1 = time.time() 
+        planfile = planfiles[i] 
+        print('' )
+        print('=====================================================================')
+        print(str(i+1,2)+'/'+str(nplanfiles)+'  processing plan file '+planfile)
+        print('=====================================================================')
+ 
+        # load the plan file load the plan file 
+        #---------------------------------------- 
+        print('')
+        print('plan file information:')
+        planstr = aploadplan(planfile,verbose=True)
+        if planstr is None:
+            continue
+ 
+        logfile = apogee_filename('diag',plate=planstr['plateid'],mjd=planstr['mjd']) 
+ 
+        # add psfid tag to planstr apexp structure add psfid tag to planstr apexp structure 
+        if 'psfid' in planstr['apexp'].keys() == False:
+            apexp = planstr['apexp']
+            add_tag,apexp,'psfid',0,apexp 
+            old = planstr 
+            oldtags = tag_names(old) 
+            planstr = create_struct(oldtags[0],old[0]) 
+            for j in np.arange(1,len(oldtags)): 
+                if oldtags[j] == 'apexp': 
+                    planstr = create_struct(planstr,'apexp',apexp) 
+                else: 
+                    planstr = create_struct(planstr,oldtags[j],old[j]) 
+            old,oldtags = None,None
+  
+ 
+        # Use dmeflat library
+        #--------------------
+        # if (1) domeflat id set in planfile, or (2) domelibrary parameter
+        # set in planfile, or (3) /domelibrary keyword is set.
+        if 'domelibrary' in planstr.keys():
+            plandomelibrary = planstr['domelibrary']
+        else: 
+            plandomelibrary = None
+        if domelibrary or 'psfid' not in planstr.keys() or plandomelibrary is not None:
+            print('Using domeflat library')
+            # You can do "domeflattrace --mjdplate" where mjdplate could be
+            # e.g. 59223-9244, or "domeflattrace --planfile", with absolute
+            # path of planfile
+            # force single domeflat if a short visit or domelibrary=='single'
+            if planstr['telescope'] == 'apo25m' or planstr['telescope'] == 'apo1m': 
+                observatory = 'apo' 
+            else: 
+                observatory = 'lco' 
+            if str(domelibrary) == 'single' or str(plandomelibrary) == 'single' or len(planstr['apexp']) <= 3: 
+                out = subprocess.run(['domeflattrace',observatory,'--planfile',planfile,'--s'],shell=False)
+            else: 
+                out = subprocess.run(['domeflattrace',observatory,'--planfile',planfile],shell=False)
+            nout = len(out) 
+            for f in range(nout): 
+                print(out[f])
+            # parse the output parse the output 
+            lo = re.search(out,'^DOME FLAT RESULTS:')
+            #lo = where(stregex(out,'^DOME FLAT RESULTS:',/boolean) eq 1,nlo)
+            hi = np.where((str(out)=='') & (np.arange(nout) > lo[0]))[0][0]
+            if lo == -1 or hi == -1: 
+                print('problem running:meflattrace for '+planfile+'.  skipping this planfile.')
+                continue 
+            outarr = out[lo+1:hi].split()
+            ims = outarr[0,:]
+            domeflatims = outarr[1,:]
+            # update planstr
+            ind1,ind2,vals = np.intersect1d(apexp['name'],ims)
+            planstr['apexp']['psfid'][ind1] = domeflatims[ind2] 
+        else: 
+            planstr['apexp']['psfid'] = planstr['psfid']
+ 
+        # Don't extract dark frames:n't extract dark frames
+        if 'platetype' in planstr.keys():
+            if planstr.platetype == 'dark' or planstr.platetype == 'intflat' :
+                continue
+ 
+        # Try to make the required calibration files (if not already made)
+        # Then check if the calibration files exist
+        #-------------------------------------------------
+ 
+        # apPSF files
+        if planstr['sparseid'] != 0 : 
+            makecal,sparse=planstr['sparseid']
+        if planstr['fiberid'] != 0 : 
+            makecal,fiber=planstr['fiberid']
+        if 'psfid' in planstr.keys():
+            makecal,psf=planstr['psfid'],clobber=calclobber 
+            tracefiles = apogee_filename('psf',num=planstr['psfid'],chip=chiptag) 
+            tracefile = os.path.dirname(tracefiles[0])+'/%8d' % planstr['psfid']
+            tracetest = os.path.exists(tracefiles) 
+            if min(tracetest) == 0: 
+                bd1, = np.where(tracetest == 0) 
+                nbd1 = len(bd1)
+                if nbd1 > 0: 
+                    print('halt: ',tracefiles[bd1],' not found')
+                    import pdb; pdb.set_trace()
+                for ichip in range(2+1): 
+                    p = fits.getdata(tracefiles[ichip],1)
+                    if len(p) != 300: 
+                        print( 'halt: tracefile ', tracefiles[ichip],' does not have 300 traces')
+ 
+        # apWave files : wavelength calibration apwave files : wavelength calibration 
+        waveid = planstr['waveid']
+        if 'platetype' in planstr.keys():
+            if planstr['platetype'] == 'cal' or planstr['platetype'] == 'extra': 
+                waveid = 0 
+        if waveid > 0 : 
+            makecal,multiwave=waveid 
+ 
+        # FPI calibration file fpi calibration file 
+        if 'fpi' in planstr.keys():
+            fpiid = planstr['fpi']
+        else: 
             fpiid = 0 
+ 
+        # apFlux files : since individual frames are usually made per plate
+        if planstr['fluxid'] != 0: 
+            makecal,flux=planstr.fluxid,psf=planstr.psfid,clobber=calclobber 
+            fluxfiles = apogee_filename('flux',chip=chiptag,num=planstr['fluxid']) 
+            fluxfile = os.path.dirname(fluxfiles[0])+'/%8d' % planstr['fluxid']
+            fluxtest = os.path.exists(fluxfiles) 
+            if min(fluxtest) == 0: 
+                bd1 , = np.where(fluxtest == 0) 
+                nbd1 = len(bd1)
+                if nbd1 > 0: 
+                    print('halt: ',fluxfiles[bd1],' not found')
+                    import pdb; pdb.set_trace()
+        else:
+            fluxtest = 0 
+ 
+        # apResponse files
+        #  these aren't used anymore
+        if 'responseid' not in planstr.keys():
+            add_tag,planstr,'responseid',0,planstr 
+            if planstr['responseid'] != 0: 
+                makecal,response=planstr['responseid']
+                responsefiles = apogee_filename('response',chip=chiptag,num=planstr['responseid']) 
+                responsefile = os.path.dirname(responsefiles[0])+'/%8d' % planstr['responseid']
+                responsetest = os.path.exists(responsefiles) 
+                if min(responsetest) == 0: 
+                    bd1 , = np.where(responsetest == 0) 
+                    nbd1 = len(bd1)
+                    if nbd1 > 0 : 
+                        print('halt: ',responsefiles[bd1],' not found')
+                        import pdb; pdb.set_trace()
+ 
+        # load the plug plate map file
+        #-----------------------------
+        if 'platetype' in planstr.keys():
+            if planstr['platetype'] == 'cal' or planstr['platetype'] == 'extra' or planstr['platetype'] == 'single': 
+                plugmap = 0 
+            else: 
+                print('')
+                print('plug map file information:')
+                plugfile = planstr['plugmap']
+                if 'fixfiberid' in planstr.keys():
+                    fixfiberid = planstr['fixfiberid']
+                if type(fixfiberid) is str and np.array(fixfiberid).size == 1: # null/none 
+                    if (str(fixfiberid) == 'null' or str(fixfiberid).lower() == 'none'): 
+                        fixfiberid = None
+                if 'badfiberid' in planstr.keys():
+                    badfiberid = planstr['badfiberid']
+                if type(badfiberid) is str and np.array(badfiberid).size == 1: # null/none 
+                    if (str(badfiberid) == 'null' or str(badfiberid).lower() == 'none'): 
+                        badfiberid = None  # null/none 
+                # we only need the information on sky fibers
+                plugmap = platedata.getdata(planstr['plateid'],str(planstr['mjd']),plugid=planstr['plugmap'],
+                                            fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data,
+                                            noobject=True)
+                if plugmap is None:
+                    print('halt: error with plugmap: ',plugfile)
+                    import pdb; pdb.set_trace()
+                plugmap['mjd'] = planstr['mjd']   # enter mjd from the plan file enter mjd from the plan file 
+ 
+        # Are there enough files are there enough files 
+        nframes = len(planstr['apexp']) 
+        if nframes < 1: 
+            print('no frames to process')
+            continue
+ 
+ 
+        # Process each frame
+        #-------------------
+        for j in range(nframes):
+            # get trace files get trace files 
+            tracefiles = apogee_filename('psf',num=planstr.apexp[i].psfid,chip=chiptag) 
+            tracefile = os.path.dirname(tracefiles[0])+'/%8d' % planstr['apexp']['psfid'][i]
+            tracetest = os.path.exists(tracefiles) 
+            if min(tracetest) == 0: 
+                bd1, = np.where(tracetest == 0) 
+                nbd1 = len(bd1)
+                if nbd1 > 0 : 
+                    print('halt: ',tracefiles[bd1],' not found')
+                    import pdb; pdb.set_trace()
+                for ichip in range(3): 
+                    p = fits.getdata(tracefiles[ichip],1)
+                    if len(p) != 300: 
+                        print( 'halt: tracefile ', tracefiles[ichip],' does not have 300 traces')
+         
+            # Make the filenames and check the files
+            rawfiles = apogee_filename('r',chip=chiptag,num=planstr['apexp']['name'][j]) 
+            rawinfo = apfileinfo(rawfiles)        # this returns useful info even if the files:n't exist
+            framenum = rawinfo[0].fid8       # the frame number the frame number 
+            files = apogee_filename('2d',chip=chiptag,num=framenum) 
+            inpfile = os.path.dirname(files[0])+'/'+framenum 
+            info = apfileinfo(files) 
+            okay = (info.exists and info.sp2dfmt and info.allchips and (info.mjd5 == planstr.mjd) and 
+                    ((info.naxis == 3) or (info.exten == 1))) 
+            if min(okay) < 1: 
+                bd, = np.where(okay == 0)
+                print('halt: there is a problem with files: '+' '.join(files[bd]))
+                import pdb; pdb.set_trace()
+ 
+            print('') 
+            print('-----------------------------------------')
+            print(str(j+1),'/',str(nframes),'  processing frame number >>',str(framenum),'<<')
+            print('-----------------------------------------')
+ 
+            # Run AP2DPROC
+            if 'platetype' in plantstr.keys():
+                if planstr['platetype'] == 'cal': 
+                    skywave = False
+                else: 
+                    skywave = True 
+            if 'platetype' in planstr.keys():
+                if planstr['platetype'] == 'sky': 
+                    plugmap = 0 
+            outdir = apogee_filename('1d',num=framenum,chip='a',dir=True) 
+            if os.path.exists(outdir)==False:
+                file_mkdir,outdir 
+            if min(fluxtest) == 0 or planstr.apexp[j].flavor == 'flux' : 
+                ap2dproc(inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,
+                         wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,compress=True)
+            elif waveid > 0 : 
+                ap2dproc(inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,
+                         fluxcalfile=fluxfile,responsefile=responsefile,
+                         wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,compress=True)
+            else:
+                ap2dproc(inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,
+                         fluxcalfile=fluxfile,responsefile=responsefile,
+                         clobber=clobber,compress=True)
+ 
+        # Now add in wavelength calibration information, with shift from
+        #  FPI or sky lines
+        # this used to call "apskywavecal", "ap1dwavecal" now handles
+        # both cases (sky lines and fpi lines)
+        if waveid > 0 or fpiid > 0: 
+            cmd = ['ap1dwavecal',planfile] 
+
+            # check if there is fpi flux in the 2 fibers
+            if fpiid > 0: 
+                outfile1 = apogee_filename('1d',num=framenum,chip='b') 
+                if os.path.exists(outfile1) == 0: 
+                    print(outfile1,' not found')
+                    return      
+                flux, head = fits.getdata(outfile1,1)
+                flux1 = flux[:,[75,225]]
+                # average on the level of the lsf, ~13 pixels average on the level of the lsf, ~13 pixels 
+                bflux1 = flux1[0:157*13].reshape(157,2).sum(axis=1) 
+                medbflux = np.median(bflux1) 
+                # ~3800 for fpi (chip b) ~3800 for fpi (chip b) 
+                if medbflux < 2000: 
+                    print('fpiid is set but not enough flux in the 2-fpi fibers.  using sky lines instead!')
+                    fpiid = 0 
+
+            if fpiid > 0:  # use fpi lines use fpi lines 
+                cmd = [cmd,'--fpiid',str(fpiid)] 
+            else:  # use sky lines use sky lines 
+                if skywave==False:
+                    cmd = [cmd,'--nosky']
+            subprocess.run(cmd,shell=False)
      
+        # Compress 2d files
+        nframes = len(planstr['apexp']) 
+        for j in range(nframes): 
+            files = apogee_filename('2d',num=planstr['apexp']['name'][j],chip=chiptag) 
+            modfiles = apogee_filename('2dmodel',num=planstr['apexp']['name'][j],chip=chiptag) 
+            for jj in range(len(files)): 
+                if os.path.exists(files[jj]): 
+                    if os.path.exists(files[jj]+'.fz'): os.remove(files[jj]+'.fz')
+                    # spawn,['fpack','-d','-y',files[jj]],/noshell
+                if os.path.exists(modfiles[jj]): 
+                    if os.path.exists(modfiles[jj]+'.fz'): os.remove(modfiles[jj]+'.fz')
+                subprocess.run(['fpack','-d','-y',modfiles[jj]],shell=False)
+                              
+        writelog(logfile,'ap2d: '+os.path.basename(planfile)+('%.1f' % time.time()-t0))
  
-     
-    if fpiid > 0:  # use fpi lines use fpi lines 
-        cmd = [cmd,'--fpiid',str(fpiid,2)] 
-    else:  # use sky lines use sky lines 
-        if not keyword_set(skywave) : 
-            cmd=[cmd,'--nosky'] 
-     
- 
-    spawn,cmd,/noshell 
-    # if skywave:spawn,['apskywavecal',planfile],/noshell     # else  spawn,['apskywavecal',planfile,'--nosky'],/noshell if skywave:spawn,['apskywavecal',planfile],/noshell      else  spawn,['apskywavecal',planfile,'--nosky'],/noshell 
- 
-     
-    bomb: 
-     
-    # compress 2d files compress 2d files 
-    nframes = len(planstr.apexp) 
-    for j in np.arange(0l,nframes): 
-        begin 
- 
-    files = apogee_filename('2d',num=planstr.apexp[j].name,chip=chiptag) 
-    modfiles = apogee_filename('2dmodel',num=planstr.apexp[j].name,chip=chiptag) 
-    for jj in range(len(files)): 
-        begin 
- 
-    if os.path.exists(files[jj]): 
-        os.remove(files[jj]+'.fz',/allow_nonexistent 
-        #       spawn,['fpack','-d','-y',files[jj]],/noshell       spawn,['fpack','-d','-y',files[jj]],/noshell 
- 
-    if os.path.exists(modfiles[jj]): 
-        os.remove(modfiles[jj]+'.fz',/allow_nonexistent 
-        spawn,['fpack','-d','-y',modfiles[jj]],/noshell 
- 
- 
- 
- 
-writelog,logfile,'ap2d: '+os.path.basename(planfile)+string(format='(f8.2)',time.time()-t1) 
- 
-  # plan file loop plan file loop 
- 
-apgundef,epsfchip 
- 
-print('ap2d finished' 
-dt = time.time()-t0 
-print('dt = ',str(string(dt,format='(f10.1)'),2),' sec' 
- 
-if keyword_set(stp) : 
-import pdb; pdb.set_trace() 
- 
+    del epsfchip 
+
+    print('ap2d finished')
+    dt = time.time()-t0 
+    print('dt = %.1f sec' % dt)
+  
  
  
