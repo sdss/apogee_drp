@@ -750,10 +750,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allStarLite-dr17-synspec.fits'
         allv = fits.getdata(allvpath)
 
-        fields = np.array(['18956', '19106', '16092'])
+        fields = np.array(['18956', '19106', '19092'])
         plates = np.array(['1917', '2573', '2649'])
         mjds = np.array(['59595', '59601', '59602'])
         ind = 2
+
+        sbs = np.array(['2M08182323+4616076', '2M08174272+4648176', '2M08121440+4634381', '2M08195933+4749123'])
 
         plotfile = specdir5 + 'monitor/' + instrument + '/rvparams-' + fields[ind] + '-' + plates[ind] + '-' + mjds[ind] + '.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
@@ -762,7 +764,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         db = apogeedb.DBSession()
         vcat = db.query('visit_latest', where="plate='" + plates[ind] + "' and mjd='" + mjds[ind] + "'", fmt='table')
         gd, = np.where(vcat['snr'] > 20)
-        vcat = vcat[gd]; nv = len(vcat)
+        vcat = vcat[gd]
+        nv = len(vcat)
 
         fig = plt.figure(figsize=(20,18))
         ax1 = plt.subplot2grid((2,2), (0,0))
@@ -809,10 +812,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             if len(gd) > 0:
                 dif = allv['VHELIO_AVG'][gd][0] - vcat['vheliobary'][i]
                 if np.absolute(dif) > 5: print(vcat['apogee_id'][i] + str("%.3f" % round(dif, 3)).rjust(10))
-                ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75, zorder=10)
-                ax2.scatter(allv['RV_TEFF'][gd][0]/1000, vcat['rv_teff'][i]/1000, marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75, zorder=10)
-                ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_logg'][i], marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75, zorder=10)
-                ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75, zorder=10)
+                symbol = 'o'
+                symsz = 70
+                symc = 'cyan'
+                sb, = np.where(vcat['apogee_id'][i] == sbs)
+                if len(sb) > 0:
+                    symbol = '*'
+                    symsz = 140
+                    symc = 'orange'
+                ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+                ax2.scatter(allv['RV_TEFF'][gd][0]/1000, vcat['rv_teff'][i]/1000, marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+                ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_logg'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+                ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
 
         fig.subplots_adjust(left=0.08,right=0.98,bottom=0.055,top=0.96,hspace=0.2,wspace=0.2)
