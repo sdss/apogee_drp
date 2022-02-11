@@ -24,6 +24,7 @@ from holtztools import struct
 import numpy as np
 from astropy.table import Table,Column
 import logging
+import traceback
 
 from apogee_drp.apred import rv
 from apogee_drp.utils import bitmask,apload
@@ -88,13 +89,18 @@ if __name__ == '__main__' :
                               plot=args.plot,logger=logger,mjd=mjd)
             except:
                 logger.exception('Error running Doppler on '+star)
-    
+                traceback.print_exc()    
+
     # Single star
     else:
         # Run doppler_rv_star() for this star
-        rv.doppler_rv(star,apred,telescope,clobber=args.clobber,tweak=args.tweak,
-                      nres=args.nres,windows=args.windows,verbose=args.verbose,
-                      plot=args.plot,logger=logger,mjd=mjd)
+        try:
+            rv.doppler_rv(star,apred,telescope,clobber=args.clobber,tweak=args.tweak,
+                          nres=args.nres,windows=args.windows,verbose=args.verbose,
+                          plot=args.plot,logger=logger,mjd=mjd)
+        except:
+            logger.exception('Error running Doppler on '+star)
+            traceback.print_exc()
 
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
