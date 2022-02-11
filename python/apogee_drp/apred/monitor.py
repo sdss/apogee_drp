@@ -784,11 +784,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
         ax1.set_ylabel(r'DR17 $-$ FPS')
         ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
-        ax2.set_ylabel(r'DR17 $-$ FPS')
         ax3.set_xlabel(r'DR17 RV log$\,g$')
         ax3.set_ylabel(r'DR17 $-$ FPS')
         ax4.set_xlabel(r'DR17 RV [Fe/H]')
-        ax4.set_ylabel(r'DR17 $-$ FPS')
         ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
         #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
         ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
@@ -850,7 +848,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #        ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
 
-        fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.96,hspace=0.2,wspace=0.2)
+        fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.96,hspace=0.2,wspace=0.1)
         plt.savefig(plotfile)
         plt.close('all')
 
