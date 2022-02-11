@@ -76,7 +76,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
     quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
-    return allsci
 
     if makesumfiles is True:
         ###########################################################################################
@@ -2527,6 +2526,7 @@ def getExpStruct(data=None):
 
 ''' GETSCISTRUCT: put SDSS-IV and SDSS-V apPlateSum files in structure '''
 def getSciStruct(data=None):
+    cols = data.columns.names
 
     dt = np.dtype([('TELESCOPE', np.str, 6),
                    ('PLATE',     np.int32),
@@ -2560,13 +2560,11 @@ def getSciStruct(data=None):
 
     outstr = np.zeros(len(data['PLATE']), dtype=dt)
 
-    return data
-    pdb.set_trace()
     outstr['TELESCOPE'] = data['TELESCOPE']
     outstr['PLATE'] =     data['PLATE']
     outstr['NREADS'] =    data['NREADS']
     outstr['DATEOBS'] =   data['DATEOBS']
-    outstr['EXPTIME'] =   data['EXPTIME']
+    if 'EXPTIME' in cols: outstr['EXPTIME'] =   data['EXPTIME']
     outstr['SECZ'] =      data['SECZ']
     outstr['HA'] =        data['HA']
     outstr['DESIGN_HA'] = data['DESIGN_HA']
