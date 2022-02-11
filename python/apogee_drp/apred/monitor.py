@@ -80,6 +80,40 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makesumfiles is True:
         ###########################################################################################
+        # MAKE MASTER apPlateSum FILE
+        # Get zeropoint info from apPlateSum files
+        # Append together the individual apPlateSum files
+
+        files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
+        if len(files) < 1:
+            print("----> monitor: No apPlateSum files!")
+        else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Sci.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+            outstr = getSciStruct(allsci)
+
+            files.sort()
+            files = np.array(files)
+            nfiles=len(files)
+
+            # Loop over SDSS-V files and add them to output structure
+            for i in range(nfiles):
+                data = fits.open(files[i])[1].data
+                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
+                if len(check) > 0:
+                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getSciStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
+
+            Table(outstr).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
+
+        ###########################################################################################
         # MAKE MASTER QACAL FILE
         # Append together the individual QAcal files
 
@@ -177,40 +211,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 else:
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                     newstr = getExpStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
-
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
-
-        ###########################################################################################
-        # MAKE MASTER apPlateSum FILE
-        # Get zeropoint info from apPlateSum files
-        # Append together the individual apPlateSum files
-
-        files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
-        if len(files) < 1:
-            print("----> monitor: No apPlateSum files!")
-        else:
-            outfile = specdir5 + 'monitor/' + instrument + 'Sci.fits'
-            print("----> monitor: Making " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            outstr = getSciStruct(allsci)
-
-            files.sort()
-            files = np.array(files)
-            nfiles=len(files)
-
-            # Loop over SDSS-V files and add them to output structure
-            for i in range(nfiles):
-                data = fits.open(files[i])[1].data
-                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
-                if len(check) > 0:
-                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
-                    continue
-                else:
-                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                    newstr = getSciStruct(data)
                     outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
@@ -2560,6 +2560,7 @@ def getSciStruct(data=None):
 
     outstr = np.zeros(len(data['PLATE']), dtype=dt)
 
+    return data
     pdb.set_trace()
     outstr['TELESCOPE'] = data['TELESCOPE']
     outstr['PLATE'] =     data['PLATE']
