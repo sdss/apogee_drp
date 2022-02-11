@@ -783,7 +783,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             exptimes = d1['exptime']
             nexp = len(exptimes)
             for iexp in range(nexp):
-                sn2perMinute = d2['sn'][:, iexp, ichip]**2 / exptimes[iexp] / 60
+                sn2perMinute = d2['sn'][:, iexp, 1]**2 / exptimes[iexp] / 60
                 ax.scatter(d2['hmag'], sn2perMinute, marker='o', s=80, color='cyan', edgecolors='k')
 
         fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.955,hspace=0.08,wspace=0.00)
