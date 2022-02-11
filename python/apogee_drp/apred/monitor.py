@@ -824,6 +824,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         teff17 = teff17[gd]
         logg17 = logg17[gd]
         feh17 = feh17[gd]
+        vcat = vcat[gd]
 
         symbol = 'o'
         symsz = 70
