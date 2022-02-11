@@ -1038,6 +1038,7 @@ def dbingest(startab,starvisits):
         starvisits['star_pk'] = starout['pk'][0]
         # Remove some unnecessary columns (duplicates what's in visit table)
         delcols = ['target_id','objtype','survey', 'field', 'programname', 'alt_id', 'location_id', 'glon','glat',
+                   'assigned','on_target','valid',
                    'jmag','jerr', 'herr', 'kmag', 'kerr', 'src_h','pmra', 'pmdec', 'pm_src','apogee_target1',
                    'apogee_target2', 'apogee_target3', 'apogee_target4','gaiadr2_sourceid',
                    'gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error','gaiadr2_pmdec',
