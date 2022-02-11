@@ -744,6 +744,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     if makecomplots is True:
         ###########################################################################################
         # snrFPS.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snrFPS.png'
+        print("----> monitor: Making " + os.path.basename(plotfile))
+
         fields = np.array(['18956', '19106', '16092', '20914', '20916', '20918'])
         plates = np.array(['1917', '2573', '2649', '3211', '3213', '3216'])
         mjds = np.array(['59595', '59601', '59602', '59619', '59619', '59619'])
