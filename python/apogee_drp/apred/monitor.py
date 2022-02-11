@@ -774,7 +774,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax4 = plt.subplot2grid((2,2), (1,1))
         axes = [ax1,ax2,ax3,ax4]
         ax1.set_xlim(-140, 140)
-        ax1.set_ylim(-140, 140)
+        ax1.set_ylim(-10, 10)
         ax2.set_xlim(3.0, 9.5)
         #ax2.set_ylim(3.0, 9.5)
         ax3.set_xlim(0.5, 5.5)
