@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser.add_argument('apred', type=str, nargs=1, help='APOGEE Reduction version')
     parser.add_argument('--mjd', type=str, nargs=1, help='MJD list/range')
     parser.add_argument('--steps', type=str, nargs=1, help='Processing steps')    
-    parser.add_argument('--qos', type=str, nargs=1, help='Which SDSS queue to use.')
+    parser.add_argument('--nodes', type=str, nargs=1, help='How many nodes to use')
     parser.add_argument('--fresh', action='store_true', help='Start fresh.')
     parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
     args = parser.parse_args()
@@ -37,10 +37,11 @@ if __name__ == "__main__":
         steps= args.steps[0]
     else:
         steps = None
-    if isinstance(args.qos,list):
-        qos = args.qos[0]
+    if isinstance(args.nodes,list):
+        nodes = args.nodes[0]
     else:
-        qos = 'sdss'
+        nodes = None
 
     # Run data reduction
-    apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,qos=args.qos,fresh=args.fresh,clobber=args.clobber)
+    apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,qos=args.qos,
+                  nodes=nodes,fresh=args.fresh,clobber=args.clobber)
