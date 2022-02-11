@@ -748,7 +748,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         print("----> monitor: Making " + os.path.basename(plotfile))
 
         ssdir = specdir5 + 'visit/apo25m/'
-        fields = np.array(['18956', '19106', '16092', '20914', '20916', '20918'])
+        fields = np.array(['18956', '19106', '19092', '20914', '20916', '20918'])
         plates = np.array(['1917', '2573', '2649', '3211', '3213', '3216'])
         mjds = np.array(['59595', '59601', '59602', '59619', '59619', '59619'])
         nfps = len(mjds)
