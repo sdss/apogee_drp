@@ -753,7 +753,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         fields = np.array(['18956', '19106', '19092'])
         plates = np.array(['1917', '2573', '2649'])
         mjds = np.array(['59595', '59601', '59602'])
-        ind = 1
+        ind = 0
 
         sbs = np.array(['2M08182323+4616076', '2M08174272+4648176', '2M08121440+4634381', '2M08195933+4749123'])
 
