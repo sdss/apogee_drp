@@ -778,7 +778,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax.set_ylabel(r'S/N$^{2}$ per minute')
         #ax.axes.xaxis.set_ticklabels([])
 
-        for icomp in range(ncomp):
+        for icomp in range(2):
             d1 = fits.open(compsumfiles[icomp])[1].data
             d2 = fits.open(compsumfiles[icomp])[2].data
             sci, = np.where(d2['objtype'] != 'SKY')
