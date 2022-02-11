@@ -753,9 +753,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,14))
 
             gd, = np.where(allsci['EXPTIME'] > 0)
-            pdb.set_trace()
-            gdcal = allcal[qrtz]
-            caljd = gdcal['JD'] - 2.4e6
+            gdcal = allsci[gd]
+            caljd = gdcal['MJD']# - 2.4e6
 
             for ichip in range(nchips):
                 chip = chips[ichip]
@@ -769,8 +768,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Median Flux')
+                if ichip == nchips-1: ax.set_xlabel(r'MJD')
+                ax.set_ylabel(r'S/N per minute')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
 
@@ -778,16 +777,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                for ifib in range(nplotfibs):
-                    yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
+                yvals = gdcal['SN'][:, ichip]  / gdcal['EXPTIME'] / 60
+                ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
+                #if ichip == 0: 
+                #    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                #              fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
