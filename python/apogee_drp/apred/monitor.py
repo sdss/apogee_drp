@@ -68,6 +68,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
     #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
+    allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
+    allsci4 =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+
     # Read in the master summary files
     allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
@@ -77,8 +80,41 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
 
-
     if makesumfiles is True:
+        ###########################################################################################
+        # MAKE MASTER apPlateSum FILE
+        # Get zeropoint info from apPlateSum files
+        # Append together the individual apPlateSum files
+
+        files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
+        if len(files) < 1:
+            print("----> monitor: No apPlateSum files!")
+        else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Sci.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+            outstr = getSciStruct(allsci)
+
+            files.sort()
+            files = np.array(files)
+            nfiles=len(files)
+
+            # Loop over SDSS-V files and add them to output structure
+            for i in range(nfiles):
+                data = fits.open(files[i])[1].data
+                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
+                if len(check) > 0:
+                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getSciStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
+
+            Table(outstr).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
+
         ###########################################################################################
         # MAKE MASTER QACAL FILE
         # Append together the individual QAcal files
@@ -177,40 +213,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 else:
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                     newstr = getExpStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
-
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
-
-        ###########################################################################################
-        # MAKE MASTER apPlateSum FILE
-        # Get zeropoint info from apPlateSum files
-        # Append together the individual apPlateSum files
-
-        files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
-        if len(files) < 1:
-            print("----> monitor: No apPlateSum files!")
-        else:
-            outfile = specdir5 + 'monitor/' + instrument + 'Sci.fits'
-            print("----> monitor: Making " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            outstr = getSciStruct(allsci)
-
-            files.sort()
-            files = np.array(files)
-            nfiles=len(files)
-
-            # Loop over SDSS-V files and add them to output structure
-            for i in range(nfiles):
-                data = fits.open(files[i])[1].data
-                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
-                if len(check) > 0:
-                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
-                    continue
-                else:
-                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                    newstr = getSciStruct(data)
                     outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
@@ -743,54 +745,110 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
-        # snrFPS.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/snrFPS.png'
+        # rvparams1.png
+        # Plot of residuals of stellar parameters, plate vs. FPS
+        allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allStarLite-dr17-synspec.fits'
+        allv = fits.getdata(allvpath)
+
+        fields = np.array(['18956', '19106', '19092'])
+        plates = np.array(['1917', '2573', '2649'])
+        mjds = np.array(['59595', '59601', '59602'])
+        ind = 0
+
+        sbs = np.array(['2M08182323+4616076', '2M08174272+4648176', '2M08121440+4634381', '2M08195933+4749123'])
+
+        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1-' + fields[ind] + '-' + plates[ind] + '-' + mjds[ind] + '.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
 
-        fields = np.array(['18956', '19106', '16092', '20914', '20916', '20918'])
-        plates = np.array(['1917', '2573', '2649', '3211', '3213', '3216'])
-        mjds = np.array(['59595', '59601', '59602', '59619', '59619', '59619'])
-        compfield = 'RM_XMM-LSS'
-        compplate = '15002'
-        compdir = specdir5 + 'visit/apo25m/' + compfield + '/' + compplate + '/'
-        compsumfiles = glob.glob(compdir + '59*/apPlateSum-*fits')
-        compsumfiles.sort()
-        compsumfiles = np.array(compsumfiles)
-        ncomp = len(compsumfiles)
+        # DB query for this visit
+        db = apogeedb.DBSession()
+        vcat = db.query('visit_latest', where="plate='" + plates[ind] + "' and mjd='" + mjds[ind] + "'", fmt='table')
+        gd, = np.where(vcat['snr'] > 20)
+        vcat = vcat[gd]
+        nv = len(vcat)
 
-        xarr = np.arange(0, 300, 1) + 1
+        fig = plt.figure(figsize=(22,18))
+        ax1 = plt.subplot2grid((2,2), (0,0))
+        ax2 = plt.subplot2grid((2,2), (0,1))
+        ax3 = plt.subplot2grid((2,2), (1,0))
+        ax4 = plt.subplot2grid((2,2), (1,1))
+        axes = [ax1,ax2,ax3,ax4]
+        ax1.set_xlim(-140, 140)
+        ax1.set_ylim(-10, 10)
+        ax2.set_xlim(3.0, 8.5)
+        ax2.set_ylim(-0.5, 0.5)
+        ax3.set_xlim(0.5, 5.5)
+        ax3.set_ylim(-0.5, 0.5)
+        ax4.set_xlim(-2.5, 1.0)
+        ax4.set_ylim(-0.5, 0.5)
+        ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
+        ax1.set_ylabel(r'DR17 $-$ FPS')
+        ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
+        ax3.set_xlabel(r'DR17 RV log$\,g$')
+        ax3.set_ylabel(r'DR17 $-$ FPS')
+        ax4.set_xlabel(r'DR17 RV [Fe/H]')
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
+        #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
+        ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
+        #ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
+        tmp = 'field: ' + fields[ind] + '    plate: ' + plates[ind] + '    mjd: ' + mjds[ind]
+        ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
+        for ax in axes:
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.axhline(y=0, linestyle='dashed', color='k', zorder=1)
+            #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
 
-        fig = plt.figure(figsize=(30,16))
+        vh17 = np.zeros(nv)
+        teff17 = np.zeros(nv)
+        logg17 = np.zeros(nv)
+        feh17 = np.zeros(nv)
+        for i in range(nv):
+            gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
+            if len(gd) > 0:
+                vh17[i] = allv['VHELIO_AVG'][gd][0]
+                teff17[i] = allv['RV_TEFF'][gd][0]
+                logg17[i] = allv['RV_LOGG'][gd][0]
+                feh17[i] = allv['RV_FEH'][gd][0]
 
-        ax = plt.subplot2grid((1,1), (0,0))
-        ax.set_xlim(6,14)
-        #ax.set_ylim(-1.1, 1.1)
-        ax.minorticks_on()
-        ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
-        ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.5))
-        #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax.tick_params(axis='both',which='major',length=axmajlen)
-        ax.tick_params(axis='both',which='minor',length=axminlen)
-        ax.tick_params(axis='both',which='both',width=axwidth)
-        ax.set_xlabel(r'H mag')
-        ax.set_ylabel(r'S/N$^{2}$ per minute')
-        #ax.axes.xaxis.set_ticklabels([])
+        gd, = np.where(teff17 > 0)
+        vh17 = vh17[gd]
+        teff17 = teff17[gd]
+        logg17 = logg17[gd]
+        feh17 = feh17[gd]
+        vcat = vcat[gd]
 
-        for icomp in range(ncomp):
-            d1 = fits.open(compsumfiles[icomp])[1].data
-            d2 = fits.open(compsumfiles[icomp])[2].data
-            sci, = np.where(d2['objtype'] != 'SKY')
-            d2 = d2[sci]
-            exptimes = d1['exptime']
-            nexp = len(exptimes)
-            for iexp in range(nexp):
-                sn2perMinute = d2['sn'][:, iexp, 1]**2 / exptimes[iexp] / 60
-                #ax.scatter(d2['hmag'], sn2perMinute, marker='o', s=80, color='cyan', edgecolors='k')
-                ax.plot(d2['hmag'], sn2perMinute)#, marker='o', s=80, color='cyan', edgecolors='k')
+        symbol = 'o'
+        symsz = 70
 
-        fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.955,hspace=0.08,wspace=0.00)
+        ax1.scatter(vh17, vh17-vcat['vheliobary'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax2.scatter(teff17/1000, teff17/1000-vcat['rv_teff']/1000, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax3.scatter(logg17, logg17-vcat['rv_logg'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax4.scatter(feh17, feh17-vcat['rv_feh'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        #for i in range(nv):
+        #    gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
+        #    if len(gd) > 0:
+        #        dif = allv['VHELIO_AVG'][gd][0] - vcat['vheliobary'][i]
+        #        if np.absolute(dif) > 5: print(vcat['apogee_id'][i] + str("%.3f" % round(dif, 3)).rjust(10))
+        #        symbol = 'o'
+        #        symsz = 70
+        #        symc = 'cyan'
+        #        sb, = np.where(vcat['apogee_id'][i] == sbs)
+        #        if len(sb) > 0:
+        #            symbol = '*'
+        #            symsz = 140
+        #            symc = 'orange'
+        #        ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        #        ax2.scatter(allv['RV_TEFF'][gd][0]/1000, vcat['rv_teff'][i]/1000, marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        #        ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_logg'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        #        ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+
+        fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.96,hspace=0.2,wspace=0.1)
         plt.savefig(plotfile)
         plt.close('all')
 
@@ -802,10 +860,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allStarLite-dr17-synspec.fits'
         allv = fits.getdata(allvpath)
 
-        fields = np.array(['18956', '19106', '16092'])
+        fields = np.array(['18956', '19106', '19092'])
         plates = np.array(['1917', '2573', '2649'])
         mjds = np.array(['59595', '59601', '59602'])
-        ind = 1
+        ind = 2
+
+        sbs = np.array(['2M08182323+4616076', '2M08174272+4648176', '2M08121440+4634381', '2M08195933+4749123'])
 
         plotfile = specdir5 + 'monitor/' + instrument + '/rvparams-' + fields[ind] + '-' + plates[ind] + '-' + mjds[ind] + '.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
@@ -814,9 +874,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         db = apogeedb.DBSession()
         vcat = db.query('visit_latest', where="plate='" + plates[ind] + "' and mjd='" + mjds[ind] + "'", fmt='table')
         gd, = np.where(vcat['snr'] > 20)
-        vcat = vcat[gd]; nv = len(vcat)
+        vcat = vcat[gd]
+        nv = len(vcat)
 
-        fig = plt.figure(figsize=(20,18))
+        fig = plt.figure(figsize=(22,18))
         ax1 = plt.subplot2grid((2,2), (0,0))
         ax2 = plt.subplot2grid((2,2), (0,1))
         ax3 = plt.subplot2grid((2,2), (1,0))
@@ -856,16 +917,175 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='both',width=axwidth)
             #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
 
+        vh17 = np.zeros(nv)
+        teff17 = np.zeros(nv)
+        logg17 = np.zeros(nv)
+        feh17 = np.zeros(nv)
         for i in range(nv):
             gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
             if len(gd) > 0:
-                ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75, zorder=10)
-                ax2.scatter(allv['RV_TEFF'][gd][0]/1000, vcat['rv_teff'][i]/1000, marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75, zorder=10)
-                ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_logg'][i], marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75, zorder=10)
-                ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker='o', c='cyan', s=70, edgecolors='k', alpha=0.75, zorder=10)
+                vh17[i] = allv['VHELIO_AVG'][gd][0]
+                teff17[i] = allv['RV_TEFF'][gd][0]
+                logg17[i] = allv['RV_LOGG'][gd][0]
+                feh17[i] = allv['RV_FEH'][gd][0]
+
+        gd, = np.where(teff17 > 0)
+        vh17 = vh17[gd]
+        teff17 = teff17[gd]
+        logg17 = logg17[gd]
+        feh17 = feh17[gd]
+        vcat = vcat[gd]
+
+        symbol = 'o'
+        symsz = 70
+
+        ax1.scatter(vh17, vcat['vheliobary'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax2.scatter(teff17/1000, vcat['rv_teff']/1000, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax3.scatter(logg17, vcat['rv_logg'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax4.scatter(feh17, vcat['rv_feh'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        #for i in range(nv):
+        #    gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
+        #    if len(gd) > 0:
+        #        dif = allv['VHELIO_AVG'][gd][0] - vcat['vheliobary'][i]
+        #        if np.absolute(dif) > 5: print(vcat['apogee_id'][i] + str("%.3f" % round(dif, 3)).rjust(10))
+        #        symbol = 'o'
+        #        symsz = 70
+        #        symc = 'cyan'
+        #        sb, = np.where(vcat['apogee_id'][i] == sbs)
+        #        if len(sb) > 0:
+        #            symbol = '*'
+        #            symsz = 140
+        #            symc = 'orange'
+        #        ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        #        ax2.scatter(allv['RV_TEFF'][gd][0]/1000, vcat['rv_teff'][i]/1000, marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        #        ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_logg'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        #        ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
 
-        fig.subplots_adjust(left=0.08,right=0.98,bottom=0.055,top=0.96,hspace=0.2,wspace=0.2)
+        fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.96,hspace=0.2,wspace=0.2)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+        return
+
+        ###########################################################################################
+        # snhistory.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+
+            gd, = np.where(allsci['EXPTIME'] > 0)
+            gdcal = allsci[gd]
+            caljd = gdcal['MJD']# - 2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                #ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'MJD')
+                ax.set_ylabel(r'S/N per minute')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
+
+                #for iyear in range(nyears):
+                #    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                #    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                yvals = (gdcal['SN'][:, ichip]**2)  / gdcal['EXPTIME'] / 60
+                ax.scatter(caljd, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                #if ichip == 0: 
+                #    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                #              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        return
+
+        ###########################################################################################
+        # snrFPS.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snrFPS.png'
+        print("----> monitor: Making " + os.path.basename(plotfile))
+
+        ssdir = specdir5 + 'visit/apo25m/'
+        fields = np.array(['18956', '19106', '19092', '20914', '20916', '20918'])
+        plates = np.array(['1917', '2573', '2649', '3211', '3213', '3216'])
+        mjds = np.array(['59595', '59601', '59602', '59619', '59619', '59619'])
+        nfps = len(mjds)
+        compfield = 'RM_XMM-LSS'
+        compplate = '15002'
+        compdir = ssdir + compfield + '/' + compplate + '/'
+        compsumfiles = glob.glob(compdir + '59*/apPlateSum-*fits')
+        compsumfiles.sort()
+        compsumfiles = np.array(compsumfiles)
+        ncomp = len(compsumfiles)
+
+        xarr = np.arange(0, 300, 1) + 1
+
+        fig = plt.figure(figsize=(30,16))
+
+        ax = plt.subplot2grid((1,1), (0,0))
+        ax.set_xlim(6,14)
+        #ax.set_ylim(-1.1, 1.1)
+        ax.minorticks_on()
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.5))
+        #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        ax.set_xlabel(r'H mag')
+        ax.set_ylabel(r'S/N$^{2}$ per minute')
+        #ax.axes.xaxis.set_ticklabels([])
+
+        for icomp in range(ncomp):
+            d1 = fits.open(compsumfiles[icomp])[1].data
+            d2 = fits.open(compsumfiles[icomp])[2].data
+            sci, = np.where(d2['objtype'] != 'SKY')
+            d2 = d2[sci]
+            exptimes = d1['exptime']
+            nexp = len(exptimes)
+            for iexp in range(nexp):
+                sn2perMinute = d2['sn'][:, iexp, 1]**2 / exptimes[iexp] / 60
+                sn2perMinute = d2['sn'][:, iexp, 1] / exptimes[iexp] / 60# / 60
+                #ax.scatter(d2['hmag'], sn2perMinute, marker='o', s=80, color='cyan', edgecolors='k')
+                ax.semilogy(d2['hmag'], sn2perMinute, marker='o', ms=9, mec='k', alpha=0.7, mfc='dodgerblue', linestyle='')
+                #ax.plot(d2['hmag'], sn2perMinute)#, marker='o', s=80, color='cyan', edgecolors='k')
+
+        for ifps in range(nfps):
+            dfile = ssdir + fields[ifps] + '/' + plates[ifps] + '/' + mjds[ifps] + '/apPlateSum-' + plates[ifps] + '-' + mjds[ifps] + '.fits'
+            d1 = fits.open(dfile)[1].data
+            d2 = fits.open(dfile)[2].data
+            sci, = np.where(d2['objtype'] != 'SKY')
+            d2 = d2[sci]
+            exptimes = d1['exptime']
+            nexp = len(exptimes)
+            for iexp in range(nexp):
+                sn2perMinute = d2['sn'][:, iexp, 1]**2 / exptimes[iexp] / 60
+                sn2perMinute = d2['sn'][:, iexp, 1] / exptimes[iexp] / 60# / 60
+                #ax.scatter(d2['hmag'], sn2perMinute, marker='o', s=80, color='cyan', edgecolors='k')
+                ax.semilogy(d2['hmag'], sn2perMinute, marker='o', ms=9, mec='k', alpha=0.7, mfc='r', linestyle='')
+                #ax.plot(d2['hmag'], sn2perMinute)#, marker='o', s=80, color='cyan', edgecolors='k')
+
+
+        fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.955,hspace=0.08,wspace=0.00)
         plt.savefig(plotfile)
         plt.close('all')
 
@@ -2507,12 +2727,13 @@ def getExpStruct(data=None):
 
 ''' GETSCISTRUCT: put SDSS-IV and SDSS-V apPlateSum files in structure '''
 def getSciStruct(data=None):
+    cols = data.columns.names
 
     dt = np.dtype([('TELESCOPE', np.str, 6),
                    ('PLATE',     np.int32),
                    ('NREADS',    np.int32),
                    ('DATEOBS',   np.str, 30),
-                   #('EXPTIME',   np.int32),
+                   ('EXPTIME',   np.int32),
                    ('SECZ',      np.float64),
                    ('HA',        np.float64),
                    ('DESIGN_HA', np.float64, 3),
@@ -2544,7 +2765,7 @@ def getSciStruct(data=None):
     outstr['PLATE'] =     data['PLATE']
     outstr['NREADS'] =    data['NREADS']
     outstr['DATEOBS'] =   data['DATEOBS']
-    #outstr['EXPTIME'] =   data['EXPTIME']
+    if 'EXPTIME' in cols: outstr['EXPTIME'] =   data['EXPTIME']
     outstr['SECZ'] =      data['SECZ']
     outstr['HA'] =        data['HA']
     outstr['DESIGN_HA'] = data['DESIGN_HA']
