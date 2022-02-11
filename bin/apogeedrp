@@ -43,5 +43,5 @@ if __name__ == "__main__":
         nodes = None
 
     # Run data reduction
-    apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,qos=args.qos,
+    apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,
                   nodes=nodes,fresh=args.fresh,clobber=args.clobber)
