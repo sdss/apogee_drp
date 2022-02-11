@@ -2,6 +2,7 @@
 #
 # Make APOGEE DRP master calibration products
 
+import traceback
 from argparse import ArgumentParser
 from .plan import apogeedrp
 
@@ -14,4 +15,7 @@ if __name__ == "__main__":
     parser.add_argument('--links', type=str, nargs=1, help='Version to create cal symlinks to')
     args = parser.parse_args()
 
-    apogeedrp.mkmastercals(args.vers,args.telescope,clobber=args.clobber,links=args.links)
+    try:
+        apogeedrp.mkmastercals(args.vers,args.telescope,clobber=args.clobber,links=args.links)
+    except:
+        traceback.print_exc()

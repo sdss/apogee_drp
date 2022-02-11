@@ -18,6 +18,7 @@ import os
 import sys
 import subprocess
 import pdb
+import traceback
 
 if __name__ == '__main__' :
 
@@ -101,5 +102,7 @@ if __name__ == '__main__' :
                     cmd += ','+str(key)+'=1'
 
     # Run the command
-    subprocess.call(["idl","-e",cmd])
-
+    try:
+        subprocess.call(["idl","-e",cmd])
+    except:
+        traceback.print_exc()

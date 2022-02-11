@@ -2,6 +2,7 @@
 #
 # Setup APOGEE DRP version
 
+import traceback
 from argparse import ArgumentParser
 from .plan import apogeedrp
 
@@ -17,4 +18,7 @@ if __name__ == "__main__":
     else:
         vers = args.vers
 
-    apogeedrp.mkvers(apred=args.vers,fresh=args.fresh)
+    try:
+        apogeedrp.mkvers(apred=args.vers,fresh=args.fresh)
+    except:
+        traceback.print_exc()

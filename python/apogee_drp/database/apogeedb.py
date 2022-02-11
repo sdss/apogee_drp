@@ -460,9 +460,17 @@ class DBSession(object):
             # Constraint column names input
             else:
                 constraintstr = '('+constraintname+')'
-            # There is a constraint, use on conflict do update
+            # There is a constraint, use on conflict to update
             if constraintname is not None:
                 excluded = ','.join(['"'+c+'"=excluded."'+c+'"' for c in columns])
+                # Include CREATED in the list of columns to update (if it exists in the table)
+                #  get table column names
+                cur.execute("select column_name,data_type from information_schema.columns where table_schema='"+schema+"' and table_name='"+tab+"'")
+                head = cur.fetchall()
+                tabcolnames = [h[0] for h in head]
+                if 'created' in tabcolnames:
+                    excluded += ',"created"=now()'
+                # Create the insert statement
                 insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s ON CONFLICT '+constraintstr+\
                                ' DO UPDATE SET '+excluded
             else: # no constraint
