@@ -773,9 +773,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
 
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                #for iyear in range(nyears):
+                #    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                #    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 yvals = gdcal['SN'][:, ichip]  / gdcal['EXPTIME'] / 60
                 ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
