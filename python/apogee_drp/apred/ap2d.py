@@ -3,6 +3,10 @@
 import os
 import time
 import numpy as np
+from ..utils import plan,apload,platedata
+from . import psf
+from dlnpyutils import utils as dln
+import subprocess
 
 def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=False,
              fluxcalfile=None,responsefile=None,wavefile=None,skywave=False,
@@ -119,8 +123,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
     #if len(savedepsfiles) == 0 : initialize if needed 
     #    savedepsffiles=[' ',' ',' ']  # initialize if needed 
  
-    if len(epsfchip) == 0: 
-        epsfchip=0 
+    #if len(epsfchip) == 0: 
+    #    epsfchip = 0 
 
     if np.array(inpfile).size==1:
         inpfile = [inpfile]
@@ -973,8 +977,10 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
  
     t0 = time.time() 
  
-    nplanfiles = len(planfiles) 
- 
+    nplanfiles = np.array(planfiles).size
+    if nplanfiles==1 and type(planfiles) is not list:
+        planfiles = [planfiles]
+
     print('' )
     print('Running AP2D')
     print('')
@@ -991,33 +997,28 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         planfile = planfiles[i] 
         print('' )
         print('=====================================================================')
-        print(str(i+1,2)+'/'+str(nplanfiles)+'  processing plan file '+planfile)
+        print(str(i+1)+'/'+str(nplanfiles)+'  processing plan file '+planfile)
         print('=====================================================================')
  
         # load the plan file load the plan file 
         #---------------------------------------- 
         print('')
         print('plan file information:')
-        planstr = aploadplan(planfile,verbose=True)
+        planstr = plan.load(planfile,np=True)
         if planstr is None:
             continue
  
-        logfile = apogee_filename('diag',plate=planstr['plateid'],mjd=planstr['mjd']) 
- 
-        # add psfid tag to planstr apexp structure add psfid tag to planstr apexp structure 
-        if 'psfid' in planstr['apexp'].keys() == False:
-            apexp = planstr['apexp']
-            add_tag,apexp,'psfid',0,apexp 
-            old = planstr 
-            oldtags = tag_names(old) 
-            planstr = create_struct(oldtags[0],old[0]) 
-            for j in np.arange(1,len(oldtags)): 
-                if oldtags[j] == 'apexp': 
-                    planstr = create_struct(planstr,'apexp',apexp) 
-                else: 
-                    planstr = create_struct(planstr,oldtags[j],old[j]) 
-            old,oldtags = None,None
-  
+        load = apload.ApLoad(apred=planstr['apogee_drp_ver'],telescope=planstr['telescope'])
+        logfile = load.filename('Diag',plate=planstr['plateid'],mjd=planstr['mjd'])
+
+
+
+
+        # Add PSFID tag to planstr APEXP structure
+        if 'psfid' not in planstr['APEXP'].dtype.names:
+            apexp = planstr['APEXP']
+            apexp = dln.addcatcols(apexp,np.dtype([('psfid',int)]))
+            planstr['APEXP'] = apexp
  
         # Use dmeflat library
         #--------------------
@@ -1037,7 +1038,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 observatory = 'apo' 
             else: 
                 observatory = 'lco' 
-            if str(domelibrary) == 'single' or str(plandomelibrary) == 'single' or len(planstr['apexp']) <= 3: 
+            if str(domelibrary) == 'single' or str(plandomelibrary) == 'single' or len(planstr['APEXP']) <= 3: 
                 out = subprocess.run(['domeflattrace',observatory,'--planfile',planfile,'--s'],shell=False)
             else: 
                 out = subprocess.run(['domeflattrace',observatory,'--planfile',planfile],shell=False)
@@ -1056,13 +1057,14 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             domeflatims = outarr[1,:]
             # update planstr
             ind1,ind2,vals = np.intersect1d(apexp['name'],ims)
-            planstr['apexp']['psfid'][ind1] = domeflatims[ind2] 
+            planstr['APEXP']['psfid'][ind1] = domeflatims[ind2] 
         else: 
-            planstr['apexp']['psfid'] = planstr['psfid']
+            planstr['APEXP']['psfid'] = planstr['psfid']
  
-        # Don't extract dark frames:n't extract dark frames
+        # Don't extract dark frames
         if 'platetype' in planstr.keys():
-            if planstr.platetype == 'dark' or planstr.platetype == 'intflat' :
+            if planstr['platetype'] == 'dark' or planstr['platetype'] == 'intflat' :
+                print('Not extracting Dark or internalflat frames')
                 continue
  
         # Try to make the required calibration files (if not already made)
@@ -1071,18 +1073,22 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
  
         # apPSF files
         if planstr['sparseid'] != 0 : 
-            makecal,sparse=planstr['sparseid']
+            sout = subprocess.run(['makecal','--sparse',str(planstr['sparseid'])],shell=False)
         if planstr['fiberid'] != 0 : 
-            makecal,fiber=planstr['fiberid']
+            sout = subprocess.run(['makecal','--fiber',str(planstr['fiberid'])],shell=False)
         if 'psfid' in planstr.keys():
-            makecal,psf=planstr['psfid'],clobber=calclobber 
-            tracefiles = apogee_filename('psf',num=planstr['psfid'],chip=chiptag) 
+            cmd = ['makecal','--psf',str(planstr['psfid'])]
+            if calclobber:
+                cmd += ['--clobber']
+            sout = subprocess.run(cmd,shell=False)
+            tracefiles = load.filename('PSF',num=planstr['psfid'],chips=True)
+            tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
             tracefile = os.path.dirname(tracefiles[0])+'/%8d' % planstr['psfid']
-            tracetest = os.path.exists(tracefiles) 
-            if min(tracetest) == 0: 
-                bd1, = np.where(tracetest == 0) 
+            tracetest = [os.path.exists(t) for t in tracefiles]
+            if np.sum(tracetest) != 3:
+                bd1, = np.where(np.array(tracetest)==False)
                 nbd1 = len(bd1)
-                if nbd1 > 0: 
+                if nbd1>0: 
                     print('halt: ',tracefiles[bd1],' not found')
                     import pdb; pdb.set_trace()
                 for ichip in range(2+1): 
@@ -1095,9 +1101,9 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         if 'platetype' in planstr.keys():
             if planstr['platetype'] == 'cal' or planstr['platetype'] == 'extra': 
                 waveid = 0 
-        if waveid > 0 : 
-            makecal,multiwave=waveid 
- 
+        if waveid > 0: 
+            sout = subprocess.run(['makecal','--multiwave',str(waveid)],shell=False)
+
         # FPI calibration file fpi calibration file 
         if 'fpi' in planstr.keys():
             fpiid = planstr['fpi']
@@ -1106,15 +1112,20 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
  
         # apFlux files : since individual frames are usually made per plate
         if planstr['fluxid'] != 0: 
-            makecal,flux=planstr.fluxid,psf=planstr.psfid,clobber=calclobber 
-            fluxfiles = apogee_filename('flux',chip=chiptag,num=planstr['fluxid']) 
+            #makecal,flux=planstr.fluxid,psf=planstr.psfid,clobber=calclobber 
+            cmd = ['makecal','--flux',str(planstr['fluxid']),'--psf',str(planstr['psfid'])]
+            if calclobber:
+                cmd += ['--clobber']
+            sout = subprocess.run(cmd,shell=False)
+            fluxfiles = load.filename('Flux',num=planstr['fluxid'],chips=True)
+            fluxfiles = [fluxfiles.replace('Flux-','Flux-'+ch+'-') for ch in chiptag]
             fluxfile = os.path.dirname(fluxfiles[0])+'/%8d' % planstr['fluxid']
-            fluxtest = os.path.exists(fluxfiles) 
-            if min(fluxtest) == 0: 
-                bd1 , = np.where(fluxtest == 0) 
+            fluxtest = [os.path.exists(f) for f in fluxfiles]
+            if np.sum(fluxtest) != 3: 
+                bd1, = np.where(np.array(fluxtest)==False)
                 nbd1 = len(bd1)
                 if nbd1 > 0: 
-                    print('halt: ',fluxfiles[bd1],' not found')
+                    print('halt: '+str(np.array(fluxfiles)[bd1])+' not found')
                     import pdb; pdb.set_trace()
         else:
             fluxtest = 0 
@@ -1122,18 +1133,19 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         # apResponse files
         #  these aren't used anymore
         if 'responseid' not in planstr.keys():
-            add_tag,planstr,'responseid',0,planstr 
-            if planstr['responseid'] != 0: 
-                makecal,response=planstr['responseid']
-                responsefiles = apogee_filename('response',chip=chiptag,num=planstr['responseid']) 
-                responsefile = os.path.dirname(responsefiles[0])+'/%8d' % planstr['responseid']
-                responsetest = os.path.exists(responsefiles) 
-                if min(responsetest) == 0: 
-                    bd1 , = np.where(responsetest == 0) 
-                    nbd1 = len(bd1)
-                    if nbd1 > 0 : 
-                        print('halt: ',responsefiles[bd1],' not found')
-                        import pdb; pdb.set_trace()
+            planstr['responseid'] = 0
+        if planstr['responseid'] != 0: 
+            sout = subprocess.run(['makecal','--response',str(planstr['responseid'])],shell=False)
+            responsefiles = load.filename('Response',num=planstr['responseid'],chips=True) 
+            responsefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
+            responsefile = os.path.dirname(responsefiles[0])+'/%8d' % planstr['responseid']
+            responsetest = [os.path.exists(f) for f in responsefiles]
+            if np.sum(responsetest) != 3:
+                bd1 , = np.where(np.array(responsetest)==False)
+                nbd1 = len(bd1)
+                if nbd1 > 0 : 
+                    print('halt: ',responsefiles[bd1],' not found')
+                    import pdb; pdb.set_trace()
  
         # load the plug plate map file
         #-----------------------------
@@ -1155,32 +1167,32 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                     if (str(badfiberid) == 'null' or str(badfiberid).lower() == 'none'): 
                         badfiberid = None  # null/none 
                 # we only need the information on sky fibers
-                plugmap = platedata.getdata(planstr['plateid'],str(planstr['mjd']),plugid=planstr['plugmap'],
-                                            fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data,
-                                            noobject=True)
+                plugmap = platedata.getdata(planstr['plateid'],planstr['mjd'],load.apred,load.telescope,
+                                            plugid=planstr['plugmap'],fixfiberid=fixfiberid,badfiberid=badfiberid,
+                                            mapper_data=mapper_data,noobject=True)
                 if plugmap is None:
                     print('halt: error with plugmap: ',plugfile)
                     import pdb; pdb.set_trace()
                 plugmap['mjd'] = planstr['mjd']   # enter mjd from the plan file enter mjd from the plan file 
  
         # Are there enough files are there enough files 
-        nframes = len(planstr['apexp']) 
+        nframes = len(planstr['APEXP']) 
         if nframes < 1: 
             print('no frames to process')
             continue
- 
- 
+                                            
         # Process each frame
         #-------------------
         for j in range(nframes):
             # get trace files get trace files 
-            tracefiles = apogee_filename('psf',num=planstr.apexp[i].psfid,chip=chiptag) 
-            tracefile = os.path.dirname(tracefiles[0])+'/%8d' % planstr['apexp']['psfid'][i]
-            tracetest = os.path.exists(tracefiles) 
-            if min(tracetest) == 0: 
-                bd1, = np.where(tracetest == 0) 
+            tracefiles = load.filename('PSF',num=planstr['APEXP']['psfid'][i],chips=True)
+            tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
+            tracefile = os.path.dirname(tracefiles[0])+'/%8d' % planstr['APEXP']['psfid'][i]
+            tracetest = [os.path.exists(t) for t in tracefiles]
+            if np.sum(tracetest) != 3:
+                bd1, = np.where(np.array(tracetest)==False)
                 nbd1 = len(bd1)
-                if nbd1 > 0 : 
+                if nbd1 > 0: 
                     print('halt: ',tracefiles[bd1],' not found')
                     import pdb; pdb.set_trace()
                 for ichip in range(3): 
@@ -1189,17 +1201,20 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                         print( 'halt: tracefile ', tracefiles[ichip],' does not have 300 traces')
          
             # Make the filenames and check the files
-            rawfiles = apogee_filename('r',chip=chiptag,num=planstr['apexp']['name'][j]) 
-            rawinfo = apfileinfo(rawfiles)        # this returns useful info even if the files:n't exist
-            framenum = rawinfo[0].fid8       # the frame number the frame number 
-            files = apogee_filename('2d',chip=chiptag,num=framenum) 
+            rawfiles = load.filename('R',num=planstr['APEXP']['name'][j],chips=True)
+            rawfiles = [rawfiles.replace('R-','R-'+ch+'-') for ch in chiptag]
+            framenum = planstr['APEXP']['name'][j]
+            #rawinfo = apfileinfo(rawfiles)        # this returns useful info even if the files don't exist
+            #framenum = rawinfo[0].fid8       # the frame number the frame number 
+            files = load.filename('2D',num=framenum,chips=True)
+            files = [files.replace('2D-','2D-'+ch+'-') for ch in chiptag]
             inpfile = os.path.dirname(files[0])+'/'+framenum 
-            info = apfileinfo(files) 
-            okay = (info.exists and info.sp2dfmt and info.allchips and (info.mjd5 == planstr.mjd) and 
-                    ((info.naxis == 3) or (info.exten == 1))) 
-            if min(okay) < 1: 
-                bd, = np.where(okay == 0)
-                print('halt: there is a problem with files: '+' '.join(files[bd]))
+            #info = apfileinfo(files) 
+            okay = load.exists('R',num=planstr['APEXP']['name'][j]) and load.exists('2D',num=planstr['APEXP']['name'][j])
+            #okay = (info.exists and info.sp2dfmt and info.allchips and (info.mjd5 == planstr.mjd) and 
+            #        ((info.naxis == 3) or (info.exten == 1))) 
+            if okay==False:
+                print('halt: there is a problem with files: '+' '.join(files))
                 import pdb; pdb.set_trace()
  
             print('') 
@@ -1207,6 +1222,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             print(str(j+1),'/',str(nframes),'  processing frame number >>',str(framenum),'<<')
             print('-----------------------------------------')
  
+            import pdb; pdb.set_trace()
+
             # Run AP2DPROC
             if 'platetype' in plantstr.keys():
                 if planstr['platetype'] == 'cal': 
@@ -1259,20 +1276,20 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             else:  # use sky lines use sky lines 
                 if skywave==False:
                     cmd = [cmd,'--nosky']
-            subprocess.run(cmd,shell=False)
+            sout = subprocess.run(cmd,shell=False)
      
         # Compress 2d files
-        nframes = len(planstr['apexp']) 
+        nframes = len(planstr['APEXP']) 
         for j in range(nframes): 
-            files = apogee_filename('2d',num=planstr['apexp']['name'][j],chip=chiptag) 
-            modfiles = apogee_filename('2dmodel',num=planstr['apexp']['name'][j],chip=chiptag) 
+            files = apogee_filename('2d',num=planstr['APEXP']['name'][j],chip=chiptag) 
+            modfiles = apogee_filename('2dmodel',num=planstr['APEXP']['name'][j],chip=chiptag) 
             for jj in range(len(files)): 
                 if os.path.exists(files[jj]): 
                     if os.path.exists(files[jj]+'.fz'): os.remove(files[jj]+'.fz')
                     # spawn,['fpack','-d','-y',files[jj]],/noshell
                 if os.path.exists(modfiles[jj]): 
                     if os.path.exists(modfiles[jj]+'.fz'): os.remove(modfiles[jj]+'.fz')
-                subprocess.run(['fpack','-d','-y',modfiles[jj]],shell=False)
+                sout = subprocess.run(['fpack','-d','-y',modfiles[jj]],shell=False)
                               
         writelog(logfile,'ap2d: '+os.path.basename(planfile)+('%.1f' % time.time()-t0))
  
