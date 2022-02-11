@@ -65,7 +65,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #allcal =  fits.open(specdir4 + instrument + 'Cal.fits')[1].data
     #alldark = fits.open(specdir4 + instrument + 'Cal.fits')[2].data
     #allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
-    allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+    #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
     #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
     allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
@@ -75,7 +75,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
-    #allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
+    allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
     dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
     quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
@@ -94,7 +94,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
-            pdb.set_trace()
             outstr = getSciStruct(allsci)
 
             files.sort()
@@ -752,12 +751,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 44000
-            if instrument == 'apogee-s': 
-                ymax = 125000
-            ymin = 0 - ymax * 0.05
-            yspan = ymax - ymin
 
+            gd, = np.where(allsci['EXPTIME'] > 0)
+            pdb.set_trace()
             gdcal = allcal[qrtz]
             caljd = gdcal['JD'] - 2.4e6
 
@@ -2622,9 +2618,7 @@ def getSciStruct(data=None):
     outstr['PLATE'] =     data['PLATE']
     outstr['NREADS'] =    data['NREADS']
     outstr['DATEOBS'] =   data['DATEOBS']
-    if 'EXPTIME' not in cols: 
-        pdb.set_trace()
-    outstr['EXPTIME'] =   data['EXPTIME']
+    if 'EXPTIME' in cols: outstr['EXPTIME'] =   data['EXPTIME']
     outstr['SECZ'] =      data['SECZ']
     outstr['HA'] =        data['HA']
     outstr['DESIGN_HA'] = data['DESIGN_HA']
