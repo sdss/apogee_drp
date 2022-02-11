@@ -825,6 +825,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         logg17 = logg17[gd]
         feh17 = feh17[gd]
 
+        symbol = 'o'
+        symsz = 70
+
         ax1.scatter(vh17, vcat['vheliobary'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax2.scatter(teff17/1000, vcat['rv_teff']/1000, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax3.scatter(logg17, vcat['rv_logg'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
