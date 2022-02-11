@@ -777,7 +777,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                 #    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                yvals = gdcal['SN'][:, ichip]  / gdcal['EXPTIME'] / 60
+                yvals = (gdcal['SN'][:, ichip]**2)  / gdcal['EXPTIME'] / 60
                 ax.scatter(caljd, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
