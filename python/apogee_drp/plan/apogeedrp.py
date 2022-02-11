@@ -1305,6 +1305,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     del queue
 
     # Make nightly QA/summary pages
+    # we should parallelize this
     for m in mjds:
         try:
             apodir = os.environ.get('APOGEE_REDUX')+'/'
