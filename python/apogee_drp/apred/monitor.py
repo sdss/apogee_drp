@@ -745,6 +745,118 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
+        # rvparams1.png
+        # Plot of residuals of stellar parameters, plate vs. FPS
+        allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allStarLite-dr17-synspec.fits'
+        allv = fits.getdata(allvpath)
+
+        fields = np.array(['18956', '19106', '19092'])
+        plates = np.array(['1917', '2573', '2649'])
+        mjds = np.array(['59595', '59601', '59602'])
+        ind = 2
+
+        sbs = np.array(['2M08182323+4616076', '2M08174272+4648176', '2M08121440+4634381', '2M08195933+4749123'])
+
+        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1-' + fields[ind] + '-' + plates[ind] + '-' + mjds[ind] + '.png'
+        print("----> monitor: Making " + os.path.basename(plotfile))
+
+        # DB query for this visit
+        db = apogeedb.DBSession()
+        vcat = db.query('visit_latest', where="plate='" + plates[ind] + "' and mjd='" + mjds[ind] + "'", fmt='table')
+        gd, = np.where(vcat['snr'] > 20)
+        vcat = vcat[gd]
+        nv = len(vcat)
+
+        fig = plt.figure(figsize=(22,18))
+        ax1 = plt.subplot2grid((2,2), (0,0))
+        ax2 = plt.subplot2grid((2,2), (0,1))
+        ax3 = plt.subplot2grid((2,2), (1,0))
+        ax4 = plt.subplot2grid((2,2), (1,1))
+        axes = [ax1,ax2,ax3,ax4]
+        ax1.set_xlim(-140, 140)
+        ax1.set_ylim(-140, 140)
+        ax2.set_xlim(3.0, 9.5)
+        #ax2.set_ylim(3.0, 9.5)
+        ax3.set_xlim(0.5, 5.5)
+        #ax3.set_ylim(0.5, 5.5)
+        ax4.set_xlim(-2.5, 1.0)
+        #ax4.set_ylim(-2.5, 1.0)
+        ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
+        ax1.set_ylabel(r'DR17 $-$ FPS')
+        ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
+        ax2.set_ylabel(r'DR17 $-$ FPS')
+        ax3.set_xlabel(r'DR17 RV log$\,g$')
+        ax3.set_ylabel(r'DR17 $-$ FPS')
+        ax4.set_xlabel(r'DR17 RV [Fe/H]')
+        ax4.set_ylabel(r'DR17 $-$ FPS')
+        ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
+        #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
+        ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
+        #ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
+        tmp = 'field: ' + fields[ind] + '    plate: ' + plates[ind] + '    mjd: ' + mjds[ind]
+        ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
+        for ax in axes:
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.axhline(y=0, linestyle='dashed', color='k', zorder=1)
+            #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
+
+        vh17 = np.zeros(nv)
+        teff17 = np.zeros(nv)
+        logg17 = np.zeros(nv)
+        feh17 = np.zeros(nv)
+        for i in range(nv):
+            gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
+            if len(gd) > 0:
+                vh17[i] = allv['VHELIO_AVG'][gd][0]
+                teff17[i] = allv['RV_TEFF'][gd][0]
+                logg17[i] = allv['RV_LOGG'][gd][0]
+                feh17[i] = allv['RV_FEH'][gd][0]
+
+        gd, = np.where(teff17 > 0)
+        vh17 = vh17[gd]
+        teff17 = teff17[gd]
+        logg17 = logg17[gd]
+        feh17 = feh17[gd]
+        vcat = vcat[gd]
+
+        symbol = 'o'
+        symsz = 70
+
+        ax1.scatter(vh17, vh17-vcat['vheliobary'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax2.scatter(teff17/1000, teff17/1000-vcat['rv_teff']/1000, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax3.scatter(logg17, logg17-vcat['rv_logg'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax4.scatter(feh17, feh17-vcat['rv_feh'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        #for i in range(nv):
+        #    gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
+        #    if len(gd) > 0:
+        #        dif = allv['VHELIO_AVG'][gd][0] - vcat['vheliobary'][i]
+        #        if np.absolute(dif) > 5: print(vcat['apogee_id'][i] + str("%.3f" % round(dif, 3)).rjust(10))
+        #        symbol = 'o'
+        #        symsz = 70
+        #        symc = 'cyan'
+        #        sb, = np.where(vcat['apogee_id'][i] == sbs)
+        #        if len(sb) > 0:
+        #            symbol = '*'
+        #            symsz = 140
+        #            symc = 'orange'
+        #        ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        #        ax2.scatter(allv['RV_TEFF'][gd][0]/1000, vcat['rv_teff'][i]/1000, marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        #        ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_logg'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        #        ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+
+        fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.96,hspace=0.2,wspace=0.2)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+        return
+
+        ###########################################################################################
         # rvparams.png
         # Plot of stellar parameters, plate vs. FPS
         allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allStarLite-dr17-synspec.fits'
