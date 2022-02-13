@@ -783,8 +783,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                 #if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-                ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
+            snrPerMin = []
+            jd = []
             for isci in range(nsci):
                 plsum = glob.glob(specdir5 + 'visit/apo25m/*/' + str(gsci['PLATE'][isci]) + '/' + str(gsci['MJD'][isci]) + '/apPlateSum-*fits')
                 if len(plsum) < 1: continue
