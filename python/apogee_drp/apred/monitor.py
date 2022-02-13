@@ -816,7 +816,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         meansn = np.nanmean(sn)
                         sigsn = np.nanstd(sn)
                         dif = np.absolute(sn - meansn)
-                        gd, = np.where(dif < 2*sig)
+                        gd, = np.where(dif < 2*sigsn)
                         sn = sn[gd]
                         snr.append(np.nanmean(sn))
 
