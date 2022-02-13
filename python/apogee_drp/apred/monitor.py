@@ -786,21 +786,56 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                 #if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-            snrPerMin = []
+            maglims = [10.5, 11.5]
+            snr = []
             jd = []
+            secz = []
+            expt = []
+            moondist = []
+            moonphase = []
+            seeing  = []
             for isci in range(nsci):
+                print(str(isci+1) + '/' + str(nsci))
                 plsum = glob.glob(specdir5 + 'visit/apo25m/*/' + str(gsci['PLATE'][isci]) + '/' + str(gsci['MJD'][isci]) + '/apPlateSum-*fits')
                 if len(plsum) < 1: continue
                 d1 = fits.open(plsum[0])[1].data
                 d2 = fits.open(plsum[0])[2].data
-                pdb.set_trace()
-#                yvals = (gdcal['SN'][:, ichip]**2)  / gdcal['EXPTIME'] / 60
-#                ax.scatter(caljd, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+                nexp = len(d1['EXPTIME'])
+                for iexp in range(nexp):
+                    print('   ' + str(iexp))
+                    tt = Time(d1['DATEOBS'][iexp], format='fits')
+                    jd.append(tt.jd - 2.4e6)
+                    secz.append(d1['SECZ'][iexp])
+                    expt.append(d1['EXPTIME'][iexp])
+                    moondist.append(d1['MOONDIST'][iexp])
+                    moonphase.append(d1['MOONPHASE'][iexp])
+                    seeing.append(d1['SEEING'][iexp])
+                    gd, = np.where((d2['hmag'] >= maglims[0]) & (d2['hmag'] <= maglims[1]) & (d2['SN'][:,iexp,1] > 10))
+                    if len(gd) > 2:
+                        sn = d2['SN'][gd, iexp, 1]
+                        meansn = np.nanmean(sn)
+                        sigsn = np.nanstd(sn)
+                        dif = np.absolute(sn - meansn)
+                        gd, = np.where(dif < 2*sig)
+                        sn = sn[gd]
+                        snr.append(np.nanmean(sn))
 
+            snr = np.array(snr)
+            jd = np.array(jd)
+            secz = np.array(secz)
+            expt = np.array(expt)
+            moondist = np.array(moondist)
+            moonphase = np.array(moonphase)
+            seeing  = np.array(seeing)
+
+            yvals = (snr**2)  / expt / 60
+            ax.scatter(jd, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
+
+            pdb.set_trace()
 
         return
 
