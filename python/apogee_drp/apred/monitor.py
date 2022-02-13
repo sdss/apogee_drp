@@ -752,6 +752,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             gd, = np.where((allsci['SN'][:,1] > 15) & (allsci['MJD'] > 59146))
             gsci = allsci[gd]
+            gord = np.argsort(gsci['MJD'])
+            gsci = gsci[gord]
             nsci = len(gd)
 
             #fields = np.array(['18956', '19106', '19092', '19942', '19942', '19942', '18956', '19942', '20950', '20918', '18956', '18956', '18956', '20549', '20549', '20549', '20549', '20002', '20902', '20900', '17031', '20894', '19942', '19852', '19852'])
