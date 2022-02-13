@@ -804,15 +804,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 nexp = len(d1['EXPTIME'])
                 for iexp in range(nexp):
                     print('   ' + str(iexp))
-                    tt = Time(d1['DATEOBS'][iexp], format='fits')
-                    jd.append(tt.jd - 2.4e6)
-                    secz.append(d1['SECZ'][iexp])
-                    expt.append(d1['EXPTIME'][iexp])
-                    moondist.append(d1['MOONDIST'][iexp])
-                    moonphase.append(d1['MOONPHASE'][iexp])
-                    seeing.append(d1['SEEING'][iexp])
                     gd, = np.where((d2['hmag'] >= maglims[0]) & (d2['hmag'] <= maglims[1]) & (d2['SN'][:,iexp,1] > 50))
                     if len(gd) > 2:
+                        tt = Time(d1['DATEOBS'][iexp], format='fits')
+                        jd.append(tt.jd - 2.4e6)
+                        secz.append(d1['SECZ'][iexp])
+                        expt.append(d1['EXPTIME'][iexp])
+                        moondist.append(d1['MOONDIST'][iexp])
+                        moonphase.append(d1['MOONPHASE'][iexp])
+                        seeing.append(d1['SEEING'][iexp])
+
                         sn = d2['SN'][gd, iexp, 1]
                         meansn = np.nanmean(sn)
                         sigsn = np.nanstd(sn)
