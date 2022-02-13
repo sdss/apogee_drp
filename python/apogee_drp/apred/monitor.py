@@ -789,8 +789,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for isci in range(nsci):
                 plsum = glob.glob(specdir5 + 'visit/apo25m/*/' + str(gsci['PLATE'][isci]) + '/' + str(gsci['MJD'][isci]) + '/apPlateSum-*fits')
                 if len(plsum) < 1: continue
-                d1 = fits.open(plsum)[1].data
-                d2 = fits.open(plsum)[2].data
+                d1 = fits.open(plsum[0])[1].data
+                d2 = fits.open(plsum[0])[2].data
                 pdb.set_trace()
 #                yvals = (gdcal['SN'][:, ichip]**2)  / gdcal['EXPTIME'] / 60
 #                ax.scatter(caljd, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
