@@ -750,7 +750,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where((allsci['SN'][:,1] > 15) & (allsci['MJD'] > 59146))
+            #gd, = np.where((allsci['SN'][:,1] > 15) & (allsci['MJD'] > 59146))
+            gd, = np.where(allsci['MJD'] > 59146)
             gsci = allsci[gd]
             gord = np.argsort(gsci['MJD'])
             gsci = gsci[gord]
