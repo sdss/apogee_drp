@@ -745,6 +745,56 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
+        # snhistory2.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory2.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            pdb.set_trace()
+            gd, = np.where(allsci['SN'] > 0)
+
+            #fields = np.array(['18956', '19106', '19092', '19942', '19942', '19942', '18956', '19942', '20950', '20918', '18956', '18956', '18956', '20549', '20549', '20549', '20549', '20002', '20902', '20900', '17031', '20894', '19942', '19852', '19852'])
+            #plates = np.array(['1917', '2573', '2649', '3238', '3235', '3233', '3239', '3234', '3258', '3216', '3207', '3206', '3203', '3198', '3199', '3201', '3202', '3167', '3174', '3172', '3122', '3168', '3119', '3120', '3121'])
+            #mjds = np.array(['59595', '59601', '59602', '59620', '59620', '59620', '59620', '59620', '59620', '59619', '59619', '59619', '59619', '59619', '59619', '59619', '59619', '59618', '59618', '59618', '59618', '59618', '59616', '59616'])
+
+
+
+            fig = plt.figure(figsize=(30,14))
+
+            allv5 = fits.getdata(specdir5 + 'summary/allVisit-daily-apo25m.fits')
+            umjd,uind = np.unique(allv5['mjd'], return_index=True)
+            nmjd = len(umjd)
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            ax.set_xlim(xmin, xmax)
+            #ax.set_ylim(ymin, ymax)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip == nchips-1: ax.set_xlabel(r'MJD')
+            ax.set_ylabel(r'S/N$^{2}$ per minute')
+            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            ax.axvline(x=59146, color='r', linewidth=2)
+
+            for iyear in range(nyears):
+                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+
+                yvals = (gdcal['SN'][:, ichip]**2)  / gdcal['EXPTIME'] / 60
+                ax.scatter(caljd, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        return
+
+        ###########################################################################################
         # snhistory.png
         plotfile = specdir5 + 'monitor/' + instrument + '/snhistory.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
