@@ -862,7 +862,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['SN11'][:,2-ichip]**2)  / allsnrg['NREADS'] / 47
-                scolors = allsnrg['SECZ']
+                scolors = allsnrg['ZERO']
                 ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='rainbow')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
