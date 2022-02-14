@@ -3080,7 +3080,6 @@ def getSnrStruct(plsum=None):
         outstr['SNRATIO'][iexp] =   data1['SNRATIO'][iexp]
         if len(data2['HMAG']) != 300:
             pdb.set_trace()
-        pdb.set_trace()
         outstr['HMAG'][iexp] =      data2['HMAG']
         g, = np.where(data2['OBJTYPE'] != 'SKY')
         outstr['STARFIBER'][iexp][g] = 1
