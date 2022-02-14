@@ -831,7 +831,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             maglims = [10.5, 11.5]
             gd, = np.where((np.isnan(allsnr['SNRATIO']) == False) & (allsnr['SN'][:,1] > 10))# & (allsnr['HMAG'] >= maglims[0]) & (allsnr['HMAG'] <= maglims[1]))
             allsnrg = allsnr[gd]
-            gmag = np.where(allsnr['HMAG']>maglims[0]) & (allsnr['HMAG']<maglims[1]))
+            gmag = np.where((allsnr['HMAG']>maglims[0]) & (allsnr['HMAG']<maglims[1]))
             ugd,uind,ucount=np.unique(gmag[0], return_index=True, return_counts=True)
             gd, = np.where(ucount > 5)
             uind = uind[gd]
