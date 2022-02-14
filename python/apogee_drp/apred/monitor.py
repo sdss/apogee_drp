@@ -863,7 +863,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['SN11'][:,2-ichip]**2)  / (allsnrg['NREADS'] / 47)
                 scolors = 1-allsnrg['MOONPHASE']
-                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
@@ -918,8 +918,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['SN11'][:,2-ichip]**2)  / (allsnrg['EXPTIME'] / 60)
-                scolors = allsnrg['MOONPHASE']
-                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+                scolors = 1-allsnrg['MOONPHASE']
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
