@@ -98,7 +98,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         uvis,uind = np.unique(vis, return_index=True)
         uallv4 = allv4[uind]
         nvis = len(uvis)
-        print('   adding data for ' + str(nvis) + ' pre-5 visits.')
+        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
         for i in range(5):
             plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
@@ -3036,7 +3036,7 @@ def getSnrStruct(plsum=None):
                    ('NSN',       np.int32),
                    ('SNRATIO',   np.float64),
                    ('HMAG',      np.float64, 300),
-                   ('OBJTYPE',   np.float64, 300),
+                   ('OBJTYPE',   np.str, 10),
                    ('SNFIBER',   np.float64, (300, 3))])
 
     outstr = np.zeros(nexp, dtype=dt)
