@@ -70,6 +70,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
     allsci4 =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+    allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
 
     # Read in the master summary files
     allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
@@ -77,7 +78,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
     allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
     #snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
-    allsnr = fits.open(specdir5 + 'monitor/' + instrument + 'SNR.fits')[1].data
+    allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
     dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
     quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
@@ -117,7 +118,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         #return
 
-        outfile = specdir5 + 'monitor/' + instrument + 'SNR1.fits'
+        outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
         if allv5 is None:
@@ -132,6 +133,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         nvis = len(uvis)
         print('----> monitor: adding data for ' + str(nvis) + '  visits.')
 
+        count = 0
         for i in range(5):
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
@@ -150,13 +152,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     else:
                         newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
                         outstr = np.concatenate([outstr, newstr])
+                    count += 1
 
-        pdb.set_trace()
-        #outstr = vstack([allsnr, Table(outstr)])
-        Table(outstr).write(outfile, overwrite=True)
-        print("----> monitor: Finished making " + os.path.basename(outfile))
+        if count > 0:
+            out = vstack([Table(allsnr), Table(outstr)])
+            out.write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        pdb.set_trace()
         return
 
         ###########################################################################################
