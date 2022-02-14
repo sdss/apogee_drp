@@ -76,11 +76,51 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
     allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
+    snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
     dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
     quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
 
     if makesumfiles is True:
+        ###########################################################################################
+        # MAKE MASTER apSNRsum FILE
+        # Append together S/N arrays and other metadata from apPlateSum files
+        allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-synspec.fits'
+        allv = fits.getdata(allvpath)
+
+        gd, = np.where(allv['TELESCOPE'] == telescope)
+        pdb.set_trace()
+
+        files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
+        if len(files) < 1:
+            print("----> monitor: No apPlateSum files!")
+        else:
+            outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+            outstr = getSciStruct(allsci)
+
+            files.sort()
+            files = np.array(files)
+            nfiles=len(files)
+
+            # Loop over SDSS-V files and add them to output structure
+            for i in range(nfiles):
+                data = fits.open(files[i])[1].data
+                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
+                if len(check) > 0:
+                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getSciStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
+
+            Table(outstr).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
+
+
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
         # Get zeropoint info from apPlateSum files
