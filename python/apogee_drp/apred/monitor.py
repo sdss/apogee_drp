@@ -3036,7 +3036,7 @@ def getSnrStruct(plsum=None):
                    ('NSN',       np.int32),
                    ('SNRATIO',   np.float64),
                    ('HMAG',      np.float64, 300),
-                   ('OBJTYPE',   np.str, 10, 300),
+                   ('STARFIBER', np.int32, 300),
                    ('SNFIBER',   np.float64, (300, 3))])
 
     outstr = np.zeros(nexp, dtype=dt)
@@ -3082,7 +3082,9 @@ def getSnrStruct(plsum=None):
             pdb.set_trace()
         pdb.set_trace()
         outstr['HMAG'][iexp] =      data2['HMAG']
-        outstr['OBJTYPE'][iexp] =   data2['OBJTYPE']
+        g, = np.where(data2['OBJTYPE'] != 'SKY')
+        outstr['STARFIBER'][iexp][g] = 1
+        #outstr['OBJTYPE'][iexp] =   data2['OBJTYPE']
         outstr['SNFIBER'][iexp] =   data2['SNFIBER'][:, :, iexp]
 
     return outstr
