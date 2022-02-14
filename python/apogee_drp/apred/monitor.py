@@ -2800,92 +2800,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     print("----> monitor done")
 
-
-''' GETSNRSTRUCT: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
-def getSnrStruct(plsum=None):
-    data1 = fits.open(plsum)[1].data
-    data2 = fits.open(plsum)[2].data
-    nexp = len(data1['IM'])
-    cols = data1.columns.names
-    field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
-
-    dt = np.dtype([('IM',        np.int32),
-                   ('TELESCOPE', np.str, 6),
-                   ('FIELD',     np.str, 30),
-                   ('PLATE',     np.int32),
-                   ('MJD',       np.int32),
-                   ('JD',        np.float64),
-                   ('DATEOBS',   np.str, 30),
-                   ('NREADS',    np.int32),
-                   ('EXPTIME',   np.int32),
-                   ('DITHER',    np.float64),
-                   ('SECZ',      np.float64),
-                   ('SEEING',    np.float64),
-                   ('MOONDIST',  np.float64),
-                   ('MOONPHASE', np.float64),
-                   ('FWHM',      np.float64),
-                   ('GDRMS',     np.float64),
-                   ('ZERO',      np.float64),
-                   ('ZERORMS',   np.float64),
-                   ('ZERONORM',  np.float64),
-                   ('SKY',       np.float64, 3),
-                   ('SN',        np.float64, 3),
-                   ('SNC',       np.float64, 3),
-                   ('ALTSN',     np.float64, 3),
-                   ('NSN',       np.int32),
-                   ('SNRATIO',   np.float64),
-                   ('HMAG',      np.float64, 300),
-                   ('OBJTYPE',   np.float64, 300),
-                   ('SNFIBER',   np.float64, (300, 3))])
-
-    outstr = np.zeros(nexp, dtype=dt)
-
-    for iexp in range(nexp):
-        tmp = Time(data1['DATEOBS'][iexp], format='fits')
-        jd = tmp.jd - 2.4e6
-
-        outstr['IM']        = data1['IM'][iexp]
-        outstr['TELESCOPE'] = data1['TELESCOPE'][iexp]
-        outstr['FIELD']     = field
-        outstr['PLATE']     = data1['PLATE'][iexp]
-        outstr['MJD']       = data1['MJD'][iexp]
-        outstr['DATEOBS']   = data1['DATEOBS'][iexp]
-        outstr['JD']        = jd
-        outstr['NREADS'] =    data1['NREADS'][iexp]
-        if 'EXPTIME' in cols:
-            outstr['EXPTIME'] =   data1['EXPTIME'][iexp]
-        else:
-            tmp = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
-            if os.path.exists(tmp):
-                tmp = ascii.read(tmp)
-                g, = np.where(data1['IM'][iexp] == tmp['col1'])
-                if len(g) > 0:
-                    outstr['EXPTIME'] =   tmp['col8'][g][0]
-        outstr['SECZ'] =      data1['SECZ'][iexp]
-        outstr['SEEING'] =    data1['SEEING'][iexp]
-        outstr['MOONDIST'] =  data1['MOONDIST']
-        outstr['MOONPHASE'] = data1['MOONPHASE']
-        outstr['FWHM'] =      data1['FWHM'][iexp]
-        outstr['GDRMS'] =     data1['GDRMS'][iexp]
-        outstr['DITHER'] =    data1['DITHER'][iexp]
-        outstr['ZERO'] =      data1['ZERO'][iexp]
-        outstr['ZERORMS'] =   data1['ZERORMS'][iexp]
-        outstr['ZERONORM'] =  data1['ZERONORM'][iexp]
-        outstr['SKY'] =       data1['SKY'][iexp]
-        outstr['SN'] =        data1['SN'][iexp]
-        outstr['SNC'] =       data1['SNC'][iexp]
-        outstr['ALTSN'] =     data1['ALTSN'][iexp]
-        outstr['NSN'] =       data1['NSN'][iexp]
-        outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
-        if len(data2['HMAG']) != 300:
-            pdb.set_trace()
-        outstr['HMAG'] =      data2['HMAG']
-        outstr['OBJTYPE'] =   data2['OBJTYPE']
-        outstr['SNFIBER'] =   data2['SNFIBER'][:, :, iexp]
-
-    return outstr
-
-
 ''' GETQACALSTRUCT: put SDSS-IV and SDSS-V QAcal files in structure '''
 def getQAcalStruct(data=None):
 
@@ -3087,5 +3001,88 @@ def getSciStruct(data=None):
 
     return outstr
 
+''' GETSNRSTRUCT: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
+def getSnrStruct(plsum=None):
+    data1 = fits.open(plsum)[1].data
+    data2 = fits.open(plsum)[2].data
+    nexp = len(data1['IM'])
+    cols = data1.columns.names
+    field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
 
+    dt = np.dtype([('IM',        np.int32),
+                   ('TELESCOPE', np.str, 6),
+                   ('FIELD',     np.str, 30),
+                   ('PLATE',     np.int32),
+                   ('MJD',       np.int32),
+                   ('JD',        np.float64),
+                   ('DATEOBS',   np.str, 30),
+                   ('NREADS',    np.int32),
+                   ('EXPTIME',   np.int32),
+                   ('DITHER',    np.float64),
+                   ('SECZ',      np.float64),
+                   ('SEEING',    np.float64),
+                   ('MOONDIST',  np.float64),
+                   ('MOONPHASE', np.float64),
+                   ('FWHM',      np.float64),
+                   ('GDRMS',     np.float64),
+                   ('ZERO',      np.float64),
+                   ('ZERORMS',   np.float64),
+                   ('ZERONORM',  np.float64),
+                   ('SKY',       np.float64, 3),
+                   ('SN',        np.float64, 3),
+                   ('SNC',       np.float64, 3),
+                   ('ALTSN',     np.float64, 3),
+                   ('NSN',       np.int32),
+                   ('SNRATIO',   np.float64),
+                   ('HMAG',      np.float64, 300),
+                   ('OBJTYPE',   np.float64, 300),
+                   ('SNFIBER',   np.float64, (300, 3))])
+
+    outstr = np.zeros(nexp, dtype=dt)
+
+    for iexp in range(nexp):
+        tmp = Time(data1['DATEOBS'][iexp], format='fits')
+        jd = tmp.jd - 2.4e6
+
+        outstr['IM']        = data1['IM'][iexp]
+        outstr['TELESCOPE'] = data1['TELESCOPE'][iexp]
+        outstr['FIELD']     = field
+        outstr['PLATE']     = data1['PLATE'][iexp]
+        outstr['MJD']       = data1['MJD'][iexp]
+        outstr['DATEOBS']   = data1['DATEOBS'][iexp]
+        outstr['JD']        = jd
+        outstr['NREADS'] =    data1['NREADS'][iexp]
+        if 'EXPTIME' in cols:
+            outstr['EXPTIME'] =   data1['EXPTIME'][iexp]
+        else:
+            tmp = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
+            if os.path.exists(tmp):
+                tmp = ascii.read(tmp)
+                g, = np.where(data1['IM'][iexp] == tmp['col1'])
+                if len(g) > 0:
+                    pdb.set_trace()
+                    outstr['EXPTIME'] =   tmp['col8'][g][0]
+        outstr['SECZ'] =      data1['SECZ'][iexp]
+        outstr['SEEING'] =    data1['SEEING'][iexp]
+        outstr['MOONDIST'] =  data1['MOONDIST']
+        outstr['MOONPHASE'] = data1['MOONPHASE']
+        outstr['FWHM'] =      data1['FWHM'][iexp]
+        outstr['GDRMS'] =     data1['GDRMS'][iexp]
+        outstr['DITHER'] =    data1['DITHER'][iexp]
+        outstr['ZERO'] =      data1['ZERO'][iexp]
+        outstr['ZERORMS'] =   data1['ZERORMS'][iexp]
+        outstr['ZERONORM'] =  data1['ZERONORM'][iexp]
+        outstr['SKY'] =       data1['SKY'][iexp]
+        outstr['SN'] =        data1['SN'][iexp]
+        outstr['SNC'] =       data1['SNC'][iexp]
+        outstr['ALTSN'] =     data1['ALTSN'][iexp]
+        outstr['NSN'] =       data1['NSN'][iexp]
+        outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
+        if len(data2['HMAG']) != 300:
+            pdb.set_trace()
+        outstr['HMAG'] =      data2['HMAG']
+        outstr['OBJTYPE'] =   data2['OBJTYPE']
+        outstr['SNFIBER'] =   data2['SNFIBER'][:, :, iexp]
+
+    return outstr
 
