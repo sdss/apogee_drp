@@ -102,7 +102,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         nvis = len(uvis)
         print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
-        for i in range(5):
+        for i in range(nvis):
             plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
             print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
