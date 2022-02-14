@@ -103,7 +103,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         for i in range(5):
             plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
-            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basname(plsum))
+            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
             if os.path.exists(plsum):
                 if i == 0:
                     outstr = getSnrStruct(plsum)
