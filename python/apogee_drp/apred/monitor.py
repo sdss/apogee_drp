@@ -829,7 +829,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             maglims = [10.5, 11.5]
-            gd, = np.where((np.isnan(allsnr['SNRATIO']) == False) & (allsnr['SN'][:,1] > 10) & (allsnr['HMAG'] >= maglims[0]) & (allsnr['HMAG'] <= maglims[1]))
+            gd, = np.where((np.isnan(allsnr['SNRATIO']) == False) & (allsnr['SN'][:,1] > 10))# & (allsnr['HMAG'] >= maglims[0]) & (allsnr['HMAG'] <= maglims[1]))
             ngd = len(gd)
             allsnrg = allsnr[gd]
 
