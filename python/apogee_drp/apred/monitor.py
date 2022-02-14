@@ -3182,6 +3182,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     sky, = np.where(data2['OBJTYPE'] == 'SKY')
     if len(sky) > 0: outstr['HMAG'][sky] = -999.999
     if len(sci) > 0:
+        pdb.set_trace()
         outstr['HMAG'][sci] = data2['HMAG'][sci]
         outstr['STARFIBER'][sci] = 1
         outstr['SNFIBER'][sci] =   data2['SN'][sci, :, iexp]
