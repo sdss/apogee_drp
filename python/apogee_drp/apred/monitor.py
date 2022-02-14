@@ -3017,7 +3017,7 @@ def getSnrStruct(plsum=None):
                    ('JD',        np.float64),
                    ('DATEOBS',   np.str, 30),
                    ('NREADS',    np.int32),
-                   ('EXPTIME',   np.int32),
+                   ('EXPTIME',   np.float64),
                    ('DITHER',    np.float64),
                    ('SECZ',      np.float64),
                    ('SEEING',    np.float64),
@@ -3055,13 +3055,12 @@ def getSnrStruct(plsum=None):
         if 'EXPTIME' in cols:
             outstr['EXPTIME'] =   data1['EXPTIME'][iexp]
         else:
-            tmp = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
-            if os.path.exists(tmp):
-                tmp = ascii.read(tmp)
-                g, = np.where(data1['IM'][iexp] == tmp['col1'])
+            snfile = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
+            if os.path.exists(snfile):
+                snfile = ascii.read(snfile)
+                g, = np.where(data1['IM'][iexp] == snfile['col1'])
                 if len(g) > 0:
-                    pdb.set_trace()
-                    outstr['EXPTIME'] =   tmp['col8'][g][0]
+                    outstr['EXPTIME'] = float(snfile['col8'][g][0].split('\t')[0])
         outstr['SECZ'] =      data1['SECZ'][iexp]
         outstr['SEEING'] =    data1['SEEING'][iexp]
         outstr['MOONDIST'] =  data1['MOONDIST']
