@@ -3236,6 +3236,9 @@ def getSnrStruct(plsum=None):
 
 ''' GETSNRSTRUCT2: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
 def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
+    magbins = np.array([7,8,9,10,11,12,13])
+    magrad = 0.5
+
     cols = data1.columns.names
 
     dt = np.dtype([('SUMFILE',   np.str, 30),
@@ -3266,7 +3269,28 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
                    ('SNRATIO',   np.float64),
                    ('HMAG',      np.float64, 300),
                    ('STARFIBER', np.int32, 300),
-                   ('SNFIBER',   np.float64, (300, 3))])
+                   ('SNFIBER',   np.float64, (300, 3)),
+                   ('SN7',       np.float64, 3),
+                   ('SN8',       np.float64, 3),
+                   ('SN9',       np.float64, 3),
+                   ('SN10',      np.float64, 3),
+                   ('SN11',      np.float64, 3),
+                   ('SN12',      np.float64, 3),
+                   ('SN13',      np.float64, 3),
+                   ('ESN7',      np.float64, 3),
+                   ('ESN8',      np.float64, 3),
+                   ('ESN9',      np.float64, 3),
+                   ('ESN10',     np.float64, 3),
+                   ('ESN11',     np.float64, 3),
+                   ('ESN12',     np.float64, 3),
+                   ('ESN13',     np.float64, 3),
+                   ('NSN7',      np.float64),
+                   ('NSN8',      np.float64),
+                   ('NSN9',      np.float64),
+                   ('NSN10',     np.float64),
+                   ('NSN11',     np.float64),
+                   ('NSN12',     np.float64),
+                   ('NSN13',     np.float64)])
 
     outstr = np.zeros(1, dtype=dt)
 
@@ -3315,6 +3339,15 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
             outstr['HMAG'][0][sci][gd]      = data2['HMAG'][sci][gd]
             outstr['STARFIBER'][0][sci][gd] = 1
             outstr['SNFIBER'][0][sci][gd]   = data2['SN'][sci[gd], iexp, :]
+            for magbin in magbins:
+                maglab = 'SN' + str(magbin)
+                magelab = 'E' + maglab
+                magnlab = 'N' + maglab
+                g, = np.where((data2['HMAG'][sci] >= magbin-magrad) & (data2['HMAG'][sci] < magbin+magrad))
+                if len(g) > 5:
+                    outstr[maglab] = np.nanmean(data2['SN'][sci[gd][g], iexp, :], axis=0)
+                    outstr[magelab] = np.nanstd(data2['SN'][sci[gd][g], iexp, :], axis=0)
+                    outstr[magnlab] = len(g)
     if len(sky) > 0: outstr['HMAG'][0][sky] = -999.999
 
     return outstr
