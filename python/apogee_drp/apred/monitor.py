@@ -862,6 +862,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['SN11'][:,2-ichip]**2)  / allsnrg['NREADS'] / 47
+                pdb.set_trace()
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
