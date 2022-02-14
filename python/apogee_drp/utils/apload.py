@@ -171,10 +171,12 @@ class ApLoad:
         if 'apo' in telescope:
             self.instrument = 'apogee-n'
             self.observatory = 'apo'
+            self.prefix = 'ap'
         if 'lco' in telescope:
             self.instrument = 'apogee-s'
             self.observatory = 'lco'
- 
+            self.prefix = 'as'
+
     def setinst(self,instrument) :
         self.instrument=instrument
  
@@ -789,8 +791,11 @@ class ApLoad:
         if type(prefix) is str:
             prefix = [prefix]
         for p in prefix:
-            outfile = self.filename(p,num=num,mjd=mjd,chips=True,**kwargs)
-            outfiles += [outfile.replace(p+'-',p+'-'+ch+'-') for ch in chips]
+            if lroot=='sparse':
+                outfiles = [os.path.dirname(self.filename('PSF',num=0,chips=True))+'/apSparse-'+str(num)+'.fits']
+            else:
+                outfile = self.filename(p,num=num,mjd=mjd,chips=True,**kwargs)
+                outfiles += [outfile.replace(p+'-',p+'-'+ch+'-') for ch in chips]
         # Only chip b for Littrow
         if lroot=='littrow':
             outfiles = [outfiles[1]]
@@ -823,12 +828,12 @@ class ApLoad:
         # those require different directory paths
         if 'all' in root or 'aspcap' in root or 'cannon' in root :
             sdssroot = root 
-        elif root == 'R' :
+        elif root=='R' or root=='2D' or root=='1D':
             if mjd is None:
                 mjd = self.cmjd(num)
-            if 'lco' in self.telescope: sdssroot = 'asR'
-            elif 'apo1m' in self.telescope: sdssroot = 'apR-1m'
-            else : sdssroot = 'apR'
+            if 'lco' in self.telescope: sdssroot = 'as'+root
+            elif 'apo1m' in self.telescope: sdssroot = 'ap'+root+'-1m'
+            else : sdssroot = 'ap'+root
         elif (self.telescope == 'apo1m' and 
            (root == 'Plan' or root == 'PlateSum' or root == 'Visit' or root == 'VisitSum' or root == 'Tellstar' or 
             root == 'Cframe' or root == 'Plate') ) :

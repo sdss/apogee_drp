@@ -6,9 +6,11 @@ import numpy as np
 from ..utils import plan,apload,platedata
 from . import psf
 from dlnpyutils import utils as dln
+from astropy.io import fits
 import subprocess
 
-def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=False,
+def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
+             outdir=None,clobber=False,fixbadpix=False,
              fluxcalfile=None,responsefile=None,wavefile=None,skywave=False,
              plugmap=0,highrej=7,lowrej=10,recenterfit=False,recenterln2=False,fitsigma=False,
              refpixzero=False,outlong=False,nowrite=False,npolyback=0,
@@ -35,6 +37,13 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
           3-Gaussian PSF fitting extraction
           4-Jon's Empirical PSF extraction
           5-Full Gaussian-Hermite PSF fitting extraction
+    apred : str, optional
+        The APOGEE reduction version, e.g. 'daily'.
+    telescope : str, optional
+        The telescope, e.g. 'apo25m', 'lco25m'.
+    load : ApLoad
+        The ApLoad object.  Either this must be input or
+          apred and telescope
     outdir : str, optional
         The output directory.  By default the 1D extracted
           files are written to the same directory that
@@ -125,14 +134,6 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
  
     #if len(epsfchip) == 0: 
     #    epsfchip = 0 
-
-    if np.array(inpfile).size==1:
-        inpfile = [inpfile]
-    ninpfile = len(inpfile) 
- 
-    # More than one file input more than one file input 
-    if ninpfile > 1: 
-        raise ValueError('Only one file can be input at a time')
      
     # Output directory output directory 
     if outdir is None:
@@ -141,6 +142,11 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
     #dirs = getdir() 
      
     chiptag = ['a','b','c'] 
+    localdir = os.environ['APOGEE_LOCALDIR']
+
+    # Need load or apred+telescope
+    if apred is None and telescope is None and load is None:
+        raise ValueError(' Must input load or apred+telescope')
      
     # outdir must be a string outdir must be a string 
     #if size(outdir,/type) != 7:if size(outdir,/type) != 7: 
@@ -164,69 +170,61 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
             raise ValueError('fibers must have <=300 elements with values [0-299].')
      
     # make the filenames and check the files make the filenames and check the files 
+
     fdir = os.path.dirname(inpfile) 
     base = os.path.basename(inpfile) 
     if os.path.exists(fdir)==False:
         print('directory '+fdir+' not found')
         return [],[]
      
-    baseframeid = string(int(base),format='(i08)') 
-    files = fdir+'/'+dirs.prefix+'2d-'+chiptag+'-'+baseframeid+'.fits' 
-    info = apfileinfo(files)
-    framenum = info[0].fid8   # the frame number the frame number 
-    okay = (info.exists and info.sp2dfmt and info.allchips and ((info.naxis == 3) or (info.exten == 1))) 
-    if min(okay) < 1: 
-        bd , = np.where(okay == 0,nbd) 
-        error = 'there is a problem with files: '+strjoin((files)(bd),' ') 
+    baseframeid = '%8d' % int(base)
+    files = [fdir+'/'+load.prefix+'2D-'+ch+'-'+baseframeid+'.fits' for ch in chiptag]
+    exists = [os.path.exists(f) for f in files]
+    framenum = int(base)
+    #info = apfileinfo(files)
+    #okay = (info.exists and info.sp2dfmt and info.allchips and ((info.naxis == 3) or (info.exten == 1))) 
+    okay = np.sum(exists) == 3
+    if not okay:
         if not silent: 
-            print('halt: '+error)
+            print('halt: there is a problem with files: '+' '.join(files))
         import pdb; pdb.set_trace() 
-        return
+        return [],[]
          
-    # get psf info get psf info 
+    # Get PSF info
     psf_dir = os.path.dirname(psffile) 
     psf_base = os.path.basename(psffile) 
-    if os.path.exists(psf_dir) == 0: 
-        error = 'psf directory '+psf_dir+' not found' 
+    if os.path.exists(psf_dir) == False: 
         if not silent: 
-            print('halt: '+error)
+            print('halt: psf directory '+psf_dir+' not found')
         import pdb; pdb.set_trace() 
-        return 
+        return [],[]
      
-    psfframeid = string(int(psf_base),format='(i08)') 
-    psffiles = apogee_filename('psf',num=psfframeid,chip=chiptag) 
-    epsffiles = apogee_filename('epsf',num=psfframeid,chip=chiptag) 
-    pinfo = apfileinfo(psffiles) 
-    pokay = (pinfo.exists and pinfo.allchips) 
-    if min(pokay) < 1: 
-        pbd , = np.where(pokay == 0,nbd) 
-        error = 'there is a problem with psf files: '+strjoin((psffiles)(pbd),' ') 
+    psfframeid = '%8d' % int(psf_base)
+    psffiles = load.filename('PSF',num=psfframeid,chips=True)
+    psffiles = [psffiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
+    epsffiles = load.filename('EPSF',num=psfframeid,chips=True)
+    epsffiles = [epsffiles.replace('EPSF-','EPSF-'+ch+'-') for ch in chiptag]
+    if load.exists('PSF',int(psfframeid))==False:
         if not silent: 
-            print('halt: '+error)
+            print('halt: there is a problem with psf files: '+' '.join(psffiles))
         import pdb; pdb.set_trace() 
-        return 
+        return [],[]
      
     if not silent: 
         print('')
         print('extracting file ',inpfile)
         print('--------------------------------------------------')
      
-         
-    # parameters parameters 
-    mjd5 = info[0].mjd5 
-    nreads = info[0].nreads 
+
+    # Parameters
+    frame = load.ap2D(int(base))
+    mjd5 = int(load.cmjd(int(base)))
+    nreads = frame['a'][0].header['nread']
     if not silent: 
         print('mjd5 = ',str(mjd5))
          
-    # check header check header
+    # Check header
     head = fits.getheader(files[0],0)
-    if errmsg != '': 
-        error = 'there was an error loading the header for '+file 
-        if not silent: 
-            print('halt: '+error)
-        import pdb; pdb.set_trace() 
-        return 
-     
          
     # determine file type determine file type 
     #-------------------------------------------- 
@@ -237,88 +235,76 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
     #obstype = sxpar(head,'obstype',count=nobs)obstype = sxpar(head,'obstype',count=nobs) 
     imagetyp = head.get('imagetyp')
     if imagetyp is None:
-        error = 'no imagetyp keyword found for '+baseframeid 
         if not silent: 
-            print(error) 
+            print('no imagetyp keyword found for '+baseframeid)
      
     #obstype = strlowcase(str(obstype,2))obstype = strlowcase(str(obstype,2)) 
     imagetyp = str(imagetyp).lower()
-         
-    # load the frame load the frame 
-    frame = load.ap2D(files)
      
     # Double-check the flux calibration file
     if fluxcalfile is not None: 
-        fluxcalfiles = os.path.dirname(fluxcalfile)+'/'+dirs.prefix+'flux-'+chiptag+'-'+os.path.basename(fluxcalfile)+'.fits' 
-        ftest = os.path.exists(fluxcalfiles) 
+        fluxcalfiles = [os.path.dirname(fluxcalfile)+'/'+load.prefix+'Flux-'+ch+'-'+os.path.basename(fluxcalfile)+'.fits' for ch in chiptag]
+        ftest = [os.path.exists(f) for f in fluxcalfiles]
         if np.sum(ftest) < 3: 
-            error = 'problems with flux calibration file '+fluxcalfile 
             if not silent: 
-                print('halt: '+error)
+                print('halt: problems with flux calibration file '+fluxcalfile)
             import pdb; pdb.set_trace() 
-            return
+            return [],[]
          
     # Double-check the response calibration file
     if responsefile is not None: 
-        responsefiles = os.path.dirname(responsefile)+'/'+dirs.prefix+'response-'+chiptag+'-'+os.path.basename(responsefile)+'.fits' 
-        ftest = os.path.exists(responsefiles) 
+        responsefiles = [os.path.dirname(responsefile)+'/'+load.prefix+'Response-'+ch+'-'+os.path.basename(responsefile)+'.fits' for ch in chiptag]
+        ftest = [os.path.exists(f) for f in responsefiles]
         if np.sum(ftest) < 3: 
-            error = 'problems with response calibration file '+responsefile 
             if not silent: 
-                print('halt: '+error)
+                print('halt: problems with response calibration file '+responsefile)
             import pdb; pdb.set_trace() 
-            return 
+            return [],[]
          
     # Double-check the wave calibration file
     if wavefile is not None: 
-        wavefiles = os.path.dirname(wavefile)+'/'+dirs.prefix+'wave-'+chiptag+'-'+os.path.basename(wavefile)+'.fits' 
-        wtest = os.path.exists(wavefiles) 
+        wavefiles = [os.path.dirname(wavefile)+'/'+load.prefix+'Wave-'+ch+'-'+os.path.basename(wavefile)+'.fits' for ch in chiptag]
+        wtest = [os.path.exists(f) for f in wavefiles]
         if np.sum(wtest) < 3: 
-            error = 'problems with wavelength file '+wavefile 
             if not silent: 
-                print('halt: '+error)
+                print('halt: problems with wavelength file '+wavefile)
             import pdb; pdb.set_trace() 
-            return 
-
+            return [],[]
          
     # wait if another process is working on this wait if another process is working on this 
-    lockfile = outdir+dirs.prefix+'1d-'+framenum # lock file lock file 
-    if getlocaldir(): 
-        lockfile = getlocaldir()+'/'+dirs.prefix+'1d-'+framenum+'.lock' 
+    lockfile = outdir+load.prefix+'1D-'+str(framenum) # lock file lock file 
+    if localdir: 
+        lockfile = localdir+'/'+load.prefix+'1D-'+str(framenum)+'.lock' 
     else: 
-        lockfile = outdir+dirs.prefix+'1d-'+framenum+'.lock' 
+        lockfile = outdir+load.prefix+'1D-'+str(framenum)+'.lock' 
     
     if not unlock:
         while os.path.exists(lockfile):
-            apwait(lockfile,10)
+            time.sleep(10)
+            #apwait(lockfile,10)
         else: 
             if os.path.exists(lockfile): 
                 os.remove(lockfile)
-             
-    err = 1 
-    while err != 0: 
-        if os.path.exists(os.path.dirname(lockfile))==False:
-            os.mkdirs(os.path.dirname(lockfile))
-        openw,lock,lockfile, error=err 
-        if (err != 0): 
-            print(file_search('/scratch/local','*'))
+
+    if os.path.exists(os.path.dirname(lockfile))==False:
+        os.mkdirs(os.path.dirname(lockfile))
+    open(lockfile,'w').close()
                          
     # Since final ap1dwavecal requires simultaneous fit of all three chips, and
     #  this required final output to be put off until after all chips are done,
     #  all 3 need to be done here if any at all, so that data from all chips is loaded
     # Output files
-    outfiles = outdir+dirs.prefix+'1d-'+chiptag+'-'+framenum+'.fits'  # output file output file 
-    outtest = os.path.exists(outfiles) 
-    if min(outtest) == 0 : 
-        clobber=1 
-         
-    if not keyword_set(clobber) : 
-        goto,ap 
+    outfiles = [outdir+load.prefix+'1D-'+ch+'-'+framenum+'.fits' for ch in chiptag]  # output file
+    outtest = [os.path.exists(f) for f in outfiles]
+    if np.sum(outtest)==3 and not clobber:
+        print(outdir+load.prefix+'1D-'+framenum+'.fits already exists and clobber not set')
+        if os.path.exists(lockfile): os.remove(lockfile)
+        return [],[]
          
     #-------------------------------------------------------------------- 
     # looping through the three chips looping through the three chips 
     #-------------------------------------------------------------------- 
-    head_chip=strarr(len(chips),5000) #initialise an array to store the headers
+    head_chip = strarr(len(chips),5000) #initialise an array to store the headers
     output = None
     outmodel = None
     outstr = None
@@ -337,7 +323,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
         iepsffile = epsffiles[ichip] 
              
         # output file output file 
-        outfile = outdir+dirs.prefix+'1d-'+chiptag[ichip]+'-'+framenum+'.fits'  # output file output file 
+        outfile = outdir+load.prefix+'1D-'+chiptag[ichip]+'-'+framenum+'.fits'  # output file output file 
              
         if not silent: 
             if i > 0 : 
@@ -459,7 +445,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
         #------------------------------------------------------------ 
         head = chstr.header 
         head['psffile'] = ipsffile,' psf file used' 
-        leadstr = 'ap2d: ' 
+        leadstr = 'ap2D: ' 
         pyvers = sys.version.split()[0]
         head['v_apred'] = getgitvers(),'apogee software version' 
         head['apred'] = getvers(),'apogee reduction version' 
@@ -712,9 +698,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
         if len(fluxcalfile) > 0:
             # restore the relative flux calibration correction file
             if not silent: 
-                print('flux calibrating with ',os.path.dirname(fluxcalfile)+'/'+dirs.prefix+'flux-'+os.path.basename(fluxcalfile))
+                print('flux calibrating with ',os.path.dirname(fluxcalfile)+'/'+load.prefix+'flux-'+os.path.basename(fluxcalfile))
  
-            fluxcalfiles = os.path.dirname(fluxcalfile)+'/'+dirs.prefix+'flux-'+chiptag+'-'+os.path.basename(fluxcalfile)+'.fits' 
+            fluxcalfiles = os.path.dirname(fluxcalfile)+'/'+load.prefix+'flux-'+chiptag+'-'+os.path.basename(fluxcalfile)+'.fits' 
             fluxcal,fluxcal_head = fits.getdata(fluxcalfiles[ichip],header=True)
             outstr['flux'] /= fluxcal          # correct flux correct flux 
             bderr, = np.where(outstr.err == baderr()) 
@@ -739,9 +725,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
         if responsefile is not None: 
             # restore the relative flux calibration correction file
             if not silent: 
-                print('response calibrating with ',os.path.dirname(responsefile)+'/'+dirs.prefix+'flux-'+os.path.basename(responsefile))
+                print('response calibrating with ',os.path.dirname(responsefile)+'/'+load.prefix+'flux-'+os.path.basename(responsefile))
  
-            responsefiles = os.path.dirname(responsefile)+'/'+dirs.prefix+'response-'+chiptag+'-'+os.path.basename(responsefile)+'.fits' 
+            responsefiles = os.path.dirname(responsefile)+'/'+load.prefix+'response-'+chiptag+'-'+os.path.basename(responsefile)+'.fits' 
             response,response_head = fits.getdata(responsefiles[ichip],header=True)
  
             sz = outstr['flux'].shape
@@ -759,9 +745,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
         # Adding wavelengths
         #-------------------
         if wavefile is not None:
-            wavefiles = os.path.dirname(wavefile)+'/'+dirs.prefix+'wave-'+chiptag+'-'+os.path.basename(wavefile)+'.fits' 
+            wavefiles = os.path.dirname(wavefile)+'/'+load.prefix+'wave-'+chiptag+'-'+os.path.basename(wavefile)+'.fits' 
             if not silent: 
-                print('adding wavelengths from ',os.path.dirname(wavefile)+'/'+dirs.prefix+'wave-'+os.path.basename(wavefile))
+                print('adding wavelengths from ',os.path.dirname(wavefile)+'/'+load.prefix+'wave-'+os.path.basename(wavefile))
 
             # Get the wavelength calibration data get the wavelength calibration data 
             wcoef,whead = fits.getdata(wavefiles[ichip],1,header=True)
@@ -789,20 +775,18 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
  
         # Output the 2d model spectrum
         if len(ymodel) > 0: 
-            modelfile = outdir+dirs.prefix+'2dmodel-'+chiptag[ichip]+'-'+framenum+'.fits'  # model output file model output file 
+            modelfile = outdir+load.prefix+'2Dmodel-'+chiptag[ichip]+'-'+framenum+'.fits'  # model output file model output file 
             if not silent: 
-                print('writing 2d model to: ',modelfile)
+                print('writing 2D model to: ',modelfile)
             mwrfits,ymodel,modelfile #,/create 
-            #    # compress model and 2d image:ne in ap2d     compress model and 2d image:ne in ap2d 
-            #    if keyword_set(compress):    if keyword_set(compress): 
-            #      os.remove(modelfile+'.fz',/allow_nonexistent      os.remove(modelfile+'.fz',/allow_nonexistent 
-            #      spawn,'fpack -d -y '+modelfile      spawn,'fpack -d -y '+modelfile 
-            #      origfile = outdir+dirs.prefix+'2d-'+chiptag[ichip]+'-'+framenum+'.fits'      origfile = outdir+dirs.prefix+'2d-'+chiptag[ichip]+'-'+framenum+'.fits' 
-            #      if os.path.exists(origfile):      if os.path.exists(origfile): 
-            #        os.remove(origfile+'.fz',/allow_nonexistent        os.remove(origfile+'.fz',/allow_nonexistent 
-            #        spawn,'fpack -d -y '+origfile        spawn,'fpack -d -y '+origfile 
-            #             
-            #         
+            #    # compress model and 2D image done in ap2d
+            #    if keyword_set(compress):
+            #      os.remove(modelfile+'.fz',/allow_nonexistent
+            #      spawn,'fpack -d -y '+modelfile 
+            #      origfile = outdir+load.prefix+'2D-'+chiptag[ichip]+'-'+framenum+'.fits'
+            #      if os.path.exists(origfile):
+            #        os.remove(origfile+'.fz',/allow_nonexistent
+            #        spawn,'fpack -d -y '+origfile
 
         # Add to output structure
         if ifirst == 0: 
@@ -857,7 +841,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,outdir=None,clobber=False,fixbadpix=
         for i in range(len(chips)): 
             ichip = chips[i]   # chip index, 0-first chip chip index, 0-first chip 
             # output file output file 
-            outfile = outdir+dirs.prefix+'1d-'+chiptag[ichip]+'-'+framenum+'.fits'  # output file output file 
+            outfile = outdir+load.prefix+'1D-'+chiptag[ichip]+'-'+framenum+'.fits'  # output file output file 
             if not silent: 
                 print('writing output to: ',outfile)
  
@@ -1072,15 +1056,24 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         #-------------------------------------------------
  
         # apPSF files
-        if planstr['sparseid'] != 0 : 
-            sout = subprocess.run(['makecal','--sparse',str(planstr['sparseid'])],shell=False)
-        if planstr['fiberid'] != 0 : 
-            sout = subprocess.run(['makecal','--fiber',str(planstr['fiberid'])],shell=False)
+        if planstr['sparseid'] != 0:
+            if load.exists('Sparse',num=planstr['sparseid']):
+                print(load.filename('Sparse',num=planstr['sparseid'])+' already made')
+            else:
+                sout = subprocess.run(['makecal','--sparse',str(planstr['sparseid'])],shell=False)
+        if planstr['fiberid'] != 0: 
+            if load.exists('ETrace',num=planstr['fiberid']):
+                print(load.filename('ETrace',num=planstr['fiberid'],chips=True)+' already made')
+            else:
+                sout = subprocess.run(['makecal','--fiber',str(planstr['fiberid'])],shell=False)
         if 'psfid' in planstr.keys():
-            cmd = ['makecal','--psf',str(planstr['psfid'])]
-            if calclobber:
-                cmd += ['--clobber']
-            sout = subprocess.run(cmd,shell=False)
+            if load.exists('PSF',num=planstr['psfid']):
+                print(load.filename('PSF',num=planstr['psfid'],chips=True)+' already made')
+            else:
+                cmd = ['makecal','--psf',str(planstr['psfid'])]
+                if calclobber:
+                    cmd += ['--clobber']
+                sout = subprocess.run(cmd,shell=False)
             tracefiles = load.filename('PSF',num=planstr['psfid'],chips=True)
             tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
             tracefile = os.path.dirname(tracefiles[0])+'/%8d' % planstr['psfid']
@@ -1102,7 +1095,10 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             if planstr['platetype'] == 'cal' or planstr['platetype'] == 'extra': 
                 waveid = 0 
         if waveid > 0: 
-            sout = subprocess.run(['makecal','--multiwave',str(waveid)],shell=False)
+            if load.exists('Wave',num=planstr['waveid']):
+                print(load.filename('Wave',num=planstr['waveid'],chips=True)+' already made')
+            else:
+                sout = subprocess.run(['makecal','--multiwave',str(waveid)],shell=False)
 
         # FPI calibration file fpi calibration file 
         if 'fpi' in planstr.keys():
@@ -1112,15 +1108,19 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
  
         # apFlux files : since individual frames are usually made per plate
         if planstr['fluxid'] != 0: 
-            #makecal,flux=planstr.fluxid,psf=planstr.psfid,clobber=calclobber 
-            cmd = ['makecal','--flux',str(planstr['fluxid']),'--psf',str(planstr['psfid'])]
-            if calclobber:
-                cmd += ['--clobber']
-            sout = subprocess.run(cmd,shell=False)
+            if load.exists('Flux',num=planstr['fluxid']):
+                print(load.filename('Flux',num=planstr['fluxid'],chips=True)+' already made')
+            else:
+                #makecal,flux=planstr.fluxid,psf=planstr.psfid,clobber=calclobber 
+                cmd = ['makecal','--flux',str(planstr['fluxid']),'--psf',str(planstr['psfid'])]
+                if calclobber:
+                    cmd += ['--clobber']
+                sout = subprocess.run(cmd,shell=False)
             fluxfiles = load.filename('Flux',num=planstr['fluxid'],chips=True)
             fluxfiles = [fluxfiles.replace('Flux-','Flux-'+ch+'-') for ch in chiptag]
             fluxfile = os.path.dirname(fluxfiles[0])+'/%8d' % planstr['fluxid']
             fluxtest = [os.path.exists(f) for f in fluxfiles]
+            fludtest = True if np.sum(fluxtest)==3 else False
             if np.sum(fluxtest) != 3: 
                 bd1, = np.where(np.array(fluxtest)==False)
                 nbd1 = len(bd1)
@@ -1128,14 +1128,17 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                     print('halt: '+str(np.array(fluxfiles)[bd1])+' not found')
                     import pdb; pdb.set_trace()
         else:
-            fluxtest = 0 
+            fluxtest = False 
  
         # apResponse files
         #  these aren't used anymore
         if 'responseid' not in planstr.keys():
             planstr['responseid'] = 0
         if planstr['responseid'] != 0: 
-            sout = subprocess.run(['makecal','--response',str(planstr['responseid'])],shell=False)
+            if load.exists('Response',num=planstr['responseid']):
+                print(load.filename('Response',num=planstr['responseid'])+' exists already')
+            else:
+                sout = subprocess.run(['makecal','--response',str(planstr['responseid'])],shell=False)
             responsefiles = load.filename('Response',num=planstr['responseid'],chips=True) 
             responsefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
             responsefile = os.path.dirname(responsefiles[0])+'/%8d' % planstr['responseid']
@@ -1208,7 +1211,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             #framenum = rawinfo[0].fid8       # the frame number the frame number 
             files = load.filename('2D',num=framenum,chips=True)
             files = [files.replace('2D-','2D-'+ch+'-') for ch in chiptag]
-            inpfile = os.path.dirname(files[0])+'/'+framenum 
+            inpfile = os.path.dirname(files[0])+'/'+str(framenum)
             #info = apfileinfo(files) 
             okay = load.exists('R',num=planstr['APEXP']['name'][j]) and load.exists('2D',num=planstr['APEXP']['name'][j])
             #okay = (info.exists and info.sp2dfmt and info.allchips and (info.mjd5 == planstr.mjd) and 
@@ -1218,33 +1221,31 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 import pdb; pdb.set_trace()
  
             print('') 
-            print('-----------------------------------------')
-            print(str(j+1),'/',str(nframes),'  processing frame number >>',str(framenum),'<<')
-            print('-----------------------------------------')
+            print('-------------------------------------------')
+            print(str(j+1)+'/'+str(nframes)+'  processing frame number >>'+str(framenum)+'<<')
+            print('-------------------------------------------')
  
-            import pdb; pdb.set_trace()
-
             # Run AP2DPROC
-            if 'platetype' in plantstr.keys():
+            if 'platetype' in planstr.keys():
                 if planstr['platetype'] == 'cal': 
                     skywave = False
                 else: 
                     skywave = True 
             if 'platetype' in planstr.keys():
                 if planstr['platetype'] == 'sky': 
-                    plugmap = 0 
-            outdir = apogee_filename('1d',num=framenum,chip='a',dir=True) 
+                    plugmap = 0
+            outdir = os.path.dirname(load.filename('1D',num=framenum,chips=True))
             if os.path.exists(outdir)==False:
                 file_mkdir,outdir 
-            if min(fluxtest) == 0 or planstr.apexp[j].flavor == 'flux' : 
-                ap2dproc(inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,
+            if fluxtest==False or planstr['APEXP']['flavor'][j]=='flux': 
+                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,
                          wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,compress=True)
-            elif waveid > 0 : 
-                ap2dproc(inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,
+            elif waveid > 0: 
+                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,
                          fluxcalfile=fluxfile,responsefile=responsefile,
                          wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,compress=True)
             else:
-                ap2dproc(inpfile,tracefile,exttype,outdir=outdir,unlock=unlock,
+                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,
                          fluxcalfile=fluxfile,responsefile=responsefile,
                          clobber=clobber,compress=True)
  
