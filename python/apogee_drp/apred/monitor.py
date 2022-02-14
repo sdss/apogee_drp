@@ -78,7 +78,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
     allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
     #snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
-    #allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
+    allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
     dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
     quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
@@ -125,7 +125,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
             allv5 = fits.getdata(allv5path)
 
-        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])))
+        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr['MJD'])))
         allv5 = allv5[gd]
         vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
         uvis,uind = np.unique(vis, return_index=True)
@@ -137,7 +137,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         for i in range(nvis):
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
-            p, = np.where(os.path.basename(plsum) == allsnr4['SUMFILE'])
+            p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
             if (len(p) < 1) & (os.path.exists(plsum)):
                 print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
                 hdul = fits.open(plsum)
@@ -159,7 +159,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        return
+        #return
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
@@ -830,23 +830,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            maglims = [10.5, 11.5]
-            gd, = np.where((np.isnan(allsnr['SNRATIO']) == False) & (allsnr['SN'][:,1] > 10))# & (allsnr['HMAG'] >= maglims[0]) & (allsnr['HMAG'] <= maglims[1]))
+            gd, = np.where((allsnr['NSN11'] > 10) & (allsnr['SN11'][:1] > 10))
             allsnrg = allsnr[gd]
-            gmag = np.where((allsnr['HMAG']>maglims[0]) & (allsnr['HMAG']<maglims[1]))
-            ugd,uind,ucount=np.unique(gmag[0], return_index=True, return_counts=True)
-            gd, = np.where(ucount > 5)
-            uind = uind[gd]
-            pdb.set_trace()
-            allsnrg = allsnrg[gmag][0][uind]
             ngd = len(allsnrg)
 
-
             fig = plt.figure(figsize=(30,14))
-
-            allv5 = fits.getdata(specdir5 + 'summary/allVisit-daily-apo25m.fits')
-            umjd,uind = np.unique(allv5['mjd'], return_index=True)
-            nmjd = len(umjd)
 
             ax = plt.subplot2grid((1,1), (0,0))
             ax.set_xlim(xmin, xmax)
@@ -867,51 +855,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                 #if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-
-            snr = []
-            jd = []
-            secz = []
-            expt = []
-            moondist = []
-            moonphase = []
-            seeing  = []
-            for isci in range(nsci):
-                print(str(isci+1) + '/' + str(nsci))
-                plsum = glob.glob(specdir5 + 'visit/apo25m/*/' + str(gsci['PLATE'][isci]) + '/' + str(gsci['MJD'][isci]) + '/apPlateSum-*fits')
-                if len(plsum) < 1: continue
-                d1 = fits.open(plsum[0])[1].data
-                d2 = fits.open(plsum[0])[2].data
-                nexp = len(d1['EXPTIME'])
-                for iexp in range(nexp):
-                    print('   ' + str(iexp))
-                    gd, = np.where((d2['hmag'] >= maglims[0]) & (d2['hmag'] <= maglims[1]) & (d2['SN'][:,iexp,1] > 50))
-                    if len(gd) > 2:
-                        tt = Time(d1['DATEOBS'][iexp], format='fits')
-                        jd.append(tt.jd - 2.4e6)
-                        secz.append(d1['SECZ'][iexp])
-                        expt.append(d1['EXPTIME'][iexp])
-                        moondist.append(d1['MOONDIST'][iexp])
-                        moonphase.append(d1['MOONPHASE'][iexp])
-                        seeing.append(d1['SEEING'][iexp])
-
-                        sn = d2['SN'][gd, iexp, 1]
-                        meansn = np.nanmean(sn)
-                        sigsn = np.nanstd(sn)
-                        dif = np.absolute(sn - meansn)
-                        gd, = np.where(dif < 2*sigsn)
-                        sn = sn[gd]
-                        snr.append(np.nanmean(sn))
-
-            snr = np.array(snr)
-            jd = np.array(jd)
-            secz = np.array(secz)
-            expt = np.array(expt)
-            moondist = np.array(moondist)
-            moonphase = np.array(moonphase)
-            seeing  = np.array(seeing)
-
-            yvals = (snr**2)  / expt / 60
-            ax.scatter(jd, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            xvals = allsnrg['JD']
+            yvals = (allsnrg['SN11'][:1]**2)  / allsnrg['EXPTIME'] / 60
+            ax.scatter(xvals, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
