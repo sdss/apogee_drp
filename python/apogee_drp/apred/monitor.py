@@ -3152,7 +3152,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     outstr['MJD']       = data1['MJD'][iexp]
     outstr['DATEOBS']   = data1['DATEOBS'][iexp]
     outstr['JD']        = jd
-    outstr['NREADS'] =    data1['NREADS'][iexp]
+    outstr['NREADS']    = data1['NREADS'][iexp]
     if 'EXPTIME' in cols:
         outstr['EXPTIME'] =   data1['EXPTIME'][iexp]
     else:
@@ -3180,12 +3180,11 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
     sci, = np.where(data2['OBJTYPE'] != 'SKY')
     sky, = np.where(data2['OBJTYPE'] == 'SKY')
-    if len(sky) > 0: outstr['HMAG'][sky] = -999.999
+    if len(sky) > 0: outstr['HMAG'][0][sky] = -999.999
     if len(sci) > 0:
-        pdb.set_trace()
-        outstr['HMAG'][sci] = data2['HMAG'][sci]
-        outstr['STARFIBER'][sci] = 1
-        outstr['SNFIBER'][sci] =   data2['SN'][sci, :, iexp]
+        outstr['HMAG'][0][sci]      = data2['HMAG'][sci]
+        outstr['STARFIBER'][0][sci] = 1
+        outstr['SNFIBER'][0][sci]   = data2['SN'][sci, :, iexp]
 
     return outstr
 
