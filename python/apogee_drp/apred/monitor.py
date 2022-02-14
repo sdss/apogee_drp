@@ -3220,9 +3220,10 @@ def getSnrStruct(plsum=None):
             magelab = 'E' + maglab
             g, = np.where((data2['HMAG'][sci] >= magbin-magrad) & (data2['HMAG'][sci] < magbin+magrad))
             if len(g) > 5:
+                pdb.set_trace()
                 outstr[maglab][iexp] = np.nanmean(data2['SN'][sci[g], :, iexp], axis=1)
                 outstr[magelab][iexp] = np.nanstd(data2['SN'][sci[g], :, iexp], axis=1)
-                pdb.set_trace()
+
 
     return outstr
 
