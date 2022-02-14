@@ -852,7 +852,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'S/N$^{2}$ / NREADS / 47')
+                if ichip == 1: ax.set_ylabel(r'S/N$^{2}$ / NREADS / 47')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
 
@@ -875,11 +875,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
                 if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-            fig.subplots_adjust(left=0.06,right=0.93,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.05,right=0.94,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
-        return
 
         ###########################################################################################
         # snhistory3.png
@@ -909,7 +908,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'S/N$^{2}$ per minute')
+                if ichip == 1: ax.set_ylabel(r'S/N$^{2}$ per minute')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
 
@@ -919,12 +918,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['SN11'][:,2-ichip]**2)  / allsnrg['EXPTIME'] / 60
-                ax.scatter(xvals, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+                scolors = allsnrg['MOONPHASE']
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
 
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                cax.minorticks_on()
+                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            fig.subplots_adjust(left=0.05,right=0.94,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
