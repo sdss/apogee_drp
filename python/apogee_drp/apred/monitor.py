@@ -147,7 +147,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
                 hdul.close()
                 for iexp in range(nexp):
-                    if (i==0) & (iexp == 0):
+                    if count == 0:
                         outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
                     else:
                         newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
