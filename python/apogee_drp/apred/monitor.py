@@ -113,7 +113,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #            outstr = np.concatenate([outstr, newstr])
 
         if allv5 is None:
-            allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits')
+            allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
             allv5 = fits.getdata(allv5path)
 
         gd, = np.where(allv5['TELESCOPE'] == telescope)
