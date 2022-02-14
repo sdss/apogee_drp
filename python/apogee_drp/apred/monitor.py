@@ -94,12 +94,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         gd, = np.where(allv['TELESCOPE'] == telescope)
         allv = allv[gd]
         vis = allv['FIELD'] + '/' + allv['PLATE'] + '/' + np.array(allv['MJD']).astype(str) + '/'
-        uvis,uind = np.unique(pmf, return_index=True)
+        uvis,uind = np.unique(vis, return_index=True)
         uallv = allv[uind]
         nvis = len(uvis)
 
         for i in range(nvis):
             plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv['PLATE'][i] + '-' + str(uallv['MJD'][i]) + '.fits'
+            pdb.set_trace()
             if os.path.exists(plsum):
                 plsum1 = fits.open(plsum)[1].data
                 plsum2 = fits.open(plsum)[2].data
