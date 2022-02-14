@@ -3036,7 +3036,7 @@ def getSnrStruct(plsum=None):
                    ('NSN',       np.int32),
                    ('SNRATIO',   np.float64),
                    ('HMAG',      np.float64, 300),
-                   ('OBJTYPE',   np.str, 10),
+                   ('OBJTYPE',   np.str, 10, 300),
                    ('SNFIBER',   np.float64, (300, 3))])
 
     outstr = np.zeros(nexp, dtype=dt)
