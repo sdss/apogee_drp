@@ -835,7 +835,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ngd = len(allsnrg)
 
             ymin = -0.01
-            ymax = 0.15
+            ymax = 0.18
             yspan = ymax-ymin
 
             fig = plt.figure(figsize=(30,14))
