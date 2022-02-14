@@ -830,10 +830,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             maglims = [10.5, 11.5]
             gd, = np.where((np.isnan(allsnr['SNRATIO']) == False) & (allsnr['SN'][:,1] > 10))# & (allsnr['HMAG'] >= maglims[0]) & (allsnr['HMAG'] <= maglims[1]))
-            ngd = len(gd)
             allsnrg = allsnr[gd]
-
+            gmag = np.where(allsnr['HMAG']>maglims[0]) & (allsnr['HMAG']<maglims[1]))
+            ugd,uind,ucount=np.unique(gmag[0], return_index=True, return_counts=True)
+            gd, = np.where(ucount > 5)
+            uind = uind[gd]
+            allsnrg = allsnrg[gmag][0][uind]
+            ngd = len(allsnrg)
             pdb.set_trace()
+
             fig = plt.figure(figsize=(30,14))
 
             allv5 = fits.getdata(specdir5 + 'summary/allVisit-daily-apo25m.fits')
