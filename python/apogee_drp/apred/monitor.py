@@ -3009,6 +3009,7 @@ def getSnrStruct(plsum=None):
     nexp = len(data1['IM'])
     cols = data1.columns.names
     field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
+    fiberid = data2['FIBERID']
 
     dt = np.dtype([('IM',        np.int32),
                    ('TELESCOPE', np.str, 6),
@@ -3075,16 +3076,15 @@ def getSnrStruct(plsum=None):
         outstr['SKY'][iexp] =       data1['SKY'][iexp]
         outstr['SN'][iexp] =        data1['SN'][iexp]
         outstr['SNC'][iexp] =       data1['SNC'][iexp]
-        outstr['ALTSN'][iexp]=     data1['ALTSN'][iexp]
+        outstr['ALTSN'][iexp]=      data1['ALTSN'][iexp]
         outstr['NSN'][iexp] =       data1['NSN'][iexp]
         outstr['SNRATIO'][iexp] =   data1['SNRATIO'][iexp]
-        if len(data2['HMAG']) != 300:
-            pdb.set_trace()
-        outstr['HMAG'][iexp] =      data2['HMAG']
-        g, = np.where(data2['OBJTYPE'] != 'SKY')
-        outstr['STARFIBER'][iexp][g] = 1
-        #outstr['OBJTYPE'][iexp] =   data2['OBJTYPE']
-        outstr['SNFIBER'][iexp] =   data2['SN'][:, :, iexp]
+        sci, = np.where(data2['OBJTYPE'] != 'SKY')
+        sky, = np.where(data2['OBJTYPE'] == 'SKY')
+        outstr['HMAG'][iexp, sci] = data2['HMAG'][sci]
+        outstr['HMAG'][iexp, sky] = -999.999
+        outstr['STARFIBER'][iexp, sci] = 1
+        outstr['SNFIBER'][iexp, sci] =   data2['SN'][sci, :, iexp]
 
     return outstr
 
