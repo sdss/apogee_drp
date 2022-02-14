@@ -134,12 +134,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         print('----> monitor: adding data for ' + str(nvis) + '  visits.')
 
         count = 0
-        for i in range(5):
+        for i in range(nvis):
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
             p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
             if (len(p) < 1) & (os.path.exists(plsum)):
-                print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
+                print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
                 hdul = fits.open(plsum)
                 data1 = hdul[1].data
                 data2 = hdul[2].data
