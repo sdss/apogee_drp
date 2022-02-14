@@ -90,18 +90,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         if allv4 is None:
             allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
-            allv4 = fits.getdata(allvpath)
+            allv4 = fits.getdata(allv4path)
 
         gd, = np.where(allv['TELESCOPE'] == telescope)
-        allv = allv[gd]
-        vis = allv['FIELD'] + '/' + allv['PLATE'] + '/' + np.array(allv['MJD']).astype(str) + '/'
+        allv4 = allv4[gd]
+        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
         uvis,uind = np.unique(vis, return_index=True)
-        uallv = allv[uind]
+        uallv4 = allv4[uind]
         nvis = len(uvis)
         print('   adding data for ' + str(nvis) + ' pre-5 visits.')
 
         for i in range(nvis):
-            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv['PLATE'][i] + '-' + str(uallv['MJD'][i]) + '.fits'
+            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
             pdb.set_trace()
             if os.path.exists(plsum):
