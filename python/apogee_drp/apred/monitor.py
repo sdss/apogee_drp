@@ -101,7 +101,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         print('   adding data for ' + str(nvis) + ' pre-5 visits.')
 
         for i in range(nvis):
-            plsum = specdir4 + 'visit/' + telescope + '/' + uallv['FIELD'][i] + '/' + uallv['PLATE'][i].strip() + '/' + str(uallv['MJD'][i]) + 'apPlateSum-' + uallv['PLATE'][i].strip() + '-' + str(uallv['MJD'][i]) + '.fits'
+            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv['PLATE'][i] + '-' + str(uallv['MJD'][i]) + '.fits'
+            plsum = plsum.replace(' ', '')
             pdb.set_trace()
             if os.path.exists(plsum):
                 plsum1 = fits.open(plsum)[1].data
