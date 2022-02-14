@@ -3180,12 +3180,14 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
     sci, = np.where(data2['OBJTYPE'] != 'SKY')
     sky, = np.where(data2['OBJTYPE'] == 'SKY')
-    if len(sky) > 0: outstr['HMAG'][0][sky] = -999.999
     if len(sci) > 0:
-        outstr['HMAG'][0][sci]      = data2['HMAG'][sci]
-        outstr['STARFIBER'][0][sci] = 1
-        pdb.set_trace()
-        outstr['SNFIBER'][0][sci]   = data2['SN'][sci, :, iexp]
+        gd, = np.where(np.isnan(data2['SN'][sci, iexp, 1]) == False)
+        if len(gd) > 0:
+            outstr['HMAG'][0][sci][gd]      = data2['HMAG'][sci][gd]
+            outstr['STARFIBER'][0][sci][gd] = 1
+            pdb.set_trace()
+            outstr['SNFIBER'][0][sci][gd]   = data2['SN'][sci[gd], iexp, :]
+    if len(sky) > 0: outstr['HMAG'][0][sky] = -999.999
 
     return outstr
 
