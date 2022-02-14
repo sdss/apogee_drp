@@ -3336,7 +3336,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     sci, = np.where(data2['OBJTYPE'] != 'SKY')
     sky, = np.where(data2['OBJTYPE'] == 'SKY')
     if len(sci) > 0:
-        gd, = np.where(np.isnan(data2['SN'][sci, iexp, 1]) == False)
+        gd, = np.where((data2['SN'][sci, iexp, 1] > 0) & (np.isnan(data2['SN'][sci, iexp, 1]) == False))
         if len(gd) > 0:
             outstr['HMAG'][0][sci][gd]      = data2['HMAG'][sci][gd]
             outstr['STARFIBER'][0][sci][gd] = 1
@@ -3345,8 +3345,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
                 maglab = 'SN' + str(magbin)
                 magelab = 'E' + maglab
                 magnlab = 'N' + maglab
-                pdb.set_trace()
-                g, = np.where((data2['HMAG'][0][sci][gd] >= magbin-magrad) & (data2['HMAG'][sci][0][gd] < magbin+magrad))
+                g, = np.where((data2['HMAG'][sci][gd] >= magbin-magrad) & (data2['HMAG'][sci][gd] < magbin+magrad))
                 if len(g) > 5:
                     outstr[maglab] = np.nanmean(data2['SN'][sci[gd][g], iexp, :], axis=0)
                     outstr[magelab] = np.nanstd(data2['SN'][sci[gd][g], iexp, :], axis=0)
