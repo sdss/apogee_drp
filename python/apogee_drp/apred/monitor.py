@@ -830,6 +830,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
+            pdb.set_trace()
             gd, = np.where((allsnr['NSN11'] > 10) & (allsnr['SN11'][:1] > 10))
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
