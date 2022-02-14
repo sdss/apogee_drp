@@ -3343,7 +3343,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
                 maglab = 'SN' + str(magbin)
                 magelab = 'E' + maglab
                 magnlab = 'N' + maglab
-                g, = np.where((data2['HMAG'][sci] >= magbin-magrad) & (data2['HMAG'][sci] < magbin+magrad))
+                g, = np.where((data2['HMAG'][0][sci][gd] >= magbin-magrad) & (data2['HMAG'][sci][0][gd] < magbin+magrad))
                 if len(g) > 5:
                     outstr[maglab] = np.nanmean(data2['SN'][sci[gd][g], iexp, :], axis=0)
                     outstr[magelab] = np.nanstd(data2['SN'][sci[gd][g], iexp, :], axis=0)
