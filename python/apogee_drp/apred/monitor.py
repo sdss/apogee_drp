@@ -102,7 +102,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         nvis = len(uvis)
         print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
-        for i in range(nvis):
+        for i in range(5):
             plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
             print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
@@ -116,7 +116,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         Table(outstr).write(outfile, overwrite=True)
         print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        #return
+        return
 
         outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
@@ -3161,13 +3161,20 @@ def getSnrStruct(plsum=None):
                    ('SN11',      np.float64, 3),
                    ('SN12',      np.float64, 3),
                    ('SN13',      np.float64, 3),
-                   ('ESN7',       np.float64, 3),
-                   ('ESN8',       np.float64, 3),
-                   ('ESN9',       np.float64, 3),
-                   ('ESN10',      np.float64, 3),
-                   ('ESN11',      np.float64, 3),
-                   ('ESN12',      np.float64, 3),
-                   ('ESN13',      np.float64, 3)])
+                   ('ESN7',      np.float64, 3),
+                   ('ESN8',      np.float64, 3),
+                   ('ESN9',      np.float64, 3),
+                   ('ESN10',     np.float64, 3),
+                   ('ESN11',     np.float64, 3),
+                   ('ESN12',     np.float64, 3),
+                   ('ESN13',     np.float64, 3),
+                   ('NSN7',      np.float64),
+                   ('NSN8',      np.float64),
+                   ('NSN9',      np.float64),
+                   ('NSN10',     np.float64),
+                   ('NSN11',     np.float64),
+                   ('NSN12',     np.float64),
+                   ('NSN13',     np.float64)])
 
     outstr = np.zeros(nexp, dtype=dt)
 
@@ -3218,12 +3225,12 @@ def getSnrStruct(plsum=None):
         for magbin in magbins:
             maglab = 'SN' + str(magbin)
             magelab = 'E' + maglab
+            magnlab = 'N' + maglab
             g, = np.where((data2['HMAG'][sci] >= magbin-magrad) & (data2['HMAG'][sci] < magbin+magrad))
             if len(g) > 5:
-                pdb.set_trace()
-                outstr[maglab][iexp] = np.nanmean(data2['SN'][sci[g], :, iexp], axis=1)
-                outstr[magelab][iexp] = np.nanstd(data2['SN'][sci[g], :, iexp], axis=1)
-
+                outstr[maglab][iexp] = np.nanmean(data2['SN'][sci[g], :, iexp], axis=0)
+                outstr[magelab][iexp] = np.nanstd(data2['SN'][sci[g], :, iexp], axis=0)
+                outstr[magnlab][iexp] = len(g)
 
     return outstr
 
