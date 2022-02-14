@@ -3045,44 +3045,44 @@ def getSnrStruct(plsum=None):
         tmp = Time(data1['DATEOBS'][iexp], format='fits')
         jd = tmp.jd - 2.4e6
 
-        outstr['IM']        = data1['IM'][iexp]
-        outstr['TELESCOPE'] = data1['TELESCOPE'][iexp]
-        outstr['FIELD']     = field
-        outstr['PLATE']     = data1['PLATE'][iexp]
-        outstr['MJD']       = data1['MJD'][iexp]
-        outstr['DATEOBS']   = data1['DATEOBS'][iexp]
-        outstr['JD']        = jd
-        outstr['NREADS'] =    data1['NREADS'][iexp]
+        outstr['IM'][iexp]        = data1['IM'][iexp]
+        outstr['TELESCOPE'][iexp] = data1['TELESCOPE'][iexp]
+        outstr['FIELD'][iexp]     = field
+        outstr['PLATE'][iexp]     = data1['PLATE'][iexp]
+        outstr['MJD'][iexp]       = data1['MJD'][iexp]
+        outstr['DATEOBS'][iexp]   = data1['DATEOBS'][iexp]
+        outstr['JD'][iexp]        = jd
+        outstr['NREADS'][iexp] =    data1['NREADS'][iexp]
         if 'EXPTIME' in cols:
-            outstr['EXPTIME'] =   data1['EXPTIME'][iexp]
+            outstr['EXPTIME'][iexp] =   data1['EXPTIME'][iexp]
         else:
             snfile = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
             if os.path.exists(snfile):
                 snfile = ascii.read(snfile)
                 g, = np.where(data1['IM'][iexp] == snfile['col1'])
                 if len(g) > 0:
-                    outstr['EXPTIME'] = float(snfile['col8'][g][0].split('\t')[0])
-        outstr['SECZ'] =      data1['SECZ'][iexp]
-        outstr['SEEING'] =    data1['SEEING'][iexp]
-        outstr['MOONDIST'] =  data1['MOONDIST']
-        outstr['MOONPHASE'] = data1['MOONPHASE']
-        outstr['FWHM'] =      data1['FWHM'][iexp]
-        outstr['GDRMS'] =     data1['GDRMS'][iexp]
-        outstr['DITHER'] =    data1['DITHER'][iexp]
-        outstr['ZERO'] =      data1['ZERO'][iexp]
-        outstr['ZERORMS'] =   data1['ZERORMS'][iexp]
-        outstr['ZERONORM'] =  data1['ZERONORM'][iexp]
-        outstr['SKY'] =       data1['SKY'][iexp]
-        outstr['SN'] =        data1['SN'][iexp]
-        outstr['SNC'] =       data1['SNC'][iexp]
-        outstr['ALTSN'] =     data1['ALTSN'][iexp]
-        outstr['NSN'] =       data1['NSN'][iexp]
-        outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
+                    outstr['EXPTIME'][iexp] = float(snfile['col8'][g][0].split('\t')[0])
+        outstr['SECZ'][iexp] =      data1['SECZ'][iexp]
+        outstr['SEEING'][iexp] =    data1['SEEING'][iexp]
+        outstr['MOONDIST'][iexp] =  data1['MOONDIST']
+        outstr['MOONPHASE'][iexp] = data1['MOONPHASE']
+        outstr['FWHM'][iexp] =      data1['FWHM'][iexp]
+        outstr['GDRMS'][iexp] =     data1['GDRMS'][iexp]
+        outstr['DITHER'][iexp] =    data1['DITHER'][iexp]
+        outstr['ZERO'][iexp] =      data1['ZERO'][iexp]
+        outstr['ZERORMS'][iexp] =   data1['ZERORMS'][iexp]
+        outstr['ZERONORM'][iexp] =  data1['ZERONORM'][iexp]
+        outstr['SKY'][iexp] =       data1['SKY'][iexp]
+        outstr['SN'][iexp] =        data1['SN'][iexp]
+        outstr['SNC'][iexp] =       data1['SNC'][iexp]
+        outstr['ALTSN'][iexp]=     data1['ALTSN'][iexp]
+        outstr['NSN'][iexp] =       data1['NSN'][iexp]
+        outstr['SNRATIO'][iexp] =   data1['SNRATIO'][iexp]
         if len(data2['HMAG']) != 300:
             pdb.set_trace()
-        outstr['HMAG'] =      data2['HMAG']
-        outstr['OBJTYPE'] =   data2['OBJTYPE']
-        outstr['SNFIBER'] =   data2['SNFIBER'][:, :, iexp]
+        outstr['HMAG'][iexp] =      data2['HMAG']
+        outstr['OBJTYPE'][iexp] =   data2['OBJTYPE']
+        outstr['SNFIBER'][iexp] =   data2['SNFIBER'][:, :, iexp]
 
     return outstr
 
