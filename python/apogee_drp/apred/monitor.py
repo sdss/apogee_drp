@@ -3185,7 +3185,6 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         if len(gd) > 0:
             outstr['HMAG'][0][sci][gd]      = data2['HMAG'][sci][gd]
             outstr['STARFIBER'][0][sci][gd] = 1
-            pdb.set_trace()
             outstr['SNFIBER'][0][sci][gd]   = data2['SN'][sci[gd], iexp, :]
     if len(sky) > 0: outstr['HMAG'][0][sky] = -999.999
 
