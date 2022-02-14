@@ -85,17 +85,33 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
+        outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
+        print("----> monitor: Making " + os.path.basename(outfile))
+
         allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
         allv = fits.getdata(allvpath)
 
         gd, = np.where(allv['TELESCOPE'] == telescope)
-        pdb.set_trace()
+        allv = allv[gd]
+        vis = allv['FIELD'] + '/' + allv['PLATE'] + '/' + np.array(allv['MJD']).astype(str) + '/'
+        uvis,uind = np.unique(pmf, return_index=True)
+        uallv = allv[uind]
+        nvis = len(uvis)
+
+        for i in range(nvis):
+            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv['PLATE'][i] + '-' + str(uallv['MJD'][i]) + '.fits'
+            if os.path.exists(plsum):
+                plsum1 = fits.open(plsum)[1].data
+                plsum2 = fits.open(plsum)[2].data
+                pdb.set_trace()
+
+
 
         files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
         if len(files) < 1:
             print("----> monitor: No apPlateSum files!")
         else:
-            outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
+
             print("----> monitor: Making " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
