@@ -100,7 +100,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         nvis = len(uvis)
         print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
-        for i in range(5):
+        for i in range(nvis):
             plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
             print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
@@ -114,37 +114,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         Table(outstr).write(outfile, overwrite=True)
         print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        pdb.set_trace()
-
-        files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
-        if len(files) < 1:
-            print("----> monitor: No apPlateSum files!")
-        else:
-
-            print("----> monitor: Making " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            outstr = getSciStruct(allsci)
-
-            files.sort()
-            files = np.array(files)
-            nfiles=len(files)
-
-            # Loop over SDSS-V files and add them to output structure
-            for i in range(nfiles):
-                data = fits.open(files[i])[1].data
-                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
-                if len(check) > 0:
-                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
-                    continue
-                else:
-                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                    newstr = getSciStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
-
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
-
+        return
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
