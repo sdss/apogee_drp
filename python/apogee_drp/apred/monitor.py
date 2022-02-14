@@ -835,9 +835,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ugd,uind,ucount=np.unique(gmag[0], return_index=True, return_counts=True)
             gd, = np.where(ucount > 5)
             uind = uind[gd]
+            pdb.set_trace()
             allsnrg = allsnrg[gmag][0][uind]
             ngd = len(allsnrg)
-            pdb.set_trace()
+
 
             fig = plt.figure(figsize=(30,14))
 
