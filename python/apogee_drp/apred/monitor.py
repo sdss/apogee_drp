@@ -834,8 +834,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
-            ymin = 0
-            ymax = 0.12
+            ymin = -0.01
+            ymax = 0.15
             yspan = ymax-ymin
 
             fig = plt.figure(figsize=(30,14))
@@ -861,7 +861,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 xvals = allsnrg['JD']
-                yvals = (allsnrg['SN11'][:,ichip]**2)  / allsnrg['EXPTIME'] / 60
+                yvals = (allsnrg['SN11'][:,2-ichip]**2)  / allsnrg['EXPTIME'] / 60
                 ax.scatter(xvals, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
