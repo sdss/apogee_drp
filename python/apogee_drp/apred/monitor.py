@@ -834,13 +834,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
+            ymin = 0
+            ymax = 0.12
+            yspan = ymax-ymin
+
             fig = plt.figure(figsize=(30,14))
 
             for ichip in range(nchips):
                 chip = chips[ichip]
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin, xmax)
-                #ax.set_ylim(ymin, ymax)
+                ax.set_ylim(ymin, ymax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
