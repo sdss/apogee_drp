@@ -146,9 +146,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 hdul.close()
                 for iexp in range(nexp):
                     if (i==0) & (iexp == 0):
-                        outstr = getSnrStruct(data1, data2, iexp, field, os.path.basename(plsum))
+                        outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
                     else:
-                        newstr = getSnrStruct(data1, data2, iexp, field, os.path.basename(plsum))
+                        newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
                         outstr = np.concatenate([outstr, newstr])
 
         pdb.set_trace()
