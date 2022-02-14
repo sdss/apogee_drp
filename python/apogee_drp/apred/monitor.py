@@ -92,7 +92,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
             allv4 = fits.getdata(allv4path)
 
-        gd, = np.where(allv['TELESCOPE'] == telescope)
+        gd, = np.where(allv4['TELESCOPE'] == telescope)
         allv4 = allv4[gd]
         vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
         uvis,uind = np.unique(vis, return_index=True)
