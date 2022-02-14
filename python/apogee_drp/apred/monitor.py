@@ -38,7 +38,7 @@ from datetime import date,datetime
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True,
             makeplots=True, makedomeplots=True, makequartzplots=True,
-            makecomplots=False, fiberdaysbin=20):
+            makecomplots=False, fiberdaysbin=20, allv4=None):
 
     print("----> monitor starting")
 
@@ -88,8 +88,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
-        allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
-        allv = fits.getdata(allvpath)
+        if allv4 is None:
+            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
+            allv4 = fits.getdata(allvpath)
 
         gd, = np.where(allv['TELESCOPE'] == telescope)
         allv = allv[gd]
@@ -97,9 +98,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         uvis,uind = np.unique(vis, return_index=True)
         uallv = allv[uind]
         nvis = len(uvis)
+        print('   adding data for ' + str(nvis) + ' pre-5 visits.')
 
         for i in range(nvis):
-            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv['PLATE'][i] + '-' + str(uallv['MJD'][i]) + '.fits'
+            plsum = specdir4 + 'visit/' + telescope + '/' + uallv['FIELD'][i] + '/' + uallv['PLATE'][i].strip() + '/' + str(uallv['MJD'][i]) + 'apPlateSum-' + uallv['PLATE'][i].strip() + '-' + str(uallv['MJD'][i]) + '.fits'
             pdb.set_trace()
             if os.path.exists(plsum):
                 plsum1 = fits.open(plsum)[1].data
