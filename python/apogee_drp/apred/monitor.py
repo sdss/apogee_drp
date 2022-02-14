@@ -7,7 +7,7 @@ import time
 import numpy as np
 from pathlib import Path
 from astropy.io import fits, ascii
-from astropy.table import Table
+from astropy.table import Table, vstack
 from astropy.time import Time
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -38,7 +38,7 @@ from datetime import date,datetime
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True,
             makeplots=True, makedomeplots=True, makequartzplots=True,
-            makecomplots=False, fiberdaysbin=20, allv4=None):
+            makecomplots=False, fiberdaysbin=20, allv4=None, allv5=None):
 
     print("----> monitor starting")
 
@@ -70,13 +70,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
     allsci4 =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+    allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
 
     # Read in the master summary files
     allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
     allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
-    snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
+    #snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
+    allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
     dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
     quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
@@ -85,36 +87,79 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
+#        outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
+#        print("----> monitor: Making " + os.path.basename(outfile))
+
+#        if allv4 is None:
+#            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
+#            allv4 = fits.getdata(allv4path)
+
+#        gd, = np.where(allv4['TELESCOPE'] == telescope)
+#        allv4 = allv4[gd]
+#        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
+#        uvis,uind = np.unique(vis, return_index=True)
+#        uallv4 = allv4[uind]
+#        nvis = len(uvis)
+#        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
+#
+#        for i in range(nvis):
+#            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
+#            plsum = plsum.replace(' ', '')
+#            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
+#            if os.path.exists(plsum):
+#                if i == 0:
+#                    outstr = getSnrStruct(plsum)
+#                else:
+#                    newstr = getSnrStruct(plsum)
+#                    outstr = np.concatenate([outstr, newstr])
+
+#        Table(outstr).write(outfile, overwrite=True)
+#        print("----> monitor: Finished making " + os.path.basename(outfile))
+
+#        return
+
         outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
-        if allv4 is None:
-            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
-            allv4 = fits.getdata(allv4path)
+        if allv5 is None:
+            allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
+            allv5 = fits.getdata(allv5path)
 
-        gd, = np.where(allv4['TELESCOPE'] == telescope)
-        allv4 = allv4[gd]
-        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
+        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr['MJD'])))
+        allv5 = allv5[gd]
+        vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
         uvis,uind = np.unique(vis, return_index=True)
-        uallv4 = allv4[uind]
+        uallv5 = allv5[uind]
         nvis = len(uvis)
-        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
+        print('----> monitor: adding data for ' + str(nvis) + '  visits.')
 
+        count = 0
         for i in range(nvis):
-            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
+            plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
-            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
-            if os.path.exists(plsum):
-                if i == 0:
-                    outstr = getSnrStruct(plsum)
-                else:
-                    newstr = getSnrStruct(plsum)
-                    outstr = np.concatenate([outstr, newstr])
+            p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
+            if (len(p) < 1) & (os.path.exists(plsum)):
+                print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
+                hdul = fits.open(plsum)
+                data1 = hdul[1].data
+                data2 = hdul[2].data
+                nexp = len(data1['IM'])
+                field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
+                hdul.close()
+                for iexp in range(nexp):
+                    if count == 0:
+                        outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
+                    else:
+                        newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
+                        outstr = np.concatenate([outstr, newstr])
+                    count += 1
 
-        Table(outstr).write(outfile, overwrite=True)
-        print("----> monitor: Finished making " + os.path.basename(outfile))
+        if count > 0:
+            out = vstack([Table(allsnr4), Table(outstr)])
+            out.write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        return
+        #return
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
@@ -779,6 +824,122 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
 
     if makecomplots is True:
+        ###########################################################################################
+        # snhistory4.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory4.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            gd, = np.where((allsnr['NSN11'] > 10) & (allsnr['SN11'][:,1] > 10))
+            allsnrg = allsnr[gd]
+            ngd = len(allsnrg)
+
+            ymin = -0.01
+            ymax = 0.18
+            yspan = ymax-ymin
+
+            fig = plt.figure(figsize=(30,14))
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                #ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == 1: ax.set_ylabel(r'S/N$^{2}$ / NREADS / 47')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
+
+                if ichip == 0: ylims = ax.get_ylim()
+                pdb.set_trace()
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    #if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                xvals = allsnrg['JD']
+                yvals = (allsnrg['SN11'][:,2-ichip]**2)  / (allsnrg['NREADS'] / 47)
+                scolors = allsnrg['MOONPHASE']
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                cax.minorticks_on()
+                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+
+        ###########################################################################################
+        # snhistory3.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory3.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            gd, = np.where((allsnr['NSN11'] > 10) & (allsnr['SN11'][:,1] > 10))
+            allsnrg = allsnr[gd]
+            ngd = len(allsnrg)
+
+            ymin = -0.01
+            ymax = 0.18
+            yspan = ymax-ymin
+
+            fig = plt.figure(figsize=(30,14))
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                #ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == 1: ax.set_ylabel(r'S/N$^{2}$ per minute')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    #if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                xvals = allsnrg['JD']
+                yvals = (allsnrg['SN11'][:,2-ichip]**2)  / (allsnrg['EXPTIME'] / 60)
+                scolors = allsnrg['MOONPHASE']
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                cax.minorticks_on()
+                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        return
+
         ###########################################################################################
         # snhistory2.png
         plotfile = specdir5 + 'monitor/' + instrument + '/snhistory2.png'
@@ -2974,14 +3135,19 @@ def getSciStruct(data=None):
 
 ''' GETSNRSTRUCT: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
 def getSnrStruct(plsum=None):
-    data1 = fits.open(plsum)[1].data
-    data2 = fits.open(plsum)[2].data
+    magbins = np.array([7,8,9,10,11,12,13])
+    magrad = 0.5
+    hdul = fits.open(plsum)
+    data1 = hdul[1].data
+    data2 = hdul[2].data
     nexp = len(data1['IM'])
     cols = data1.columns.names
     field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
     fiberid = data2['FIBERID']
+    hdul.close()
 
-    dt = np.dtype([('IM',        np.int32),
+    dt = np.dtype([('SUMFILE',   np.str, 30),
+                   ('IM',        np.int32),
                    ('TELESCOPE', np.str, 6),
                    ('FIELD',     np.str, 30),
                    ('PLATE',     np.int32),
@@ -3008,7 +3174,28 @@ def getSnrStruct(plsum=None):
                    ('SNRATIO',   np.float64),
                    ('HMAG',      np.float64, 300),
                    ('STARFIBER', np.int32, 300),
-                   ('SNFIBER',   np.float64, (300, 3))])
+                   ('SNFIBER',   np.float64, (300, 3)),
+                   ('SN7',       np.float64, 3),
+                   ('SN8',       np.float64, 3),
+                   ('SN9',       np.float64, 3),
+                   ('SN10',      np.float64, 3),
+                   ('SN11',      np.float64, 3),
+                   ('SN12',      np.float64, 3),
+                   ('SN13',      np.float64, 3),
+                   ('ESN7',      np.float64, 3),
+                   ('ESN8',      np.float64, 3),
+                   ('ESN9',      np.float64, 3),
+                   ('ESN10',     np.float64, 3),
+                   ('ESN11',     np.float64, 3),
+                   ('ESN12',     np.float64, 3),
+                   ('ESN13',     np.float64, 3),
+                   ('NSN7',      np.float64),
+                   ('NSN8',      np.float64),
+                   ('NSN9',      np.float64),
+                   ('NSN10',     np.float64),
+                   ('NSN11',     np.float64),
+                   ('NSN12',     np.float64),
+                   ('NSN13',     np.float64)])
 
     outstr = np.zeros(nexp, dtype=dt)
 
@@ -3016,6 +3203,7 @@ def getSnrStruct(plsum=None):
         tmp = Time(data1['DATEOBS'][iexp], format='fits')
         jd = tmp.jd - 2.4e6
 
+        outstr['SUMFILE'][iexp]   = os.path.basename(plsum)
         outstr['IM'][iexp]        = data1['IM'][iexp]
         outstr['TELESCOPE'][iexp] = data1['TELESCOPE'][iexp]
         outstr['FIELD'][iexp]     = field
@@ -3055,6 +3243,138 @@ def getSnrStruct(plsum=None):
         outstr['HMAG'][iexp, sky] = -999.999
         outstr['STARFIBER'][iexp, sci] = 1
         outstr['SNFIBER'][iexp, sci] =   data2['SN'][sci, :, iexp]
+        for magbin in magbins:
+            maglab = 'SN' + str(magbin)
+            magelab = 'E' + maglab
+            magnlab = 'N' + maglab
+            g, = np.where((data2['HMAG'][sci] >= magbin-magrad) & (data2['HMAG'][sci] < magbin+magrad))
+            if len(g) > 5:
+                outstr[maglab][iexp] = np.nanmean(data2['SN'][sci[g], :, iexp], axis=0)
+                outstr[magelab][iexp] = np.nanstd(data2['SN'][sci[g], :, iexp], axis=0)
+                outstr[magnlab][iexp] = len(g)
 
     return outstr
+
+''' GETSNRSTRUCT2: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
+def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
+    magbins = np.array([7,8,9,10,11,12,13])
+    magrad = 0.5
+
+    cols = data1.columns.names
+
+    dt = np.dtype([('SUMFILE',   np.str, 30),
+                   ('IM',        np.int32),
+                   ('TELESCOPE', np.str, 6),
+                   ('FIELD',     np.str, 30),
+                   ('PLATE',     np.int32),
+                   ('MJD',       np.int32),
+                   ('JD',        np.float64),
+                   ('DATEOBS',   np.str, 30),
+                   ('NREADS',    np.int32),
+                   ('EXPTIME',   np.float64),
+                   ('DITHER',    np.float64),
+                   ('SECZ',      np.float64),
+                   ('SEEING',    np.float64),
+                   ('MOONDIST',  np.float64),
+                   ('MOONPHASE', np.float64),
+                   ('FWHM',      np.float64),
+                   ('GDRMS',     np.float64),
+                   ('ZERO',      np.float64),
+                   ('ZERORMS',   np.float64),
+                   ('ZERONORM',  np.float64),
+                   ('SKY',       np.float64, 3),
+                   ('SN',        np.float64, 3),
+                   ('SNC',       np.float64, 3),
+                   ('ALTSN',     np.float64, 3),
+                   ('NSN',       np.int32),
+                   ('SNRATIO',   np.float64),
+                   ('HMAG',      np.float64, 300),
+                   ('STARFIBER', np.int32, 300),
+                   ('SNFIBER',   np.float64, (300, 3)),
+                   ('SN7',       np.float64, 3),
+                   ('SN8',       np.float64, 3),
+                   ('SN9',       np.float64, 3),
+                   ('SN10',      np.float64, 3),
+                   ('SN11',      np.float64, 3),
+                   ('SN12',      np.float64, 3),
+                   ('SN13',      np.float64, 3),
+                   ('ESN7',      np.float64, 3),
+                   ('ESN8',      np.float64, 3),
+                   ('ESN9',      np.float64, 3),
+                   ('ESN10',     np.float64, 3),
+                   ('ESN11',     np.float64, 3),
+                   ('ESN12',     np.float64, 3),
+                   ('ESN13',     np.float64, 3),
+                   ('NSN7',      np.float64),
+                   ('NSN8',      np.float64),
+                   ('NSN9',      np.float64),
+                   ('NSN10',     np.float64),
+                   ('NSN11',     np.float64),
+                   ('NSN12',     np.float64),
+                   ('NSN13',     np.float64)])
+
+    outstr = np.zeros(1, dtype=dt)
+
+    tmp = Time(data1['DATEOBS'][iexp], format='fits')
+    jd = tmp.jd - 2.4e6
+
+    outstr['SUMFILE']   = sumfile
+    outstr['IM']        = data1['IM'][iexp]
+    outstr['TELESCOPE'] = data1['TELESCOPE'][iexp]
+    outstr['FIELD']     = field
+    outstr['PLATE']     = data1['PLATE'][iexp]
+    outstr['MJD']       = data1['MJD'][iexp]
+    outstr['DATEOBS']   = data1['DATEOBS'][iexp]
+    outstr['JD']        = jd
+    outstr['NREADS']    = data1['NREADS'][iexp]
+    if 'EXPTIME' in cols:
+        outstr['EXPTIME'] =   data1['EXPTIME'][iexp]
+    else:
+        snfile = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
+        if os.path.exists(snfile):
+            snfile = ascii.read(snfile)
+            g, = np.where(data1['IM'][iexp] == snfile['col1'])
+            if len(g) > 0:
+                outstr['EXPTIME'] = float(snfile['col8'][g][0].split('\t')[0])
+    outstr['SECZ'] =      data1['SECZ'][iexp]
+    outstr['SEEING'] =    data1['SEEING'][iexp]
+    outstr['MOONDIST'] =  data1['MOONDIST'][iexp]
+    outstr['MOONPHASE'] = data1['MOONPHASE'][iexp]
+    outstr['FWHM'] =      data1['FWHM'][iexp]
+    outstr['GDRMS'] =     data1['GDRMS'][iexp]
+    outstr['DITHER'] =    data1['DITHER'][iexp]
+    outstr['ZERO'] =      data1['ZERO'][iexp]
+    outstr['ZERORMS'] =   data1['ZERORMS'][iexp]
+    outstr['ZERONORM'] =  data1['ZERONORM'][iexp]
+    outstr['SKY'] =       data1['SKY'][iexp]
+    outstr['SN'] =        data1['SN'][iexp]
+    outstr['SNC'] =       data1['SNC'][iexp]
+    outstr['ALTSN'] =     data1['ALTSN'][iexp]
+    outstr['NSN'] =       data1['NSN'][iexp]
+    outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
+    sci, = np.where(data2['OBJTYPE'] != 'SKY')
+    sky, = np.where(data2['OBJTYPE'] == 'SKY')
+    if len(sci) > 0:
+        gd, = np.where((data2['SN'][sci, iexp, 1] > 0) & (np.isnan(data2['SN'][sci, iexp, 1]) == False))
+        if len(gd) > 0:
+            outstr['HMAG'][0][sci][gd]      = data2['HMAG'][sci][gd]
+            outstr['STARFIBER'][0][sci][gd] = 1
+            outstr['SNFIBER'][0][sci][gd]   = data2['SN'][sci[gd], iexp, :]
+            for magbin in magbins:
+                maglab = 'SN' + str(magbin)
+                magelab = 'E' + maglab
+                magnlab = 'N' + maglab
+                g, = np.where((data2['HMAG'][sci][gd] >= magbin-magrad) & (data2['HMAG'][sci][gd] < magbin+magrad))
+                if len(g) > 5:
+                    outstr[maglab] = np.nanmean(data2['SN'][sci[gd][g], iexp, :], axis=0)
+                    outstr[magelab] = np.nanstd(data2['SN'][sci[gd][g], iexp, :], axis=0)
+                    outstr[magnlab] = len(g)
+    if len(sky) > 0: outstr['HMAG'][0][sky] = -999.999
+
+    return outstr
+
+
+
+
+
 
