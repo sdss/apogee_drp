@@ -3184,6 +3184,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     if len(sci) > 0:
         outstr['HMAG'][0][sci]      = data2['HMAG'][sci]
         outstr['STARFIBER'][0][sci] = 1
+        pdb.set_trace()
         outstr['SNFIBER'][0][sci]   = data2['SN'][sci, :, iexp]
 
     return outstr
