@@ -2856,7 +2856,7 @@ def getSnrStruct(plsum=None):
             outstr['EXPTIME'] =   data1['EXPTIME'][iexp]
         else:
             tmp = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
-            if os.path.exist(tmp):
+            if os.path.exists(tmp):
                 tmp = ascii.read(tmp)
                 g, = np.where(data1['IM'][iexp] == tmp['col1'])
                 if len(g) > 0:
