@@ -3085,7 +3085,7 @@ def getSnrStruct(plsum=None):
         g, = np.where(data2['OBJTYPE'] != 'SKY')
         outstr['STARFIBER'][iexp][g] = 1
         #outstr['OBJTYPE'][iexp] =   data2['OBJTYPE']
-        outstr['SNFIBER'][iexp] =   data2['SNFIBER'][:, :, iexp]
+        outstr['SNFIBER'][iexp] =   data2['SN'][:, :, iexp]
 
     return outstr
 
