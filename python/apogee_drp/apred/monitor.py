@@ -38,7 +38,7 @@ from datetime import date,datetime
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True,
             makeplots=True, makedomeplots=True, makequartzplots=True,
-            makecomplots=False, fiberdaysbin=20):
+            makecomplots=False, fiberdaysbin=20, allv4=None):
 
     print("----> monitor starting")
 
@@ -76,11 +76,46 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
     allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
+    snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
     dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
     quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
 
     if makesumfiles is True:
+        ###########################################################################################
+        # MAKE MASTER apSNRsum FILE
+        # Append together S/N arrays and other metadata from apPlateSum files
+        outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
+        print("----> monitor: Making " + os.path.basename(outfile))
+
+        if allv4 is None:
+            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
+            allv4 = fits.getdata(allv4path)
+
+        gd, = np.where(allv4['TELESCOPE'] == telescope)
+        allv4 = allv4[gd]
+        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
+        uvis,uind = np.unique(vis, return_index=True)
+        uallv4 = allv4[uind]
+        nvis = len(uvis)
+        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
+
+        for i in range(nvis):
+            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
+            plsum = plsum.replace(' ', '')
+            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
+            if os.path.exists(plsum):
+                if i == 0:
+                    outstr = getSnrStruct(plsum)
+                else:
+                    newstr = getSnrStruct(plsum)
+                    outstr = np.concatenate([outstr, newstr])
+
+        Table(outstr).write(outfile, overwrite=True)
+        print("----> monitor: Finished making " + os.path.basename(outfile))
+
+        return
+
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
         # Get zeropoint info from apPlateSum files
@@ -744,6 +779,103 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
 
     if makecomplots is True:
+        ###########################################################################################
+        # snhistory2.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory2.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            #gd, = np.where((allsci['SN'][:,1] > 15) & (allsci['MJD'] > 59146))
+            gd, = np.where(allsci['MJD'] > 59146)
+            gsci = allsci[gd]
+            gord = np.argsort(gsci['MJD'])
+            gsci = gsci[gord]
+            nsci = len(gd)
+
+            #fields = np.array(['18956', '19106', '19092', '19942', '19942', '19942', '18956', '19942', '20950', '20918', '18956', '18956', '18956', '20549', '20549', '20549', '20549', '20002', '20902', '20900', '17031', '20894', '19942', '19852', '19852'])
+            #plates = np.array(['1917', '2573', '2649', '3238', '3235', '3233', '3239', '3234', '3258', '3216', '3207', '3206', '3203', '3198', '3199', '3201', '3202', '3167', '3174', '3172', '3122', '3168', '3119', '3120', '3121'])
+            #mjds = np.array(['59595', '59601', '59602', '59620', '59620', '59620', '59620', '59620', '59620', '59619', '59619', '59619', '59619', '59619', '59619', '59619', '59619', '59618', '59618', '59618', '59618', '59618', '59616', '59616'])
+
+
+            fig = plt.figure(figsize=(30,14))
+
+            allv5 = fits.getdata(specdir5 + 'summary/allVisit-daily-apo25m.fits')
+            umjd,uind = np.unique(allv5['mjd'], return_index=True)
+            nmjd = len(umjd)
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            ax.set_xlim(xmin, xmax)
+            #ax.set_ylim(ymin, ymax)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            #if ichip == nchips-1: ax.set_xlabel(r'MJD')
+            ax.set_xlabel(r'MJD')
+            ax.set_ylabel(r'S/N$^{2}$ per minute')
+            #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            ax.axvline(x=59146, color='r', linewidth=2)
+
+            for iyear in range(nyears):
+                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                #if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+            maglims = [10.5, 11.5]
+            snr = []
+            jd = []
+            secz = []
+            expt = []
+            moondist = []
+            moonphase = []
+            seeing  = []
+            for isci in range(nsci):
+                print(str(isci+1) + '/' + str(nsci))
+                plsum = glob.glob(specdir5 + 'visit/apo25m/*/' + str(gsci['PLATE'][isci]) + '/' + str(gsci['MJD'][isci]) + '/apPlateSum-*fits')
+                if len(plsum) < 1: continue
+                d1 = fits.open(plsum[0])[1].data
+                d2 = fits.open(plsum[0])[2].data
+                nexp = len(d1['EXPTIME'])
+                for iexp in range(nexp):
+                    print('   ' + str(iexp))
+                    gd, = np.where((d2['hmag'] >= maglims[0]) & (d2['hmag'] <= maglims[1]) & (d2['SN'][:,iexp,1] > 50))
+                    if len(gd) > 2:
+                        tt = Time(d1['DATEOBS'][iexp], format='fits')
+                        jd.append(tt.jd - 2.4e6)
+                        secz.append(d1['SECZ'][iexp])
+                        expt.append(d1['EXPTIME'][iexp])
+                        moondist.append(d1['MOONDIST'][iexp])
+                        moonphase.append(d1['MOONPHASE'][iexp])
+                        seeing.append(d1['SEEING'][iexp])
+
+                        sn = d2['SN'][gd, iexp, 1]
+                        meansn = np.nanmean(sn)
+                        sigsn = np.nanstd(sn)
+                        dif = np.absolute(sn - meansn)
+                        gd, = np.where(dif < 2*sigsn)
+                        sn = sn[gd]
+                        snr.append(np.nanmean(sn))
+
+            snr = np.array(snr)
+            jd = np.array(jd)
+            secz = np.array(secz)
+            expt = np.array(expt)
+            moondist = np.array(moondist)
+            moonphase = np.array(moonphase)
+            seeing  = np.array(seeing)
+
+            yvals = (snr**2)  / expt / 60
+            ax.scatter(jd, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+            pdb.set_trace()
+
+        return
+
         ###########################################################################################
         # snhistory.png
         plotfile = specdir5 + 'monitor/' + instrument + '/snhistory.png'
@@ -2639,7 +2771,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     print("----> monitor done")
 
-
 ''' GETQACALSTRUCT: put SDSS-IV and SDSS-V QAcal files in structure '''
 def getQAcalStruct(data=None):
 
@@ -2841,5 +2972,89 @@ def getSciStruct(data=None):
 
     return outstr
 
+''' GETSNRSTRUCT: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
+def getSnrStruct(plsum=None):
+    data1 = fits.open(plsum)[1].data
+    data2 = fits.open(plsum)[2].data
+    nexp = len(data1['IM'])
+    cols = data1.columns.names
+    field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
+    fiberid = data2['FIBERID']
 
+    dt = np.dtype([('IM',        np.int32),
+                   ('TELESCOPE', np.str, 6),
+                   ('FIELD',     np.str, 30),
+                   ('PLATE',     np.int32),
+                   ('MJD',       np.int32),
+                   ('JD',        np.float64),
+                   ('DATEOBS',   np.str, 30),
+                   ('NREADS',    np.int32),
+                   ('EXPTIME',   np.float64),
+                   ('DITHER',    np.float64),
+                   ('SECZ',      np.float64),
+                   ('SEEING',    np.float64),
+                   ('MOONDIST',  np.float64),
+                   ('MOONPHASE', np.float64),
+                   ('FWHM',      np.float64),
+                   ('GDRMS',     np.float64),
+                   ('ZERO',      np.float64),
+                   ('ZERORMS',   np.float64),
+                   ('ZERONORM',  np.float64),
+                   ('SKY',       np.float64, 3),
+                   ('SN',        np.float64, 3),
+                   ('SNC',       np.float64, 3),
+                   ('ALTSN',     np.float64, 3),
+                   ('NSN',       np.int32),
+                   ('SNRATIO',   np.float64),
+                   ('HMAG',      np.float64, 300),
+                   ('STARFIBER', np.int32, 300),
+                   ('SNFIBER',   np.float64, (300, 3))])
+
+    outstr = np.zeros(nexp, dtype=dt)
+
+    for iexp in range(nexp):
+        tmp = Time(data1['DATEOBS'][iexp], format='fits')
+        jd = tmp.jd - 2.4e6
+
+        outstr['IM'][iexp]        = data1['IM'][iexp]
+        outstr['TELESCOPE'][iexp] = data1['TELESCOPE'][iexp]
+        outstr['FIELD'][iexp]     = field
+        outstr['PLATE'][iexp]     = data1['PLATE'][iexp]
+        outstr['MJD'][iexp]       = data1['MJD'][iexp]
+        outstr['DATEOBS'][iexp]   = data1['DATEOBS'][iexp]
+        outstr['JD'][iexp]        = jd
+        outstr['NREADS'][iexp] =    data1['NREADS'][iexp]
+        if 'EXPTIME' in cols:
+            outstr['EXPTIME'][iexp] =   data1['EXPTIME'][iexp]
+        else:
+            snfile = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
+            if os.path.exists(snfile):
+                snfile = ascii.read(snfile)
+                g, = np.where(data1['IM'][iexp] == snfile['col1'])
+                if len(g) > 0:
+                    outstr['EXPTIME'][iexp] = float(snfile['col8'][g][0].split('\t')[0])
+        outstr['SECZ'][iexp] =      data1['SECZ'][iexp]
+        outstr['SEEING'][iexp] =    data1['SEEING'][iexp]
+        outstr['MOONDIST'][iexp] =  data1['MOONDIST'][iexp]
+        outstr['MOONPHASE'][iexp] = data1['MOONPHASE'][iexp]
+        outstr['FWHM'][iexp] =      data1['FWHM'][iexp]
+        outstr['GDRMS'][iexp] =     data1['GDRMS'][iexp]
+        outstr['DITHER'][iexp] =    data1['DITHER'][iexp]
+        outstr['ZERO'][iexp] =      data1['ZERO'][iexp]
+        outstr['ZERORMS'][iexp] =   data1['ZERORMS'][iexp]
+        outstr['ZERONORM'][iexp] =  data1['ZERONORM'][iexp]
+        outstr['SKY'][iexp] =       data1['SKY'][iexp]
+        outstr['SN'][iexp] =        data1['SN'][iexp]
+        outstr['SNC'][iexp] =       data1['SNC'][iexp]
+        outstr['ALTSN'][iexp]=      data1['ALTSN'][iexp]
+        outstr['NSN'][iexp] =       data1['NSN'][iexp]
+        outstr['SNRATIO'][iexp] =   data1['SNRATIO'][iexp]
+        sci, = np.where(data2['OBJTYPE'] != 'SKY')
+        sky, = np.where(data2['OBJTYPE'] == 'SKY')
+        outstr['HMAG'][iexp, sci] = data2['HMAG'][sci]
+        outstr['HMAG'][iexp, sky] = -999.999
+        outstr['STARFIBER'][iexp, sci] = 1
+        outstr['SNFIBER'][iexp, sci] =   data2['SN'][sci, :, iexp]
+
+    return outstr
 
