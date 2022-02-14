@@ -87,34 +87,34 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
-        #outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
-        #print("----> monitor: Making " + os.path.basename(outfile))
+        outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
+        print("----> monitor: Making " + os.path.basename(outfile))
 
-        #if allv4 is None:
-        #    allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
-        #    allv4 = fits.getdata(allv4path)
+        if allv4 is None:
+            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
+            allv4 = fits.getdata(allv4path)
 
-        #gd, = np.where(allv4['TELESCOPE'] == telescope)
-        #allv4 = allv4[gd]
-        #vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
-        #uvis,uind = np.unique(vis, return_index=True)
-        #uallv4 = allv4[uind]
-        #nvis = len(uvis)
-        #print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
+        gd, = np.where(allv4['TELESCOPE'] == telescope)
+        allv4 = allv4[gd]
+        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
+        uvis,uind = np.unique(vis, return_index=True)
+        uallv4 = allv4[uind]
+        nvis = len(uvis)
+        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
-        #for i in range(nvis):
-        #    plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
-        #    plsum = plsum.replace(' ', '')
-        #    print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
-        #    if os.path.exists(plsum):
-        #        if i == 0:
-        #            outstr = getSnrStruct(plsum)
-        #        else:
-        #            newstr = getSnrStruct(plsum)
-        #            outstr = np.concatenate([outstr, newstr])
+        for i in range(nvis):
+            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
+            plsum = plsum.replace(' ', '')
+            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
+            if os.path.exists(plsum):
+                if i == 0:
+                    outstr = getSnrStruct(plsum)
+                else:
+                    newstr = getSnrStruct(plsum)
+                    outstr = np.concatenate([outstr, newstr])
 
-        #Table(outstr).write(outfile, overwrite=True)
-        #print("----> monitor: Finished making " + os.path.basename(outfile))
+        Table(outstr).write(outfile, overwrite=True)
+        print("----> monitor: Finished making " + os.path.basename(outfile))
 
         #return
 
@@ -3114,6 +3114,8 @@ def getSciStruct(data=None):
 
 ''' GETSNRSTRUCT: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
 def getSnrStruct(plsum=None):
+    magbins = np.array([7,8,9,10,11,12,13])
+    magrad = 0.5
     hdul = fits.open(plsum)
     data1 = hdul[1].data
     data2 = hdul[2].data
@@ -3151,7 +3153,21 @@ def getSnrStruct(plsum=None):
                    ('SNRATIO',   np.float64),
                    ('HMAG',      np.float64, 300),
                    ('STARFIBER', np.int32, 300),
-                   ('SNFIBER',   np.float64, (300, 3))])
+                   ('SNFIBER',   np.float64, (300, 3)),
+                   ('SN7',       np.float64, 3),
+                   ('SN8',       np.float64, 3),
+                   ('SN9',       np.float64, 3),
+                   ('SN10',      np.float64, 3),
+                   ('SN11',      np.float64, 3),
+                   ('SN12',      np.float64, 3),
+                   ('SN13',      np.float64, 3),
+                   ('ESN7',       np.float64, 3),
+                   ('ESN8',       np.float64, 3),
+                   ('ESN9',       np.float64, 3),
+                   ('ESN10',      np.float64, 3),
+                   ('ESN11',      np.float64, 3),
+                   ('ESN12',      np.float64, 3),
+                   ('ESN13',      np.float64, 3)])
 
     outstr = np.zeros(nexp, dtype=dt)
 
@@ -3199,6 +3215,14 @@ def getSnrStruct(plsum=None):
         outstr['HMAG'][iexp, sky] = -999.999
         outstr['STARFIBER'][iexp, sci] = 1
         outstr['SNFIBER'][iexp, sci] =   data2['SN'][sci, :, iexp]
+        for magbin in magbins:
+            maglab = 'SN' + str(magbin)
+            magelab = 'E' + maglab
+            g, = np.where((data2['HMAG'][sci] >= magbin-magrad) & (data2['HMAG'][sci] < magbin+magrad))
+            if len(g) > 5:
+                outstr[maglab][iexp] = np.nanmean(data2['SN'][sci[g], :, iexp], axis=1)
+                outstr[magelab][iexp] = np.nanstd(data2['SN'][sci[g], :, iexp], axis=1)
+                pdb.set_trace()
 
     return outstr
 
