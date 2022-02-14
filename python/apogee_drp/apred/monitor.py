@@ -830,8 +830,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            pdb.set_trace()
-            gd, = np.where((allsnr['NSN11'] > 10) & (allsnr['SN11'][:1] > 10))
+            gd, = np.where((allsnr['NSN11'] > 10) & (allsnr['SN11'][:,1] > 10))
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
@@ -857,7 +856,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
             xvals = allsnrg['JD']
-            yvals = (allsnrg['SN11'][:1]**2)  / allsnrg['EXPTIME'] / 60
+            yvals = (allsnrg['SN11'][:,1]**2)  / allsnrg['EXPTIME'] / 60
             ax.scatter(xvals, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
