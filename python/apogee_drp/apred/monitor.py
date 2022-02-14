@@ -159,8 +159,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        return
-
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
         # Get zeropoint info from apPlateSum files
@@ -824,6 +822,97 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
 
     if makecomplots is True:
+        ###########################################################################################
+        # snhistory3.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory3.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            maglims = [10.5, 11.5]
+            gd, = np.where((np.isnan(allsnr['SNRATIO']) == False) & (allsnr['SN'][:,1] > 10) & (allsnr['HMAG'] >= maglims[0]) & (allsnr['HMAG'] <= maglims[1]))
+            ngd = len(gd)
+            allsnrg = allsnr[gd]
+
+            pdb.set_trace()
+            fig = plt.figure(figsize=(30,14))
+
+            allv5 = fits.getdata(specdir5 + 'summary/allVisit-daily-apo25m.fits')
+            umjd,uind = np.unique(allv5['mjd'], return_index=True)
+            nmjd = len(umjd)
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            ax.set_xlim(xmin, xmax)
+            #ax.set_ylim(ymin, ymax)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            #if ichip == nchips-1: ax.set_xlabel(r'MJD')
+            ax.set_xlabel(r'MJD')
+            ax.set_ylabel(r'S/N$^{2}$ per minute')
+            #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            ax.axvline(x=59146, color='r', linewidth=2)
+
+            for iyear in range(nyears):
+                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                #if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+
+            snr = []
+            jd = []
+            secz = []
+            expt = []
+            moondist = []
+            moonphase = []
+            seeing  = []
+            for isci in range(nsci):
+                print(str(isci+1) + '/' + str(nsci))
+                plsum = glob.glob(specdir5 + 'visit/apo25m/*/' + str(gsci['PLATE'][isci]) + '/' + str(gsci['MJD'][isci]) + '/apPlateSum-*fits')
+                if len(plsum) < 1: continue
+                d1 = fits.open(plsum[0])[1].data
+                d2 = fits.open(plsum[0])[2].data
+                nexp = len(d1['EXPTIME'])
+                for iexp in range(nexp):
+                    print('   ' + str(iexp))
+                    gd, = np.where((d2['hmag'] >= maglims[0]) & (d2['hmag'] <= maglims[1]) & (d2['SN'][:,iexp,1] > 50))
+                    if len(gd) > 2:
+                        tt = Time(d1['DATEOBS'][iexp], format='fits')
+                        jd.append(tt.jd - 2.4e6)
+                        secz.append(d1['SECZ'][iexp])
+                        expt.append(d1['EXPTIME'][iexp])
+                        moondist.append(d1['MOONDIST'][iexp])
+                        moonphase.append(d1['MOONPHASE'][iexp])
+                        seeing.append(d1['SEEING'][iexp])
+
+                        sn = d2['SN'][gd, iexp, 1]
+                        meansn = np.nanmean(sn)
+                        sigsn = np.nanstd(sn)
+                        dif = np.absolute(sn - meansn)
+                        gd, = np.where(dif < 2*sigsn)
+                        sn = sn[gd]
+                        snr.append(np.nanmean(sn))
+
+            snr = np.array(snr)
+            jd = np.array(jd)
+            secz = np.array(secz)
+            expt = np.array(expt)
+            moondist = np.array(moondist)
+            moonphase = np.array(moonphase)
+            seeing  = np.array(seeing)
+
+            yvals = (snr**2)  / expt / 60
+            ax.scatter(jd, yvals, marker='o', s=markersz)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+            pdb.set_trace()
+
+        return
+
         ###########################################################################################
         # snhistory2.png
         plotfile = specdir5 + 'monitor/' + instrument + '/snhistory2.png'
