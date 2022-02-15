@@ -3362,9 +3362,9 @@ def getSnrStruct(plsum=None):
                    ('HMAG',      np.float64, 300),
                    ('FIBERID',   np.int32, 300),
                    ('SNFIBER',   np.float64, (300, 3)),
-                   ('SNBINS',    np.float64, nmagbins),
-                   ('NSNBINS',   np.float64, nmagbins),
-                   ('ESNBINS',   np.float64, nmagbins)])
+                   ('SNBINS',    np.float64, (nmagbins, 3)),
+                   ('ESNBINS',   np.float64, (nmagbins, 3)),
+                   ('NSNBINS',   np.float64, nmagbins)])
 
     outstr = np.zeros(nexp, dtype=dt)
 
@@ -3415,8 +3415,8 @@ def getSnrStruct(plsum=None):
             if len(g) > 2:
                 pdb.set_trace()
                 print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
-                outstr['SNBINS'][iexp,jj] = np.nanmean(data2['SN'][g, :, iexp], axis=0)
-                outstr['ESNBINS'][iexp,jj] = np.nanstd(data2['SN'][g, :, iexp], axis=0)
+                outstr['SNBINS'][iexp,jj,:] = np.nanmean(data2['SN'][g, :, iexp], axis=0)
+                outstr['ESNBINS'][iexp,jj,:] = np.nanstd(data2['SN'][g, :, iexp], axis=0)
                 outstr['NSNBINS'][iexp,jj] = len(g)
             jj+=1
 
