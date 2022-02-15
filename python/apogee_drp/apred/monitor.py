@@ -150,9 +150,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if count == 0:
                         outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
                     else:
-                        pdb.set_trace()
                         newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
-                        outstr = np.concatenate([outstr, newstr])
+                        if newstr is not None: outstr = np.concatenate([outstr, newstr])
                     count += 1
 
         if count > 0:
@@ -3519,6 +3518,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad) & (np.isnan(data2['HMAG']) == False))
         if len(g) > 2:
             #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
+            pdb.set_trace()
             outstr['SNBINS'][0][jj,:] = np.nanmean(data2['SN'][g, iexp, :], axis=0)
             outstr['ESNBINS'][0][jj,:] = np.nanstd(data2['SN'][g, iexp, :], axis=0)
             outstr['NSNBINS'][0][jj] = len(g)
