@@ -3517,7 +3517,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     for magbin in magbins:
         g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad) & (np.isnan(data2['HMAG']) == False))
         if len(g) > 2:
-            #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
+            print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
             outstr['SNBINS'][0][jj,:] = np.nanmean(data2['SN'][g, iexp, :], axis=0)
             outstr['ESNBINS'][0][jj,:] = np.nanstd(data2['SN'][g, iexp, :], axis=0)
             outstr['NSNBINS'][0][jj] = len(g)
