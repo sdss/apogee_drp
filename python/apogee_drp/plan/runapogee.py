@@ -844,6 +844,11 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
             mjd5 = int(mjd5[0])
         updatemjdfile = True
 
+    # SDSS-V FPS
+    fps = False
+    if int(mjd)>=59556:
+        fps = True
+
     # Make sure the data is there
     mjddatadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory] + '/'+str(mjd5)
     if os.path.exists(mjddatadir):
@@ -961,7 +966,12 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                        (qachk['okay']==True))
     if len(calind)>0:
         # 1: psf, 2: flux, 4: arcs, 8: fpi
-        calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':4, 'FPI':8}
+        if fps:
+            # Only use QUARTZFLATs in the FPS era because they have all 300 fibers
+            #  domeflats are missing the 2 dedicated FPI fibers
+            calcodedict = {'DOMEFLAT':2, 'QUARTZFLAT':1, 'ARCLAMP':4, 'FPI':8}
+        else:
+            calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':4, 'FPI':8}
         calcode = [calcodedict[etype] for etype in expinfo['exptype'][calind]]
         calnames = ['DOMEFLAT/QUARTZFLAT','FLUX','ARCLAMP','FPI']
         shcalnames = ['psf','flux','arcs','fpi']

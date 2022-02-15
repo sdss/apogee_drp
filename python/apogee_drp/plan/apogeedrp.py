@@ -650,7 +650,7 @@ def runap3d(load,mjds,slurm,clobber=False,logger=None):
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     
     # Get exposures
-    expinfo = getexpinfo(observatory,mjds,logger=logger)
+    expinfo = getexpinfo(load,mjds,logger=logger)
 
     # Process the files
     if len(expinfo)==0:
@@ -734,7 +734,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     
     # Get exposures
-    expinfo = getexpinfo(observatory,mjds,logger=logger,verbose=False)
+    expinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
 
     # First we need to run domeflats and quartzflats so there are apPSF files
     # Then the arclamps
@@ -763,6 +763,13 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     # 1: psf, 2: flux, 4: arcs, 8: fpi
     calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':4, 'FPI':8}
     calcode = [calcodedict[etype] for etype in expinfo['exptype']]
+    # Do NOT use DOMEFLATS for apPSF with FPS, MJD>=59556 (only quarzflats)
+    #  Only use domeflats for apFlux cal files, need to chance calcode
+    dome, = np.where((expinfo['exptype']=='DOMEFLAT') & (expinfo['mjd']>=59556))
+    if len(dome)>0:
+        calcode = np.array(calcode)
+        calcode[dome] = 2
+        calcode = list(calcode)
     calnames = ['DOMEFLAT/QUARTZFLAT','FLUX','ARCLAMP','FPI']
     shcalnames = ['psf','flux','arcs','fpi']
     filecodes = ['PSF','Flux','Wave','WaveFPI']

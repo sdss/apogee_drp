@@ -738,7 +738,6 @@ For i=0,n_elements(chips)-1 do begin
   ENDCASE
 
   t2=systime(/seconds)
-  ;stop
 
 
   ; Do the fiber-to-fiber throughput corrections and relative
@@ -852,7 +851,7 @@ For i=0,n_elements(chips)-1 do begin
   endelse
 
   if keyword_set(logfile) then writeline,logfile,file_basename(outfile),string(format='(f8.3)',systime(/seconds)-t1)
-  ;stop
+  ;;stop
 
   BOMB:
 
