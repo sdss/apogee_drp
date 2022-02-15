@@ -833,7 +833,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             gd, = np.where(allsnr['NSN11'] > 10)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
-            umjd,uind = np.unique(allsnrg['MJD'])
+            umjd,uind = np.unique(allsnrg['MJD'], return_index=True)
             nmjd = len(umjd)
 
             mjdmean = np.zero(nmjd)
