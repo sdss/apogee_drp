@@ -37,7 +37,7 @@ if __name__ == '__main__' :
     parser.add_argument('mjd', type=str, nargs=1,  help='Night MJD5')
     parser.add_argument('observatory', type=str, nargs=1, help='APOGEE observatory (apo or lco)')
     parser.add_argument('--apred', type=str, nargs=1, default='daily', help='APOGEE reduction version')
-    parser.add_argument('--plate', type=str, nargs=1, default='', help='Plate/configuration_id')
+    parser.add_argument('--plate', type=str, nargs=1, help='Plate/configuration_id')
     parser.add_argument('--telescope', type=str, nargs=1, help='Telescope')
     parser.add_argument('--platesum', type=str, nargs=1, help='Make plate summary files')
     parser.add_argument('--obshtml', type=str, nargs=1, help='Make observation html pages')
