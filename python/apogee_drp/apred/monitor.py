@@ -134,7 +134,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         print('----> monitor: adding data for ' + str(nvis) + '  visits.')
 
         count = 0
-        for i in range(20):
+        for i in range(40):
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
             p, = np.where(os.path.basename(plsum) == allsnr4['SUMFILE'])
