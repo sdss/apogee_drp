@@ -937,7 +937,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axvline(x=59146, color='r', linewidth=2)
 
                 xvals = allsnrg['JD']
-                yvals = (allsnrg['SN11'][:,2-ichip]**2)  / (allsnrg['NREADS'] / 47)
+                yvals = (allsnrg['SN11'][:,2-ichip])  / (allsnrg['NREADS'] / 47)
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
@@ -994,7 +994,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axvline(x=59146, color='r', linewidth=2)
 
                 xvals = allsnrg['JD']
-                yvals = (allsnrg['SN11'][:,2-ichip]**2)  / (allsnrg['EXPTIME'] / 60)
+                yvals = (allsnrg['SN11'][:,2-ichip])  / (allsnrg['EXPTIME'] / 60)
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
