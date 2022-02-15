@@ -836,8 +836,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             umjd,uind = np.unique(allsnrg['MJD'], return_index=True)
             nmjd = len(umjd)
 
-            mjdmean = np.zeros(nmjd, nchips)
-            mjdsig  = np.zeros(nmjd, nchips)
+            mjdmean = np.zeros((nmjd, nchips))
+            mjdsig  = np.zeros((nmjd, nchips))
             jdmean = np.zeros(nmjd)
             for i in range(nmjd):
                 gd, = np.where(allsnrg['MJD'] == umjd[i])
