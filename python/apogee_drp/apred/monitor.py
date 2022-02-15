@@ -850,7 +850,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     mjdmean[i,:] = np.nanmean(allsnrg['SN11'][gd][gd1],axis=0)
                     mjdsig[i,:] = np.nanstd(allsnrg['SN11'][gd][gd1],axis=0)
                     jdmean[i] = np.nanmean(allsnrg['JD'][gd][gd1])
-                pdb.set_trace()
 
             ymin = -0.01
             ymax = 0.18
