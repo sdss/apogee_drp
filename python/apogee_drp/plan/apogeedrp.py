@@ -826,6 +826,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                     logger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
                     logger.info(logfile1)
                     queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+                    logfiles.append(logfile1)
             if np.sum(docal)>0:
                 queue.commit(hard=True,submit=True)
                 logger.info('PBS key is '+queue.key)
