@@ -882,8 +882,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #sigsnr5 = sigsnr5[gd]
 
             #ascii.write([umjd5, meansnr5, sigsnr5], 'allVisitMjdSnr5_' + magmin + '_' + magmax + '.dat', overwrite=True, format='no_header')
-            d4 = ascii.read('allVisitMjdSnr4_' + magmin + '_' + magmax + '.dat'
-            d5 = ascii.read('allVisitMjdSnr5_' + magmin + '_' + magmax + '.dat'
+            d4 = ascii.read('allVisitMjdSnr4_' + magmin + '_' + magmax + '.dat')
+            d5 = ascii.read('allVisitMjdSnr5_' + magmin + '_' + magmax + '.dat')
 
             ymin = -0.01
             ymax = 0.18
