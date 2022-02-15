@@ -798,7 +798,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                 calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd1))
                 exptype1 = expinfo['exptype'][cind[k]]
                 arctype1 = expinfo['arctype'][cind[k]]                    
-                if ccode==1:   # psfs
+                if ccode==1:    # psfs
                     cmd1 = 'makecal --psf '+str(num1)+' --unlock'
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
@@ -806,14 +806,14 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                     cmd1 = 'makecal --psf '+str(num1)+' --flux '+str(num1)+' --unlock'
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
-                elif ccode==4:  # and exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):  # arcs                       
+                elif ccode==4:  # arcs
                     cmd1 = 'makecal --wave '+str(num1)+' --unlock'
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
-                elif ccode==8:  # and exptype1=='ARCLAMP' and arctype1=='None':    # fpi                       
+                elif ccode==8:  # fpi
                     cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
                     if clobber: cmd1 += ' --clobber'
-                logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+                    logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
                 logger.info(logfile1)
                 logfiles.append(logfile1)
                 # Check if files exist already
