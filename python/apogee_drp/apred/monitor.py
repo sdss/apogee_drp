@@ -618,7 +618,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     axmajlen = 7
     axminlen = 3.5
     alf = 0.6
-    markersz = 7
+    markersz = 1
     colors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange'])[::-1]
     colors1 = np.array(['k', 'b', 'r', 'gold'])
     colors2 = np.array(['dodgerblue', 'seagreen', 'orange'])
@@ -834,23 +834,25 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             magmin = str("%.1f" % round(int(snbin)-0.5,1))
             magmax = str("%.1f" % round(int(snbin)+0.5,1))
 
-            #umjd4,uind = np.unique(allv4['MJD'], return_index=True)
+            #gd, = np.where(allv4['TELESCOPE'] == 'apo25m')
+            #allv4g = allv4[gd]
+            #umjd4,uind = np.unique(allv4g['MJD'], return_index=True)
             #nmjd4 = len(umjd4)
 
             #meansnr4 = np.zeros(nmjd4)
             #sigsnr4 = np.zeros(nmjd4)
             #for i in range(nmjd4):
             #    print(umjd4[i])
-            #    gd, = np.where((umjd4[i] == allv4['MJD']) & (allv4['H'] >= int(snbin)-0.5) & (allv4['H'] < int(snbin)+0.5))
+            #    gd, = np.where((umjd4[i] == allv4g['MJD']) & (allv4g['H'] >= int(snbin)-0.5) & (allv4g['H'] < int(snbin)+0.5))
             #    if len(gd) > 2:
-            #        imean = np.nanmean(allv4['SNR'][gd])
-            #        isig = np.nanstd(allv4['SNR'][gd])
-            #        dif = allv4['SNR'][gd] - imean
+            #        imean = np.nanmean(allv4g['SNR'][gd])
+            #        isig = np.nanstd(allv4g['SNR'][gd])
+            #        dif = allv4g['SNR'][gd] - imean
             #        mdif = isig - imean
             #        gd1, = np.where(dif > mdif)
             #        if len(gd1) > 2:
-            #            meansnr4[i] = np.nanmean(allv4['SNR'][gd][gd1])
-            #            sigsnr4[i] = np.nanstd(allv4['SNR'][gd][gd1])
+            #            meansnr4[i] = np.nanmean(allv4g['SNR'][gd][gd1])
+            #            sigsnr4[i] = np.nanstd(allv4g['SNR'][gd][gd1])
             #gd, = np.where(meansnr4 > 1)
             #umjd4 = umjd4[gd]
             #meansnr4 = meansnr4[gd]
@@ -910,7 +912,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ylims = ax.get_ylim()
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
+                ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.015), cyears[iyear], ha='center')
 
                 #ax_divider = make_axes_locatable(ax)
                 #cax = ax_divider.append_axes("right", size="2%", pad="1%")
@@ -920,7 +922,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
                 
 
-            fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.05,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
