@@ -3360,6 +3360,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
     #sci, = np.where(data2['OBJTYPE'] != 'SKY')
     #sky, = np.where(data2['OBJTYPE'] == 'SKY')
+    pdb.set_trace()
     outstr['HMAG'][fiberid-1] = data2['HMAG']
     outstr['FIBERID'][fiberid-1] = data2['FIBERID']
     for magbin in magbins:
