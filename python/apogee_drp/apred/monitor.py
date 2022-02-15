@@ -1006,7 +1006,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
-        return
+        #return
 
 
         ###########################################################################################
@@ -1015,7 +1015,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 20)
+            snbin = 10
+            magmin = '10.8'
+            magmax = '11.2'
+
+            gd, = np.where((allsnr['NSNBINS'][:, snbin] > 10) & (allsnr['SNBINS'][:, snbin, 1] > 0))
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
@@ -1042,7 +1046,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axvline(x=59146, color='r', linewidth=2)
 
                 xvals = allsnrg['JD']
-                yvals = (allsnrg['SN11'][:,2-ichip]**2)  / (allsnrg['NREADS'] / 47)
+                yvals = allsnrg['SNBINS'][:, snbin, 2-ichip]**2)  / (allsnrg['NREADS'] / 47)
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
@@ -1072,7 +1076,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 20)
+            snbin = 10
+            magmin = '10.8'
+            magmax = '11.2'
+
+            gd, = np.where((allsnr['NSNBINS'][:, snbin] > 10) & (allsnr['SNBINS'][:, snbin, 1] > 0))
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
@@ -1099,7 +1107,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axvline(x=59146, color='r', linewidth=2)
 
                 xvals = allsnrg['JD']
-                yvals = (allsnrg['SN11'][:,2-ichip]**2)  / (allsnrg['EXPTIME'] / 60)
+                yvals = (allsnrg['SNBINS'][:, snbin, 2-ichip]**2) / (allsnrg['EXPTIME'] / 60)
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
