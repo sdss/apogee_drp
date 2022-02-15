@@ -618,7 +618,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     axmajlen = 7
     axminlen = 3.5
     alf = 0.6
-    markersz = 7
+    markersz = 1
     colors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange'])[::-1]
     colors1 = np.array(['k', 'b', 'r', 'gold'])
     colors2 = np.array(['dodgerblue', 'seagreen', 'orange'])
