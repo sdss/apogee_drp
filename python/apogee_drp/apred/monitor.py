@@ -87,7 +87,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
-        outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2_new.fits'
+        outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
         if allv4 is None:
@@ -102,7 +102,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         nvis = len(uvis)
         print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
-        for i in range(5):
+        for i in range(nvis):
             plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
             print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
@@ -3251,7 +3251,7 @@ def getSnrStruct(plsum=None):
             magnlab = 'N' + maglab
             g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad))
             if len(g) > 2:
-                print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
+                #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
                 outstr[maglab][iexp] = np.nanmean(data2['SN'][g, :, iexp], axis=0)
                 outstr[magelab][iexp] = np.nanstd(data2['SN'][g, :, iexp], axis=0)
                 outstr[magnlab][iexp] = len(g)
