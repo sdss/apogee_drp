@@ -3360,9 +3360,8 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
     #sci, = np.where(data2['OBJTYPE'] != 'SKY')
     #sky, = np.where(data2['OBJTYPE'] == 'SKY')
-    pdb.set_trace()
-    outstr['HMAG'][fiberid-1] = data2['HMAG']
-    outstr['FIBERID'][fiberid-1] = data2['FIBERID']
+    outstr['HMAG'][0][fiberid-1] = data2['HMAG']
+    outstr['FIBERID'][0][fiberid-1] = data2['FIBERID']
     for magbin in magbins:
         maglab = 'SN' + str(magbin)
         magelab = 'E' + maglab
@@ -3370,9 +3369,9 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad) & (np.isnan(data2['HMAG']) == False))
         if len(g) > 2:
             print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
-            outstr[maglab] = np.nanmean(data2['SN'][g, iexp, :], axis=1)
-            outstr[magelab] = np.nanstd(data2['SN'][g, iexp, :], axis=1)
-            outstr[magnlab] = len(g)
+            outstr[maglab][0] = np.nanmean(data2['SN'][g, iexp, :], axis=1)
+            outstr[magelab][0] = np.nanstd(data2['SN'][g, iexp, :], axis=1)
+            outstr[magnlab][0] = len(g)
 
     return outstr
 
