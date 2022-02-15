@@ -125,7 +125,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
             allv5 = fits.getdata(allv5path)
 
-        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])))
+        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] > 59600)) # & (allv5['mjd'] >= np.max(allsnr4['MJD'])))
         allv5 = allv5[gd]
         vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
         uvis,uind = np.unique(vis, return_index=True)
@@ -134,7 +134,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         print('----> monitor: adding data for ' + str(nvis) + '  visits.')
 
         count = 0
-        for i in range(100):
+        for i in range(20):
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
             p, = np.where(os.path.basename(plsum) == allsnr4['SUMFILE'])
@@ -3367,13 +3367,12 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         magelab = 'E' + maglab
         magnlab = 'N' + maglab
         g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad) & (np.isnan(data2['HMAG']) == False))
-        if sumfile == 'apPlateSum-384-59566.fits': pdb.set_trace()
-
+        if sumfile == 'apPlateSum-2573-59601.fits': pdb.set_trace()
         if len(g) > 2:
             try:
-                print(str("%.3f" % round(np.nanmean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
-                outstr[maglab][0] = np.nanmean(data2['SN'][g, iexp, :], axis=1)
-                outstr[magelab][0] = np.nanstd(data2['SN'][g, iexp, :], axis=1)
+                print(str("%.3f" % round(np.nanmean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 0])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 1])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 2])))))
+                outstr[maglab][0] = np.nanmean(data2['SN'][g, iexp, :], axis=0)
+                outstr[magelab][0] = np.nanstd(data2['SN'][g, iexp, :], axis=0)
                 outstr[magnlab][0] = len(g)
             except:
                 nothing = 1
