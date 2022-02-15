@@ -830,7 +830,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 1)
+            gd, = np.where(allsnr['NSN11'] > 5)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
@@ -886,7 +886,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 1)
+            gd, = np.where(allsnr['NSN11'] > 5)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
@@ -943,11 +943,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 1)
+            gd, = np.where(allsnr['NSN11'] > 5)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
-            pdb.set_trace()
             ymin = -0.01
             ymax = 0.18
             yspan = ymax-ymin
