@@ -830,7 +830,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 10)
+            snbin = '10'
+            magmin = str("%.1f" % round(int(snbin)-0.5,1))
+            magmax = str("%.1f" % round(int(snbin)+0.5,1))
+
+            gd, = np.where(allsnr['NSN'+snbin] > 10)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
             umjd,uind = np.unique(allsnrg['MJD'], return_index=True)
@@ -842,13 +846,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for i in range(nmjd):
                 gd, = np.where(allsnrg['MJD'] == umjd[i])
                 if len(gd) > 1:
-                    imean = np.nanmean(allsnrg['SN11'][gd],axis=0)
-                    isig = np.nanstd(allsnrg['SN11'][gd],axis=0)
-                    dif = allsnrg['SN11'][gd] - imean
+                    imean = np.nanmean(allsnrg['SN'+snbin][gd],axis=0)
+                    isig = np.nanstd(allsnrg['SN'+snbin][gd],axis=0)
+                    dif = allsnrg['SN'+snbin][gd] - imean
                     mdif = isig - imean
                     gd1, = np.where((dif[:,0] > mdif[0]) & (dif[:,1] > mdif[1]) & (dif[:,1] > mdif[1]))
-                    mjdmean[i,:] = np.nanmean(allsnrg['SN11'][gd][gd1],axis=0)
-                    mjdsig[i,:] = np.nanstd(allsnrg['SN11'][gd][gd1],axis=0)
+                    mjdmean[i,:] = np.nanmean(allsnrg['SN'+snbin][gd][gd1],axis=0)
+                    mjdsig[i,:] = np.nanstd(allsnrg['SN'+snbin][gd][gd1],axis=0)
                     jdmean[i] = np.nanmean(allsnrg['JD'][gd][gd1])
 
             ymin = -0.01
@@ -869,12 +873,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                if ichip == 1: ax.set_ylabel(r'S/N ($10.5>=H>11.5$)')
+                if ichip == 1: ax.set_ylabel(r'S/N ($' + magmin + r'>=H>' + magmax + r'$)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
 
                 xvals = allsnrg['JD']
-                yvals = allsnrg['SN11'][:,2-ichip]#**2)  / (allsnrg['NREADS'] / 47)
+                yvals = allsnrg['SN'+snbin][:,2-ichip]#**2)  / (allsnrg['NREADS'] / 47)
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r', zorder=1)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
                 ax.scatter(jdmean, mjdmean[:, 2-ichip], marker='*', s=markersz*5, c='cyan', edgecolors='cyan', zorder=2)
