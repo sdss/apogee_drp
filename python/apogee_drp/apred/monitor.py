@@ -134,10 +134,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         print('----> monitor: adding data for ' + str(nvis) + '  visits.')
 
         count = 0
-        for i in range(25):
+        for i in range(nvis):
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
-            p, = np.where(os.path.basename(plsum) == allsnr4['SUMFILE'])
+            p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
             if (len(p) < 1) & (os.path.exists(plsum)):
                 print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
                 hdul = fits.open(plsum)
@@ -155,11 +155,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     count += 1
 
         if count > 0:
-            out = vstack([Table(allsnr4), Table(outstr)])
+            out = vstack([Table(allsnr), Table(outstr)])
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        return
+        #return
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
@@ -825,12 +825,92 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
+        # snhistory5.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory5.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            snbin = '11'
+            magmin = str("%.1f" % round(int(snbin)-0.5,1))
+            magmax = str("%.1f" % round(int(snbin)+0.5,1))
+
+            gd, = np.where(allsnr['NSN'+snbin] > 20)
+            allsnrg = allsnr[gd]
+            ngd = len(allsnrg)
+            umjd,uind = np.unique(allsnrg['MJD'], return_index=True)
+            nmjd = len(umjd)
+
+            mjdmean = np.zeros((nmjd, nchips))
+            mjdsig  = np.zeros((nmjd, nchips))
+            jdmean = np.zeros(nmjd)
+            for i in range(nmjd):
+                gd, = np.where(allsnrg['MJD'] == umjd[i])
+                if len(gd) > 1:
+                    imean = np.nanmean(allsnrg['SN'+snbin][gd],axis=0)
+                    isig = np.nanstd(allsnrg['SN'+snbin][gd],axis=0)
+                    dif = allsnrg['SN'+snbin][gd] - imean
+                    mdif = isig - imean
+                    gd1, = np.where((dif[:,0] > mdif[0]) & (dif[:,1] > mdif[1]) & (dif[:,1] > mdif[1]))
+                    mjdmean[i,:] = np.nanmean(allsnrg['SN'+snbin][gd][gd1],axis=0)
+                    mjdsig[i,:] = np.nanstd(allsnrg['SN'+snbin][gd][gd1],axis=0)
+                    jdmean[i] = np.nanmean(allsnrg['JD'][gd][gd1])
+
+            ymin = -0.01
+            ymax = 0.18
+            yspan = ymax-ymin
+
+            fig = plt.figure(figsize=(30,14))
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                #ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == 1: ax.set_ylabel(r'S/N ($' + magmin + r'>=H>' + magmax + r'$)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
+
+                xvals = allsnrg['JD']
+                yvals = allsnrg['SN'+snbin][:,2-ichip]#**2)  / (allsnrg['NREADS'] / 47)
+                scolors = allsnrg['MOONPHASE']
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r', zorder=1)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+                ax.scatter(jdmean, mjdmean[:, 2-ichip], marker='*', s=markersz*5, c='cyan', edgecolors='cyan', zorder=2)
+                #ax.plot(jdmean, mjdmean[:, 2-ichip], color='cyan', zorder=2)
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+
+                if ichip == 0: ylims = ax.get_ylim()
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
+
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                cax.minorticks_on()
+                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                
+
+            fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
         # snhistory4.png
         plotfile = specdir5 + 'monitor/' + instrument + '/snhistory4.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where((allsnr['NSN11'] > 10) & (allsnr['SN11'][:,1] > 10))
+            gd, = np.where(allsnr['NSN11'] > 20)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
@@ -887,7 +967,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where((allsnr['NSN11'] > 10) & (allsnr['SN11'][:,1] > 10))
+            gd, = np.where(allsnr['NSN11'] > 20)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
@@ -3366,13 +3446,15 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         maglab = 'SN' + str(magbin)
         magelab = 'E' + maglab
         magnlab = 'N' + maglab
-        g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad) & (np.isnan(data2['HMAG']) == False) & (np.isnan(data2['SN']) == False))
-        pdb.set_trace()
+        g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad) & (np.isnan(data2['HMAG']) == False))
         if len(g) > 2:
-            print(str("%.3f" % round(np.nanmean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
-            outstr[maglab][0] = np.nanmean(data2['SN'][g, iexp, :], axis=1)
-            outstr[magelab][0] = np.nanstd(data2['SN'][g, iexp, :], axis=1)
-            outstr[magnlab][0] = len(g)
+            try:
+                #print(str("%.3f" % round(np.nanmean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 0])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 1])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 2])))))
+                outstr[maglab][0] = np.nanmean(data2['SN'][g, iexp, :], axis=0)
+                outstr[magelab][0] = np.nanstd(data2['SN'][g, iexp, :], axis=0)
+                outstr[magnlab][0] = len(g)
+            except:
+                nothing = 1
 
     return outstr
 
