@@ -834,7 +834,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             magmin = str("%.1f" % round(int(snbin)-0.5,1))
             magmax = str("%.1f" % round(int(snbin)+0.5,1))
 
-            gd, = np.where(allsnr['NSN'+snbin] > 50)
+            gd, = np.where(allsnr['NSN'+snbin] > 20)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
             umjd,uind = np.unique(allsnrg['MJD'], return_index=True)
