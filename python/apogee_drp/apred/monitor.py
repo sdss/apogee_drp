@@ -825,6 +825,105 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
+        # snhistory6.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory6.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            snbin = '11'
+            magmin = str("%.1f" % round(int(snbin)-0.5,1))
+            magmax = str("%.1f" % round(int(snbin)+0.5,1))
+
+            #gd, = np.where((allv4['H'] >= int(snbin)-0.5) & (allv4['H'] < int(snbin)+0.5))
+            umjd4,uind = np.unique(allv4['MJD'], return_index=True)
+            nmjd4 = len(umjd4)
+
+            meansnr4 = np.zeros(nmjd4)
+            sigsnr4 = np.zeros(nmjd4)
+            for i in range(nmjd4):
+                print(umjd4[i])
+                gd, = np.where((umjd4[i] == allv4['MJD']) & (allv4['H'] >= int(snbin)-0.5) & (allv4['H'] < int(snbin)+0.5))
+                if len(gd) > 2:
+                    imean = np.nanmean(allv4['SNR'][gd])
+                    isig = np.nanstd(allv4['SNR'][gd])
+                    dif = allv4['SNR'][gd] - imean
+                    mdif = isig - imean
+                    gd1, = np.where(dif > mdif)
+                    if len(gd1) > 2:
+                        meansnr4[i] = np.nanmean(allv4['SNR'][gd][gd1])
+                        sigsnr4[i] = np.nanstd(allv4['SNR'][gd][gd1])
+            gd, = np.where(meansnr4 > 1)
+            umjd4 = umjd4[gd]
+            meansnr4 = meansnr4[gd]
+            sigsnr4 = sigsnr4[gd]
+
+            ascii.write([umjd4, meansnr4, signr4], 'allVisitMjdSnr4_' + magmin + '_' + magmax + '.dat', overwrite=True, format='no_header')
+
+            #gd, = np.where((allv5['H'] >= int(snbin)-0.5) & (allv5['H'] < int(snbin)+0.5))
+            umjd5,uind = np.unique(allv5['MJD'], return_index=True)
+            nmjd5 = len(umjd5)
+
+            meansnr5 = np.zeros(nmjd5)
+            sigsnr5 = np.zeros(nmjd5)
+            for i in range(nmjd5):
+                print(umjd5[i])
+                gd, = np.where((umjd5[i] == allv5['MJD']) & (allv5['HMAG'] >= int(snbin)-0.5) & (allv5['HMAG'] < int(snbin)+0.5))
+                if len(gd) > 2:
+                    imean = np.nanmean(allv5['SNR'][gd])
+                    isig = np.nanstd(allv5['SNR'][gd])
+                    dif = allv5['SNR'][gd] - imean
+                    mdif = isig - imean
+                    gd1, = np.where(dif > mdif)
+                    if len(gd1) > 2:
+                        meansnr5[i] = np.nanmean(allv5['SNR'][gd][gd1])
+                        sigsnr5[i] = np.nanstd(allv5['SNR'][gd][gd1])
+            gd, = np.where(meansnr5 > 1)
+            umjd5 = umjd5[gd]
+            meansnr5 = meansnr5[gd]
+            sigsnr5 = sigsnr5[gd]
+
+            ascii.write([umjd5, meansnr5, signr5], 'allVisitMjdSnr5_' + magmin + '_' + magmax + '.dat', overwrite=True, format='no_header')
+
+            ymin = -0.01
+            ymax = 0.18
+            yspan = ymax-ymin
+
+            fig = plt.figure(figsize=(30,14))
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            ax.set_xlim(xmin, xmax)
+            #ax.set_ylim(ymin, ymax)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_xlabel(r'MJD')
+            ax.set_ylabel(r'mean S/N ($' + magmin + r'>=H>' + magmax + r'$)')
+            ax.axvline(x=59146, color='r', linewidth=2)
+
+            sc1 = ax.errorbar(umjd4, meansnr4, sigsnr4)
+            sc2 = ax.errorbar(umjd5, meansnr5, sigsnr5)
+
+            ylims = ax.get_ylim()
+            for iyear in range(nyears):
+                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
+
+                #ax_divider = make_axes_locatable(ax)
+                #cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                #cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                #cax.minorticks_on()
+                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                #if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                
+
+            fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
         # snhistory5.png
         plotfile = specdir5 + 'monitor/' + instrument + '/snhistory5.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
