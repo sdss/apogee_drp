@@ -834,37 +834,52 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             magmin = str("%.1f" % round(int(snbin)-0.5,1))
             magmax = str("%.1f" % round(int(snbin)+0.5,1))
 
-            gd, = np.where((allv4['H'] >= int(snbin)-0.5) & (allv4['H'] < int(snbin)+0.5))
+            #gd, = np.where((allv4['H'] >= int(snbin)-0.5) & (allv4['H'] < int(snbin)+0.5))
             umjd4,uind = np.unique(allv4['MJD'], return_index=True)
             nmjd4 = len(umjd4)
 
             meansnr4 = np.zeros(nmjd4)
             sigsnr4 = np.zeros(nmjd4)
             for i in range(nmjd4):
+                print(umjd4[i])
                 gd, = np.where((umjd4[i] == allv4['MJD']) & (allv4['H'] >= int(snbin)-0.5) & (allv4['H'] < int(snbin)+0.5))
-                imean = np.nanmean(allv4['SNR'][gd])
-                isig = np.nanstd(allv4['SNR'][gd])
-                dif = allv4['SNR'][gd] - imean
-                mdif = isig - imean
-                gd1, = np.where(dif > mdif)
-                meansnr4[i] = np.nanmean(allv4['SNR'][gd][gd1])
-                sigsnr4[i] = np.nanstd(allv4['SNR'][gd][gd1])
+                if len(gd) > 2:
+                    imean = np.nanmean(allv4['SNR'][gd])
+                    isig = np.nanstd(allv4['SNR'][gd])
+                    dif = allv4['SNR'][gd] - imean
+                    mdif = isig - imean
+                    gd1, = np.where(dif > mdif)
+                    if len(gd1) > 2:
+                        meansnr4[i] = np.nanmean(allv4['SNR'][gd][gd1])
+                        sigsnr4[i] = np.nanstd(allv4['SNR'][gd][gd1])
+            gd, = np.where(meansnr4 > 1)
+            umjd4 = umjd4[gd]
+            meansnr4 = meansnr4[gd]
+            sigsnr4 = sigsnr4[gd]
 
-            gd, = np.where((allv5['H'] >= int(snbin)-0.5) & (allv5['H'] < int(snbin)+0.5))
+            #gd, = np.where((allv5['H'] >= int(snbin)-0.5) & (allv5['H'] < int(snbin)+0.5))
             umjd5,uind = np.unique(allv5['MJD'], return_index=True)
             nmjd5 = len(umjd5)
 
             meansnr5 = np.zeros(nmjd5)
             sigsnr5 = np.zeros(nmjd5)
             for i in range(nmjd5):
+                print(umjd5[i])
                 gd, = np.where((umjd5[i] == allv5['MJD']) & (allv5['H'] >= int(snbin)-0.5) & (allv5['H'] < int(snbin)+0.5))
-                imean = np.nanmean(allv5['SNR'][gd])
-                isig = np.nanstd(allv5['SNR'][gd])
-                dif = allv5['SNR'][gd] - imean
-                mdif = isig - imean
-                gd1, = np.where(dif > mdif)
-                meansnr5[i] = np.nanmean(allv5['SNR'][gd][gd1])
-                sigsnr5[i] = np.nanstd(allv5['SNR'][gd][gd1])
+                if len(gd) > 2:
+                    imean = np.nanmean(allv5['SNR'][gd])
+                    isig = np.nanstd(allv5['SNR'][gd])
+                    dif = allv5['SNR'][gd] - imean
+                    mdif = isig - imean
+                    gd1, = np.where(dif > mdif)
+                    if len(gd1) > 2:
+                        meansnr5[i] = np.nanmean(allv5['SNR'][gd][gd1])
+                        sigsnr5[i] = np.nanstd(allv5['SNR'][gd][gd1])
+            gd, = np.where(meansnr5 > 1)
+            umjd5 = umjd5[gd]
+            meansnr5 = meansnr5[gd]
+            sigsnr5 = sigsnr5[gd]
+
 
             pdb.set_trace()
 
