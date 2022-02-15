@@ -877,7 +877,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 yvals = allsnrg['SN11'][:,2-ichip]#**2)  / (allsnrg['NREADS'] / 47)
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r', zorder=1)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
-                ax.scatter(jdmean, mjdmean[:, 2-ichip], marker='*', s=markersz*15, c='cyan', edgecolors='cyan', zorder=2)
+                ax.scatter(jdmean, mjdmean[:, 2-ichip], marker='*', s=markersz*10, c='cyan', edgecolors='cyan', zorder=2)
                 #ax.plot(jdmean, mjdmean[:, 2-ichip], color='cyan', zorder=2)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
