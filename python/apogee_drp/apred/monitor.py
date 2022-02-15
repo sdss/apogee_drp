@@ -835,6 +835,37 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             magmax = str("%.1f" % round(int(snbin)+0.5,1))
 
             gd, = np.where((allv4['H'] >= int(snbin)-0.5) & (allv4['H'] < int(snbin)+0.5))
+            umjd4,uind = np.unique(allv4['MJD'], return_index=True)
+            nmjd4 = len(umjd4)
+
+            meansnr4 = np.zeros(nmjd4)
+            sigsnr4 = np.zeros(nmjd4)
+            for i in range(nmjd4):
+                gd, = np.where((umjd4[i] == allv4['MJD']) & (allv4['H'] >= int(snbin)-0.5) & (allv4['H'] < int(snbin)+0.5))
+                imean = np.nanmean(allv4['SNR'][gd])
+                isig = np.nanstd(allv4['SNR'][gd])
+                dif = allv4['SNR'][gd] - imean
+                mdif = isig - imean
+                gd1, = np.where(dif > mdif)
+                meansnr4[i] = np.nanmean(allv4['SNR'][gd][gd1])
+                sigsnr4[i] = np.nanstd(allv4['SNR'][gd][gd1])
+
+            gd, = np.where((allv5['H'] >= int(snbin)-0.5) & (allv5['H'] < int(snbin)+0.5))
+            umjd5,uind = np.unique(allv5['MJD'], return_index=True)
+            nmjd5 = len(umjd5)
+
+            meansnr5 = np.zeros(nmjd5)
+            sigsnr5 = np.zeros(nmjd5)
+            for i in range(nmjd5):
+                gd, = np.where((umjd5[i] == allv5['MJD']) & (allv5['H'] >= int(snbin)-0.5) & (allv5['H'] < int(snbin)+0.5))
+                imean = np.nanmean(allv5['SNR'][gd])
+                isig = np.nanstd(allv5['SNR'][gd])
+                dif = allv5['SNR'][gd] - imean
+                mdif = isig - imean
+                gd1, = np.where(dif > mdif)
+                meansnr5[i] = np.nanmean(allv5['SNR'][gd][gd1])
+                sigsnr5[i] = np.nanstd(allv5['SNR'][gd][gd1])
+
             pdb.set_trace()
 
             ymin = -0.01
@@ -843,43 +874,33 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             fig = plt.figure(figsize=(30,14))
 
-            for ichip in range(nchips):
-                chip = chips[ichip]
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                #ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                if ichip == 1: ax.set_ylabel(r'S/N ($' + magmin + r'>=H>' + magmax + r'$)')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+            ax = plt.subplot2grid((1,1), (0,0))
+            ax.set_xlim(xmin, xmax)
+            #ax.set_ylim(ymin, ymax)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_xlabel(r'MJD')
+            ax.set_ylabel(r'mean S/N ($' + magmin + r'>=H>' + magmax + r'$)')
+            ax.axvline(x=59146, color='r', linewidth=2)
 
-                xvals = allsnrg['JD']
-                yvals = allsnrg['SN'+snbin][:,2-ichip]#**2)  / (allsnrg['NREADS'] / 47)
-                scolors = allsnrg['MOONPHASE']
-                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r', zorder=1)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
-                ax.scatter(jdmean, mjdmean[:, 2-ichip], marker='*', s=markersz*5, c='cyan', edgecolors='cyan', zorder=2)
-                #ax.plot(jdmean, mjdmean[:, 2-ichip], color='cyan', zorder=2)
+            sc1 = ax.errorbar(umjd4, meansnr4, sigsnr4)
+            sc2 = ax.errorbar(umjd5, meansnr5, sigsnr5)
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
+            ylims = ax.get_ylim()
+            for iyear in range(nyears):
+                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
 
-                if ichip == 0: ylims = ax.get_ylim()
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
-
-                ax_divider = make_axes_locatable(ax)
-                cax = ax_divider.append_axes("right", size="2%", pad="1%")
-                cb1 = colorbar(sc1, cax=cax, orientation="vertical")
-                cax.minorticks_on()
-                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-                if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                #ax_divider = make_axes_locatable(ax)
+                #cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                #cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                #cax.minorticks_on()
+                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                #if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
                 
 
             fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
