@@ -836,9 +836,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             umjd,uind = np.unique(allsnrg['MJD'], return_index=True)
             nmjd = len(umjd)
 
-            mjdmean = np.zeros(nmjd)
+            mjdmean = np.zeros(nmjd, nchips)
+            mjdsig  = np.zeros(nmjd, nchips)
+            jdmean = np.zeros(nmjd)
             for i in range(nmjd):
                 gd, = np.where(allsnrg['MJD'] == umjd[i])
+                if len(gd) > 1:
+                    imean = np.nanmean(allsnrg['SN11'][gd],axis=0)
+                    isig = np.nanstd(allsnrg['SN11'][gd],axis=0)
+                    dif = allsnrg['SN11'][gd] - imean
+                    mdif = isig - imean
+                    gd1, = np.where((dif[:,0] > mdif[0]) & (dif[:,1] > mdif[1]) & (dif[:,1] > mdif[1]))
+                    mjdmean[i,:] = np.nanmean(allsnrg['SN11'][gd][gd1],axis=0)
+                    mjdsig[i,:] = np.nanstd(allsnrg['SN11'][gd][gd1],axis=0)
+                    jdmean[i] = np.nanmean(allsnrg['JD'][gd][gd1])
                 pdb.set_trace()
 
             ymin = -0.01
@@ -866,7 +877,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 xvals = allsnrg['JD']
                 yvals = allsnrg['SN11'][:,2-ichip]#**2)  / (allsnrg['NREADS'] / 47)
                 scolors = allsnrg['MOONPHASE']
-                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r', zorder=1)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+                ax.scatter(jdmean, mjdmean[:, 2-icip], marker='*', s=markersz*10, c='seagreen', edgecolors='k', zorder=2)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
