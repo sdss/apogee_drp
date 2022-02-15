@@ -611,8 +611,6 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
     x = np.arange(2048).astype(float)
     for iframe,name in enumerate(p['APEXP']['name']) :
         name = str(name)  # make sure it's a string
-        #print('KLUDGE! hard-coding frame name')
-        #name = '38310023'
         print('frame: ', name)
         frame = load.ap1D(int(name))
         plot = dirname+'/plots/fpipixshift-'+name+'-'+str(fpiid)
