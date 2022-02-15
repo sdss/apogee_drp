@@ -1435,7 +1435,10 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.removeHandler(rootLogger.handlers[0]) 
     rootLogger = logging.getLogger()
     logtime = datetime.now().strftime("%Y%m%d%H%M%S") 
-    logfile = logdir+'apogeedrp-'+str(mjdstart)+'-'+str(mjdstop)+'.'+logtime+'.log'
+    if mjdstart==mjdstop:
+        logfile = logdir+'apogeedrp-'+str(mjdstart)+'.'+logtime+'.log'
+    else:
+        logfile = logdir+'apogeedrp-'+str(mjdstart)+'-'+str(mjdstop)+'.'+logtime+'.log'
     if os.path.exists(logfile): os.remove(logfile)
     fileHandler = logging.FileHandler(logfile)
     fileHandler.setFormatter(logFormatter)
