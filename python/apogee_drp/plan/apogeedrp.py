@@ -815,6 +815,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                     if clobber: cmd1 += ' --clobber'
                 logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
                 logger.info(logfile1)
+                logfiles.append(logfile1)
                 # Check if files exist already
                 docal[k] = True
                 if clobber is not True:
@@ -826,7 +827,6 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                     logger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
                     logger.info(logfile1)
                     queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-                    logfiles.append(logfile1)
             if np.sum(docal)>0:
                 queue.commit(hard=True,submit=True)
                 logger.info('PBS key is '+queue.key)
