@@ -150,6 +150,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if count == 0:
                         outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
                     else:
+                        pdb.set_trace()
                         newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
                         outstr = np.concatenate([outstr, newstr])
                     count += 1
