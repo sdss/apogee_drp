@@ -125,7 +125,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
             allv5 = fits.getdata(allv5path)
 
-        gd, = np.where((allv5['telescope'] == telescope))# & (allv5['mjd'] >= np.max(allsnr4['MJD'])))
+        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr['MJD'])))
         allv5 = allv5[gd]
         vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
         uvis,uind = np.unique(vis, return_index=True)
@@ -137,7 +137,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         for i in range(nvis):
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
-            p, = np.where(os.path.basename(plsum) == allsnr4['SUMFILE'])
+            p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
             if (len(p) < 1) & (os.path.exists(plsum)):
                 print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
                 hdul = fits.open(plsum)
@@ -155,7 +155,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     count += 1
 
         if count > 0:
-            out = vstack([Table(allsnr4), Table(outstr)])
+            out = vstack([Table(allsnr), Table(outstr)])
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
@@ -932,11 +932,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            snbin = '11'
-            magmin = str("%.1f" % round(int(snbin)-0.5,1))
-            magmax = str("%.1f" % round(int(snbin)+0.5,1))
+            snbin = 10
+            magmin = '10.8'
+            magmax = '11.2'
 
-            gd, = np.where(allsnr['NSN'+snbin] > 20)
+            gd, = np.where((allsnr
+
+            gd, = np.where((allsnr['NSNBINS'][:, snbin] > 10) & (allsnr['SNBINS'][:, snbin] > 0))
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
             umjd,uind = np.unique(allsnrg['MJD'], return_index=True)
@@ -948,13 +950,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for i in range(nmjd):
                 gd, = np.where(allsnrg['MJD'] == umjd[i])
                 if len(gd) > 1:
-                    imean = np.nanmean(allsnrg['SN'+snbin][gd],axis=0)
-                    isig = np.nanstd(allsnrg['SN'+snbin][gd],axis=0)
-                    dif = allsnrg['SN'+snbin][gd] - imean
+                    imean = np.nanmean(allsnrg['SNBINS'][:, snbin][gd], axis=0)
+                    isig = np.nanstd(allsnrg['SNBINS'][:, snbin][gd], axis=0)
+                    dif = allsnrg['SNBINS'][:, snbin][gd] - imean
                     mdif = isig - imean
                     gd1, = np.where((dif[:,0] > mdif[0]) & (dif[:,1] > mdif[1]) & (dif[:,1] > mdif[1]))
-                    mjdmean[i,:] = np.nanmean(allsnrg['SN'+snbin][gd][gd1],axis=0)
-                    mjdsig[i,:] = np.nanstd(allsnrg['SN'+snbin][gd][gd1],axis=0)
+                    mjdmean[i,:] = np.nanmean(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
+                    mjdsig[i,:] = np.nanstd(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
                     jdmean[i] = np.nanmean(allsnrg['JD'][gd][gd1])
 
             ymin = -0.01
@@ -980,7 +982,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axvline(x=59146, color='r', linewidth=2)
 
                 xvals = allsnrg['JD']
-                yvals = allsnrg['SN'+snbin][:,2-ichip]#**2)  / (allsnrg['NREADS'] / 47)
+                yvals = allsnrg['SNBINS'][:, snbin, 2-ichip]#**2)  / (allsnrg['NREADS'] / 47)
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r', zorder=1)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
                 ax.scatter(jdmean, mjdmean[:, 2-ichip], marker='*', s=markersz*5, c='cyan', edgecolors='cyan', zorder=2)
@@ -1005,6 +1007,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
+
+        return
+
 
         ###########################################################################################
         # snhistory4.png
@@ -3428,7 +3433,8 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     magmin = 7.0
     magmax = 13.4
     magbins = np.arange(magmin, magmax, magrad*2)
-#array([ 7. ,  7.4,  7.8,  8.2,  8.6,  9. ,  9.4,  9.8, 10.2, 10.6, 11. , 11.4, 11.8, 12.2, 12.6, 13. ])
+    #         0     1     2     3     4     5     6     7    8     9     10    11    12    13    14    15
+    #array([ 7. ,  7.4,  7.8,  8.2,  8.6,  9. ,  9.4,  9.8, 10.2, 10.6, 11. , 11.4, 11.8, 12.2, 12.6, 13. ])
     nmagbins = len(magbins)
 
 
