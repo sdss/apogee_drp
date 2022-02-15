@@ -910,7 +910,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 10)
+            gd, = np.where(allsnr['NSN11'] > 20)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
@@ -967,7 +967,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 10)
+            gd, = np.where(allsnr['NSN11'] > 20)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
