@@ -857,6 +857,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             meansnr4 = meansnr4[gd]
             sigsnr4 = sigsnr4[gd]
 
+            ascii.write([umjd4, meansnr4, signr4], 'allVisitMjdSnr4_' + magmin + '_' + magmax + '.dat', overwrite=True, format='no_header')
+
             #gd, = np.where((allv5['H'] >= int(snbin)-0.5) & (allv5['H'] < int(snbin)+0.5))
             umjd5,uind = np.unique(allv5['MJD'], return_index=True)
             nmjd5 = len(umjd5)
@@ -865,7 +867,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             sigsnr5 = np.zeros(nmjd5)
             for i in range(nmjd5):
                 print(umjd5[i])
-                gd, = np.where((umjd5[i] == allv5['MJD']) & (allv5['H'] >= int(snbin)-0.5) & (allv5['H'] < int(snbin)+0.5))
+                gd, = np.where((umjd5[i] == allv5['MJD']) & (allv5['HMAG'] >= int(snbin)-0.5) & (allv5['HMAG'] < int(snbin)+0.5))
                 if len(gd) > 2:
                     imean = np.nanmean(allv5['SNR'][gd])
                     isig = np.nanstd(allv5['SNR'][gd])
@@ -880,8 +882,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             meansnr5 = meansnr5[gd]
             sigsnr5 = sigsnr5[gd]
 
-
-            pdb.set_trace()
+            ascii.write([umjd5, meansnr5, signr5], 'allVisitMjdSnr5_' + magmin + '_' + magmax + '.dat', overwrite=True, format='no_header')
 
             ymin = -0.01
             ymax = 0.18
