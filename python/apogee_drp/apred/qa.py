@@ -522,6 +522,10 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     sky = rows[fibersky]
     if nsky < 1: print("----> makePlateSum: PROBLEM!!! No skies found.")
 
+    if (nobj < 1) & (ntelluric < 1) & (nsky < 1): 
+        print("----> makePlateSum: PROBLEM!!! No science objects, tellurics, nor skies found. Skipping this visit.")
+        return 'bad'
+
     fiberstar = np.concatenate([fiberobj,fibertelluric])
     nstar = len(fiberstar)
     star = rows[fiberstar]
