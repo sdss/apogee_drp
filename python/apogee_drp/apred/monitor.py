@@ -856,13 +856,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
 
-                if ichip == 0: ylims = ax.get_ylim()
-                pdb.set_trace()
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    #if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['SN11'][:,2-ichip]**2)  / (allsnrg['NREADS'] / 47)
                 scolors = allsnrg['MOONPHASE']
@@ -870,6 +863,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
+
+                if ichip == 0: ylims = ax.get_ylim()
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
 
                 ax_divider = make_axes_locatable(ax)
                 cax = ax_divider.append_axes("right", size="2%", pad="1%")
@@ -915,10 +913,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
 
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    #if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['SN11'][:,2-ichip]**2)  / (allsnrg['EXPTIME'] / 60)
                 scolors = allsnrg['MOONPHASE']
@@ -926,6 +920,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
+
+                if ichip == 0: ylims = ax.get_ylim()
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
 
                 ax_divider = make_axes_locatable(ax)
                 cax = ax_divider.append_axes("right", size="2%", pad="1%")
