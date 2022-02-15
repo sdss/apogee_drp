@@ -87,36 +87,36 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
-        outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
-        print("----> monitor: Making " + os.path.basename(outfile))
+        #outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
+        #print("----> monitor: Making " + os.path.basename(outfile))
 
-        if allv4 is None:
-            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
-            allv4 = fits.getdata(allv4path)
+        #if allv4 is None:
+        #    allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
+        #    allv4 = fits.getdata(allv4path)
 
-        gd, = np.where(allv4['TELESCOPE'] == telescope)
-        allv4 = allv4[gd]
-        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
-        uvis,uind = np.unique(vis, return_index=True)
-        uallv4 = allv4[uind]
-        nvis = len(uvis)
-        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
+        #gd, = np.where(allv4['TELESCOPE'] == telescope)
+        #allv4 = allv4[gd]
+        #vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
+        #uvis,uind = np.unique(vis, return_index=True)
+        #uallv4 = allv4[uind]
+        #nvis = len(uvis)
+        #print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
-        for i in range(nvis):
-            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
-            plsum = plsum.replace(' ', '')
-            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
-            if os.path.exists(plsum):
-                if i == 0:
-                    outstr = getSnrStruct(plsum)
-                else:
-                    newstr = getSnrStruct(plsum)
-                    outstr = np.concatenate([outstr, newstr])
+        #for i in range(nvis):
+        #    plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
+        #    plsum = plsum.replace(' ', '')
+        #    print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
+        #    if os.path.exists(plsum):
+        #        if i == 0:
+        #            outstr = getSnrStruct(plsum)
+        #        else:
+        #            newstr = getSnrStruct(plsum)
+        #            outstr = np.concatenate([outstr, newstr])
 
-        Table(outstr).write(outfile, overwrite=True)
-        print("----> monitor: Finished making " + os.path.basename(outfile))
+        #Table(outstr).write(outfile, overwrite=True)
+        #print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        return
+        #return
 
         outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
@@ -125,7 +125,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
             allv5 = fits.getdata(allv5path)
 
-        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])))
+        gd, = np.where((allv5['telescope'] == telescope))# & (allv5['mjd'] >= np.max(allsnr4['MJD'])))
         allv5 = allv5[gd]
         vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
         uvis,uind = np.unique(vis, return_index=True)
@@ -137,7 +137,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         for i in range(nvis):
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
-            p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
+            p, = np.where(os.path.basename(plsum) == allsnr4['SUMFILE'])
             if (len(p) < 1) & (os.path.exists(plsum)):
                 print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
                 hdul = fits.open(plsum)
@@ -155,11 +155,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     count += 1
 
         if count > 0:
-            out = vstack([Table(allsnr), Table(outstr)])
+            out = vstack([Table(allsnr4), Table(outstr)])
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        #return
+        return
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
