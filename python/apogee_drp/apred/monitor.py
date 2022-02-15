@@ -830,9 +830,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 5)
+            gd, = np.where(allsnr['NSN11'] > 10)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
+            umjd,uind = np.unique(allsnrg['MJD'])
+            nmjd = len(umjd)
+
+            mjdmean = np.zero(nmjd)
+            for i in range(nmjd):
+                gd, = np.where(allsnrg['MJD'] == umjd[i])
+                pdb.set_trace()
 
             ymin = -0.01
             ymax = 0.18
@@ -875,6 +882,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 cax.minorticks_on()
                 cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
                 if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                
 
             fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -886,7 +894,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 5)
+            gd, = np.where(allsnr['NSN11'] > 10)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
@@ -943,7 +951,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd, = np.where(allsnr['NSN11'] > 5)
+            gd, = np.where(allsnr['NSN11'] > 10)
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
