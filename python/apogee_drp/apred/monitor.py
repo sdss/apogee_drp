@@ -3317,11 +3317,10 @@ def getSciStruct(data=None):
 ''' GETSNRSTRUCT: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
 def getSnrStruct(plsum=None):
     #magbins = np.array([7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5])
-
     magrad = 0.2
     magmin = 7.0
     magmax = 13.4
-    magbins = np.arange(minmag, maxmag, magrad*2)
+    magbins = np.arange(magmin, magmax, magrad*2)
 #array([ 7. ,  7.4,  7.8,  8.2,  8.6,  9. ,  9.4,  9.8, 10.2, 10.6, 11. , 11.4, 11.8, 12.2, 12.6, 13. ])
     nmagbins = len(magbins)
 
