@@ -830,7 +830,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            snbin = '9'
+            snbin = '11'
             magmin = str("%.1f" % round(int(snbin)-0.5,1))
             magmax = str("%.1f" % round(int(snbin)+0.5,1))
 
