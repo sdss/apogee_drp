@@ -3435,11 +3435,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     #array([ 7. ,  7.4,  7.8,  8.2,  8.6,  9. ,  9.4,  9.8, 10.2, 10.6, 11. , 11.4, 11.8, 12.2, 12.6, 13. ])
     nmagbins = len(magbins)
 
-
-    magbins = np.array([7,8,9,10,11,12,13])
-    magrad = 0.5
     fiberid = data2['FIBERID']
-
     cols = data1.columns.names
 
     dt = np.dtype([('SUMFILE',   np.str, 30),
@@ -3526,7 +3522,6 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
                 outstr['SNBINS'][0][jj,:] = np.nanmean(data2['SN'][g, iexp, :], axis=0)
                 outstr['ESNBINS'][0][jj,:] = np.nanstd(data2['SN'][g, iexp, :], axis=0)
                 outstr['NSNBINS'][0][jj] = len(g)
-                pdb.set_trace()
             except:
                 continue
                 
