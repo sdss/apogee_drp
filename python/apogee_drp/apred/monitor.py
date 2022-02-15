@@ -3245,13 +3245,12 @@ def getSnrStruct(plsum=None):
         #outstr['HMAG'][iexp, sky] = -999.999
         #outstr['STARFIBER'][iexp, sci] = 1
         outstr['SNFIBER'][iexp, fiberid-1] =   data2['SN'][:, :, iexp]
-        pdb.set_trace()
         for magbin in magbins:
             maglab = 'SN' + str(magbin)
             magelab = 'E' + maglab
             magnlab = 'N' + maglab
             g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad))
-            pdb.set_trace()
+            print(str("%.3f" % round(data2['HMAG'][g],3)).rjust(6) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
             if len(g) > 2:
                 outstr[maglab][iexp] = np.nanmean(data2['SN'][g, :, iexp], axis=0)
                 outstr[magelab][iexp] = np.nanstd(data2['SN'][g, :, iexp], axis=0)
