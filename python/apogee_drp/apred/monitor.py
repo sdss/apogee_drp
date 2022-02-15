@@ -857,7 +857,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             meansnr4 = meansnr4[gd]
             sigsnr4 = sigsnr4[gd]
 
-            ascii.write([umjd4, meansnr4, signr4], 'allVisitMjdSnr4_' + magmin + '_' + magmax + '.dat', overwrite=True, format='no_header')
+            ascii.write([umjd4, meansnr4, sigsnr4], 'allVisitMjdSnr4_' + magmin + '_' + magmax + '.dat', overwrite=True, format='no_header')
 
             #gd, = np.where((allv5['H'] >= int(snbin)-0.5) & (allv5['H'] < int(snbin)+0.5))
             umjd5,uind = np.unique(allv5['MJD'], return_index=True)
@@ -882,7 +882,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             meansnr5 = meansnr5[gd]
             sigsnr5 = sigsnr5[gd]
 
-            ascii.write([umjd5, meansnr5, signr5], 'allVisitMjdSnr5_' + magmin + '_' + magmax + '.dat', overwrite=True, format='no_header')
+            ascii.write([umjd5, meansnr5, sigsnr5], 'allVisitMjdSnr5_' + magmin + '_' + magmax + '.dat', overwrite=True, format='no_header')
 
             ymin = -0.01
             ymax = 0.18
