@@ -834,7 +834,8 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
             else:
                 logger.info('No '+str(calnames[j])+' calibration files need to be run')
             # Checks the status and updates the database
-            chkcal1 = runapogee.check_calib(expinfo,logfiles,queue.key,apred,verbose=True,logger=logger)
+            calinfo = expinfo[cind]
+            chkcal1 = runapogee.check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=logger)
             if len(chkcal)==0:
                 chkcal = chkcal1
             else:
