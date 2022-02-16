@@ -83,6 +83,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
 
+    badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
+
     if makesumfiles is True:
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
@@ -135,6 +137,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         count = 0
         for i in range(nvis):
+            badcheck, = np.where((int(uallv5['plate'][i]) == badComObs['CONFIG']) & (uallv5['mjd'][i] == badComObs['MJD']))
+            if len(badcheck) > 0: continue
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
             p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
@@ -159,7 +163,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        return
+        #return
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
@@ -490,20 +494,30 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.close()
 
     ###############################################################################################
-    # HTML for individual fiber throughput plots (dome flats)
-    badfibers = np.array(['015','034','105','111','115','121','122','123','124','125','126','127',
+    # Lists of low throughput or broken fibers for each telescope
+    badfibersPlate = np.array(['015','034','105','111','115','121','122','123','124','125','126','127',
                           '128','129','130','131','132','133','134','135','136','137','138','139',
                           '140','141','142','143','144','145','146','147','148','149','150','151',
-                          '182','202','227','245','250','277','278','284','289',])
-    deadfibers = np.array(['211','273'])
+                          '182','202','227','245','250','277','278','284','289'])
+    deadfibersPlate = np.array(['211','273'])
 
-    badfibersS = np.array(['031','034','039','061','067','069','083','084','091','129','136','140',
+    badfibersFPS = np.array([ '018','021','109','289'])
+    deadfibersFPS = np.array(['025'])
+
+    badfibersPlate_S = np.array(['031','034','039','061','067','069','083','084','091','129','136','140',
                            '145','147','151','165','180','241','269'])
-    deadfibersS = None
+    deadfibersPlate_S = None
+    badfibersFPS_S = None
+    deadfibersFPS_S = None
 
     if instrument == 'apogee-s':
-        badfibers = badfibersS
-        deadfibers = deadfibersS
+        badfibersPlate = badfibersPlate_S
+        deadfibersPlate = deadfibersPlate_S
+        badfibersFPS = badfibersFPS_S
+        deadfibersFPS = deadfibersFPS_S
+
+    ###############################################################################################
+    # HTML for individual fiber throughput plots (dome flats)
 
     fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
     if os.path.exists(fibdir) is False: os.mkdir(fibdir)
@@ -528,16 +542,23 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         fibqual = 'normal'
         bgcolor = '#FFFFFF'
 
-        if deadfibers is not None:
-            bd, = np.where(cfib == deadfibers)
+        if deadfibersPlate is not None:
+            bd, = np.where(cfib == deadfibersPlate)
+            if len(bd) >= 1: fibqual = 'previously broken<BR>fixed 4 FPS'
+        if badfibersPlate is not None:
+            bd, = np.where(cfib == badfibersPlate)
+            if len(bd) >= 1: fibqual = 'previously low flux<BR>fixed 4 FPS'
+        if deadfibersFPS is not None:
+            bd, = np.where(cfib == deadfibersFPS)
             if len(bd) >= 1: 
-                fibqual = 'dead'
-                bgcolor = '#E53935'
-        if badfibers is not None:
-            bd, = np.where(cfib == badfibers)
-            if len(bd) >= 1:
-                fibqual = 'problematic'
-                bgcolor = '#FFA726'
+                fibqual = 'dead/broken'
+                bgcolor = 'red'
+        if badfibersFPS is not None:
+            bd, = np.where(cfib == badfibersFPS)
+            if len(bd) >= 1: 
+                fibqual = 'low flux'
+                bgcolor = 'yellow'
+
 
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
         fhtml.write('<TD ALIGN=center>' + cfib + '<BR>(' + cblock + ') <TD ALIGN=center>' + fibqual)
@@ -651,7 +672,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         for i in range(300):
             gdcal = allexp[dome]
             caljd = gdcal['JD'] - 2.4e6
-            ymax1 = 16;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
+            ymax1 = 27;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
             ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
@@ -1108,7 +1129,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['SNBINS'][:, snbin, 2-ichip]**2) / (allsnrg['EXPTIME'] / 60)
-                if ichip == 0: pdb.set_trace()
+                pdb.set_trace()
+                #if ichip == 0: pdb.set_trace()
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
@@ -2470,7 +2492,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 44000
+            ymax = 70000
             if instrument == 'apogee-s': 
                 ymax = 125000
             ymin = 0 - ymax * 0.05
@@ -2486,6 +2508,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.set_xlim(xmin, xmax)
                 ax.set_ylim(ymin, ymax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
@@ -2576,7 +2599,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = np.array([510000, 58000, 11000]) 
+            ymax = np.array([510000, 58000, 16000]) 
             if instrument == 'apogee-s': ymax = np.array([110000, 30000, 3000])
             ymin = 0 - ymax * 0.05
             yspan = ymax - ymin
@@ -2604,7 +2627,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
+                    if ichip == 0:
+                        ylims = ax.get_ylim()
+                        ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
@@ -2628,7 +2653,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = np.array([40000, 3000, 7700])
+            ymax = np.array([45000, 3000, 12000])
             if instrument == 'apogee-s': ymax = np.array([6000, 1500, 3000])
             ymin = 0 - ymax*0.05
             yspan = ymax - ymin
@@ -2656,7 +2681,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
+                    if ichip == 0:
+                        ylims = ax.get_ylim()
+                        ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
@@ -2680,7 +2707,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 35000
+            ymax = 30000
             ymin = 0 - ymax*0.05
             yspan = ymax - ymin
 
@@ -2733,9 +2760,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 3.0
+            ymax = 2.5
             if instrument == 'apogee-s': 
-                ymax = 3.0
+                ymax = 2.5
             ymin = 0.8
             yspan = ymax - ymin
 
@@ -3527,7 +3554,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad) & (np.isnan(data2['HMAG']) == False))
         if len(g) > 2:
             try:
-                print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 0])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 1])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 2])))))
+                #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 0])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 1])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 2])))))
                 outstr['SNBINS'][0][jj,:] = np.nanmean(data2['SN'][g, iexp, :], axis=0)
                 outstr['ESNBINS'][0][jj,:] = np.nanstd(data2['SN'][g, iexp, :], axis=0)
                 outstr['NSNBINS'][0][jj] = len(g)

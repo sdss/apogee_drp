@@ -2188,7 +2188,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
     hlines = np.array([16811.111,16411.692,16113.732,15884.897,15704.970,15560.718,15443.157,15345.999,15264.725,15196.016,15137.357])
     ce3lines = np.array([15851.880,15961.157,15964.928,16133.170,16292.642])
     mn2lines = np.array([15387.220,15412.667,15586.57,15600.576,15620.314])
-    hcolor = 'grey'
+    hcolor = 'b'
     ce3color = 'r'
     mn2color = 'b'
     visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
@@ -2250,6 +2250,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                 ymx4 = np.nanmax(tmpF[ymxsec4])
                 ymx5 = np.nanmax(tmpF[ymxsec5])
                 ymx = np.nanmax([ymx1,ymx2,ymx3,ymx4,ymx5])
+                med = np.nanmedian(Flux)
                 if objtype != 'SKY':
                     ymin = 0
                     yspn = ymx - ymin
@@ -2261,7 +2262,6 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                         ymin = ymn - (yspn * 0.10)
                         ymax = ymx + (yspn * 0.15)
                 else:
-                    med = np.nanmedian(Flux)
                     ymin = med - 50
                     ymax = med + 50
                 yspan = ymax-ymin
@@ -2287,11 +2287,43 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                 else:
                     for ll in hlines: ax1.axvline(x=ll, color=hcolor, alpha=0.6)
                     ax1.text(16811.111, ymin+yspan*0.03, 'H I', color=hcolor, bbox=bboxpar, fontsize=fsz, ha='center')
-                    if jkcolor < 0.3:
-                        for ll in ce3lines: ax1.axvline(x=ll, color=ce3color, alpha=0.6)
-                        for ll in mn2lines: ax1.axvline(x=ll, color=mn2color, alpha=0.6)
-                        ax1.text(15412.667, ymin+yspan*0.03, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
-                        ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
+                    #if jkcolor < 0.3:
+                        #for ll in ce3lines: ax1.axvline(x=ll, color=ce3color, alpha=0.6)
+                        #for ll in mn2lines: ax1.axvline(x=ll, color=mn2color, alpha=0.6)
+                        #ax1.text(15412.667, ymin+yspan*0.03, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
+                        #ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
+
+                    if med > 400:
+                        badpixels, = np.where(FluxB < 1)
+                        if len(badpixels) > 0:
+                            g, = np.where((badpixels > 12) & (badpixels < 2036))
+                            if len(g) > 0:
+                                badpixels = badpixels[g]
+                                for badpixel in badpixels:
+                                    badfixrange1 = [badpixel-10, badpixel-1]
+                                    badfixrange2 = [badpixel+1, badpixel+10]
+                                    g, = np.where((FluxB[badfixrange1[0]:badfixrange1[1]] > med/3) | (FluxB[badfixrange2[0]:badfixrange2[1]] > med/3))
+                                    if len(g) > 2: FluxB[badpixel] = np.mean([FluxB[badfixrange1[0]:badfixrange1[1]], FluxB[badfixrange2[0]:badfixrange2[1]]])
+                        badpixels, = np.where(FluxG < 1)
+                        if len(badpixels) > 0:
+                            g, = np.where((badpixels > 12) & (badpixels < 2036))
+                            if len(g) > 0:
+                                badpixels = badpixels[g]
+                                for badpixel in badpixels:
+                                    badfixrange1 = [badpixel-10, badpixel-1]
+                                    badfixrange2 = [badpixel+1, badpixel+10]
+                                    g, = np.where((FluxG[badfixrange1[0]:badfixrange1[1]] > med/3) | (FluxG[badfixrange2[0]:badfixrange2[1]] > med/3))
+                                    if len(g) > 2: FluxG[badpixel] = np.mean([FluxG[badfixrange1[0]:badfixrange1[1]], FluxG[badfixrange2[0]:badfixrange2[1]]])
+                        badpixels, = np.where(FluxR < 1)
+                        if len(badpixels) > 0:
+                            g, = np.where((badpixels > 12) & (badpixels < 2036))
+                            if len(g) > 0:
+                                badpixels = badpixels[g]
+                                for badpixel in badpixels:
+                                    badfixrange1 = [badpixel-10, badpixel-1]
+                                    badfixrange2 = [badpixel+1, badpixel+10]
+                                    g, = np.where((FluxR[badfixrange1[0]:badfixrange1[1]] > med/3) | (FluxR[badfixrange2[0]:badfixrange2[1]] > med/3))
+                                    if len(g) > 2: FluxR[badpixel] = np.mean([FluxB[badfixrange1[0]:badfixrange1[1]], FluxR[badfixrange2[0]:badfixrange2[1]]])
 
                     ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color='white', linewidth=10)
                     ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color='white', linewidth=10)
@@ -3309,6 +3341,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         ilon = ilon[order]
         ilat = ilat[order]
         inexposures = inexposures[order]
+        iexptime = iexptime[order]
         icart = icart[order]
         izero = izero[order]
         imoonphase = imoonphase[order]
