@@ -655,7 +655,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         for i in range(300):
             gdcal = allexp[dome]
             caljd = gdcal['JD'] - 2.4e6
-            ymax1 = 16;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
+            ymax1 = 19;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
             ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
@@ -2474,7 +2474,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 44000
+            ymax = 45000
             if instrument == 'apogee-s': 
                 ymax = 125000
             ymin = 0 - ymax * 0.05
@@ -2580,7 +2580,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = np.array([510000, 58000, 11000]) 
+            #ymax = np.array([510000, 58000, 13000]) 
             if instrument == 'apogee-s': ymax = np.array([110000, 30000, 3000])
             ymin = 0 - ymax * 0.05
             yspan = ymax - ymin
@@ -2594,7 +2594,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin[ichip], ymax[ichip])
+                #ax.set_ylim(ymin[ichip], ymax[ichip])
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -2608,7 +2608,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
+                    if ichip == 0:
+                        ylims = ax.get_ylim()
+                        ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
@@ -2632,7 +2634,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = np.array([40000, 3000, 7700])
+            #ymax = np.array([43000, 3000, 8500])
             if instrument == 'apogee-s': ymax = np.array([6000, 1500, 3000])
             ymin = 0 - ymax*0.05
             yspan = ymax - ymin
@@ -2660,7 +2662,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
+                    if ichip == 0:
+                        ylims = ax.get_ylim()
+                        ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
@@ -2684,7 +2688,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 35000
+            ymax = 30000
             ymin = 0 - ymax*0.05
             yspan = ymax - ymin
 
@@ -2737,9 +2741,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 3.0
+            ymax = 2.5
             if instrument == 'apogee-s': 
-                ymax = 3.0
+                ymax = 2.5
             ymin = 0.8
             yspan = ymax - ymin
 
