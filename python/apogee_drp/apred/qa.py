@@ -2287,7 +2287,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                 else:
                     for ll in hlines: ax1.axvline(x=ll, color=hcolor, alpha=0.6)
                     ax1.text(16811.111, ymin+yspan*0.03, 'H I', color=hcolor, bbox=bboxpar, fontsize=fsz, ha='center')
-                    if jkcolor < 0.3:
+                    #if jkcolor < 0.3:
                         #for ll in ce3lines: ax1.axvline(x=ll, color=ce3color, alpha=0.6)
                         #for ll in mn2lines: ax1.axvline(x=ll, color=mn2color, alpha=0.6)
                         #ax1.text(15412.667, ymin+yspan*0.03, 'Mn II', color=mn2color, bbox=bboxpar, fontsize=fsz, ha='center')
