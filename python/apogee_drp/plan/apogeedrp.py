@@ -137,6 +137,7 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
         if len(ind1) != len(expinfo1):
             db.ingest('exposure',expinfo1)  # insert into database
             expinfo1 = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))            
+            expinfo1 = Table(expinfo1)
         else:
             expinfo1 = Table(dbexpinfo)
         if expinfo is None:
