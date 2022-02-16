@@ -2581,7 +2581,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            #ymax = np.array([510000, 58000, 13000]) 
+            ymax = np.array([510000, 58000, 16000]) 
             if instrument == 'apogee-s': ymax = np.array([110000, 30000, 3000])
             ymin = 0 - ymax * 0.05
             yspan = ymax - ymin
@@ -2595,7 +2595,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin, xmax)
-                #ax.set_ylim(ymin[ichip], ymax[ichip])
+                ax.set_ylim(ymin[ichip], ymax[ichip])
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
