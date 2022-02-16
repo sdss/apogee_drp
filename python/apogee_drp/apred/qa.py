@@ -3341,6 +3341,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         ilon = ilon[order]
         ilat = ilat[order]
         inexposures = inexposures[order]
+        iexptime = iexptime[order]
         icart = icart[order]
         izero = izero[order]
         imoonphase = imoonphase[order]
