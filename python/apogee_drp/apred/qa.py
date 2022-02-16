@@ -2250,6 +2250,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                 ymx4 = np.nanmax(tmpF[ymxsec4])
                 ymx5 = np.nanmax(tmpF[ymxsec5])
                 ymx = np.nanmax([ymx1,ymx2,ymx3,ymx4,ymx5])
+                med = np.nanmedian(Flux)
                 if objtype != 'SKY':
                     ymin = 0
                     yspn = ymx - ymin
@@ -2261,7 +2262,6 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                         ymin = ymn - (yspn * 0.10)
                         ymax = ymx + (yspn * 0.15)
                 else:
-                    med = np.nanmedian(Flux)
                     ymin = med - 50
                     ymax = med + 50
                 yspan = ymax-ymin
