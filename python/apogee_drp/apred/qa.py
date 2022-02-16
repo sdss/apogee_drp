@@ -2294,26 +2294,36 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                         #ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
 
                     if med > 400:
-                        pdb.set_trace()
                         badpixels, = np.where(FluxB < 1)
-                        for badpixel in badpixels:
-                            try:
-                                FluxB[badpixel] = np.median([FluxB[badpixel-10:badpixel-1], FluxB[badpixel+1:badpixel+10]])
-                            except:
-                                nothing = 1
+                        if len(badpixels) > 0:
+                            g, = np.where((badpixels > 12) & (badpixels < 2036))
+                            if len(g) > 0:
+                                badpixels = badpixels[g]
+                                for badpixel in badpixels:
+                                    badfixrange1 = [badpixel-10, badpixel-1]
+                                    badfixrange2 = [badpixel+1, badpixel+10]
+                                    g, = np.where((FluxB[badfixrange1[0]:badfixrange1[1]] > med/3) | (FluxB[badfixrange2[0]:badfixrange2[1]] > med/3))
+                                    if len(g) > 2: FluxB[badpixel] = np.mean([FluxB[badfixrange1[0]:badfixrange1[1]], FluxB[badfixrange2[0]:badfixrange2[1]]])
                         badpixels, = np.where(FluxG < 1)
-                        for badpixel in badpixels:
-                            try:
-                                FluxG[badpixel] = np.median([FluxG[badpixel-10:badpixel-1], FluxG[badpixel+1:badpixel+10]])
-                            except:
-                                nothing = 1
+                        if len(badpixels) > 0:
+                            g, = np.where((badpixels > 12) & (badpixels < 2036))
+                            if len(g) > 0:
+                                badpixels = badpixels[g]
+                                for badpixel in badpixels:
+                                    badfixrange1 = [badpixel-10, badpixel-1]
+                                    badfixrange2 = [badpixel+1, badpixel+10]
+                                    g, = np.where((FluxG[badfixrange1[0]:badfixrange1[1]] > med/3) | (FluxG[badfixrange2[0]:badfixrange2[1]] > med/3))
+                                    if len(g) > 2: FluxG[badpixel] = np.mean([FluxG[badfixrange1[0]:badfixrange1[1]], FluxG[badfixrange2[0]:badfixrange2[1]]])
                         badpixels, = np.where(FluxR < 1)
-                        for badpixel in badpixels:
-                            try:
-                                FluxR[badpixel] = np.median([FluxR[badpixel-10:badpixel-1], FluxR[badpixel+1:badpixel+10]])
-                            except:
-                                nothing = 1
-
+                        if len(badpixels) > 0:
+                            g, = np.where((badpixels > 12) & (badpixels < 2036))
+                            if len(g) > 0:
+                                badpixels = badpixels[g]
+                                for badpixel in badpixels:
+                                    badfixrange1 = [badpixel-10, badpixel-1]
+                                    badfixrange2 = [badpixel+1, badpixel+10]
+                                    g, = np.where((FluxR[badfixrange1[0]:badfixrange1[1]] > med/3) | (FluxR[badfixrange2[0]:badfixrange2[1]] > med/3))
+                                    if len(g) > 2: FluxR[badpixel] = np.mean([FluxB[badfixrange1[0]:badfixrange1[1]], FluxR[badfixrange2[0]:badfixrange2[1]]])
 
                     ax1.plot(WaveB[np.argsort(WaveB)], FluxB[np.argsort(WaveB)], color='white', linewidth=10)
                     ax1.plot(WaveG[np.argsort(WaveG)], FluxG[np.argsort(WaveG)], color='white', linewidth=10)
