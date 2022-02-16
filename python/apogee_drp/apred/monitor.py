@@ -494,20 +494,30 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.close()
 
     ###############################################################################################
-    # HTML for individual fiber throughput plots (dome flats)
-    badfibers = np.array(['015','034','105','111','115','121','122','123','124','125','126','127',
+    # Lists of low throughput or broken fibers for each telescope
+    badfibersPlate = np.array(['015','034','105','111','115','121','122','123','124','125','126','127',
                           '128','129','130','131','132','133','134','135','136','137','138','139',
                           '140','141','142','143','144','145','146','147','148','149','150','151',
-                          '182','202','227','245','250','277','278','284','289',])
-    deadfibers = np.array(['211','273'])
+                          '182','202','227','245','250','277','278','284','289'])
+    deadfibersPlate = np.array(['211','273'])
 
-    badfibersS = np.array(['031','034','039','061','067','069','083','084','091','129','136','140',
+    badfibersFPS = np.array(['034','018','021','109','289'])
+    deadfibersFPS = np.array(['025'])
+
+    badfibersPlate_S = np.array(['031','034','039','061','067','069','083','084','091','129','136','140',
                            '145','147','151','165','180','241','269'])
-    deadfibersS = None
+    deadfibersPlate_S = None
+    badfibersFPS_S = None
+    deadfibersFPS_S = None
 
     if instrument == 'apogee-s':
-        badfibers = badfibersS
-        deadfibers = deadfibersS
+        badfibersPlate = badfibersPlate_S
+        deadfibersPlate = deadfibersPlate_S
+        badfibersFPS = badfibersFPS_S
+        deadfibersFPS = deadfibersFPS_S
+
+    ###############################################################################################
+    # HTML for individual fiber throughput plots (dome flats)
 
     fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
     if os.path.exists(fibdir) is False: os.mkdir(fibdir)
@@ -532,16 +542,23 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         fibqual = 'normal'
         bgcolor = '#FFFFFF'
 
-        if deadfibers is not None:
-            bd, = np.where(cfib == deadfibers)
+        if deadfibersPlate is not None:
+            bd, = np.where(cfib == deadfibersPlate)
+            if len(bd) >= 1: fibqual = 'previously broken<BR>fixed 4 FPS'
+        if badfibersPlate is not None:
+            bd, = np.where(cfib == badfibersPlate)
+            if len(bd) >= 1: fibqual = 'previously low flux<BR>fixed 4 FPS'
+        if deadfibersFPS is not None:
+            bd, = np.where(cfib == deadfibersFPS)
             if len(bd) >= 1: 
-                fibqual = 'dead'
-                bgcolor = '#E53935'
-        if badfibers is not None:
-            bd, = np.where(cfib == badfibers)
-            if len(bd) >= 1:
-                fibqual = 'problematic'
-                bgcolor = '#FFA726'
+                fibqual = 'dead/broken'
+                bgcolor = 'red'
+        if badfibersFPS is not None:
+            bd, = np.where(cfib == badfibersFPS)
+            if len(bd) >= 1: 
+                fibqual = 'low flux'
+                bgcolor = 'yellow'
+
 
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
         fhtml.write('<TD ALIGN=center>' + cfib + '<BR>(' + cblock + ') <TD ALIGN=center>' + fibqual)
