@@ -2294,6 +2294,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
                         #ax1.text(15961.157, ymin+yspan*0.03, 'Ce III', color=ce3color, bbox=bboxpar, fontsize=fsz, ha='center')
 
                     if med > 400:
+                        pdb.set_trace()
                         badpixels, = np.where(FluxB < 1)
                         for badpixel in badpixels:
                             try:
