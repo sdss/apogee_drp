@@ -655,7 +655,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         for i in range(300):
             gdcal = allexp[dome]
             caljd = gdcal['JD'] - 2.4e6
-            ymax1 = 22;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
+            ymax1 = 25;   ymin1 = 0 - ymax1 * 0.05;   yspan1 = ymax1 - ymin1
             ymax2 = 1.1; ymin2 = 0;                  yspan2 = ymax2 - ymin2
 
             plotfile = specdir5 + 'monitor/' + instrument + '/fiber/fiber' + str(i + 1).zfill(3) + '.png'
