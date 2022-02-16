@@ -1002,7 +1002,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
                     elif ccode==2:  # flux
-                        cmd1 = 'makecal --psf '+str(num1)+' --flux '+str(num1)+' --unlock'
+                        cmd1 = 'makecal --flux '+str(num1)+' --unlock'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
                     elif ccode==4: # and exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):  # arcs

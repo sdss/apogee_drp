@@ -803,7 +803,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif ccode==2:   # flux
-                    cmd1 = 'makecal --psf '+str(num1)+' --flux '+str(num1)+' --unlock'
+                    cmd1 = 'makecal --flux '+str(num1)+' --unlock'
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif ccode==4:  # arcs
