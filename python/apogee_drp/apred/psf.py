@@ -758,10 +758,31 @@ def loadframe(infile):
     return frame
 
 def loadepsf(infile):
-    # Load Empirical PSF data
-    # this takes a while
+    """
+    Load Empirical PSF data
+    this takes a while
+
+    Parameters
+    ----------
+    infile : str
+       Filename of apEPSF file.
+
+    Returns
+    -------
+    epsf : list
+       List of dictionaries with information on each trace.
+
+    Example
+    -------
+
+    epsf = loadepsf(infile)
+ 
+    """
     phead = fits.getheader(infile,0)
-    ntrace = phead['ntrace']
+    ntrace = phead.get('ntrace')
+    if ntrace is None:
+        print('No NTRACE in header')
+        return []
     epsf = []
     hdu = fits.open(infile)
     for itrace in range(ntrace):

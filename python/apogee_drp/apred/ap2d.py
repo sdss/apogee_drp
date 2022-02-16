@@ -630,17 +630,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 # Load Empirical PSF data
                 if not silent:
                     print('Loading empirical PSF data from '+iepsffile)
-                phead = fits.getheader(iepsffile,0)
-                ntrace = phead.get('ntrace')
-                img = ntrace*[None]
-                for itrace in range(ntrace): 
-                    ptmp = fits.getdata(iepsffile,itrace+1) 
-                    img[itrace] = ptmp['img']
-                    pp = {'fiber': ptmp['fiber'][0], 'lo': ptmp['lo'][0],
-                          'hi': ptmp['hi'][0], 'img': img[itrace][0]} 
-                    if itrace == 0: 
-                        epsf = ntrace*[None]
-                    epsf[itrace] = pp
+                epsf = psf.loadepsf(iepsffile)
                 # Save for later
                 epsfchip[ichip] = epsf
                 savedepsffiles[ichip] = epsffiles[ichip] 
@@ -837,71 +827,66 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             if outlong and not silent:
                 print('Saving flux/err as long instead of float')
  
-            # HDU0 - header only HDU0 - header only 
+            # HDU0 - header only
             hdu = fits.open(outfile)
             hdu.append(fits.ImageHDU(0,head))
  
-            # HDU1 - Flux HDU1 - flux 
+            # HDU1 - Flux
             flux = frame_wave[i]['flux']
             if outlong:
                 flux = np.round(flux).astype(int)
-            head1 = fits.Header()
-            head1['ctype1'] = 'pixel' 
-            head1['ctype2'] = 'fiber' 
-            head1['bunit'] = 'flux (adu)' 
-            hdu.append(fits.ImageHDU(flux,head1))
+            hdu.append(fits.ImageHDU(flux))
+            hdu[1].header['CTYPE1'] = 'Pixel'
+            hdu[1].header['CTYPE2'] = 'Fiber'
+            hdu[1].header['BUNIT'] = 'Flux (ADU)'
  
-            # HDU2 - error HDU2 - error 
+            # HDU2 - error
             err = errout(frame_wave[i]['err']) 
             if outlong:
                 err = np.round(err).astype(int) 
-            head2 = fits.Header()
-            head2['ctype1'] = 'pixel' 
-            head2['ctype2'] = 'fiber' 
-            head2['bunit'] = 'error (adu)' 
-            hdu.append(fits.ImageHDU(err,head2))
+            hdu.append(fits.ImageHDU(err))
+            hdu[2].header['CTYPE1'] = 'Pixel'
+            hdu[2].header['CTYPE2'] = 'Fiber'
+            hdu[2].header['BUNIT'] = 'Error (ADU)'
  
-            # HDU3 - mask HDU3 - mask 
+            # HDU3 - mask
             mask = frame_wave[i]['mask']                                 
-            head3 = fits.Header()
-            head3['ctype1'] = 'pixel' 
-            head3['ctype2'] = 'fiber' 
+            hdu.append(fits.ImageHDU(mask))
+            hdu[3].header['CTYPE1'] = 'Pixel'
+            hdu[3].header['CTYPE2'] = 'Fiber'
             if (extract_type == 1): 
-                head3['bunit'] = 'flag mask (bitwise)' 
-                head3['HISTORY'] = 'explanation of bitwise flag mask (or combined)'
-                head3['HISTORY'] = ' 1 - bad pixels'
-                head3['HISTORY'] = ' 2 - cosmic ray'
-                head3['HISTORY'] = ' 4 - saturated'
-                head3['HISTORY'] = ' 8 - unfixable'
+                hdu[3].header['BUNIT'] = 'Flag Mask (bitwise)' 
+                hdu[3].header['HISTORY'] = 'Explanation of BITWISE flag mask (OR combined)'
+                hdu[3].header['HISTORY'] = ' 1 - bad pixels'
+                hdu[3].header['HISTORY'] = ' 2 - cosmic ray'
+                hdu[3].header['HISTORY'] = ' 4 - saturated'
+                hdu[3].header['HISTORY'] = ' 8 - unfixable'
             else: 
-                head3['bunit'] = 'flag mask' 
-                head3['HISTORY'] = 'explanation of flag mask'
-                head3['HISTORY'] = ' 0 - good pixels'
-                head3['HISTORY'] = ' 1 - bad pixels'
-            hdu.append(fits.ImageHDU(mask,head3))
+                hdu[3].header['BUNIT'] = 'Flag Mask' 
+                hdu[3].header['HISTORY'] = 'Explanation of flag mask'
+                hdu[3].header['HISTORY'] = ' 0 - good pixels'
+                hdu[3].header['HISTORY'] = ' 1 - bad pixels'
  
             if wavefile is not None:
                 # HDU4 - Wavelengths
-                head4 = fits.Header()
-                mkhdr,head4,frame_wave[i]['wavelength'] #,/image 
-                head4['ctype1'] = 'pixel' 
-                head4['ctype2'] = 'fiber' 
-                head4['bunit'] = 'wavelength (angstroms)' 
-                hdu.append(fits.ImageHDU(frame_wave[i]['wavelength'],head4))
+                hdu.append(fits.ImageHDU(frame_wave[i]['wavelength']))
+                hdu[4].header['CTYPE1'] = 'Pixel'
+                hdu[4].header['CTYPE2'] = 'Fiber'
+                hdu[4].header['BUNIT'] = 'Wavelength (Angstroms)' 
  
-            # HDU5 - wavelength solution coefficients [double]
+            # HDU5 - Wavelength solution coefficients [DOUBLE]
             #-------------------------------------------------
             wcoef = frame_wave[i]['wcoef'].astype(float)
-            head5 = fits.Header()
-            head5['ctype1'] = 'fiber' 
-            head5['ctype2'] = 'parameters' 
-            head5['bunit'] = 'wavelength coefficients' 
-            head5['HISTORY'] = 'wavelength coefficients to be used with pix2wave.pro:'
-            head5['HISTORY'] = ' 1 global additive pixel offset'
-            head5['HISTORY'] = ' 4 sine parameters'
-            head5['HISTORY'] = ' 7 polynomial parameters (first is a zero-point offset'
-            head5['HISTORY'] = '                     in addition to the pixel offset)'
-            hdu.append(fits.ImageHDU(wcoef,head5))
+            hdu.append(fits.ImageHDU(wcoef))
+            nhdu = len(hdu)
+            hdu[nhdu].header['CTYPE1'] = 'Pixel'
+            hdu[nhdu].header['CTYPE2'] = 'Parameters'
+            hdu[nhdu].header['BUNIT'] = 'Wavelength Coefficients'
+            hdu[nhdu].header['HISTORY'] = 'Wavelength Coefficients to be used with PIX2WAVE.PRO:'
+            hdu[nhdu].header['HISTORY'] = ' 1 Global additive pixel offset'
+            hdu[nhdu].header['HISTORY'] = ' 4 Sine Parameters'
+            hdu[nhdu].header['HISTORY'] = ' 7 Polynomial parameters (first is a zero-point offset'
+            hdu[nhdu].header['HISTORY'] = '                     in addition to the pixel offset)'
 
             hdu.writeto(outfile,overwrite=True)
             hdu.close()
