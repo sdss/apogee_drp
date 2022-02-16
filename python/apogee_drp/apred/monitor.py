@@ -501,7 +501,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                           '182','202','227','245','250','277','278','284','289'])
     deadfibersPlate = np.array(['211','273'])
 
-    badfibersFPS = np.array(['034','018','021','109','289'])
+    badfibersFPS = np.array([ '018','021','109','289'])
     deadfibersFPS = np.array(['025'])
 
     badfibersPlate_S = np.array(['031','034','039','061','067','069','083','084','091','129','136','140',
