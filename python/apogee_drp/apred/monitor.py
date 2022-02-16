@@ -163,7 +163,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        return
+        #return
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
