@@ -855,8 +855,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             magmin = '8.8'
             magmax = '9.2'
 
-            gd, = np.where((allsnr['NSNBINS'][:, snbin] > 10) & (allsnr['SNBINS'][:, snbin, 1] > 0))
-            allsnrg = allsnr#[gd]
+            gd, = np.where((allsnr['NSNBINS'][:, snbin] > 5) & (allsnr['SNBINS'][:, snbin, 1] > 0))
+            allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
             ymin = -0.01
