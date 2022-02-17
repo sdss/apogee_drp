@@ -881,7 +881,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 #if ichip == 1: ax.set_ylabel(r'S/N$^{2}$ per minute ($' + magmin + r'>=H>' + magmax + r'$)')
-                if ichip == 1: ax.text(-0.03, 0.5, r'S/N per minute ($' + magmin + r'>=H>' + magmax + r'$)', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                if ichip == 1: ax.text(-0.035, 0.5, r'S/N per minute ($' + magmin + r'>=H>' + magmax + r'$)', transform=ax.transAxes, rotation=90, ha='right', va='center')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
 
@@ -911,12 +911,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
-        return
+        #return
 
         ###########################################################################################
         # rvparams.png
         # Plot of stellar parameters, plate vs. FPS
-        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams2.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
 
         remake = 0
@@ -994,14 +994,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax3 = plt.subplot2grid((2,2), (1,0))
         ax4 = plt.subplot2grid((2,2), (1,1))
         axes = [ax1,ax2,ax3,ax4]
-        #ax1.set_xlim(-140, 140)
-        #ax1.set_ylim(-10, 10)
-        #ax2.set_xlim(3.0, 8.5)
-        #ax2.set_ylim(-0.5, 0.5)
-        #ax3.set_xlim(0.5, 5.5)
-        #ax3.set_ylim(-0.5, 0.5)
-        #ax4.set_xlim(-2.5, 1.0)
-        #ax4.set_ylim(-0.5, 0.5)
+        ax1.set_xlim(-200, 200)
+        ax1.set_ylim(-10, 10)
+        ax2.set_xlim(3.0, 7.0)
+        ax2.set_ylim(-1, 1)
+        ax3.set_xlim(-0.1, 5.1)
+        ax3.set_ylim(-2.0, 1.6)
+        ax4.set_xlim(-2.6, 0.5)
+        ax4.set_ylim(-1.6, 2.1)
         ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
         ax1.set_ylabel(r'DR17 $-$ FPS')
         ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
