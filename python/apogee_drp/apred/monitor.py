@@ -89,36 +89,36 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
-        #outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
-        #print("----> monitor: Making " + os.path.basename(outfile))
+        outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
+        print("----> monitor: Making " + os.path.basename(outfile))
 
-        #if allv4 is None:
-        #    allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
-        #    allv4 = fits.getdata(allv4path)
+        if allv4 is None:
+            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
+            allv4 = fits.getdata(allv4path)
 
-        #gd, = np.where(allv4['TELESCOPE'] == telescope)
-        #allv4 = allv4[gd]
-        #vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
-        #uvis,uind = np.unique(vis, return_index=True)
-        #uallv4 = allv4[uind]
-        #nvis = len(uvis)
-        #print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
+        gd, = np.where(allv4['TELESCOPE'] == telescope)
+        allv4 = allv4[gd]
+        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
+        uvis,uind = np.unique(vis, return_index=True)
+        uallv4 = allv4[uind]
+        nvis = len(uvis)
+        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
-        #for i in range(nvis):
-        #    plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
-        #    plsum = plsum.replace(' ', '')
-        #    print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
-        #    if os.path.exists(plsum):
-        #        if i == 0:
-        #            outstr = getSnrStruct(plsum)
-        #        else:
-        #            newstr = getSnrStruct(plsum)
-        #            outstr = np.concatenate([outstr, newstr])
+        for i in range(nvis):
+            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
+            plsum = plsum.replace(' ', '')
+            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
+            if os.path.exists(plsum):
+                if i == 0:
+                    outstr = getSnrStruct(plsum)
+                else:
+                    newstr = getSnrStruct(plsum)
+                    outstr = np.concatenate([outstr, newstr])
 
-        #Table(outstr).write(outfile, overwrite=True)
-        #print("----> monitor: Finished making " + os.path.basename(outfile))
+        Table(outstr).write(outfile, overwrite=True)
+        print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        #return
+        return
 
         outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
@@ -3505,6 +3505,7 @@ def getSnrStruct(plsum=None):
                    ('FIBERID',   np.int32, 300),
                    ('SNFIBER',   np.float64, (300, 3)),
                    ('SNBINS',    np.float64, (nmagbins, 3)),
+                   ('MEDSNBINS', np.float64, (nmagbins, 3)),
                    ('ESNBINS',   np.float64, (nmagbins, 3)),
                    ('NSNBINS',   np.float64, nmagbins)])
 
@@ -3556,12 +3557,38 @@ def getSnrStruct(plsum=None):
             g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad))
             if len(g) > 2:
                 #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
+                snvals = np.mean(data2['SN'][g, :, iexp], axis=0)
+                # Reject points below 1 sigma from median
+                medsn = np.nanmedian(snvals)
+                sigsn = np.nanstd(snvals)
+                pdb.set_trace()
+                dif = snvals - medsn
+                mdif = sigsn - medsn
+                g, = np.where(
                 outstr['SNBINS'][iexp,jj,:] = np.nanmean(data2['SN'][g, :, iexp], axis=0)
+                outstr['MEDSNBINS'][iexp,jj,:] = np.nanmedian(data2['SN'][g, :, iexp], axis=0)
                 outstr['ESNBINS'][iexp,jj,:] = np.nanstd(data2['SN'][g, :, iexp], axis=0)
                 outstr['NSNBINS'][iexp,jj] = len(g)
             jj+=1
 
     return outstr
+
+            mjdmean = np.zeros((nmjd, nchips))
+            mjdsig  = np.zeros((nmjd, nchips))
+            jdmean = np.zeros(nmjd)
+            for i in range(nmjd):
+                gd, = np.where(allsnrg['MJD'] == umjd[i])
+                if len(gd) > 1:
+                    imean = np.nanmean(allsnrg['SNBINS'][:, snbin][gd], axis=0)
+                    isig = np.nanstd(allsnrg['SNBINS'][:, snbin][gd], axis=0)
+                    dif = allsnrg['SNBINS'][:, snbin][gd] - imean
+                    mdif = isig - imean
+                    gd1, = np.where((dif[:,0] > mdif[0]) & (dif[:,1] > mdif[1]) & (dif[:,1] > mdif[1]))
+                    mjdmean[i,:] = np.nanmean(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
+                    mjdsig[i,:] = np.nanstd(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
+                    jdmean[i] = np.nanmean(allsnrg['JD'][gd][gd1])
+
+
 
 ''' GETSNRSTRUCT2: tabulate SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
 def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
