@@ -886,7 +886,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #pdb.set_trace()
                 #if ichip == 0: pdb.set_trace()
                 scolors = allsnrg['MOONPHASE']
-                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='brg_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
