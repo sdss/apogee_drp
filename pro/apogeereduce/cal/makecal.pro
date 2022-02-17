@@ -250,17 +250,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       ;; Try to find a PSF from this day
       endif else begin
         print,'Trying to automatically find a PSF calibration file'
-        pname = apogee_filename('PSF',num=strmid(strtrim(fpi[0],2),0,4)+'????',chip='a')
-        psffiles = file_search(pname,count=npsffiles)
-        if npsffiles eq 0 then begin
-          print,'No PSF calibration file found for MJD=',cmjd
-          return
-        endif
-        ;; Find closest one
-        psfids = lonarr(npsffiles)
-        for j=0,npsffiles-1 do psfids[j]=strmid(file_basename(psffiles[j]),8,8)
-        si = sort(abs(long(psfids-long(fpi[0]))))
-        psfid = psfids[si[0]]
+        psfid = getpsfcal(fpi[0])
       endelse
       MAKECAL,psf=psfid,unlock=unlock
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
@@ -315,17 +305,22 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
 
   ;; Make Flux calibration file
   if keyword_set(flux) then begin
-    if not keyword_set(psf) then begin
-      print,'for flux, need psf as well!'
-      stop
-    endif
+    cmjd = getcmjd(flux[0],mjd=mjd)
+    ;; What PSF to use
+    if keyword_set(psf) then begin
+      psfid = psf
+    ;; Try to find a PSF from this day
+    endif else begin
+      print,'Trying to automatically find a PSF calibration file'
+      psfid = getpsfcal(flux[0])
+    endelse
     print,'makecal flux: ', flux
     if flux gt 1 then begin
       cmjd = getcmjd(flux,mjd=mjd)
-      MAKECAL,psf=psf,unlock=unlock
+      MAKECAL,psf=psfid,unlock=unlock
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,littrowid=littrowid,waveid=waveid
       MAKECAL,littrow=littrowid,unlock=unlock
-      MKFLUX,flux,darkid=darkid,flatid=flatid,psfid=psf,littrowid=littrowid,waveid=waveid,$
+      MKFLUX,flux,darkid=darkid,flatid=flatid,psfid=psfid,littrowid=littrowid,waveid=waveid,$
              clobber=clobber,unlock=unlock
     endif
   endif

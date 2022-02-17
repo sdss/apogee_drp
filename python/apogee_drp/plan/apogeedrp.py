@@ -137,6 +137,7 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
         if len(ind1) != len(expinfo1):
             db.ingest('exposure',expinfo1)  # insert into database
             expinfo1 = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))            
+            expinfo1 = Table(expinfo1)
         else:
             expinfo1 = Table(dbexpinfo)
         if expinfo is None:
@@ -734,6 +735,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     
     # Get exposures
+    logger.info('Getting exposure information')
     expinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
 
     # First we need to run domeflats and quartzflats so there are apPSF files
@@ -759,6 +761,17 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     else:
         logger.info('No good calibration files to run')
         return None        
+
+    # Only need one FPI per night
+    # The FPI processing is done at a NIGHT level
+    fpi, = np.where(expinfo['exptype']=='FPI')
+    if len(fpi)>0:
+        # Take the first for each night
+        logger.info('Only keeping ONE FPI exposure per night/MJD')
+        vals,ui = np.unique(expinfo['mjd'][fpi],return_index=True)
+        todel = np.copy(fpi)
+        todel = np.delete(todel,ui)  # remove the ones we want to keep
+        expinfo = np.delete(expinfo,todel)
 
     # 1: psf, 2: flux, 4: arcs, 8: fpi
     calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':4, 'FPI':8}
@@ -803,7 +816,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif ccode==2:   # flux
-                    cmd1 = 'makecal --psf '+str(num1)+' --flux '+str(num1)+' --unlock'
+                    cmd1 = 'makecal --flux '+str(num1)+' --unlock'
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif ccode==4:  # arcs
