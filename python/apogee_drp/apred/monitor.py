@@ -961,7 +961,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         x = gdata['VHELIO'][:,0][g]
         y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
         #ax1.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax1.transAxes, va='top')
-        ax1.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax1.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['TEFF'][:,0][g] / 1000
