@@ -977,7 +977,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
         ax4.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
-        fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.98,hspace=0.2,wspace=0.1)
+        pdb.set_trace()
+        fig.subplots_adjust(left=0.08, right=0.93, bottom=0.055, top=0.98, hspace=0.2, wspace=0.1)
         plt.savefig(plotfile)
         plt.close('all')
 
