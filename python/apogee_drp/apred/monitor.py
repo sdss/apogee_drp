@@ -892,15 +892,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             gdata['EVHELIO'][i,0] = np.nanmean(allv4['VHELIO'][p4])
             gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
 
-        vh17 = np.zeros(nv)
-        teff17 = np.zeros(nv)
-        logg17 = np.zeros(nv)
-        feh17 = np.zeros(nv)
-
-        parms = 
-        
-        pdb.set_trace()
-
         fig = plt.figure(figsize=(22,18))
         ax1 = plt.subplot2grid((2,2), (0,0))
         ax2 = plt.subplot2grid((2,2), (0,1))
