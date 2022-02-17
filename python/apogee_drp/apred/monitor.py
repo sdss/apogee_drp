@@ -853,13 +853,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         gd, = np.where(allv5['MJD'] > 59580)
         allv5fps = allv5[gd]
-        gd, = np.where(allv5['MJD'] < 59500)
-        allv5plate = allv5[gd]
 
-        plateIDs = np.concatenate([allv4['APOGEE_ID'], allv5plate['APOGEE_ID']])
-        fpsIDs = all5vfps['APOGEE_ID']
+        uplateIDs = np.unique(allv4['APOGEE_ID'])
+        fpsIDs = allv5fps['APOGEE_ID']
+        ufpsIDs = np.unique(fpsIDs)
 
-        platefps, plate_ind, fps_ind = np.intersect1d(plateIDs, fpsIDs, return_indices=True)
+        gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
         pdb.set_trace()
 
         fig = plt.figure(figsize=(22,18))
