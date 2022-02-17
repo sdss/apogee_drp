@@ -869,7 +869,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                            (allv4['SNR'] > 10))
             allv4g = allv4[gd]
 
-            uplateIDs = np.unique(allv4['APOGEE_ID'])
+            uplateIDs = np.unique(allv4g['APOGEE_ID'])
             ufpsIDs = np.unique(allv5fps['APOGEE_ID'])
 
             gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
