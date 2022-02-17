@@ -3564,7 +3564,6 @@ def getSnrStruct(plsum=None):
                 # Reject points below 1 sigma from median
                 medsn = np.nanmedian(msnvals)
                 sigsn = np.nanstd(msnvals)
-                pdb.set_trace()
                 dif = msnvals - medsn
                 mdif = medsn - sigsn
                 g, = np.nanwhere(dif > -sigsn)
