@@ -3507,7 +3507,8 @@ def getSnrStruct(plsum=None):
                    ('SNBINS',    np.float64, (nmagbins, 3)),
                    ('MEDSNBINS', np.float64, (nmagbins, 3)),
                    ('ESNBINS',   np.float64, (nmagbins, 3)),
-                   ('NSNBINS',   np.float64, nmagbins)])
+                   ('NSNBINS',   np.float64, nmagbins),
+                   ('BINH',      np.float64, nmagbins)])
 
     outstr = np.zeros(nexp, dtype=dt)
 
@@ -3555,20 +3556,24 @@ def getSnrStruct(plsum=None):
         jj=0
         for magbin in magbins:
             g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad))
-            if len(g) > 2:
+            if len(g) > 1:
                 #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
-                snvals = np.mean(data2['SN'][g, :, iexp], axis=0)
+                snvals = data2['SN'][g, :, iexp]
+                hmags = data2['HMAG'][g]
+                msnvals = np.nanmean(snvals, axis=1)
                 # Reject points below 1 sigma from median
-                medsn = np.nanmedian(snvals)
-                sigsn = np.nanstd(snvals)
+                medsn = np.nanmedian(msnvals)
+                sigsn = np.nanstd(msnvals)
                 pdb.set_trace()
-                dif = snvals - medsn
-                mdif = sigsn - medsn
-                #g, = np.where(
-                outstr['SNBINS'][iexp,jj,:] = np.nanmean(data2['SN'][g, :, iexp], axis=0)
-                outstr['MEDSNBINS'][iexp,jj,:] = np.nanmedian(data2['SN'][g, :, iexp], axis=0)
-                outstr['ESNBINS'][iexp,jj,:] = np.nanstd(data2['SN'][g, :, iexp], axis=0)
-                outstr['NSNBINS'][iexp,jj] = len(g)
+                dif = msnvals - medsn
+                mdif = medsn - sigsn
+                g, = np.nanwhere(dif > -sigsn)
+                if len(g) > 1:
+                    outstr['SNBINS'][iexp,jj,:] = np.nanmean(snvals[g], axis=0)
+                    outstr['MEDSNBINS'][iexp,jj,:] = np.nanmedian(snvals[g], axis=0)
+                    outstr['ESNBINS'][iexp,jj,:] = np.nanstd(snvals[g], axis=0)
+                    outstr['NSNBINS'][iexp,jj] = len(g)
+                    outstr['BINH'] = np.nanmean(hmags)
             jj+=1
 
     return outstr
