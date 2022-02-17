@@ -880,8 +880,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             p4, = np.where(gdIDs[i] == allv4['APOGEE_ID'])
             p5, = np.where(gdIDs[i] == allv5fps['APOGEE_ID'])
             gdata['H'][i] = allv4['H'][p4][0]
-            gdata['NVIS'[i,0] = len(p4)
-            gdata['NVIS'[i,1] = len(p5)
+            gdata['NVIS'][i,0] = len(p4)
+            gdata['NVIS'][i,1] = len(p5)
             gdata['SNRTOT'][i,0] = np.nansum(allv4['SNR'][p4])
             gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
             gdata['SNRAVG'][i,0] = np.nanmean(allv4['SNR'][p4])
