@@ -957,28 +957,28 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         symbol = 'o'
         symsz = 70
 
-        #pdb.set_trace()
-        x = gdata['VHELIO'][:,0]
-        y = gdata['VHELIO'][:,0] - gdata['VHELIO'][:,1]
-        ax1.text(0.05, 0.95, str(len(gdata)) + ' stars', transform=ax1.transAxes, va='top')
+        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
+        x = gdata['VHELIO'][:,0][g]
+        y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
+        #ax1.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax1.transAxes, va='top')
         ax1.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['TEFF'][:,0][g] / 1000
         y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
-        ax2.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax2.transAxes, va='top')
+        #ax2.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax2.transAxes, va='top')
         sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['LOGG'][:,0][g]
         y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
-        ax3.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax3.transAxes, va='top')
+        #ax3.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax3.transAxes, va='top')
         ax3.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['FEH'][:,0][g]
         y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
-        ax4.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax4.transAxes, va='top')
+        #ax4.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax4.transAxes, va='top')
         sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         ax2_divider = make_axes_locatable(ax2)
