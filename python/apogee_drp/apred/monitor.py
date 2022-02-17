@@ -947,17 +947,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         symbol = 'o'
         symsz = 70
 
+        pdb.set_trace()
         x = gdata['VHELIO'][:,0]
-        y = gdata['VHELIO'][:,0]-gdata['VHELIO'][:,1]
+        y = gdata['VHELIO'][:,0] - gdata['VHELIO'][:,1]
         ax1.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        x = gdata['TEFF'][:,0]/1000
-        y = (gdata['TEFF'][:,0]-gdata['TEFF'][:,1])/1000
+        x = gdata['TEFF'][:,0] / 1000
+        y = (gdata['TEFF'][:,0] - gdata['TEFF'][:,1]) / 1000
         ax2.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         x = gdata['LOGG'][:,0]/1000
-        y = (gdata['LOGG'][:,0]-gdata['TEFF'][:,1])/1000
+        y = gdata['LOGG'][:,0] - gdata['LOGG'][:,1]
         ax3.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        x = gdata['FEH'][:,0]/1000
-        y = (gdata['FEH'][:,0]-gdata['FEH'][:,1])/1000
+        x = gdata['FEH'][:,0]
+        y = gdata['FEH'][:,0] - gdata['FEH'][:,1]
         ax4.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.98,hspace=0.2,wspace=0.1)
