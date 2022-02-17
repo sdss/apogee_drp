@@ -960,7 +960,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #pdb.set_trace()
         x = gdata['VHELIO'][:,0]
         y = gdata['VHELIO'][:,0] - gdata['VHELIO'][:,1]
-        ax1.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax1.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False))
         x = gdata['TEFF'][:,0][g] / 1000
