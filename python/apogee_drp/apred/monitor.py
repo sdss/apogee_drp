@@ -853,7 +853,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         remake = 1
         datafile = 'rvparams_plateVSfps.fits'
-        if (os.path.exists(datafile)) | (remake == 0):
+        if (os.path.exists(datafile)) & (remake == 0):
             gdata = fits.getdata(datafile)
         else:
             gd, = np.where((allv5['MJD'] > 59580) & 
