@@ -141,7 +141,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     # Output directory output directory 
     if outdir is None:
         outdir = os.path.dirname(inpfile)+'/' 
- 
+    if outdir.endswith('/')==False:
+        outdir += '/'
+
     #dirs = getdir() 
      
     chiptag = ['a','b','c'] 
@@ -215,7 +217,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
      
     if not silent: 
         print('')
-        print('extracting file ',inpfile)
+        print('Extracting file ',inpfile)
         print('--------------------------------------------------')
      
 
@@ -446,34 +448,34 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         # Initialize the output header
         #-----------------------------
         head = chstr['header']
-        head['psffile'] = ipsffile,' psf file used' 
-        leadstr = 'ap2D: ' 
+        head['PSFFILE'] = ipsffile,' PSF file used' 
+        leadstr = 'AP2D: ' 
         pyvers = sys.version.split()[0]
-        head['v_apred'] = plan.getgitvers(),'apogee software version' 
-        head['apred'] = load.apred,'apogee reduction version' 
+        head['V_APRED'] = plan.getgitvers(),'APOGEE software version' 
+        head['APRED'] = load.apred,'APOGEE Reduction version' 
         head['HISTORY'] = leadstr+time.asctime()
         import socket
         head['HISTORY'] = leadstr+os.getlogin()+' on '+socket.gethostname()
         import platform
-        head['HISTORY'] = leadstr+'python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
-        # add reduction pipeline version to the header add reduction pipeline version to the header 
-        head['HISTORY'] = leadstr+' apogee reduction pipeline version: '+load.apred
+        head['HISTORY'] = leadstr+'Python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
+        # add reduction pipeline version to the header
+        head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+load.apred
         head['HISTORY'] = leadstr+'output file:'
-        head['HISTORY'] = leadstr+' hdu1 - image (adu)'
-        head['HISTORY'] = leadstr+' hdu2 - error (adu)'
+        head['HISTORY'] = leadstr+' HDU1 - Image (ADU)'
+        head['HISTORY'] = leadstr+' HDU2 - Error (ADU)'
         if (extract_type == 1): 
-            head['HISTORY'] = leadstr+' hdu3 - flag mask (bitwise or combined)'
+            head['HISTORY'] = leadstr+' HDU3 - flag mask (bitwise OR combined)'
             head['HISTORY'] = leadstr+'        1 - bad pixels'
             head['HISTORY'] = leadstr+'        2 - cosmic ray'
             head['HISTORY'] = leadstr+'        4 - saturated'
             head['HISTORY'] = leadstr+'        8 - unfixable'
         else: 
-            head['HISTORY'] = leadstr+' hdu3 - flag mask'
+            head['HISTORY'] = leadstr+' HDU3 - flag mask'
             head['HISTORY'] = leadstr+'        0 - good pixels'
             head['HISTORY'] = leadstr+'        1 - bad pixels'
         if wavefile is not None:
-            head['HISTORY'] = leadstr+' hdu4 - wavelengths (ang)'
-            head['HISTORY'] = leadstr+' hdu5 - wavelength coefficients'
+            head['HISTORY'] = leadstr+' HDU4 - wavelengths (Ang)'
+            head['HISTORY'] = leadstr+' HDU5 - wavelength coefficients'
              
         outstr = None
         ymodel = None
@@ -637,8 +639,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             else:
                 epsf = epsfchip[ichip]
             if fibers is None:
-                fibers = [e['fiber'] for e in epsf]
-
+                #fibers = [e['fiber'] for e in epsf]
+                fibers = np.arange(len(epsf))
          
             # Update header
             head['HISTORY'] = leadstr+'extract_type=4 - using empirical psf extraction'
@@ -696,8 +698,6 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             head['HISTORY'] = leadstr+fluxcalfiles[ichip]
             head['fluxfile'] = fluxcalfile,' flux calibration file used' 
  
-        import pdb; pdb.set_trace()
-
         # Response curve calibration
         #---------------------------
         if responsefile is not None: 
@@ -715,48 +715,42 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 outstr['err'][bderr] = BADERR 
  
             # Update header
-            head['HISTORY'] = leadstr+'applying response function:'
+            head['HISTORY'] = leadstr+'Applying response function:'
             head['HISTORY'] = leadstr+responsefiles[ichip]
-            head['respfile'] = responsefile,' response file used' 
+            head['RESPFILE'] = responsefile,' Response file used' 
  
         # Adding wavelengths
         #-------------------
         if wavefile is not None:
             wavefiles = os.path.dirname(wavefile)+'/'+load.prefix+'wave-'+chiptag+'-'+os.path.basename(wavefile)+'.fits' 
             if not silent: 
-                print('adding wavelengths from ',os.path.dirname(wavefile)+'/'+load.prefix+'wave-'+os.path.basename(wavefile))
+                print('Adding wavelengths from ',os.path.dirname(wavefile)+'/'+load.prefix+'wave-'+os.path.basename(wavefile))
             # Get the wavelength calibration data
             wcoef,whead = fits.getdata(wavefiles[ichip],1,header=True)
             wim,whead2 = fits.getdata(wavefiles[ichip],2,header=True)
             # this is now fixed in the apwave files this is now fixed in the apwave files 
             #wim = transpose(wim)  # want it [npix, nfibers]wim = transpose(wim)   want it [npix, nfibers] 
  
-            head['HISTORY'] = leadstr+'adding wavelengths from'
+            head['HISTORY'] = leadstr+'Adding wavelengths from'
             head['HISTORY'] = leadstr+wavefiles[ichip]
-            head['wavefile'] = wavefile,' wavelength calibration file' 
-            head['wavehdu'] = 5,' wavelength coef hdu' 
+            head['WAVEFILE'] = wavefile,' Wavelength Calibration file' 
+            head['WAVEHDU'] = 5,' Wavelength coef HDU' 
     
         # Add header to structure
-        head0 = head 
-        head = strarr(5000) 
-        nhead = len(head0) 
-        head[0:nhead-1] = head0 
-        outstr = create_struct(outstr,'header',head) 
- 
-        head_chip[ichip,:]=head 
+        outstr['header'] = head
  
         # Add fibers to structure
         if fibers is not None:
-            outstr = create_struct(outstr,'fibers',fibers) 
+            outstr['fibers'] = fibers
  
         # Output the 2D model spectrum
         if ymodel is not None:
-            modelfile = outdir+load.prefix+'2Dmodel-'+chiptag[ichip]+'-'+framenum+'.fits'  # model output file model output file 
+            modelfile = outdir+load.prefix+'2Dmodel-'+chiptag[ichip]+'-'+str(framenum)+'.fits'  # model output file model output file 
             if not silent: 
-                print('writing 2D model to: ',modelfile)
-            hdu = fits.open(modelfile)
-            hdu.append(fits.ImageHDU(ymodel))
-            hdu.writeot(modelfile,overwrite=True)
+                print('Writing 2D model to: ',modelfile)
+            hdu = fits.HDUList()
+            hdu.append(fits.PrimaryHDU(ymodel))
+            hdu.writeto(modelfile,overwrite=True)
             hdu.close()
             #    # compress model and 2D image done in ap2d
             #    if keyword_set(compress):
@@ -769,20 +763,15 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
 
         # Add to output structure
         if ifirst == 0: 
-            output = create_struct('chip'+chiptag[ichip],outstr) 
-        if ymodel is not None: 
-            outmodel = create_struct('chip'+chiptag[ichip],{model:ymodel})
+            output = {'chip'+chiptag[ichip]:outstr}
+            if ymodel is not None: 
+                outmodel = {'chip'+chiptag[ichip]:ymodel}
             ifirst = 1 
         else: 
-            output = create_struct(output,'chip'+chiptag[ichip],outstr) 
+            output['chip'+chiptag[ichip]] = outstr
             if ymodel is not None:
-                outmodel = create_struct(outmodel,'chip'+chiptag[ichip],{model:ymodel}) 
- 
-        if logfile is not None:
-            name = os.path.basename(outfile)+('%f8.3' % (time.time()-t1))
-            utils.writelog(logfile,name)
- 
-        #import pdb; pdb.set_trace()
+                outmodel['chip'+chiptag[ichip]] = ymodel
+
   
     # Now we have output structure with three chips, each with tags header, flux, err, mask
  
@@ -812,6 +801,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         del frame  # free up memory
     else:
         frame_wave = output 
+
  
     # Write output file
     #------------------
@@ -828,8 +818,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 print('Saving flux/err as long instead of float')
  
             # HDU0 - header only
-            hdu = fits.open(outfile)
-            hdu.append(fits.ImageHDU(0,head))
+            hdu = fits.HDUList()
+            hdu.append(fits.PrimaryHDU(header=head))
  
             # HDU1 - Flux
             flux = frame_wave[i]['flux']
@@ -890,6 +880,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
 
             hdu.writeto(outfile,overwrite=True)
             hdu.close()
+
+            import pdb; pdb.set_trace()
  
     if os.path.exists(lockfile):
         os.remove(lockfile)
