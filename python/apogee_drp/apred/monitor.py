@@ -960,21 +960,25 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #pdb.set_trace()
         x = gdata['VHELIO'][:,0]
         y = gdata['VHELIO'][:,0] - gdata['VHELIO'][:,1]
+        ax1.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax1.transAxes, ha='top')
         ax1.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['TEFF'][:,0][g] / 1000
         y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
+        ax2.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax2.transAxes, ha='top')
         sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['LOGG'][:,0][g]
         y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
+        ax3.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax3.transAxes, ha='top')
         ax3.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['FEH'][:,0][g]
         y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
+        ax4.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax4.transAxes, ha='top')
         sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         ax2_divider = make_axes_locatable(ax2)
@@ -982,14 +986,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         cb2 = colorbar(sc2, cax=cax2, orientation="vertical")
         cax2.minorticks_on()
         #cax2.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-        ax2.text(1.15, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
+        ax2.text(1.12, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
 
         ax4_divider = make_axes_locatable(ax4)
         cax4 = ax4_divider.append_axes("right", size="5%", pad="1%")
         cb4 = colorbar(sc4, cax=cax4, orientation="vertical")
         cax4.minorticks_on()
         #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-        ax4.text(1.15, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
+        ax4.text(1.12, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
 
         fig.subplots_adjust(left=0.07, right=0.95, bottom=0.055, top=0.98, hspace=0.2, wspace=0.15)
         plt.savefig(plotfile)
