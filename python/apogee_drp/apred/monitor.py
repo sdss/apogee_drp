@@ -954,7 +954,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         x = gdata['TEFF'][:,0] / 1000
         y = (gdata['TEFF'][:,0] - gdata['TEFF'][:,1]) / 1000
         ax2.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        x = gdata['LOGG'][:,0]/1000
+        x = gdata['LOGG'][:,0]
         y = gdata['LOGG'][:,0] - gdata['LOGG'][:,1]
         ax3.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         x = gdata['FEH'][:,0]
