@@ -1023,7 +1023,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
 
         symbol = 'o'
-        symsz = 25
+        symsz = 40
 
         g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['VHELIO'][:,0][g]
