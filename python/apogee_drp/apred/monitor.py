@@ -916,7 +916,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # rvparams.png
         # Plot of stellar parameters, plate vs. FPS
-        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams2.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
 
         remake = 0
@@ -994,20 +994,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax3 = plt.subplot2grid((2,2), (1,0))
         ax4 = plt.subplot2grid((2,2), (1,1))
         axes = [ax1,ax2,ax3,ax4]
-        ax1.set_xlim(-150, 150)
-        ax1.set_ylim(-5, 5)
-        ax2.set_xlim(3.3, 6.8)
-        ax2.set_ylim(-0.6, 0.6)
-        ax3.set_xlim(-0.1, 5.1)
-        ax3.set_ylim(-1.4, 1.4)
-        ax4.set_xlim(-1.5, 0.4)
-        ax4.set_ylim(-0.5, 0.5)
-        ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
-        ax1.set_ylabel(r'DR17 $-$ FPS')
-        ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
-        ax3.set_xlabel(r'DR17 RV log$\,g$')
-        ax3.set_ylabel(r'DR17 $-$ FPS')
-        ax4.set_xlabel(r'DR17 RV [Fe/H]')
+        #ax1.set_xlim(-150, 150)
+        #ax1.set_ylim(-5, 5)
+        #ax2.set_xlim(3.3, 6.8)
+        #ax2.set_ylim(-0.6, 0.6)
+        #ax3.set_xlim(-0.1, 5.1)
+        #ax3.set_ylim(-1.4, 1.4)
+        #ax4.set_xlim(-1.5, 0.4)
+        #ax4.set_ylim(-0.5, 0.5)
+        #ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
+        #ax1.set_ylabel(r'DR17 $-$ FPS')
+        #ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
+        #ax3.set_xlabel(r'DR17 RV log$\,g$')
+        #ax3.set_ylabel(r'DR17 $-$ FPS')
+        #ax4.set_xlabel(r'DR17 RV [Fe/H]')
         #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
         #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
         #ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
