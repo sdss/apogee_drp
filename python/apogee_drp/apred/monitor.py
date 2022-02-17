@@ -991,7 +991,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
         ax4.text(1.09, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
 
-        fig.subplots_adjust(left=0.08, right=0.93, bottom=0.055, top=0.98, hspace=0.2, wspace=0.1)
+        fig.subplots_adjust(left=0.07, right=0.93, bottom=0.055, top=0.98, hspace=0.2, wspace=0.15)
         plt.savefig(plotfile)
         plt.close('all')
 
