@@ -763,14 +763,14 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
 
         # Add to output structure
         if ifirst == 0: 
-            output = {'chip'+chiptag[ichip]:outstr}
+            output = {ichip:outstr}
             if ymodel is not None: 
-                outmodel = {'chip'+chiptag[ichip]:ymodel}
+                outmodel = {ichip:ymodel}
             ifirst = 1 
         else: 
-            output['chip'+chiptag[ichip]] = outstr
+            output[ichip] = outstr
             if ymodel is not None:
-                outmodel['chip'+chiptag[ichip]] = ymodel
+                outmodel[ichip] = ymodel
 
   
     # Now we have output structure with three chips, each with tags header, flux, err, mask
@@ -857,6 +857,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 hdu[3].header['HISTORY'] = ' 0 - good pixels'
                 hdu[3].header['HISTORY'] = ' 1 - bad pixels'
  
+
+            import pdb; pdb.set_trace()
+
             if wavefile is not None:
                 # HDU4 - Wavelengths
                 hdu.append(fits.ImageHDU(frame_wave[i]['wavelength']))

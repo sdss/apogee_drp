@@ -86,7 +86,13 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   for i=0,n_elements(waveid)-1 do begin
     print,''
     print,'--- Frame ',strtrim(i+1,2),':  ',strtrim(waveid[i],2),' ---'
-    MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock
+    ;; Check if they exist
+    wavefiles = apogee_filename('Wave',num=waveid[i],chips=chips)
+    if total(file_test(wavefiles)) lt 3 or keyword_set(clobber) then begin
+      MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock
+    endif else begin
+      print,repstr(wavefiles[0],'-a-','-'),' made already'
+    endelse
   endfor
 
   ;; New Python version! 

@@ -964,7 +964,17 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     calind, = np.where(((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
                         (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI')) &
                        (qachk['okay']==True))
+
     if len(calind)>0:
+        # Only need one FPI per night
+        # The FPI processing is done at a NIGHT level
+        fpi, = np.where(expinfo['exptype'][calind]=='FPI')
+        if len(fpi)>1:
+            # Take the first FPI exposure
+            logger.info('Only keeping ONE FPI exposure per night/MJD')
+            calind = np.delete(calind,fpi[1:])  # remove all except the first one
+
+
         # 1: psf, 2: flux, 4: arcs, 8: fpi
         if fps:
             # Only use QUARTZFLATs in the FPS era because they have all 300 fibers

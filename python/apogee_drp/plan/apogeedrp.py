@@ -735,6 +735,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     
     # Get exposures
+    logger.info('Getting exposure information')
     expinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
 
     # First we need to run domeflats and quartzflats so there are apPSF files
@@ -760,6 +761,17 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     else:
         logger.info('No good calibration files to run')
         return None        
+
+    # Only need one FPI per night
+    # The FPI processing is done at a NIGHT level
+    fpi, = np.where(expinfo['exptype']=='FPI')
+    if len(fpi)>0:
+        # Take the first for each night
+        logger.info('Only keeping ONE FPI exposure per night/MJD')
+        vals,ui = np.unique(expinfo['mjd'][fpi],return_index=True)
+        todel = np.copy(fpi)
+        todel = np.delete(todel,ui)  # remove the ones we want to keep
+        expinfo = np.delete(expinfo,todel)
 
     # 1: psf, 2: flux, 4: arcs, 8: fpi
     calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':4, 'FPI':8}
