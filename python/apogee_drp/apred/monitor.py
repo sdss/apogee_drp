@@ -3564,7 +3564,7 @@ def getSnrStruct(plsum=None):
                 pdb.set_trace()
                 dif = snvals - medsn
                 mdif = sigsn - medsn
-                g, = np.where(
+                #g, = np.where(
                 outstr['SNBINS'][iexp,jj,:] = np.nanmean(data2['SN'][g, :, iexp], axis=0)
                 outstr['MEDSNBINS'][iexp,jj,:] = np.nanmedian(data2['SN'][g, :, iexp], axis=0)
                 outstr['ESNBINS'][iexp,jj,:] = np.nanstd(data2['SN'][g, :, iexp], axis=0)
