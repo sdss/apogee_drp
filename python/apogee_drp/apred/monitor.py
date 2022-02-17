@@ -867,7 +867,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                        ('SNRAVG',    np.float64, 2),
                        ('VHELIO',    np.float64, 2),
                        ('EVHELIO',   np.float64, 2),
-                       ('SIGVHELIO', np.float64, 2),
                        ('TEFF',      np.float64, 2),
                        ('ETEFF',     np.float64, 2),
                        ('LOGG',      np.float64, 2),
@@ -888,9 +887,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
             gdata['VHELIO'][i,0] = np.nanmean(allv4['VHELIO'][p4])
             gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
-            pdb.set_trace()
-            gdata['EVHELIO'][i,0] = np.nanmean(allv4['VHELIO'][p4])
-            gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
+            gdata['EVHELIO'][i,0] = np.nanmean(allv4['VRELERR'][p4])
+            gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
+            gdata['TEFF'][i,0] = np.nanmean(allv4['RV_TEFF'][p4])
+            gdata['TEFF'][i,1] = np.nanmean(allv5fps['rv_teff'][p5])
+            gdata['ETEFF'][i,0] = np.nanstd(allv4['RV_TEFF'][p4])
+            gdata['ETEFF'][i,1] = np.nanstd(allv5fps['rv_teff'][p5])
+            gdata['LOGG'][i,0] = np.nanmean(allv4['RV_LOGG'][p4])
+            gdata['LOGG'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
+            gdata['ELOGG'][i,0] = np.nanstd(allv4['RV_LOGG'][p4])
+            gdata['ELOGG'][i,1] = np.nanstd(allv5fps['rv_logg'][p5])
+            gdata['FEH'][i,0] = np.nanmean(allv4['RV_LOGG'][p4])
+            gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
+            gdata['EFEH'][i,0] = np.nanstd(allv4['RV_FEH'][p4])
+            gdata['EFEH'][i,1] = np.nanstd(allv5fps['rv_feh'][p5])
+
+        pdb.set_trace()
 
         fig = plt.figure(figsize=(22,18))
         ax1 = plt.subplot2grid((2,2), (0,0))
@@ -926,25 +938,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.axhline(y=0, linestyle='dashed', color='k', zorder=1)
             #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
-
-        vh17 = np.zeros(nv)
-        teff17 = np.zeros(nv)
-        logg17 = np.zeros(nv)
-        feh17 = np.zeros(nv)
-        for i in range(nv):
-            gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
-            if len(gd) > 0:
-                vh17[i] = allv['VHELIO_AVG'][gd][0]
-                teff17[i] = allv['RV_TEFF'][gd][0]
-                logg17[i] = allv['RV_LOGG'][gd][0]
-                feh17[i] = allv['RV_FEH'][gd][0]
-
-        gd, = np.where(teff17 > 0)
-        vh17 = vh17[gd]
-        teff17 = teff17[gd]
-        logg17 = logg17[gd]
-        feh17 = feh17[gd]
-        vcat = vcat[gd]
 
         symbol = 'o'
         symsz = 70
