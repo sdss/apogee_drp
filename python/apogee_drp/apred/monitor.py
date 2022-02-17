@@ -851,7 +851,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
 
-        remake = 0
+        remake = 1
         datafile = 'rvparams_plateVSfps.fits'
         if remake:
             gd, = np.where((allv5['MJD'] > 59580) & 
@@ -978,14 +978,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         ax2_divider = make_axes_locatable(ax2)
-        cax2 = ax2_divider.append_axes("right", size="2%", pad="1%")
+        cax2 = ax2_divider.append_axes("right", size="5%", pad="1%")
         cb2 = colorbar(sc2, cax=cax2, orientation="vertical")
         cax2.minorticks_on()
         #cax2.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
         ax2.text(1.09, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
 
         ax4_divider = make_axes_locatable(ax4)
-        cax4 = ax4_divider.append_axes("right", size="2%", pad="1%")
+        cax4 = ax4_divider.append_axes("right", size="5%", pad="1%")
         cb4 = colorbar(sc4, cax=cax4, orientation="vertical")
         cax4.minorticks_on()
         #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
