@@ -3806,7 +3806,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
                 if len(g) > 1:
                     #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 0])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 1])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 2])))))
                     outstr['SNBINS'][0][jj,:] = np.nanmean(snvals[g], axis=0)
-                    outstr['MEDSNBINS'][[0][jj,:] = np.nanmedian(snvals[g], axis=0)
+                    outstr['MEDSNBINS'][0][jj,:] = np.nanmedian(snvals[g], axis=0)
                     outstr['ESNBINS'][0][jj,:] = np.nanstd(snvals[g], axis=0)
                     outstr['NSNBINS'][0][jj] = len(g)
                     outstr['BINH'] = np.nanmean(hmags)
