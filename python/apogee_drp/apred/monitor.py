@@ -851,58 +851,64 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
 
-        gd, = np.where(allv5['MJD'] > 59580)
-        allv5fps = allv5[gd]
+        remake = 0
+        datafile = 'rvparams_plateVSfps.fits'
+        if os.path.exists(datafile):
+            gdata = fits.getdata(datafile)
+        else:
+            if remake == 1:
+                gd, = np.where(allv5['MJD'] > 59580)
+                allv5fps = allv5[gd]
 
-        uplateIDs = np.unique(allv4['APOGEE_ID'])
-        fpsIDs = allv5fps['APOGEE_ID']
-        ufpsIDs = np.unique(fpsIDs)
+                uplateIDs = np.unique(allv4['APOGEE_ID'])
+                fpsIDs = allv5fps['APOGEE_ID']
+                ufpsIDs = np.unique(fpsIDs)
 
-        gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
-        ngd = len(gdIDs)
+                gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
+                ngd = len(gdIDs)
 
-        dt = np.dtype([('H',         np.float64),
-                       ('NVIS',      np.int32, 2),
-                       ('SNRTOT',    np.float64, 2),
-                       ('SNRAVG',    np.float64, 2),
-                       ('VHELIO',    np.float64, 2),
-                       ('EVHELIO',   np.float64, 2),
-                       ('TEFF',      np.float64, 2),
-                       ('ETEFF',     np.float64, 2),
-                       ('LOGG',      np.float64, 2),
-                       ('ELOGG',     np.float64, 2),
-                       ('FEH',       np.float64, 2),
-                       ('EFEH',      np.float64, 2)])
-        gdata = np.zeros(ngd, dtype=dt)
+                dt = np.dtype([('H',         np.float64),
+                               ('NVIS',      np.int32, 2),
+                               ('SNRTOT',    np.float64, 2),
+                               ('SNRAVG',    np.float64, 2),
+                               ('VHELIO',    np.float64, 2),
+                               ('EVHELIO',   np.float64, 2),
+                               ('TEFF',      np.float64, 2),
+                               ('ETEFF',     np.float64, 2),
+                               ('LOGG',      np.float64, 2),
+                               ('ELOGG',     np.float64, 2),
+                               ('FEH',       np.float64, 2),
+                               ('EFEH',      np.float64, 2)])
+                gdata = np.zeros(ngd, dtype=dt)
 
-        for i in range(ngd):
-            p4, = np.where(gdIDs[i] == allv4['APOGEE_ID'])
-            p5, = np.where(gdIDs[i] == allv5fps['APOGEE_ID'])
-            gdata['H'][i] = allv4['H'][p4][0]
-            gdata['NVIS'][i,0] = len(p4)
-            gdata['NVIS'][i,1] = len(p5)
-            gdata['SNRTOT'][i,0] = np.nansum(allv4['SNR'][p4])
-            gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
-            gdata['SNRAVG'][i,0] = np.nanmean(allv4['SNR'][p4])
-            gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
-            gdata['VHELIO'][i,0] = np.nanmean(allv4['VHELIO'][p4])
-            gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
-            gdata['EVHELIO'][i,0] = np.nanmean(allv4['VRELERR'][p4])
-            gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
-            gdata['TEFF'][i,0] = np.nanmean(allv4['RV_TEFF'][p4])
-            gdata['TEFF'][i,1] = np.nanmean(allv5fps['rv_teff'][p5])
-            gdata['ETEFF'][i,0] = np.nanstd(allv4['RV_TEFF'][p4])
-            gdata['ETEFF'][i,1] = np.nanstd(allv5fps['rv_teff'][p5])
-            gdata['LOGG'][i,0] = np.nanmean(allv4['RV_LOGG'][p4])
-            gdata['LOGG'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
-            gdata['ELOGG'][i,0] = np.nanstd(allv4['RV_LOGG'][p4])
-            gdata['ELOGG'][i,1] = np.nanstd(allv5fps['rv_logg'][p5])
-            gdata['FEH'][i,0] = np.nanmean(allv4['RV_LOGG'][p4])
-            gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
-            gdata['EFEH'][i,0] = np.nanstd(allv4['RV_FEH'][p4])
-            gdata['EFEH'][i,1] = np.nanstd(allv5fps['rv_feh'][p5])
+                for i in range(ngd):
+                    p4, = np.where(gdIDs[i] == allv4['APOGEE_ID'])
+                    p5, = np.where(gdIDs[i] == allv5fps['APOGEE_ID'])
+                    gdata['H'][i] = allv4['H'][p4][0]
+                    gdata['NVIS'][i,0] = len(p4)
+                    gdata['NVIS'][i,1] = len(p5)
+                    gdata['SNRTOT'][i,0] = np.nansum(allv4['SNR'][p4])
+                    gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
+                    gdata['SNRAVG'][i,0] = np.nanmean(allv4['SNR'][p4])
+                    gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
+                    gdata['VHELIO'][i,0] = np.nanmean(allv4['VHELIO'][p4])
+                    gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
+                    gdata['EVHELIO'][i,0] = np.nanmean(allv4['VRELERR'][p4])
+                    gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
+                    gdata['TEFF'][i,0] = np.nanmean(allv4['RV_TEFF'][p4])
+                    gdata['TEFF'][i,1] = np.nanmean(allv5fps['rv_teff'][p5])
+                    gdata['ETEFF'][i,0] = np.nanstd(allv4['RV_TEFF'][p4])
+                    gdata['ETEFF'][i,1] = np.nanstd(allv5fps['rv_teff'][p5])
+                    gdata['LOGG'][i,0] = np.nanmean(allv4['RV_LOGG'][p4])
+                    gdata['LOGG'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
+                    gdata['ELOGG'][i,0] = np.nanstd(allv4['RV_LOGG'][p4])
+                    gdata['ELOGG'][i,1] = np.nanstd(allv5fps['rv_logg'][p5])
+                    gdata['FEH'][i,0] = np.nanmean(allv4['RV_LOGG'][p4])
+                    gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
+                    gdata['EFEH'][i,0] = np.nanstd(allv4['RV_FEH'][p4])
+                    gdata['EFEH'][i,1] = np.nanstd(allv5fps['rv_feh'][p5])
 
-        pdb.set_trace()
+                Table(gdata).write('rvparams_plateVSfps.fits', overwrite=True)
 
         fig = plt.figure(figsize=(22,18))
         ax1 = plt.subplot2grid((2,2), (0,0))
@@ -942,29 +948,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         symbol = 'o'
         symsz = 70
 
-        ax1.scatter(vh17, vh17-vcat['vheliobary'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        ax2.scatter(teff17/1000, teff17/1000-vcat['rv_teff']/1000, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        ax3.scatter(logg17, logg17-vcat['rv_logg'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        ax4.scatter(feh17, feh17-vcat['rv_feh'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-
-        #for i in range(nv):
-        #    gd,=np.where(vcat['apogee_id'][i] == allv['APOGEE_ID'])
-        #    if len(gd) > 0:
-        #        dif = allv['VHELIO_AVG'][gd][0] - vcat['vheliobary'][i]
-        #        if np.absolute(dif) > 5: print(vcat['apogee_id'][i] + str("%.3f" % round(dif, 3)).rjust(10))
-        #        symbol = 'o'
-        #        symsz = 70
-        #        symc = 'cyan'
-        #        sb, = np.where(vcat['apogee_id'][i] == sbs)
-        #        if len(sb) > 0:
-        #            symbol = '*'
-        #            symsz = 140
-        #            symc = 'orange'
-        #        ax1.scatter(allv['VHELIO_AVG'][gd][0], vcat['vheliobary'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        #        ax2.scatter(allv['RV_TEFF'][gd][0]/1000, vcat['rv_teff'][i]/1000, marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        #        ax3.scatter(allv['RV_LOGG'][gd][0], vcat['rv_logg'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        #        ax4.scatter(allv['RV_FEH'][gd][0], vcat['rv_feh'][i], marker=symbol, c=symc, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-
+        x = gdata['VHELIO'][:,0]
+        y = gdata['VHELIO'][:,0]-gdata['VHELIO'][:,1]
+        ax1.scatter(x, y, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        x = gdata['TEFF'][:,0]/1000
+        y = (gdata['TEFF'][:,0]-gdata['TEFF'][:,1])/1000
+        ax2.scatter(x, y, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        x = gdata['LOGG'][:,0]/1000
+        y = (gdata['LOGG'][:,0]-gdata['TEFF'][:,1])/1000
+        ax3.scatter(x, y, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        x = gdata['FEH'][:,0]/1000
+        y = (gdata['FEH'][:,0]-gdata['FEH'][:,1])/1000
+        ax4.scatter(x, y, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.96,hspace=0.2,wspace=0.1)
         plt.savefig(plotfile)
