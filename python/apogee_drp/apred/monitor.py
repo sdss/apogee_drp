@@ -934,7 +934,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
         ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
         #ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
-        tmp = 'field: ' + fields[ind] + '    plate: ' + plates[ind] + '    mjd: ' + mjds[ind]
         ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
         for ax in axes:
             ax.minorticks_on()
@@ -961,7 +960,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         y = (gdata['FEH'][:,0]-gdata['FEH'][:,1])/1000
         ax4.scatter(x, y, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
-        fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.96,hspace=0.2,wspace=0.1)
+        fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.98,hspace=0.2,wspace=0.1)
         plt.savefig(plotfile)
         plt.close('all')
 
