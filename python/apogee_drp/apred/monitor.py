@@ -851,7 +851,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
 
-        remake = 1
+        remake = 0
         datafile = 'rvparams_plateVSfps.fits'
         if remake:
             gd, = np.where((allv5['MJD'] > 59580) & 
@@ -962,17 +962,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         y = gdata['VHELIO'][:,0] - gdata['VHELIO'][:,1]
         ax1.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
-        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False))
+        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['TEFF'][:,0][g] / 1000
         y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
         sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
-        g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False))
+        g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['LOGG'][:,0][g]
         y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
         ax3.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
-        g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False))
+        g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
         x = gdata['FEH'][:,0][g]
         y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
         sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
