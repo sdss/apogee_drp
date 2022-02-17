@@ -3573,20 +3573,20 @@ def getSnrStruct(plsum=None):
 
     return outstr
 
-            mjdmean = np.zeros((nmjd, nchips))
-            mjdsig  = np.zeros((nmjd, nchips))
-            jdmean = np.zeros(nmjd)
-            for i in range(nmjd):
-                gd, = np.where(allsnrg['MJD'] == umjd[i])
-                if len(gd) > 1:
-                    imean = np.nanmean(allsnrg['SNBINS'][:, snbin][gd], axis=0)
-                    isig = np.nanstd(allsnrg['SNBINS'][:, snbin][gd], axis=0)
-                    dif = allsnrg['SNBINS'][:, snbin][gd] - imean
-                    mdif = isig - imean
-                    gd1, = np.where((dif[:,0] > mdif[0]) & (dif[:,1] > mdif[1]) & (dif[:,1] > mdif[1]))
-                    mjdmean[i,:] = np.nanmean(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
-                    mjdsig[i,:] = np.nanstd(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
-                    jdmean[i] = np.nanmean(allsnrg['JD'][gd][gd1])
+#            mjdmean = np.zeros((nmjd, nchips))
+#           mjdsig  = np.zeros((nmjd, nchips))
+#            jdmean = np.zeros(nmjd)
+#            for i in range(nmjd):
+#                gd, = np.where(allsnrg['MJD'] == umjd[i])
+#                if len(gd) > 1:
+#                    imean = np.nanmean(allsnrg['SNBINS'][:, snbin][gd], axis=0)
+#                    isig = np.nanstd(allsnrg['SNBINS'][:, snbin][gd], axis=0)
+#                    dif = allsnrg['SNBINS'][:, snbin][gd] - imean
+#                    mdif = isig - imean
+#                    gd1, = np.where((dif[:,0] > mdif[0]) & (dif[:,1] > mdif[1]) & (dif[:,1] > mdif[1]))
+#                    mjdmean[i,:] = np.nanmean(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
+#                    mjdsig[i,:] = np.nanstd(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
+#                    jdmean[i] = np.nanmean(allsnrg['JD'][gd][gd1])
 
 
 
