@@ -926,14 +926,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax3 = plt.subplot2grid((2,2), (1,0))
         ax4 = plt.subplot2grid((2,2), (1,1))
         axes = [ax1,ax2,ax3,ax4]
-        #ax1.set_xlim(-140, 140)
-        #ax1.set_ylim(-10, 10)
-        #ax2.set_xlim(3.0, 8.5)
-        #ax2.set_ylim(-0.5, 0.5)
-        #ax3.set_xlim(0.5, 5.5)
-        #ax3.set_ylim(-0.5, 0.5)
-        #ax4.set_xlim(-2.5, 1.0)
-        #ax4.set_ylim(-0.5, 0.5)
+        ax1.set_xlim(-140, 140)
+        ax1.set_ylim(-10, 10)
+        ax2.set_xlim(3.0, 8.5)
+        ax2.set_ylim(-0.5, 0.5)
+        ax3.set_xlim(0.5, 5.5)
+        ax3.set_ylim(-0.5, 0.5)
+        ax4.set_xlim(-2.5, 1.0)
+        ax4.set_ylim(-0.5, 0.5)
         ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
         ax1.set_ylabel(r'DR17 $-$ FPS')
         ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
@@ -960,16 +960,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #pdb.set_trace()
         x = gdata['VHELIO'][:,0]
         y = gdata['VHELIO'][:,0] - gdata['VHELIO'][:,1]
-        ax1.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        x = gdata['TEFF'][:,0] / 1000
-        y = (gdata['TEFF'][:,0] - gdata['TEFF'][:,1]) / 1000
-        ax2.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        x = gdata['LOGG'][:,0]
-        y = gdata['LOGG'][:,0] - gdata['LOGG'][:,1]
-        ax3.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-        x = gdata['FEH'][:,0]
-        y = gdata['FEH'][:,0] - gdata['FEH'][:,1]
-        ax4.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax1.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False))
+        x = gdata['TEFF'][:,0][g] / 1000
+        y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
+        ax2.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False))
+        x = gdata['LOGG'][:,0][g]
+        y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
+        ax3.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False))
+        x = gdata['FEH'][:,0][g]
+        y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
+        ax4.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
         fig.subplots_adjust(left=0.08,right=0.93,bottom=0.055,top=0.98,hspace=0.2,wspace=0.1)
         plt.savefig(plotfile)
