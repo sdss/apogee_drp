@@ -855,7 +855,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             magmin = '10.8'
             magmax = '11.2'
 
-            gd, = np.where((allsnr['NSNBINS'][:, snbin] > 5) & (allsnr['SNBINS'][:, snbin, 1] > 0))
+            medesnrG = np.nanmedian(allsnr['ESNBINS'][:,10,1])
+            medesnrG = np.nanstd(allsnr['ESNBINS'][:,10,1])
+            limesnrG = medesnrG + 2*medesnrG
+            gd, = np.where((allsnr['NSNBINS'][:, snbin] > 5) & (allsnr['SNBINS'][:, snbin, 1] > 0) & (allsnr['ESNBINS'][:, snbin, 1] < limesnrG))
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
