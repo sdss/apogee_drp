@@ -885,7 +885,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 yvals = (allsnrg['SNBINS'][:, snbin, 2-ichip]**2) / (allsnrg['EXPTIME'] / 60)
                 #pdb.set_trace()
                 #if ichip == 0: pdb.set_trace()
-                scolors = allsnrg['SECZ']
+                scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='inferno_r', vmax=1.6)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
@@ -900,8 +900,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 cax = ax_divider.append_axes("right", size="2%", pad="1%")
                 cb1 = colorbar(sc1, cax=cax, orientation="vertical")
                 cax.minorticks_on()
-                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-                if ichip == 1: ax.text(1.06, 0.5, r'secz',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
             fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -3563,7 +3563,7 @@ def getSnrStruct(plsum=None):
 
     return outstr
 
-''' GETSNRSTRUCT2: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
+''' GETSNRSTRUCT2: tabulate SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
 def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     #magbins = np.array([7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5])
     magrad = 0.2
