@@ -3566,7 +3566,7 @@ def getSnrStruct(plsum=None):
                 sigsn = np.nanstd(msnvals)
                 dif = msnvals - medsn
                 mdif = medsn - sigsn
-                g, = np.nanwhere(dif > -sigsn)
+                g, = np.where(dif > -sigsn)
                 if len(g) > 1:
                     outstr['SNBINS'][iexp,jj,:] = np.nanmean(snvals[g], axis=0)
                     outstr['MEDSNBINS'][iexp,jj,:] = np.nanmedian(snvals[g], axis=0)
