@@ -857,8 +857,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             gdata = fits.getdata(datafile)
         else:
             gd, = np.where((allv5['MJD'] > 59580) & 
-                           (np.isnan(allv5['VHELIO']) == False) & 
-                           (np.absolute(allv5['VHELIO']) < 400) & 
+                           (np.isnan(allv5['vheliobary']) == False) & 
+                           (np.absolute(allv5['vheliobary']) < 400) & 
                            (np.isnan(allv5['SNR']) == False) & 
                            (allv5['SNR'] > 10))
             allv5fps = allv5[gd]
