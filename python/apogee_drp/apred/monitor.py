@@ -851,7 +851,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
 
-        remake = 1
+        remake = 0
         datafile = 'rvparams_plateVSfps.fits'
         if (os.path.exists(datafile)) & (remake == 0):
             gdata = fits.getdata(datafile)
