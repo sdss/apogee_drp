@@ -851,11 +851,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
         print("----> monitor: Making " + os.path.basename(plotfile))
 
-        remake = 1
+        remake = 0
         datafile = 'rvparams_plateVSfps.fits'
-        if (os.path.exists(datafile)) & (remake == 0):
-            gdata = fits.getdata(datafile)
-        else:
+        if remake:
             gd, = np.where((allv5['MJD'] > 59580) & 
                            (np.isnan(allv5['vheliobary']) == False) & 
                            (np.absolute(allv5['vheliobary']) < 400) & 
@@ -913,12 +911,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 gdata['LOGG'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
                 gdata['ELOGG'][i,0] = np.nanstd(allv4g['RV_LOGG'][p4])
                 gdata['ELOGG'][i,1] = np.nanstd(allv5fps['rv_logg'][p5])
-                gdata['FEH'][i,0] = np.nanmean(allv4g['RV_LOGG'][p4])
-                gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
+                gdata['FEH'][i,0] = np.nanmean(allv4g['RV_FEH'][p4])
+                gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_feh'][p5])
                 gdata['EFEH'][i,0] = np.nanstd(allv4g['RV_FEH'][p4])
                 gdata['EFEH'][i,1] = np.nanstd(allv5fps['rv_feh'][p5])
 
             Table(gdata).write('rvparams_plateVSfps.fits', overwrite=True)
+
+        gdata = fits.getdata(datafile)
 
         fig = plt.figure(figsize=(22,18))
         ax1 = plt.subplot2grid((2,2), (0,0))
@@ -926,14 +926,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax3 = plt.subplot2grid((2,2), (1,0))
         ax4 = plt.subplot2grid((2,2), (1,1))
         axes = [ax1,ax2,ax3,ax4]
-        ax1.set_xlim(-140, 140)
-        ax1.set_ylim(-10, 10)
-        ax2.set_xlim(3.0, 8.5)
-        ax2.set_ylim(-0.5, 0.5)
-        ax3.set_xlim(0.5, 5.5)
-        ax3.set_ylim(-0.5, 0.5)
-        ax4.set_xlim(-2.5, 1.0)
-        ax4.set_ylim(-0.5, 0.5)
+        #ax1.set_xlim(-140, 140)
+        #ax1.set_ylim(-10, 10)
+        #ax2.set_xlim(3.0, 8.5)
+        #ax2.set_ylim(-0.5, 0.5)
+        #ax3.set_xlim(0.5, 5.5)
+        #ax3.set_ylim(-0.5, 0.5)
+        #ax4.set_xlim(-2.5, 1.0)
+        #ax4.set_ylim(-0.5, 0.5)
         ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
         ax1.set_ylabel(r'DR17 $-$ FPS')
         ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
