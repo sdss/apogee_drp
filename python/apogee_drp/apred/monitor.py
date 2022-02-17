@@ -859,6 +859,46 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ufpsIDs = np.unique(fpsIDs)
 
         gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
+        ngd = len(gdIDs)
+
+        dt = np.dtype([('H',         np.float64),
+                       ('NVIS',      np.int32, 2),
+                       ('SNRTOT',    np.float64, 2),
+                       ('SNRAVG',    np.float64, 2),
+                       ('VHELIO',    np.float64, 2),
+                       ('EVHELIO',   np.float64, 2),
+                       ('SIGVHELIO', np.float64, 2),
+                       ('TEFF',      np.float64, 2),
+                       ('ETEFF',     np.float64, 2),
+                       ('LOGG',      np.float64, 2),
+                       ('ELOGG',     np.float64, 2),
+                       ('FEH',       np.float64, 2),
+                       ('EFEH',      np.float64, 2)])
+        gdata = np.zeros(ngd, dtype=dt)
+
+        for i in range(ngd):
+            p4, = np.where(gdIDs[i] == allv4['APOGEE_ID'])
+            p5, = np.where(gdIDs[i] == allv5fps['APOGEE_ID'])
+            gdata['H'][i] = allv4['H'][p4][0]
+            gdata['NVIS'[i,0] = len(p4)
+            gdata['NVIS'[i,1] = len(p5)
+            gdata['SNRTOT'][i,0] = np.nansum(allv4['SNR'][p4])
+            gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
+            gdata['SNRAVG'][i,0] = np.nanmean(allv4['SNR'][p4])
+            gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
+            gdata['VHELIO'][i,0] = np.nanmean(allv4['VHELIO'][p4])
+            gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
+            pdb.set_trace()
+            gdata['EVHELIO'][i,0] = np.nanmean(allv4['VHELIO'][p4])
+            gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
+
+        vh17 = np.zeros(nv)
+        teff17 = np.zeros(nv)
+        logg17 = np.zeros(nv)
+        feh17 = np.zeros(nv)
+
+        parms = 
+        
         pdb.set_trace()
 
         fig = plt.figure(figsize=(22,18))
