@@ -853,73 +853,72 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         remake = 1
         datafile = 'rvparams_plateVSfps.fits'
-        if os.path.exists(datafile):
+        if (os.path.exists(datafile)) | (remake == 0):
             gdata = fits.getdata(datafile)
         else:
-            if remake == 1:
-                gd, = np.where((allv5['MJD'] > 59580) & 
-                               (np.isnan(allv5['VHELIO']) == False) & 
-                               (np.absolute(allv5['VHELIO']) < 400) & 
-                               (np.isnan(allv5['SNR']) == False) & 
-                               (allv5['SNR'] > 10))
-                allv5fps = allv5[gd]
+            gd, = np.where((allv5['MJD'] > 59580) & 
+                           (np.isnan(allv5['VHELIO']) == False) & 
+                           (np.absolute(allv5['VHELIO']) < 400) & 
+                           (np.isnan(allv5['SNR']) == False) & 
+                           (allv5['SNR'] > 10))
+            allv5fps = allv5[gd]
 
-                gd, = np.where((np.isnan(allv4['VHELIO']) == False) &
-                               (np.absolute(allv4['VHELIO']) < 400) &
-                               (np.isnan(allv4['SNR']) == False) & 
-                               (allv4['SNR'] > 10))
-                allv4g = allv4[gd]
+            gd, = np.where((np.isnan(allv4['VHELIO']) == False) &
+                           (np.absolute(allv4['VHELIO']) < 400) &
+                           (np.isnan(allv4['SNR']) == False) & 
+                           (allv4['SNR'] > 10))
+            allv4g = allv4[gd]
 
-                uplateIDs = np.unique(allv4['APOGEE_ID'])
-                ufpsIDs = np.unique(allv5fps['APOGEE_ID'])
+            uplateIDs = np.unique(allv4['APOGEE_ID'])
+            ufpsIDs = np.unique(allv5fps['APOGEE_ID'])
 
-                gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
-                ngd = len(gdIDs)
-                print(ngd)
+            gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
+            ngd = len(gdIDs)
+            print(ngd)
 
-                dt = np.dtype([('H',         np.float64),
-                               ('NVIS',      np.int32, 2),
-                               ('SNRTOT',    np.float64, 2),
-                               ('SNRAVG',    np.float64, 2),
-                               ('VHELIO',    np.float64, 2),
-                               ('EVHELIO',   np.float64, 2),
-                               ('TEFF',      np.float64, 2),
-                               ('ETEFF',     np.float64, 2),
-                               ('LOGG',      np.float64, 2),
-                               ('ELOGG',     np.float64, 2),
-                               ('FEH',       np.float64, 2),
-                               ('EFEH',      np.float64, 2)])
-                gdata = np.zeros(ngd, dtype=dt)
+            dt = np.dtype([('H',         np.float64),
+                           ('NVIS',      np.int32, 2),
+                           ('SNRTOT',    np.float64, 2),
+                           ('SNRAVG',    np.float64, 2),
+                           ('VHELIO',    np.float64, 2),
+                           ('EVHELIO',   np.float64, 2),
+                           ('TEFF',      np.float64, 2),
+                           ('ETEFF',     np.float64, 2),
+                           ('LOGG',      np.float64, 2),
+                           ('ELOGG',     np.float64, 2),
+                           ('FEH',       np.float64, 2),
+                           ('EFEH',      np.float64, 2)])
+            gdata = np.zeros(ngd, dtype=dt)
 
-                for i in range(ngd):
-                    print(i)
-                    p4, = np.where(gdIDs[i] == allv4g['APOGEE_ID'])
-                    p5, = np.where(gdIDs[i] == allv5fps['APOGEE_ID'])
-                    gdata['H'][i] = allv4['H'][p4][0]
-                    gdata['NVIS'][i,0] = len(p4)
-                    gdata['NVIS'][i,1] = len(p5)
-                    gdata['SNRTOT'][i,0] = np.nansum(allv4g['SNR'][p4])
-                    gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
-                    gdata['SNRAVG'][i,0] = np.nanmean(allv4g['SNR'][p4])
-                    gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
-                    gdata['VHELIO'][i,0] = np.nanmean(allv4g['VHELIO'][p4])
-                    gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
-                    gdata['EVHELIO'][i,0] = np.nanmean(allv4g['VRELERR'][p4])
-                    gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
-                    gdata['TEFF'][i,0] = np.nanmean(allv4g['RV_TEFF'][p4])
-                    gdata['TEFF'][i,1] = np.nanmean(allv5fps['rv_teff'][p5])
-                    gdata['ETEFF'][i,0] = np.nanstd(allv4g['RV_TEFF'][p4])
-                    gdata['ETEFF'][i,1] = np.nanstd(allv5fps['rv_teff'][p5])
-                    gdata['LOGG'][i,0] = np.nanmean(allv4g['RV_LOGG'][p4])
-                    gdata['LOGG'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
-                    gdata['ELOGG'][i,0] = np.nanstd(allv4g['RV_LOGG'][p4])
-                    gdata['ELOGG'][i,1] = np.nanstd(allv5fps['rv_logg'][p5])
-                    gdata['FEH'][i,0] = np.nanmean(allv4g['RV_LOGG'][p4])
-                    gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
-                    gdata['EFEH'][i,0] = np.nanstd(allv4g['RV_FEH'][p4])
-                    gdata['EFEH'][i,1] = np.nanstd(allv5fps['rv_feh'][p5])
+            for i in range(ngd):
+                print(i)
+                p4, = np.where(gdIDs[i] == allv4g['APOGEE_ID'])
+                p5, = np.where(gdIDs[i] == allv5fps['APOGEE_ID'])
+                gdata['H'][i] = allv4['H'][p4][0]
+                gdata['NVIS'][i,0] = len(p4)
+                gdata['NVIS'][i,1] = len(p5)
+                gdata['SNRTOT'][i,0] = np.nansum(allv4g['SNR'][p4])
+                gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
+                gdata['SNRAVG'][i,0] = np.nanmean(allv4g['SNR'][p4])
+                gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
+                gdata['VHELIO'][i,0] = np.nanmean(allv4g['VHELIO'][p4])
+                gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
+                gdata['EVHELIO'][i,0] = np.nanmean(allv4g['VRELERR'][p4])
+                gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
+                gdata['TEFF'][i,0] = np.nanmean(allv4g['RV_TEFF'][p4])
+                gdata['TEFF'][i,1] = np.nanmean(allv5fps['rv_teff'][p5])
+                gdata['ETEFF'][i,0] = np.nanstd(allv4g['RV_TEFF'][p4])
+                gdata['ETEFF'][i,1] = np.nanstd(allv5fps['rv_teff'][p5])
+                gdata['LOGG'][i,0] = np.nanmean(allv4g['RV_LOGG'][p4])
+                gdata['LOGG'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
+                gdata['ELOGG'][i,0] = np.nanstd(allv4g['RV_LOGG'][p4])
+                gdata['ELOGG'][i,1] = np.nanstd(allv5fps['rv_logg'][p5])
+                gdata['FEH'][i,0] = np.nanmean(allv4g['RV_LOGG'][p4])
+                gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
+                gdata['EFEH'][i,0] = np.nanstd(allv4g['RV_FEH'][p4])
+                gdata['EFEH'][i,1] = np.nanstd(allv5fps['rv_feh'][p5])
 
-                Table(gdata).write('rvparams_plateVSfps.fits', overwrite=True)
+            Table(gdata).write('rvparams_plateVSfps.fits', overwrite=True)
 
         fig = plt.figure(figsize=(22,18))
         ax1 = plt.subplot2grid((2,2), (0,0))
@@ -958,7 +957,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         symbol = 'o'
         symsz = 70
 
-        pdb.set_trace()
+        #pdb.set_trace()
         x = gdata['VHELIO'][:,0]
         y = gdata['VHELIO'][:,0] - gdata['VHELIO'][:,1]
         ax1.scatter(x, y, marker=symbol, c=gdata['H'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
