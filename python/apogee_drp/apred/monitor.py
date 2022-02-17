@@ -940,9 +940,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ax3.set_xlabel(r'DR17 RV log$\,g$')
         ax3.set_ylabel(r'DR17 $-$ FPS')
         ax4.set_xlabel(r'DR17 RV [Fe/H]')
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
+        #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
         #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
-        ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
+        #ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
         #ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
         #ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
         for ax in axes:
