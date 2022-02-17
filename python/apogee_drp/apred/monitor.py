@@ -860,13 +860,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 gd, = np.where((allv5['MJD'] > 59580) & 
                                (np.isnan(allv5['VHELIO']) == False) & 
                                (np.absolute(allv5['VHELIO']) < 400) & 
-                               (np.isnan(allv5['SNR'] == False) & 
+                               (np.isnan(allv5['SNR']) == False) & 
                                (allv5['SNR'] > 10))
                 allv5fps = allv5[gd]
 
                 gd, = np.where((np.isnan(allv4['VHELIO']) == False) &
                                (np.absolute(allv4['VHELIO']) < 400) &
-                               (np.isnan(allv4['SNR'] == False) & 
+                               (np.isnan(allv4['SNR']) == False) & 
                                (allv4['SNR'] > 10))
                 allv4g = allv4[gd]
 
