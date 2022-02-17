@@ -882,7 +882,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.axvline(x=59146, color='r', linewidth=2)
 
                 xvals = allsnrg['JD']
-                yvals = (allsnrg['SNBINS'][:, snbin, 2-ichip]**2) / (allsnrg['EXPTIME'] / 60)
+                yvals = (allsnrg['MEDSNBINS'][:, snbin, 2-ichip]**2) / (allsnrg['EXPTIME'] / 60)
                 #pdb.set_trace()
                 #if ichip == 0: pdb.set_trace()
                 scolors = allsnrg['MOONPHASE']
