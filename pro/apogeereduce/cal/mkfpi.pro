@@ -87,7 +87,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
     print,''
     print,'--- Frame ',strtrim(i+1,2),':  ',strtrim(waveid[i],2),' ---'
     ;; Check if they exist
-    wavefiles = apogee_filename('Wave',num=waveid[i],chips=chips)
+    wavefiles = apogee_filename('Wave',num=waveid[i],chip=chips)
     if total(file_test(wavefiles)) lt 3 or keyword_set(clobber) then begin
       MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock
     endif else begin
