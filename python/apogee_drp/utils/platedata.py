@@ -286,7 +286,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         gdid, = np.where( (plugmap['fiberdata']['catalogid']>0) & (plugmap['fiberdata']['spectrographId']==2))
         if len(gdid)>0:
             catinfo = catalogdb.getdata(catid=plugmap['fiberdata']['catalogid'][gdid])
-            dum,ind1,ind2 = np.intersect1d(ph['catalogid'],catinfo['catalogid'],return_indices=True)
+            if len(catinfo)>0:
+                dum,ind1,ind2 = np.intersect1d(ph['catalogid'],catinfo['catalogid'],return_indices=True)
+            else:
+                ind1 = []
             if len(ind1)>0:
                 ph['tmass_id'] = '                      '
                 ph['tmass_id'][ind1] = catinfo['twomass'][ind2]
