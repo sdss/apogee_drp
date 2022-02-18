@@ -971,7 +971,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
         fpi, = np.where(expinfo['exptype'][calind]=='FPI')
         if len(fpi)>1:
             # Take the first FPI exposure
-            logger.info('Only keeping ONE FPI exposure per night/MJD')
+            rootLogger.info('Only keeping ONE FPI exposure per night/MJD')
             calind = np.delete(calind,fpi[1:])  # remove all except the first one
 
 
