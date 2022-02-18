@@ -846,7 +846,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
 
     # SDSS-V FPS
     fps = False
-    if int(mjd)>=59556:
+    if int(mjd5)>=59556:
         fps = True
 
     # Make sure the data is there
