@@ -250,7 +250,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       ;; Try to find a PSF from this day
       endif else begin
         print,'Trying to automatically find a PSF calibration file'
-        psfid = getpsfcal(fpi[0])
+        psfid = GETPSFCAL(fpi[0])
       endelse
       MAKECAL,psf=psfid,unlock=unlock
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
@@ -372,36 +372,16 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         ims = wave
         name = ims[0]
         cmjd = getcmjd(ims[0],mjd=mjd)
+
+        ;; What PSF to use
         if keyword_set(psf) then begin
           psfid = psf
         ;; Try to find a PSF from this day
         endif else begin
           print,'Trying to automatically find a PSF calibration file'
-          pname = apogee_filename('PSF',num=strmid(strtrim(ims[0],2),0,4)+'????',chip='a')
-          psffiles = file_search(pname,count=npsffiles)
-          if npsffiles eq 0 then begin
-            print,'No PSF calibration file found for MJD=',cmjd,'. Trying to make one.'
-            ;; Try to make a PSF file
-            psfinfo = dbquery("select * from apogee_drp.exposure where mjd="+cmjd+$
-                              " and exptype='DOMEFLAT' or exptype='QUARTZFLAT'",count=npsfinfo)
-            if npsfinfo eq 0 then begin
-              print,'No DOMEFLAT or QUARTZFLAT exposure for MJD=',cmjd
-              return
-            endif
-            ;; Find quartzflat/domeflat that is closest to the waveid
-            si = sort(abs(long(psfinfo.num-long(ims[0]))))         
-            psfid = psfinfo[si[0]].num
-            MAKECAL,psf=psfid,unlock=unlock
-          endif else begin
-            ;; Find closest one
-            psfids = lonarr(npsffiles)
-            for j=0,npsffiles-1 do psfids[j]=strmid(file_basename(psffiles[j]),8,8)
-            si = sort(abs(long(psfids-long(ims[0]))))         
-            psfid = psfids[si[0]]
-          endelse
+          psfid = GETPSFCAL(ims[0])
         endelse
       endelse
-
       cmjd = getcmjd(ims[0],mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
       MAKECAL,bpm=bpmid,unlock=unlock
