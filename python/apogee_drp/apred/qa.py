@@ -3238,7 +3238,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         nplates = len(plates)
         # should really get this next stuff direct from database!
         # We are now!!!
-        #plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par', np=True)
+        plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par', np=True)
 
         # Get arrays of observed data values (plate ID, mjd, telescope, field name, program, location ID, ra, dec)
         iplate = np.zeros(nplates).astype(str)
