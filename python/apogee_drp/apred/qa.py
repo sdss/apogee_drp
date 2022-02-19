@@ -733,13 +733,16 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2))
             nsn = len(snstars)
             scale = 1
-            pdb.set_trace()
             if nsn < 3:
-                bright, = np.where(fiber['hmag'] < 12)
-                hmax = np.nanmax(fiber['hmag'][bright])
-                snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
-                nsn = len(snstars)
-                scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
+                try:
+                    bright, = np.where(fiber['hmag'] < 12)
+                    hmax = np.nanmax(fiber['hmag'][bright])
+                    snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
+                    nsn = len(snstars)
+                    scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
+                except:
+                    print("----> makePlateSum: No S/N stars! Skipping.")
+                    return 'bad'
 
             achievedsn = np.nanmedian(sn[snstars,:], axis=0) * scale
             #gd, = np.where(snt > 0)
