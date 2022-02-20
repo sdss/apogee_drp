@@ -178,7 +178,7 @@ FOR p=0,npairs-1 do begin
   i2 = ipairstr.index[1]
   print,'Combining Pair ',strtrim(p+1,2),' - ',ipairstr.framename[0],' + ',ipairstr.framename[1]
 
-  ;; Initialize combframe structure. Need 2x as many pixels
+  ;; Initialize combframe structure. Need 2x as many pixels, if dithered
   For i=0,2 do begin
     chstr0 = frame1.(i)
     tags = tag_names(chstr0)
@@ -1158,11 +1158,11 @@ For jfiber=0,nfibers-1 do begin
 
     ;; Average the wavelengths across all of the pairs
     if keyword_set(avgwave) then begin
-      combwave = dblarr(npix*2)
+      combwave = dblarr(npix2)
       for p=0,npairs-1 do combwave += allcombframes[p].(ichip).wavelength[*,jfiber]
       combwave /= npairs
       ;; Fit polynomial model to the wavelengths
-      newy = dindgen(npix*2)
+      newy = dindgen(npix2)
       ;; poly2wave.pro scales the x values using (x+xoffset)/3000.0
       wcoef = allcombframes[0].(ichip).wcoef[jfiber,*]
       newcoef = poly_fit((newy+wcoef[0])/3000.,combwave,3)
