@@ -294,7 +294,7 @@ FOR i=0L,nplanfiles-1 do begin
         print,outfile1,' NOT FOUND'
         return
       endif
-      head0 = headfits(outfile,exten=0)
+      head0 = headfits(outfile1,exten=0)
       nread = sxpar(head0,'nread')
       exptime = sxpar(head0,'exptime')
       fits_read,outfile1,flux,head,exten=1
