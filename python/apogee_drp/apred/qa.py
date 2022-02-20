@@ -734,11 +734,15 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             nsn = len(snstars)
             scale = 1
             if nsn < 3:
-                bright, = np.where(fiber['hmag'] < 12)
-                hmax = np.nanmax(fiber['hmag'][bright])
-                snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
-                nsn = len(snstars)
-                scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
+                try:
+                    bright, = np.where(fiber['hmag'] < 12)
+                    hmax = np.nanmax(fiber['hmag'][bright])
+                    snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
+                    nsn = len(snstars)
+                    scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
+                except:
+                    print("----> makePlateSum: No S/N stars! Skipping.")
+                    return 'bad'
 
             achievedsn = np.nanmedian(sn[snstars,:], axis=0) * scale
             #gd, = np.where(snt > 0)
@@ -3238,7 +3242,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         nplates = len(plates)
         # should really get this next stuff direct from database!
         # We are now!!!
-        #plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par', np=True)
+        plans = yanny.yanny(os.environ['PLATELIST_DIR']+'/platePlans.par', np=True)
 
         # Get arrays of observed data values (plate ID, mjd, telescope, field name, program, location ID, ra, dec)
         iplate = np.zeros(nplates).astype(str)
