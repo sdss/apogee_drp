@@ -294,14 +294,18 @@ FOR i=0L,nplanfiles-1 do begin
         print,outfile1,' NOT FOUND'
         return
       endif
+      head0 = headfits(outfile,exten=0)
+      nread = sxpar(head0,'nread')
+      exptime = sxpar(head0,'exptime')
       fits_read,outfile1,flux,head,exten=1
       flux1 = flux[*,[75,225]]
       ;; average on the level of the LSF, ~13 pixels
       bflux1 = rebin(flux1[0:157*13-1],157,2)
       medbflux = median(bflux1)
-      ;; ~3800 for FPI (chip b)
-      if medbflux lt 2000 then begin
-        print,'FPIId is set but not enough flux in the 2-FPI fibers.  Using sky lines instead!'
+      medbfluxnread = medbflux/nread
+      ;; flux/nreads ~65 for FPI (chip b)
+      if medbfluxnread lt 20 then begin
+        print,'FPIID is set but not enough flux in the 2-FPI fibers.  Using sky lines instead!'
         fpiid = 0
       endif
     endif
