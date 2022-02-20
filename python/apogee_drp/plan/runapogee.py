@@ -146,9 +146,12 @@ def queue_wait(queue,sleeptime=60,verbose=True,logger=None):
     running = True
     while running:
         time.sleep(sleeptime)
-        percent_complete1 = queue.get_percent_complete()
-        percent_complete2 = check_queue_status(queue)
-        precent_complete = np.maximum(percent_complete1,percent_complete2)
+        percent_complete = queue.get_percent_complete()
+        # Do a more detailed check once some have finished
+        ntasks_complete = queue.client.job.task_count_with_status(5)
+        if ntasks_complete>0:
+            percent_complete2 = check_queue_status(queue)
+            percent_complete = np.maximum(percent_complete,percent_complete2)
         if verbose==True:
             logger.info('percent complete = %d' % percent_complete)
         if percent_complete == 100:
