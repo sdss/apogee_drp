@@ -17,6 +17,7 @@ from collections import OrderedDict
 #from astropy.time import Time
 from datetime import datetime
 import logging
+import slurm
 from slurm import queue as pbsqueue
 import time
 
@@ -87,6 +88,53 @@ def writeNewMJD(observatory,mjd,apred='daily'):
     f.write(str(mjd))
     f.close()
 
+def check_queue_status(queue):
+    """
+    Check the status of the jobs.
+
+    This performs a rigorous check of the status of the tasks and
+    of the individual tasks running on each cpu.  Sometimes the signal
+    that a task completed does *not* go through.  This function should
+    be able to deal with that.
+    """
+
+    # Get the tasks
+    tasks = queue.client.job.tasks
+
+    # Gather the information on all the tasks
+    dt = np.dtype([('task_number',int),('node_number',int),('proc_number',int),('status',int),('complete',bool)])
+    data = np.zeros(len(tasks),dtype=dt)
+    nodeproc = []
+    for i,t in enumerate(tasks):
+        # Make sure we have the most up-to-date information
+        #  redo the query to update the task
+        slurm.db.session.refresh(t)
+        data['task_number'][i] = t.task_number
+        data['node_number'][i] = t.node_number
+        data['proc_number'][i] = t.proc_number
+        data['status'][i] = t.status
+        if t.status==5:
+            data['complete'][i] = True
+        nodeproc.append(str(t.node_number)+'-'+str(t.proc_number))
+
+    index = dln.create_index(nodeproc)
+    for i,unp in enumerate(index['value']):
+        ind = index['index'][index['lo'][i]:index['hi'][i]+1]
+        data1 = data[ind]
+        node,proc = unp.split('-')
+        # Order by task number
+        si = np.argsort(data1['task_number'])
+        data1 = data1[si]
+        # If last task in this group is complete,
+        #   then they should all be done!
+        if data1['status'][-1]==5:
+            data['complete'][ind] = True
+
+    # Calculate the completeness percentage
+    ncomplete = np.sum(data['complete']==True)
+    ntasks = len(data)
+    percent_complete = ncomplete/ntasks*100
+    return percent_complete
 
 def queue_wait(queue,sleeptime=60,verbose=True,logger=None):
     """ Wait for the pbs queue to finish."""
@@ -98,7 +146,9 @@ def queue_wait(queue,sleeptime=60,verbose=True,logger=None):
     running = True
     while running:
         time.sleep(sleeptime)
-        percent_complete = queue.get_percent_complete()
+        percent_complete1 = queue.get_percent_complete()
+        percent_complete2 = check_queue_status(queue)
+        precent_complete = np.maximum(percent_complete1,percent_complete2)
         if verbose==True:
             logger.info('percent complete = %d' % percent_complete)
         if percent_complete == 100:
