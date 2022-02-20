@@ -613,7 +613,6 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
         name = str(name)  # make sure it's a string
         print('frame: ', name)
         frame = load.ap1D(int(name))
-        plot = dirname+'/plots/fpipixshift-'+name+'-'+str(fpiid)
 
         newwaves = np.zeros((3,300,2048),float)
         newcoef = np.zeros((3,norder+1,300),float)    
@@ -643,9 +642,9 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
                     # crossmatch the two lists of positions, find matches within 1 pixel
                     x1 = np.vstack((np.array(linestr1['pars'][:,1]),np.zeros(len(linestr1),float))).T
                     x2 = np.vstack((np.array(fpilines1['pars'][:,1]),np.zeros(len(fpilines1),float))).T
-                    dist,ind = coords.crossmatch(x1,x2,max_distance=1.0)
-                    gd, = np.where(dist<1.0)
-                    print('row: ',f,' ',len(gd),' matches')
+                    dist,ind = coords.crossmatch(x1,x2,max_distance=5.0)
+                    gd, = np.where(dist<1.5)
+                    print('row: ',f,' ',len(gd),' matches within 1.5 pixels')
                     ind1 = gd
                     ind2 = ind[gd]
                     if len(mlinestr)==0:
@@ -735,6 +734,7 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
         # Plots
         plot = None
         if plot is not None:
+            plot = dirname+'/plots/fpipixshift-'+name+'-'+str(fpiid)
             try: os.mkdir(dirname+'/plots')
             except: pass
 
