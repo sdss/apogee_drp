@@ -853,7 +853,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
 
-            xarr = np.arange(0,nplate+20,1)
+            #xarr = np.arange(0,nplate+20,1)
 
             fig = plt.figure(figsize=(16,14))
 
