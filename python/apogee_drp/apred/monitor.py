@@ -868,7 +868,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     minh[i] = np.nanmin(allv5g['hmag'][p])
                     maxh[i] = np.nanmax(allv5g['hmag'][p])
 
-            xarr = np.arange(0,nplate[1])
+            xarr = np.arange(0,nplate,1)
 
             fig = plt.figure(figsize=(30,14))
 
