@@ -853,9 +853,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             gd,=np.where((allv5['mjd'] > 59145) & (allv5['targflags'] == 'MWM_TELLURIC') | (allv5['firstcarton'] == 'ops_std_apogee'))
             allv5g = allv5[gd]
-            uplate = np.unique(allv5g['plate'], return_index=True)
+            uplate = np.unique(allv5g['plate'])
             nplate = len(uplate)
-            pl, = np.where(uplate > 14999)
+            #pl, = np.where(uplate > 14999)
             meanh = np.zeros(nplate)
             sigh = np.zeros(nplate)
             minh = np.zeros(nplate)
