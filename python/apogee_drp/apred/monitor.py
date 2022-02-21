@@ -898,11 +898,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     xx = xx+20
                     color = 'cyan'
                 xx = pl[i]
-                if xx > 10000: xx = xx-10000
-                ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
+                if xx > 10000: 
+                    xx = xx-10000
+                    ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
 
             g, = np.where(pl < 10000)
             uh,uind = np.unique(meanh[g], return_index=True)
+            for i in range(len(uh)):
+                ax.plot([pl[g][uind][i],pl[g][uind][i]], [minh[g][uind][i],maxh[g][uind][i]], color='k', zorder=1)
             ax.scatter(pl[g][uind], uh, marker='o', s=100, c='cyan', edgecolors='k', zorder=10)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
             g, = np.where(pl > 10000)
             ax.scatter(pl[g]-10000, meanh[g], marker='o', s=100, c='red', edgecolors='k', zorder=10)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
