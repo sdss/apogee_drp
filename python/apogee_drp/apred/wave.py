@@ -1219,7 +1219,8 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
             configgrp = '{:0>4d}XX'.format(int(configid) // 100)
             plugdir = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/'
             plugmap = yanny.yanny(plugdir+'confSummary-'+str(configid)+'.par')
-            skyind = np.where((np.char.array(plugmap['FIBERMAP']['category']).upper() == 'SKY_APOGEE') & 
+            skyind = np.where(((np.char.array(plugmap['FIBERMAP']['category']).upper() == 'SKY_APOGEE') | 
+                               (np.char.array(plugmap['FIBERMAP']['category']).upper() == 'SKY_BOSS')) & 
                               (np.array(plugmap['FIBERMAP']['spectrographId']) == 2) &
                               (np.array(plugmap['FIBERMAP']['fiberId']) > 0))[0]
             skyfibers = np.array(plugmap['FIBERMAP']['fiberId'])[skyind]
