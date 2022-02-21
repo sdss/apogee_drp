@@ -989,7 +989,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.axhline(np.mean(uh), linestyle='dashed', color='cyan', zorder=1)
             g, = np.where(pl > 10000)
             ax.scatter(pl[g]-10000, meanh[g], marker='o', s=100, c='red', edgecolors='k', zorder=10)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
-            ax.axhline(np.mean(meanjk[g]), linestyle='dashed', color='red', zorder=1)
+            ax.axhline(np.mean(meanh[g]), linestyle='dashed', color='red', zorder=1)
 
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
