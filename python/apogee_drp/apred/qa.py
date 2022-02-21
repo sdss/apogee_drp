@@ -734,7 +734,6 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             nsn = len(snstars)
             scale = 1
             if nsn < 3:
-                pdb.set_trace()
                 try:
                     bright, = np.where(fiber['hmag'] < 12)
                     hmax = np.nanmax(fiber['hmag'][bright])
