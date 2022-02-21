@@ -462,6 +462,7 @@ for i=0,299 do begin
           objtype = 'STAR'
           if strupcase(plugmap.fiberdata[m].category) eq 'SCIENCE' then objtype='STAR'
           if strupcase(plugmap.fiberdata[m].category) eq 'SKY_APOGEE' then objtype='SKY'
+          if strupcase(plugmap.fiberdata[m].category) eq 'SKY_BOSS' then objtype='SKY'
           if strupcase(plugmap.fiberdata[m].category) eq 'STANDARD_APOGEE' then objtype='HOT_STD'             
           fiber[i].objtype = objtype
           if objtype eq 'SKY' then continue

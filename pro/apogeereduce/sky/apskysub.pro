@@ -1,6 +1,3 @@
-pro apskysub,frame,plugmap,outframe,suboption=suboption,nearest=nearest,$
-             error=error,silent=silent,verbose=verbose,pl=pl,stp=stp,force=force
-
 ;+
 ;
 ; APSKYSUB
@@ -29,6 +26,9 @@ pro apskysub,frame,plugmap,outframe,suboption=suboption,nearest=nearest,$
 ;
 ; By D. Nidever  April 2010
 ;-
+
+pro apskysub,frame,plugmap,outframe,suboption=suboption,nearest=nearest,$
+             error=error,silent=silent,verbose=verbose,pl=pl,stp=stp,force=force
 
 apgundef,outframe
 ;setdisp,/silent
@@ -324,6 +324,7 @@ CASE suboption of
          skymax-=0.25
         endwhile
         if skymax le 5 then begin
+stop
           print,'not halted: problem with enough sky fibers, fiber: ', 300-i
           goto,BOMB0
         endif

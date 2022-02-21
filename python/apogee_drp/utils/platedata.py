@@ -443,6 +443,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         objtype = 'STAR'
                         if plugmap['fiberdata']['category'][m].astype(str).upper() == 'SCIENCE': objtype='STAR'
                         if plugmap['fiberdata']['category'][m].astype(str).upper() == 'SKY_APOGEE': objtype='SKY'
+                        if plugmap['fiberdata']['category'][m].astype(str).upper() == 'SKY_BOSS': objtype='SKY'
                         if plugmap['fiberdata']['category'][m].astype(str).upper() == 'STANDARD_APOGEE': objtype='HOT_STD'
                         fiber['objtype'][i] = objtype
                         if objtype=='SKY': continue
