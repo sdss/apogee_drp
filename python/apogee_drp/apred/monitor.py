@@ -874,7 +874,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             x = np.mean(allsnr['SN'], axis=1)
             y = allsnr['SEEING']
-            ax.scatter(x, y, marker='o', s=10, c='b', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            c = allsnr['JD']
+            cmap = 'inferno'
+            ax.scatter(x, y, marker='o', s=10, c=c, cmap=cmap, edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
