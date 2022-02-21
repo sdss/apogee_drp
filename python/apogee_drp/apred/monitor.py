@@ -150,6 +150,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 hdul.close()
                 nexp = len(data1['IM'])
                 totexptime = np.sum(data1['EXPTIME'])
+                pdb.set_trace()
                 if (nexp > 2) & (totexptime > 900):
                     field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
                     for iexp in range(nexp):
