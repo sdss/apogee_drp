@@ -882,7 +882,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             #if ichip == nchips-1: ax.set_xlabel(r'MJD')
-            ax.set_xlabel(r'Plate/config index ')
+            ax.set_xlabel(r'Plate/config ID (minus 10000 if > 10000)')
             ax.set_ylabel(r'Mean Telluric STD $J-K$')
             #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
             #ax.axvline(x=59146, color='r', linewidth=2)
