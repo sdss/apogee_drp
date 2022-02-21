@@ -877,8 +877,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,14))
 
             ax = plt.subplot2grid((1,1), (0,0))
-            #ax.set_xlim(xmin, xmax)
-            #ax.set_ylim(ymin, ymax)
+            ax.set_xlim(200, 15950)
+            ax.set_ylim(7, 11)
             #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -891,6 +891,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
             #ax.axvline(x=59146, color='r', linewidth=2)
 
+            highpl
             ax.scatter(pl, meanh, marker='o', s=10)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
