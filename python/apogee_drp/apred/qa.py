@@ -707,8 +707,11 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         if "NFRAMES" in dhdr: nreads = dhdr['NFRAMES']
         exptime = dhdr['EXPTIME']
         skyzero = 14.75 + (2.5 * np.log10(nreads))
+
+        gdHmag, = np.where((fiber['hmag'] > 5) & (fiber['hmag'] < 20))
         zero = 0
         zerorms = 0.
+        zeronorm = 0
         faint = -1
         nfaint = 0
         achievedsn = np.zeros(nchips)
@@ -717,47 +720,49 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         altsn = np.zeros(nchips)
         nsn = 0
 
-        tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
-        zero = np.nanmedian(tmp)
-        zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
-        faint, = np.where((tmp - zero) < -0.5)
-        nfaint = len(faint)
-        zeronorm = zero - (2.5 * np.log10(nreads))
+        # Only run this part if there some stars with reasonable H mag
+        if len(gdHmag) >= 5:
+            tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
+            zero = np.nanmedian(tmp)
+            zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
+            faint, = np.where((tmp - zero) < -0.5)
+            nfaint = len(faint)
+            zeronorm = zero - (2.5 * np.log10(nreads))
 
-        if (flat is None) & (onem is None):
-            # Target line that has S/N=100 for 3 hour exposure at H=12.2
-            sntarget = 100 * np.sqrt(exptime / (3.0 * 3600))
-            sntargetmag = 12.2
+            if (flat is None) & (onem is None):
+                # Target line that has S/N=100 for 3 hour exposure at H=12.2
+                sntarget = 100 * np.sqrt(exptime / (3.0 * 3600))
+                sntargetmag = 12.2
 
-            # Get typical S/N for this plate
-            snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2))
-            nsn = len(snstars)
-            scale = 1
-            if nsn < 3:
-                try:
-                    bright, = np.where(fiber['hmag'] < 12)
-                    hmax = np.nanmax(fiber['hmag'][bright])
-                    snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
-                    nsn = len(snstars)
-                    scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
-                except:
-                    print("----> makePlateSum: No S/N stars! Skipping.")
-                    return 'bad'
+                # Get typical S/N for this plate
+                snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2))
+                nsn = len(snstars)
+                scale = 1
+                if nsn < 3:
+                    try:
+                        bright, = np.where(fiber['hmag'] < 12)
+                        hmax = np.nanmax(fiber['hmag'][bright])
+                        snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
+                        nsn = len(snstars)
+                        scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
+                    except:
+                        print("----> makePlateSum: No S/N stars! Skipping.")
+                        #return 'bad'
 
-            achievedsn = np.nanmedian(sn[snstars,:], axis=0) * scale
-            #gd, = np.where(snt > 0)
-            #achievedsnt = np.nanmedian(snt[:], axis=0) * scale
+                achievedsn = np.nanmedian(sn[snstars,:], axis=0) * scale
+                #gd, = np.where(snt > 0)
+                #achievedsnt = np.nanmedian(snt[:], axis=0) * scale
 
-            # Alternative S/N as computed from median of all stars with H<12.2, scaled
-            snstars, = np.where(fiber['hmag'] < 12.2)
-            scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
-            altsn = achievedsn * 0.
-            for ichip in range(nchips): 
-                altsn[ichip] = np.nanmedian(sn[snstars,ichip] * scale)
-                achievedsnc[ichip] = np.nanmedian(snc[snstars,ichip] * scale)
-        else:
-            if onem is not None:
-                achievedsn = np.nanmedian([sn[obj,:]], axis=0)
+                # Alternative S/N as computed from median of all stars with H<12.2, scaled
+                snstars, = np.where(fiber['hmag'] < 12.2)
+                scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
+                altsn = achievedsn * 0.
+                for ichip in range(nchips): 
+                    altsn[ichip] = np.nanmedian(sn[snstars,ichip] * scale)
+                    achievedsnc[ichip] = np.nanmedian(snc[snstars,ichip] * scale)
+            else:
+                if onem is not None:
+                    achievedsn = np.nanmedian([sn[obj,:]], axis=0)
 
         medsky = np.zeros(3, dtype=np.float64)
         for ichip in range(nchips):
