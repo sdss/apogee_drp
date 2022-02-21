@@ -660,7 +660,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     maxjd = np.max(caljd)
     jdspan = maxjd - minjd
     xmin = minjd - jdspan * 0.01
-    xmax = maxjd + jdspan * 0.10
+    xmax = maxjd + jdspan * 0.08
     xspan = xmax-xmin
 
     if makedomeplots is True:
