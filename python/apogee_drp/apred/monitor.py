@@ -897,13 +897,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if pl[i] > 10000: 
                     xx = xx+20
                     color = 'cyan'
-                #ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
+                xx = pl[i]
+                if xx > 10000: xx = xx-10000
+                ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
 
             g, = np.where(pl < 10000)
             uh,uind = np.unique(meanh[g], return_index=True)
-            ax.scatter(pl[g][uind], uh, marker='o', s=50, c='cyan', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            ax.scatter(pl[g][uind], uh, marker='o', s=70, c='cyan', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
             g, = np.where(pl > 10000)
-            ax.scatter(pl[g]-10000, meanh[g], marker='o', s=50, c='red', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            ax.scatter(pl[g]-10000, meanh[g], marker='o', s=70, c='red', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
