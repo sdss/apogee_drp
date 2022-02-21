@@ -857,6 +857,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             uplate = np.unique(allv5g['plate'])
             nplate = len(uplate)
             #pl, = np.where(uplate > 14999)
+            pl = np.zeros(nplate)
             meanh = np.zeros(nplate)
             sigh = np.zeros(nplate)
             minh = np.zeros(nplate)
@@ -864,6 +865,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for i in range(nplate):
                 p, = np.where(uplate[i] == allv5g['plate'])
                 if len(p) > 10:
+                    pl[i] = int(uplate[i])
                     meanh[i] = np.nanmean(allv5g['hmag'][p])
                     if meanh[i] < 0: pdb.set_trace()
                     sigh[i] = np.nanstd(allv5g['hmag'][p])
