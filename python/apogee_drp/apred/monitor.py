@@ -899,8 +899,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     color = 'cyan'
                 ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
 
-            
-            ax.scatter(pl, meanh, marker='o', s=20, c='cyan', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            g, = np.wjere(pl < 10000)
+            ax.scatter(xarr[g], meanh[g], marker='o', s=50, c='cyan', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            g, = np.wjere(pl > 10000)
+            ax.scatter(xarr[g]+20, meanh[g], marker='o', s=50, c='red', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
