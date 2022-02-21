@@ -143,15 +143,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plsum = plsum.replace(' ', '')
             p, = np.where(os.path.basename(plsum) == allsnr4['SUMFILE'])
             if (len(p) < 1) & (os.path.exists(plsum)):
-                print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
                 hdul = fits.open(plsum)
                 data1 = hdul[1].data
                 data2 = hdul[2].data
                 hdul.close()
                 nexp = len(data1['IM'])
                 totexptime = np.sum(data1['EXPTIME'])
-                pdb.set_trace()
                 if (nexp > 2) & (totexptime > 900):
+                    print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
                     field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
                     for iexp in range(nexp):
                         if count == 0:
