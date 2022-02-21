@@ -127,7 +127,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
             allv5 = fits.getdata(allv5path)
 
-        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])))
+        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])) & ((allv5['mjd'] < 59558) | (allv5['mjd'] >= 59595)))
         allv5 = allv5[gd]
         vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
         uvis,uind = np.unique(vis, return_index=True)
