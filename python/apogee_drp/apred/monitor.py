@@ -847,6 +847,69 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
+        # telluricH.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/telluricH.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            gd,=np.where((allv5['mjd'] > 59145) & ((allv5['targflags'] == 'MWM_TELLURIC') | (allv5['firstcarton'] == 'ops_std_apogee')) &
+                         (allv5['hmag'] > 0) & (allv5['hmag'] < 20))
+            allv5g = allv5[gd]
+            uplate = np.unique(allv5g['plate'])
+            nplate = len(uplate)
+            #pl, = np.where(uplate > 14999)
+            pl = np.zeros(nplate)
+            meanh = np.zeros(nplate)
+            sigh = np.zeros(nplate)
+            minh = np.zeros(nplate)
+            maxh = np.zeros(nplate)
+
+            xarr = np.arange(0,nplate+20,1)
+
+            fig = plt.figure(figsize=(30,14))
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            #ax.set_xlim(0, 1000)
+            ax.set_ylim(7, 11)
+            #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            #if ichip == nchips-1: ax.set_xlabel(r'MJD')
+            ax.set_xlabel(r'Plate/config index ')
+            ax.set_ylabel(r'Mean Telluric STD $H$ mag')
+            #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            #ax.axvline(x=59146, color='r', linewidth=2)
+
+            for i in range(nplate):
+                p, = np.where(uplate[i] == allv5g['plate'])
+                #if len(p) > 10:
+                pl[i] = int(uplate[i])
+                meanh[i] = np.nanmean(allv5g['hmag'][p])
+                if meanh[i] < 0: pdb.set_trace()
+                sigh[i] = np.nanstd(allv5g['hmag'][p])
+                minh[i] = np.nanmin(allv5g['hmag'][p])
+                maxh[i] = np.nanmax(allv5g['hmag'][p])
+                xx = xarr[i]
+                color = 'red'
+                if pl > 10000: 
+                    xx = xx+20
+                    color = 'cyan'
+                ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
+
+            
+            ax.scatter(pl, meanh, sigh, marker='o', s=20, c='cyan', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+
+        return
+
+        ###########################################################################################
         # seeingSNR.png
         plotfile = specdir5 + 'monitor/' + instrument + '/seeingSNR.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -956,68 +1019,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
-
-        return
-
-        ###########################################################################################
-        # telluricH.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/telluricH.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            gd,=np.where((allv5['mjd'] > 59145) & ((allv5['targflags'] == 'MWM_TELLURIC') | (allv5['firstcarton'] == 'ops_std_apogee')) &
-                         (allv5['hmag'] > 0) & (allv5['hmag'] < 20))
-            allv5g = allv5[gd]
-            uplate = np.unique(allv5g['plate'])
-            nplate = len(uplate)
-            #pl, = np.where(uplate > 14999)
-            pl = np.zeros(nplate)
-            meanh = np.zeros(nplate)
-            sigh = np.zeros(nplate)
-            minh = np.zeros(nplate)
-            maxh = np.zeros(nplate)
-
-            xarr = np.arange(0,nplate+20,1)
-
-            fig = plt.figure(figsize=(30,14))
-
-            ax = plt.subplot2grid((1,1), (0,0))
-            #ax.set_xlim(0, 1000)
-            ax.set_ylim(7, 11)
-            #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            #if ichip == nchips-1: ax.set_xlabel(r'MJD')
-            ax.set_xlabel(r'Plate/config index ')
-            ax.set_ylabel(r'Mean Telluric STD $H$ mag')
-            #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-            #ax.axvline(x=59146, color='r', linewidth=2)
-
-            for i in range(nplate):
-                p, = np.where(uplate[i] == allv5g['plate'])
-                #if len(p) > 10:
-                pl[i] = int(uplate[i])
-                meanh[i] = np.nanmean(allv5g['hmag'][p])
-                if meanh[i] < 0: pdb.set_trace()
-                sigh[i] = np.nanstd(allv5g['hmag'][p])
-                minh[i] = np.nanmin(allv5g['hmag'][p])
-                maxh[i] = np.nanmax(allv5g['hmag'][p])
-                xx = xarr[i]
-                color = 'red'
-                if pl > 10000: 
-                    xx = xx+20
-                    color = 'cyan'
-                ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
-
-            ax.scatter(pl, meanh, sigh, marker='o', s=20, c=color, edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
 
         return
 
