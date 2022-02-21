@@ -859,7 +859,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             ax = plt.subplot2grid((1,1), (0,0))
             ax.set_xlim(-1, 50)
-            ax.set_ylim(-0.5, 7)
+            ax.set_ylim(-0.2, 7)
             #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -875,7 +875,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             x = np.mean(allsnr['SN'], axis=1)
             y = allsnr['SEEING']
             c = allsnr['JD']
-            cmap = 'inferno'
+            cmap = 'gnuplot_r'
             sc1 = ax.scatter(x, y, marker='o', s=10, c=c, cmap=cmap, alpha=0.5)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
             ax_divider = make_axes_locatable(ax)
