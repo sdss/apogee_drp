@@ -855,10 +855,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             #xarr = np.arange(0,nplate+20,1)
 
-            fig = plt.figure(figsize=(17,14))
+            fig = plt.figure(figsize=(18,14))
 
             ax = plt.subplot2grid((1,1), (0,0))
-            ax.set_xlim(0, 50)
+            ax.set_xlim(-1, 50)
             ax.set_ylim(-0.5, 7)
             #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
@@ -883,9 +883,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             cb1 = colorbar(sc1, cax=cax, orientation="vertical")
             cax.minorticks_on()
             #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-            ax.text(1.08, 0.5, r'MJD',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            ax.text(1.14, 0.5, r'MJD',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-            fig.subplots_adjust(left=0.06,right=0.93,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.06,right=0.90,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
