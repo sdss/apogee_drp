@@ -907,7 +907,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 xx = pl[i]
                 if xx > 10000: 
                     xx = xx-10000
-                    ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
+                    ax.plot([xx,xx], [minjk[i],maxjk[i]], color='k', zorder=1)
 
             g, = np.where(pl < 10000)
             uh,uind = np.unique(meanjk[g], return_index=True)
