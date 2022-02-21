@@ -127,7 +127,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
             allv5 = fits.getdata(allv5path)
 
-        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr['MJD'])))
+        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])))
         allv5 = allv5[gd]
         vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
         uvis,uind = np.unique(vis, return_index=True)
@@ -137,29 +137,31 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         count = 0
         for i in range(nvis):
-            badcheck, = np.where((int(uallv5['plate'][i]) == badComObs['CONFIG']) & (uallv5['mjd'][i] == badComObs['MJD']))
-            if len(badcheck) > 0: continue
+            #badcheck, = np.where((int(uallv5['plate'][i]) == badComObs['CONFIG']) & (uallv5['mjd'][i] == badComObs['MJD']))
+            #if len(badcheck) > 0: continue
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
-            p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
+            p, = np.where(os.path.basename(plsum) == allsnr4['SUMFILE'])
             if (len(p) < 1) & (os.path.exists(plsum)):
                 print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
                 hdul = fits.open(plsum)
                 data1 = hdul[1].data
                 data2 = hdul[2].data
-                nexp = len(data1['IM'])
-                field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
                 hdul.close()
-                for iexp in range(nexp):
-                    if count == 0:
-                        outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
-                    else:
-                        newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
-                        if newstr is not None: outstr = np.concatenate([outstr, newstr])
-                    count += 1
+                nexp = len(data1['IM'])
+                totexptime = np.sum(data1['EXPTIME'])
+                if (nexp > 2) & (totexptime > 900):
+                    field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
+                    for iexp in range(nexp):
+                        if count == 0:
+                            outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
+                        else:
+                            newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
+                            if newstr is not None: outstr = np.concatenate([outstr, newstr])
+                        count += 1
 
         if count > 0:
-            out = vstack([Table(allsnr), Table(outstr)])
+            out = vstack([Table(allsnr4), Table(outstr)])
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
