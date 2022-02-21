@@ -883,7 +883,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='both',width=axwidth)
             #if ichip == nchips-1: ax.set_xlabel(r'MJD')
             ax.set_xlabel(r'Plate/config index ')
-            ax.set_ylabel(r'Mean Telluric STD $H$ mag')
+            ax.set_ylabel(r'Mean Telluric STD $J-K$')
             #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
             #ax.axvline(x=59146, color='r', linewidth=2)
 
@@ -896,9 +896,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 sigh[i] = np.nanstd(allv5g['hmag'][p])
                 minh[i] = np.nanmin(allv5g['hmag'][p])
                 maxh[i] = np.nanmax(allv5g['hmag'][p])
-                meanjk[i] = np.nanmean(allv5g['jmag'][p] - allv5g['jmag'][p])
-                minjk[i] = np.nanmin(allv5g['jmag'][p] - allv5g['jmag'][p])
-                maxjk[i] = np.nanmax(allv5g['jmag'][p] - allv5g['jmag'][p])
+                meanjk[i] = np.nanmean(allv5g['jmag'][p] - allv5g['kmag'][p])
+                minjk[i] = np.nanmin(allv5g['jmag'][p] - allv5g['kmag'][p])
+                maxjk[i] = np.nanmax(allv5g['jmag'][p] - allv5g['kmag'][p])
                 xx = xarr[i]
                 color = 'red'
                 if pl[i] > 10000: 
