@@ -851,7 +851,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gd,=np.where((allv5['mjd'] > 59145) & (allv5['targflags'] == 'MWM_TELLURIC') | (allv5['firstcarton'] == 'ops_std_apogee') &
+            gd,=np.where((allv5['mjd'] > 59145) & ((allv5['targflags'] == 'MWM_TELLURIC') | (allv5['firstcarton'] == 'ops_std_apogee')) &
                          (allv5['hmag'] > 0) & (allv5['hmag'] < 20))
             allv5g = allv5[gd]
             uplate = np.unique(allv5g['plate'])
