@@ -865,6 +865,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 p, = np.where(uplate[i] == allv5g['plate'])
                 if len(p) > 10:
                     meanh[i] = np.nanmean(allv5g['hmag'][p])
+                    if meanh[i] < 0: pdb.set_trace()
                     sigh[i] = np.nanstd(allv5g['hmag'][p])
                     minh[i] = np.nanmin(allv5g['hmag'][p])
                     maxh[i] = np.nanmax(allv5g['hmag'][p])
