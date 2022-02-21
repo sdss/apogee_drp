@@ -889,7 +889,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
             #ax.axvline(x=59146, color='r', linewidth=2)
 
-            ax.scatter(xarr, meanh, marker='o', s=10)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            ax.scatter(uplate, meanh, marker='o', s=10)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
