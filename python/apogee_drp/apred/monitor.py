@@ -876,9 +876,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             y = allsnr['SEEING']
             c = allsnr['JD']
             cmap = 'inferno'
-            ax.scatter(x, y, marker='o', s=10, c=c, cmap=cmap, edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            sc1 = ax.scatter(x, y, marker='o', s=10, c=c, cmap=cmap, alpha=0.5)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("right", size="2%", pad="1%")
+            cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+            cax.minorticks_on()
+            #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+            if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            fig.subplots_adjust(left=0.06,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
