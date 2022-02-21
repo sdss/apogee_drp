@@ -847,6 +847,42 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
+        # seeingSNR.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/seeingSNR.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+
+            xarr = np.arange(0,nplate+20,1)
+
+            fig = plt.figure(figsize=(16,14))
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            #ax.set_xlim(0, 1000)
+            #ax.set_ylim(7, 11)
+            #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            #if ichip == nchips-1: ax.set_xlabel(r'MJD')
+            ax.set_xlabel(r'Plate/config index ')
+            ax.set_ylabel(r'Mean Telluric STD $H$ mag')
+            #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            #ax.axvline(x=59146, color='r', linewidth=2)
+
+            x = np.mean(allsnr['SN'], axis=1)
+            y = allsnr['SEEING']
+            ax.scatter(x, y, marker='o', s=10, c='b', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        return
+
+        ###########################################################################################
         # snhistory3.png
         plotfile = specdir5 + 'monitor/' + instrument + '/snhistory3.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
