@@ -859,7 +859,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             ax = plt.subplot2grid((1,1), (0,0))
             ax.set_xlim(-1, 50)
-            ax.set_ylim(-0.2, 7)
+            ax.set_ylim(-0.2, 6.5)
             #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
