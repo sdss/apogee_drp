@@ -900,7 +900,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
 
             
-            ax.scatter(pl, meanh, sigh, marker='o', s=20, c='cyan', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            ax.scatter(pl, meanh, marker='o', s=20, c='cyan', edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
