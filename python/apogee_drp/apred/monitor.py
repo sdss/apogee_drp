@@ -894,7 +894,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 maxh[i] = np.nanmax(allv5g['hmag'][p])
                 xx = xarr[i]
                 color = 'red'
-                if pl > 10000: 
+                if pl[i] > 10000: 
                     xx = xx+20
                     color = 'cyan'
                 ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
