@@ -134,13 +134,15 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
         gd, = np.where((allv5['MJD'] > 59580) & 
                        (np.isnan(allv5['vheliobary']) == False) & 
                        (np.absolute(allv5['vheliobary']) < 400) & 
-                       (np.isnan(allv5['SNR']) == False) & 
+                       (np.isnan(allv5['SNR']) == False) &  
+                       (allv5['n_components'] == 1) & 
                        (allv5['SNR'] > 10))
         allv5fps = allv5[gd]
 
         gd, = np.where((np.isnan(allv4['VHELIO']) == False) &
                        (np.absolute(allv4['VHELIO']) < 400) &
-                       (np.isnan(allv4['SNR']) == False) & 
+                       (np.isnan(allv4['SNR']) == False) &  
+                       (allv4['n_components'] == 1) & 
                        (allv4['SNR'] > 10))
         allv4g = allv4[gd]
 
@@ -150,8 +152,6 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
         gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
         ngd = len(gdIDs)
         print(ngd)
-
-        pdb.set_trace()
 
         dt = np.dtype([('APOGEE_ID', np.str, 18)
                        ('JMAG',      np.float64),
