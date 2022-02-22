@@ -288,13 +288,13 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     else: 
         lockfile = outdir+load.prefix+'1D-'+str(framenum)+'.lock' 
     
-    if not unlock:
+    if not unlock and not clobber:
         while os.path.exists(lockfile):
             print('Waiting for lockfile '+lockfile)
             time.sleep(10)
-        else: 
-            if os.path.exists(lockfile): 
-                os.remove(lockfile)
+    else: 
+        if os.path.exists(lockfile): 
+            os.remove(lockfile)
 
     if os.path.exists(os.path.dirname(lockfile))==False:
         os.mkdirs(os.path.dirname(lockfile))

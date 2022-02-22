@@ -289,7 +289,7 @@ lockfile = outdir+dirs.prefix+'1D-'+framenum ; lock file
 if getlocaldir() then lockfile=getlocaldir()+'/'+dirs.prefix+'1D-'+framenum+'.lock' $
 else lockfile=outdir+dirs.prefix+'1D-'+framenum+'.lock'
 
-if not keyword_set(unlock) then begin
+if not keyword_set(unlock) and not keyword_set(clobber) then begin
   while file_test(lockfile) do apwait,lockfile,10
 endif else begin
   if file_test(lockfile) then file_delete,lockfile,/allow
