@@ -217,7 +217,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
         ax4.set_xlim(-1.5, 0.4)
         ax4.set_ylim(-0.5, 0.5)
     ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top')
-    ax2.text(0.05, 0.95, r'RV $T_{\rm eff}$ (kK)', transform=ax2.transAxes, va='top')
+    ax2.text(0.05, 0.95, r'RV $T_{\rm eff}$ (K)', transform=ax2.transAxes, va='top')
     ax3.text(0.05, 0.95, r'RV log$\,g$ (dex)', transform=ax3.transAxes, va='top')
     ax4.text(0.05, 0.95, r'RV [Fe/H] (dex)', transform=ax4.transAxes, va='top')
     #ax1.set_xlabel(r'DR17 ')
@@ -253,8 +253,8 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     ax1.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
-    x = gdata['TEFF'][:,0][g] / 1000
-    y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
+    x = gdata['TEFF'][:,0][g]# / 1000
+    y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g])# / 1000
     ax2.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax2.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     ax2.text(0.05, 0.82, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax2.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
@@ -287,7 +287,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
     ax4.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
 
-    fig.subplots_adjust(left=0.07, right=0.935, bottom=0.05, top=0.98, hspace=0.1, wspace=0.15)
+    fig.subplots_adjust(left=0.07, right=0.935, bottom=0.05, top=0.98, hspace=0.1, wspace=0.2)
     plt.savefig(plotfile)
     plt.close('all')
 
