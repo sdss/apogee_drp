@@ -114,6 +114,40 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
+def skytests(mjd='59592'):
+
+    apodir = os.environ.get('APOGEE_REDUX')+'/'
+
+    exp59592a = np.array([40300046,40300050,40300052,40300056,40300058,40300062])
+    exp59592b = np.array([40300047,40300049,40300053,40300055,40300059,40300061])
+    nexp59592 = len(exp59592a)
+
+    for iexp in range(nexp59592):
+        onedfile = load.filename('1D', num=exp59592a[i], mjd=mjd, chips=True)
+
+        tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
+        ra = tothdr['RADEG']
+        dec = tothdr['DECDEG']
+        DateObs = tothdr['DATE-OBS']
+
+        # Get moon distance and phase.
+        dateobs = dhdr['DATE-OBS']
+        tt = Time(dateobs, format='fits')
+        moonpos = get_moon(tt)
+        moonra = moonpos.ra.deg
+        moondec = moonpos.dec.deg
+        c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
+        c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
+        sep = c1.separation(c2)
+        moondist = sep.deg
+        moonphase = moon_illumination(tt)
+
+        pdb.set_trace()
+
+    return
+
+
+###########################################################################################
 def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     # rvparams.png
     # Plot of stellar parameters, plate vs. FPS
