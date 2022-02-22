@@ -278,7 +278,7 @@ def rvparams(allv4=None, allv5=None, remake=False):
     #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
     ax4.text(1.174, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
 
-    fig.subplots_adjust(left=0.07, right=0.9435, bottom=0.05, top=0.98, hspace=0.1, wspace=0.1)
+    fig.subplots_adjust(left=0.07, right=0.935, bottom=0.05, top=0.98, hspace=0.1, wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
