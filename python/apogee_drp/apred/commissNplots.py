@@ -249,6 +249,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     x = gdata['VHELIO'][:,0][g]
     y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
     ax1.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(y), 3)) + r' km$\,s^{-1}$', transform=ax1.transAxes, va='top', fontsize=fsz)
+    ax1.text(0.05, 0.81, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)) + r' km$\,s^{-1}$', transform=ax1.transAxes, va='top', fontsize=fsz)
     ax1.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
