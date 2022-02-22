@@ -151,9 +151,10 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
         ngd = len(gdIDs)
         print(ngd)
 
-        dt = np.dtype([('JMAG',         np.float64),
-                       ('HMAG',         np.float64),
-                       ('KMAG',         np.float64),
+        dt = np.dtype([('APOGEE_ID', np.str, 18)
+                       ('JMAG',      np.float64),
+                       ('HMAG',      np.float64),
+                       ('KMAG',      np.float64),
                        ('NVIS',      np.int32, 2),
                        ('SNRTOT',    np.float64, 2),
                        ('SNRAVG',    np.float64, 2),
@@ -166,6 +167,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
                        ('FEH',       np.float64, 2),
                        ('EFEH',      np.float64, 2)])
         gdata = np.zeros(ngd, dtype=dt)
+        gdata['APOGEE_ID'] = gdIDs
 
         for i in range(ngd):
             print(i)
@@ -255,6 +257,10 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['TEFF'][:,0][g]# / 1000
     y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g])# / 1000
+    gg, = np.where(np.absolute(y) < 2000)
+    g = g[gg]
+    x = x[gg]
+    y = y[gg]
     ax2.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax2.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     ax2.text(0.05, 0.82, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax2.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
