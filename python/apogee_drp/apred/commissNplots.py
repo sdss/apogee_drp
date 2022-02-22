@@ -258,12 +258,11 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     x = gdata['TEFF'][:,0][g]# / 1000
     y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g])# / 1000
     gg, = np.where(np.absolute(y) < 2000)
-    g = g[gg]
     x = x[gg]
     y = y[gg]
     ax2.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax2.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     ax2.text(0.05, 0.82, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax2.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
-    sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
+    sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['JMAG'][g][gg]-gdata['KMAG'][g][gg], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['LOGG'][:,0][g]
