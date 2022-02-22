@@ -156,10 +156,10 @@ def skytests(mjd='59592'):
         p2 = str("%.5f" % round(ra,5))
         p3 = str("%.5f" % round(dec,5))
         p4 = str("%.3f" % round(moonphase,3))
-        p5 = str("%.3f" % round(moondist,3))
-        p6 = str("%.3f" % round(medb,3))
-        p7 = str("%.3f" % round(medg,3))
-        p8 = str("%.3f" % round(medr,3))
+        p5 = str("%.3f" % round(moondist,3)).rjust(6)
+        p6 = str("%.3f" % round(medb,3)).rjust(7)
+        p7 = str("%.3f" % round(medg,3)).rjust(7)
+        p8 = str("%.3f" % round(medr,3)).rjust(7)
         print(p1+'   '+p2+'   '+p3+'   '+p4+'   '+p5+'   '+p6+'   '+p7+'   '+p8)
 
 
