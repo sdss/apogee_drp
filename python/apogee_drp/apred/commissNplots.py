@@ -216,10 +216,10 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
         ax3.set_ylim(-1.4, 1.4)
         ax4.set_xlim(-1.5, 0.4)
         ax4.set_ylim(-0.5, 0.5)
-    ax1.text(0.05, 0.95, r'$V_{\rm helio}$', transform=ax1.transAxes, va='top')
-    ax2.text(0.05, 0.95, r'RV $T_{\rm eff}$', transform=ax2.transAxes, va='top')
-    ax3.text(0.05, 0.95, r'RV log$\,g$', transform=ax3.transAxes, va='top')
-    ax4.text(0.05, 0.95, r'RV [Fe/H]', transform=ax4.transAxes, va='top')
+    ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top')
+    ax2.text(0.05, 0.95, r'RV $T_{\rm eff}$ (kK)', transform=ax2.transAxes, va='top')
+    ax3.text(0.05, 0.95, r'RV log$\,g$ (dex)', transform=ax3.transAxes, va='top')
+    ax4.text(0.05, 0.95, r'RV [Fe/H] (dex)', transform=ax4.transAxes, va='top')
     #ax1.set_xlabel(r'DR17 ')
     ax1.set_ylabel(r'DR17 $-$ FPS')
     ax3.set_xlabel(r'DR17')
@@ -248,26 +248,29 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['VHELIO'][:,0][g]
     y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
-    ax1.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(y), 3)) + r' km$\,s^{-1}$', transform=ax1.transAxes, va='top', fontsize=fsz)
-    ax1.text(0.05, 0.81, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)) + r' km$\,s^{-1}$', transform=ax1.transAxes, va='top', fontsize=fsz)
+    ax1.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(y), 3)), transform=ax1.transAxes, va='top', fontsize=fsz)
+    ax1.text(0.05, 0.81, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax1.transAxes, va='top', fontsize=fsz)
     ax1.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['TEFF'][:,0][g] / 1000
     y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
-    #ax2.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax2.transAxes, va='top')
+    ax2.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(y), 3)), transform=ax2.transAxes, va='top', fontsize=fsz)
+    ax2.text(0.05, 0.81, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax2.transAxes, va='top', fontsize=fsz)
     sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['LOGG'][:,0][g]
     y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
-    #ax3.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax3.transAxes, va='top')
+    ax3.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(y), 3)), transform=ax3.transAxes, va='top', fontsize=fsz)
+    ax3.text(0.05, 0.81, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax3.transAxes, va='top', fontsize=fsz)
     ax3.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['FEH'][:,0][g]
     y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
-    #ax4.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax4.transAxes, va='top')
+    ax4.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(y), 3)), transform=ax4.transAxes, va='top', fontsize=fsz)
+    ax4.text(0.05, 0.81, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax4.transAxes, va='top', fontsize=fsz)
     sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     ax2_divider = make_axes_locatable(ax2)
