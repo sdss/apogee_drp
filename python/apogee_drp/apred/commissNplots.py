@@ -122,17 +122,19 @@ def skytests(mjd='59592'):
     exp59592b = np.array([40300047,40300049,40300053,40300055,40300059,40300061])
     nexp59592 = len(exp59592a)
 
+    print('EXPOSURE     RA     DEC     MOONPHASE  MOONDIST  MEDB   MEDG    MEDR')
     for iexp in range(nexp59592):
         onedfile = load.filename('1D', num=exp59592a[iexp], mjd=mjd, chips=True)
-
-        hdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
+        fileb = onedfile.replace('1D-','1D-c-')
+        fileg = onedfile.replace('1D-','1D-b-')
+        filer = onedfile.replace('1D-','1D-a-')
+        hdr = fits.getheader(fileb)
         ra = hdr['RADEG']
         dec = hdr['DECDEG']
-        DateObs = hdr['DATE-OBS']
-
-        # Get moon distance and phase.
         dateobs = hdr['DATE-OBS']
         tt = Time(dateobs, format='fits')
+
+        # Get moon distance and phase.
         moonpos = get_moon(tt)
         moonra = moonpos.ra.deg
         moondec = moonpos.dec.deg
@@ -142,7 +144,24 @@ def skytests(mjd='59592'):
         moondist = sep.deg
         moonphase = moon_illumination(tt)
 
-        pdb.set_trace()
+        fluxb = fits.getdata(fileb,1)
+        fluxg = fits.getdata(fileg,1)
+        fluxr = fits.getdata(filer,1)
+        medb = np.nanmedian(fluxb[:, 824:1224])
+        medg = np.nanmedian(fluxg[:, 824:1224])
+        medr = np.nanmedian(fluxr[:, 824:1224])
+
+
+        p1 = str(exp59592a[iexp])
+        p2 = str("%.5f" % round(ra,5))
+        p3 = str("%.5f" % round(dec,5))
+        p4 = str("%.3f" % round(moonphase,3))
+        p5 = str("%.3f" % round(moondist,3))
+        p6 = str("%.3f" % round(medb,3))
+        p7 = str("%.3f" % round(medg,3))
+        p8 = str("%.3f" % round(medr,3))
+        print(p1+'   '+p2+'   '+p3+'   '+p4+'   '+p5+'   '+p6+'   '+p7+'   '+p8)
+
 
     return
 
