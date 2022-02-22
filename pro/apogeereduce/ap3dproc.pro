@@ -734,7 +734,7 @@ FOR f=0,nfiles-1 do begin
   if n_elements(outfile) gt 0 then begin
     if getlocaldir() then lockfile=getlocaldir()+'/'+file_basename(outfile[f])+'.lock' $
     else lockfile=outfile[f]+'.lock'
-    if not keyword_set(unlock) then begin
+    if not keyword_set(unlock) and not keyword_set(clobber) then begin
       while file_test(lockfile) do apwait,lockfile,10
     endif else begin
       if file_test(lockfile) then file_delete,lockfile,/allow

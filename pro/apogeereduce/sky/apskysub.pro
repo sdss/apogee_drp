@@ -324,7 +324,6 @@ CASE suboption of
          skymax-=0.25
         endwhile
         if skymax le 5 then begin
-stop
           print,'not halted: problem with enough sky fibers, fiber: ', 300-i
           goto,BOMB0
         endif
