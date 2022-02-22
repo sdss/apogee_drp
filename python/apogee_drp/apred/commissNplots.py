@@ -147,9 +147,9 @@ def skytests(mjd='59592'):
         fluxb = fits.getdata(fileb,1)
         fluxg = fits.getdata(fileg,1)
         fluxr = fits.getdata(filer,1)
-        medb = np.nanmedian(fluxb[:, 824:1224])
-        medg = np.nanmedian(fluxg[:, 824:1224])
-        medr = np.nanmedian(fluxr[:, 824:1224])
+        medb = np.nanmedian(fluxb[:, 524:1524])
+        medg = np.nanmedian(fluxg[:, 524:1524])
+        medr = np.nanmedian(fluxr[:, 524:1524])
 
 
         p1 = str(exp59592a[iexp])
