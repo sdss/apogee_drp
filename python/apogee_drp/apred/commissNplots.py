@@ -133,10 +133,10 @@ def rvparams(allv4=None, allv5=None, remake=False):
     # rvparams.png
     # Plot of stellar parameters, plate vs. FPS
 
+    specdir5 = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
     print("----> monitor: Making " + os.path.basename(plotfile))
 
-    specdir5 = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     datafile = 'rvparams_plateVSfps.fits'
 
     if remake:
