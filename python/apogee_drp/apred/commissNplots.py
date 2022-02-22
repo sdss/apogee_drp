@@ -85,7 +85,7 @@ dark, = np.where(alldark['EXPTYPE'] == 'DARK')
 matplotlib.use('agg')
 fontsize = 24;   fsz = fontsize * 0.75
 matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
+bboxpar = dict(facecolor='white', edgecolor='none', alpha=0.9)
 axwidth = 1.5
 axmajlen = 7
 axminlen = 3.5
@@ -218,10 +218,10 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
         ax3.set_ylim(-1.4, 1.4)
         ax4.set_xlim(-1.5, 0.4)
         ax4.set_ylim(-0.5, 0.5)
-    ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top')
-    ax2.text(0.05, 0.95, r'RV $T_{\rm eff}$ (K)', transform=ax2.transAxes, va='top')
-    ax3.text(0.05, 0.95, r'RV log$\,g$ (dex)', transform=ax3.transAxes, va='top')
-    ax4.text(0.05, 0.95, r'RV [Fe/H] (dex)', transform=ax4.transAxes, va='top')
+    ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top', bbox=bboxpar)
+    ax2.text(0.05, 0.95, r'RV $T_{\rm eff}$ (K)', transform=ax2.transAxes, va='top', bbox=bboxpar)
+    ax3.text(0.05, 0.95, r'RV log$\,g$ (dex)', transform=ax3.transAxes, va='top', bbox=bboxpar)
+    ax4.text(0.05, 0.95, r'RV [Fe/H] (dex)', transform=ax4.transAxes, va='top', bbox=bboxpar)
     #ax1.set_xlabel(r'DR17 ')
     ax1.set_ylabel(r'DR17 $-$ FPS')
     ax3.set_xlabel(r'DR17')
