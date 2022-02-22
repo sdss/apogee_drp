@@ -259,6 +259,8 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     ax2.text(0.05, 0.82, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax2.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
+    pdb.set_trace()
+
     g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['LOGG'][:,0][g]
     y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
