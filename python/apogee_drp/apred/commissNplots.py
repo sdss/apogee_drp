@@ -241,7 +241,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
 
     symbol = 'o'
     symsz = 40
-    cmap = 'cool'
+    cmap = 'rainbow'
     vmin = 0
     vmax = 1.5
 
