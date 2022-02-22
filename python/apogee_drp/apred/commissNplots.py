@@ -248,28 +248,28 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['VHELIO'][:,0][g]
     y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
-    ax1.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(y), 3)), transform=ax1.transAxes, va='top', fontsize=fsz)
+    ax1.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax1.transAxes, va='top', fontsize=fsz)
     ax1.text(0.05, 0.81, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax1.transAxes, va='top', fontsize=fsz)
     ax1.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['TEFF'][:,0][g] / 1000
     y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
-    ax2.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(y), 3)), transform=ax2.transAxes, va='top', fontsize=fsz)
+    ax2.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax2.transAxes, va='top', fontsize=fsz)
     ax2.text(0.05, 0.81, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax2.transAxes, va='top', fontsize=fsz)
     sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['LOGG'][:,0][g]
     y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
-    ax3.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(y), 3)), transform=ax3.transAxes, va='top', fontsize=fsz)
+    ax3.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax3.transAxes, va='top', fontsize=fsz)
     ax3.text(0.05, 0.81, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax3.transAxes, va='top', fontsize=fsz)
     ax3.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['FEH'][:,0][g]
     y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
-    ax4.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(y), 3)), transform=ax4.transAxes, va='top', fontsize=fsz)
+    ax4.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax4.transAxes, va='top', fontsize=fsz)
     ax4.text(0.05, 0.81, 'dlnmad: ' + str("%.3f" % round(dln.mad(y), 3)), transform=ax4.transAxes, va='top', fontsize=fsz)
     sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
