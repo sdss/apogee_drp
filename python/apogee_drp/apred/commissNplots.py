@@ -253,7 +253,7 @@ def rvparams(allv4=None, allv5=None, remake=False):
     x = gdata['LOGG'][:,0][g]
     y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
     #ax3.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax3.transAxes, va='top')
-    ax3.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+    ax3.scatter(x, y, marker=symbol, c=gdata['HMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
     g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['FEH'][:,0][g]
