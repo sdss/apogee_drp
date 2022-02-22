@@ -210,7 +210,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     if restrict:
         ax1.set_xlim(-150, 150)
         ax1.set_ylim(-5, 5)
-        ax2.set_xlim(3.3, 6.8)
+        ax2.set_xlim(3300, 6800)
         ax2.set_ylim(-0.6, 0.6)
         ax3.set_xlim(-0.1, 5.1)
         ax3.set_ylim(-1.4, 1.4)
