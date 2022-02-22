@@ -123,7 +123,7 @@ def skytests(mjd='59592'):
     nexp59592 = len(exp59592a)
 
     for iexp in range(nexp59592):
-        onedfile = load.filename('1D', num=exp59592a[i], mjd=mjd, chips=True)
+        onedfile = load.filename('1D', num=exp59592a[iexp], mjd=mjd, chips=True)
 
         tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
         ra = tothdr['RADEG']
