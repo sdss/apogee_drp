@@ -151,11 +151,14 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
         ngd = len(gdIDs)
         print(ngd)
 
+        pdb.set_trace()
+
         dt = np.dtype([('APOGEE_ID', np.str, 18)
                        ('JMAG',      np.float64),
                        ('HMAG',      np.float64),
                        ('KMAG',      np.float64),
                        ('NVIS',      np.int32, 2),
+                       ('NCOMP',       np.float64, 2),
                        ('SNRTOT',    np.float64, 2),
                        ('SNRAVG',    np.float64, 2),
                        ('VHELIO',    np.float64, 2),
