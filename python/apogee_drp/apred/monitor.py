@@ -73,10 +73,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
 
     # Read in the master summary files
-    allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
-    alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
-    allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
-    allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
+    allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
+    alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
+    allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
+    allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
     #snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
     allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
     dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
@@ -127,6 +127,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
             allv5 = fits.getdata(allv5path)
 
+        #gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])) & ((allv5['mjd'] < 59558) | (allv5['mjd'] >= 59595)))
         gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr['MJD'])))
         allv5 = allv5[gd]
         vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
@@ -137,33 +138,33 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         count = 0
         for i in range(nvis):
-            badcheck, = np.where((int(uallv5['plate'][i]) == badComObs['CONFIG']) & (uallv5['mjd'][i] == badComObs['MJD']))
-            if len(badcheck) > 0: continue
+            #badcheck, = np.where((int(uallv5['plate'][i]) == badComObs['CONFIG']) & (uallv5['mjd'][i] == badComObs['MJD']))
+            #if len(badcheck) > 0: continue
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
             p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
             if (len(p) < 1) & (os.path.exists(plsum)):
-                print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
-                hdul = fits.open(plsum)
-                data1 = hdul[1].data
-                data2 = hdul[2].data
+                data1 = fits.getdata(plsum,1)
+                data2 = fits.getdata(plsum,2)
                 nexp = len(data1['IM'])
-                field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
-                hdul.close()
-                for iexp in range(nexp):
-                    if count == 0:
-                        outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
-                    else:
-                        newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
-                        if newstr is not None: outstr = np.concatenate([outstr, newstr])
-                    count += 1
+                totexptime = np.sum(data1['EXPTIME'])
+                if (nexp > 1) & (totexptime > 900):
+                    print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
+                    field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
+                    for iexp in range(nexp):
+                        if count == 0:
+                            outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
+                        else:
+                            newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
+                            if newstr is not None: outstr = np.concatenate([outstr, newstr])
+                        count += 1
 
         if count > 0:
             out = vstack([Table(allsnr), Table(outstr)])
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        return
+        #return
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
@@ -659,7 +660,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     maxjd = np.max(caljd)
     jdspan = maxjd - minjd
     xmin = minjd - jdspan * 0.01
-    xmax = maxjd + jdspan * 0.10
+    xmax = maxjd + jdspan * 0.08
     xspan = xmax-xmin
 
     if makedomeplots is True:
@@ -846,6 +847,85 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
+        # telluricJK.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/telluricJK.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            gd,=np.where((allv5['mjd'] > 59145) & ((allv5['targflags'] == 'MWM_TELLURIC') | (allv5['firstcarton'] == 'ops_std_apogee')) &
+                         (allv5['hmag'] > 0) & (allv5['hmag'] < 20))
+            allv5g = allv5[gd]
+            uplate = np.unique(allv5g['plate'])
+            nplate = len(uplate)
+            #pl, = np.where(uplate > 14999)
+            pl = np.zeros(nplate)
+            meanh = np.zeros(nplate)
+            sigh = np.zeros(nplate)
+            minh = np.zeros(nplate)
+            maxh = np.zeros(nplate)
+            meanjk = np.zeros(nplate)
+            minjk = np.zeros(nplate)
+            maxjk = np.zeros(nplate)
+            
+
+            xarr = np.arange(0,nplate+20,1)
+
+            fig = plt.figure(figsize=(30,14))
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            #ax.set_xlim(0, 1000)
+            ax.set_ylim(-0.3, 0.65)
+            #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            #if ichip == nchips-1: ax.set_xlabel(r'MJD')
+            ax.set_xlabel(r'Plate/config ID (minus 10000 if > 10000)')
+            ax.set_ylabel(r'Mean Telluric STD $J-K$')
+            #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            #ax.axvline(x=59146, color='r', linewidth=2)
+
+            for i in range(nplate):
+                p, = np.where(uplate[i] == allv5g['plate'])
+                #if len(p) > 10:
+                pl[i] = int(uplate[i])
+                meanh[i] = np.nanmean(allv5g['hmag'][p])
+                if meanh[i] < 0: pdb.set_trace()
+                sigh[i] = np.nanstd(allv5g['hmag'][p])
+                minh[i] = np.nanmin(allv5g['hmag'][p])
+                maxh[i] = np.nanmax(allv5g['hmag'][p])
+                meanjk[i] = np.nanmean(allv5g['jmag'][p] - allv5g['kmag'][p])
+                minjk[i] = np.nanmin(allv5g['jmag'][p] - allv5g['kmag'][p])
+                maxjk[i] = np.nanmax(allv5g['jmag'][p] - allv5g['kmag'][p])
+                xx = xarr[i]
+                color = 'red'
+                if pl[i] > 10000: 
+                    xx = xx+20
+                    color = 'cyan'
+                xx = pl[i]
+                if xx > 10000: 
+                    xx = xx-10000
+                    ax.plot([xx,xx], [minjk[i],maxjk[i]], color='k', zorder=1)
+
+            g, = np.where(pl < 10000)
+            uh,uind = np.unique(meanjk[g], return_index=True)
+            for i in range(len(uh)):
+                ax.plot([pl[g][uind][i],pl[g][uind][i]], [minjk[g][uind][i],maxjk[g][uind][i]], color='k', zorder=1)
+            ax.scatter(pl[g][uind], uh, marker='o', s=100, c='cyan', edgecolors='k', zorder=10)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            ax.axhline(np.mean(uh), linestyle='dashed', color='cyan', zorder=1)
+            g, = np.where(pl > 10000)
+            ax.scatter(pl[g]-10000, meanjk[g], marker='o', s=100, c='red', edgecolors='k', zorder=10)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            ax.axhline(np.mean(meanjk[g]), linestyle='dashed', color='red', zorder=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        #return
+
+        ###########################################################################################
         # telluricH.png
         plotfile = specdir5 + 'monitor/' + instrument + '/telluricH.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -869,7 +949,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             ax = plt.subplot2grid((1,1), (0,0))
             #ax.set_xlim(0, 1000)
-            ax.set_ylim(7, 11)
+            ax.set_ylim(6.7, 11.3)
             #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -893,17 +973,74 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 maxh[i] = np.nanmax(allv5g['hmag'][p])
                 xx = xarr[i]
                 color = 'red'
-                if pl > 10000: 
+                if pl[i] > 10000: 
                     xx = xx+20
                     color = 'cyan'
-                ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
+                xx = pl[i]
+                if xx > 10000: 
+                    xx = xx-10000
+                    ax.plot([xx,xx], [minh[i],maxh[i]], color='k', zorder=1)
 
-            ax.scatter(pl, meanh, sigh, marker='o', s=20, c=color, edgecolors='k')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            g, = np.where(pl < 10000)
+            uh,uind = np.unique(meanh[g], return_index=True)
+            for i in range(len(uh)):
+                ax.plot([pl[g][uind][i],pl[g][uind][i]], [minh[g][uind][i],maxh[g][uind][i]], color='k', zorder=1)
+            ax.scatter(pl[g][uind], uh, marker='o', s=100, c='cyan', edgecolors='k', zorder=10)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            ax.axhline(np.mean(uh), linestyle='dashed', color='cyan', zorder=1)
+            g, = np.where(pl > 10000)
+            ax.scatter(pl[g]-10000, meanh[g], marker='o', s=100, c='red', edgecolors='k', zorder=10)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+            ax.axhline(np.mean(meanh[g]), linestyle='dashed', color='red', zorder=1)
+
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
+
+        return
+
+        ###########################################################################################
+        # seeingSNR.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/seeingSNR.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+
+            #xarr = np.arange(0,nplate+20,1)
+
+            fig = plt.figure(figsize=(18,14))
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            ax.set_xlim(-1, 50)
+            ax.set_ylim(-0.2, 6.5)
+            #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            #if ichip == nchips-1: ax.set_xlabel(r'MJD')
+            ax.set_xlabel(r'exposure S/N')
+            ax.set_ylabel(r'exposure seeing')
+            #if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            #ax.axvline(x=59146, color='r', linewidth=2)
+
+            x = np.mean(allsnr['SN'], axis=1)
+            y = allsnr['SEEING']
+            c = allsnr['JD']
+            cmap = 'gnuplot_r'
+            sc1 = ax.scatter(x, y, marker='o', s=10, c=c, cmap=cmap, alpha=0.5)#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("right", size="2%", pad="1%")
+            cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+            cax.minorticks_on()
+            #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+            ax.text(1.12, 0.5, r'MJD',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            fig.subplots_adjust(left=0.055,right=0.90,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
 
         return
 
@@ -973,7 +1110,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
-        #return
+        return
 
         ###########################################################################################
         # rvparams.png
@@ -3723,6 +3860,8 @@ def getSnrStruct(plsum=None):
                    ('ALTSN',     np.float64, 3),
                    ('NSN',       np.int32),
                    ('SNRATIO',   np.float64),
+                   #('APOGEE_ID', np.str, 300)
+                   #('OBJTYPE',   np.str, 300)
                    ('HMAG',      np.float64, 300),
                    ('FIBERID',   np.int32, 300),
                    ('SNFIBER',   np.float64, (300, 3)),
@@ -3856,6 +3995,8 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
                    ('ALTSN',     np.float64, 3),
                    ('NSN',       np.int32),
                    ('SNRATIO',   np.float64),
+                   #('APOGEE_ID', np.str, 300)
+                   #('OBJTYPE',   np.str, 300)
                    ('HMAG',      np.float64, 300),
                    ('FIBERID',   np.int32, 300),
                    ('SNFIBER',   np.float64, (300, 3)),
@@ -3864,7 +4005,6 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
                    ('ESNBINS',   np.float64, (nmagbins, 3)),
                    ('NSNBINS',   np.float64, nmagbins),
                    ('BINH',      np.float64, nmagbins)])
-
 
     outstr = np.zeros(1, dtype=dt)
 
