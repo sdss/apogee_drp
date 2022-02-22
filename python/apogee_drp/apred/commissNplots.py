@@ -248,7 +248,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['VHELIO'][:,0][g]
     y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
-    #ax1.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax1.transAxes, va='top')
+    ax1.text(0.05, 0.88, str("%.3f" % round(np.median(y), 3)) + r' km$\,s^{-1}$', transform=ax1.transAxes, va='top')
     ax1.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
