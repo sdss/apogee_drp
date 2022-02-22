@@ -38,102 +38,86 @@ from datetime import date,datetime
 apred = 'daily'
 instrument = 'apogee-n'
 telescope = 'apo25m'
+fiberdaysbin=20
 
-def makeplots(instrument='apogee-n', apred='daily', clobber=True, 
-              fiberdaysbin=20, allv4=None, allv5=None):
+chips = np.array(['blue','green','red'])
+nchips = len(chips)
+fibers = np.array([10,80,150,220,290])[::-1]
+nfibers = len(fibers)
+nlines = 2
+nquad = 4
 
-    print("----> monitor starting")
+load = apload.ApLoad(apred=apred, telescope=telescope)
 
-    telescope = 'apo25m'
-    if instrument == 'apogee-s': telescope = 'lco25m'
+# Establish  directories... hardcode sdss4/apogee2 for now
+specdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
+sdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/' + instrument + '/'
 
-    chips = np.array(['blue','green','red'])
-    nchips = len(chips)
-    fibers = np.array([10,80,150,220,290])[::-1]
-    nfibers = len(fibers)
-    nlines = 2
-    nquad = 4
+specdir5 = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
+sdir5 = specdir5 + 'monitor/' + instrument + '/'
 
-    load = apload.ApLoad(apred=apred, telescope=telescope)
+allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
+allsci4 =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
 
-    # Establish  directories... hardcode sdss4/apogee2 for now
-    specdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
-    sdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/' + instrument + '/'
+# Read in the master summary files
+allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
+alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
+allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
+allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
+allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
+dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
+quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
 
-    specdir5 = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
-    sdir5 = specdir5 + 'monitor/' + instrument + '/'
+badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
 
-    allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
-    allsci4 =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
-    allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
+###############################################################################################
+# Find the different cals
+thar, = np.where(allcal['THAR'] == 1)
+une, =  np.where(allcal['UNE'] == 1)
+qrtz, = np.where(allcal['QRTZ'] == 1)
+dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
+qrtzexp, = np.where(allexp['IMAGETYP'] == 'QuartzFlat')
+dark, = np.where(alldark['EXPTYPE'] == 'DARK')
 
-    # Read in the master summary files
-    allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
-    alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
-    allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
-    allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
-    allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
-    dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
-    quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
+###############################################################################################
+# Set up some basic plotting parameters
+matplotlib.use('agg')
+fontsize = 24;   fsz = fontsize * 0.75
+matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
+axwidth = 1.5
+axmajlen = 7
+axminlen = 3.5
+alf = 0.6
+markersz = 1
+colors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange'])[::-1]
+colors1 = np.array(['k', 'b', 'r', 'gold'])
+colors2 = np.array(['dodgerblue', 'seagreen', 'orange'])
+fibers = np.array([10, 80, 150, 220, 290])[::-1]
+nplotfibs = len(fibers)
+#years = np.array([2011, 2012, 2013, 2014
 
-    badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
-
-    if allv4 is None:
-        allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
-        allv4 = fits.getdata(allv4path)
-
-    if allv5 is None:
-        allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
-        allv5 = fits.getdata(allv5path)
-
-    ###############################################################################################
-    # Find the different cals
-    thar, = np.where(allcal['THAR'] == 1)
-    une, =  np.where(allcal['UNE'] == 1)
-    qrtz, = np.where(allcal['QRTZ'] == 1)
-    dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
-    qrtzexp, = np.where(allexp['IMAGETYP'] == 'QuartzFlat')
-    dark, = np.where(alldark['EXPTYPE'] == 'DARK')
-
-    ###############################################################################################
-    # Set up some basic plotting parameters
-    matplotlib.use('agg')
-    fontsize = 24;   fsz = fontsize * 0.75
-    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-    bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
-    axwidth = 1.5
-    axmajlen = 7
-    axminlen = 3.5
-    alf = 0.6
-    markersz = 1
-    colors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange'])[::-1]
-    colors1 = np.array(['k', 'b', 'r', 'gold'])
-    colors2 = np.array(['dodgerblue', 'seagreen', 'orange'])
-    fibers = np.array([10, 80, 150, 220, 290])[::-1]
-    nplotfibs = len(fibers)
-    #years = np.array([2011, 2012, 2013, 2014
-
-    tmp = allcal[qrtz]
-    caljd = tmp['JD'] - 2.4e6
-    t = Time(tmp['JD'], format='jd')
-    years = np.unique(np.floor(t.byear)) + 1
-    cyears = years.astype(int).astype(str)
-    nyears = len(years)
-    t = Time(years, format='byear')
-    yearjd = t.jd - 2.4e6
-    minjd = np.min(caljd)
-    maxjd = np.max(caljd)
-    jdspan = maxjd - minjd
-    xmin = minjd - jdspan * 0.01
-    xmax = maxjd + jdspan * 0.08
-    xspan = xmax-xmin
+tmp = allcal[qrtz]
+caljd = tmp['JD'] - 2.4e6
+t = Time(tmp['JD'], format='jd')
+years = np.unique(np.floor(t.byear)) + 1
+cyears = years.astype(int).astype(str)
+nyears = len(years)
+t = Time(years, format='byear')
+yearjd = t.jd - 2.4e6
+minjd = np.min(caljd)
+maxjd = np.max(caljd)
+jdspan = maxjd - minjd
+xmin = minjd - jdspan * 0.01
+xmax = maxjd + jdspan * 0.08
+xspan = xmax-xmin
 
 ###########################################################################################
 def rvparams(allv4=None, allv5=None, remake=False):
     # rvparams.png
     # Plot of stellar parameters, plate vs. FPS
 
-    specdir5 = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
     print("----> monitor: Making " + os.path.basename(plotfile))
 
