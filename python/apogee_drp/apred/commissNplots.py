@@ -114,11 +114,12 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def rvparams(allv4=None, allv5=None, remake=False):
+def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     # rvparams.png
     # Plot of stellar parameters, plate vs. FPS
 
     plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
+    if restrict: plotfile = plotfile.replace('rvparams1', 'rvparams2')
     print("----> monitor: Making " + os.path.basename(plotfile))
 
     datafile = 'rvparams_plateVSfps.fits'
@@ -206,14 +207,15 @@ def rvparams(allv4=None, allv5=None, remake=False):
     ax3 = plt.subplot2grid((2,2), (1,0))
     ax4 = plt.subplot2grid((2,2), (1,1))
     axes = [ax1,ax2,ax3,ax4]
-    #ax1.set_xlim(-150, 150)
-    #ax1.set_ylim(-5, 5)
-    #ax2.set_xlim(3.3, 6.8)
-    #ax2.set_ylim(-0.6, 0.6)
-    #ax3.set_xlim(-0.1, 5.1)
-    #ax3.set_ylim(-1.4, 1.4)
-    #ax4.set_xlim(-1.5, 0.4)
-    #ax4.set_ylim(-0.5, 0.5)
+    if restrict:
+        ax1.set_xlim(-150, 150)
+        ax1.set_ylim(-5, 5)
+        ax2.set_xlim(3.3, 6.8)
+        ax2.set_ylim(-0.6, 0.6)
+        ax3.set_xlim(-0.1, 5.1)
+        ax3.set_ylim(-1.4, 1.4)
+        ax4.set_xlim(-1.5, 0.4)
+        ax4.set_ylim(-0.5, 0.5)
     ax1.text(0.05, 0.95, r'$V_{\rm helio}$', transform=ax1.transAxes, va='top')
     ax2.text(0.05, 0.95, r'RV $T_{\rm eff}$', transform=ax2.transAxes, va='top')
     ax3.text(0.05, 0.95, r'RV log$\,g$', transform=ax3.transAxes, va='top')
@@ -239,30 +241,31 @@ def rvparams(allv4=None, allv5=None, remake=False):
 
     symbol = 'o'
     symsz = 40
+    cmap = 'cool'
 
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['VHELIO'][:,0][g]
     y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
     #ax1.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax1.transAxes, va='top')
-    ax1.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+    ax1.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['TEFF'][:,0][g] / 1000
     y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
     #ax2.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax2.transAxes, va='top')
-    sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+    sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
     g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['LOGG'][:,0][g]
     y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
     #ax3.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax3.transAxes, va='top')
-    ax3.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+    ax3.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
     g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
     x = gdata['FEH'][:,0][g]
     y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
     #ax4.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax4.transAxes, va='top')
-    sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+    sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
     ax2_divider = make_axes_locatable(ax2)
     cax2 = ax2_divider.append_axes("right", size="5%", pad="1%")
