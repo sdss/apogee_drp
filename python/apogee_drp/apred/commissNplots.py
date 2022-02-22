@@ -125,13 +125,13 @@ def skytests(mjd='59592'):
     for iexp in range(nexp59592):
         onedfile = load.filename('1D', num=exp59592a[iexp], mjd=mjd, chips=True)
 
-        tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
-        ra = tothdr['RADEG']
-        dec = tothdr['DECDEG']
-        DateObs = tothdr['DATE-OBS']
+        hdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
+        ra = hdr['RADEG']
+        dec = hdr['DECDEG']
+        DateObs = hdr['DATE-OBS']
 
         # Get moon distance and phase.
-        dateobs = dhdr['DATE-OBS']
+        dateobs = hdr['DATE-OBS']
         tt = Time(dateobs, format='fits')
         moonpos = get_moon(tt)
         moonra = moonpos.ra.deg
