@@ -1815,8 +1815,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             # Establish html table row background color and spectrum plot color
             bgcolor = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): bgcolor = '#D2B4DE'
-            if objtype == 'SKY': bgcolor = '#D6EAF8'
-            if (objtype != 'SKY') & (objid != '') & (objid != '2M') & (objid != '2MNone'):
+            if objtype == 'SKY': 
+                bgcolor = '#D6EAF8'
+                firstcarton = 'SKY'
+            else:
                 # DB query to get star and visit info
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 vcatlind, = np.where(fiber == vcatl['fiberid'])
@@ -1843,10 +1845,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 # Handle case of unassigned or off target fibers 
                 if (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
                     bgcolor = 'Silver'
-                    firstcarton = 'OFF TARGET!!!<BR>' + firstcarton
+                    firstcarton = 'OFF TARGET!!!'
                     if jvcat['assigned'] == 0:
                         bgcolor = 'Gray'
-                        firstcarton = 'UNASSIGNED!!!<BR>' + firstcarton
+                        firstcarton = 'UNASSIGNED!!!'
 
                 # Create SIMBAD link
                 cra = str("%.5f" % round(jvcat['ra'], 5))
@@ -1855,26 +1857,28 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
                 simbadlink = txt1 + txt2
 
-                # Get paths to apStar file and star html
-                healpix = apload.obj2healpix(objid)
-                healpixgroup = str(healpix // 1000)
-                healpix = str(healpix)
-
-                # Find the associated healpix html directories
                 apStarRelPath = None
-                starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-                starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
-                apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
-                if len(apStarCheck) > 0:
-                    # Find the newest apStar file
-                    apStarCheck.sort()
-                    apStarCheck = np.array(apStarCheck)
-                    apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = '../' + starRelPath + apStarNewest
+                starHTMLrelPath = None
+                if (objid != '') & (objid != '2M') & (objid != '2MNone'):
+                    # Get paths to apStar file and star html
+                    healpix = apload.obj2healpix(objid)
+                    healpixgroup = str(healpix // 1000)
+                    healpix = str(healpix)
+
+                    # Find the associated healpix html directories
+                    starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+                    starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                    starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
+                    apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                    if len(apStarCheck) > 0:
+                        # Find the newest apStar file
+                        apStarCheck.sort()
+                        apStarCheck = np.array(apStarCheck)
+                        apStarNewest = os.path.basename(apStarCheck[-1])
+                        apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
-            if (objtype != 'SKY') & (objid != '') & (objid != '2M') & (objid != '2MNone'):
+            if objtype != 'SKY':
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD>' + objid + '\n')
@@ -1882,11 +1886,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<BR><A HREF=../' + visitfile + '>apVisit file</A>\n')
                 if apStarRelPath is not None:
                     vishtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
+                    vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
                 else:
                     vishtml.write('<BR>apStar file??\n')
-                vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
+                    vishtml.write('<BR>Star Summary Page??\n')
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(hmag,3)))
-                if (jmag > 0) & (kmag > 0):
+                if (jmag > 0) & (kmag > 0) & (jmag < 90) & (kmag < 90):
                     vishtml.write('<TD align ="center">' + str("%.3f" % round(jmag-kmag,3)))
                 else:
                     vishtml.write('<TD align ="center"><FONT COLOR="red">99.999</FONT>')
@@ -1940,7 +1945,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             else:
                 vishtml.write('<TD align ="center BGCOLOR="white">----\n')
 
-            vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
+            if firstcarton != 'UNASSIGNED!!!':
+                vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
+            else:
+                vishtml.write('<TD align="center">')
     vishtml.close()
 
     runtime = str("%.2f" % (time.time() - start_time))

@@ -114,7 +114,7 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
+def tellmagcolor(alls4=None, alls5=None, latlims=[10,12]):
     # tellmagcolor.png
     # Check of the magnitude and color distribution of plate tellurics vs. FPS tellurics
 
@@ -128,40 +128,44 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     g, = np.where((lat > latlims[0]) & (lat < latlims[1]) & (fpsdata['selected'] == True))
     fpsdata = fpsdata[g]
 
-    g, = np.where((bitmask.is_bit_set(allv4['APOGEE_TARGET2'],9)) & (allv4['GLAT'] >= latlims[0]) & (allv4['GLAT'] <= latlims[1]))
-    allv4g = allv4[g]
+    g, = np.where(((bitmask.is_bit_set(alls4['APOGEE_TARGET2'],9)) | (bitmask.is_bit_set(alls4['APOGEE2_TARGET2'],9))) & (alls4['GLAT'] >= latlims[0]) & (alls4['GLAT'] <= latlims[1]))
+    alls4g = alls4[g]
 
     left, width = 0.1, 0.65
     bottom, height = 0.1, 0.65
-    spacing = 0.005
+    spacing = 0.02
     rect_scatter = [left, bottom, width, height]
     rect_histx = [left, bottom + height + spacing, width, 0.2]
     rect_histy = [left + width + spacing, bottom, 0.2, height]
 
-    fontsize = 32;   fsz = fontsize * 0.75
+    fontsize = 36;   fsz = fontsize * 0.75
     fig = plt.figure(figsize=(22,18))
     ax1 = fig.add_axes(rect_scatter)
     ax_histx = fig.add_axes(rect_histx, sharex=ax1)
     ax_histy = fig.add_axes(rect_histy, sharey=ax1)
     ax_histx.tick_params(axis="x", labelbottom=False)
     ax_histy.tick_params(axis="y", labelleft=False)
+    axes = [ax1, ax_histx, ax_histy]
+    for ax in axes:
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
     ax_histx.set_xlim(-0.2, 0.55)
     ax_histy.set_ylim(11.2, 6.5)
-    ax1.set_xlim(-0.2, 0.55)
-    ax1.set_ylim(11.2, 6.5)
-    #ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top', bbox=bboxpar, zorder=20)
+    ax1.set_xlim(-0.2, 0.65)
+    ax1.set_ylim(11.1, 5.8)
     ax1.set_xlabel(r'J $-$ K')
     ax1.set_ylabel(r'H')
-    #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
-    #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
-    ax1.text(0.5, 1.015, str(int(round(latlims[0]))) + r' < lat < ' + str(int(round(latlims[1]))), transform=ax1.transAxes, ha='center')
     ax1.minorticks_on()
-    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-    ax1.tick_params(axis='both',which='major',length=axmajlen)
-    ax1.tick_params(axis='both',which='minor',length=axminlen)
-    ax1.tick_params(axis='both',which='both',width=axwidth)
+
     #ax1.axhline(y=0, linestyle='dashed', color='k', zorder=1)
     #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
+
+    ax_histx.text(0.5, 1.025, str(int(round(latlims[0]))) + r' < lat < ' + str(int(round(latlims[1]))), transform=ax_histx.transAxes, ha='center')
+    ax_histx.set_ylabel(r'N (FPS)')
+    ax_histy.set_xlabel(r'N (FPS)')
 
     symbol = 'o'
     symsz = 40
@@ -169,23 +173,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     vmin = 0.2
     vmax = 1.0
 
-    x = allv4g['J'] - allv4g['K']
-    y = allv4g['H']
-    ax1.scatter(x, y, marker=symbol, c='k', s=30, alpha=0.75, zorder=2, label='Plate')
-
-    binwidth = 0.02
-    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
-    lim = (int(xymax/binwidth) + 1) * binwidth
-    bins = np.arange(-lim, lim + binwidth, binwidth)
-    ax_histx.hist(x, bins=bins, color='k', zorder=2)
-
-    binwidth = 0.1
-    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
-    lim = (int(xymax/binwidth) + 1) * binwidth
-    bins = np.arange(-lim, lim + binwidth, binwidth)
-    #ax_histx.hist(x, bins=bins)
-    ax_histy.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2)
-
+    # FPS
     x = fpsdata['j_m'] - fpsdata['k_m']
     y = fpsdata['h_m']
     ax1.scatter(x, y, marker=symbol, c='r', s=3, alpha=0.75, zorder=1, label='FPS')
@@ -194,25 +182,44 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
-    ax_histx.hist(x, bins=bins, color='r', zorder=1)
+    ax_histx.hist(x, bins=bins, color='r', zorder=1, histtype='step')
 
     binwidth = 0.1
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
     #ax_histx.hist(x, bins=bins)
-    ax_histy.hist(y, bins=bins, orientation='horizontal', color='r', zorder=1)
+    ax_histy.hist(y, bins=bins, orientation='horizontal', color='r', zorder=1, histtype='step')
 
+    # Plate
+    x = alls4g['J'] - alls4g['K']
+    y = alls4g['H']
+    ax1.scatter(x, y, marker=symbol, c='k', s=10, alpha=0.75, zorder=2, label='Plate')
+
+    ax_histx1 = ax_histx.twinx()
+    ax_histy1 = ax_histy.twiny()
+    ax_histx1.yaxis.tick_right()
+    ax_histy1.xaxis.tick_top()
+    ax_histx1.minorticks_on()
+    ax_histy1.minorticks_on()
+    ax_histx1.yaxis.set_label_position("right")
+    ax_histx1.set_ylabel(r'N (Plate)')
+    ax_histy1.xaxis.set_label_position("top")
+    ax_histy1.set_xlabel(r'N (Plate)')
+
+    binwidth = 0.02
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    ax_histx1.hist(x, bins=bins, color='k', zorder=2, histtype='step')
+
+    binwidth = 0.1
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    ax_histy1.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2, histtype='step')
 
     ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, edgecolor='k', framealpha=1)
-
-
-    #ax1 = make_axes_locatable(ax1)
-    #cax1 = ax1_divider.append_axes("right", size="5%", pad="1%")
-    #cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
-    #cax1.minorticks_on()
-    ##cax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-    #ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
     fig.subplots_adjust(left=0.05, right=0.92, bottom=0.045, top=0.92, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
@@ -225,13 +232,35 @@ def skytests(mjd='59592'):
 
     apodir = os.environ.get('APOGEE_REDUX')+'/'
 
+    exp59569a = np.array([40070027,40070031,40070032,40070033,40070034])
+    exp59569b = np.array([40070028,40070035])
+    mjd59569a = np.array(['59569','59569','59569','59569','59569'])
+    mjd59569b = np.array(['59569','59569'])
+    
+    exp59570a = np.array([40080011,40080014,40080015,40080018,40080019,40080022,40080023])
+    exp59570b = np.array([40080012,40080013,40080016,40080017,40080020,40080021,40080024])
+    mjd59570a = np.array(['59570','59570','59570','59570','59570','59570','59570'])
+    mjd59570b = np.array(['59570','59570','59570','59570','59570','59570','59570'])
+
     exp59592a = np.array([40300046,40300050,40300052,40300056,40300058,40300062])
     exp59592b = np.array([40300047,40300049,40300053,40300055,40300059,40300061])
+    mjd59592a = np.array(['59592','59592','59592','59592','59592','59592'])
+    mjd59592b = np.array(['59592','59592','59592','59592','59592','59592'])
     nexp59592 = len(exp59592a)
 
+    exp = np.concatenate([exp59569a,exp59569b,exp59570a,exp59570b,exp59592a])#,exp59592b])
+    mjd = np.concatenate([mjd59569a,mjd59569b,mjd59570a,mjd59570b,mjd59592a])#,mjd59592b])
+    expord = np.argsort(exp)
+    exp = exp[expord]
+    mjd = mjd[expord]
+    nexp = len(exp)
+
     print('EXPOSURE  RA         DEC         MOONPHASE MOONDIST   MEDB      MEDG      MEDR')
-    for iexp in range(nexp59592):
-        onedfile = load.filename('1D', num=exp59592a[iexp], mjd=mjd, chips=True)
+    for iexp in range(nexp):
+        onedfile = load.filename('1D', num=exp[iexp], mjd=mjd[iexp], chips=True)
+        if os.path.exists(onedfile.replace('1D-','1D-c-')) == False:
+            print('ap1D not found for ' + str(exp[iexp]))
+            continue
         fileb = onedfile.replace('1D-','1D-c-')
         fileg = onedfile.replace('1D-','1D-b-')
         filer = onedfile.replace('1D-','1D-a-')
@@ -254,12 +283,11 @@ def skytests(mjd='59592'):
         fluxb = fits.getdata(fileb,1)
         fluxg = fits.getdata(fileg,1)
         fluxr = fits.getdata(filer,1)
-        medb = np.nanmedian(fluxb[:, 524:1524])
-        medg = np.nanmedian(fluxg[:, 524:1524])
-        medr = np.nanmedian(fluxr[:, 524:1524])
+        medb = np.nanmedian(fluxb[:, 424:1624])
+        medg = np.nanmedian(fluxg[:, 424:1624])
+        medr = np.nanmedian(fluxr[:, 424:1624])
 
-
-        p1 = str(exp59592a[iexp])
+        p1 = str(exp[iexp])
         p2 = str("%.5f" % round(ra,5))
         p3 = str("%.5f" % round(dec,5))
         p4 = str("%.3f" % round(moonphase,3))
