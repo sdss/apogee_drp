@@ -95,6 +95,11 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
     # Restrict to valid data with at least nchips*290 Gaussian fits
     gd, = np.where((flatTable['MJD'] > 0) & (np.sum(flatTable['GAUSS_NPEAKS'], axis=1) > 870))
     flatTable = flatTable[gd]
+    # separate into plates and FPS era
+    gdplates = np.where(flatTable['MJD']<59556)
+    flatTablePlates = flatTable[gdplates]
+    gdfps = np.where(flatTable['MJD']>=59556)
+    flatTableFPS = flatTable[gdfps]
     #if medianrad != 100: flatTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits')
 
     if ims is None:
@@ -126,17 +131,24 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
                               file2d.replace('2D-', '2D-b-'),
                               file2d.replace('2D-', '2D-c-')])
 
+        # Use plate-era flats for plate exposures and and FPS-era flats for FPS exposures
+        mjd = int(load.cmjd(ims[i]))
+        if mjd>=59556:
+            flatTable1 = flatTableFPS
+        else:
+            flatTable1 = flatTablePlates
+        
         # Run findBestFlatExposure on this exposure
-        flatnums[i], flatmjds[i], rms[i] = findBestFlatExposure(flatTable=flatTable, imtype=imtype, refpix=refpix, 
+        flatnums[i], flatmjds[i], rms[i] = findBestFlatExposure(flatTable=flatTable1, imtype=imtype, refpix=refpix, 
                                                                 twodfiles=twodfiles, medianrad=medianrad,
                                                                 minflux=minflux, highfluxfrac=highfluxfrac, silent=silent)
         # Print info about this exposure and the matching dome flat
-        pflat, = np.where(flatnums[i] == flatTable['PSFID'])
+        pflat, = np.where(flatnums[i] == flatTable1['PSFID'])
         psci, = np.where(ims[i] == expTable['NUM'])
         if len(psci) > 0:
             p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> ' + imtype + ' ' + str(int(round(flatnums[i]))) + ' (MJD ' + str(int(round(flatmjds[i]))) + '),  '
             #p2 = 'alt [' + str("%.3f" % round(expTable['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(flatTable['ALT'][pflat][0],3)) + '],  '
-            p3 = 'ln2level [' + str("%.3f" % round(expTable['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(flatTable['LN2LEVEL'][pflat][0],3)) + '],   '
+            p3 = 'ln2level [' + str("%.3f" % round(expTable['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(flatTable1['LN2LEVEL'][pflat][0],3)) + '],   '
             p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
             print(p1 + p3 + p4)
         else:
