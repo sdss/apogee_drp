@@ -283,9 +283,9 @@ def skytests(mjd='59592'):
         fluxb = fits.getdata(fileb,1)
         fluxg = fits.getdata(fileg,1)
         fluxr = fits.getdata(filer,1)
-        medb = np.nanmedian(fluxb[:, 524:1524])
-        medg = np.nanmedian(fluxg[:, 524:1524])
-        medr = np.nanmedian(fluxr[:, 524:1524])
+        medb = np.nanmedian(fluxb[:, 424:1624])
+        medg = np.nanmedian(fluxg[:, 424:1624])
+        medr = np.nanmedian(fluxr[:, 424:1624])
 
         p1 = str(exp[iexp])
         p2 = str("%.5f" % round(ra,5))
