@@ -134,7 +134,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     fontsize = 28;   fsz = fontsize * 0.75
     fig = plt.figure(figsize=(22,18))
     ax1 = plt.subplot2grid((1,1), (0,0))
-    #ax1.set_xlim(-150, 150)
+    ax1.set_xlim(-0.2,0.55)
     ax1.set_ylim(11.2, 6.5)
     #ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top', bbox=bboxpar, zorder=20)
     ax1.set_xlabel(r'J $-$ K')
