@@ -1816,7 +1816,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             bgcolor = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): bgcolor = '#D2B4DE'
             if objtype == 'SKY': bgcolor = '#D6EAF8'
-            if (objtype != 'SKY') & (objid != '') & (objid != '2M') & (objid != '2MNone'):
+            if objtype != 'SKY':
                 # DB query to get star and visit info
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 vcatlind, = np.where(fiber == vcatl['fiberid'])
@@ -1855,23 +1855,24 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
                 simbadlink = txt1 + txt2
 
-                # Get paths to apStar file and star html
-                healpix = apload.obj2healpix(objid)
-                healpixgroup = str(healpix // 1000)
-                healpix = str(healpix)
-
-                # Find the associated healpix html directories
                 apStarRelPath = None
-                starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-                starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
-                apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
-                if len(apStarCheck) > 0:
-                    # Find the newest apStar file
-                    apStarCheck.sort()
-                    apStarCheck = np.array(apStarCheck)
-                    apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = '../' + starRelPath + apStarNewest
+                if (objid != '') & (objid != '2M') & (objid != '2MNone'):
+                    # Get paths to apStar file and star html
+                    healpix = apload.obj2healpix(objid)
+                    healpixgroup = str(healpix // 1000)
+                    healpix = str(healpix)
+
+                    # Find the associated healpix html directories
+                    starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+                    starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                    starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
+                    apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                    if len(apStarCheck) > 0:
+                        # Find the newest apStar file
+                        apStarCheck.sort()
+                        apStarCheck = np.array(apStarCheck)
+                        apStarNewest = os.path.basename(apStarCheck[-1])
+                        apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
             if (objtype != 'SKY') & (objid != '') & (objid != '2M') & (objid != '2MNone'):
