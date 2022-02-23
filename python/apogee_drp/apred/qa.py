@@ -1943,7 +1943,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             else:
                 vishtml.write('<TD align ="center BGCOLOR="white">----\n')
 
-            if firstcarton != 'UNASSIGNED!!!'
+            if firstcarton != 'UNASSIGNED!!!':
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
             else:
                 vishtml.write('<TD align="center">')
