@@ -145,6 +145,8 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ax_histy = fig.add_axes(rect_histy, sharey=ax1)
     ax_histx.tick_params(axis="x", labelbottom=False)
     ax_histy.tick_params(axis="y", labelleft=False)
+    ax_histx.minorticks_on()
+    ax_histy.minorticks_on()
     ax_histx.set_xlim(-0.2, 0.55)
     ax_histy.set_ylim(11.2, 6.5)
     ax1.set_xlim(-0.2, 0.65)
@@ -197,10 +199,10 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
 
     ax_histx1 = ax_histx.twinx()
     ax_histy1 = ax_histy.twiny()
-
     ax_histx1.yaxis.tick_right()
     ax_histy1.xaxis.tick_top()
-
+    ax_histx1.minorticks_on()
+    ax_histy1.minorticks_on()
     ax_histx1.yaxis.set_label_position("right")
     ax_histx1.set_ylabel(r'N (Plate)')
     ax_histy1.xaxis.set_label_position("top")
