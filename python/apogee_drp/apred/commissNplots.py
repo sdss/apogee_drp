@@ -118,7 +118,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     # tellmagcolor.png
     # Check of the magnitude and color distribution of plate tellurics vs. FPS tellurics
 
-    plotfile = specdir5 + 'monitor/' + instrument + '/tellmagcolor.png'
+    plotfile = specdir5 + 'monitor/' + instrument + '/tellmagcolor_lat_'+str(latlims[0])+'-'+str(latlims[1])+'.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     fpsdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/ops_std_apogee-0.5.0.fits', 1)
