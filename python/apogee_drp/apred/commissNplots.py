@@ -138,9 +138,11 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     rect_histx = [left, bottom + height + spacing, width, 0.2]
     rect_histy = [left + width + spacing, bottom, 0.2, height]
 
-    fontsize = 28;   fsz = fontsize * 0.75
+    fontsize = 32;   fsz = fontsize * 0.75
     fig = plt.figure(figsize=(22,18))
     ax1 = fig.add_axes(rect_scatter)
+    ax_histx = fig.add_axes(rect_histx, sharex=ax1)
+    ax_histy = fig.add_axes(rect_histy, sharey=ax1)
     ax1.set_xlim(-0.2,0.55)
     ax1.set_ylim(11.2, 6.5)
     #ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top', bbox=bboxpar, zorder=20)
@@ -167,14 +169,25 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     y = allv4g['H']
     ax1.scatter(x, y, marker=symbol, c='k', s=30, alpha=0.75, zorder=2, label='Plate')
 
+    binwidth = 0.05
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    ax_histx.hist(x, bins=bins)
+
+    binwidth = 0.2
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    #ax_histx.hist(x, bins=bins)
+    ax_histy.hist(y, bins=bins, orientation='horizontal')
+
     x = fpsdata['j_m'] - fpsdata['k_m']
     y = fpsdata['h_m']
     ax1.scatter(x, y, marker=symbol, c='r', s=3, alpha=0.75, zorder=1, label='FPS')
 
     ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, edgecolor='k', framealpha=1)
 
-    ax_histx = fig.add_axes(rect_histx, sharex=ax1)
-    ax_histy = fig.add_axes(rect_histy, sharey=ax1)
 
     #ax1 = make_axes_locatable(ax1)
     #cax1 = ax1_divider.append_axes("right", size="5%", pad="1%")
