@@ -125,7 +125,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[0,10]):
     c_icrs = SkyCoord(ra=fpsdata['ra']*u.degree, dec=fpsdata['dec']*u.degree, frame='icrs')
     lon = c_icrs.galactic.l.deg
     lat = c_icrs.galactic.b.deg
-    g, = np.where((lat >=0) & (lat < 10))
+    g, = np.where((lat >= latlims[0]) & (lat <= latlims[1]))
 
     pdb.set_trace()
 
