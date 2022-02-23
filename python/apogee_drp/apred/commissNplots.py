@@ -178,14 +178,14 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
-    ax_histx.hist(x, bins=bins, color='r', zorder=1)
+    ax_histx.hist(x, bins=bins, color='r', zorder=1, histtype='step')
 
     binwidth = 0.1
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
     #ax_histx.hist(x, bins=bins)
-    ax_histy.hist(y, bins=bins, orientation='horizontal', color='r', zorder=1)
+    ax_histy.hist(y, bins=bins, orientation='horizontal', color='r', zorder=1, histtype='step')
 
     # Plate
     x = allv4g['J'] - allv4g['K']
@@ -206,14 +206,14 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
-    ax_histx1.hist(x, bins=bins, color='k', zorder=2)
+    ax_histx1.hist(x, bins=bins, color='k', zorder=2, histtype='step')
 
     binwidth = 0.1
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
     #ax_histx.hist(x, bins=bins)
-    ax_histy1.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2)
+    ax_histy1.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2, histtype='step')
 
 
 
