@@ -1843,10 +1843,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 # Handle case of unassigned or off target fibers 
                 if (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
                     bgcolor = 'Silver'
-                    firstcarton = 'OFF TARGET!!!<BR>' + firstcarton
+                    firstcarton = 'OFF TARGET!!!'
                     if jvcat['assigned'] == 0:
                         bgcolor = 'Gray'
-                        firstcarton = 'UNASSIGNED!!!<BR>' + firstcarton
+                        firstcarton = 'UNASSIGNED!!!'
 
                 # Create SIMBAD link
                 cra = str("%.5f" % round(jvcat['ra'], 5))
@@ -1943,7 +1943,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             else:
                 vishtml.write('<TD align ="center BGCOLOR="white">----\n')
 
-            vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
+            if firstcarton != 'UNASSIGNED!!!'
+                vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
+            else:
+                vishtml.write('<TD align="center">')
     vishtml.close()
 
     runtime = str("%.2f" % (time.time() - start_time))
