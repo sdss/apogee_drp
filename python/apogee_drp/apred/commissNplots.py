@@ -232,13 +232,23 @@ def skytests(mjd='59592'):
 
     apodir = os.environ.get('APOGEE_REDUX')+'/'
 
+    exp59569a = np.array([40070027,40070031,40070032,40070033,40070034])
+    exp59569b = np.array([40070028,40070035])
+    
+    exp59570a = np.array([40080011,40080014,40080015,40080018,40080019,40080022,40080023])
+    exp59570b = np.array([40080012,40080013,40080016,40080017,40080020,40080021,40080024])
+
     exp59592a = np.array([40300046,40300050,40300052,40300056,40300058,40300062])
     exp59592b = np.array([40300047,40300049,40300053,40300055,40300059,40300061])
     nexp59592 = len(exp59592a)
 
+    exp = np.concatenate([exp59569a,exp59569b,exp59570a,exp59570b,exp59592a,exp59592b])
+    exp.sort()
+    nexp = len(exp)
+
     print('EXPOSURE  RA         DEC         MOONPHASE MOONDIST   MEDB      MEDG      MEDR')
-    for iexp in range(nexp59592):
-        onedfile = load.filename('1D', num=exp59592a[iexp], mjd=mjd, chips=True)
+    for iexp in range(nexp):
+        onedfile = load.filename('1D', num=exp[iexp], mjd=mjd, chips=True)
         fileb = onedfile.replace('1D-','1D-c-')
         fileg = onedfile.replace('1D-','1D-b-')
         filer = onedfile.replace('1D-','1D-a-')
@@ -265,8 +275,7 @@ def skytests(mjd='59592'):
         medg = np.nanmedian(fluxg[:, 524:1524])
         medr = np.nanmedian(fluxr[:, 524:1524])
 
-
-        p1 = str(exp59592a[iexp])
+        p1 = str(exp[iexp])
         p2 = str("%.5f" % round(ra,5))
         p3 = str("%.5f" % round(dec,5))
         p4 = str("%.3f" % round(moonphase,3))
