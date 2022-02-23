@@ -248,8 +248,8 @@ def skytests(mjd='59592'):
     mjd59592b = np.array(['59592','59592','59592','59592','59592','59592'])
     nexp59592 = len(exp59592a)
 
-    exp = np.concatenate([exp59569a,exp59569b,exp59570a,exp59570b,exp59592a,exp59592b])
-    mjd = np.concatenate([mjd59569a,mjd59569b,mjd59570a,mjd59570b,mjd59592a,mjd59592b])
+    exp = np.concatenate([exp59569a,exp59569b,exp59570a,exp59570b,exp59592a])#,exp59592b])
+    mjd = np.concatenate([mjd59569a,mjd59569b,mjd59570a,mjd59570b,mjd59592a])#,mjd59592b])
     expord = np.argsort(exp)
     exp = exp[expord]
     mjd = mjd[expord]
