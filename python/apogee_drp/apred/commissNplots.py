@@ -154,7 +154,6 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ax1.set_ylabel(r'H')
     #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
     #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
-    ax1.text(0.5, 1.015, str(int(round(latlims[0]))) + r' < lat < ' + str(int(round(latlims[1]))), transform=ax1.transAxes, ha='center')
     ax1.minorticks_on()
     ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
     ax1.tick_params(axis='both',which='major',length=axmajlen)
@@ -162,6 +161,8 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ax1.tick_params(axis='both',which='both',width=axwidth)
     #ax1.axhline(y=0, linestyle='dashed', color='k', zorder=1)
     #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
+
+    ax_histx.text(0.5, 1.015, str(int(round(latlims[0]))) + r' < lat < ' + str(int(round(latlims[1]))), transform=ax_histx.transAxes, ha='center')
 
     symbol = 'o'
     symsz = 40
@@ -195,12 +196,8 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ax_histx1 = ax_histx.twinx()
     ax_histy1 = ax_histy.twiny()
 
-    #ax_histx1.tick_params(axis="x", labelbottom=False)
-    #ax_histy1.tick_params(axis="y", labelleft=False)
-
     ax_histx1.yaxis.tick_right()
     ax_histy1.xaxis.tick_top()
-    #ax_histy1.yaxis.set_label_position("right")
 
     binwidth = 0.02
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
@@ -212,22 +209,9 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
-    #ax_histx.hist(x, bins=bins)
     ax_histy1.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2, histtype='step')
 
-
-
-
-
     ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, edgecolor='k', framealpha=1)
-
-
-    #ax1 = make_axes_locatable(ax1)
-    #cax1 = ax1_divider.append_axes("right", size="5%", pad="1%")
-    #cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
-    #cax1.minorticks_on()
-    ##cax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-    #ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
     fig.subplots_adjust(left=0.05, right=0.92, bottom=0.045, top=0.92, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
