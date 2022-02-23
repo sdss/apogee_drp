@@ -131,9 +131,16 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     g, = np.where((bitmask.is_bit_set(allv4['APOGEE_TARGET2'],9)) & (allv4['GLAT'] >= latlims[0]) & (allv4['GLAT'] <= latlims[1]))
     allv4g = allv4[g]
 
+    left, width = 0.1, 0.65
+    bottom, height = 0.1, 0.65
+    spacing = 0.005
+    rect_scatter = [left, bottom, width, height]
+    rect_histx = [left, bottom + height + spacing, width, 0.2]
+    rect_histy = [left + width + spacing, bottom, 0.2, height]
+
     fontsize = 28;   fsz = fontsize * 0.75
     fig = plt.figure(figsize=(22,18))
-    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1 = fig.add_axes(rect_scatter)
     ax1.set_xlim(-0.2,0.55)
     ax1.set_ylim(11.2, 6.5)
     #ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top', bbox=bboxpar, zorder=20)
@@ -166,6 +173,9 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
 
     ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, edgecolor='k', framealpha=1)
 
+    ax_histx = fig.add_axes(rect_histx, sharex=ax1)
+    ax_histy = fig.add_axes(rect_histy, sharey=ax1)
+
     #ax1 = make_axes_locatable(ax1)
     #cax1 = ax1_divider.append_axes("right", size="5%", pad="1%")
     #cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
@@ -173,7 +183,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ##cax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
     #ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
-    fig.subplots_adjust(left=0.06, right=0.98, bottom=0.055, top=0.95, hspace=0.1, wspace=0.17)
+    #fig.subplots_adjust(left=0.06, right=0.98, bottom=0.055, top=0.95, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
     plt.close('all')
 
