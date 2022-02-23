@@ -1856,6 +1856,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 simbadlink = txt1 + txt2
 
                 apStarRelPath = None
+                starHTMLrelPath = None
                 if (objid != '') & (objid != '2M') & (objid != '2MNone'):
                     # Get paths to apStar file and star html
                     healpix = apload.obj2healpix(objid)
