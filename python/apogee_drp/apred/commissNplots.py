@@ -114,14 +114,19 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def tellmagcolor(allv4=None, allv5=None):
+def tellmagcolor(allv4=None, allv5=None, latlims=[0,10]):
     # tellmagcolor.png
     # Check of the magnitude and color distribution of plate tellurics vs. FPS tellurics
 
     plotfile = specdir5 + 'monitor/' + instrument + '/tellmagcolor.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
-    fpsdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/ops_std_apogee-0.5.0.fits')
+    fpsdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/ops_std_apogee-0.5.0.fits', 1)
+    c_icrs = SkyCoord(ra=fpsdata['ra']*u.degree, dec=fpsdata['dec']*u.degree, frame='icrs')
+    lon = c_icrs.galactic.l.deg
+    lat = c_icrs.galactic.b.deg
+    g, = np.where((lat >=0) & (lat < 10))
+
     pdb.set_trace()
 
 
