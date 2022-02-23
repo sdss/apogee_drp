@@ -125,7 +125,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     c_icrs = SkyCoord(ra=fpsdata['ra']*u.degree, dec=fpsdata['dec']*u.degree, frame='icrs')
     lon = c_icrs.galactic.l.deg
     lat = c_icrs.galactic.b.deg
-    g, = np.where((lat >= latlims[0]) & (lat <= latlims[1]))
+    g, = np.where((lat > latlims[0]) & (lat < latlims[1]))
     fpsdata = fpsdata[g]
 
     g, = np.where((bitmask.is_bit_set(allv4['APOGEE_TARGET2'],9)) & (allv4['GLAT'] >= latlims[0]) & (allv4['GLAT'] <= latlims[1]))
@@ -141,7 +141,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ax1.set_ylabel(r'H')
     #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
     #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
-    #ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
+    ax1.text(0.5, 1.03, str(int(round(latlims[0]))) + r' < lat < ' + str(int(round(latlims[1]))), transform=ax1.transAxes, ha='center')
     ax1.minorticks_on()
     ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
     ax1.tick_params(axis='both',which='major',length=axmajlen)
@@ -158,12 +158,13 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
 
     x = allv4g['J'] - allv4g['K']
     y = allv4g['H']
-    ax1.scatter(x, y, marker=symbol, c='k', s=15, alpha=0.75, zorder=2)
+    ax1.scatter(x, y, marker=symbol, c='k', s=15, alpha=0.75, zorder=2, label='Plate')
 
     x = fpsdata['j_m'] - fpsdata['k_m']
     y = fpsdata['h_m']
-    ax1.scatter(x, y, marker=symbol, c='r', s=3, alpha=0.75, zorder=1)
+    ax1.scatter(x, y, marker=symbol, c='r', s=3, alpha=0.75, zorder=1, label='FPS')
 
+    ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, edgecolor='k', framealpha=1)
 
     #ax1 = make_axes_locatable(ax1)
     #cax1 = ax1_divider.append_axes("right", size="5%", pad="1%")
@@ -172,7 +173,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ##cax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
     #ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
-    fig.subplots_adjust(left=0.07, right=0.935, bottom=0.05, top=0.98, hspace=0.1, wspace=0.17)
+    fig.subplots_adjust(left=0.07, right=0.98, bottom=0.05, top=0.95, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
     plt.close('all')
 
