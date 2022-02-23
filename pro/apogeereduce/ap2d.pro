@@ -102,7 +102,8 @@ FOR i=0L,nplanfiles-1 do begin
   ;; if (1) no PSFID set in planfile or PSFID=0, or (2) psflibrary parameter
   ;; set in planfile, or (3) /psflibrary keyword is set.
   if tag_exist(planstr,'psflibrary') eq 1 then planpsflibrary=planstr.psflibrary else planpsflibrary=0
-  if keyword_set(psflibrary) or planstr.psfid eq 0 or keyword_set(planpsflibrary) then begin
+  if keyword_set(psflibrary) or planstr.psfid eq 0 or keyword_set(planpsflibrary) then usepsflibrary=1 else usepsflibrary=0
+  if keyword_set(usepsflibrary) then begin
     print,'Using PSF Library'
     ;; You can do "domeflattrace --mjdplate" where mjdplate could be
     ;; e.g. 59223-9244, or "domeflattrace --planfile", with absolute
@@ -117,10 +118,10 @@ FOR i=0L,nplanfiles-1 do begin
     nout = n_elements(out)
     for f=0,nout-1 do print,out[f]
     ;; Parse the output
-    lo = where(stregex(out,'^DOME FLAT RESULTS:',/boolean) eq 1,nlo)
+    lo = where(stregex(out,'^PSF FLAT RESULTS:',/boolean) eq 1,nlo)
     hi = first_el(where(strtrim(out,2) eq '' and lindgen(nout) gt lo[0]))
     if lo eq -1 or hi eq -1 then begin
-      print,'Problem running domeflattrace for ',planfile,'.  Skipping this planfile.'
+      print,'Problem running psflibrary for ',planfile,'.  Skipping this planfile.'
       continue
     endif
     outarr = strsplitter(out[lo+1:hi-1],' ',/extract)
@@ -129,6 +130,7 @@ FOR i=0L,nplanfiles-1 do begin
     ;; Update planstr
     match,apexp.name,ims,ind1,ind2,/sort
     planstr.apexp[ind1].psfid = psfflatims[ind2]
+    planstr.psfid = psfflatims[0]
   endif else begin
     planstr.apexp.psfid = planstr.psfid
   endelse
@@ -144,7 +146,7 @@ FOR i=0L,nplanfiles-1 do begin
   ; apPSF files 
   if planstr.sparseid ne 0 then makecal,sparse=planstr.sparseid
   if planstr.fiberid ne 0 then makecal,fiber=planstr.fiberid
-  if tag_exist(planstr,'psfid') then begin
+  if planstr.psfid gt 0 and not keyword_set(usepsflibrary) then begin
     MAKECAL,psf=planstr.psfid,clobber=calclobber
     tracefiles = apogee_filename('PSF',num=planstr.psfid,chip=chiptag)
     tracefile = file_dirname(tracefiles[0])+'/'+string(format='(i8.8)',planstr.psfid)
