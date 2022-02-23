@@ -163,6 +163,8 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
 
     ax_histx.text(0.5, 1.025, str(int(round(latlims[0]))) + r' < lat < ' + str(int(round(latlims[1]))), transform=ax_histx.transAxes, ha='center')
+    ax_histx.set_ylabel(r'N (FPS)')
+    ax_histy.set_xlabel(r'N (FPS)')
 
     symbol = 'o'
     symsz = 40
@@ -198,6 +200,11 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
 
     ax_histx1.yaxis.tick_right()
     ax_histy1.xaxis.tick_top()
+
+    ax_histx1.yaxis.set_label_position("right")
+    ax_histx1.set_ylabel(r'N (Plate)')
+    ax_histy1.xaxis.set_label_position("top")
+    ax_histy1.set_ylabel(r'N (Plate)')
 
     binwidth = 0.02
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
