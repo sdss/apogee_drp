@@ -192,8 +192,8 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     y = allv4g['H']
     ax1.scatter(x, y, marker=symbol, c='k', s=30, alpha=0.75, zorder=2, label='Plate')
 
-    ax_histx1 = fig.add_axes(rect_histx, sharex=ax_histx)
-    ax_histy1 = fig.add_axes(rect_histy, sharey=ax_histy)
+    ax_histx1 = ax_histx.twinx()
+    ax_histy1 = ax_histy.twiny()
 
     #ax_histx1.tick_params(axis="x", labelbottom=False)
     #ax_histy1.tick_params(axis="y", labelleft=False)
@@ -206,14 +206,14 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
-    ax_histx.hist(x, bins=bins, color='k', zorder=2)
+    ax_histx1.hist(x, bins=bins, color='k', zorder=2)
 
     binwidth = 0.1
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
     #ax_histx.hist(x, bins=bins)
-    ax_histy.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2)
+    ax_histy1.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2)
 
 
 
