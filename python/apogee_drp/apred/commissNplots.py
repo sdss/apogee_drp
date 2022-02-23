@@ -114,6 +114,58 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
+def tellmagcolor(allv4=None, allv5=None):
+    # tellmagcolor.png
+    # Check of the magnitude and color distribution of plate tellurics vs. FPS tellurics
+
+    plotfile = specdir5 + 'monitor/' + instrument + '/tellmagcolor.png'
+    print("----> commissNplots: Making " + os.path.basename(plotfile))
+
+    fpsdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/ops_std_apogee-0.5.0.fits')
+    pdb.set_trace()
+
+
+    fig = plt.figure(figsize=(22,18))
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    #ax1.set_xlim(-150, 150)
+    #ax1.set_ylim(-2, 2)
+    #ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top', bbox=bboxpar, zorder=20)
+    ax1.set_xlabel(r'J $-$ K')
+    ax1.set_ylabel(r'H')
+    #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
+    #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
+    #ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
+    ax1.minorticks_on()
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
+    ax1.axhline(y=0, linestyle='dashed', color='k', zorder=1)
+    #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
+
+    symbol = 'o'
+    symsz = 40
+    cmap = 'rainbow'
+    vmin = 0.2
+    vmax = 1.0
+
+    #ax1.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
+
+
+    ax1 = make_axes_locatable(ax1)
+    cax1 = ax1_divider.append_axes("right", size="5%", pad="1%")
+    cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
+    cax1.minorticks_on()
+    #cax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+    ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
+
+    fig.subplots_adjust(left=0.07, right=0.935, bottom=0.05, top=0.98, hspace=0.1, wspace=0.17)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+    return
+
+###########################################################################################
 def skytests(mjd='59592'):
 
     apodir = os.environ.get('APOGEE_REDUX')+'/'
@@ -122,7 +174,7 @@ def skytests(mjd='59592'):
     exp59592b = np.array([40300047,40300049,40300053,40300055,40300059,40300061])
     nexp59592 = len(exp59592a)
 
-    print('EXPOSURE  RA         DEC         MOONPHASE  MOONDIST  MEDB      MEDG      MEDR')
+    print('EXPOSURE  RA         DEC         MOONPHASE MOONDIST   MEDB      MEDG      MEDR')
     for iexp in range(nexp59592):
         onedfile = load.filename('1D', num=exp59592a[iexp], mjd=mjd, chips=True)
         fileb = onedfile.replace('1D-','1D-c-')
