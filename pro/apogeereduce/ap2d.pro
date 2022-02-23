@@ -110,9 +110,9 @@ FOR i=0L,nplanfiles-1 do begin
     observatory = strlowcase(strmid(planstr.telescope,0,3))
     ;; Force single PSFID for all exposures of the visit if it's a short visit or psflibrary=='single'
     if strtrim(psflibrary,2) eq 'single' or strtrim(planpsflibrary,2) eq 'single' or n_elements(planstr.apexp) le 3 then begin
-      spawn,['domeflattrace',observatory,'--planfile',planfile,'--s'],out,errout,/noshell
+      spawn,['psflibrary',observatory,'--planfile',planfile,'--s'],out,errout,/noshell
     endif else begin
-      spawn,['domeflattrace',observatory,'--planfile',planfile],out,errout,/noshell
+      spawn,['psflibrary',observatory,'--planfile',planfile],out,errout,/noshell
     endelse
     nout = n_elements(out)
     for f=0,nout-1 do print,out[f]
