@@ -1875,7 +1875,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                         apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
-            if (objtype != 'SKY') & (objid != '') & (objid != '2M') & (objid != '2MNone'):
+            if objtype != 'SKY':
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD>' + objid + '\n')
