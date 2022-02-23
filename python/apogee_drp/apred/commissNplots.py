@@ -214,7 +214,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ##cax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
     #ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
-    fig.subplots_adjust(left=0.06, right=0.90, bottom=0.055, top=0.90, hspace=0.1, wspace=0.17)
+    fig.subplots_adjust(left=0.05, right=0.92, bottom=0.045, top=0.92, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
     plt.close('all')
 
