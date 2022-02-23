@@ -112,7 +112,6 @@ endif
 
 ;; Load the catalog
 if file_test(tempfile) eq 1 then catalogstr = MRDFITS(tempfile,1,/silent)
-
 FILE_DELETE,[tbase,tbase+'.fits',tbase+'.py'],/allow
 
 return,catalogstr
