@@ -114,7 +114,7 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def tellmagcolor(allv4=None, allv5=None, latlims=[0,10]):
+def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     # tellmagcolor.png
     # Check of the magnitude and color distribution of plate tellurics vs. FPS tellurics
 
@@ -126,14 +126,16 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[0,10]):
     lon = c_icrs.galactic.l.deg
     lat = c_icrs.galactic.b.deg
     g, = np.where((lat >= latlims[0]) & (lat <= latlims[1]))
+    fpsdata = fpsdata[g]
 
-    pdb.set_trace()
+    g, = np.where((bitmask.is_bit_set(allv4['APOGEE_TARGET2'],9)) & (allv4['GLAT'] >= latlims[0]) & (allv4['GLAT'] <= latlims[1]))
+    allv5g = allv4[g]
 
 
     fig = plt.figure(figsize=(22,18))
     ax1 = plt.subplot2grid((1,1), (0,0))
     #ax1.set_xlim(-150, 150)
-    #ax1.set_ylim(-2, 2)
+    ax1.set_ylim(11.5, 6.5)
     #ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top', bbox=bboxpar, zorder=20)
     ax1.set_xlabel(r'J $-$ K')
     ax1.set_ylabel(r'H')
@@ -145,7 +147,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[0,10]):
     ax1.tick_params(axis='both',which='major',length=axmajlen)
     ax1.tick_params(axis='both',which='minor',length=axminlen)
     ax1.tick_params(axis='both',which='both',width=axwidth)
-    ax1.axhline(y=0, linestyle='dashed', color='k', zorder=1)
+    #ax1.axhline(y=0, linestyle='dashed', color='k', zorder=1)
     #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
 
     symbol = 'o'
@@ -154,15 +156,21 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[0,10]):
     vmin = 0.2
     vmax = 1.0
 
-    #ax1.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
+    x = allv4g['J'] - allv4g['K']
+    y = allv4g['H']
+    ax1.scatter(x, y, marker=symbol, c='k', s=3, alpha=0.75, zorder=1)
+
+    x = fpsdata['j_m'] - fpsdata['k_m']
+    y = fpsdata['h_m']
+    ax1.scatter(x, y, marker=symbol, c='r', s=3, alpha=0.75, zorder=1)
 
 
-    ax1 = make_axes_locatable(ax1)
-    cax1 = ax1_divider.append_axes("right", size="5%", pad="1%")
-    cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
-    cax1.minorticks_on()
-    #cax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-    ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
+    #ax1 = make_axes_locatable(ax1)
+    #cax1 = ax1_divider.append_axes("right", size="5%", pad="1%")
+    #cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
+    #cax1.minorticks_on()
+    ##cax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+    #ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
     fig.subplots_adjust(left=0.07, right=0.935, bottom=0.05, top=0.98, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
