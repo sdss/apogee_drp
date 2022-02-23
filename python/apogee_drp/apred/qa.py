@@ -1889,7 +1889,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     vishtml.write('<BR>apStar file??\n')
                     vishtml.write('<BR>Star Summary Page??\n')
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(hmag,3)))
-                if (jmag > 0) & (kmag > 0):
+                if (jmag > 0) & (kmag > 0) & (jmag < 90) & (kmag < 90):
                     vishtml.write('<TD align ="center">' + str("%.3f" % round(jmag-kmag,3)))
                 else:
                     vishtml.write('<TD align ="center"><FONT COLOR="red">99.999</FONT>')
