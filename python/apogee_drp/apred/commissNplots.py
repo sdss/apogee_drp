@@ -173,6 +173,19 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     y = allv4g['H']
     ax1.scatter(x, y, marker=symbol, c='k', s=30, alpha=0.75, zorder=2, label='Plate')
 
+    binwidth = 0.02
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    ax_histx.hist(x, bins=bins, color='k', zorder=1)
+
+    binwidth = 0.1
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    #ax_histx.hist(x, bins=bins)
+    ax_histy.hist(y, bins=bins, orientation='horizontal', color='k', zorder=1)
+
     x = fpsdata['j_m'] - fpsdata['k_m']
     y = fpsdata['h_m']
     ax1.scatter(x, y, marker=symbol, c='r', s=3, alpha=0.75, zorder=1, label='FPS')
@@ -201,7 +214,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ##cax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
     #ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
-    #fig.subplots_adjust(left=0.06, right=0.98, bottom=0.055, top=0.95, hspace=0.1, wspace=0.17)
+    fig.subplots_adjust(left=0.06, right=0.90, bottom=0.055, top=0.90, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
     plt.close('all')
 
