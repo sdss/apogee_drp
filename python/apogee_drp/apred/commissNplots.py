@@ -191,7 +191,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     # Plate
     x = allv4g['J'] - allv4g['K']
     y = allv4g['H']
-    ax1.scatter(x, y, marker=symbol, c='k', s=30, alpha=0.75, zorder=2, label='Plate')
+    ax1.scatter(x, y, marker=symbol, c='k', s=20, alpha=0.75, zorder=2, label='Plate')
 
     ax_histx1 = ax_histx.twinx()
     ax_histy1 = ax_histy.twiny()
