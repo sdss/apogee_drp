@@ -1884,9 +1884,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<BR><A HREF=../' + visitfile + '>apVisit file</A>\n')
                 if apStarRelPath is not None:
                     vishtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
+                    vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
                 else:
                     vishtml.write('<BR>apStar file??\n')
-                vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
+                    vishtml.write('<BR>Star Summary Page??\n')
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(hmag,3)))
                 if (jmag > 0) & (kmag > 0):
                     vishtml.write('<TD align ="center">' + str("%.3f" % round(jmag-kmag,3)))
