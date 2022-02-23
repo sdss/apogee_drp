@@ -114,7 +114,7 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
+def tellmagcolor(alls4=None, alls5=None, latlims=[10,12]):
     # tellmagcolor.png
     # Check of the magnitude and color distribution of plate tellurics vs. FPS tellurics
 
@@ -128,8 +128,8 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     g, = np.where((lat > latlims[0]) & (lat < latlims[1]) & (fpsdata['selected'] == True))
     fpsdata = fpsdata[g]
 
-    g, = np.where((bitmask.is_bit_set(allv4['APOGEE_TARGET2'],9)) & (allv4['GLAT'] >= latlims[0]) & (allv4['GLAT'] <= latlims[1]))
-    allv4g = allv4[g]
+    g, = np.where((bitmask.is_bit_set(alls4['APOGEE_TARGET2'],9)) & (alls4['GLAT'] >= latlims[0]) & (alls4['GLAT'] <= latlims[1]))
+    alls4g = alls4[g]
 
     left, width = 0.1, 0.65
     bottom, height = 0.1, 0.65
@@ -192,8 +192,8 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ax_histy.hist(y, bins=bins, orientation='horizontal', color='r', zorder=1, histtype='step')
 
     # Plate
-    x = allv4g['J'] - allv4g['K']
-    y = allv4g['H']
+    x = alls4g['J'] - alls4g['K']
+    y = alls4g['H']
     ax1.scatter(x, y, marker=symbol, c='k', s=10, alpha=0.75, zorder=2, label='Plate')
 
     ax_histx1 = ax_histx.twinx()
