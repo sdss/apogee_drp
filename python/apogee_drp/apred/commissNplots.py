@@ -138,7 +138,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     rect_histx = [left, bottom + height + spacing, width, 0.2]
     rect_histy = [left + width + spacing, bottom, 0.2, height]
 
-    fontsize = 32;   fsz = fontsize * 0.75
+    fontsize = 36;   fsz = fontsize * 0.75
     fig = plt.figure(figsize=(22,18))
     ax1 = fig.add_axes(rect_scatter)
     ax_histx = fig.add_axes(rect_histx, sharex=ax1)
@@ -162,7 +162,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     #ax1.axhline(y=0, linestyle='dashed', color='k', zorder=1)
     #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
 
-    ax_histx.text(0.5, 1.015, str(int(round(latlims[0]))) + r' < lat < ' + str(int(round(latlims[1]))), transform=ax_histx.transAxes, ha='center')
+    ax_histx.text(0.5, 1.025, str(int(round(latlims[0]))) + r' < lat < ' + str(int(round(latlims[1]))), transform=ax_histx.transAxes, ha='center')
 
     symbol = 'o'
     symsz = 40
