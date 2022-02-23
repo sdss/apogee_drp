@@ -46,9 +46,9 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 #     (2) a single dome/quartz flat exposure number (if the "single" keyword is set)
 #
 ###################################################################################################
-def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146-15000',
-                         observatory='apo', medianrad=100, apred='daily', apred_exp=None,
-                         single=False, highfluxfrac=None, minflux=None, silent=True):
+def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=None, 
+                         mjdplate='59146-15000', observatory='apo', medianrad=100, apred='daily', 
+                         apred_exp=None, single=False, highfluxfrac=None, minflux=None, silent=True):
 
     start_time = time.time()
     #print("Finding best dome flats for plate " + plate + ", MJD " + mjd)
@@ -88,14 +88,14 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146
     mdir = apodir + 'monitor/'
 
     # Read in the dome flat lookup table and master exposure table
-    domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all.fits')
-    if domeFile is not None: domeTable = fits.getdata(mdir + domeFile)
+    flatTable = fits.getdata(mdir + instrument + imtype + 'Trace-all.fits')
+    if libFile is not None: flatTable = fits.getdata(mdir + libFile)
     expTable = fits.getdata(mdir + instrument + 'Exp.fits')
 
     # Restrict to valid data with at least nchips*290 Gaussian fits
-    gd, = np.where((domeTable['MJD'] > 0) & (np.sum(domeTable['GAUSS_NPEAKS'], axis=1) > 870))
-    domeTable = domeTable[gd]
-    #if medianrad != 100: domeTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits')
+    gd, = np.where((flatTable['MJD'] > 0) & (np.sum(flatTable['GAUSS_NPEAKS'], axis=1) > 870))
+    flatTable = flatTable[gd]
+    #if medianrad != 100: flatTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits')
 
     if ims is None:
         # Load planfile into structure.
@@ -115,9 +115,9 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146
 
     print(str(int(round(n_ims))) + " exposures\n")
 
-    dflatnums = np.empty(n_ims).astype(int)
-    dflatmjds = np.empty(n_ims).astype(int)
-    rms =       np.empty(n_ims)
+    flatnums = np.empty(n_ims).astype(int)
+    flatmjds = np.empty(n_ims).astype(int)
+    rms =      np.empty(n_ims)
 
     for i in range(n_ims):
         # Find the ap2D files for this exposure
@@ -127,55 +127,56 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146
                               file2d.replace('2D-', '2D-c-')])
 
         # Run findBestFlatExposure on this exposure
-        dflatnums[i], dflatmjds[i], rms[i] = findBestFlatExposure(domeTable=domeTable, refpix=refpix, twodfiles=twodfiles, medianrad=medianrad,
-                                                                  minflux=minflux, highfluxfrac=highfluxfrac, silent=silent)
+        flatnums[i], flatmjds[i], rms[i] = findBestFlatExposure(flatTable=flatTable, imtype=imtype, refpix=refpix, 
+                                                                twodfiles=twodfiles, medianrad=medianrad,
+                                                                minflux=minflux, highfluxfrac=highfluxfrac, silent=silent)
         # Print info about this exposure and the matching dome flat
-        pflat, = np.where(dflatnums[i] == domeTable['PSFID'])
+        pflat, = np.where(flatnums[i] == flatTable['PSFID'])
         psci, = np.where(ims[i] == expTable['NUM'])
         if len(psci) > 0:
-            p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
-            #p2 = 'alt [' + str("%.3f" % round(expTable['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['ALT'][pflat][0],3)) + '],  '
-            p3 = 'ln2level [' + str("%.3f" % round(expTable['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(domeTable['LN2LEVEL'][pflat][0],3)) + '],   '
+            p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> ' + imtype + ' ' + str(int(round(flatnums[i]))) + ' (MJD ' + str(int(round(flatmjds[i]))) + '),  '
+            #p2 = 'alt [' + str("%.3f" % round(expTable['ALT'][psci][0],3)) + ', ' + str("%.3f" % round(flatTable['ALT'][pflat][0],3)) + '],  '
+            p3 = 'ln2level [' + str("%.3f" % round(expTable['LN2LEVEL'][psci][0],3)) + ', ' + str("%.3f" % round(flatTable['LN2LEVEL'][pflat][0],3)) + '],   '
             p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
             print(p1 + p3 + p4)
         else:
-            p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> dflat ' + str(int(round(dflatnums[i]))) + ' (MJD ' + str(int(round(dflatmjds[i]))) + '),  '
+            p1 = '(' + str(i+1).rjust(2) + ') sci exposure ' + str(ims[i]) + ' ----> ' + imtype + ' ' + str(int(round(flatnums[i]))) + ' (MJD ' + str(int(round(flatmjds[i]))) + '),  '
             p4 = 'rms = ' + str("%.4f" % round(rms[i],4))
             print(p1 + p4)
 
     # Get the unique dome flat exposure numbers
-    uniqdflatnums = np.unique(dflatnums)
-    nflats = len(uniqdflatnums)
-    print('\n' + str(int(round(nflats))) + ' dome flats:')
+    uniqflatnums = np.unique(flatnums)
+    nflats = len(uniqflatnums)
+    print('\n' + str(int(round(nflats))) + ' ' + imtype)
 
     # Check on how many time each unique dome flat was selected
     nrepeats = np.empty(nflats)
     for i in range(nflats):
-        tmp, = np.where(uniqdflatnums[i] == dflatnums)
+        tmp, = np.where(uniqflatnums[i] == flatnums)
         nrepeats[i] = len(tmp)
-        print(str(int(round(uniqdflatnums[i]))) + ':  ' + str(int(round(nrepeats[i]))).rjust(2) + ' matches')
+        print(str(int(round(uniqflatnums[i]))) + ':  ' + str(int(round(nrepeats[i]))).rjust(2) + ' matches')
 
     # Option to retun a single dome flat rather than an array of them
     if single is True:
         maxrepeats = np.max(nrepeats)
         maxind, = np.where(nrepeats == maxrepeats)
-        uniqdflatnums = uniqdflatnums[maxind]
+        uniqflatnums = uniqflatnums[maxind]
         if len(maxind) == 1:
-            dflatnums = uniqdflatnums[0]
+            flatnums = uniqflatnums[0]
         else:
             # If more than one dome flat have maxrepeats, decide based on rms
-            urms = np.empty(len(uniqdflatnums))
-            for j in range(len(uniqdflatnums)):
-                gd, = np.where(uniqdflatnums[j] == dflatnums)
+            urms = np.empty(len(uniqflatnums))
+            for j in range(len(uniqflatnums)):
+                gd, = np.where(uniqflatnums[j] == flatnums)
                 urms[j] = np.sum(rms[gd])
             minrmsind, = np.where(urms == np.min(urms))
-            dflatnums = uniqdflatnums[minrmsind][0]
-        print("\nSingle keyword set: going with dflat " + str(dflatnums) + " for all exposures.")
+            flatnums = uniqflatnums[minrmsind][0]
+        print("\nSingle keyword set: going with " + imtype + " " + str(flatnums) + " for all exposures.")
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("\nDone in " + runtime + " seconds.")
 
-    return dflatnums,ims
+    return flatnums,ims
 
 
 ###################################################################################################
@@ -187,17 +188,18 @@ def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146
 # Output is the matched dome flat exposure number, MJD, and the r.m.s. of the match.
 #
 ###################################################################################################
-def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=100, minflux=None, highfluxfrac=None, silent=True):
+def findBestFlatExposure(flatTable=None, imtype=None, refpix=None, twodfiles=None, medianrad=100, 
+                         minflux=None, highfluxfrac=None, silent=True):
 
     chips = np.array(['a', 'b', 'c'])
     nchips = len(chips)
     nfibers = 300
-    ndomes = len(domeTable)
+    nflats = len(flatTable)
 
-    medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'], axis=2) * 2.354
+    medFWHM = np.nanmedian(flatTable['GAUSS_SIGMA'], axis=2) * 2.354
 
     # Loop over the chips
-    rms = np.full([nchips, ndomes], 50).astype(np.float64)
+    rms = np.full([nchips, nflats], 50).astype(np.float64)
     for ichip in range(nchips):
         # ap2D file for this chip
         twodfile = twodfiles[ichip]
@@ -226,10 +228,10 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
 	    # Find median gaussian FWHM and restrict lookup table to similar values
         #medFWHM = np.nanmedian(gpeaks['pars'][:, 2]) * 2.354
         #print('Median Science FWHM (chip ' + chips[ichip] + ') = ' + str("%.5f" % round(medFWHM,5)))
-        #medDomeFWHM = np.nanmedian(domeTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
-        #gd, = np.where(np.absolute(medFWHM - medDomeFWHM[:, ichip]) < 0.05)
-        domeTable1 = domeTable#[gd]
-        ndomes1 = len(domeTable1)
+        #medFWHM = np.nanmedian(flatTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
+        #gd, = np.where(np.absolute(medFWHM - medFWHM[:, ichip]) < 0.05)
+        flatTable1 = flatTable#[gd]
+        nflats1 = len(flatTable1)
 
         # Option to only use fibers with flux higher than average dome flat flux
         if highfluxfrac is not None:
@@ -253,14 +255,14 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
             ngpeaks = len(gpeaks)
             if silent is False: print("   Keeping " + str(ngpeaks) + " fibers with flux > " + str(minflux))
 
-        dcent = domeTable1['GAUSS_CENT'][:, ichip, gpeaks['num']]
-        for idome in range(ndomes1):
-            diff = np.absolute(dcent[idome] - gpeaks['pars'][:, 1])
+        dcent = flatTable1['GAUSS_CENT'][:, ichip, gpeaks['num']]
+        for iflat in range(nflats1):
+            diff = np.absolute(dcent[iflat] - gpeaks['pars'][:, 1])
             gd, = np.where(np.isnan(diff) == False)
             if len(gd) < 5: continue
             diff = diff[gd]
             ndiff = len(diff)
-            rms[ichip, idome] = np.sqrt(np.nansum(diff**2)/ndiff)
+            rms[ichip, iflat] = np.sqrt(np.nansum(diff**2)/ndiff)
         #if silent is False: print("   Final match based on " + str(ndiff) + " fibers:")
 
     rmsMean = np.nanmean(rms, axis=0)
@@ -268,11 +270,11 @@ def findBestFlatExposure(domeTable=None, refpix=None, twodfiles=None, medianrad=
     if silent is False: print("   rms:  " + str(rms[:, gd[0]]))
 
     gdrms = str("%.5f" % round(rmsMean[gd][0],5))
-    if silent is False: print("   Best dome flat for exposure " + str(expnum) + ": " + str(domeTable1['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
+    if silent is False: print("   Best " + imtype + " for exposure " + str(expnum) + ": " + str(flatTable1['PSFID'][gd][0]) + " (<rms> = " + str(gdrms) + ")")
 
-    #print(medDomeFWHM[gd][0])
+    #print(medFWHM[gd][0])
 
-    return domeTable1['PSFID'][gd][0], domeTable1['MJD'][gd][0], rmsMean[gd][0]
+    return flatTable1['PSFID'][gd][0], flatTable1['MJD'][gd][0], rmsMean[gd][0]
 
 
 ###################################################################################################
