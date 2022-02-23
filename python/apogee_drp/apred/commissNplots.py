@@ -131,17 +131,17 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     g, = np.where((bitmask.is_bit_set(allv4['APOGEE_TARGET2'],9)) & (allv4['GLAT'] >= latlims[0]) & (allv4['GLAT'] <= latlims[1]))
     allv4g = allv4[g]
 
-
+    fontsize = 28;   fsz = fontsize * 0.75
     fig = plt.figure(figsize=(22,18))
     ax1 = plt.subplot2grid((1,1), (0,0))
     #ax1.set_xlim(-150, 150)
-    ax1.set_ylim(11.5, 6.5)
+    ax1.set_ylim(11.2, 6.5)
     #ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top', bbox=bboxpar, zorder=20)
     ax1.set_xlabel(r'J $-$ K')
     ax1.set_ylabel(r'H')
     #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
     #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
-    ax1.text(0.5, 1.03, str(int(round(latlims[0]))) + r' < lat < ' + str(int(round(latlims[1]))), transform=ax1.transAxes, ha='center')
+    ax1.text(0.5, 1.015, str(int(round(latlims[0]))) + r' < lat < ' + str(int(round(latlims[1]))), transform=ax1.transAxes, ha='center')
     ax1.minorticks_on()
     ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
     ax1.tick_params(axis='both',which='major',length=axmajlen)
@@ -173,7 +173,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ##cax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
     #ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
-    fig.subplots_adjust(left=0.07, right=0.98, bottom=0.05, top=0.95, hspace=0.1, wspace=0.17)
+    fig.subplots_adjust(left=0.06, right=0.98, bottom=0.055, top=0.95, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
     plt.close('all')
 
