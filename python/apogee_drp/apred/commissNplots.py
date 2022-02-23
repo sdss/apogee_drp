@@ -169,23 +169,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     vmin = 0.2
     vmax = 1.0
 
-    x = allv4g['J'] - allv4g['K']
-    y = allv4g['H']
-    ax1.scatter(x, y, marker=symbol, c='k', s=30, alpha=0.75, zorder=2, label='Plate')
-
-    binwidth = 0.02
-    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
-    lim = (int(xymax/binwidth) + 1) * binwidth
-    bins = np.arange(-lim, lim + binwidth, binwidth)
-    ax_histx.hist(x, bins=bins, color='k', zorder=2)
-
-    binwidth = 0.1
-    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
-    lim = (int(xymax/binwidth) + 1) * binwidth
-    bins = np.arange(-lim, lim + binwidth, binwidth)
-    #ax_histx.hist(x, bins=bins)
-    ax_histy.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2)
-
+    # FPS
     x = fpsdata['j_m'] - fpsdata['k_m']
     y = fpsdata['h_m']
     ax1.scatter(x, y, marker=symbol, c='r', s=3, alpha=0.75, zorder=1, label='FPS')
@@ -202,6 +186,33 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     bins = np.arange(-lim, lim + binwidth, binwidth)
     #ax_histx.hist(x, bins=bins)
     ax_histy.hist(y, bins=bins, orientation='horizontal', color='r', zorder=1)
+
+    # Plate
+    x = allv4g['J'] - allv4g['K']
+    y = allv4g['H']
+    ax1.scatter(x, y, marker=symbol, c='k', s=30, alpha=0.75, zorder=2, label='Plate')
+
+    ax_histx1 = fig.add_axes(rect_histx, sharex=ax_histx)
+    ax_histy1 = fig.add_axes(rect_histy, sharey=ax_histy)
+
+    ax_histx1.tick_params(axis="x", labelbottom=False)
+    ax_histy1.tick_params(axis="y", labelleft=False)
+
+    binwidth = 0.02
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    ax_histx1.hist(x, bins=bins, color='k', zorder=2)
+
+    binwidth = 0.1
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    #ax_histx.hist(x, bins=bins)
+    ax_histy1.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2)
+
+
+
 
 
     ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, edgecolor='k', framealpha=1)
