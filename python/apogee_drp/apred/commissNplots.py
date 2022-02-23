@@ -133,7 +133,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
 
     left, width = 0.1, 0.65
     bottom, height = 0.1, 0.65
-    spacing = 0.005
+    spacing = 0.02
     rect_scatter = [left, bottom, width, height]
     rect_histx = [left, bottom + height + spacing, width, 0.2]
     rect_histy = [left + width + spacing, bottom, 0.2, height]
@@ -147,7 +147,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ax_histy.tick_params(axis="y", labelleft=False)
     ax_histx.set_xlim(-0.2, 0.55)
     ax_histy.set_ylim(11.2, 6.5)
-    ax1.set_xlim(-0.2, 0.6)
+    ax1.set_xlim(-0.2, 0.65)
     ax1.set_ylim(11.1, 5.8)
     #ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top', bbox=bboxpar, zorder=20)
     ax1.set_xlabel(r'J $-$ K')
