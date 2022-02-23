@@ -128,7 +128,7 @@ def tellmagcolor(alls4=None, alls5=None, latlims=[10,12]):
     g, = np.where((lat > latlims[0]) & (lat < latlims[1]) & (fpsdata['selected'] == True))
     fpsdata = fpsdata[g]
 
-    g, = np.where((bitmask.is_bit_set(alls4['APOGEE_TARGET2'],9)) & (alls4['GLAT'] >= latlims[0]) & (alls4['GLAT'] <= latlims[1]))
+    g, = np.where(((bitmask.is_bit_set(alls4['APOGEE_TARGET2'],9)) | (bitmask.is_bit_set(alls4['APOGEE2_TARGET2'],9))) & (alls4['GLAT'] >= latlims[0]) & (alls4['GLAT'] <= latlims[1]))
     alls4g = alls4[g]
 
     left, width = 0.1, 0.65
