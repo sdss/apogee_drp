@@ -158,7 +158,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
 
     x = allv4g['J'] - allv4g['K']
     y = allv4g['H']
-    ax1.scatter(x, y, marker=symbol, c='k', s=15, alpha=0.75, zorder=2, label='Plate')
+    ax1.scatter(x, y, marker=symbol, c='k', s=30, alpha=0.75, zorder=2, label='Plate')
 
     x = fpsdata['j_m'] - fpsdata['k_m']
     y = fpsdata['h_m']
