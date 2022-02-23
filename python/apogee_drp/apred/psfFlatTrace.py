@@ -46,8 +46,9 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 #     (2) a single dome/quartz flat exposure number (if the "single" keyword is set)
 #
 ###################################################################################################
-def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146-15000', observatory='apo', medianrad=100,
-                         apred='daily', apred_exp=None, single=False, highfluxfrac=None, minflux=None, silent=True):
+def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146-15000',
+                         observatory='apo', medianrad=100, apred='daily', apred_exp=None,
+                         single=False, highfluxfrac=None, minflux=None, silent=True):
 
     start_time = time.time()
     #print("Finding best dome flats for plate " + plate + ", MJD " + mjd)

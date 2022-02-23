@@ -70,7 +70,7 @@ if __name__ == '__main__' :
         if mjdplate != '':
             mjd = mjdplate[0].split('-')[0]
             plate = mjdplate[0].split('-')[1]
-            load = apload.ApLoad(apred=apred, telescope=telescope)
+            lioad = apload.ApLoad(apred=apred, telescope=telescope)
             planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
             planstr = plan.load(planfile, np=True)
             gd, = np.where(planstr['APEXP']['flavor'] == 'object')
@@ -83,14 +83,14 @@ if __name__ == '__main__' :
                 ims = planstr['APEXP']['name'][gd]
 
     # Run the domeFlatTrace code
-    dflatnums,ims = psfFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims, single=single)
+    psfflatnums,ims = psfFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims, single=single)
     print('\nPSF FLAT RESULTS:')
     for i in range(len(ims)): 
         if single == False: 
-            df = dflatnums[i]
+            psfid = psfflatnums[i]
         else:
-            df = dflatnums
-        print(str(ims[i]) + '   ' + str(df))
+            psfid = psfflatnums
+        print(str(ims[i]) + '   ' + str(psfid))
     print('\n')
 
     now = datetime.datetime.now()
