@@ -175,14 +175,14 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
-    ax_histx.hist(x, bins=bins)
+    ax_histx.hist(x, bins=bins, color='r')
 
     binwidth = 0.1
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
     #ax_histx.hist(x, bins=bins)
-    ax_histy.hist(y, bins=bins, orientation='horizontal')
+    ax_histy.hist(y, bins=bins, orientation='horizontal', color='r')
 
     x = fpsdata['j_m'] - fpsdata['k_m']
     y = fpsdata['h_m']
