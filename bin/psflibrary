@@ -24,7 +24,7 @@ import numpy as np
 from astropy.table import Table,Column
 import logging
 
-from apogee_drp.apred import domeFlatTrace
+from apogee_drp.apred import psfFlatTrace
 from apogee_drp.utils import plan,apload
 from dlnpyutils import utils as dln
 
