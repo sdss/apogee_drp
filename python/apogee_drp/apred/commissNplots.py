@@ -148,7 +148,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ax_histx.set_xlim(-0.2, 0.55)
     ax_histy.set_ylim(11.2, 6.5)
     ax1.set_xlim(-0.2, 0.6)
-    ax1.set_ylim(11.1, 6.)
+    ax1.set_ylim(11.1, 5.8)
     #ax1.text(0.05, 0.95, r'$V_{\rm helio}$ (km$\,s^{-1}$)', transform=ax1.transAxes, va='top', bbox=bboxpar, zorder=20)
     ax1.set_xlabel(r'J $-$ K')
     ax1.set_ylabel(r'H')
@@ -191,7 +191,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     # Plate
     x = allv4g['J'] - allv4g['K']
     y = allv4g['H']
-    ax1.scatter(x, y, marker=symbol, c='k', s=20, alpha=0.75, zorder=2, label='Plate')
+    ax1.scatter(x, y, marker=symbol, c='k', s=10, alpha=0.75, zorder=2, label='Plate')
 
     ax_histx1 = ax_histx.twinx()
     ax_histy1 = ax_histy.twiny()
