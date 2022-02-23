@@ -173,7 +173,11 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     y = allv4g['H']
     ax1.scatter(x, y, marker=symbol, c='k', s=30, alpha=0.75, zorder=2, label='Plate')
 
-    binwidth = 0.01
+    x = fpsdata['j_m'] - fpsdata['k_m']
+    y = fpsdata['h_m']
+    ax1.scatter(x, y, marker=symbol, c='r', s=3, alpha=0.75, zorder=1, label='FPS')
+
+    binwidth = 0.02
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
@@ -186,9 +190,6 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     #ax_histx.hist(x, bins=bins)
     ax_histy.hist(y, bins=bins, orientation='horizontal', color='r', zorder=1)
 
-    x = fpsdata['j_m'] - fpsdata['k_m']
-    y = fpsdata['h_m']
-    ax1.scatter(x, y, marker=symbol, c='r', s=3, alpha=0.75, zorder=1, label='FPS')
 
     ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, markerscale=3, edgecolor='k', framealpha=1)
 
