@@ -169,13 +169,13 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     y = allv4g['H']
     ax1.scatter(x, y, marker=symbol, c='k', s=30, alpha=0.75, zorder=2, label='Plate')
 
-    binwidth = 0.05
+    binwidth = 0.01
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
     ax_histx.hist(x, bins=bins)
 
-    binwidth = 0.2
+    binwidth = 0.1
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
