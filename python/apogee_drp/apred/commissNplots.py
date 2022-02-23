@@ -205,7 +205,7 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ax_histx1.yaxis.set_label_position("right")
     ax_histx1.set_ylabel(r'N (Plate)')
     ax_histy1.xaxis.set_label_position("top")
-    ax_histy1.set_ylabel(r'N (Plate)')
+    ax_histy1.set_xlabel(r'N (Plate)')
 
     binwidth = 0.02
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
