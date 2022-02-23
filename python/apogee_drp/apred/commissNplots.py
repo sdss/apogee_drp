@@ -195,21 +195,25 @@ def tellmagcolor(allv4=None, allv5=None, latlims=[10,12]):
     ax_histx1 = fig.add_axes(rect_histx, sharex=ax_histx)
     ax_histy1 = fig.add_axes(rect_histy, sharey=ax_histy)
 
-    ax_histx1.tick_params(axis="x", labelbottom=False)
-    ax_histy1.tick_params(axis="y", labelleft=False)
+    #ax_histx1.tick_params(axis="x", labelbottom=False)
+    #ax_histy1.tick_params(axis="y", labelleft=False)
+
+    ax_histx1.yaxis.tick_right()
+    ax_histy1.xaxis.tick_top()
+    #ax_histy1.yaxis.set_label_position("right")
 
     binwidth = 0.02
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
-    ax_histx1.hist(x, bins=bins, color='k', zorder=2)
+    ax_histx.hist(x, bins=bins, color='k', zorder=2)
 
     binwidth = 0.1
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
     bins = np.arange(-lim, lim + binwidth, binwidth)
     #ax_histx.hist(x, bins=bins)
-    ax_histy1.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2)
+    ax_histy.hist(y, bins=bins, orientation='horizontal', color='k', zorder=2)
 
 
 
