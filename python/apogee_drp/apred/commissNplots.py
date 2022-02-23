@@ -257,7 +257,7 @@ def skytests(mjd='59592'):
 
     print('EXPOSURE  RA         DEC         MOONPHASE MOONDIST   MEDB      MEDG      MEDR')
     for iexp in range(nexp):
-        onedfile = load.filename('1D', num=exp[iexp], mjd=mjd[i], chips=True)
+        onedfile = load.filename('1D', num=exp[iexp], mjd=mjd[iexp], chips=True)
         fileb = onedfile.replace('1D-','1D-c-')
         fileg = onedfile.replace('1D-','1D-b-')
         filer = onedfile.replace('1D-','1D-a-')
