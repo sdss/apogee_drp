@@ -33,7 +33,7 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 
 
 ###################################################################################################
-# Program for matching a sequence of exposures to the dome flat lookup table.
+# Program for matching a sequence of exposures to the PSF flat lookup table.
 # Calls "findBestFlatExposure" to do the matching.
 #
 # Inputs can be:
@@ -42,8 +42,8 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 #     (3) a plate + MJD pair
 #
 # Output can be:
-#     (1) an array of dome flat exposure numbers, one per input exposure number (default)
-#     (2) a single dome flat exposure number (if the "single" keyword is set)
+#     (1) an array of dome/quartz flat exposure numbers, one per input exposure number (default)
+#     (2) a single dome/quartz flat exposure number (if the "single" keyword is set)
 #
 ###################################################################################################
 def findBestFlatSequence(ims=None, domeFile=None, planfile=None, mjdplate='59146-15000', observatory='apo', medianrad=100,

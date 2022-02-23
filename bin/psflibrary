@@ -3,7 +3,7 @@
 #
 # @Author: David Nidever, Drew Chojnowski
 # @Date: July 2021
-# @Filename: domeflattrace
+# @Filename: psflibrary
 # @License: BSD 3-Clause
 # @Copyright: David Nidever, Drew Chojnowski
 
@@ -32,7 +32,7 @@ if __name__ == '__main__' :
 
     parser = argparse.ArgumentParser(
         prog=os.path.basename(sys.argv[0]),
-        description='Run domeFlatTrace')
+        description='Get best PSF flat from PSF Library')
 
     single = False
     parser.add_argument('observatory', type=str, nargs=1, help='APOGEE observatory (apo or lco)')
@@ -83,8 +83,8 @@ if __name__ == '__main__' :
                 ims = planstr['APEXP']['name'][gd]
 
     # Run the domeFlatTrace code
-    dflatnums,ims = domeFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims, single=single)
-    print('\nDOME FLAT RESULTS:')
+    dflatnums,ims = psfFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims, single=single)
+    print('\nPSF FLAT RESULTS:')
     for i in range(len(ims)): 
         if single == False: 
             df = dflatnums[i]

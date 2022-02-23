@@ -12,9 +12,9 @@
 ;  /verbose      Print a lot of information to the screen
 ;  /clobber      Overwrite existing files (ap1D).
 ;  /calclobber   Overwrite existing daily calibration files (apPSF, apFlux).
-;  /domelibrary  Use the domeflat library.
+;  /psflibrary   Use the domeflat/quartzflat PSF library.
 ;  /stp          Stop at the end of the prrogram
-;  /unlock      Delete lock file and start fresh
+;  /unlock       Delete lock file and start fresh
 ;
 ; OUTPUTS:
 ;  1D extracted spectra are output.  One file for each frame.
@@ -27,7 +27,7 @@
 ;-
 
 pro ap2d,planfiles,verbose=verbose,stp=stp,clobber=clobber,exttype=exttype,mapper_data=mapper_data,$
-         calclobber=calclobber,domelibrary=domelibrary,unlock=unlock
+         calclobber=calclobber,psflibrary=psflibrary,unlock=unlock
 
 common savedepsf, savedepsffiles, epsfchip
 
@@ -41,7 +41,7 @@ if not keyword_set(calclobber) then calclobber=0  ; NOT calclobber by default,
 ; clobber will redo 1D frames
 if not keyword_set(clobber) then clobber=0  ; NOT clobber by default,
 if not keyword_set(exttype) then exttype=4
-if n_elements(domelibrary) eq 0 then domelibrary=0
+if n_elements(psflibrary) eq 0 then psflibrary=0
 
 t0 = systime(1)
 
@@ -97,19 +97,19 @@ FOR i=0L,nplanfiles-1 do begin
     undefine,old,oldtags
   endif
 
-  ;; Use domeflat library
-  ;;---------------------
-  ;; if (1) no domeflat ID set in planfile, or (2) domelibrary parameter
-  ;; set in planfile, or (3) /domelibrary keyword is set.
-  if tag_exist(planstr,'domelibrary') eq 1 then plandomelibrary=planstr.domelibrary else plandomelibrary=0
-  if keyword_set(domelibrary) or tag_exist(planstr,'psfid') eq 0 or keyword_set(plandomelibrary) then begin
-    print,'Using domeflat library'
+  ;; Use domeflat/quartzflat PSF library
+  ;;------------------------------------
+  ;; if (1) no PSFID set in planfile or PSFID=0, or (2) psflibrary parameter
+  ;; set in planfile, or (3) /psflibrary keyword is set.
+  if tag_exist(planstr,'psflibrary') eq 1 then planpsflibrary=planstr.psflibrary else planpsflibrary=0
+  if keyword_set(psflibrary) or planstr.psfid eq 0 or keyword_set(planpsflibrary) then begin
+    print,'Using PSF Library'
     ;; You can do "domeflattrace --mjdplate" where mjdplate could be
     ;; e.g. 59223-9244, or "domeflattrace --planfile", with absolute
     ;; path of planfile
-    ;; Force single domeflat if a short visit or domelibrary=='single'
-    if planstr.telescope eq 'apo25m' or planstr.telescope eq 'apo1m' then observatory='apo' else observatory='lco'
-    if strtrim(domelibrary,2) eq 'single' or strtrim(plandomelibrary,2) eq 'single' or n_elements(planstr.apexp) le 3 then begin
+    observatory = strlowcase(strmid(planstr.telescope,0,3))
+    ;; Force single PSFID for all exposures of the visit if it's a short visit or psflibrary=='single'
+    if strtrim(psflibrary,2) eq 'single' or strtrim(planpsflibrary,2) eq 'single' or n_elements(planstr.apexp) le 3 then begin
       spawn,['domeflattrace',observatory,'--planfile',planfile,'--s'],out,errout,/noshell
     endif else begin
       spawn,['domeflattrace',observatory,'--planfile',planfile],out,errout,/noshell
@@ -125,10 +125,10 @@ FOR i=0L,nplanfiles-1 do begin
     endif
     outarr = strsplitter(out[lo+1:hi-1],' ',/extract)
     ims = reform(outarr[0,*])
-    domeflatims = reform(outarr[1,*])
+    psfflatims = reform(outarr[1,*])
     ;; Update planstr
     match,apexp.name,ims,ind1,ind2,/sort
-    planstr.apexp[ind1].psfid = domeflatims[ind2]
+    planstr.apexp[ind1].psfid = psfflatims[ind2]
   endif else begin
     planstr.apexp.psfid = planstr.psfid
   endelse
