@@ -135,13 +135,14 @@ if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
 tmp = create_struct('fiberid',-1, 'ra',999999.d0, 'dec',999999.d0, 'eta',999999.d0, 'zeta',999999.d0, 'objtype','none', $
                     'holetype','OBJECT', 'object','', 'assigned',0, 'on_target',0, 'valid',0, 'tmass_style','', 'target1',0L, 'target2',0L,$
                     'target3',0L, 'target4',0L, 'spectrographid',2, 'mag',fltarr(5), catalog_info_blank(),$
-                    'catalogid',-1LL, 'gaia_g',-9999.99, 'gaia_bp',-9999.99, 'gaia_rp',-9999.99, 'sdssv_apogee_target0',0LL,$
-                    'firstcarton','', 'gaiadr2_sourceid','', 'gaiadr2_ra',-9999.99d0, 'gaiadr2_dec',-9999.99d0,$
+                    'catalogid',-1LL, 'sdssv_apogee_target0',0LL, 'firstcarton','', 'cadence','','program','','category','',$
+                    'gaia_g',-9999.99, 'gaia_bp',-9999.99, 'gaia_rp',-9999.99,$
+                    'gaiadr2_sourceid','', 'gaiadr2_ra',-9999.99d0, 'gaiadr2_dec',-9999.99d0,$
                     'gaiadr2_plx',-9999.99, 'gaiadr2_plx_error',-9999.99, 'gaiadr2_pmra',-9999.99,$
                     'gaiadr2_pmra_error',-9999.99, 'gaiadr2_pmdec',-9999.99, 'gaiadr2_pmdec_error',-9999.99, 'gaiadr2_gmag',-9999.99,$
                     'gaiadr2_gerr',-9999.99, 'gaiadr2_bpmag',-9999.99, 'gaiadr2_bperr',-9999.99, 'gaiadr2_rpmag',-9999.99,$
                     'gaiadr2_rperr',-9999.99)
-tmp.mag = 99.99 ;; default to faint magnitudes
+tmp.mag = 99.99  ;; default to faint magnitudes
 tmp.jmag = 99.99 ;; default to faint magnitudes
 tmp.hmag = 99.99 ;; default to faint magnitudes
 tmp.kmag = 99.99 ;; default to faint magnitudes
@@ -532,8 +533,10 @@ for i=0,299 do begin
               fiber[i].herr = p[match].e_hmag
               fiber[i].kmag = p[match].kmag
               fiber[i].kerr = p[match].e_kmag
-              ;;fiber[i].sdssv_apogee_target0 = p[match].sdssv_apogee_target0
-              fiber[i].firstcarton = p[match].carton
+              fiber[i].firstcarton = plugmap.fiberdata[m].firstcarton
+              fiber[i].cadence = plugmap.fiberdata[m].cadence
+              fiber[i].program = plugmap.fiberdata[m].program
+              fiber[i].category = plugmap.fiberdata[m].category
               fiber[i].pmra = p[match].pmra
               fiber[i].pmdec = p[match].pmdec
               fiber[i].gaiadr2_sourceid = p[match].gaiadr2_sourceid

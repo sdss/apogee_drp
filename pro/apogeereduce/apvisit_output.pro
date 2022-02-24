@@ -65,6 +65,9 @@ platemjd5 = strtrim(plate,2)+'-'+strtrim(mjd,2)
 locid = plugmap.locationid
 field = strtrim(plugmap.field,2)
 
+;; FPS
+if plugmap.mjd ge 59556 then fps=1 else fps=0
+
 sz = size(frame.chipa.flux)
 npix = sz[1]
 nfibers = sz[2]
@@ -492,6 +495,18 @@ For i=0,nfibers-1 do begin
     sxaddpar,header,'G2RPMAG',plugmap.fiberdata[iplugind].gaiadr2_rpmag,' Gaia DR2 Bp magnitude'
     sxaddpar,header,'HPLUS',hplus,' Delta H (neigh-obj) mag of neighboring (+1) fiber'
     sxaddpar,header,'HMINUS',hminus,' Delta H (neigh-obj) mag of neighboring (-1) fiber'
+    ;; FPS data
+    if keyword_set(fps) then begin
+      sxaddpar,header,'ASSIGNED',plugmap.fiberdata[iplugind].assigned,' FPS target assigned'
+      sxaddpar,header,'ONTARGET',plugmap.fiberdata[iplugind].on_target,' FPS fiber on target'
+      sxaddpar,header,'VALID',plugmap.fiberdata[iplugind].valid,' Valid FPS target'
+      sxaddpar,header,'CATID',plugmap.fiberdata[iplugind].catalogid,' SDSS-V catalogID'
+      sxaddpar,header,'SVTARG0',plugmap.fiberdata[iplugind].sdssv_apogee_target0,' SDSS-V APG targeting bitmask'
+      sxaddpar,header,'CARTON1',plugmap.fiberdata[iplugind].firstcarton,' SDSS-V firstcarton'
+      sxaddpar,header,'CADENCE',plugmap.fiberdata[iplugind].cadence,' SDSS-V target cadence'
+      sxaddpar,header,'PROGRAM',plugmap.fiberdata[iplugind].program,' SDSS-V target program'
+      sxaddpar,header,'CATEGORY',plugmap.fiberdata[iplugind].category,' SDSS-V target category'
+    endif
 
     ; Start a FLAG for this object
     flag=0L
