@@ -183,7 +183,7 @@ def dillum59557(resid=False):
                 for idome in range(ndome):
                     dif = flux[idome] - meanflux
                     mycolor = cmap(idome)
-                    ax.plot(xarr, diff, color=mycolor)
+                    ax.plot(xarr, dif, color=mycolor)
 
             ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='top', color=chip, bbox=bboxpar)
