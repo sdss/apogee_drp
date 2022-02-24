@@ -472,21 +472,21 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
         outstr['TCPCORN'][i] =  hdr['TCPCORN']
         outstr['TCLDPHNG'][i] = hdr['TCLDPHNG']
 
-        # Loop over the chips
-        for ichip in range(nchips):
-            pix0 = np.array(refpix[chips[ichip]])
+        try:
+            # Loop over the chips
+            for ichip in range(nchips):
+                pix0 = np.array(refpix[chips[ichip]])
 
-            # Slight corrections to reference pixel values for older apo25m dome flats
-            pix0g = pix0
-            if telescope == 'apo25m':
-                if exp['MJD'][i] < 56530:
-                    if ichip == 0: pix0g = pix0g - 1
-                else:
-                    if ichip == 0: pix0g = pix0g - 0.88
-                    if ichip == 1: pix0g = pix0g - 0.78
-                    if ichip == 2: pix0g = pix0g - 0.74
+                # Slight corrections to reference pixel values for older apo25m dome flats
+                pix0g = pix0
+                if telescope == 'apo25m':
+                    if exp['MJD'][i] < 56530:
+                        if ichip == 0: pix0g = pix0g - 1
+                    else:
+                        if ichip == 0: pix0g = pix0g - 0.88
+                        if ichip == 1: pix0g = pix0g - 0.78
+                        if ichip == 2: pix0g = pix0g - 0.74
 
-            try:
                 # Initial gaussian fit
                 gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0g)
 
@@ -510,9 +510,9 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                 outstr['E_GAUSS_YOFFSET'][i, ichip, :] = gpeaks['perr'][:, 3]
                 outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
                 outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
-            except:
-                print(' problem with exposure ' + str(exp['NUM'][i]))
-                continue
+        except:
+            print(' problem with exposure ' + str(exp['NUM'][i]))
+            continue
 
     # Either append new results to master file, or create new master file
 
