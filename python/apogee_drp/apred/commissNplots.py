@@ -129,7 +129,7 @@ def dillum59557(resid=False):
         gdcal = allexp[dome][gd]
         ndome = len(gdcal)
 
-        mycmap = 'gnuplot_r'
+        mycmap = 'rainbow'
         cmap = cmaps.get_cmap(mycmap, ndome)
         sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
 
