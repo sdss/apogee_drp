@@ -482,7 +482,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                 else:
                     if ichip == 0: pix0 = pix0 - 2
 
-            pdb.set_trace()
+            #pdb.set_trace()
 
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
             #import pdb; pdb.set_trace()
@@ -501,6 +501,8 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             outstr['E_GAUSS_YOFFSET'][i, ichip, :] = gpeaks['perr'][:, 3]
             outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
             outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
+
+    pdb.set_trace()
 
     # Either append new results to master file, or create new master file
     if append:
