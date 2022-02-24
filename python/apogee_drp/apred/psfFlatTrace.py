@@ -325,7 +325,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
     # Read in the exposure summary file and restrict to either dome or quartz
     exp = fits.getdata(mdir + instrument + 'Exp.fits')
     gd, = np.where(exp['IMAGETYP'] == imtype)
-    gd, = np.where((exp['IMAGETYP'] == imtype) & (exp['NUM'] == 40110002))
+    #gd, = np.where((exp['IMAGETYP'] == imtype) & (exp['NUM'] == 40110002))
     exp = exp[gd]
 
     # Default option to append new values rather than remake the entire file
@@ -515,8 +515,6 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             continue
 
     # Either append new results to master file, or create new master file
-
-    pdb.set_trace()
 
     if append:
         vstack([Table(clib), Table(outstr)]).write(outfile, overwrite=True)
