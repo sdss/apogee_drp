@@ -148,7 +148,10 @@ def dillum59557(resid=False):
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
-            ax.set_ylabel(r'Median Flux')
+            if resid is False:
+                ax.set_ylabel(r'Median Flux')
+            else:
+                ax.set_ylabel(r'Residual Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
             if ichip == 0:
                 ax_divider = make_axes_locatable(ax)
@@ -180,10 +183,15 @@ def dillum59557(resid=False):
 
             if resid:
                 meanflux = np.nanmean(flux,axis=0)
+                dif = flux - meanflux
                 for idome in range(ndome):
-                    dif = flux[idome] - meanflux
                     mycolor = cmap(idome)
-                    ax.plot(xarr, dif, color=mycolor)
+                    ax.plot(xarr, dif[idome], color=mycolor)
+
+                medresid = np.nanmedian(np.absolute(dif[:,80:240]))
+                madresid = dln.mad(np.absolute(dif[:,80:240]))
+                txt = 'med = ' + str("%.3f" % round(medresid, 3)) + ',    MAD = ' + str("%.3f" % round(madresid, 3))
+                ax.text(0.5, 0.1, txt, transform=ax.transAxes, ha='center')
 
             ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='top', color=chip, bbox=bboxpar)
