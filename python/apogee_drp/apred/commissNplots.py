@@ -594,8 +594,8 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     symbol = 'o'
     symsz = 40
     cmap = 'rainbow_r'
-    vmin = 0.2
-    vmax = 1.0
+    vmin = 3500
+    vmax = 8000
 
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7000))
     x = gdata['VHELIO'][:,0][g]
