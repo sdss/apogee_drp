@@ -479,7 +479,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             if telescope == 'apo25m':
                 if exp['MJD'][i] < 56530:
                     if ichip == 0: pix0 = pix0 - 1
-                else:
+                #else:
                     #if ichip == 0: pix0 = pix0 - 2
                     #if ichip == 1: pix0 = pix0 - 0.38
                     #if ichip == 2: pix0 = pix0 - 0.4
