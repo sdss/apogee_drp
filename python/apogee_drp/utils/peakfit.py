@@ -101,13 +101,10 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     npixwide = int(np.maximum(np.ceil((2*sigma1)/dx), 5))
     xlo = int(np.round(cen0))-npixwide
     xhi = int(np.round(cen0))+npixwide+1
-    #xx = x[xlo:xhi]
-    #y = spec[xlo:xhi]
-    xx = x[xlo0:xhi0]
-    y = spec[xlo0:xhi0]
+    xx = x[xlo:xhi]
+    y = spec[xlo:xhi]
     if sigma is not None:
-        #yerr = sigma[xlo:xhi]
-        yerr = sigma[xlo0:xhi0]
+        yerr = sigma[xlo:xhi]
     else:
         yerr = y*0+1
 
