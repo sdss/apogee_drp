@@ -189,9 +189,9 @@ def dillum59557(resid=False):
                     ax.plot(xarr, dif[idome], color=mycolor)
 
                 medresid = np.nanmedian(np.absolute(dif[:,80:240]))
-                medresidpercent = (medresid / meanflux[80:240])*100
+                medresidpercent = (medresid / np.nanmedian(meanflux[80:240]))*100
                 madresid = dln.mad(np.absolute(dif[:,80:240]))
-                madresidpercent = (madresid / meanflux[80:240])*100
+                madresidpercent = (madresid / np.nanmedian(meanflux[80:240]))*100
                 txt1 = 'med = ' + str("%.3f" % round(medresid, 1)) + ' (' + str("%.3f" % round(medresidpercent, 1)) + '%)'
                 txt2 = 'MAD = ' + str("%.3f" % round(madresid, 2)) + ' (' + str("%.3f" % round(madresidpercent, 2)) + '%)'
                 ax.text(0.5, 0.1, txt1+',   '+txt2, transform=ax.transAxes, ha='center')
