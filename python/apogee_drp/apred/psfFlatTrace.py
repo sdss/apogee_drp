@@ -493,7 +493,6 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             bad, = np.where(np.isnan(cen0))
             cen0[bad] = pix0g[bad]
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=cen0)
-            #import pdb; pdb.set_trace()
 
             success, = np.where(gpeaks['success'] == True)
             print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
@@ -510,14 +509,8 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
             outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
-            print(gpeaks['pars'][:, 1])
-            pdb.set_trace()
-
     # Either append new results to master file, or create new master file
     if append:
-        #p1 = Table(clib)
-        #p2 = Table(outstr)
-        #newoutstr = vstack([Table(clib), Table(outstr)])
         vstack([Table(clib), Table(outstr)]).write(outfile, overwrite=True)
     else:
         Table(outstr).write(outfile, overwrite=True)
