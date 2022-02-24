@@ -179,7 +179,7 @@ def dillum59557(resid=False):
                     print('missing ' + os.path.basename(file1d))
 
             if resid:
-                meanflux = np.nanmean(flux,axis=1)
+                meanflux = np.nanmean(flux,axis=0)
                 for idome in range(ndome):
                     dif = flux[idome] - meanflux
                     mycolor = cmap(idome)
