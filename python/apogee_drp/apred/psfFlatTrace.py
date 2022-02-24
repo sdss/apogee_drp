@@ -478,10 +478,10 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             # Slight corrections to reference pixel values for older apo25m dome flats
             if telescope == 'apo25m':
                 if exp['MJD'][i] < 56530:
-                    if ichip == 0: 
-                        pix0 = pix0 - 1
-                    else:
-                        pix0 = pix0 - 2
+                    if ichip == 0: pix0 = pix0 - 1
+                else:
+                    if ichip == 0: pix0 = pix0 - 2
+
             pdb.set_trace()
 
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
