@@ -114,6 +114,106 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
+def dillum59557(resid=False):
+    ###########################################################################################
+    # dillum59557.png
+    # Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
+    plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
+    if resid is True: plotfile = plotfile.replace('.png', '_resid.png')
+    print("----> commissNplots: Making " + os.path.basename(plotfile))
+
+    fig = plt.figure(figsize=(30,22))
+    xarr = np.arange(0, 300, 1) + 1
+
+    gd, = np.where(allexp['MJD'][dome] == 59557)
+    gdcal = allexp[dome][gd]
+    ndome = len(gdcal)
+
+    mycmap = 'rainbow'
+    cmap = cmaps.get_cmap(mycmap, ndome)
+    sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
+
+    #pdb.set_trace()
+
+    for ichip in range(nchips):
+        chip = chips[ichip]
+        ax = plt.subplot2grid((nchips, 1), (ichip, 0))
+        ax.set_xlim(0, 301)
+        #ax.set_ylim(0, 27000)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+        if resid is False:
+            ax.set_ylabel(r'Median Flux')
+        else:
+            ax.set_ylabel(r'Residual Flux')
+        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+        if ichip == 0:
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("top", size="7%", pad="2%")
+            cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+            cax.xaxis.set_ticks_position("top")
+            #cax.minorticks_on()
+            cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+            cax.xaxis.set_label_position('top') 
+            cax.set_xlabel('Exposure')
+
+        flux = np.zeros((ndome, len(xarr)))
+        for idome in range(ndome):
+            chp = 'c'
+            if ichip == 1: chp = 'b'
+            if ichip == 2: chp = 'a'
+            file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
+            file1d = file1d.replace('1D-', '1D-' + chp + '-')
+            if os.path.exists(file1d):
+                oned = fits.getdata(file1d)
+                flux[idome] = np.nanmedian(oned, axis=1)[::-1]
+                mycolor = cmap(idome)
+                gd, = np.where(flux[idome] > 100)
+                if resid is False: 
+                    ax.plot(xarr[gd], flux[idome,gd], color=mycolor)
+            else:
+                print('missing ' + os.path.basename(file1d))
+
+        if resid:
+            meanflux = np.nanmean(flux,axis=0)
+            dif = flux - meanflux
+            for idome in range(ndome):
+                mycolor = cmap(idome)
+                ax.plot(xarr, dif[idome], color=mycolor)
+
+            medresid = np.nanmedian(np.absolute(dif[:,80:240]))
+            medresidpercent = (medresid / np.nanmedian(meanflux[80:240]))*100
+            madresid = dln.mad(np.absolute(dif[:,80:240]))
+            madresidpercent = (madresid / np.nanmedian(meanflux[80:240]))*100
+            txt1 = 'med = ' + str("%.3f" % round(medresid, 1)) + ' (' + str("%.3f" % round(medresidpercent, 1)) + '%)'
+            txt2 = 'MAD = ' + str("%.3f" % round(madresid, 2)) + ' (' + str("%.3f" % round(madresidpercent, 2)) + '%)'
+            ax.text(0.5, 0.07, txt1+',   '+txt2, transform=ax.transAxes, ha='center', color='r')
+            ax.axvline(80, c='r', linestyle='dashed')
+            ax.axvline(240, c='r', linestyle='dashed')
+            medresid = np.nanmedian(np.absolute(dif))
+            medresidpercent = (medresid / np.nanmedian(meanflux))*100
+            madresid = dln.mad(np.absolute(dif))
+            madresidpercent = (madresid / np.nanmedian(meanflux))*100
+            txt1 = 'med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
+            txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
+            ax.text(0.5, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='center')
+
+
+        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                ha='center', va='top', color=chip, bbox=bboxpar)
+
+    fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
 def tellmagcolor(alls4=None, alls5=None, latlims=[10,12]):
     # tellmagcolor.png
     # Check of the magnitude and color distribution of plate tellurics vs. FPS tellurics
@@ -224,6 +324,64 @@ def tellmagcolor(alls4=None, alls5=None, latlims=[10,12]):
     fig.subplots_adjust(left=0.05, right=0.92, bottom=0.045, top=0.92, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
     plt.close('all')
+
+    return
+
+###########################################################################################
+def apsky(mjdstart='59146'):
+
+    apodir = os.environ.get('APOGEE_REDUX')+'/'
+
+
+    exp = np.concatenate([exp59569a,exp59569b,exp59570a,exp59570b,exp59592a])#,exp59592b])
+    mjd = np.concatenate([mjd59569a,mjd59569b,mjd59570a,mjd59570b,mjd59592a])#,mjd59592b])
+    expord = np.argsort(exp)
+    exp = exp[expord]
+    mjd = mjd[expord]
+    nexp = len(exp)
+
+    print('EXPOSURE  RA         DEC         MOONPHASE MOONDIST   MEDB      MEDG      MEDR')
+    for iexp in range(nexp):
+        onedfile = load.filename('1D', num=exp[iexp], mjd=mjd[iexp], chips=True)
+        if os.path.exists(onedfile.replace('1D-','1D-c-')) == False:
+            print('ap1D not found for ' + str(exp[iexp]))
+            continue
+        fileb = onedfile.replace('1D-','1D-c-')
+        fileg = onedfile.replace('1D-','1D-b-')
+        filer = onedfile.replace('1D-','1D-a-')
+        hdr = fits.getheader(fileb)
+        ra = hdr['RADEG']
+        dec = hdr['DECDEG']
+        dateobs = hdr['DATE-OBS']
+        tt = Time(dateobs, format='fits')
+
+        # Get moon distance and phase.
+        moonpos = get_moon(tt)
+        moonra = moonpos.ra.deg
+        moondec = moonpos.dec.deg
+        c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
+        c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
+        sep = c1.separation(c2)
+        moondist = sep.deg
+        moonphase = moon_illumination(tt)
+
+        fluxb = fits.getdata(fileb,1)
+        fluxg = fits.getdata(fileg,1)
+        fluxr = fits.getdata(filer,1)
+        medb = np.nanmedian(fluxb[:, 424:1624])
+        medg = np.nanmedian(fluxg[:, 424:1624])
+        medr = np.nanmedian(fluxr[:, 424:1624])
+
+        p1 = str(exp[iexp])
+        p2 = str("%.5f" % round(ra,5))
+        p3 = str("%.5f" % round(dec,5))
+        p4 = str("%.3f" % round(moonphase,3))
+        p5 = str("%.3f" % round(moondist,3)).rjust(6)
+        p6 = str("%.3f" % round(medb,3)).rjust(7)
+        p7 = str("%.3f" % round(medg,3)).rjust(7)
+        p8 = str("%.3f" % round(medr,3)).rjust(7)
+        print(p1+'   '+p2+'   '+p3+'   '+p4+'     '+p5+'     '+p6+'   '+p7+'   '+p8)
+
 
     return
 
@@ -396,16 +554,16 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     gdata = fits.getdata(datafile)
 
     fig = plt.figure(figsize=(22,18))
-    ax1 = plt.subplot2grid((2,2), (0,0))
-    ax2 = plt.subplot2grid((2,2), (0,1))
-    ax3 = plt.subplot2grid((2,2), (1,0))
-    ax4 = plt.subplot2grid((2,2), (1,1))
+    ax1 = plt.subplot2grid((2,3), (0,0), colspan=3)
+    ax2 = plt.subplot2grid((2,3), (1,0))
+    ax3 = plt.subplot2grid((2,3), (1,1))
+    ax4 = plt.subplot2grid((2,3), (1,2))
     axes = [ax1,ax2,ax3,ax4]
     if restrict:
         ax1.set_xlim(-150, 150)
-        ax1.set_ylim(-2, 2)
+        ax1.set_ylim(-1.8, 1.8)
         ax2.set_xlim(3300, 6800)
-        ax2.set_ylim(-600, 600)
+        ax2.set_ylim(-650, 650)
         ax3.set_xlim(-0.1, 5.1)
         ax3.set_ylim(-1.4, 1.4)
         ax4.set_xlim(-1.5, 0.4)
@@ -416,9 +574,10 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     ax4.text(0.05, 0.95, r'RV [Fe/H] (dex)', transform=ax4.transAxes, va='top', bbox=bboxpar, zorder=20)
     #ax1.set_xlabel(r'DR17 ')
     ax1.set_ylabel(r'DR17 $-$ FPS')
+    ax2.set_xlabel(r'DR17')
     ax3.set_xlabel(r'DR17')
-    ax3.set_ylabel(r'DR17 $-$ FPS')
     ax4.set_xlabel(r'DR17')
+    ax2.set_ylabel(r'DR17 $-$ FPS')
     #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
     #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
     ax4.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
@@ -435,56 +594,61 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
 
     symbol = 'o'
     symsz = 40
-    cmap = 'rainbow'
-    vmin = 0.2
-    vmax = 1.0
+    cmap = 'rainbow_r'
+    vmin = 3500
+    vmax = 8000
 
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7000))
     x = gdata['VHELIO'][:,0][g]
     y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
+    c = gdata['TEFF'][:,0][g]
     ax1.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax1.transAxes, va='top', fontsize=fsz, bbox=bboxpar)
     ax1.text(0.05, 0.82, 'MAD: ' + str("%.3f" % round(dln.mad(np.absolute(y)), 3)), transform=ax1.transAxes, va='top', fontsize=fsz, bbox=bboxpar)
-    ax1.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
+    sc1 = ax1.scatter(x, y, marker=symbol, c=c, cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7000))
     x = gdata['TEFF'][:,0][g]# / 1000
     y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g])# / 1000
+    c = gdata['TEFF'][:,0][g]
     gg, = np.where(np.absolute(y) < 2000)
     x = x[gg]
     y = y[gg]
+    c = c[gg]
     ax2.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax2.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     ax2.text(0.05, 0.82, 'MAD: ' + str("%.3f" % round(dln.mad(np.absolute(y)), 3)), transform=ax2.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
-    sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['JMAG'][g][gg]-gdata['KMAG'][g][gg], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
+    sc2 = ax2.scatter(x, y, marker=symbol, c=c, cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7000))
     x = gdata['LOGG'][:,0][g]
     y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
+    c = gdata['TEFF'][:,0][g]
     ax3.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax3.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     ax3.text(0.05, 0.82, 'MAD: ' + str("%.3f" % round(dln.mad(np.absolute(y)), 3)), transform=ax3.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
-    ax3.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
+    ax3.scatter(x, y, marker=symbol, c=c, cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
     g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7000))
     x = gdata['FEH'][:,0][g]
     y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
+    c = gdata['TEFF'][:,0][g]
     ax4.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax4.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     ax4.text(0.05, 0.82, 'MAD: ' + str("%.3f" % round(dln.mad(np.absolute(y)), 3)), transform=ax4.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
-    sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['JMAG'][g]-gdata['KMAG'][g], cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
+    sc4 = ax4.scatter(x, y, marker=symbol, c=c, cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
 
-    ax2_divider = make_axes_locatable(ax2)
-    cax2 = ax2_divider.append_axes("right", size="5%", pad="1%")
-    cb2 = colorbar(sc2, cax=cax2, orientation="vertical")
-    cax2.minorticks_on()
+    ax1_divider = make_axes_locatable(ax1)
+    cax1 = ax1_divider.append_axes("right", size="2%", pad="1%")
+    cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
+    cax1.minorticks_on()
     #cax2.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-    ax2.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
+    ax1.text(1.1, 0.5, r'DR17 RV $T_{\rm eff}$ (K)',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
-    ax4_divider = make_axes_locatable(ax4)
-    cax4 = ax4_divider.append_axes("right", size="5%", pad="1%")
-    cb4 = colorbar(sc4, cax=cax4, orientation="vertical")
-    cax4.minorticks_on()
-    #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-    ax4.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
+    #ax4_divider = make_axes_locatable(ax4)
+    #cax4 = ax4_divider.append_axes("right", size="5%", pad="1%")
+    #cb4 = colorbar(sc4, cax=cax4, orientation="vertical")
+    #cax4.minorticks_on()
+    ##cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+    #ax4.text(1.16, 0.5, r'DR17 RV $T_{\rm eff}$ (K)',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
 
-    fig.subplots_adjust(left=0.07, right=0.935, bottom=0.05, top=0.98, hspace=0.1, wspace=0.17)
+    fig.subplots_adjust(left=0.07, right=0.92, bottom=0.05, top=0.98, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
     plt.close('all')
 
@@ -752,5 +916,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
         plt.close('all')
 
         return
+
+
 
 
