@@ -679,8 +679,9 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         val = caldata[c]
         if str(val).isdigit(): val=int(val)
         out[c+'id'] = val
-    # We use multiwaveid for waveid
+
     if ap3d==False:
+        # We use multiwaveid for waveid
         waveid = caldata['multiwave']
         if str(waveid).isdigit(): waveid=int(waveid)
         out['waveid'] = waveid
