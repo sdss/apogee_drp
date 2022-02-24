@@ -121,6 +121,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                          ('gaiadr2_pmra',float),('gaiadr2_pmra_error',float),('gaiadr2_pmdec',float),('gaiadr2_pmdec_error',float),
                          ('gaiadr2_gmag',float),('gaiadr2_gerr',float),('gaiadr2_bpmag',float),('gaiadr2_bperr',float),
                          ('gaiadr2_rpmag',float),('gaiadr2_rperr',float),('sdssv_apogee_target0',int),('firstcarton','U50'),
+                         ('cadence','U50'),('program','U50'),('category','U50'),
                          ('targflags','U132'),('nvisits',int),('ngoodvisits',int),('ngoodrvs',int),
                          ('starflag',np.uint64),('starflags','U132'),('andflag',np.uint64),('andflags','U132'),
                          ('vheliobary',float),('vscatter',float),('verr',float),('vmederr',float),('chisq',float),
@@ -882,6 +883,11 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
     # SDSS-V info
     apstar.header['CATID'] = (allvisit['catalogid'][0], 'SDSS-V catalog ID')
+    apstar.header['SVTARG0'] = (allvisit['sdssv_apogee_target0'][0], 'SDSS-V APG targeting bitmask')
+    apstar.header['CARTON1'] = (allvisit['firstcarton'][0], 'SDSS-V firstcarton')
+    apstar.header['CADENCE'] = (allvisit['cadence'][0], 'SDSS-V target cadence')
+    apstar.header['PROGRAM'] = (allvisit['program'][0], 'SDSS-V target program')
+    apstar.header['CATEGORY'] = (allvisit['category'][0], 'SDSS-V target category')    
     apstar.header['PLX'] = (allvisit['gaiadr2_plx'].max(), 'GaiaDR2 parallax')
     apstar.header['EPLX'] = (allvisit['gaiadr2_plx_error'].max(), 'GaiaDR2 parallax uncertainty')
     apstar.header['PMRA'] = (allvisit['gaiadr2_pmra'].max(), 'GaiaDR2 proper motion in RA')
@@ -1038,7 +1044,7 @@ def dbingest(startab,starvisits):
         starvisits['star_pk'] = starout['pk'][0]
         # Remove some unnecessary columns (duplicates what's in visit table)
         delcols = ['target_id','objtype','survey', 'field', 'programname', 'alt_id', 'location_id', 'glon','glat',
-                   'assigned','on_target','valid',
+                   'assigned','on_target','valid','cadence','program','category',
                    'jmag','jerr', 'herr', 'kmag', 'kerr', 'src_h','pmra', 'pmdec', 'pm_src','apogee_target1',
                    'apogee_target2', 'apogee_target3', 'apogee_target4','gaiadr2_sourceid',
                    'gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error','gaiadr2_pmdec',
