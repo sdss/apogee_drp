@@ -75,8 +75,8 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     dx = 1
     x = np.arange(len(spec))
     xwid = 5
-    xlo0 = np.maximum(pix0-xwid,0)
-    xhi0 = pix0+xwid+1
+    xlo0 = int(round(np.maximum(pix0-xwid,0)))
+    xhi0 = int(round(pix0+xwid+1))
     xx0 = x[xlo0:xhi0]
 
     # Get quantitative estimates of height, center, sigma
