@@ -480,14 +480,12 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                 if exp['MJD'][i] < 56530:
                     if ichip == 0: pix0 = pix0 - 1
                 else:
-                    if ichip == 0: pix0 = pix0 - 2
-                    if ichip == 1: pix0 = pix0 - 0.4
-                    if ichip == 2: pix0 = pix0 - 0.4
+                    #if ichip == 0: pix0 = pix0 - 2
+                    #if ichip == 1: pix0 = pix0 - 0.38
+                    #if ichip == 2: pix0 = pix0 - 0.4
 
             # Initial gaussian fit
             gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
-
-            pdb.set_trace()
 
             # Run again to avoid hitting boundaries
             cen0 = gpeaks0['pars'][:, 1]
@@ -511,7 +509,6 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
             outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
-            pdb.set_trace()
 
     # Either append new results to master file, or create new master file
     if append:
@@ -532,8 +529,8 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
 # Function for fitting Gaussians to trace positions of all 300 fibers
 ###################################################################################################
 def gaussFitAll(infile=None, medianrad=None, pix0=None):
-    flux = fits.open(infile)[1].data
-    error = fits.open(infile)[2].data
+    flux = fits.getdata(infile,1)
+    error = fits.getdata(infile,2)
     npix = flux.shape[0]
 
     totflux = np.nanmedian(flux[:, (npix//2) - medianrad:(npix//2) + medianrad], axis=1)
