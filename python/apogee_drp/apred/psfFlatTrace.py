@@ -481,9 +481,9 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                 if exp['MJD'][i] < 56530:
                     if ichip == 0: pix0g = pix0g - 1
                 else:
-                    if ichip == 0: pix0g = pix0g - 2
-                    if ichip == 1: pix0g = pix0g - 0.38
-                    if ichip == 2: pix0g = pix0g - 0.4
+                    if ichip == 0: pix0g = pix0g - 0.88
+                    if ichip == 1: pix0g = pix0g - 0.78
+                    if ichip == 2: pix0g = pix0g - 0.74
 
             # Initial gaussian fit
             gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0g)
@@ -510,6 +510,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
             outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
 
+            print(gpeaks['pars'][:, 1])
             pdb.set_trace()
 
     # Either append new results to master file, or create new master file
