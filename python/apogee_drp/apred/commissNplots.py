@@ -555,9 +555,9 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
 
     fig = plt.figure(figsize=(22,18))
     ax1 = plt.subplot2grid((1,3), (0,0), colspan=3)
-    ax2 = plt.subplot2grid((1,3), (1,1))
-    ax3 = plt.subplot2grid((1,3), (1,2))
-    ax4 = plt.subplot2grid((1,3), (1,3))
+    ax2 = plt.subplot2grid((1,3), (1,0))
+    ax3 = plt.subplot2grid((1,3), (1,1))
+    ax4 = plt.subplot2grid((1,3), (1,2))
     axes = [ax1,ax2,ax3,ax4]
     if restrict:
         ax1.set_xlim(-150, 150)
