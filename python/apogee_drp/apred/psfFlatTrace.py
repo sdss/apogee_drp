@@ -486,29 +486,33 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                     if ichip == 1: pix0g = pix0g - 0.78
                     if ichip == 2: pix0g = pix0g - 0.74
 
-            # Initial gaussian fit
-            gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0g)
+            try:
+                # Initial gaussian fit
+                gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0g)
 
-            # Run again to avoid hitting boundaries
-            cen0 = gpeaks0['pars'][:, 1]
-            bad, = np.where(np.isnan(cen0))
-            cen0[bad] = pix0g[bad]
-            gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=cen0)
+                # Run again to avoid hitting boundaries
+                cen0 = gpeaks0['pars'][:, 1]
+                bad, = np.where(np.isnan(cen0))
+                cen0[bad] = pix0g[bad]
+                gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=cen0)
 
-            success, = np.where(gpeaks['success'] == True)
-            print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
+                success, = np.where(gpeaks['success'] == True)
+                print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
 
-            outstr['PIX0'][i, ichip, :] =            pix0g
-            outstr['GAUSS_HEIGHT'][i, ichip, :] =    gpeaks['pars'][:, 0]
-            outstr['E_GAUSS_HEIGHT'][i, ichip, :] =  gpeaks['perr'][:, 0]
-            outstr['GAUSS_CENT'][i, ichip, :] =      gpeaks['pars'][:, 1]
-            outstr['E_GAUSS_CENT'][i, ichip, :] =    gpeaks['perr'][:, 1]
-            outstr['GAUSS_SIGMA'][i, ichip, :] =     gpeaks['pars'][:, 2]
-            outstr['E_GAUSS_SIGMA'][i, ichip, :] =   gpeaks['perr'][:, 2]
-            outstr['GAUSS_YOFFSET'][i, ichip, :] =   gpeaks['pars'][:, 3]
-            outstr['E_GAUSS_YOFFSET'][i, ichip, :] = gpeaks['perr'][:, 3]
-            outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
-            outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
+                outstr['PIX0'][i, ichip, :] =            pix0g
+                outstr['GAUSS_HEIGHT'][i, ichip, :] =    gpeaks['pars'][:, 0]
+                outstr['E_GAUSS_HEIGHT'][i, ichip, :] =  gpeaks['perr'][:, 0]
+                outstr['GAUSS_CENT'][i, ichip, :] =      gpeaks['pars'][:, 1]
+                outstr['E_GAUSS_CENT'][i, ichip, :] =    gpeaks['perr'][:, 1]
+                outstr['GAUSS_SIGMA'][i, ichip, :] =     gpeaks['pars'][:, 2]
+                outstr['E_GAUSS_SIGMA'][i, ichip, :] =   gpeaks['perr'][:, 2]
+                outstr['GAUSS_YOFFSET'][i, ichip, :] =   gpeaks['pars'][:, 3]
+                outstr['E_GAUSS_YOFFSET'][i, ichip, :] = gpeaks['perr'][:, 3]
+                outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
+                outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
+            except:
+                print(' problem with exposure ' + str(exp['NUM'][i]))
+                continue
 
     # Either append new results to master file, or create new master file
 
