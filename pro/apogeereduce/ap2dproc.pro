@@ -459,7 +459,8 @@ For i=0,n_elements(chips)-1 do begin
   ; Initialize the Output header
   ;------------------------------
   head = chstr.header
-  sxaddpar,head,'PSFFILE',ipsffile,' PSF file used'
+  sxaddpar,head,'LONGSTRN','OGIP 1.0'  ;; allows us to use long/continued strings
+  fxaddpar,head,'PSFFILE',ipsffile,' PSF file used'
   leadstr = 'AP2D: '
   sxaddpar,head,'V_APRED',getgitvers(),'apogee software version'
   sxaddpar,head,'APRED',getvers(),'apogee reduction version'
@@ -764,7 +765,9 @@ For i=0,n_elements(chips)-1 do begin
     ; Update header
     sxaddhist,leadstr+'Flux Calibrating the spectra with:',head
     sxaddhist,leadstr+fluxcalfiles[ichip],head
-    sxaddpar,head,'FLUXFILE',fluxcalfile,' Flux Calibration file used'
+    if strlen(leadstr+fluxcalfiles[ichip]) gt 72 then $
+      sxaddhist,leadstr+strmid(leadstr+fluxcalfiles[ichip],72),head
+    fxaddpar,head,'FLUXFILE',fluxcalfile,' Flux Calibration file used'
   endif
 
   ; Response curve calibration
@@ -786,7 +789,9 @@ For i=0,n_elements(chips)-1 do begin
     ; Update header
     sxaddhist,leadstr+'Applying response function:',head
     sxaddhist,leadstr+responsefiles[ichip],head
-    sxaddpar,head,'RESPFILE',responsefile,' Response file used'
+    if strlen(leadstr+responsefiles[ichip]) gt 72 then $
+      sxaddhist,leadstr+strmid(leadstr+responsefiles[ichip],72),head
+    fxaddpar,head,'RESPFILE',responsefile,' Response file used'
   endif
 
   ; Adding wavelengths
@@ -805,7 +810,9 @@ For i=0,n_elements(chips)-1 do begin
 
     sxaddhist,leadstr+'Adding wavelengths from',head
     sxaddhist,leadstr+wavefiles[ichip],head
-    sxaddpar,head,'WAVEFILE',wavefile,' Wavelength Calibration file'
+    if strlen(leadstr+wavefiles[ichip]) gt 72 then $
+      sxaddhist,leadstr+strmid(leadstr+wavefiles[ichip],72),head
+    fxaddpar,head,'WAVEFILE',wavefile,' Wavelength Calibration file'
     sxaddpar,head,'WAVEHDU',5,' Wavelength coef HDU'
 
   endif

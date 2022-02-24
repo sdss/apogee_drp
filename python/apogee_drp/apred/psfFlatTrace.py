@@ -237,7 +237,7 @@ def findBestFlatExposure(flatTable=None, imtype=None, refpix=None, twodfiles=Non
         gpeaks = gpeaks[gd]
         ngpeaks = len(gd)
 
-	    # Find median gaussian FWHM and restrict lookup table to similar values
+        # Find median gaussian FWHM and restrict lookup table to similar values
         #medFWHM = np.nanmedian(gpeaks['pars'][:, 2]) * 2.354
         #print('Median Science FWHM (chip ' + chips[ichip] + ') = ' + str("%.5f" % round(medFWHM,5)))
         #medFWHM = np.nanmedian(flatTable['GAUSS_SIGMA'][:, ichip, gpeaks['num']], axis=1)*2.354
@@ -274,7 +274,8 @@ def findBestFlatExposure(flatTable=None, imtype=None, refpix=None, twodfiles=Non
             if len(gd) < 5: continue
             diff = diff[gd]
             ndiff = len(diff)
-            rms[ichip, iflat] = np.sqrt(np.nansum(diff**2)/ndiff)
+            rms[ichip, iflat] = dln.mad(diff,zero=True)  # use robust RMS
+            #rms[ichip, iflat] = np.sqrt(np.nansum(diff**2)/ndiff)
         #if silent is False: print("   Final match based on " + str(ndiff) + " fibers:")
 
     rmsMean = np.nanmean(rms, axis=0)

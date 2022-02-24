@@ -2313,6 +2313,7 @@ print,'no_checksum: ', no_checksum
   maxlen = 72-strlen(leadstr)
   ; Bad pixel mask file
   if n_elements(bpmim) gt 0 then begin
+    fxaddpar,head,'bpmfile',bpmcorr,' bpm file'
     line = 'BAD PIXEL MASK file="'+bpmcorr+'"'
     if strlen(line) gt maxlen then begin
       line1 = strmid(line,0,maxlen)
@@ -2323,6 +2324,7 @@ print,'no_checksum: ', no_checksum
   end
   ; Detector file
   if n_elements(detcorr) gt 0 then begin
+    fxaddpar,head,'detfile',detcorr,' det file'
     line = 'DETECTOR file="'+detcorr+'"'
     if strlen(line) gt maxlen then begin
       line1 = strmid(line,0,maxlen)
@@ -2333,6 +2335,7 @@ print,'no_checksum: ', no_checksum
   end
   ; Dark Correction File
   if n_elements(darkcube) gt 0 then begin
+    fxaddpar,head,'darkfile',darkcorr,' dark file'
     line = 'Dark Current Correction file="'+darkcorr+'"'
     if strlen(line) gt maxlen then begin
       line1 = strmid(line,0,maxlen)
@@ -2343,6 +2346,7 @@ print,'no_checksum: ', no_checksum
   endif
   ; Flat field Correction File
   if n_elements(flatim) gt 0 then begin
+    fxaddpar,head,'flatfile',flatcorr,' flat file'
     line = 'Flat Field Correction file="'+flatcorr+'"'
     if strlen(line) gt maxlen then begin
       line1 = strmid(line,0,maxlen)
@@ -2353,6 +2357,7 @@ print,'no_checksum: ', no_checksum
   endif
   ; Littrow ghost mask File
   if n_elements(littrowim) gt 0 then begin
+    fxaddpar,head,'littrow',littrowcorr,' littrow file'
     line = 'Littrow ghost mask file="'+littrowcorr+'"'
     if strlen(line) gt maxlen then begin
       line1 = strmid(line,0,maxlen)
@@ -2363,6 +2368,7 @@ print,'no_checksum: ', no_checksum
   endif
   ; Persistence mask File
   if n_elements(persistim) gt 0 then begin
+    fxaddpar,head,'persist',persistcorr,' persist mask file'
     line = 'Persistence mask file="'+persistcorr+'"'
     if strlen(line) gt maxlen then begin
       line1 = strmid(line,0,maxlen)
@@ -2373,6 +2379,7 @@ print,'no_checksum: ', no_checksum
   endif
   ; Persistence model file
   if n_elements(persistmodelcorr) gt 0 then begin
+    fxaddpar,head,'permodel',persistmodelcorr,' persist model file'
     line = 'Persistence model file="'+persistmodelcorr+'"'
     if strlen(line) gt maxlen then begin
       line1 = strmid(line,0,maxlen)
@@ -2383,6 +2390,7 @@ print,'no_checksum: ', no_checksum
   endif
   ; History file
   if n_elements(histcorr) gt 0 then begin
+    fxaddpar,head,'histfile',histcorr,' exposure history file'
     line = 'Exposure history file="'+histcorr+'"'
     if strlen(line) gt maxlen then begin
       line1 = strmid(line,0,maxlen)

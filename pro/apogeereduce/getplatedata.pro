@@ -305,7 +305,7 @@ if keyword_set(fps) then begin
   add_tag,p,'tmass_k',0.0,p
   p.tmass_k = p.kmag
   ;; get 2MASS IDs and other info from catalogdb
-  gdid = where(plugmap.fiberdata.catalogid gt 0,ngdid)
+  gdid = where(plugmap.fiberdata.catalogid gt 0 and plugmap.fiberdata.spectrographid eq 2,ngdid)
   if ngdid gt 0 then begin
     catinfo = get_catalogdb_data(id=plugmap.fiberdata[gdid].catalogid)
     match,p.catalogid,catinfo.catalogid,ind1,ind2,/sort,coun=nmatch
@@ -556,7 +556,7 @@ for i=0,299 do begin
           endif
           ;; SKY's
           if objtype eq 'SKY' then begin
-            object = 'SKY' 
+            objname = 'SKY' 
             hmag = 99.99
             fiber[i].mag = [hmag,hmag,hmag,hmag,hmag]
             fiber[i].objtype = 'SKY'
@@ -568,9 +568,12 @@ for i=0,299 do begin
               tmp = strtrim(p[match].tmass_id,2)
             endelse
             len = strlen(tmp)
-            object = strmid(tmp,len-16)
-            if strpos(tmp,'A') eq 0 then $
-              object='AP'+object else object='2M'+object
+            objname = strmid(tmp,len-16)
+            if strpos(tmp,'A') eq 0 then begin
+              objname = 'AP'+objname
+            endif else begin
+              objname = '2M'+objname
+            endelse
             hmag = p[match].tmass_h
             fiber[i].mag = [p[match].tmass_j,p[match].tmass_h,p[match].tmass_k,0.,0.]
             ;; Adopt PM un-adjusted  coordinates
@@ -578,8 +581,8 @@ for i=0,299 do begin
             ;fiber[i].dec -= p[match].pmdec/1000./3600.*(p[match].epoch-2000.)
           endelse
           fiber[i].hmag = hmag
-          fiber[i].object = object
-          fiber[i].tmass_style = object
+          fiber[i].object = objname
+          fiber[i].tmass_style = objname
         endif else print,'no match found in plateHoles!',fiber[i].ra,fiber[i].dec, 300-i
       endelse
     endelse

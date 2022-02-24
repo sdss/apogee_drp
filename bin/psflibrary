@@ -54,6 +54,8 @@ if __name__ == '__main__' :
     # Code copied from rv.dopple_rv()
     observatory = args.observatory[0]
     apred = args.apred
+    if type(apred) is list:
+        apred = args.apred[0]
     ims = args.ims
     mjdplate = args.mjdplate
     planfile = args.planfile
