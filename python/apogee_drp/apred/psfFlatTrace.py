@@ -325,7 +325,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
     # Read in the exposure summary file and restrict to either dome or quartz
     exp = fits.getdata(mdir + instrument + 'Exp.fits')
     gd, = np.where(exp['IMAGETYP'] == imtype)
-    pdb.set_trace()
+    gd, = np.where((exp['IMAGETYP'] == imtype) & (exp['NUM'] == 40110002))
     exp = exp[gd]
 
     # Default option to append new values rather than remake the entire file
@@ -486,6 +486,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                     if ichip == 1: pix0g = pix0g - 0.78
                     if ichip == 2: pix0g = pix0g - 0.74
 
+            pdb.set_trace()
             # Initial gaussian fit
             gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0g)
 
