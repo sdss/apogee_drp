@@ -476,28 +476,29 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             pix0 = np.array(refpix[chips[ichip]])
 
             # Slight corrections to reference pixel values for older apo25m dome flats
+            pix0g = pix0
             if telescope == 'apo25m':
                 if exp['MJD'][i] < 56530:
-                    if ichip == 0: pix0 = pix0 - 1
-                #else:
-                    #if ichip == 0: pix0 = pix0 - 2
-                    #if ichip == 1: pix0 = pix0 - 0.38
-                    #if ichip == 2: pix0 = pix0 - 0.4
+                    if ichip == 0: pix0g = pix0g - 1
+                else:
+                    if ichip == 0: pix0g = pix0g - 2
+                    if ichip == 1: pix0g = pix0g - 0.38
+                    if ichip == 2: pix0g = pix0g - 0.4
 
             # Initial gaussian fit
-            gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
+            gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0g)
 
             # Run again to avoid hitting boundaries
             cen0 = gpeaks0['pars'][:, 1]
             bad, = np.where(np.isnan(cen0))
-            cen0[bad] = pix0[bad]
+            cen0[bad] = pix0g[bad]
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=cen0)
             #import pdb; pdb.set_trace()
 
             success, = np.where(gpeaks['success'] == True)
             print('  ' + os.path.basename(twodFiles[ichip]) + ': ' + str(len(success)) + ' successful Gaussian fits')
 
-            outstr['PIX0'][i, ichip, :] =            pix0
+            outstr['PIX0'][i, ichip, :] =            pix0g
             outstr['GAUSS_HEIGHT'][i, ichip, :] =    gpeaks['pars'][:, 0]
             outstr['E_GAUSS_HEIGHT'][i, ichip, :] =  gpeaks['perr'][:, 0]
             outstr['GAUSS_CENT'][i, ichip, :] =      gpeaks['pars'][:, 1]
