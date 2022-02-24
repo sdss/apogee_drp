@@ -194,7 +194,17 @@ def dillum59557(resid=False):
                 madresidpercent = (madresid / np.nanmedian(meanflux[80:240]))*100
                 txt1 = 'med = ' + str("%.3f" % round(medresid, 1)) + ' (' + str("%.3f" % round(medresidpercent, 1)) + '%)'
                 txt2 = 'MAD = ' + str("%.3f" % round(madresid, 2)) + ' (' + str("%.3f" % round(madresidpercent, 2)) + '%)'
-                ax.text(0.5, 0.1, txt1+',   '+txt2, transform=ax.transAxes, ha='center')
+                ax.text(0.5, 0.07, txt1+',   '+txt2, transform=ax.transAxes, ha='center', color='r')
+                ax.axvline(80, c='r', linestyle='dashed')
+                ax.axvline(240, c='r', linestyle='dashed')
+                medresid = np.nanmedian(np.absolute(dif))
+                medresidpercent = (medresid / np.nanmedian(meanflux))*100
+                madresid = dln.mad(np.absolute(dif))
+                madresidpercent = (madresid / np.nanmedian(meanflux))*100
+                txt1 = 'med = ' + str("%.3f" % round(medresid, 1)) + ' (' + str("%.3f" % round(medresidpercent, 1)) + '%)'
+                txt2 = 'MAD = ' + str("%.3f" % round(madresid, 2)) + ' (' + str("%.3f" % round(madresidpercent, 2)) + '%)'
+                ax.text(0.5, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='center')
+
 
             ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                     ha='center', va='top', color=chip, bbox=bboxpar)
