@@ -93,8 +93,7 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     psf1 = np.exp(-0.5*(xx0-cen0)**2/sigma0**2)          # normalized Gaussian
     wtht1 = np.sum(flux*psf1)/np.sum(psf1*psf1)          # linear least squares
     # Second iteration
-    totflux1 = np.sum(flux[int(round(cen0-2.5*sigma0))-xlo0:int(round(cen0+2.5*sigma0))-xlo0])
-    sigma1 = (totflux1*dx)/(wtht1*np.sqrt(2*np.pi))
+    sigma1 = (totflux*dx)/(wtht1*np.sqrt(2*np.pi))
     psf2 = np.exp(-0.5*(xx0-cen0)**2/sigma1**2)          # normalized Gaussian
     wtht2 = np.sum(flux*psf2)/np.sum(psf2*psf2)
 
