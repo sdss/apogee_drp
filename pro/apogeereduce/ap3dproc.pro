@@ -2324,7 +2324,7 @@ print,'no_checksum: ', no_checksum
   end
   ; Detector file
   if n_elements(detcorr) gt 0 then begin
-    fxaddpar,head,'detfile',detcorr,' bet file'
+    fxaddpar,head,'detfile',detcorr,' det file'
     line = 'DETECTOR file="'+detcorr+'"'
     if strlen(line) gt maxlen then begin
       line1 = strmid(line,0,maxlen)
