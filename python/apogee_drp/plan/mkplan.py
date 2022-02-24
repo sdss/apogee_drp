@@ -368,7 +368,8 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
            dark=False,extra=False,sky=False,plugid=None,fixfiberid=None,stars=None,
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False,logger=None,configid=None,designid=None,
-           fieldid=None,fps=False,force=False,fpi=None,ap3d=False,ap2d=False):
+           fieldid=None,fps=False,force=False,fpi=None,ap3d=False,ap2d=False,
+           psflibrary=None):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -699,7 +700,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             psfid = np.array(psfnum)[si][0]
             out['psfid'] = str(psfid)
         # Use psflibrary for all FPS exposures
-        if fps:
+        if fps or psflibrary:
             out['psflibrary'] = 1
         # Flux calibration file
         if fluxid is not None:
