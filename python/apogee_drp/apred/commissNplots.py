@@ -639,7 +639,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
     cax1.minorticks_on()
     #cax2.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-    ax1.text(1.20, 0.5, r'DR17 RV $T_{\rm eff}$ (K)',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
+    ax1.text(1.1, 0.5, r'DR17 RV $T_{\rm eff}$ (K)',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
     #ax4_divider = make_axes_locatable(ax4)
     #cax4 = ax4_divider.append_axes("right", size="5%", pad="1%")
