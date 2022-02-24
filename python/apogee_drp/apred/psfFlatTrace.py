@@ -528,6 +528,8 @@ def gaussFitAll(infile=None, medianrad=None, pix0=None):
     toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
     gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
 
+    pdb.set_trace()
+
     return gpeaks
 
 
