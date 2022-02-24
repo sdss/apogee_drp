@@ -526,7 +526,8 @@ def gaussFitAll(infile=None, medianrad=None, pix0=None):
 
     totflux = np.nanmedian(flux[:, (npix//2) - medianrad:(npix//2) + medianrad], axis=1)
     toterror = np.sqrt(np.nanmedian(error[:, (npix//2) - medianrad:(npix//2) + medianrad]**2, axis=1))
-    gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+    #gpeaks = peakfit.peakfit(totflux, sigma=toterror, pix0=pix0)
+    pars,perr = peakfit.gausspeakfit(totflux, sigma=toterror, pix0=pix0)
 
     pdb.set_trace()
 
