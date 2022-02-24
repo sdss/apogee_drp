@@ -482,9 +482,12 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                 else:
                     if ichip == 0: pix0 = pix0 - 2
 
-            #pdb.set_trace()
-
+            # Initial gaussian fit
             gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
+
+            pdb.set_trace()
+
+            # Run again to avoid hitting boundaries
             cen0 = gpeaks0['pars'][:, 1]
             bad, = np.where(np.isnan(cen0))
             cen0[bad] = pix0[bad]
