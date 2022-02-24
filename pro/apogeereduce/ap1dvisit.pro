@@ -635,8 +635,8 @@ FOR i=0L,nplanfiles-1 do begin
       visitfile = s[0]+cmjd+s[1]+string(format='(f8.2)',mjdfrac)+s[2]
     endif
 
-    visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',mjd:0L,telescope:'',$
-                survey:'',field:'',programname:'',objtype:'',assigned:0,on_target:0,valid:0,$
+    visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',exptime:0.0,nframes:0L,$
+                mjd:0L,telescope:'',survey:'',field:'',programname:'',objtype:'',assigned:0,on_target:0,valid:0,$
                 ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
                 jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
                 pmra:0.0,pmdec:0.0,pm_src:'',$
@@ -644,8 +644,8 @@ FOR i=0L,nplanfiles-1 do begin
                 catalogid:0LL, gaiadr2_sourceid:0LL,gaiadr2_plx:0.0, gaiadr2_plx_error:0.0, gaiadr2_pmra:0.0, gaiadr2_pmra_error:0.0,$
                 gaiadr2_pmdec:0.0, gaiadr2_pmdec_error:0.0, gaiadr2_gmag:0.0, gaiadr2_gerr:0.0,$
                 gaiadr2_bpmag:0.0, gaiadr2_bperr:0.0, gaiadr2_rpmag:0.0, gaiadr2_rperr:0.0, sdssv_apogee_target0:0LL,$
-                firstcarton:'', targflags:'',snr: 0.0, starflag:0L,starflags: '',$
-                dateobs:'',jd:0.0d0}
+                firstcarton:'',cadence:'',program:'',category:'',$
+                targflags:'',snr: 0.0, starflag:0L,starflags: '',dateobs:'',jd:0.0d0}
 
     visitstr.apogee_id = obj[istar]
     visitstr.target_id = objdata[istar].object
@@ -657,6 +657,8 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.apred_vers = apred_vers
     visitstr.fiberid = objdata[istar].fiberid
     visitstr.plate = strtrim(planstr.plateid,2)
+    visitstr.exptime = sxpar(finalframe[0].hdr,'exptime')
+    visitstr.nframes = nframes
     visitstr.mjd = planstr.mjd
     visitstr.telescope = dirs.telescope
     ;; Copy over all relevant columns from plugmap/plateHoles/catalogdb
@@ -664,7 +666,6 @@ FOR i=0L,nplanfiles-1 do begin
     GLACTC,visitstr.ra,visitstr.dec,2000.0,glon,glat,1,/deg
     visitstr.glon = glon
     visitstr.glat = glat
-
     visitstr.apogee_target1 = objdata[istar].target1
     visitstr.apogee_target2 = objdata[istar].target2
     visitstr.apogee_target3 = objdata[istar].target3
