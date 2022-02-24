@@ -1073,6 +1073,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 
                            'ims':sky, 'fps':fps, 'sky':True}
                 if fps:
+                    # Use PSF library during FPS era
+                    #   quartzflat PSFID is a "backup" 
+                    skyplan['psflibrary'] = 1  
                     skyplan['configid'] = str(expinfo['configid'][i])
                     skyplan['designid'] = str(expinfo['designid'][i])
                     skyplan['fieldid'] = str(expinfo['fieldid'][i])
@@ -1103,6 +1106,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         darkplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                     'plate':0, 'psfid':0, 'fluxid':0, 'ims':dark, 'fps':fps, 'dark':True}
         if fps:
+            # Use PSF library during FPS era
+            #   quartzflat PSFID is a "backup" 
+            darkplan['psflibrary'] = 1  
             darkplan['configid'] = str(expinfo['configid'][i])
             darkplan['designid'] = str(expinfo['designid'][i])
             darkplan['fieldid'] = str(expinfo['fieldid'][i])
@@ -1115,6 +1121,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                    'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':cal, 'fps':fps,
                    'cal':True}
         if fps:
+            # Use PSF library during FPS era
+            #   quartzflat PSFID is a "backup" 
+            calplan['psflibrary'] = 1  
             calplan['configid'] = str(expinfo['configid'][i])
             calplan['designid'] = str(expinfo['designid'][i])
             calplan['fieldid'] = str(expinfo['fieldid'][i])
@@ -1127,6 +1136,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                      'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':extra, 'fps':fps,
                      'extra':True}
         if fps:
+            # Use PSF library during FPS era
+            #   quartzflat PSFID is a "backup" 
+            extraplan['psflibrary'] = 1  
             extraplan['configid'] = str(expinfo['configid'][i])
             extraplan['designid'] = str(expinfo['designid'][i])
             extraplan['fieldid'] = str(expinfo['fieldid'][i])
