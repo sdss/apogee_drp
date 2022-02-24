@@ -485,7 +485,10 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             #pdb.set_trace()
 
             gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
-            gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=gpeaks0['pars'][:, 1])
+            cen0 = gpeaks0['pars'][:, 1]
+            bad, = np.where(np.isnan(cen0))
+            cen0[bad] = pix0[bad]
+            gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=cen0)
             #import pdb; pdb.set_trace()
 
             success, = np.where(gpeaks['success'] == True)
