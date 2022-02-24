@@ -482,6 +482,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                         pix0 = pix0 - 1
                     else:
                         pix0 = pix0 - 2
+            pdb.set_trace()
 
             gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
             #import pdb; pdb.set_trace()
