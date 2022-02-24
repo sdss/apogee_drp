@@ -368,7 +368,8 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
            dark=False,extra=False,sky=False,plugid=None,fixfiberid=None,stars=None,
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False,logger=None,configid=None,designid=None,
-           fieldid=None,fps=False,force=False,fpi=None,ap3d=False,ap2d=False):
+           fieldid=None,fps=False,force=False,fpi=None,ap3d=False,ap2d=False,
+           psflibrary=None):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -678,8 +679,9 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         val = caldata[c]
         if str(val).isdigit(): val=int(val)
         out[c+'id'] = val
-    # We use multiwaveid for waveid
+
     if ap3d==False:
+        # We use multiwaveid for waveid
         waveid = caldata['multiwave']
         if str(waveid).isdigit(): waveid=int(waveid)
         out['waveid'] = waveid
@@ -698,6 +700,9 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             si = np.argsort(np.abs(np.array(psfnum).astype(int)-int(im1)))
             psfid = np.array(psfnum)[si][0]
             out['psfid'] = str(psfid)
+        # Use psflibrary for all FPS exposures
+        if fps or psflibrary:
+            out['psflibrary'] = 1
         # Flux calibration file
         if fluxid is not None:
             out['fluxid'] = fluxid
