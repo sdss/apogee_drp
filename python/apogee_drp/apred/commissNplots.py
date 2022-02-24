@@ -114,6 +114,85 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
+def dillum59557(resid=False):
+        ###########################################################################################
+        # dillum59557.png
+        # Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
+        plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
+        if resid is True: plotfile = plotfile.replace('.png', '_resid.png')
+        print("----> commissNplots: Making " + os.path.basename(plotfile))
+
+        fig = plt.figure(figsize=(30,22))
+        xarr = np.arange(0, 300, 1) + 1
+
+        gd, = np.where(allexp['MJD'][dome] == 59557)
+        gdcal = allexp[dome][gd]
+        ndome = len(gdcal)
+
+        mycmap = 'plasma_r'
+        cmap = cmaps.get_cmap(mycmap, ndome)
+        sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
+
+        #pdb.set_trace()
+
+        for ichip in range(nchips):
+            chip = chips[ichip]
+            ax = plt.subplot2grid((nchips, 1), (ichip, 0))
+            ax.set_xlim(0, 301)
+            #ax.set_ylim(0, 27000)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+            ax.set_ylabel(r'Median Flux')
+            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            if ichip == 0:
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("top", size="7%", pad="2%")
+                cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+                cax.xaxis.set_ticks_position("top")
+                #cax.minorticks_on()
+                cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+                #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+                cax.xaxis.set_label_position('top') 
+                cax.set_xlabel('Exposure')
+
+            flux = np.zeros((ndome, len(xarr)))
+            for idome in range(ndome):
+                chp = 'c'
+                if ichip == 1: chp = 'b'
+                if ichip == 2: chp = 'a'
+                file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
+                file1d = file1d.replace('1D-', '1D-' + chp + '-')
+                if os.path.exists(file1d):
+                    oned = fits.getdata(file1d)
+                    flux[idome] = np.nanmedian(oned, axis=1)[::-1]
+                    mycolor = cmap(idome)
+                    gd, = np.where(flux[idome] > 100)
+                    if resid is False: 
+                        ax.plot(xarr[gd], flux[idome,gd], color=mycolor)
+                else:
+                    print('missing ' + os.path.basename(file1d))
+
+            if resid:
+                meanflux = np.nanmean(flux,axis=1)
+                for idome in range(ndome):
+                    dif = flux[idome] - meanflux
+                    mycolor = cmap(idome)
+                    ax.plot(xarr, diff, color=mycolor)
+
+            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                    ha='center', va='top', color=chip, bbox=bboxpar)
+
+        fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+###########################################################################################
 def tellmagcolor(alls4=None, alls5=None, latlims=[10,12]):
     # tellmagcolor.png
     # Check of the magnitude and color distribution of plate tellurics vs. FPS tellurics
@@ -224,6 +303,64 @@ def tellmagcolor(alls4=None, alls5=None, latlims=[10,12]):
     fig.subplots_adjust(left=0.05, right=0.92, bottom=0.045, top=0.92, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
     plt.close('all')
+
+    return
+
+###########################################################################################
+def apsky(mjdstart='59146'):
+
+    apodir = os.environ.get('APOGEE_REDUX')+'/'
+
+
+    exp = np.concatenate([exp59569a,exp59569b,exp59570a,exp59570b,exp59592a])#,exp59592b])
+    mjd = np.concatenate([mjd59569a,mjd59569b,mjd59570a,mjd59570b,mjd59592a])#,mjd59592b])
+    expord = np.argsort(exp)
+    exp = exp[expord]
+    mjd = mjd[expord]
+    nexp = len(exp)
+
+    print('EXPOSURE  RA         DEC         MOONPHASE MOONDIST   MEDB      MEDG      MEDR')
+    for iexp in range(nexp):
+        onedfile = load.filename('1D', num=exp[iexp], mjd=mjd[iexp], chips=True)
+        if os.path.exists(onedfile.replace('1D-','1D-c-')) == False:
+            print('ap1D not found for ' + str(exp[iexp]))
+            continue
+        fileb = onedfile.replace('1D-','1D-c-')
+        fileg = onedfile.replace('1D-','1D-b-')
+        filer = onedfile.replace('1D-','1D-a-')
+        hdr = fits.getheader(fileb)
+        ra = hdr['RADEG']
+        dec = hdr['DECDEG']
+        dateobs = hdr['DATE-OBS']
+        tt = Time(dateobs, format='fits')
+
+        # Get moon distance and phase.
+        moonpos = get_moon(tt)
+        moonra = moonpos.ra.deg
+        moondec = moonpos.dec.deg
+        c1 = SkyCoord(ra * astropyUnits.deg, dec * astropyUnits.deg)
+        c2 = SkyCoord(moonra * astropyUnits.deg, moondec * astropyUnits.deg)
+        sep = c1.separation(c2)
+        moondist = sep.deg
+        moonphase = moon_illumination(tt)
+
+        fluxb = fits.getdata(fileb,1)
+        fluxg = fits.getdata(fileg,1)
+        fluxr = fits.getdata(filer,1)
+        medb = np.nanmedian(fluxb[:, 424:1624])
+        medg = np.nanmedian(fluxg[:, 424:1624])
+        medr = np.nanmedian(fluxr[:, 424:1624])
+
+        p1 = str(exp[iexp])
+        p2 = str("%.5f" % round(ra,5))
+        p3 = str("%.5f" % round(dec,5))
+        p4 = str("%.3f" % round(moonphase,3))
+        p5 = str("%.3f" % round(moondist,3)).rjust(6)
+        p6 = str("%.3f" % round(medb,3)).rjust(7)
+        p7 = str("%.3f" % round(medg,3)).rjust(7)
+        p8 = str("%.3f" % round(medr,3)).rjust(7)
+        print(p1+'   '+p2+'   '+p3+'   '+p4+'     '+p5+'     '+p6+'   '+p7+'   '+p8)
+
 
     return
 
@@ -752,5 +889,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
         plt.close('all')
 
         return
+
+
 
 
