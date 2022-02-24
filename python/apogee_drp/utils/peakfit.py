@@ -75,8 +75,8 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     dx = 1
     x = np.arange(len(spec))
     xwid = 5
-    xlo0 = np.maximum(pix0-xwid,0)
-    xhi0 = pix0+xwid+1
+    xlo0 = int(round(np.maximum(pix0-xwid,0)))
+    xhi0 = int(round(pix0+xwid+1))
     xx0 = x[xlo0:xhi0]
 
     # Get quantitative estimates of height, center, sigma
@@ -114,15 +114,13 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     ubounds = [3.0*np.max([ht0,wtht2]), initpar[1]+1, 5.0, initpar[3]+np.maximum(3*sigspec,0.3*np.abs(initpar[3]))]
     bounds = (lbounds,ubounds)
 
-    import pdb; pdb.set_trace()
-
     # Sometimes curve_fit hits the maximum number fo function evaluations and crashes
     try:
         pars,cov = curve_fit(func,xx,y,p0=initpar,sigma=yerr,bounds=bounds,maxfev=1000)            
         perr = np.sqrt(np.diag(cov))
     except:
         return None,None
-    
+
     return pars,perr
 
 

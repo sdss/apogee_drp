@@ -478,12 +478,17 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             # Slight corrections to reference pixel values for older apo25m dome flats
             if telescope == 'apo25m':
                 if exp['MJD'][i] < 56530:
-                    if ichip == 0: 
-                        pix0 = pix0 - 1
-                    else:
-                        pix0 = pix0 - 2
+                    if ichip == 0: pix0 = pix0 - 1
+                else:
+                    if ichip == 0: pix0 = pix0 - 2
 
-            gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
+            #pdb.set_trace()
+
+            gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0)
+            cen0 = gpeaks0['pars'][:, 1]
+            bad, = np.where(np.isnan(cen0))
+            cen0[bad] = pix0[bad]
+            gpeaks = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=cen0)
             #import pdb; pdb.set_trace()
 
             success, = np.where(gpeaks['success'] == True)
@@ -500,6 +505,8 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             outstr['E_GAUSS_YOFFSET'][i, ichip, :] = gpeaks['perr'][:, 3]
             outstr['GAUSS_FLUX'][i, ichip, :] =      gpeaks['sumflux']
             outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
+
+            pdb.set_trace()
 
     # Either append new results to master file, or create new master file
     if append:
