@@ -600,7 +600,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7000))
     x = gdata['VHELIO'][:,0][g]
     y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
-    c = gdata['TEFF'][g]
+    c = gdata['TEFF'][:,0][g]
     ax1.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax1.transAxes, va='top', fontsize=fsz, bbox=bboxpar)
     ax1.text(0.05, 0.82, 'MAD: ' + str("%.3f" % round(dln.mad(np.absolute(y)), 3)), transform=ax1.transAxes, va='top', fontsize=fsz, bbox=bboxpar)
     sc1 = ax1.scatter(x, y, marker=symbol, c=c, cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
@@ -608,7 +608,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7000))
     x = gdata['TEFF'][:,0][g]# / 1000
     y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g])# / 1000
-    c = gdata['TEFF'][g]
+    c = gdata['TEFF'][:,0][g]
     gg, = np.where(np.absolute(y) < 2000)
     x = x[gg]
     y = y[gg]
@@ -620,7 +620,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7000))
     x = gdata['LOGG'][:,0][g]
     y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
-    c = gdata['TEFF'][g]
+    c = gdata['TEFF'][:,0][g]
     ax3.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax3.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     ax3.text(0.05, 0.82, 'MAD: ' + str("%.3f" % round(dln.mad(np.absolute(y)), 3)), transform=ax3.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     ax3.scatter(x, y, marker=symbol, c=c, cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
@@ -628,7 +628,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7000))
     x = gdata['FEH'][:,0][g]
     y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
-    c = gdata['TEFF'][g]
+    c = gdata['TEFF'][:,0][g]
     ax4.text(0.05, 0.88, 'med: ' + str("%.3f" % round(np.median(np.absolute(y)), 3)), transform=ax4.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     ax4.text(0.05, 0.82, 'MAD: ' + str("%.3f" % round(dln.mad(np.absolute(y)), 3)), transform=ax4.transAxes, va='top', fontsize=fsz, bbox=bboxpar, zorder=20)
     sc4 = ax4.scatter(x, y, marker=symbol, c=c, cmap=cmap, s=symsz, edgecolors='k', alpha=0.75, zorder=10, vmin=vmin, vmax=vmax)
@@ -638,14 +638,14 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     cb1 = colorbar(sc1, cax=cax1, orientation="vertical")
     cax1.minorticks_on()
     #cax2.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-    ax1.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
+    ax1.text(1.16, 0.5, r'DR17 RV $T_{\rm eff}$ (K)',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
 
     ax4_divider = make_axes_locatable(ax4)
     cax4 = ax4_divider.append_axes("right", size="5%", pad="1%")
     cb4 = colorbar(sc4, cax=cax4, orientation="vertical")
     cax4.minorticks_on()
     #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-    ax4.text(1.16, 0.5, r'J$-$K',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
+    ax4.text(1.16, 0.5, r'DR17 RV $T_{\rm eff}$ (K)',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
 
     fig.subplots_adjust(left=0.07, right=0.935, bottom=0.05, top=0.98, hspace=0.1, wspace=0.17)
     plt.savefig(plotfile)
