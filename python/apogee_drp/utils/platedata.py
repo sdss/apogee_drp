@@ -103,8 +103,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                       ('spectrographid',int),('mag',float,5),('alt_id',np.str,30),('twomass_designation',np.str,30),
                       ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
                       ('phflag',np.str,50),('src_h',np.str,50),('pmra',float),('pmdec',float),('pm_src',np.str,50),
-                      ('catalogid',int),('gaia_g',float),('gaia_bp',float),('gaia_rp',float),('sdssv_apogee_target0',int),
-                      ('firstcarton',np.str,100),('gaiadr2_sourceid',np.str,25),('gaiadr2_ra',float),('gaiadr2_dec',float),
+                      ('catalogid',int),('sdssv_apogee_target0',int),('firstcarton',np.str,100),
+                      ('cadence',np.str,100),('program',np.str,100),('category',np.str,100),
+                      ('gaia_g',float),('gaia_bp',float),('gaia_rp',float),
+                      ('gaiadr2_sourceid',np.str,25),('gaiadr2_ra',float),('gaiadr2_dec',float),
                       ('gaiadr2_plx',float),('gaiadr2_plx_error',float),('gaiadr2_pmra',float),('gaiadr2_pmra_error',float),
                       ('gaiadr2_pmdec',float),('gaiadr2_pmdec_error',float),('gaiadr2_gmag',float),('gaiadr2_gerr',float),
                       ('gaiadr2_bpmag',float),('gaiadr2_bperr',float),('gaiadr2_rpmag',float),('gaiadr2_rperr',float)])
@@ -378,8 +380,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['assigned'][i] = plugmap['fiberdata']['assigned'][m]
                 fiber['on_target'][i] = plugmap['fiberdata']['on_target'][m]
                 fiber['valid'][i] = plugmap['fiberdata']['valid'][m]
-                fiber['catalogid'][i] = plugmap['fiberdata']['catalogid'][m]
                 fiber['sdssv_apogee_target0'][i] = plugmap['fiberdata']['sdssv_apogee_target0'][m]
+                fiber['catalogid'][i] = plugmap['fiberdata']['catalogid'][m]
             else:
                 fiber['target1'][i] = plugmap['fiberdata']['primTarget'][m]
                 fiber['target2'][i] = plugmap['fiberdata']['secTarget'][m]
@@ -504,8 +506,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 fiber['herr'][i] = ph['e_hmag'][match]
                                 fiber['kmag'][i] = ph['kmag'][match]
                                 fiber['kerr'][i] = ph['e_kmag'][match]
-                                #fiber['sdssv_apogee_target0'][i] = ph['sdssv_apogee_target0'][match]
-                                fiber['firstcarton'][i] = ph['carton'][match][0].astype(str)
+                                fiber['firstcarton'][i] = plugmap['fiberdata']['firstcarton'][m]
+                                fiber['cadence'][i] = plugmap['fiberdata']['cadence'][m]
+                                fiber['program'][i] = plugmap['fiberdata']['program'][m]
+                                fiber['category'][i] = plugmap['fiberdata']['category'][m]
                                 fiber['pmra'][i] = ph['pmra'][match]
                                 fiber['pmdec'][i] = ph['pmdec'][match]
                                 fiber['gaiadr2_sourceid'][i] = ph['gaiadr2_sourceid'][match][0].astype(str)
