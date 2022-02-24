@@ -115,103 +115,103 @@ xspan = xmax-xmin
 
 ###########################################################################################
 def dillum59557(resid=False):
-        ###########################################################################################
-        # dillum59557.png
-        # Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
-        plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
-        if resid is True: plotfile = plotfile.replace('.png', '_resid.png')
-        print("----> commissNplots: Making " + os.path.basename(plotfile))
+    ###########################################################################################
+    # dillum59557.png
+    # Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
+    plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
+    if resid is True: plotfile = plotfile.replace('.png', '_resid.png')
+    print("----> commissNplots: Making " + os.path.basename(plotfile))
 
-        fig = plt.figure(figsize=(30,22))
-        xarr = np.arange(0, 300, 1) + 1
+    fig = plt.figure(figsize=(30,22))
+    xarr = np.arange(0, 300, 1) + 1
 
-        gd, = np.where(allexp['MJD'][dome] == 59557)
-        gdcal = allexp[dome][gd]
-        ndome = len(gdcal)
+    gd, = np.where(allexp['MJD'][dome] == 59557)
+    gdcal = allexp[dome][gd]
+    ndome = len(gdcal)
 
-        mycmap = 'rainbow'
-        cmap = cmaps.get_cmap(mycmap, ndome)
-        sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
+    mycmap = 'rainbow'
+    cmap = cmaps.get_cmap(mycmap, ndome)
+    sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
 
-        #pdb.set_trace()
+    #pdb.set_trace()
 
-        for ichip in range(nchips):
-            chip = chips[ichip]
-            ax = plt.subplot2grid((nchips, 1), (ichip, 0))
-            ax.set_xlim(0, 301)
-            #ax.set_ylim(0, 27000)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
-            ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
-            if resid is False:
-                ax.set_ylabel(r'Median Flux')
+    for ichip in range(nchips):
+        chip = chips[ichip]
+        ax = plt.subplot2grid((nchips, 1), (ichip, 0))
+        ax.set_xlim(0, 301)
+        #ax.set_ylim(0, 27000)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+        if resid is False:
+            ax.set_ylabel(r'Median Flux')
+        else:
+            ax.set_ylabel(r'Residual Flux')
+        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+        if ichip == 0:
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("top", size="7%", pad="2%")
+            cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+            cax.xaxis.set_ticks_position("top")
+            #cax.minorticks_on()
+            cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+            cax.xaxis.set_label_position('top') 
+            cax.set_xlabel('Exposure')
+
+        flux = np.zeros((ndome, len(xarr)))
+        for idome in range(ndome):
+            chp = 'c'
+            if ichip == 1: chp = 'b'
+            if ichip == 2: chp = 'a'
+            file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
+            file1d = file1d.replace('1D-', '1D-' + chp + '-')
+            if os.path.exists(file1d):
+                oned = fits.getdata(file1d)
+                flux[idome] = np.nanmedian(oned, axis=1)[::-1]
+                mycolor = cmap(idome)
+                gd, = np.where(flux[idome] > 100)
+                if resid is False: 
+                    ax.plot(xarr[gd], flux[idome,gd], color=mycolor)
             else:
-                ax.set_ylabel(r'Residual Flux')
-            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-            if ichip == 0:
-                ax_divider = make_axes_locatable(ax)
-                cax = ax_divider.append_axes("top", size="7%", pad="2%")
-                cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
-                cax.xaxis.set_ticks_position("top")
-                #cax.minorticks_on()
-                cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-                #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
-                cax.xaxis.set_label_position('top') 
-                cax.set_xlabel('Exposure')
+                print('missing ' + os.path.basename(file1d))
 
-            flux = np.zeros((ndome, len(xarr)))
+        if resid:
+            meanflux = np.nanmean(flux,axis=0)
+            dif = flux - meanflux
             for idome in range(ndome):
-                chp = 'c'
-                if ichip == 1: chp = 'b'
-                if ichip == 2: chp = 'a'
-                file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
-                file1d = file1d.replace('1D-', '1D-' + chp + '-')
-                if os.path.exists(file1d):
-                    oned = fits.getdata(file1d)
-                    flux[idome] = np.nanmedian(oned, axis=1)[::-1]
-                    mycolor = cmap(idome)
-                    gd, = np.where(flux[idome] > 100)
-                    if resid is False: 
-                        ax.plot(xarr[gd], flux[idome,gd], color=mycolor)
-                else:
-                    print('missing ' + os.path.basename(file1d))
+                mycolor = cmap(idome)
+                ax.plot(xarr, dif[idome], color=mycolor)
 
-            if resid:
-                meanflux = np.nanmean(flux,axis=0)
-                dif = flux - meanflux
-                for idome in range(ndome):
-                    mycolor = cmap(idome)
-                    ax.plot(xarr, dif[idome], color=mycolor)
-
-                medresid = np.nanmedian(np.absolute(dif[:,80:240]))
-                medresidpercent = (medresid / np.nanmedian(meanflux[80:240]))*100
-                madresid = dln.mad(np.absolute(dif[:,80:240]))
-                madresidpercent = (madresid / np.nanmedian(meanflux[80:240]))*100
-                txt1 = 'med = ' + str("%.3f" % round(medresid, 1)) + ' (' + str("%.3f" % round(medresidpercent, 1)) + '%)'
-                txt2 = 'MAD = ' + str("%.3f" % round(madresid, 2)) + ' (' + str("%.3f" % round(madresidpercent, 2)) + '%)'
-                ax.text(0.5, 0.07, txt1+',   '+txt2, transform=ax.transAxes, ha='center', color='r')
-                ax.axvline(80, c='r', linestyle='dashed')
-                ax.axvline(240, c='r', linestyle='dashed')
-                medresid = np.nanmedian(np.absolute(dif))
-                medresidpercent = (medresid / np.nanmedian(meanflux))*100
-                madresid = dln.mad(np.absolute(dif))
-                madresidpercent = (madresid / np.nanmedian(meanflux))*100
-                txt1 = 'med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
-                txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
-                ax.text(0.5, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='center')
+            medresid = np.nanmedian(np.absolute(dif[:,80:240]))
+            medresidpercent = (medresid / np.nanmedian(meanflux[80:240]))*100
+            madresid = dln.mad(np.absolute(dif[:,80:240]))
+            madresidpercent = (madresid / np.nanmedian(meanflux[80:240]))*100
+            txt1 = 'med = ' + str("%.3f" % round(medresid, 1)) + ' (' + str("%.3f" % round(medresidpercent, 1)) + '%)'
+            txt2 = 'MAD = ' + str("%.3f" % round(madresid, 2)) + ' (' + str("%.3f" % round(madresidpercent, 2)) + '%)'
+            ax.text(0.5, 0.07, txt1+',   '+txt2, transform=ax.transAxes, ha='center', color='r')
+            ax.axvline(80, c='r', linestyle='dashed')
+            ax.axvline(240, c='r', linestyle='dashed')
+            medresid = np.nanmedian(np.absolute(dif))
+            medresidpercent = (medresid / np.nanmedian(meanflux))*100
+            madresid = dln.mad(np.absolute(dif))
+            madresidpercent = (madresid / np.nanmedian(meanflux))*100
+            txt1 = 'med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
+            txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
+            ax.text(0.5, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='center')
 
 
-            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                    ha='center', va='top', color=chip, bbox=bboxpar)
+        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                ha='center', va='top', color=chip, bbox=bboxpar)
 
-        fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
-        plt.savefig(plotfile)
-        plt.close('all')
+    fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+    plt.savefig(plotfile)
+    plt.close('all')
 
 ###########################################################################################
 def tellmagcolor(alls4=None, alls5=None, latlims=[10,12]):
@@ -554,10 +554,10 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
     gdata = fits.getdata(datafile)
 
     fig = plt.figure(figsize=(22,18))
-    ax1 = plt.subplot2grid((2,2), (0,0))
-    ax2 = plt.subplot2grid((2,2), (0,1))
-    ax3 = plt.subplot2grid((2,2), (1,0))
-    ax4 = plt.subplot2grid((2,2), (1,1))
+    ax1 = plt.subplot2grid((3,1), (0,0), colspan=3)
+    ax2 = plt.subplot2grid((3,1), (1,1))
+    ax3 = plt.subplot2grid((3,1), (2,1))
+    ax4 = plt.subplot2grid((3,1), (3,1))
     axes = [ax1,ax2,ax3,ax4]
     if restrict:
         ax1.set_xlim(-150, 150)
