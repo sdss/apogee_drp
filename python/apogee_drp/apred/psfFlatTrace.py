@@ -293,7 +293,7 @@ def findBestFlatExposure(flatTable=None, imtype=None, refpix=None, twodfiles=Non
 # Program for making the domeflat lookup table.
 # Takes about 8 hours to run, unless a later "mjdstart" is specified.
 ###################################################################################################
-def makeLookupTable(apred='daily', telescope='apo25m', imtype='DomeFlat', medianrad=100, append=True):
+def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medianrad=100, append=True):
 
     start_time = time.time()
 
