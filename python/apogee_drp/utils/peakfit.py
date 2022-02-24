@@ -120,7 +120,9 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
         perr = np.sqrt(np.diag(cov))
     except:
         return None,None
-    
+
+    import pdb; pdb.set_trace()
+
     return pars,perr
 
 
