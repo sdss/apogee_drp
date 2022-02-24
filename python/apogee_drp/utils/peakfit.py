@@ -121,8 +121,6 @@ def gausspeakfit(spec,pix0=None,estsig=5,sigma=None,func=gaussbin) :
     except:
         return None,None
 
-    pdb.set_trace()
-
     return pars,perr
 
 
