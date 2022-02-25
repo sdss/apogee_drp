@@ -613,7 +613,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     configid = head.get('CONFIGID')
     exptype = head.get('EXPTYPE')
     if (ignore==False) and not ap3d and not ap2d:
-        if fps==False & (plate!=0) & (plate!=plateid):
+        if fps==False and (plate!=0) and (plate!=plateid):
             raise ValueError('plateid in header does not match plate!')
 
     # plugmap
