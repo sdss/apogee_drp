@@ -82,6 +82,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   cmd = ['apmultiwavecal','--name',strtrim(name,2),'--vers',dirs.apred]
   if keyword_set(nofit) then cmd=[cmd,'--nofit']
   if keyword_set(plot) then cmd=[cmd,'--plot','--hard']
+  if keyword_set(clobber) then cmd=[cmd,'--clobber']
   cmd = [cmd,'--inst',dirs.instrument,'--verbose']
   for i=0,n_elements(waveid)-1 do cmd=[cmd,string(waveid[i])]
   spawn,cmd,/noshell
