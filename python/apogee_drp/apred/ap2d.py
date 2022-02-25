@@ -453,6 +453,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         # Initialize the output header
         #-----------------------------
         head = chstr['header']
+        head['LONGSTRN'] = 'OGIP 1.0'    # allows us to use long/continued strings     
         head['PSFFILE'] = ipsffile,' PSF file used' 
         leadstr = 'AP2D: ' 
         pyvers = sys.version.split()[0]
@@ -493,6 +494,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         if extract_type==1:
             if not silent: 
                 print('Using Boxcar Extraction')
+
+            raise ValueError('Not Translated yet')
                  
             # Update header
             head['HISTORY'] = leadstr+'Extract_type=1 - Using Boxcar Extraction'
@@ -516,6 +519,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             if not silent: 
                 print('Using PSF Image Extraction')
              
+            raise ValueError('Not Translated yet')
+
             # Load the PSF image
             psfim,head_psfim = fits.getdata(ipsffile,2,header=True)
                  
@@ -543,6 +548,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         elif extract_type==3:
             if not silent: 
                 print('Esing Gaussian PSF fitting Extraction')
+
+            raise ValueError('Not Translated yet')
             
             # Update header
             head['HISTORY'] = leadstr+'Extract_type=3 - Using Gaussian PSF fitting Extraction'
@@ -904,29 +911,38 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
 
 
 def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
-         calclobber=False,domelibrary=False,unlock=False):  
+         calclobber=False,psflibrary=False,unlock=False):  
     """
     This program processes 2D APOGEE spectra.  It extracts the
     spectra.
 
     Parameters
     ----------
-    planfiles     Input list of plate plan files
-    =exttype      
-    =mapper_data  Directory for mapper data.
-    /verbose      Print a lot of information to the screen
-    /clobber      Overwrite existing files (ap1D).
-    /calclobber   Overwrite existing daily calibration files (apPSF, apFlux).
-    /domelibrary  Use the domeflat library.
-    /stp          Stop at the end of the prrogram
-    /unlock      Delete lock file and start fresh
+    planfiles : str or list
+        Input list of plate plan files
+    exttype : int
+        Extraction type.  Default is 4.           
+    mapper_data : str, optional
+        Directory for mapper data.
+    verbose : boolean, optional
+        Print a lot of information to the screen.  Default is False.
+    clobber : boolean, optional
+        Overwrite existing files (ap1D).  Default is False.
+    calclobber : boolean, optional
+        Overwrite existing daily calibration files (apPSF, apFlux).
+           Default is False.
+    psflibrary : boolean, optional
+        Use the PSF library.  Default is False.
+    unlock : boolean, optional
+        Delete lock file and start fresh.  Default is False.
 
     Returns
     -------
-    1D extracted spectra are output.  One file for each frame.
+    1D extracted spectra are output.  Three files for each exposure.
 
     Example
     -------
+
     out = ap2d(planfile)
 
     Written by D.Nidever  Mar. 2010
@@ -974,50 +990,54 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         logfile = load.filename('Diag',plate=planstr['plateid'],mjd=planstr['mjd'])
 
 
+        # Make sure PSFID exists
+        if 'psfid' not in planstr.keys():
+            planstr['psfid'] = 0
         # Add PSFID tag to planstr APEXP structure
         if 'psfid' not in planstr['APEXP'].dtype.names:
             apexp = planstr['APEXP']
             apexp = dln.addcatcols(apexp,np.dtype([('psfid',int)]))
             planstr['APEXP'] = apexp
  
-        # Use dmeflat library
-        #--------------------
-        # if (1) domeflat id set in planfile, or (2) domelibrary parameter
-        # set in planfile, or (3) /domelibrary keyword is set.
-        if 'domelibrary' in planstr.keys():
-            plandomelibrary = planstr['domelibrary']
+        # Use domeflat/quartzflat PSF library
+        #------------------------------------
+        # if (1) no PSFID set in planfile or PSFID=0, or (2) psflibrary parameter
+        # set in planfile, or (3) /psflibrary keyword is set.  
+        if 'psflibrary' in planstr.keys():
+            planpsflibrary = planstr['psflibrary']
         else: 
-            plandomelibrary = None
-        if domelibrary or 'psfid' not in planstr.keys() or plandomelibrary is not None:
-            print('Using domeflat library')
+            planpsflibrary = None
+        if psflibrary or planstr['psfid']==0 or planpsflibrary:
+            usepsflibrary = True
+        else:
+            usepsflibrary = False
+        if usepsflibrary:
+            print('Using PSF library')
             # You can do "domeflattrace --mjdplate" where mjdplate could be
             # e.g. 59223-9244, or "domeflattrace --planfile", with absolute
             # path of planfile
             # force single domeflat if a short visit or domelibrary=='single'
-            if planstr['telescope'] == 'apo25m' or planstr['telescope'] == 'apo1m': 
-                observatory = 'apo' 
+            observatory = planstr['telescope'][0:3]
+            if str(psflibrary) == 'single' or str(planpsflibrary) == 'single' or len(planstr['APEXP']) <= 3: 
+                out = subprocess.run(['psflibrary',observatory,'--planfile',planfile,'--s'],shell=False)
             else: 
-                observatory = 'lco' 
-            if str(domelibrary) == 'single' or str(plandomelibrary) == 'single' or len(planstr['APEXP']) <= 3: 
-                out = subprocess.run(['domeflattrace',observatory,'--planfile',planfile,'--s'],shell=False)
-            else: 
-                out = subprocess.run(['domeflattrace',observatory,'--planfile',planfile],shell=False)
+                out = subprocess.run(['psflibrary',observatory,'--planfile',planfile],shell=False)
             nout = len(out) 
             for f in range(nout): 
                 print(out[f])
             # parse the output parse the output 
-            lo = re.search(out,'^DOME FLAT RESULTS:')
-            #lo = where(stregex(out,'^DOME FLAT RESULTS:',/boolean) eq 1,nlo)
+            lo = re.search(out,'^PSF FLAT RESULTS:')
             hi = np.where((str(out)=='') & (np.arange(nout) > lo[0]))[0][0]
             if lo == -1 or hi == -1: 
-                print('problem running:meflattrace for '+planfile+'.  skipping this planfile.')
+                print('Problem running psflibrary for '+planfile+'. Skipping this planfile.')
                 continue 
             outarr = out[lo+1:hi].split()
             ims = outarr[0,:]
-            domeflatims = outarr[1,:]
+            psfflatims = outarr[1,:]
             # update planstr
             ind1,ind2,vals = np.intersect1d(apexp['name'],ims)
-            planstr['APEXP']['psfid'][ind1] = domeflatims[ind2] 
+            planstr['APEXP']['psfid'][ind1] = psfflatims[ind2] 
+            planstr['psfid'] = psfflatims[0]
         else: 
             planstr['APEXP']['psfid'] = planstr['psfid']
  
@@ -1238,24 +1258,28 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 if os.path.exists(outfile1) == 0: 
                     print(outfile1,' not found')
                     return      
+                head0 = fits.getheader(outfile1,0)
+                nread = head0['nread']
+                exptime = head0['exptime']
                 flux, head = fits.getdata(outfile1,1)
                 flux1 = flux[:,[75,225]]
-                # average on the level of the lsf, ~13 pixels average on the level of the lsf, ~13 pixels 
+                # average on the level of the lsf, ~13 pixels
                 bflux1 = flux1[0:157*13].reshape(157,2).sum(axis=1) 
                 medbflux = np.median(bflux1) 
-                # ~3800 for fpi (chip b) ~3800 for fpi (chip b) 
-                if medbflux < 2000: 
-                    print('fpiid is set but not enough flux in the 2-fpi fibers.  using sky lines instead!')
+                medbfluxnread = medbflux/nread
+                # flux/nreads ~65 for FPI (chip b)  
+                if medbfluxnread < 20: 
+                    print('FPIID is set but not enough flux in the 2-FPI fibers.  Using sky lines instead!')
                     fpiid = 0 
 
-            if fpiid > 0:  # use fpi lines
+            if fpiid > 0:  # use FPI lines
                 cmd = [cmd,'--fpiid',str(fpiid)] 
             else:  # use sky lines
                 if skywave==False:
                     cmd = [cmd,'--nosky']
             sout = subprocess.run(cmd,shell=False)
      
-        # Compress 2d files
+        # Compress 2D files
         nframes = len(planstr['APEXP']) 
         for j in range(nframes): 
             files = apogee_filename('2d',num=planstr['APEXP']['name'][j],chip=chiptag) 

@@ -80,6 +80,8 @@ FOR i=0L,nplanfiles-1 do begin
   if n_elements(planerror) gt 0 then goto,BOMB
   logfile = apogee_filename('Diag',plate=planstr.plateid,mjd=planstr.mjd)
 
+  ;; Make sure PSFID exists in planstr
+  if tag_exist(planstr,'psfid') eq 0 then add_tag,planstr,'psfid',0,planstr
   ;; Add PSFID tag to planstr APEXP structure
   if tag_exist(planstr.apexp,'psfid') eq 0 then begin
     apexp = planstr.apexp
