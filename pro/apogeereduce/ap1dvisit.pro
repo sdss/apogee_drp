@@ -680,7 +680,7 @@ FOR i=0L,nplanfiles-1 do begin
                                     visitstr.apogee_target4,survey=survey)
     endelse
     visitstr.survey = survey
-    visitstr.field = plugmap.field
+    visitstr.field = strtrim(plugmap.field,2)
     visitstr.programname = plugmap.programname
 
     ; get a few things from apVisit file (done in aprv also, but not
