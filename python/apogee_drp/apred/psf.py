@@ -497,10 +497,45 @@ class PSF(object):
         
     
 #####  GET EMPIRICAL PSF #######
+
+
+def mkfiber2hdu(hdulist):
+    # Get fiber numbers for each hdu of an apEPSF file
+    fiber2hdu = {}
+    fibernum = np.zeros(len(hdulist)-1,int)
+    for i in range(len(hdulist)-1):
+        fibernum[i] = hdulist[i+1].data['FIBER']
+        fiber2hdu[hdulist[i+1].data[0]['FIBER']] = i+1
+    return fiber2hdu
     
 
 def getprofdata(fibs,cols,hdulist,fiber2hdu):
-    """ Get the apEPSF profile data for a range of fibers and columns."""
+    """
+    Load the apEPSF profile data for a range of fibers and columns from the HDUList.
+
+    Parameters
+    ----------
+    fibs : list
+      List or fiber numbers or two-element list of upper/lower range to use.
+    cols : list
+      Two-element list of upper/lower range of columns to use.
+    hdulist : HDUList
+      HDUList containing the data.
+    fiber2hdu : dict
+      Fiber to HDU conversion dictionary.
+
+    Returns
+    -------
+    data : numpy array
+      The profile data for the range of fibers and columns [Nfibers*Ncols*30,4].
+      The values in the second dimension are: dy, flux, X, Y.
+
+    Example
+    -------
+
+    data = getprofdata(fibs,cols,hdulist,fiber2hdu)
+
+    """
 
     # Fiber range
     if len(fibs)==2:
@@ -546,7 +581,39 @@ def getprofdata(fibs,cols,hdulist,fiber2hdu):
 
 
 def avgprofile(fibs,cols,hdulist,fiber2hdu):
-    """ Get the average profile for a range of fibers and columns."""
+    """
+    Calculate the average profile for a range of fibers and columns.
+
+    Parameters
+    ----------
+    fibers : list
+      List or 2-element upper/lower range of fiber numbers to average.
+    cols : list
+      List or 2-element upper/lower range of column numbers to average.
+    hdulist : HDUList
+      HDUList containing the data.
+    fiber2hdu : dict
+      Fiber to HDU conversion dictionary.
+
+    Returns
+    -------
+    data : numpy array
+      The profile data for the range of fibers and columns [Nfibers*Ncols*30,4].
+      The values in the second dimension are: dy, flux, X, Y.
+
+    xbin : numpy array
+      Binned X-values.
+    ybin : numpy array
+      Binned Y-values.
+    profile : numpy array
+      The binned and normalized profiles for each grid point.
+
+    Example
+    -------
+
+    data, xbin, ybin, profile = avgprofile(fibs,cols,hdulist,fiber2hdu):
+
+    """
     # composite profile
     
     # Get profile data
@@ -587,19 +654,48 @@ def avgprofile(fibs,cols,hdulist,fiber2hdu):
     return data, xbin, ybin, ybinsm
 
 
-def getprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
-    """ Get all of the profiles across the detector."""
+def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
+    """
+    Construct a grid in X and Y across the detector of average
+    PSF profiles.
+
+    Parameters
+    ----------
+    psffile : str
+      Filename of apEPSF file with empirical PSF profiles.
+    sparsefile : str
+      Filename of apSparse file with APOGEE sparse PSF profile data.
+    nfbin : int
+      Number of fibers to bin/average.  Default is 5.
+    ncbin : int
+      Number of column to bin/average.  Default is 200.
+
+    Returns
+    -------
+    data : numpy array
+      List of all profile data for the grid.  There is an element
+        for each grid point that contains:
+         [xbin,ybin,profile,fiber,column]
+    mnx : numpy array
+      Mean X values for each average/grid profile point [Ncols,Nfibers].
+    mny : numpy array
+      Mean Y values for each average/grid profile point [Ncols,Nfibers].
+    profiles : numpy array
+      Averaged profile data [Ncols, Nfibers, 300].
+
+    Example
+    -------
+
+    data,mnx,mny,profiles = makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200)
+
+    """
 
     allim,head = fits.getdata(sparsefile,0,header=True)
     sim = allim[1,:,:]
     psfhdu = fits.open(psffile)
 
     # Get fiber numbers for each hdu
-    fiber2hdu = {}
-    fibernum = np.zeros(len(psfhdu)-1,int)
-    for i in range(len(psfhdu)-1):
-        fibernum[i] = psfhdu[i+1].data['FIBER']
-        fiber2hdu[psfhdu[i+1].data[0]['FIBER']] = i+1
+    fiber2hdu = mkfiber2hdu(psfhdu)
     
     fibers = np.arange(0,300,nfbin)
     columns = np.arange(10,2000,ncbin)
@@ -1352,7 +1448,7 @@ if __name__ == '__main__' :
     im = allim[1,:,:]
     psfhdu = fits.open(psfdir+psffile)
 
-    data = getprofilegrid(psfdir+psffile,psfdir+sparsefile)
+    data = makeprofilegrid(psfdir+psffile,psfdir+sparsefile)
 
 
     import pdb; pdb.set_trace()
