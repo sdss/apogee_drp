@@ -1359,6 +1359,68 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     # Run monitor page
     #  always runs on all MJDs
     monitor.monitor()
+
+
+def summary_email(observatory,apred,mjds,steps,chkmaster=None,chk3d=None,chkcal=None, 
+                  planfiles=None,chkapred=None,chkrv=None,logfile=None,slurm=None,
+                  clobber=None):   
+    """ Send a summary email."""
+
+    mjdstart = np.min(mjds)
+    mjdstop = np.max(mjds)
+    address = 'apogee-pipeline-log@sdss.org'
+    subject = 'DRP APOGEE Reduction %s %s %s-%s' % (observatory,apred,mjdstart,mjdstop)
+    message = """\
+              <html>
+                <body>
+              """
+    message += '<b>DRP APOGEE Reduction %s %s %s-%s</b><br>\n' % (observatory,apred,mjdstart,mjdstop)
+    message += 'Steps: '+','+join(steps)+'<br>\n'
+    message += '<p>\n'
+    message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/'+str(apred)+'/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
+
+    if clobber:
+        message += 'clobber: '+str(clobber)+'<br>\n'
+    if slurm:
+        message += 'Slurm settings: '+str(slurm)+'<br>\n'
+
+    # Master Cals step
+    if 'master' in steps and chkmaster:
+        ind, = np.where(chkmaster['success']==True)
+        message += '%d/%d Master calibrations successfully processed<br> \n' % (len(ind),len(chkmaster))
+        
+    # AP3D step
+    if '3d' in steps and chk3d:
+        ind, = np.where(chk3d['success']==True)
+        message += 'AP3D: %d/%d exposures successfully processed through AP3D<br> \n' % (len(ind),len(chk3d))
+
+    # Daily Cals step
+    if 'cal' in steps and chkcal:
+        ind, = np.where(chkcal['success']==True)
+        message += 'Cal: %d/%d daily calibrations successfully processed<br> \n' % (len(ind),len(chkcal))
+ 
+    # Plan files
+    if 'plan' in steps and planfiles:
+        message += 'Plan: %d plan files successfully made<br> \n' % len(planfiles)
+
+    # APRED step
+    if 'apred' in steps and chkapred:
+        ind, = np.where(chkapred['success']==True)
+        message += 'APRED: %d/%d visits successfully processed<br> \n' % (len(ind),len(chkapred))
+
+    # RV step
+    if 'rv' in steps and chkrv:
+        ind, = np.where(chkrv['success']==True)
+        message += 'RV: %d/%d RV+visit combination successfully processed<br> \n' % (len(ind),len(chkrv))
+
+    message += """\
+                 </p>
+                 </body>
+               </html>
+               """
+
+    # Send the message
+    email.send(address,subject,message,files=logfile)
     
 
 def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=False,links=None,
@@ -1461,13 +1523,16 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     rootLogger.addHandler(consoleHandler)
     rootLogger.setLevel(logging.NOTSET)
 
-    rootLogger.info('Running APOGEE DRP for '+str(observatory).upper()+' apred='+apred)
+    rootLogger.info('Running APOGEE DRP for '+str(observatory).upper()+' APRED='+apred)
     rootLogger.info(str(nmjd)+' MJDs: '+','.join(np.char.array(mjds).astype(str)))
     rootLogger.info(str(nsteps)+' steps: '+','.join(steps))
-    rootLogger.info('Clobber is '+str(clobber))
+    rootLogger.info('Clobber: '+str(clobber))
 
     # Common keyword arguments
     kws = {'slurm':slurm, 'clobber':clobber, 'logger':rootLogger}
+
+    # Defaults for check tables
+    chkmaster,chk3d,chkcal,planfiles,chkapred,chkrv = None,None,None,None,None,None
 
     # 1) Setup the directory structure
     #----------------------------------
@@ -1501,7 +1566,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('2) Generating master calibration products')
         rootLogger.info('=========================================')
         rootLogger.info('')
-        chk = mkmastercals(load,links=links,**kws)
+        chkmaster = mkmastercals(load,links=links,**kws)
 
     # 3) Process all exposures through ap3d
     #---------------------------------------
@@ -1554,6 +1619,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         chkrv = runrv(load,mjds,**kws)
 
     # 8) Create full allVisit/allStar files
+    #--------------------------------------
     if 'summary' in steps:
         rootLogger.info('')
         rootLogger.info('-----------------------')
@@ -1563,7 +1629,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         runsumfiles(load,mjds,logger=rootLogger)
     
     # 9) Unified directory structure
-    #---------------------------------
+    #-------------------------------
     if 'unified' in steps:
         rootLogger.info('')
         rootLogger.info('---------------------------------------------')
@@ -1605,13 +1671,12 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
 
     ## UPDATE THE DATABASE!!!
     
-    rootLogger.info('Daily APOGEE reduction finished for MJD=%d to MJD=%d and observatory=%s' % (mjdstart,mjdstop,observatory))
+    rootLogger.info('DRP APOGEE reduction finished for %s APRED=%s MJD=%d to MJD=%d' % (observatory,apred,mjdstart,mjdstop))
 
 
     # Summary email
     # send to apogee_reduction email list
-    # include basic information
-    # give link to QA page
-    # attach full run_daily() log (as attachment)
-    # don't see it if using --debug mode
-    #runapogee.summary_email(observatory,mjdstart,chkexp,chkvisit,chkrv,logfile)
+    summary_email(observatory,apred,mjds,steps,chkmaster=chkmaster,chk3d=chk3d,chkcal=chkcal,
+                  planfiles=planfiles,chkapred=chkapred,chkrv=chkrv,logfile=logfile,slurm=slurm,
+                  clobber=clobber)
+
