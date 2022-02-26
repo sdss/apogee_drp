@@ -20,7 +20,9 @@ if __name__ == "__main__":
     parser.add_argument('--steps', type=str, nargs=1, help='Processing steps (setup, master, 3d, cal, plan, apred, rv, summary, unified, qa)')    
     parser.add_argument('--nodes', type=str, nargs=1, help='How many nodes to use')
     parser.add_argument('--fresh', action='store_true', help='Start fresh.')
+    parser.add_argument('--linkvers', type=str, nargs=1, help='Link master calibration files to this reduction version.')
     parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
+    parser.add_argument('--debug', action='store_true', help='For testing purposes')
     args = parser.parse_args()
 
     t0 = time.time()
@@ -41,7 +43,11 @@ if __name__ == "__main__":
         nodes = args.nodes[0]
     else:
         nodes = None
+    if isinstance(args.linkvers,list):
+        linkvers = args.linkvers[0]
+    else:
+        linkvers = None
 
     # Run data reduction
-    apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,
-                  nodes=nodes,fresh=args.fresh,clobber=args.clobber)
+    apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,clobber=args.clobber,
+                  nodes=nodes,fresh=args.fresh,linkvers=linkvers,debug=args.debug)

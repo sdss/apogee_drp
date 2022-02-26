@@ -4,13 +4,12 @@
 
 import traceback
 from argparse import ArgumentParser
-from .plan import apogeedrp
+from apogee_drp.plan import apogeedrp
 
 # Main command-line program
 if __name__ == "__main__":
     parser = ArgumentParser(description='Setup APOGEE DRP directory structure')
     parser.add_argument('vers', type=str, nargs=1, help='APOGEE Reduction version')
-    parser.add_argument('--fresh', action='store_true', help='Start fresh.')
     args = parser.parse_args()
 
     if isinstance(args.vers,list):
@@ -19,6 +18,6 @@ if __name__ == "__main__":
         vers = args.vers
 
     try:
-        apogeedrp.mkvers(apred=args.vers,fresh=args.fresh)
+        apogeedrp.mkvers(apred=vers)
     except:
         traceback.print_exc()

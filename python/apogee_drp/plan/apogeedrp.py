@@ -20,7 +20,7 @@ import logging
 from slurm import queue as pbsqueue
 import time
 import traceback
-
+import subprocess
 
 def loadmjd(mjd):
     """ Parse and expand input MJD range/list."""
@@ -223,7 +223,7 @@ def getplanfiles(load,mjds,exist=False,logger=None):
     return planfiles
 
 
-def mkvers(apred,fresh=False,logger=None):
+def mkvers(apred,logger=None):
     """
     Setup APOGEE DRP directory structure.
    
@@ -231,9 +231,6 @@ def mkvers(apred,fresh=False,logger=None):
     ----------
     apred : str
        Reduction version name.
-    fresh : boolean, optional
-       Start the reduction directory fresh.  The default is continue with what is
-         already there.
     logger : logger, optional
        Logging object.  If not is input, then a default one will be created.
     
@@ -254,67 +251,61 @@ def mkvers(apred,fresh=False,logger=None):
     apogee_redux = os.environ['APOGEE_REDUX']+'/'
     apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
 
-    logger.info('Setting up directory structure for APOGEE DRP version = ',vers)
-
-    # Start fresh
-    if args.fresh:
-        logger.info('Starting fresh')
-        if os.path.exists(apogee_redux+vers):
-            shutil.rmtree(apogee_redux+vers)
+    logger.info('Setting up directory structure for APOGEE DRP version = '+apred)
 
     # Main directory
-    if os.path.exists(apogee_redux+vers)==False:
-        logger.info('Creating ',apogee_redux+vers)
-        os.makedirs(apogee_redux+vers)
+    if os.path.exists(apogee_redux+apred)==False:
+        logger.info('Creating '+apogee_redux+apred)
+        os.makedirs(apogee_redux+apred)
     else:
-        logger.info(apogee_redux+vers,' already exists')
+        logger.info(apogee_redux+apred+' already exists')
     # First level
     for d in ['cal','exposures','stars','fields','visit','qa','plates','monitor','summary','log']:
-        if os.path.exists(apogee_redux+vers+'/'+d)==False:
-            logger.info('Creating ',apogee_redux+vers+'/'+d)
-            os.makedirs(apogee_redux+vers+'/'+d)
+        if os.path.exists(apogee_redux+apred+'/'+d)==False:
+            logger.info('Creating '+apogee_redux+apred+'/'+d)
+            os.makedirs(apogee_redux+apred+'/'+d)
         else:
-            logger.info(apogee_redux+vers+'/'+d,' already exists')
+            logger.info(apogee_redux+apred+'/'+d+' already exists')
     # North/south subdirectories
     for d in ['cal','exposures','monitor']:
         for obs in ['apogee-n','apogee-s']:
-            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
-                logger.info('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
+            if os.path.exists(apogee_redux+apred+'/'+d+'/'+obs)==False:
+                logger.info('Creating '+apogee_redux+apred+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs)
             else:
-                logger.info(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
+                logger.info(apogee_redux+apred+'/'+d+'/'+obs+' already exists')
     for d in ['visit','stars','fields']:
         for obs in ['apo25m','lco25m']:
-            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
-                logger.info('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
+            if os.path.exists(apogee_redux+apred+'/'+d+'/'+obs)==False:
+                logger.info('Creating '+apogee_redux+apred+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs)
             else:
-                logger.info(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
+                logger.info(apogee_redux+apred+'/'+d+'/'+obs+' already exists')
     for d in ['log']:
         for obs in ['apo','lco']:
-            if os.path.exists(apogee_redux+vers+'/'+d+'/'+obs)==False:
-                logger.info('Creating ',apogee_redux+vers+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+vers+'/'+d+'/'+obs)
+            if os.path.exists(apogee_redux+apred+'/'+d+'/'+obs)==False:
+                logger.info('Creating '+apogee_redux+apred+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs)
             else:
-                logger.info(apogee_redux+vers+'/'+d+'/'+obs,' already exists')
+                logger.info(apogee_redux+apred+'/'+d+'/'+obs+' already exists')
     # Cal subdirectories
     for d in ['bpm','darkcorr','detector','flatcorr','flux','fpi','html','littrow','lsf','persist','plans','psf','qa','telluric','trace','wave']:
         for obs in ['apogee-n','apogee-s']:
-            if os.path.exists(apogee_redux+vers+'/cal/'+obs+'/'+d)==False:
-                logger.info('Creating ',apogee_redux+vers+'/cal/'+obs+'/'+d)
-                os.makedirs(apogee_redux+vers+'/cal/'+obs+'/'+d)
+            if os.path.exists(apogee_redux+apred+'/cal/'+obs+'/'+d)==False:
+                logger.info('Creating '+apogee_redux+apred+'/cal/'+obs+'/'+d)
+                os.makedirs(apogee_redux+apred+'/cal/'+obs+'/'+d)
             else:
-                logger.info(apogee_redux+vers+'/cal/'+obs+'/'+d,' already exists')
+                logger.info(apogee_redux+apred+'/cal/'+obs+'/'+d+' already exists')
 
     # Webpage files
     #if os.path.exists(apogee_drp_dir+'etc/htaccess'):
-    #    os.copy(apogee_drp_dir+'etc/htaccess',apogee_redux+vers+'qa/.htaccess'
-    if os.path.exists(apogee_drp_dir+'etc/sorttable.js') and os.path.exists(apogee_redux+vers+'/qa/sorttable.js')==False:
+    #    os.copy(apogee_drp_dir+'etc/htaccess',apogee_redux+apred+'qa/.htaccess'
+    if os.path.exists(apogee_drp_dir+'etc/sorttable.js') and os.path.exists(apogee_redux+apred+'/qa/sorttable.js')==False:
         logger.info('Copying sorttable.js')
-        shutil.copyfile(apogee_drp_dir+'etc/sorttable.js',apogee_redux+vers+'/qa/sorttable.js')
+        shutil.copyfile(apogee_drp_dir+'etc/sorttable.js',apogee_redux+apred+'/qa/sorttable.js')
 
 
-def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
+def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     """
     Make the master calibration products for a reduction version and MJD range.
 
@@ -328,8 +319,8 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
        Dictionary of slurm settings.
     clobber : boolean, optional
        Overwrite any existing files.  Default is False.
-    links : str, optional
-       Name of reduction version to use for symlinks for the calibration files.    
+    linkvers : str, optional
+       Name of reduction version to use for symlinks for the master calibration files.    
     logger : logger, optional
        Logging object.  If not is input, then a default one will be created.
 
@@ -355,17 +346,19 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     apogee_redux = os.environ['APOGEE_REDUX']+'/'
     apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
     
-
     # Symbolic links to another version
-    if links is not None:
-        linkvers = links
-        logger.info('Creating calibration product symlinks to version >>'+linkvers+'<<')
+    if linkvers:
+        logger.info('Creating calibration product symlinks to version >>'+str(linkvers)+'<<')
         cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','fpi','littrow','lsf','persist','telluric','wave']:
+        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','wave']:
             for obs in ['apogee-n','apogee-s']:    
-                logger.info('Creating symlinks for '+apogee_redux+vers+'/cal/'+obs+'/'+d)
-                os.chdir(apogee_redux+vers+'/cal/'+obs+'/'+d)
-                subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/*fits .'],shell=True)
+                logger.info('Creating symlinks for '+apogee_redux+apred+'/cal/'+obs+'/'+d)
+                os.chdir(apogee_redux+apred+'/cal/'+obs+'/'+d)
+                if d!='wave':
+                    subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/*fits .'],shell=True)
+                else:
+                    # Only multiwave files
+                    subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/apWave-?-?????fits .'],shell=True)
         return
 
 
@@ -404,7 +397,6 @@ def mkmastercals(load,mjds,slurm,clobber=False,links=None,logger=None):
     # Wave, from arclamps
 
     # Maybe have an option to copy/symlink them from a previous apred version
-    
 
     # Make darks sequentially
     #-------------------------
@@ -1363,19 +1355,21 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
 
 def summary_email(observatory,apred,mjds,steps,chkmaster=None,chk3d=None,chkcal=None, 
                   planfiles=None,chkapred=None,chkrv=None,logfile=None,slurm=None,
-                  clobber=None):   
+                  clobber=None,debug=False):   
     """ Send a summary email."""
 
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
     address = 'apogee-pipeline-log@sdss.org'
+    if debug:
+        address = 'dnidever@montana.edu'
     subject = 'DRP APOGEE Reduction %s %s %s-%s' % (observatory,apred,mjdstart,mjdstop)
     message = """\
               <html>
                 <body>
               """
     message += '<b>DRP APOGEE Reduction %s %s %s-%s</b><br>\n' % (observatory,apred,mjdstart,mjdstop)
-    message += 'Steps: '+','+join(steps)+'<br>\n'
+    message += 'Steps: '+','.join(steps)+'<br>\n'
     message += '<p>\n'
     message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/'+str(apred)+'/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
 
@@ -1420,11 +1414,11 @@ def summary_email(observatory,apred,mjds,steps,chkmaster=None,chk3d=None,chkcal=
                """
 
     # Send the message
-    email.send(address,subject,message,files=logfile)
+    email.send(address,subject,message,files=logfile,send_from='noreply.apogeedrp')
     
 
-def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=False,links=None,
-        nodes=10):
+def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
+        linkvers=None,nodes=5,debug=False):
     """
     Perform APOGEE Data Release Processing
 
@@ -1443,15 +1437,17 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
        Processing steps to perform.  The full list is:
          ['setup','master','3d','cal','plan','apred','rv','summary','unified','qa']
          By default, all steps are run.
-    qos : str, optional
-       The pbs queue to use.  Default is "sdss".
     clobber : boolean, optional
        Overwrite any existing data.  Default is False.
     fresh : boolean, optional
        Start the reduction directory fresh.  The default is continue with what is
          already there.
-    links : str, optional
+    linkvers : str, optional
        Name of reduction version to use for symlinks for the calibration files.
+    nodes : int, optional
+       Number of nodes to use on the CHPC.  Default is 5.
+    debug : boolean, optional
+       For testing purposes.  Default is False.
 
     Returns
     -------
@@ -1503,6 +1499,15 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     # Data directory 
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
 
+    # Starting fresh
+    #  need to do this before we start the log file
+    if 'setup' in steps and fresh:
+        print('Starting '+str(apred)+' fresh')
+        apogee_redux = os.environ['APOGEE_REDUX']+'/'
+        if os.path.exists(apogee_redux+apred):
+            shutil.rmtree(apogee_redux+apred)
+        os.makedirs(logdir)        
+
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
     rootLogger = logging.getLogger() 
@@ -1527,6 +1532,9 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     rootLogger.info(str(nmjd)+' MJDs: '+','.join(np.char.array(mjds).astype(str)))
     rootLogger.info(str(nsteps)+' steps: '+','.join(steps))
     rootLogger.info('Clobber: '+str(clobber))
+    if fresh:
+        rootLogger.info('Starting '+str(apred)+' fresh')
+    rootLogger.info('Slurm settings: '+str(slurm))
 
     # Common keyword arguments
     kws = {'slurm':slurm, 'clobber':clobber, 'logger':rootLogger}
@@ -1543,19 +1551,15 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('=====================================')
         rootLogger.info('')
         queue = pbsqueue(verbose=True)
-        queue.create(label='mkvers', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
+        queue.create(label='mkvers', nodes=1, alloc=alloc, ppn=ppn, cpus=1, shared=shared, walltime=walltime, notification=False)
         mkvoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkvers.'+logtime+'.log'
         mkverrfile = mkvoutfile.replace('-mkvers.log','-mkvers.'+logtime+'.err')
         if os.path.exists(os.path.dirname(mkvoutfile))==False:
             os.makedirs(os.path.dirname(mkvoutfile))
         cmd = 'mkvers {0}'.format(apred)
-        if fresh:
-            cmd += ' --fresh'
-        if links is not None:
-            cmd += ' --links '+str(links)
         queue.append(cmd,outfile=mkvoutfile, errfile=mkverrfile)
         queue.commit(hard=True,submit=True)
-        runapogee.queue_wait(queue)  # wait for jobs to complete
+        runapogee.queue_wait(queue,sleeptime=30,logger=rootLogger,verbose=True)  # wait for jobs to complete 
         del queue    
 
     # 2) Master calibration products, make sure to do them in the right order
@@ -1566,7 +1570,7 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
         rootLogger.info('2) Generating master calibration products')
         rootLogger.info('=========================================')
         rootLogger.info('')
-        chkmaster = mkmastercals(load,links=links,**kws)
+        chkmaster = mkmastercals(load,mjds,linkvers=linkvers,**kws)
 
     # 3) Process all exposures through ap3d
     #---------------------------------------
@@ -1678,5 +1682,5 @@ def run(observatory,apred,mjd=None,steps=None,qos='sdss',clobber=False,fresh=Fal
     # send to apogee_reduction email list
     summary_email(observatory,apred,mjds,steps,chkmaster=chkmaster,chk3d=chk3d,chkcal=chkcal,
                   planfiles=planfiles,chkapred=chkapred,chkrv=chkrv,logfile=logfile,slurm=slurm,
-                  clobber=clobber)
+                  clobber=clobber,debug=debug)
 
