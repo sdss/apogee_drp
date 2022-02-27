@@ -1372,7 +1372,7 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
               """
 
     message += '<b>APOGEE DRP Reduction %s %s %s</b><br>\n' % (observatory,apred,str(mjd))
-    message += str(nmjd)+' MJDs: '+','.join(np.char.array(mjds).astype(str))
+    message += str(nmjd)+' MJDs: '+','.join(np.char.array(mjds).astype(str))+'<br>\n'
     message += 'Steps: '+','.join(steps)+'<br>\n'
     message += '<p>\n'
     message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/'+str(apred)+'/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
