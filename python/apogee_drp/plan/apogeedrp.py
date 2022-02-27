@@ -358,7 +358,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/*fits .'],shell=True)
                 else:
                     # Only multiwave files
-                    subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/apWave-?-?????fits .'],shell=True)
+                    subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/apWave-?-?????.fits .'],shell=True)
         return
 
 
@@ -1353,22 +1353,26 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     monitor.monitor()
 
 
-def summary_email(observatory,apred,mjds,steps,chkmaster=None,chk3d=None,chkcal=None, 
+def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=None, 
                   planfiles=None,chkapred=None,chkrv=None,logfile=None,slurm=None,
                   clobber=None,debug=False):   
     """ Send a summary email."""
 
+    mjds = loadmjd(mjd)
+    nmjd = len(mjds)
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
     address = 'apogee-pipeline-log@sdss.org'
     if debug:
         address = 'dnidever@montana.edu'
-    subject = 'DRP APOGEE Reduction %s %s %s-%s' % (observatory,apred,mjdstart,mjdstop)
+    subject = 'APOGEE DRP Reduction %s %s %s-%s' % (observatory,apred,mjdstart,mjdstop)
     message = """\
               <html>
                 <body>
               """
-    message += '<b>DRP APOGEE Reduction %s %s %s-%s</b><br>\n' % (observatory,apred,mjdstart,mjdstop)
+
+    message += '<b>APOGEE DRP Reduction %s %s %s</b><br>\n' % (observatory,apred,str(mjd))
+    message += str(nmjd)+' MJDs: '+','.join(np.char.array(mjds).astype(str))
     message += 'Steps: '+','.join(steps)+'<br>\n'
     message += '<p>\n'
     message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/'+str(apred)+'/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
@@ -1529,6 +1533,7 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
     rootLogger.setLevel(logging.NOTSET)
 
     rootLogger.info('Running APOGEE DRP for '+str(observatory).upper()+' APRED='+apred)
+    rootLogger.info('MJD: '+str(mjd))
     rootLogger.info(str(nmjd)+' MJDs: '+','.join(np.char.array(mjds).astype(str)))
     rootLogger.info(str(nsteps)+' steps: '+','.join(steps))
     rootLogger.info('Clobber: '+str(clobber))
@@ -1675,12 +1680,11 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
 
     ## UPDATE THE DATABASE!!!
     
-    rootLogger.info('DRP APOGEE reduction finished for %s APRED=%s MJD=%d to MJD=%d' % (observatory,apred,mjdstart,mjdstop))
+    rootLogger.info('APOGEE DRP reduction finished for %s APRED=%s MJD=%d to MJD=%d' % (observatory,apred,mjdstart,mjdstop))
 
 
     # Summary email
-    # send to apogee_reduction email list
-    summary_email(observatory,apred,mjds,steps,chkmaster=chkmaster,chk3d=chk3d,chkcal=chkcal,
+    summary_email(observatory,apred,mjd,steps,chkmaster=chkmaster,chk3d=chk3d,chkcal=chkcal,
                   planfiles=planfiles,chkapred=chkapred,chkrv=chkrv,logfile=logfile,slurm=slurm,
                   clobber=clobber,debug=debug)
 
