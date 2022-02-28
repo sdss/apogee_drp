@@ -426,6 +426,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     html.write('<h3> <a name=scisnr></a> S/N history for H=10.8-11.2 stars</h3>\n')
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=1100></A>\n')
+    html.write('<A HREF=' + instrument + '/snmoondist.png target="_blank"><IMG SRC=' + instrument + '/snmoondist.png WIDTH=1100></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
@@ -958,6 +959,66 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #if ichip == 0: pdb.set_trace()
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+                if ichip == 0: ylims = ax.get_ylim()
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
+
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                cax.minorticks_on()
+                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            fig.subplots_adjust(left=0.05,right=0.945,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # snmoondist.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snmoondist.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            snbin = 10
+            magmin = '10.8'
+            magmax = '11.2'
+
+            medesnrG = np.nanmedian(allsnr['ESNBINS'][:,10,1])
+            medesnrG = np.nanstd(allsnr['ESNBINS'][:,10,1])
+            limesnrG = medesnrG + 2*medesnrG
+            gd, = np.where((allsnr['NSNBINS'][:, snbin] > 5) & (allsnr['SNBINS'][:, snbin, 1] > 0) & (allsnr['ESNBINS'][:, snbin, 1] < limesnrG))
+            allsnrg = allsnr[gd]
+            ngd = len(allsnrg)
+
+            ymin = -0.5
+            ymax = 10.5
+            yspan = ymax-ymin
+
+            fig = plt.figure(figsize=(32,14))
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                #ax.set_xlim(0, 1)
+                ax.set_ylim(ymin, ymax)
+                #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'Moon Distance')
+                if ichip == 1: ax.text(-0.035, 0.5, r'S/N per minute ($' + magmin + r'>=H>' + magmax + r'$)', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                xvals = allsnrg['MOONDIST']
+                yvals = (allsnrg['MEDSNBINS'][:, snbin, 2-ichip]) / (allsnrg['EXPTIME'] / 60)
+                scolors = allsnrg['MJD']
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='gnuplot_r')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 if ichip == 0: ylims = ax.get_ylim()
                 for iyear in range(nyears):
