@@ -1372,8 +1372,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,14))
 
             ycent = np.array([1730, 625, 1780])
-            ymax = ycent+18
-            ymin = ycent-18
+            ymax = ycent+40
+            ymin = ycent-40
             yspan = ymax-ymin
 
             gdcal = allcal[thar]
@@ -1384,7 +1384,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin, xmax)
-                ax.set_xlim(ymin, ymax)
+                ax.set_xlim(ymin[ichip], ymax[ichip])
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -1402,15 +1402,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
                         ha='right', va='top', color=chip, bbox=bboxpar)
 
-                w = np.nanmedian(gdcal['GAUSS'][:, 1, ichip, :, 1])
-                ymin = w - 40
-                ymax = w + 40
-                yspan = ymax - ymin
-                ax.set_ylim(ymin, ymax)
+                #w = np.nanmedian(gdcal['GAUSS'][:, 1, ichip, :, 1])
+                #min = w - 40
+                #ymax = w + 40
+                #yspan = ymax - ymin
+                #ax.set_ylim(ymin, ymax)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                    if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['GAUSS'][:, 1, ichip, ifib, 1] 
