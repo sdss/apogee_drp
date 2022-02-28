@@ -294,7 +294,7 @@ def findBestFlatExposure(flatTable=None, imtype=None, refpix=None, twodfiles=Non
 # Program for making the domeflat lookup table.
 # Takes about 8 hours to run, unless a later "mjdstart" is specified.
 ###################################################################################################
-def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medianrad=100, append=True):
+def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medianrad=100, append=True, mjdstart=56580):
 
     start_time = time.time()
 
@@ -324,7 +324,10 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
 
     # Read in the exposure summary file and restrict to either dome or quartz
     exp = fits.getdata(mdir + instrument + 'Exp.fits')
-    gd, = np.where(exp['IMAGETYP'] == imtype)
+    if mjdstart is None:
+        gd, = np.where(exp['IMAGETYP'] == imtype)
+    else:
+        gd, = np.where((exp['IMAGETYP'] == imtype) & (exp['MJD'] >= mjdstart))
     #gd, = np.where((exp['IMAGETYP'] == imtype) & (exp['MJD'] > 59560))
     exp = exp[gd]
     nexp = len(exp)
