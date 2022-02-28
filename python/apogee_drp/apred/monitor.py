@@ -950,6 +950,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
                 ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
                 ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['MEDSNBINS'][:, snbin, 2-ichip]) / (allsnrg['EXPTIME'] / 60)
@@ -957,9 +959,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #if ichip == 0: pdb.set_trace()
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
-
-                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
-                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 if ichip == 0: ylims = ax.get_ylim()
                 for iyear in range(nyears):
@@ -1009,7 +1008,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59560, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1020,8 +1025,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='fib ' + str(fibers[ifib]))
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: 
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz, edgecolor='k', framealpha=1)
@@ -1063,7 +1066,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'FWHM (pixels)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59560, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1074,8 +1083,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='fib ' + str(fibers[ifib]))
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: 
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz, edgecolor='k', framealpha=1)
@@ -1115,7 +1122,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Line Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59560, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1128,8 +1141,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='fib ' + str(fibers[ifib]))
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: 
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz, edgecolor='k', framealpha=1)
@@ -1169,7 +1180,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Line Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59560, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1182,8 +1199,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='fib ' + str(fibers[ifib]))
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: 
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz, edgecolor='k', framealpha=1)
@@ -1221,7 +1236,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59560, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1235,8 +1256,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='fib ' + str(fibers[ifib]), zorder=3)
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: 
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz, edgecolor='k', framealpha=1)
@@ -1278,7 +1297,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'FWHM (pixels)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59560, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1289,8 +1314,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.scatter(dmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='fib ' + str(fibers[ifib]))
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: 
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz, edgecolor='k', framealpha=1)
@@ -1322,7 +1345,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.set_xlabel(r'JD - 2,400,000')
             ax.set_ylabel(r'Zeropoint (mag.)')
             ax.axes.xaxis.set_ticklabels([])
-            ax.axvline(x=59146, color='r', linewidth=2)
+            ax.axvline(x=59146, color='teal', linewidth=2)
+            ax.axvline(x=59560, color='teal', linewidth=2)
+            ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+            ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
 
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1361,7 +1388,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Position (pixel)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59560, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 w = np.nanmedian(gdcal['GAUSS'][:, 1, ichip, :, 1])
                 ymin = w - 40
@@ -1377,8 +1410,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     yvals = gdcal['GAUSS'][:, 1, ichip, ifib, 1] 
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
 
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
                 if ichip == 0: 
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz, edgecolor='k', framealpha=1)
@@ -1413,7 +1444,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                         ax.set_ylabel(r'FWHM ($\rm \AA$)')
                         if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                        ax.axvline(x=59146, color='r', linewidth=2)
+                        ax.axvline(x=59146, color='teal', linewidth=2)
+                        ax.axvline(x=59560, color='teal', linewidth=2)
+                        ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                        ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                        ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                        ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                                ha='right', va='top', color=chip, bbox=bboxpar)
 
                         w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
                         ymin = w * 0.8
@@ -1433,8 +1470,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                             ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                        label='fib ' + str(fibers[ifib]), zorder=3)
 
-                        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                                ha='center', va='top', color=chip, bbox=bboxpar)
                         if ichip == 0: 
                             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                                       fontsize=fsz, edgecolor='k', framealpha=1)
@@ -1464,7 +1499,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax1.set_xlim(xmin, xmax)
             ax1.set_xlabel(r'JD - 2,400,000')
             ax2.set_xlabel(r'LN2 Level')
-            ax1.axvline(x=59146, color='r', linewidth=2)
+            ax.axvline(x=59146, color='teal', linewidth=2)
+            ax.axvline(x=59560, color='teal', linewidth=2)
+            ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+            ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
             for ax in axes:
                 ax.set_ylim(ymin, ymax)
                 ax.minorticks_on()
@@ -1514,7 +1553,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 if ichip == 1: ax.set_ylabel(r'Mean (column median)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59560, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1523,9 +1568,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ibias in range(4):
                     ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
                                 mec=colors1[ibias], mfc=colors1[ibias], linestyle='', label='quad '+str(ibias+1))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
 
                 if ichip == 0: 
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
@@ -1564,7 +1606,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 if ichip == 1: ax.set_ylabel(r'$\sigma$ (column median)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59560, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1573,9 +1621,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ibias in range(4):
                     ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
                                 mec=colors1[ibias], mfc=colors1[ibias], linestyle='', label='quad '+str(ibias+1))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
 
                 if ichip == 0: 
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
