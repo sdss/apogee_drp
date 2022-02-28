@@ -425,7 +425,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
 
     html.write('<h3> <a name=scisnr></a> S/N history for H=10.8-11.2 stars</h3>\n')
-    html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snrhistory.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
@@ -873,6 +873,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.set_xlabel(r'JD - 2,400,000')
             ax.set_ylabel(r'$N_{\rm obs}$')
             ax.axvline(x=59146, color='r', linewidth=2)
+            ax.text(59146+xspan*0.02, ymax-yspan*0.05, 'plate-V', fontsize=fsz, color='r', va='top')
+            ax.axvline(x=59560, color='r', linewidth=2)
+            ax.text(59560+xspan*0.02, ymax-yspan*0.05, 'FPS-V', fontsize=fsz, color='r', va='top')
 
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -897,7 +900,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #ax.scatter(umjd, nexp, marker='o', s=markersz, c='grey', alpha=alf, label='exposures')
             #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
 
-            ax.legend(loc='upper right', labelspacing=0.5, handletextpad=0.3, markerscale=1, 
+            ax.legend(loc='upper left', labelspacing=0.5, handletextpad=0.3, markerscale=1, 
                       fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.04,right=0.99,bottom=0.08,top=0.94,hspace=0.08,wspace=0.00)
