@@ -847,6 +847,166 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makecomplots is True:
         ###########################################################################################
+        # rvparams.png
+        # Plot of stellar parameters, plate vs. FPS
+        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
+        print("----> monitor: Making " + os.path.basename(plotfile))
+
+        remake = 1
+        datafile = 'rvparams_plateVSfps.fits'
+        if remake:
+            gd, = np.where((allv5['MJD'] > 59580) & 
+                           (np.isnan(allv5['vheliobary']) == False) & 
+                           (np.absolute(allv5['vheliobary']) < 400) & 
+                           (np.isnan(allv5['SNR']) == False) & 
+                           (allv5['SNR'] > 10))
+            allv5fps = allv5[gd]
+
+            gd, = np.where((np.isnan(allv4['VHELIO']) == False) &
+                           (np.absolute(allv4['VHELIO']) < 400) &
+                           (np.isnan(allv4['SNR']) == False) & 
+                           (allv4['SNR'] > 10))
+            allv4g = allv4[gd]
+
+            uplateIDs = np.unique(allv4g['APOGEE_ID'])
+            ufpsIDs = np.unique(allv5fps['APOGEE_ID'])
+
+            gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
+            ngd = len(gdIDs)
+            print(ngd)
+
+            dt = np.dtype([('JMAG',      np.float64),
+                           ('HMAG',      np.float64),
+                           ('KMAG',      np.float64),
+                           ('NVIS',      np.int32, 2),
+                           ('SNRTOT',    np.float64, 2),
+                           ('SNRAVG',    np.float64, 2),
+                           ('VHELIO',    np.float64, 2),
+                           ('EVHELIO',   np.float64, 2),
+                           ('TEFF',      np.float64, 2),
+                           ('ETEFF',     np.float64, 2),
+                           ('LOGG',      np.float64, 2),
+                           ('ELOGG',     np.float64, 2),
+                           ('FEH',       np.float64, 2),
+                           ('EFEH',      np.float64, 2)])
+            gdata = np.zeros(ngd, dtype=dt)
+
+            for i in range(ngd):
+                print(i)
+                p4, = np.where(gdIDs[i] == allv4g['APOGEE_ID'])
+                p5, = np.where(gdIDs[i] == allv5fps['APOGEE_ID'])
+                gdata['JMAG'][i] = allv4['J'][p4][0]
+                gdata['HMAG'][i] = allv4['H'][p4][0]
+                gdata['KMAG'][i] = allv4['K'][p4][0]
+                gdata['NVIS'][i,0] = len(p4)
+                gdata['NVIS'][i,1] = len(p5)
+                gdata['SNRTOT'][i,0] = np.nansum(allv4g['SNR'][p4])
+                gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
+                gdata['SNRAVG'][i,0] = np.nanmean(allv4g['SNR'][p4])
+                gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
+                gdata['VHELIO'][i,0] = np.nanmean(allv4g['VHELIO'][p4])
+                gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
+                gdata['EVHELIO'][i,0] = np.nanmean(allv4g['VRELERR'][p4])
+                gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
+                gdata['TEFF'][i,0] = np.nanmean(allv4g['RV_TEFF'][p4])
+                gdata['TEFF'][i,1] = np.nanmean(allv5fps['rv_teff'][p5])
+                gdata['ETEFF'][i,0] = np.nanstd(allv4g['RV_TEFF'][p4])
+                gdata['ETEFF'][i,1] = np.nanstd(allv5fps['rv_teff'][p5])
+                gdata['LOGG'][i,0] = np.nanmean(allv4g['RV_LOGG'][p4])
+                gdata['LOGG'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
+                gdata['ELOGG'][i,0] = np.nanstd(allv4g['RV_LOGG'][p4])
+                gdata['ELOGG'][i,1] = np.nanstd(allv5fps['rv_logg'][p5])
+                gdata['FEH'][i,0] = np.nanmean(allv4g['RV_FEH'][p4])
+                gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_feh'][p5])
+                gdata['EFEH'][i,0] = np.nanstd(allv4g['RV_FEH'][p4])
+                gdata['EFEH'][i,1] = np.nanstd(allv5fps['rv_feh'][p5])
+
+            Table(gdata).write('rvparams_plateVSfps.fits', overwrite=True)
+
+        gdata = fits.getdata(datafile)
+
+        fig = plt.figure(figsize=(22,18))
+        ax1 = plt.subplot2grid((2,2), (0,0))
+        ax2 = plt.subplot2grid((2,2), (0,1))
+        ax3 = plt.subplot2grid((2,2), (1,0))
+        ax4 = plt.subplot2grid((2,2), (1,1))
+        axes = [ax1,ax2,ax3,ax4]
+        #ax1.set_xlim(-150, 150)
+        #ax1.set_ylim(-5, 5)
+        #ax2.set_xlim(3.3, 6.8)
+        #ax2.set_ylim(-0.6, 0.6)
+        #ax3.set_xlim(-0.1, 5.1)
+        #ax3.set_ylim(-1.4, 1.4)
+        #ax4.set_xlim(-1.5, 0.4)
+        #ax4.set_ylim(-0.5, 0.5)
+        #ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
+        #ax1.set_ylabel(r'DR17 $-$ FPS')
+        #ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
+        #ax3.set_xlabel(r'DR17 RV log$\,g$')
+        #ax3.set_ylabel(r'DR17 $-$ FPS')
+        #ax4.set_xlabel(r'DR17 RV [Fe/H]')
+        #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
+        #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
+        #ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
+        #ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
+        #ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
+        for ax in axes:
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.axhline(y=0, linestyle='dashed', color='k', zorder=1)
+            #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
+
+        symbol = 'o'
+        symsz = 40
+
+        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
+        x = gdata['VHELIO'][:,0][g]
+        y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
+        #ax1.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax1.transAxes, va='top')
+        ax1.scatter(x, y, marker=symbol, c=gdata['HMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
+        x = gdata['TEFF'][:,0][g] / 1000
+        y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
+        #ax2.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax2.transAxes, va='top')
+        sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['HMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
+        x = gdata['LOGG'][:,0][g]
+        y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
+        #ax3.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax3.transAxes, va='top')
+        ax3.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
+        x = gdata['FEH'][:,0][g]
+        y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
+        #ax4.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax4.transAxes, va='top')
+        sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['HMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        ax2_divider = make_axes_locatable(ax2)
+        cax2 = ax2_divider.append_axes("right", size="5%", pad="1%")
+        cb2 = colorbar(sc2, cax=cax2, orientation="vertical")
+        cax2.minorticks_on()
+        #cax2.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+        ax2.text(1.12, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
+
+        ax4_divider = make_axes_locatable(ax4)
+        cax4 = ax4_divider.append_axes("right", size="5%", pad="1%")
+        cb4 = colorbar(sc4, cax=cax4, orientation="vertical")
+        cax4.minorticks_on()
+        #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+        ax4.text(1.12, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
+
+        fig.subplots_adjust(left=0.07, right=0.95, bottom=0.055, top=0.98, hspace=0.2, wspace=0.15)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+        return
+
+        ###########################################################################################
         # telluricJK.png
         plotfile = specdir5 + 'monitor/' + instrument + '/telluricJK.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -1112,161 +1272,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         return
 
-        ###########################################################################################
-        # rvparams.png
-        # Plot of stellar parameters, plate vs. FPS
-        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
-        print("----> monitor: Making " + os.path.basename(plotfile))
 
-        remake = 0
-        datafile = 'rvparams_plateVSfps.fits'
-        if remake:
-            gd, = np.where((allv5['MJD'] > 59580) & 
-                           (np.isnan(allv5['vheliobary']) == False) & 
-                           (np.absolute(allv5['vheliobary']) < 400) & 
-                           (np.isnan(allv5['SNR']) == False) & 
-                           (allv5['SNR'] > 10))
-            allv5fps = allv5[gd]
-
-            gd, = np.where((np.isnan(allv4['VHELIO']) == False) &
-                           (np.absolute(allv4['VHELIO']) < 400) &
-                           (np.isnan(allv4['SNR']) == False) & 
-                           (allv4['SNR'] > 10))
-            allv4g = allv4[gd]
-
-            uplateIDs = np.unique(allv4g['APOGEE_ID'])
-            ufpsIDs = np.unique(allv5fps['APOGEE_ID'])
-
-            gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
-            ngd = len(gdIDs)
-            print(ngd)
-
-            dt = np.dtype([('H',         np.float64),
-                           ('NVIS',      np.int32, 2),
-                           ('SNRTOT',    np.float64, 2),
-                           ('SNRAVG',    np.float64, 2),
-                           ('VHELIO',    np.float64, 2),
-                           ('EVHELIO',   np.float64, 2),
-                           ('TEFF',      np.float64, 2),
-                           ('ETEFF',     np.float64, 2),
-                           ('LOGG',      np.float64, 2),
-                           ('ELOGG',     np.float64, 2),
-                           ('FEH',       np.float64, 2),
-                           ('EFEH',      np.float64, 2)])
-            gdata = np.zeros(ngd, dtype=dt)
-
-            for i in range(ngd):
-                print(i)
-                p4, = np.where(gdIDs[i] == allv4g['APOGEE_ID'])
-                p5, = np.where(gdIDs[i] == allv5fps['APOGEE_ID'])
-                gdata['H'][i] = allv4['H'][p4][0]
-                gdata['NVIS'][i,0] = len(p4)
-                gdata['NVIS'][i,1] = len(p5)
-                gdata['SNRTOT'][i,0] = np.nansum(allv4g['SNR'][p4])
-                gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
-                gdata['SNRAVG'][i,0] = np.nanmean(allv4g['SNR'][p4])
-                gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
-                gdata['VHELIO'][i,0] = np.nanmean(allv4g['VHELIO'][p4])
-                gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
-                gdata['EVHELIO'][i,0] = np.nanmean(allv4g['VRELERR'][p4])
-                gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
-                gdata['TEFF'][i,0] = np.nanmean(allv4g['RV_TEFF'][p4])
-                gdata['TEFF'][i,1] = np.nanmean(allv5fps['rv_teff'][p5])
-                gdata['ETEFF'][i,0] = np.nanstd(allv4g['RV_TEFF'][p4])
-                gdata['ETEFF'][i,1] = np.nanstd(allv5fps['rv_teff'][p5])
-                gdata['LOGG'][i,0] = np.nanmean(allv4g['RV_LOGG'][p4])
-                gdata['LOGG'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
-                gdata['ELOGG'][i,0] = np.nanstd(allv4g['RV_LOGG'][p4])
-                gdata['ELOGG'][i,1] = np.nanstd(allv5fps['rv_logg'][p5])
-                gdata['FEH'][i,0] = np.nanmean(allv4g['RV_FEH'][p4])
-                gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_feh'][p5])
-                gdata['EFEH'][i,0] = np.nanstd(allv4g['RV_FEH'][p4])
-                gdata['EFEH'][i,1] = np.nanstd(allv5fps['rv_feh'][p5])
-
-            Table(gdata).write('rvparams_plateVSfps.fits', overwrite=True)
-
-        gdata = fits.getdata(datafile)
-
-        fig = plt.figure(figsize=(22,18))
-        ax1 = plt.subplot2grid((2,2), (0,0))
-        ax2 = plt.subplot2grid((2,2), (0,1))
-        ax3 = plt.subplot2grid((2,2), (1,0))
-        ax4 = plt.subplot2grid((2,2), (1,1))
-        axes = [ax1,ax2,ax3,ax4]
-        #ax1.set_xlim(-150, 150)
-        #ax1.set_ylim(-5, 5)
-        #ax2.set_xlim(3.3, 6.8)
-        #ax2.set_ylim(-0.6, 0.6)
-        #ax3.set_xlim(-0.1, 5.1)
-        #ax3.set_ylim(-1.4, 1.4)
-        #ax4.set_xlim(-1.5, 0.4)
-        #ax4.set_ylim(-0.5, 0.5)
-        #ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
-        #ax1.set_ylabel(r'DR17 $-$ FPS')
-        #ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
-        #ax3.set_xlabel(r'DR17 RV log$\,g$')
-        #ax3.set_ylabel(r'DR17 $-$ FPS')
-        #ax4.set_xlabel(r'DR17 RV [Fe/H]')
-        #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
-        #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
-        #ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
-        #ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
-        #ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
-        for ax in axes:
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.axhline(y=0, linestyle='dashed', color='k', zorder=1)
-            #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
-
-        symbol = 'o'
-        symsz = 40
-
-        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
-        x = gdata['VHELIO'][:,0][g]
-        y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
-        #ax1.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax1.transAxes, va='top')
-        ax1.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-
-        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
-        x = gdata['TEFF'][:,0][g] / 1000
-        y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
-        #ax2.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax2.transAxes, va='top')
-        sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-
-        g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
-        x = gdata['LOGG'][:,0][g]
-        y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
-        #ax3.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax3.transAxes, va='top')
-        ax3.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-
-        g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
-        x = gdata['FEH'][:,0][g]
-        y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
-        #ax4.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax4.transAxes, va='top')
-        sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-
-        ax2_divider = make_axes_locatable(ax2)
-        cax2 = ax2_divider.append_axes("right", size="5%", pad="1%")
-        cb2 = colorbar(sc2, cax=cax2, orientation="vertical")
-        cax2.minorticks_on()
-        #cax2.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-        ax2.text(1.12, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
-
-        ax4_divider = make_axes_locatable(ax4)
-        cax4 = ax4_divider.append_axes("right", size="5%", pad="1%")
-        cb4 = colorbar(sc4, cax=cax4, orientation="vertical")
-        cax4.minorticks_on()
-        #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-        ax4.text(1.12, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
-
-        fig.subplots_adjust(left=0.07, right=0.95, bottom=0.055, top=0.98, hspace=0.2, wspace=0.15)
-        plt.savefig(plotfile)
-        plt.close('all')
-
-        return
 
         ###########################################################################################
         # rvparams.png
@@ -2822,75 +2828,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #    plt.savefig(plotfile)
         #    plt.close('all')
 
-        ###########################################################################################
-        ## dillum59557.png
-        ## Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
-        #plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
-        #if (os.path.exists(plotfile) == False) | (clobber == True):
-        #    print("----> monitor: Making " + os.path.basename(plotfile))
-
-        #    fig = plt.figure(figsize=(30,22))
-        #    xarr = np.arange(0, 300, 1) + 1
-
-        #    gd, = np.where(allexp['MJD'][dome] == 59557)
-        #    gdcal = allexp[dome][gd]
-        #    ndome = len(gdcal)
-
-        #    mycmap = 'viridis_r'
-        #    cmap = cmaps.get_cmap(mycmap, ndome)
-        #    sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
-
-        #    #pdb.set_trace()
-
-        #    for ichip in range(nchips):
-        #        chip = chips[ichip]
-        #        ax = plt.subplot2grid((nchips, 1), (ichip, 0))
-        #        ax.set_xlim(0, 301)
-        #        #ax.set_ylim(0, 27000)
-        #        ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
-        #        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-        #        ax.minorticks_on()
-        #        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        #        ax.tick_params(axis='both',which='major',length=axmajlen)
-        #        ax.tick_params(axis='both',which='minor',length=axminlen)
-        #        ax.tick_params(axis='both',which='both',width=axwidth)
-        #        if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
-        #        ax.set_ylabel(r'Median Flux')
-        #        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-        #        if ichip == 0:
-        #            ax_divider = make_axes_locatable(ax)
-        #            cax = ax_divider.append_axes("top", size="7%", pad="2%")
-        #            cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
-        #            cax.xaxis.set_ticks_position("top")
-        #            #cax.minorticks_on()
-        #            cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-        #            #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
-        #            cax.xaxis.set_label_position('top') 
-        #            cax.set_xlabel('Exposure')
-
-        #        for idome in range(ndome):
-        #            chp = 'c'
-        #            if ichip == 1: chp = 'b'
-        #            if ichip == 2: chp = 'a'
-        #            file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
-        #            file1d = file1d.replace('1D-', '1D-' + chp + '-')
-        #            #pdb.set_trace()
-        #            if os.path.exists(file1d):
-        #                oned = fits.getdata(file1d)
-        #                onedflux = np.nanmedian(oned, axis=1)[::-1]
-        #                mycolor = cmap(idome)
-        #                gd, = np.where(onedflux > 100)
-        #                ax.plot(xarr[gd], onedflux[gd], color=mycolor)
-        #                #ax.hist(onedflux, 300, color=mycolor, fill=False)
-
-        #        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-        #                ha='center', va='top', color=chip, bbox=bboxpar)
-
-        #    fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
-        #    plt.savefig(plotfile)
-        #    plt.close('all')
-
-
 
     if makeplots is True:
         ###########################################################################################
@@ -2988,7 +2925,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(nplotfibs):
                     yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
+                               label='fib ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
@@ -3042,7 +2979,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(nplotfibs):
                     yvals = qfwhm[:, ichip, ifib]
                     ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
+                               label='fib ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
@@ -3096,7 +3033,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
+                               label='fib ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
@@ -3150,7 +3087,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
+                               label='fib ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
@@ -3203,7 +3140,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(nplotfibs):
                     yvals = gdcal['MED'][:, ichip, fibers[ifib]]
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]), zorder=3)
+                               label='fib ' + str(fibers[ifib]), zorder=3)
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
@@ -3257,7 +3194,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(nplotfibs):
                     yvals = dfwhm[:, ichip, ifib]
                     ax.scatter(dmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
+                               label='fib ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
@@ -3401,7 +3338,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                             ax.axhline(y=w, color='k', linewidth=3, zorder=1)
                             yvals = 2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
                             ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                                       label='Fiber ' + str(fibers[ifib]), zorder=3)
+                                       label='fib ' + str(fibers[ifib]), zorder=3)
 
                         ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                                 ha='center', va='top', color=chip, bbox=bboxpar)
