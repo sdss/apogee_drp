@@ -325,7 +325,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
     # Read in the exposure summary file and restrict to either dome or quartz
     exp = fits.getdata(mdir + instrument + 'Exp.fits')
     gd, = np.where(exp['IMAGETYP'] == imtype)
-    gd, = np.where((exp['IMAGETYP'] == imtype) & (exp['MJD'] > 59560))
+    #gd, = np.where((exp['IMAGETYP'] == imtype) & (exp['MJD'] > 59560))
     exp = exp[gd]
 
     # Default option to append new values rather than remake the entire file
