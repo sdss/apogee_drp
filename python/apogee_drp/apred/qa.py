@@ -3130,12 +3130,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                                 visSum = fits.getdata(visSumFile)
                                 assignedFib, = np.where(visSum['assigned'] == 1)
                                 note = ' (' + str(len(assignedFib)) + ' assigned)'
-                                if len(assignedFib) < 1: note = ' (ZERO assigned)'
+                                #if len(assignedFib) < 1: note = ' (ZERO assigned)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>'+note+'<BR>\n')
                         else:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>'+note+'<BR>\n')')
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>'+note+'<BR>\n')
                     else:
                         note = ' (failed)'
                         if j < nplatesall:
