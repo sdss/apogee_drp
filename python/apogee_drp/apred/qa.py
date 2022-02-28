@@ -3059,6 +3059,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<TR bgcolor="#eaeded"><TH>(1)<BR>Date <TH>(2)<BR>Observer Log <TH>(3)<BR>Exposure Log <TH>(4)<BR>Raw Data <TH>(5)<BR>Night QA')
         html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Plots of Spectra <TH>(8)<BR>Summary Files <TH>(9)<BR> Phase\n')
         for i in range(nmjd):
+            fps = False
+            if mjd[i] > 59556: fps = True
+
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
             date = tt.fits[0:10]
@@ -3126,16 +3129,25 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     # Check for failed plates
                     plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
                     if os.path.exists(plateQAfile):
+                        note = ''
+                        if fps:
+                            visSumFile = load.filename('VisitSum', plate=int(plate), mjd=mjd, fps=fps)
+                            if os.path.exists(visSumFile):
+                                visSum = fits.getdata(visSumFile)
+                                assignedFib, = np.where((visSum['assigned'] == 1) & (visSum['snr'] > 0) & (np.isnan(visSum['snr']) == False))
+                                note = ' (' + str(len(assignedFib)) + ' stars)'
+                                if len(assignedFib) < 1: note = ' (ZERO stars)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+note+'</A><BR>\n')
                         else:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+note+'</A>\n')
                     else:
+                        note = ' (failed)'
                         if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT><BR>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+note+'</FONT><BR>\n')
                         else:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+note+'</FONT>\n')
 
                 # Column 7: Visit spectra plots
                 html.write('<TD align="left">')
@@ -3247,7 +3259,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASPCAP <TH>PLATE<BR>OR<BR>CONFIG <TH>MJD')
-        html.write('<TH>LOC <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>S/N(red) <TH>S/N(green) <TH>S/N(blue)')
+        html.write('<TH>LOC <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>S/N(blue) <TH>S/N(green) <TH>S/N(red)')
         html.write('<TH>N<BR>EXP. <TH>TOTAL<BR>EXPTIME <TH>CART <TH>ZERO <TH>MOON<BR>PHASE\n')
     #    html.write('<TR><TD>FIELD<TD>Program<TD>ASPCAP<br>'+apred_vers+'/'+aspcap_vers+'<TD>PLATE<TD>MJD<TD>LOCATION<TD>RA<TD>DEC<TD>S/N(red)<TD>S/N(green)<TD>S/N(blue)\n')
 
@@ -3271,6 +3283,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         ilat = np.zeros(nplates).astype(str)
         inexposures = np.zeros(nplates).astype(str)
         iexptime = np.zeros(nplates).astype(str)
+        isnr = np.full((nplates,3), 0).astype(str)
         icart = np.zeros(nplates).astype(str)
         izero = np.zeros(nplates).astype(str)
         imoonphase = np.zeros(nplates)
@@ -3336,13 +3349,19 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 if len(tmp) > 0: 
                     platesumfile = tmp[0]
             if os.path.exists(platesumfile):
-                tmp = fits.open(platesumfile)
-                plsum1 = tmp[1].data
+                plsum1 = fits.getdata(platesumfile,1)
                 inexposures[i] = str(len(plsum1['IM']))
                 iexptime[i] = str(np.sum(plsum1['EXPTIME']))
                 icart[i] = str(plsum1['CART'][0])
                 izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
                 imoonphase[i] = np.mean(plsum1['MOONPHASE'])
+                try:
+                    plsum3 = fits.getdata(platesumfile,3)
+                    isnr[i,0] = str(int(round(plsum3['SN'][0][0])))
+                    isnr[i,1] = str(int(round(plsum3['SN'][0][1])))
+                    isnr[i,2] = str(int(round(plsum3['SN'][0][2])))
+                except:
+                    print("----> makeMasterQApages: no 3rd extension in apPlateSum for plate " + iplate[i] + ', MJD ' + imjd[i])
             else:
                 print('----> makeMasterQApages: Problem with plate/config ' + iplate[i] + ', MJD ' + imjd[i] + '. PlateSum not found.')
 
@@ -3361,19 +3380,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         ilat = ilat[order]
         inexposures = inexposures[order]
         iexptime = iexptime[order]
+        isnr = isnr[order]
         icart = icart[order]
         izero = izero[order]
         imoonphase = imoonphase[order]
         inst = inst[order]
 
         for i in range(nplates):
-            tmp = fits.open(plates[i])
-            try:
-                platetab = tmp[3].data
-            except:
-                print("----> makeMasterQApages: no 3rd extension in apPlateSum for plate " + iplate[i] + ', MJD ' + imjd[i])
-                continue
-
             color = '#ffb3b3'
             if len(iprogram[i]) < 3:
                 if iprogram[i] == 'RM': 
@@ -3396,9 +3409,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD align="right">' + idec[i])
             html.write('<TD align="right">' + ilon[i]) 
             html.write('<TD align="right">' + ilat[i])
-            html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][0],1))) 
-            html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][1],1))) 
-            html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][2],1))) 
+            html.write('<TD align="right">' + isnr[i,2]) 
+            html.write('<TD align="right">' + isnr[i,1]) 
+            html.write('<TD align="right">' + isnr[i,0]) 
             html.write('<TD align="right">' + inexposures[i]) 
             html.write('<TD align="right">' + iexptime[i]) 
             html.write('<TD align="right">' + icart[i]) 
