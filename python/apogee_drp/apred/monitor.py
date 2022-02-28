@@ -64,8 +64,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     # Read in the SDSS-IV/APOGEE2 summary files
     #allcal =  fits.open(specdir4 + instrument + 'Cal.fits')[1].data
     #alldark = fits.open(specdir4 + instrument + 'Cal.fits')[2].data
-    #allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
-    #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+    allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
+    allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
     #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
     allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
@@ -75,8 +75,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     # Read in the master summary files
     allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
     alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
-    allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
-    allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
+    #allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
+    #allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
     #snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
     allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
     dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
