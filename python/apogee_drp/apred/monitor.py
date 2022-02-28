@@ -1371,11 +1371,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             fig = plt.figure(figsize=(30,14))
 
-            ycent = np.array([1730, 625, 1780])
-            ymax = ycent+40
-            ymin = ycent-40
-            yspan = ymax-ymin
-
             gdcal = allcal[thar]
             caljd = gdcal['JD']-2.4e6
 
@@ -1394,23 +1389,24 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Position (pixel)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                w = np.nanmedian(gdcal['GAUSS'][:, 1, ichip, :, 1])
+                min = w - 40
+                ymax = w + 40
+                yspan = ymax - ymin
+                ax.set_ylim(ymin, ymax)
+
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=59560, color='teal', linewidth=2)
-                ax.text(59146-xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-                ax.text(59353, ymax[ichip]-yspan[ichip]*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-                ax.text(59560+xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
                 ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
                         ha='right', va='top', color=chip, bbox=bboxpar)
 
-                #w = np.nanmedian(gdcal['GAUSS'][:, 1, ichip, :, 1])
-                #min = w - 40
-                #ymax = w + 40
-                #yspan = ymax - ymin
-                #ax.set_ylim(ymin, ymax)
-
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax[ichip]+yspan[ichip]*0.025, cyears[iyear], ha='center')
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['GAUSS'][:, 1, ichip, ifib, 1] 
