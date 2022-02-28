@@ -1357,7 +1357,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             t = Time(allsci['DATEOBS'], format='fits')
             jd = t.jd - 2.4e6
-            ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, c='teal', alpha=alf)
+            ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, c='blueviolet', alpha=alf)
 
             fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -1517,8 +1517,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                 ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-            ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, c='cyan', edgecolors='k', alpha=alf)
-            ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, c='cyan', edgecolors='k', alpha=alf)
+            ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
+            ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
             plt.savefig(plotfile)
