@@ -3133,15 +3133,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                                 if len(assignedFib) < 1: note = ' (ZERO assigned)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+note+'</A><BR>\n')
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>'+note+'<BR>\n')
                         else:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+note+'</A>\n')
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>'+note+'<BR>\n')')
                     else:
                         note = ' (failed)'
                         if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+note+'</FONT><BR>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</A>'+note+'<BR>\n')
                         else:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+note+'</FONT>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</A>'+note+'\n')
 
                 # Column 7: Visit spectra plots
                 html.write('<TD align="left">')
