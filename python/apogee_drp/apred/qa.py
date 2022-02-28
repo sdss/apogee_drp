@@ -524,11 +524,11 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
     if (nobj < 1) & (ntelluric < 1) & (nsky < 1): 
         print("----> makePlateSum: PROBLEM!!! No science objects, tellurics, nor skies found. Skipping this visit.")
-        return 'bad'
-
-    fiberstar = np.concatenate([fiberobj,fibertelluric])
-    nstar = len(fiberstar)
-    star = rows[fiberstar]
+        #return 'bad'
+    else:
+        fiberstar = np.concatenate([fiberobj,fibertelluric])
+        nstar = len(fiberstar)
+        star = rows[fiberstar]
 
     # Loop through all the images for this plate, and make the plots.
     # Load up and save information for this plate in a FITS table.
@@ -656,50 +656,51 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
         # Get a "magnitude" for each fiber from a median on each chip.
         # Do a crude sky subtraction, calculate S/N.
-        for ichip in range(nchips):
-            chip = chips[ichip]
+        if (nobj > 5) & (ntelluric > 5) & (nsky > 5): 
+            for ichip in range(nchips):
+                chip = chips[ichip]
 
-            fluxarr = d[chip][1].data
-            errarr = d[chip][2].data
-            cfluxarr = cframe[chip][1].data
-            cerrarr = cframe[chip][2].data
+                fluxarr = d[chip][1].data
+                errarr = d[chip][2].data
+                cfluxarr = cframe[chip][1].data
+                cerrarr = cframe[chip][2].data
 
-            if ims[0] == 0: medsky = 0.
-            if ims[0] != 0: medsky = np.median(obs[fibersky, ichip])
+                if ims[0] == 0: medsky = 0.
+                if ims[0] != 0: medsky = np.median(obs[fibersky, ichip])
 
-            ### NOTE: using axis=0 caused error, so trying axis=0
-            if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
+                ### NOTE: using axis=0 caused error, so trying axis=0
+                if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
 
-            if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
+                if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
 
-            if nobj > 0:
-                sn[fiberobj, ichip] = np.median((fluxarr[obj, :] - medsky) / errarr[obj, :], axis=1)
-                if len(cframe) > 1:
-                    snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=1)
+                if nobj > 0:
+                    sn[fiberobj, ichip] = np.median((fluxarr[obj, :] - medsky) / errarr[obj, :], axis=1)
+                    if len(cframe) > 1:
+                        snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=1)
 
-            if ntelluric > 0:
-                sn[fibertelluric, ichip] = np.median((fluxarr[telluric,:] - medsky) / errarr[telluric, :], axis=1)
-                if len(cframe) > 1:
-                    snc[fibertelluric, ichip] = np.median(cfluxarr[telluric, :] / cerrarr[telluric, :], axis=1)
-                    medfilt = ScipyMedfilt2D(cfluxarr[telluric, :], kernel_size=(1,49))
-                    sz = cfluxarr.shape
-                    i1 = int(np.floor((900 * sz[1]) / 2048))
-                    i2 = int(np.floor((1000 * sz[1]) / 2048))
-                    for itell in range(ntelluric):
-                        p1 = np.mean(cfluxarr[telluric[itell], i1:i2])
-                        p2 = np.std(cfluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
-                        snt[fibertelluric[itell], ichip] = p1 / p2
+                if ntelluric > 0:
+                    sn[fibertelluric, ichip] = np.median((fluxarr[telluric,:] - medsky) / errarr[telluric, :], axis=1)
+                    if len(cframe) > 1:
+                        snc[fibertelluric, ichip] = np.median(cfluxarr[telluric, :] / cerrarr[telluric, :], axis=1)
+                        medfilt = ScipyMedfilt2D(cfluxarr[telluric, :], kernel_size=(1,49))
+                        sz = cfluxarr.shape
+                        i1 = int(np.floor((900 * sz[1]) / 2048))
+                        i2 = int(np.floor((1000 * sz[1]) / 2048))
+                        for itell in range(ntelluric):
+                            p1 = np.mean(cfluxarr[telluric[itell], i1:i2])
+                            p2 = np.std(cfluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
+                            snt[fibertelluric[itell], ichip] = p1 / p2
 
-                else:
-                    snc[fibertelluric,ichip] = sn[fibertelluric,ichip]
-                    medfilt = ScipyMedfilt2D(fluxarr[telluric, :], kernel_size=(1,49))
-                    sz = fluxarr.shape
-                    i1 = int(np.floor((900 * sz[1]) / 2048))
-                    i2 = int(np.floor((1000 * sz[1]) / 2048))
-                    for itell in range(ntelluric):
-                        p1 = np.mean(fluxarr[telluric[itell], i1:i2 * (int(np.floor(sz[1] / 2048)))])
-                        p2 = np.std(fluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
-                        snt[fibertelluric[itell], ichip] = p1 / p2
+                    else:
+                        snc[fibertelluric,ichip] = sn[fibertelluric,ichip]
+                        medfilt = ScipyMedfilt2D(fluxarr[telluric, :], kernel_size=(1,49))
+                        sz = fluxarr.shape
+                        i1 = int(np.floor((900 * sz[1]) / 2048))
+                        i2 = int(np.floor((1000 * sz[1]) / 2048))
+                        for itell in range(ntelluric):
+                            p1 = np.mean(fluxarr[telluric[itell], i1:i2 * (int(np.floor(sz[1] / 2048)))])
+                            p2 = np.std(fluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
+                            snt[fibertelluric[itell], ichip] = p1 / p2
 
         # Calculate zeropoints from known H band mags.
         # Use a static zeropoint to calculate sky brightness.
