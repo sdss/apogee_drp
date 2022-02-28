@@ -3273,6 +3273,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Get arrays of observed data values (plate ID, mjd, telescope, field name, program, location ID, ra, dec)
         iplate = np.zeros(nplates).astype(str)
         imjd = np.zeros(nplates).astype(str)
+        iassigned = np.full(nplates, 0).astype(str)
         itel = np.zeros(nplates).astype(str)
         iname = np.zeros(nplates).astype(str)
         iprogram = np.zeros(nplates).astype(str)
@@ -3355,6 +3356,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 icart[i] = str(plsum1['CART'][0])
                 izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
                 imoonphase[i] = np.mean(plsum1['MOONPHASE'])
+                plsum2 = fits.getdata(platesumfile,2)
+                ass, = np.where(plsum2['assigned'])
+                iassigned[i] = str(len(ass))
                 try:
                     plsum3 = fits.getdata(platesumfile,3)
                     isnr[i,0] = str(int(round(plsum3['SN'][0][0])))
@@ -3370,6 +3374,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         plates = plates[order]
         iplate = iplate[order]
         imjd = imjd[order]
+        iassigned = iassigned[order]
         itel = itel[order]
         iname = iname[order]
         iprogram = iprogram[order]
@@ -3387,6 +3392,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         inst = inst[order]
 
         for i in range(nplates):
+            note = ''
+            if int(imjd[i]) > 59556: note = ' (' + iassigned[i] + ' stars)'
+
+
             color = '#ffb3b3'
             if len(iprogram[i]) < 3:
                 if iprogram[i] == 'RM': 
@@ -3398,7 +3407,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 if iprogram[i][0:3] == 'MWM': color = '#B3E5FC'
                 if iprogram[i][0:5] == 'eFEDS': color='#FFF9C4'
 
-            html.write('<TR bgcolor=' + color + '><TD>' + iname[i]) 
+            html.write('<TR bgcolor=' + color + '><TD>' + iname[i]+note) 
             html.write('<TD>' + str(iprogram[i])) 
             html.write('<TD> --- ')
             qalink = '../visit/' + itel[i] + '/' + iname[i] + '/' + iplate[i] + '/' + imjd[i] + '/html/apQA-' + iplate[i] + '-' + imjd[i] + '.html'
