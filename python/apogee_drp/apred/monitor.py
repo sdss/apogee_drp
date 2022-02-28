@@ -873,10 +873,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.set_xlabel(r'JD - 2,400,000')
             ax.set_ylabel(r'$N_{\rm obs}$')
             ax.axvline(x=59146, color='r', linewidth=2)
-            ax.text(59146+xspan*0.005, ymax-yspan*0.02, 'plate-V', fontsize=fsz, color='r', va='top', bbox=bboxpar)
-            ax.text(59146-xspan*0.005, ymax-yspan*0.02, 'plate-III+IV', fontsize=fsz, color='r', va='top', ha='right', bbox=bboxpar)
             ax.axvline(x=59560, color='r', linewidth=2)
-            ax.text(59560+xspan*0.005, ymax-yspan*0.02, 'FPS-V', fontsize=fsz, color='r', va='top', bbox=bboxpar)
+            ax.text(59146-xspan*0.005, ymax-yspan*0.02, 'plate-III+IV', fontsize=fsz, color='r', va='top', ha='right', bbox=bboxpar)
+            ax.text(59353, ymax-yspan*0.02, 'plate-V', fontsize=fsz, color='r', va='top', ha='center', bbox=bboxpar)
+            ax.text(59560+xspan*0.005, ymax-yspan*0.02, 'FPS-V', fontsize=fsz, color='r', va='top', ha='left', bbox=bboxpar)
 
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
