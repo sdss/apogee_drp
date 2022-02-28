@@ -958,8 +958,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
-                ax.text(0.985,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
-                        ha='center', va='top', color=chip, bbox=bboxpar)
+                ax.text(0.95,0.93,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                        ha='right', va='top', color=chip, bbox=bboxpar)
 
                 if ichip == 0: ylims = ax.get_ylim()
                 for iyear in range(nyears):
