@@ -872,11 +872,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_xlabel(r'JD - 2,400,000')
             ax.set_ylabel(r'$N_{\rm obs}$')
-            ax.axvline(x=59146, color='r', linewidth=2)
-            ax.axvline(x=59560, color='r', linewidth=2)
-            ax.text(59146-xspan*0.005, ymax-yspan*0.02, 'plate-III+IV', fontsize=fsz, color='r', va='top', ha='right', bbox=bboxpar)
-            ax.text(59353, ymax-yspan*0.02, 'plate-V', fontsize=fsz, color='r', va='top', ha='center', bbox=bboxpar)
-            ax.text(59560+xspan*0.005, ymax-yspan*0.02, 'FPS-V', fontsize=fsz, color='r', va='top', ha='left', bbox=bboxpar)
+            ax.axvline(x=59146, color='teal', linewidth=2)
+            ax.axvline(x=59560, color='teal', linewidth=2)
+            ax.text(59146-xspan*0.005, ymax-yspan*0.02, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+            ax.text(59353, ymax-yspan*0.02, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax.text(59560+xspan*0.005, ymax-yspan*0.02, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
 
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -893,10 +893,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 nvis[i] = len(uplate)
                 if i < nmjd-1:
                     ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='k')#, label='exposures')
-                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='dodgerblue')#, label='visits')
+                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='r')#, label='visits')
                 else:
                     ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='k', label='exposures')
-                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='dodgerblue', label='visits')
+                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='r', label='visits')
 
             #ax.scatter(umjd, nexp, marker='o', s=markersz, c='grey', alpha=alf, label='exposures')
             #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
