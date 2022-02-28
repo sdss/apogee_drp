@@ -3303,6 +3303,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if itel[i] != 'apo25m': inst[i] = 'apogee-s'
 
             load = apload.ApLoad(apred=apred, telescope=itel[i])
+            platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
 
             if fps:
                 # Get field center RA and DEC from confSummary file
@@ -3315,6 +3316,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 c_icrs = SkyCoord(ra=tra*u.degree, dec=tdec*u.degree, frame='icrs')
                 ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
                 ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
+                if os.path.exists(platesumfile):
+                    plsum2 = fits.getdata(platesumfile,2)
+                    ass, = np.where(plsum2['assigned'])
+                    iassigned[i] = str(len(ass))
 
                 ## Read planfile
                 #planfile = load.filename('Plan', plate=int(iplate[i]), mjd=imjd[i], fps=fps)
@@ -3323,7 +3328,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 #badfiberid = planstr['badfiberid']
                 #plugmap =    planstr['plugmap']
                 #plug = platedata.getdata(int(iplate[i]), int(imjd[i]), apred, tel, plugid=plugmap, badfiberid=badfiberid)
-                iprogram[i] = '???'
+                iprogram[i] = 'SDSS-V'
                 iloc[i] = name
             else:
                 gd, = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
@@ -3338,7 +3343,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
                     ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
 
-            platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
             if os.path.exists(platesumfile) is False:
                 tmp = glob.glob(platesumfile.replace('None','*'))
                 if len(tmp) > 0: 
@@ -3350,9 +3354,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 icart[i] = str(plsum1['CART'][0])
                 izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
                 imoonphase[i] = np.mean(plsum1['MOONPHASE'])
-                plsum2 = fits.getdata(platesumfile,2)
-                ass, = np.where(plsum2['assigned'])
-                iassigned[i] = str(len(ass))
                 try:
                     plsum3 = fits.getdata(platesumfile,3)
                     isnr[i,0] = str(int(round(plsum3['SN'][0][0])))
