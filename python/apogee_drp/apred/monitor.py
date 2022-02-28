@@ -1446,6 +1446,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                         ax.set_ylabel(r'FWHM ($\rm \AA$)')
                         if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                        w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
+                        ymin = w * 0.8
+                        ymax = w * 1.25
+                        yspan = ymax - ymin
+                        ax.set_ylim(ymin, ymax)
+
                         ax.axvline(x=59146, color='teal', linewidth=2)
                         ax.axvline(x=59560, color='teal', linewidth=2)
                         ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
@@ -1453,12 +1460,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
                         ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
                                 ha='right', va='top', color=chip, bbox=bboxpar)
-
-                        w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
-                        ymin = w * 0.8
-                        ymax = w * 1.25
-                        yspan = ymax - ymin
-                        ax.set_ylim(ymin, ymax)
 
                         for iyear in range(nyears):
                             ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
