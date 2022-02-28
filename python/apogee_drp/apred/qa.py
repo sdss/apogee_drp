@@ -3128,9 +3128,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                             visSumFile = load.filename('VisitSum', plate=int(plate), mjd=cmjd, fps=fps)
                             if os.path.exists(visSumFile):
                                 visSum = fits.getdata(visSumFile)
-                                assignedFib, = np.where((visSum['assigned'] == 1) & (visSum['snr'] > 0) & (np.isnan(visSum['snr']) == False))
-                                note = ' (' + str(len(assignedFib)) + ' stars)'
-                                if len(assignedFib) < 1: note = ' (ZERO stars)'
+                                assignedFib, = np.where(visSum['assigned'] == 1)
+                                note = ' (' + str(len(assignedFib)) + ' assigned)'
+                                if len(assignedFib) < 1: note = ' (ZERO assigned)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+note+'</A><BR>\n')
@@ -3252,7 +3252,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<br><br>Click on column headings to sort<br>\n')
 
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASPCAP <TH>PLATE<BR>OR<BR>CONFIG <TH>MJD')
+        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASSIGNED<BR>FIBERS <TH>ASPCAP <TH>PLATE<BR>OR<BR>CONFIG <TH>MJD')
         html.write('<TH>LOC <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>S/N(blue) <TH>S/N(green) <TH>S/N(red)')
         html.write('<TH>N<BR>EXP. <TH>TOTAL<BR>EXPTIME <TH>CART <TH>ZERO <TH>MOON<BR>PHASE\n')
     #    html.write('<TR><TD>FIELD<TD>Program<TD>ASPCAP<br>'+apred_vers+'/'+aspcap_vers+'<TD>PLATE<TD>MJD<TD>LOCATION<TD>RA<TD>DEC<TD>S/N(red)<TD>S/N(green)<TD>S/N(blue)\n')
@@ -3267,7 +3267,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Get arrays of observed data values (plate ID, mjd, telescope, field name, program, location ID, ra, dec)
         iplate = np.zeros(nplates).astype(str)
         imjd = np.zeros(nplates).astype(str)
-        iassigned = np.full(nplates, 0).astype(str)
+        iassigned = np.full(nplates, '---')
         itel = np.zeros(nplates).astype(str)
         iname = np.zeros(nplates).astype(str)
         iprogram = np.zeros(nplates).astype(str)
@@ -3390,10 +3390,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         inst = inst[order]
 
         for i in range(nplates):
-            note = ''
-            if int(imjd[i]) > 59556: note = ' (' + iassigned[i] + ' stars)'
-
-
             color = '#ffb3b3'
             if len(iprogram[i]) < 3:
                 if iprogram[i] == 'RM': 
@@ -3405,8 +3401,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 if iprogram[i][0:3] == 'MWM': color = '#B3E5FC'
                 if iprogram[i][0:5] == 'eFEDS': color='#FFF9C4'
 
-            html.write('<TR bgcolor=' + color + '><TD>' + iname[i]+note) 
+            html.write('<TR bgcolor=' + color + '><TD>' + iname[i]) 
             html.write('<TD>' + str(iprogram[i])) 
+            html.write('<TD>' + iassigned[i]) 
             html.write('<TD> --- ')
             qalink = '../visit/' + itel[i] + '/' + iname[i] + '/' + iplate[i] + '/' + imjd[i] + '/html/apQA-' + iplate[i] + '-' + imjd[i] + '.html'
             html.write('<TD align="center"><A HREF="' + qalink + '" target="_blank">' + iplate[i] + '</A>')
