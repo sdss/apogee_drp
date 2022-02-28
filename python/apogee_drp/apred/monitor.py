@@ -947,9 +947,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
                 ax.axvline(x=59560, color='r', linewidth=2)
-                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='chartreuse', va='top', ha='right', bbox=bboxpar)
-                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='chartreuse', va='top', ha='center', bbox=bboxpar)
-                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='chartreuse', va='top', ha='left', bbox=bboxpar)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
 
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['MEDSNBINS'][:, snbin, 2-ichip]) / (allsnrg['EXPTIME'] / 60)
