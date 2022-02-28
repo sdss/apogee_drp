@@ -881,7 +881,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         txt = "making " + os.path.basename(outfile1) + " and " + os.path.basename(outfile2)
         print("----> makePlateSum: " + txt)
 
-        tab1 = fits.open(platesum)[1].data
+        tab1 = fits.getdata(platesum,1)
         for j in range(nout):
             out = open(outfiles[j], 'w')
             for i in range(n_exposures):
@@ -952,10 +952,9 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         sys.exit(err1 + err2)
 
     # Read the plateSum file
-    tmp = fits.open(platesum)
-    tab1 = tmp[1].data
-    tab2 = tmp[2].data
-    tab3 = tmp[3].data
+    tab1 = fits.getdata(platesum,1)
+    tab2 = fits.getdata(platesum,2)
+    tab3 = fits.getdata(platesum,3)
 
     # Make the html directory if it doesn't already exist
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
@@ -1222,9 +1221,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         sys.exit(err1 + err2)
 
     # Read the plateSum file
-    tmp = fits.open(platesum)
-    plSum1 = tmp[1].data
-    platesum2 = tmp[2].data
+    plSum1 = fits.getdata(platesum,1)
+    platesum2 = fits.getdata(platesum,2)
     fibord = np.argsort(platesum2['FIBERID'])
     plSum2 = platesum2[fibord]
     nfiber = len(plSum2['HMAG'])
@@ -2131,8 +2129,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                     ccart = '?'
                     platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd, fps=fps)
                     if os.path.exists(platefile):
-                        platehdus = fits.open(platefile)
-                        platetab = platehdus[1].data
+                        platetab = fits.getdata(platefile,1)
                         ccart = str(platetab['CART'][0])
                     
                     csnr = str("%.1f" % round(vcat['snr'][k],1))
@@ -2756,9 +2753,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             platefilebase = os.path.basename(platefile)
             platefiledir = os.path.dirname(planfiles[i])
             if (planstr['platetype'] == 'normal') & (os.path.exists(platefile)): 
-                platehdus = fits.open(platefile)
-                platetab = platehdus[1].data
-                platefiber = platehdus[2].data
+                platetab = fits.getdata(platefile,1)
+                platefiber = fits.getdata(platefile,2)
                 # Nframes
                 html.write('<TD align="right">' + str(len(platetab)) + '\n')
                 # Zero and zerorms
@@ -2798,8 +2794,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         nplates = len(platefiles)
         for i in range(nplates):
             platefiledir = os.path.dirname(platefiles[i])
-            platehdus = fits.open(platefiles[i])
-            platetab = platehdus[1].data
+            platetab = fits.getdata(platefiles[i],1)
             mjd = str(int(round(platetab['MJD'][0])))
             #sntab, tabs=platefiles[i], outfile=platefiledir + '/sn-' + plate + '-' + mjd + '.dat'
             #sntab, tabs=platefiles[i], outfile=platefiledir + '/altsn-' + plate + '-' + mjd + '.dat', /altsn
@@ -2923,8 +2918,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         th1 = '<TH>Plate <TH>Frame <TH>Cart <TH>sec(z) <TH>HA <TH>Design HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads '
         th2 = '<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n'
         for i in range(nplates):
-            platehdus = fits.open(platefiles[i])
-            platetab = platehdus[1].data
+            platetab = fits.getdata(platefiles[i],1)
             plate = str(int(round(platetab['PLATE'][0])))
             try:
                 cart = str(int(round(platetab['CART'][0])))
