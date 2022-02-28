@@ -3125,7 +3125,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     if os.path.exists(plateQAfile):
                         note = ''
                         if fps:
-                            visSumFile = load.filename('VisitSum', plate=int(plate), mjd=mjd, fps=fps)
+                            visSumFile = load.filename('VisitSum', plate=int(plate), mjd=cmjd, fps=fps)
                             if os.path.exists(visSumFile):
                                 visSum = fits.getdata(visSumFile)
                                 assignedFib, = np.where((visSum['assigned'] == 1) & (visSum['snr'] > 0) & (np.isnan(visSum['snr']) == False))
