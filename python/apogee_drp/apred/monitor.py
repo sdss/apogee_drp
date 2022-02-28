@@ -1029,7 +1029,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 cax = ax_divider.append_axes("right", size="2%", pad="1%")
                 cb1 = colorbar(sc1, cax=cax, orientation="vertical")
                 cax.minorticks_on()
-                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
                 if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
             fig.subplots_adjust(left=0.05,right=0.945,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
