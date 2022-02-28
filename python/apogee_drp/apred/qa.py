@@ -3317,9 +3317,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
                 ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
                 if os.path.exists(platesumfile):
-                    plsum2 = fits.getdata(platesumfile,2)
-                    ass, = np.where(plsum2['assigned'])
-                    iassigned[i] = str(len(ass))
+                    try:
+                        plsum2 = fits.getdata(platesumfile,2)
+                        ass, = np.where(plsum2['assigned'])
+                        iassigned[i] = str(len(ass))
+                    except:
+                        nothing = 5
 
                 ## Read planfile
                 #planfile = load.filename('Plan', plate=int(iplate[i]), mjd=imjd[i], fps=fps)
