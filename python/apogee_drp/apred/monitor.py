@@ -947,9 +947,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='r', linewidth=2)
                 ax.axvline(x=59560, color='r', linewidth=2)
-                ax.text(59146-xspan*0.005, ymax-yspan*0.05, 'plate-III+IV', fontsize=fsz, color='r', va='top', ha='right', bbox=bboxpar)
-                ax.text(59353, ymax-yspan*0.02, 'plate-V', fontsize=fsz, color='r', va='top', ha='center', bbox=bboxpar)
-                ax.text(59560+xspan*0.005, ymax-yspan*0.05, 'FPS-V', fontsize=fsz, color='r', va='top', ha='left', bbox=bboxpar)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='chartreuse', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='chartreuse', va='top', ha='center', bbox=bboxpar)
+                ax.text(59560+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='chartreuse', va='top', ha='left', bbox=bboxpar)
 
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['MEDSNBINS'][:, snbin, 2-ichip]) / (allsnrg['EXPTIME'] / 60)
@@ -958,7 +958,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 scolors = allsnrg['MOONPHASE']
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
-                ax.text(0.99,0.95,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
+                ax.text(0.99,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz,
                         ha='right', va='top', color=chip, bbox=bboxpar)
 
                 if ichip == 0: ylims = ax.get_ylim()
