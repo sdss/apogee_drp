@@ -327,6 +327,8 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
     gd, = np.where(exp['IMAGETYP'] == imtype)
     #gd, = np.where((exp['IMAGETYP'] == imtype) & (exp['MJD'] > 59560))
     exp = exp[gd]
+    nexp = len(exp)
+    nexptr = str(nexp)
 
     # Default option to append new values rather than remake the entire file
     if append:
