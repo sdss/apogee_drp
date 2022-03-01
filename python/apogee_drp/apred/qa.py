@@ -1428,7 +1428,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 c = platesum2['HMAG'][gd]
                 sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1)
             else:
-                sc = ax.scatter([-100,-100], [-100,-100], marker='o', s=100, c=platesum2['HMAG'][0], edgecolors='k', cmap='afmhot', alpha=1)
+                sc = ax.scatter([-100,-100], [-100,-100], marker='o', s=100, edgecolors='k', cmap='afmhot', alpha=1)
             ax_divider = make_axes_locatable(ax)
             cax = ax_divider.append_axes("top", size="4%", pad="1%")
             cb = colorbar(sc, cax=cax, orientation="horizontal")
