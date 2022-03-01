@@ -1714,43 +1714,43 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 skylines['C4']   = 16255.0, 0.0
                 skylines['TYPE'] = 1, 0
 
-                for iline in range(nskylines):
-                    skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
-
-                medsky = np.nanmedian(skylines['FLUX'][0][fibersky])
-
-                fig=plt.figure(figsize=(14,15))
-                ax1 = plt.subplot2grid((1,1), (0,0))
-                ax1.set_xlim(-1.6,1.6)
-                ax1.set_ylim(-1.6,1.6)
-                ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-                ax1.minorticks_on()
-                ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax1.tick_params(axis='both',which='major',length=axmajlen)
-                ax1.tick_params(axis='both',which='minor',length=axminlen)
-                ax1.tick_params(axis='both',which='both',width=axwidth)
-                ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
-
-                xx = platesum2['ZETA'][fiberobj]
-                yy = platesum2['ETA'][fiberobj]
-                cc = skylines['FLUX'][0][fiberobj] / medsky
-                ax1.scatter(xx, yy, marker='*', s=400, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
-
-                if ntelluric>0:
-                    xx = platesum2['ZETA'][fibertelluric]
-                    yy = platesum2['ETA'][fibertelluric]
-                    cc = skylines['FLUX'][0][fibertelluric] / medsky
-                    ax1.scatter(xx, yy, marker='o', s=215, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
-
-                if nsky>0:
-                    xx = platesum2['ZETA'][fibersky]
-                    yy = platesum2['ETA'][fibersky]
-                    cc = skylines['FLUX'][0][fibersky] / medsky
-                    sc = ax1.scatter(xx, yy, marker='s', s=230, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
-
-                ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
-
                 try:
+                    for iline in range(nskylines):
+                        skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
+
+                    medsky = np.nanmedian(skylines['FLUX'][0][fibersky])
+
+                    fig=plt.figure(figsize=(14,15))
+                    ax1 = plt.subplot2grid((1,1), (0,0))
+                    ax1.set_xlim(-1.6,1.6)
+                    ax1.set_ylim(-1.6,1.6)
+                    ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+                    ax1.minorticks_on()
+                    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                    ax1.tick_params(axis='both',which='major',length=axmajlen)
+                    ax1.tick_params(axis='both',which='minor',length=axminlen)
+                    ax1.tick_params(axis='both',which='both',width=axwidth)
+                    ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
+
+                    xx = platesum2['ZETA'][fiberobj]
+                    yy = platesum2['ETA'][fiberobj]
+                    cc = skylines['FLUX'][0][fiberobj] / medsky
+                    ax1.scatter(xx, yy, marker='*', s=400, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
+
+                    if ntelluric>0:
+                        xx = platesum2['ZETA'][fibertelluric]
+                        yy = platesum2['ETA'][fibertelluric]
+                        cc = skylines['FLUX'][0][fibertelluric] / medsky
+                        ax1.scatter(xx, yy, marker='o', s=215, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
+
+                    if nsky>0:
+                        xx = platesum2['ZETA'][fibersky]
+                        yy = platesum2['ETA'][fibersky]
+                        cc = skylines['FLUX'][0][fibersky] / medsky
+                        sc = ax1.scatter(xx, yy, marker='s', s=230, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
+
+                    ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+
                     ax1_divider = make_axes_locatable(ax1)
                     cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
                     cb = colorbar(sc, cax=cax1, orientation="horizontal")
