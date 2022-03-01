@@ -1566,7 +1566,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
                 if ntelluric>0:
                     try:
-                    ass, = np.where(plSum2['ASSIGNED'][telluric])
+                        ass, = np.where(plSum2['ASSIGNED'][telluric])
                         x = plSum2['ZETA'][telluric][ass];    y = plSum2['ETA'][telluric][ass]
                         c = plSum2['HMAG'][telluric][ass] - plSum2['obsmag'][telluric[ass],ii,1]
                     except:
