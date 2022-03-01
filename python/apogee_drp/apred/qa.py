@@ -1435,7 +1435,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 cax.minorticks_on()
                 ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
 
-            ax.text(0.03, 0.97, fiblabs[itype]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color='k')
+            ax.text(0.03, 0.97, fiblabs[itype].replace('HOT_STD', 'TELLURIC'), transform=ax.transAxes, ha='left', va='top', color='k')
 
         fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
