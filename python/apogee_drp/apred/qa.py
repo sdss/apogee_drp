@@ -1402,7 +1402,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(33,10))
+        fig=plt.figure(figsize=(28,10))
         plotrad = 1.6
 
         for itype in range(3):
