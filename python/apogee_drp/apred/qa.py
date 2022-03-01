@@ -1012,7 +1012,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
     # Fiber location plots.
     html.write('<H3>Fiber Positions:</H3>\n')
-    html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','FibLoc')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','FibLoc')+' WIDTH=1200></A>')
+    html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','FibLoc')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','FibLoc')+' WIDTH=900></A>')
     html.write('<HR>\n')
 
     # Table of individual exposures.
