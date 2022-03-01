@@ -1391,7 +1391,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     flux = load.apFlux(fluxid)
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
-    fiblabs = np.array(['Sky', 'Telluric', 'Science'])
+    fiblabs = np.array(['SKY', 'HOT_STD', 'SCIENCE'])
 
     plotfile = fluxfile.replace('.fits', '.png').replace('Flux', 'FibLoc')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
@@ -1415,9 +1415,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             if itype == 0: ax.set_ylabel(r'Eta (deg.)')
             if itype != 0: ax.axes.yaxis.set_ticklabels([])
 
-            pdb.set_trace()
-            gd, = np.where((ypos > 60) & (ypos < 90))
-            sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=platesum2['HMAG'], edgecolors='k', cmap='afmhot', alpha=1, vmin=0.01, vmax=0.99)
+            gd, = np.where(platesum2['objtype'] == fiblabs[itype])
+            if len(gd) > 0:
+                x = platesum2['Zeta'][gd]
+                y = platesum2['Eta'][gd]
+                c = platesum2['HMAG'][gd]
+                sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1, vmin=0.01, vmax=0.99)
 
             ax.text(0.03, 0.97, fiblabs[itype]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color='k')
 
@@ -1432,10 +1435,6 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
         
-    oldplotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
-    if os.path.exists(plotsdir + oldplotfile): os.remove(plotsdir + oldplotfile)
-
-
     #----------------------------------------------------------------------------------------------
     # PLOT 7: guider rms plot
     #----------------------------------------------------------------------------------------------
