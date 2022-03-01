@@ -1403,7 +1403,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(24,10))
+        fig=plt.figure(figsize=(26,10))
         plotrad = 1.6
 
         for itype in range(3):
@@ -1437,7 +1437,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
             ax.text(0.03, 0.97, fiblabs[itype].replace('HOT_STD', 'TELLURIC'), transform=ax.transAxes, ha='left', va='top', color='k')
 
-        fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
+        fig.subplots_adjust(left=0.045,right=0.985,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
         
