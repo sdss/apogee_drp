@@ -1555,14 +1555,23 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 #gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
                 #           a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
 
-                pdb.set_trace()
-                x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
-                c = plSum2['HMAG'][science] - plSum2['obsmag'][science,ii,1]
+                try:
+                    ass, = np.where(plSum2['ASSIGNED'][science])
+                    x = plSum2['ZETA'][science][ass];    y = plSum2['ETA'][science][ass]
+                    c = plSum2['HMAG'][science][ass] - plSum2['obsmag'][science[ass],ii,1]
+                except:
+                    x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
+                    c = plSum2['HMAG'][science] - plSum2['obsmag'][science,ii,1]
                 psci = ax1.scatter(x, y, marker='*', s=400, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
                 if ntelluric>0:
-                    x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
-                    c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,ii,1]
+                    try:
+                    ass, = np.where(plSum2['ASSIGNED'][telluric])
+                        x = plSum2['ZETA'][telluric][ass];    y = plSum2['ETA'][telluric][ass]
+                        c = plSum2['HMAG'][telluric][ass] - plSum2['obsmag'][telluric[ass],ii,1]
+                    except:
+                        x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
+                        c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,ii,1]
                     ptel = ax1.scatter(x, y, marker='o', s=215, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
                 #try:
