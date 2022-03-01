@@ -1749,12 +1749,15 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
                 ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-                ax1_divider = make_axes_locatable(ax1)
-                cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-                cb = colorbar(sc, cax=cax1, orientation="horizontal")
-                cax1.xaxis.set_ticks_position("top")
-                cax1.minorticks_on()
-                ax1.text(0.5, 1.12, r'Sky emission deviation',ha='center', transform=ax1.transAxes)
+                try:
+                    ax1_divider = make_axes_locatable(ax1)
+                    cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+                    cb = colorbar(sc, cax=cax1, orientation="horizontal")
+                    cax1.xaxis.set_ticks_position("top")
+                    cax1.minorticks_on()
+                    ax1.text(0.5, 1.12, r'Sky emission deviation',ha='center', transform=ax1.transAxes)
+                except:
+                    nothing = 5
 
                 fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
                 plt.savefig(plotsdir+plotfile)
