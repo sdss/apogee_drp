@@ -1555,6 +1555,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 #gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
                 #           a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
 
+                pdb.set_trace()
                 x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
                 c = plSum2['HMAG'][science] - plSum2['obsmag'][science,ii,1]
                 psci = ax1.scatter(x, y, marker='*', s=400, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
