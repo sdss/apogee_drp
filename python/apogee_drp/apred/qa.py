@@ -1425,7 +1425,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 x = platesum2['Zeta'][gd]
                 y = platesum2['Eta'][gd]
                 c = platesum2['HMAG'][gd]
-                sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1, vmin=0.01, vmax=0.99)
+                sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1)
 
                 ax_divider = make_axes_locatable(ax)
                 cax = ax_divider.append_axes("top", size="4%", pad="1%")
