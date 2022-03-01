@@ -1427,14 +1427,14 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 c = platesum2['HMAG'][gd]
                 sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1, vmin=0.01, vmax=0.99)
 
-            ax.text(0.03, 0.97, fiblabs[itype]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color='k')
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("top", size="4%", pad="1%")
+                cb = colorbar(sc, cax=cax, orientation="horizontal")
+                cax.xaxis.set_ticks_position("top")
+                cax.minorticks_on()
+                ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
 
-            ax_divider = make_axes_locatable(ax)
-            cax = ax_divider.append_axes("top", size="4%", pad="1%")
-            cb = colorbar(sc, cax=cax, orientation="horizontal")
-            cax.xaxis.set_ticks_position("top")
-            cax.minorticks_on()
-            ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
+            ax.text(0.03, 0.97, fiblabs[itype]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color='k')
 
         fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
