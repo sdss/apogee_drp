@@ -1443,7 +1443,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
             ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
 
-            txt = fiblabs[itype].replace('HOT_STD', 'TELLURIC').replace('STAR', 'SCIENCE') + ' (' + str(len(gd)) + ')'
+            txt = fiblabs[itype].replace('HOT_STD', 'TELLURIC').replace('STAR', 'SCIENCE').lower() + ' (' + str(len(gd)) + ')'
             ax.text(0.03, 0.97, txt, transform=ax.transAxes, ha='left', va='top', color='k')
 
         fig.subplots_adjust(left=0.045,right=0.985,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
