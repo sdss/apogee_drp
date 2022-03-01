@@ -1421,26 +1421,29 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             if itype == 0: ax.set_ylabel(r'Eta (deg.)')
             if itype != 0: ax.axes.yaxis.set_ticklabels([])
 
-            gd, = np.where((platesum2['objtype'] == fiblabs[itype]) & (platesum2['assigned']))
-            if len(gd) > 0:
-                x = platesum2['Zeta'][gd]
-                y = platesum2['Eta'][gd]
-                c = platesum2['HMAG'][gd]
-                sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1)
-                ax_divider = make_axes_locatable(ax)
-                cax = ax_divider.append_axes("top", size="4%", pad="1%")
-                if (len(gd) > 1) & (fiblabs[itype] != 'SKY'): 
-                    cb = colorbar(sc, cax=cax, orientation="horizontal")
-                    ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
-                cax.xaxis.set_ticks_position("top")
-                cax.minorticks_on()
-            else:
-                sc = ax.scatter([-100,-100], [-100,-100], marker='o', s=100, edgecolors='k', cmap='afmhot', alpha=1)
-                ax_divider = make_axes_locatable(ax)
-                cax = ax_divider.append_axes("top", size="4%", pad="1%")
-                cax.xaxis.set_ticks_position("top")
-                cax.axes.yaxis.set_ticklabels([])
-                cax.minorticks_on()
+            try:
+                gd, = np.where((platesum2['objtype'] == fiblabs[itype]) & (platesum2['assigned']))
+                if len(gd) > 0:
+                    x = platesum2['Zeta'][gd]
+                    y = platesum2['Eta'][gd]
+                    c = platesum2['HMAG'][gd]
+                    sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1)
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("top", size="4%", pad="1%")
+                    if (len(gd) > 1) & (fiblabs[itype] != 'SKY'): 
+                        cb = colorbar(sc, cax=cax, orientation="horizontal")
+                        ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
+                    cax.xaxis.set_ticks_position("top")
+                    cax.minorticks_on()
+                else:
+                    sc = ax.scatter([-100,-100], [-100,-100], marker='o', s=100, edgecolors='k', cmap='afmhot', alpha=1)
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("top", size="4%", pad="1%")
+                    cax.xaxis.set_ticks_position("top")
+                    cax.axes.yaxis.set_ticklabels([])
+                    cax.minorticks_on()
+            except:
+                nothing = 5
 
             txt = fiblabs[itype].replace('HOT_STD', 'TELLURIC').replace('STAR', 'SCIENCE').lower() + ' (' + str(len(gd)) + ')'
             ax.text(0.03, 0.97, txt, transform=ax.transAxes, ha='left', va='top', color='k')
