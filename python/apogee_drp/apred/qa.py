@@ -1010,6 +1010,11 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
         html.write('<HR>\n')
 
+    # Fiber location plots.
+    html.write('<H3>Fiber Positions:</H3>\n')
+    html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','FibLoc')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','FibLoc')+' WIDTH=1200></A>')
+    html.write('<HR>\n')
+
     # Table of individual exposures.
     if pairstr is not None:
         html.write('<H3>Individual Exposures:</H3>\n')
