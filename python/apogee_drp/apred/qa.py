@@ -1385,6 +1385,58 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if os.path.exists(plotsdir + oldplotfile): os.remove(plotsdir + oldplotfile)
 
     #----------------------------------------------------------------------------------------------
+    # PLOTS 7: sky, telluric, science fiber positions, colored by Hmag
+    #----------------------------------------------------------------------------------------------
+    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    flux = load.apFlux(fluxid)
+    ypos = 300 - platesum2['FIBERID']
+    block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
+    fiblabs = np.array(['Sky', 'Telluric', 'Science'])
+
+    plotfile = fluxfile.replace('.fits', '.png').replace('Flux', 'FibLoc')
+    if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+        print("----> makeObsPlots: Making "+plotfile)
+
+        fig=plt.figure(figsize=(33,10))
+        plotrad = 1.6
+
+        for itype in range(3):
+            ax = plt.subplot2grid((1, 3), (0,itype))
+            ax.set_xlim(-plotrad, plotrad)
+            ax.set_ylim(-plotrad, plotrad)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_xlabel(r'Zeta (deg.)')
+            if itype == 0: ax.set_ylabel(r'Eta (deg.)')
+            if itype != 0: ax.axes.yaxis.set_ticklabels([])
+
+            pdb.set_trace()
+            gd, = np.where((ypos > 60) & (ypos < 90))
+            sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=platesum2['HMAG'], edgecolors='k', cmap='afmhot', alpha=1, vmin=0.01, vmax=0.99)
+
+            ax.text(0.03, 0.97, fiblabs[itype]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color='k')
+
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("top", size="4%", pad="1%")
+            cb = colorbar(sc, cax=cax, orientation="horizontal")
+            cax.xaxis.set_ticks_position("top")
+            cax.minorticks_on()
+            ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
+
+        fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
+        plt.savefig(plotsdir+plotfile)
+        plt.close('all')
+        
+    oldplotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
+    if os.path.exists(plotsdir + oldplotfile): os.remove(plotsdir + oldplotfile)
+
+
+    #----------------------------------------------------------------------------------------------
     # PLOT 7: guider rms plot
     #----------------------------------------------------------------------------------------------
     expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
