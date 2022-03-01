@@ -1442,8 +1442,6 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 cax.axes.yaxis.set_ticklabels([])
                 cax.minorticks_on()
 
-            ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
-
             txt = fiblabs[itype].replace('HOT_STD', 'TELLURIC').replace('STAR', 'SCIENCE').lower() + ' (' + str(len(gd)) + ')'
             ax.text(0.03, 0.97, txt, transform=ax.transAxes, ha='left', va='top', color='k')
 
