@@ -1403,7 +1403,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(26,10))
+        fig=plt.figure(figsize=(25,10))
         plotrad = 1.6
 
         for itype in range(3):
@@ -1427,15 +1427,17 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 y = platesum2['Eta'][gd]
                 c = platesum2['HMAG'][gd]
                 sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1)
+            else:
+                sc = ax.scatter([-100,-100], [-100,-100], marker='o', s=100, c=platesum2['HMAG'][0], edgecolors='k', cmap='afmhot', alpha=1)
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("top", size="4%", pad="1%")
+            cb = colorbar(sc, cax=cax, orientation="horizontal")
+            cax.xaxis.set_ticks_position("top")
+            cax.minorticks_on()
+            ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
 
-                ax_divider = make_axes_locatable(ax)
-                cax = ax_divider.append_axes("top", size="4%", pad="1%")
-                cb = colorbar(sc, cax=cax, orientation="horizontal")
-                cax.xaxis.set_ticks_position("top")
-                cax.minorticks_on()
-                ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
-
-            ax.text(0.03, 0.97, fiblabs[itype].replace('HOT_STD', 'TELLURIC'), transform=ax.transAxes, ha='left', va='top', color='k')
+            txt = fiblabs[itype].replace('HOT_STD', 'TELLURIC') + ' (' + str(len(gd)) + ')'
+            ax.text(0.03, 0.97, txt, transform=ax.transAxes, ha='left', va='top', color='k')
 
         fig.subplots_adjust(left=0.045,right=0.985,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
