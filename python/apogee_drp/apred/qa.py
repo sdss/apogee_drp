@@ -1212,6 +1212,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
     alpha = 0.6
     axwidth=1.5
     axmajlen=7
@@ -2261,6 +2262,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
     #matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
     bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
     axwidth=1.5
     axmajlen=7
@@ -2442,6 +2444,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     # Basic plotting parameters
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
     bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
     axwidth=1.5
     axmajlen=7
@@ -2638,6 +2641,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
     alpha = 0.6
     axwidth=1.5
     axmajlen=7
@@ -3512,6 +3516,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         matplotlib.use('agg')
         fontsize = 24;   fsz = fontsize * 0.60
         matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+        matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
         alf = 0.80
         axwidth = 1.5
         axmajlen = 7
