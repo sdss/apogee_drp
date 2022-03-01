@@ -1438,6 +1438,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 ax_divider = make_axes_locatable(ax)
                 cax = ax_divider.append_axes("top", size="4%", pad="1%")
                 cax.xaxis.set_ticks_position("top")
+                cax.axes.yaxis.set_ticklabels([])
                 cax.minorticks_on()
 
             ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
