@@ -1437,6 +1437,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 sc = ax.scatter([-100,-100], [-100,-100], marker='o', s=100, edgecolors='k', cmap='afmhot', alpha=1)
                 ax_divider = make_axes_locatable(ax)
                 cax = ax_divider.append_axes("top", size="4%", pad="1%")
+                cax.xaxis.set_ticks_position("top")
+                cax.minorticks_on()
+
             ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
 
             txt = fiblabs[itype].replace('HOT_STD', 'TELLURIC').replace('STAR', 'SCIENCE') + ' (' + str(len(gd)) + ')'
