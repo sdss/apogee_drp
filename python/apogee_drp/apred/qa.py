@@ -1396,7 +1396,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     flux = load.apFlux(fluxid)
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
-    fiblabs = np.array(['SKY', 'HOT_STD', 'SCIENCE'])
+    fiblabs = np.array(['SKY', 'HOT_STD', 'STAR'])
 
     plotfile = fluxfile.replace('.fits', '.png').replace('Flux', 'FibLoc')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
