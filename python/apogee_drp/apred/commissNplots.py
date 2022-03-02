@@ -183,10 +183,16 @@ def snhistory3():
     return
 
 ###########################################################################################
-def dillum_FPSonly(mjdstart=59604):
+def dillum_FPSonly(mjdstart=59604, norm=True):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
+
     plotfile = specdir5 + 'monitor/' + instrument + '/dillum_FPSonly.png'
+    ylabel = r'Median Flux'
+    if norm:
+        plotfile = plotfile.replace('.png', '_norm.png')
+        ylabel = r'Median Flux / Max Flux'
+
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(30,22))
@@ -217,7 +223,7 @@ def dillum_FPSonly(mjdstart=59604):
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
         if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
-        ax.set_ylabel(r'Median Flux')
+        ax.set_ylabel(ylabel)
         if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
         if ichip == 0:
             ax_divider = make_axes_locatable(ax)
@@ -245,12 +251,9 @@ def dillum_FPSonly(mjdstart=59604):
                 print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
                 mnf = np.nanmin(onedflux[135:145])
                 if (ichip == 0) & (mnf < 7500): print("BAD FLAT")
-                if (umjd[idome] == 59557) | (umjd[idome] == 59566): continue
                 mycolor = cmap(idome)
-                #gd, = np.where(onedflux > 100)
+                if norm: onedflux = onedflux / np.nanmax(onedflux)
                 ax.plot(xarr, onedflux, color=mycolor)
-                #if (chp == 'c') & (np.nanmax(onedflux) > 30000): pdb.set_trace()
-                #ax.hist(onedflux, 300, color=mycolor, fill=False)
 
         ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                 ha='center', va='top', color=chip, bbox=bboxpar)
