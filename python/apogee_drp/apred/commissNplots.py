@@ -183,6 +183,39 @@ def snhistory3():
     return
 
 ###########################################################################################
+def dillum(mjdstart=59604):
+    # HTML header background color
+    thcolor = '#DCDCDC'
+
+    htmlfile = specdir5 + 'monitor/' + instrument + '/fiber2fiber/fiber2fiber.html'
+    html = open(htmlfile, 'w')
+    html.write('<HTML><HEAD><title>'+os.path.basename(htmlfile).replace('.html','')+'</title></head><BODY>\n')
+    html.write('<H1> Fiber-to-fiber Throughput Investigation</H1>\n')
+    html.write('<TABLE BORDER=2>\n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH> <TH>All FPS (night-to-night variation) <TH>59557 (nightly variation) \n')
+
+    html.write('<TR><TD bgcolor="'+thcolor+'">Median Flux<BR>All Pixels\n')
+    pfile = '../dillum_FPSonly_0-2047.png'
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=300></A>\n')
+
+    html.write('<TR><TD bgcolor="'+thcolor+'">Median Flux / Max Flux<BR>(all pixels)\n')
+    pfile = '../dillum_FPSonly_0-2047_norm.png'
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=300></A>\n')
+ 
+    html.write('<TR><TD bgcolor="'+thcolor+'">Median Flux / Max Flux<BR>(all pixels)\n')
+    pfile = '../dillum_FPSonly_0-2047_norm.png'
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=300></A>\n')
+
+    html.write('<TR><TD bgcolor="'+thcolor+'">Median Flux / Max Flux / Overall Median Flux<BR>(all pixels)\n')
+    pfile = '../dillum_FPSonly_0-2047_norm_resid.png'
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=300></A>\n')
+    html.write('</table><HR>\n')
+
+    html.write('<BR><BR>\n')
+    html.write('</BODY></HTML>\n')
+    html.close()
+
+###########################################################################################
 def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
