@@ -197,7 +197,7 @@ def dillum(mjdstart=59604):
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
 
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'"all\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
     pfile = '../dillum_FPSonly_0-2047.png'
     pfile1 = pfile.replace('.png','_norm.png')
     pfile2 = pfile1.replace('.png','_resid.png')
