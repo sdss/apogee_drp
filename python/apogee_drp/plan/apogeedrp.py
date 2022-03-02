@@ -410,9 +410,13 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('Making master darks sequentially')
     logger.info('================================')
     # Give each job LOTS of memory
-    logger.info('Slurm settings: '+str(slurm))
+    slurm1 = slurm.copy()
+    slurm1['nodes'] = 2
+    slurm1['cpus'] = 4
+    slurm1['mem_per_cpu'] = 20000  # in MB
+    logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mkdark', **slurm)
+    queue.create(label='mkdark', **slurm1)
     docal = np.zeros(len(darkdict),bool)
     for i in range(len(darkdict)):
         name = darkdict['name'][i]
@@ -448,20 +452,16 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         cal.darkplot(apred=apred,telescope=telescope)
 
-    import pdb; pdb.set_trace()
 
-    # Make flats sequentially
+    # Make flats in parallel
     #-------------------------
     #idl -e "makecal,flat=1,vers='$vers',telescope='$telescope'" >& log/mkflat-$telescope.$host.log
     #flatplot --apred $vers --telescope $telescope
     flatdict = allcaldict['flat']
     logger.info('')
-    logger.info('--------------------------------')
-    logger.info('Making master flats sequentially')
-    logger.info('================================')
-    slurm1 = slurm.copy()
-    slurm1['nodes'] = 1
-    slurm1['cpus'] = 1    
+    logger.info('-------------------------------')
+    logger.info('Making master flats in parallel')
+    logger.info('===============================')
     logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkflat', **slurm1)
@@ -500,17 +500,17 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
         cal.flatplot(apred=apred,telescope=telescope)
 
 
-    # Make BPM sequentially
+    # Make BPM in parallel
     #----------------------
     #idl -e "makecal,bpm=1,vers='$vers',telescope='$telescope'" >& log/mkbpm-$telescope.$host.log
     bpmdict = allcaldict['bpm']
     logger.info('')
-    logger.info('--------------------------------')
-    logger.info('Making master BPMs sequentially')
-    logger.info('================================')
-    logger.info('Slurm settings: '+str(slurm1))
+    logger.info('------------------------------')
+    logger.info('Making master BPMs in parallel')
+    logger.info('==============================')
+    logger.info('Slurm settings: '+str(slurm))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mkbpm', **slurm1)
+    queue.create(label='mkbpm', **slurm)
     for i in range(len(bpmdict)):
         name = bpmdict['name'][i]
         if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
@@ -543,17 +543,17 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     del queue    
 
 
-    # Make Littrow sequentially
+    # Make Littrow in parallel
     #--------------------------
     #idl -e "makecal,littrow=1,vers='$vers',telescope='$telescope'" >& log/mklittrow-$telescope.$host.log
     littdict = allcaldict['littrow']
     logger.info('')
-    logger.info('-----------------------------------')
-    logger.info('Making master Littrows sequentially')
-    logger.info('===================================')
-    logger.info('Slurm settings: '+str(slurm1))
+    logger.info('----------------------------------')
+    logger.info('Making master Littrows in parallel')
+    logger.info('==================================')
+    logger.info('Slurm settings: '+str(slurm))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mklittrow', **slurm1)
+    queue.create(label='mklittrow', **slurm)
     for i in range(len(littdict)):
         name = littdict['name'][i]
         if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
@@ -572,7 +572,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                 outfile = load.filename('Littrow',num=name,chips=True)
                 if load.exists('Littrow',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docalik] = False
+                    docal[i] = False
             if docal[i]:
                 logger.info('Littrow file %d : %s' % (i+1,name))
                 logger.info(logfile1)
@@ -586,16 +586,16 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     del queue    
 
 
-    # Make Response sequentially
+    # Make Response in parallel
     #--------------------------
     responsedict = allcaldict['response']
     logger.info('')
-    logger.info('------------------------------------')
-    logger.info('Making master responses sequentially')
-    logger.info('====================================')
-    logger.info('Slurm settings: '+str(slurm1))
+    logger.info('-----------------------------------')
+    logger.info('Making master responses in parallel')
+    logger.info('===================================')
+    logger.info('Slurm settings: '+str(slurm))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mkresponse', **slurm1)
+    queue.create(label='mkresponse', **slurm)
     for i in range(len(responsedict)):
         name = responsedict['name'][i]
         if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
@@ -678,11 +678,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('--------------------------------')
     logger.info('Making master LSFs in parallel')
     logger.info('================================')
-    slurm1['nodes'] = 1
-    slurm1['cpus'] = 5
-    logger.info('Slurm settings: '+str(slurm1))
+    logger.info('Slurm settings: '+str(slurm))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mklsf', **slurm1)
+    queue.create(label='mklsf', **slurm)
     for i in range(len(littdict)):
         name = lsfdict['name'][i]
         if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:

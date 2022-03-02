@@ -42,7 +42,7 @@ if __name__ == "__main__":
     if isinstance(args.nodes,list):
         nodes = args.nodes[0]
     else:
-        nodes = None
+        nodes = args.nodes
     if isinstance(args.linkvers,list):
         linkvers = args.linkvers[0]
     else:
