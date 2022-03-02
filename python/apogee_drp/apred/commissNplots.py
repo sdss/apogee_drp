@@ -219,7 +219,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
         chip = chips[ichip]
         ax = plt.subplot2grid((nchips, 1), (ichip, 0))
         ax.set_xlim(0, 301)
-        #ax.set_ylim(0, 27000)
+        if resid: ax.set_ylim(0.75, 1.25)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
         ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax.minorticks_on()
@@ -327,7 +327,7 @@ def dillum59557(pix=[824,1224], norm=True, resid=True):
         chip = chips[ichip]
         ax = plt.subplot2grid((nchips, 1), (ichip, 0))
         ax.set_xlim(0, 301)
-        #ax.set_ylim(0, 27000)
+        if resid: ax.set_ylim(0.75, 1.25)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
         ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax.minorticks_on()
