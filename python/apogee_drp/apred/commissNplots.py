@@ -193,7 +193,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
         plotfile = plotfile.replace('.png', '_norm.png')
         ylabel = r'Median Flux / Max Flux'
     if resid:
-        plotfile = plotfile.replace('.png', '_norm.png')
+        plotfile = plotfile.replace('.png', '_resid.png')
         ylabel = r'Median Flux / Max Flux / Mean Fiber Flux'
 
     print("----> commissNplots: Making " + os.path.basename(plotfile))
@@ -252,7 +252,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
                 flux[idome] = np.nanmedian(oned[:, pix[0]:pix[1]], axis=1)[::-1]
                 flux[idome][74] = np.nanmean([flux[idome][72],flux[idome][73],flux[idome][75],flux[idome][76]])
                 flux[idome][224] = np.nanmean([flux[idome][222],flux[idome][223],flux[idome][225],flux[idome][226]])
-                print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
+                print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(flux[idome]))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
                 mnf = np.nanmin(flux[idome][135:145])
                 if (ichip == 0) & (mnf < 7500): print("BAD FLAT")
                 mycolor = cmap(idome)
