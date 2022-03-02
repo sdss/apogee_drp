@@ -1066,14 +1066,17 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                         logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
                     elif ccode==2:  # flux
                         cmd1 = 'makecal --flux '+str(num1)+' --unlock'
+                        if fps: cmd1 += ' --psflibrary'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
                     elif ccode==4: # and exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):  # arcs
                         cmd1 = 'makecal --wave '+str(num1)+' --unlock'
+                        if fps: cmd1 += ' --psflibrary'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
                     elif ccode==8: # and exptype1=='ARCLAMP' and arctype1=='FPI':    # fpi
                         cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
+                        if fps: cmd1 += ' --psflibrary'
                         if clobber: cmd1 += ' --clobber'
                         logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
                     logfiles.append(logfile1)

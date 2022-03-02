@@ -6,7 +6,10 @@
 ; a new one.
 ;
 ; INPUTS:
-;  num    Eight digit Exposure number.
+;  num          Eight digit Exposure number.
+;  /psflibrary  Use the PSF library to find the best PSF to use.
+;                 Used for FPS data by default.  Otherwise it
+;                 searches through the apPSF files that are on disk.
 ;
 ; OUTPUTS:
 ;  psfid  Exposure number of the PSF calibration file.
@@ -17,7 +20,8 @@
 ; By D.Nidever  Feb 2022
 ;-
 
-function getpsfcal,num
+function getpsfcal,num,psflibrary=psflibrary
+  common apver,ver,telescop,instrume
 
   ;; Not enough inputs
   if n_elements(num) eq 0 then begin
@@ -27,6 +31,34 @@ function getpsfcal,num
 
   cmjd = getcmjd(num[0],mjd=mjd)
   if mjd ge 59556 then fps=1 else fps=0
+  ;; Use PSF library for FPS by default
+  if n_elements(psflibrary) eq 0 and keyword_set(fps) then psflibrary=1
+
+  ;; Use the PSF library
+  if keyword_set(psflibrary) then begin
+    print,'Using PSF Library'
+    ;; You can do "domeflattrace --mjdplate" where mjdplate could be
+    ;; e.g. 59223-9244, or "domeflattrace --planfile", with absolute
+    ;; path of planfile
+    observatory = strlowcase(strmid(telescop,0,3))
+    spawn,['psflibrary',observatory,'--ims',strtrim(num,2)],out,errout,/noshell
+    nout = n_elements(out)
+    ;;for f=0,nout-1 do print,out[f]
+    ;; Parse the output
+    lo = where(stregex(out,'^PSF FLAT RESULTS:',/boolean) eq 1,nlo)
+    hi = first_el(where(strtrim(out,2) eq '' and lindgen(nout) gt lo[0]))
+    if lo ne -1 and hi ne -1 then begin
+      outarr = strsplitter(out[lo+1:hi-1],' ',/extract)
+      ims = reform(outarr[0,*])
+      psfflatims = reform(outarr[1,*])
+      psfid = psfflatims[0]
+      print,'psf: ',psfid
+      return,psfid
+    endif else begin
+      print,'Problem running psflibrary for ',strtrim(num,2)
+    endelse
+  endif
+
 
   ;; Try to find a PSF from this day
   pname = apogee_filename('PSF',num=strmid(strtrim(num[0],2),0,4)+'????',chip='a')
