@@ -114,6 +114,77 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
+def snhistory3():
+    # snhistory3.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/snhistory3.png'
+    print("----> monitor: Making " + os.path.basename(plotfile))
+
+    snbin = 10
+    magmin = '10.8'
+    magmax = '11.2'
+
+    medesnrG = np.nanmedian(allsnr['ESNBINS'][:,10,1])
+    medesnrG = np.nanstd(allsnr['ESNBINS'][:,10,1])
+    limesnrG = medesnrG + 2*medesnrG
+    gd, = np.where((allsnr['NSNBINS'][:, snbin] > 5) & (allsnr['SNBINS'][:, snbin, 1] > 0) & (allsnr['ESNBINS'][:, snbin, 1] < limesnrG))
+    allsnrg = allsnr[gd]
+    ngd = len(allsnrg)
+
+    ymin = -0.01
+    ymax = 0.18
+    yspan = ymax-ymin
+
+    fig = plt.figure(figsize=(30,14))
+
+    for ichip in range(nchips):
+        chip = chips[ichip]
+        ax = plt.subplot2grid((nchips,1), (ichip,0))
+        ax.set_xlim(xmin, xmax)
+        #ax.set_ylim(ymin, ymax)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+        #if ichip == 1: ax.set_ylabel(r'S/N$^{2}$ per minute ($' + magmin + r'>=H>' + magmax + r'$)')
+        if ichip == 1: ax.text(-0.035, 0.5, r'S/N per minute ($' + magmin + r'>=H>' + magmax + r'$)', transform=ax.transAxes, rotation=90, ha='right', va='center')
+        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+        ax.axvline(x=59146, color='r', linewidth=2)
+
+        xvals = allsnrg['JD']
+        yvals = (allsnrg['MEDSNBINS'][:, snbin, 2-ichip]) / (allsnrg['EXPTIME'] / 60)
+        #pdb.set_trace()
+        #if ichip == 0: pdb.set_trace()
+        scolors = allsnrg['MOONPHASE']
+        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                ha='center', va='top', color=chip, bbox=bboxpar)
+
+        if ichip == 0: ylims = ax.get_ylim()
+        for iyear in range(nyears):
+            ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+            if ichip == 0: ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
+
+        ax_divider = make_axes_locatable(ax)
+        cax = ax_divider.append_axes("right", size="2%", pad="1%")
+        cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+        cax.minorticks_on()
+        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+        if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+    return
+
+
+
+
+###########################################################################################
 def dillum59557(resid=False):
     ###########################################################################################
     # dillum59557.png
@@ -850,72 +921,7 @@ def rvparams(allv4=None, allv5=None, remake=False, restrict=False):
 
         return
 
-        ###########################################################################################
-        # snhistory3.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory3.png'
-        print("----> monitor: Making " + os.path.basename(plotfile))
 
-        snbin = 10
-        magmin = '10.8'
-        magmax = '11.2'
-
-        medesnrG = np.nanmedian(allsnr['ESNBINS'][:,10,1])
-        medesnrG = np.nanstd(allsnr['ESNBINS'][:,10,1])
-        limesnrG = medesnrG + 2*medesnrG
-        gd, = np.where((allsnr['NSNBINS'][:, snbin] > 5) & (allsnr['SNBINS'][:, snbin, 1] > 0) & (allsnr['ESNBINS'][:, snbin, 1] < limesnrG))
-        allsnrg = allsnr[gd]
-        ngd = len(allsnrg)
-
-        ymin = -0.01
-        ymax = 0.18
-        yspan = ymax-ymin
-
-        fig = plt.figure(figsize=(30,14))
-
-        for ichip in range(nchips):
-            chip = chips[ichip]
-            ax = plt.subplot2grid((nchips,1), (ichip,0))
-            ax.set_xlim(xmin, xmax)
-            #ax.set_ylim(ymin, ymax)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-            #if ichip == 1: ax.set_ylabel(r'S/N$^{2}$ per minute ($' + magmin + r'>=H>' + magmax + r'$)')
-            if ichip == 1: ax.text(-0.035, 0.5, r'S/N per minute ($' + magmin + r'>=H>' + magmax + r'$)', transform=ax.transAxes, rotation=90, ha='right', va='center')
-            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-            ax.axvline(x=59146, color='r', linewidth=2)
-
-            xvals = allsnrg['JD']
-            yvals = (allsnrg['MEDSNBINS'][:, snbin, 2-ichip]) / (allsnrg['EXPTIME'] / 60)
-            #pdb.set_trace()
-            #if ichip == 0: pdb.set_trace()
-            scolors = allsnrg['MOONPHASE']
-            sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
-
-            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                    ha='center', va='top', color=chip, bbox=bboxpar)
-
-            if ichip == 0: ylims = ax.get_ylim()
-            for iyear in range(nyears):
-                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                if ichip == 0: ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
-
-            ax_divider = make_axes_locatable(ax)
-            cax = ax_divider.append_axes("right", size="2%", pad="1%")
-            cb1 = colorbar(sc1, cax=cax, orientation="vertical")
-            cax.minorticks_on()
-            cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-            if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-
-        fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-        plt.savefig(plotfile)
-        plt.close('all')
-
-        return
 
 
 

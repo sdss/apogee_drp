@@ -524,11 +524,11 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
     if (nobj < 1) & (ntelluric < 1) & (nsky < 1): 
         print("----> makePlateSum: PROBLEM!!! No science objects, tellurics, nor skies found. Skipping this visit.")
-        return 'bad'
-
-    fiberstar = np.concatenate([fiberobj,fibertelluric])
-    nstar = len(fiberstar)
-    star = rows[fiberstar]
+        #return 'bad'
+    else:
+        fiberstar = np.concatenate([fiberobj,fibertelluric])
+        nstar = len(fiberstar)
+        star = rows[fiberstar]
 
     # Loop through all the images for this plate, and make the plots.
     # Load up and save information for this plate in a FITS table.
@@ -656,50 +656,51 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
         # Get a "magnitude" for each fiber from a median on each chip.
         # Do a crude sky subtraction, calculate S/N.
-        for ichip in range(nchips):
-            chip = chips[ichip]
+        if (nobj > 5) & (ntelluric > 5) & (nsky > 5): 
+            for ichip in range(nchips):
+                chip = chips[ichip]
 
-            fluxarr = d[chip][1].data
-            errarr = d[chip][2].data
-            cfluxarr = cframe[chip][1].data
-            cerrarr = cframe[chip][2].data
+                fluxarr = d[chip][1].data
+                errarr = d[chip][2].data
+                cfluxarr = cframe[chip][1].data
+                cerrarr = cframe[chip][2].data
 
-            if ims[0] == 0: medsky = 0.
-            if ims[0] != 0: medsky = np.median(obs[fibersky, ichip])
+                if ims[0] == 0: medsky = 0.
+                if ims[0] != 0: medsky = np.median(obs[fibersky, ichip])
 
-            ### NOTE: using axis=0 caused error, so trying axis=0
-            if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
+                ### NOTE: using axis=0 caused error, so trying axis=0
+                if nobj > 0: obs[fiberobj, ichip] = np.median(fluxarr[obj, :], axis=1) - medsky
 
-            if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
+                if ntelluric > 0: obs[fibertelluric, ichip] = np.median(fluxarr[telluric, :], axis=1) - medsky
 
-            if nobj > 0:
-                sn[fiberobj, ichip] = np.median((fluxarr[obj, :] - medsky) / errarr[obj, :], axis=1)
-                if len(cframe) > 1:
-                    snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=1)
+                if nobj > 0:
+                    sn[fiberobj, ichip] = np.median((fluxarr[obj, :] - medsky) / errarr[obj, :], axis=1)
+                    if len(cframe) > 1:
+                        snc[fiberobj, ichip] = np.median(cfluxarr[obj, :] / cerrarr[obj, :], axis=1)
 
-            if ntelluric > 0:
-                sn[fibertelluric, ichip] = np.median((fluxarr[telluric,:] - medsky) / errarr[telluric, :], axis=1)
-                if len(cframe) > 1:
-                    snc[fibertelluric, ichip] = np.median(cfluxarr[telluric, :] / cerrarr[telluric, :], axis=1)
-                    medfilt = ScipyMedfilt2D(cfluxarr[telluric, :], kernel_size=(1,49))
-                    sz = cfluxarr.shape
-                    i1 = int(np.floor((900 * sz[1]) / 2048))
-                    i2 = int(np.floor((1000 * sz[1]) / 2048))
-                    for itell in range(ntelluric):
-                        p1 = np.mean(cfluxarr[telluric[itell], i1:i2])
-                        p2 = np.std(cfluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
-                        snt[fibertelluric[itell], ichip] = p1 / p2
+                if ntelluric > 0:
+                    sn[fibertelluric, ichip] = np.median((fluxarr[telluric,:] - medsky) / errarr[telluric, :], axis=1)
+                    if len(cframe) > 1:
+                        snc[fibertelluric, ichip] = np.median(cfluxarr[telluric, :] / cerrarr[telluric, :], axis=1)
+                        medfilt = ScipyMedfilt2D(cfluxarr[telluric, :], kernel_size=(1,49))
+                        sz = cfluxarr.shape
+                        i1 = int(np.floor((900 * sz[1]) / 2048))
+                        i2 = int(np.floor((1000 * sz[1]) / 2048))
+                        for itell in range(ntelluric):
+                            p1 = np.mean(cfluxarr[telluric[itell], i1:i2])
+                            p2 = np.std(cfluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
+                            snt[fibertelluric[itell], ichip] = p1 / p2
 
-                else:
-                    snc[fibertelluric,ichip] = sn[fibertelluric,ichip]
-                    medfilt = ScipyMedfilt2D(fluxarr[telluric, :], kernel_size=(1,49))
-                    sz = fluxarr.shape
-                    i1 = int(np.floor((900 * sz[1]) / 2048))
-                    i2 = int(np.floor((1000 * sz[1]) / 2048))
-                    for itell in range(ntelluric):
-                        p1 = np.mean(fluxarr[telluric[itell], i1:i2 * (int(np.floor(sz[1] / 2048)))])
-                        p2 = np.std(fluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
-                        snt[fibertelluric[itell], ichip] = p1 / p2
+                    else:
+                        snc[fibertelluric,ichip] = sn[fibertelluric,ichip]
+                        medfilt = ScipyMedfilt2D(fluxarr[telluric, :], kernel_size=(1,49))
+                        sz = fluxarr.shape
+                        i1 = int(np.floor((900 * sz[1]) / 2048))
+                        i2 = int(np.floor((1000 * sz[1]) / 2048))
+                        for itell in range(ntelluric):
+                            p1 = np.mean(fluxarr[telluric[itell], i1:i2 * (int(np.floor(sz[1] / 2048)))])
+                            p2 = np.std(fluxarr[telluric[itell], i1:i2] - medfilt[itell, i1:i2])
+                            snt[fibertelluric[itell], ichip] = p1 / p2
 
         # Calculate zeropoints from known H band mags.
         # Use a static zeropoint to calculate sky brightness.
@@ -880,7 +881,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         txt = "making " + os.path.basename(outfile1) + " and " + os.path.basename(outfile2)
         print("----> makePlateSum: " + txt)
 
-        tab1 = fits.open(platesum)[1].data
+        tab1 = fits.getdata(platesum,1)
         for j in range(nout):
             out = open(outfiles[j], 'w')
             for i in range(n_exposures):
@@ -951,10 +952,9 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         sys.exit(err1 + err2)
 
     # Read the plateSum file
-    tmp = fits.open(platesum)
-    tab1 = tmp[1].data
-    tab2 = tmp[2].data
-    tab3 = tmp[3].data
+    tab1 = fits.getdata(platesum,1)
+    tab2 = fits.getdata(platesum,2)
+    tab3 = fits.getdata(platesum,3)
 
     # Make the html directory if it doesn't already exist
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
@@ -1009,6 +1009,11 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
         html.write('<HR>\n')
+
+    # Fiber location plots.
+    html.write('<H3>Fiber Positions:</H3>\n')
+    html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','FibLoc')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','FibLoc')+' WIDTH=900></A>')
+    html.write('<HR>\n')
 
     # Table of individual exposures.
     if pairstr is not None:
@@ -1207,6 +1212,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
     alpha = 0.6
     axwidth=1.5
     axmajlen=7
@@ -1221,9 +1227,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         sys.exit(err1 + err2)
 
     # Read the plateSum file
-    tmp = fits.open(platesum)
-    plSum1 = tmp[1].data
-    platesum2 = tmp[2].data
+    plSum1 = fits.getdata(platesum,1)
+    platesum2 = fits.getdata(platesum,2)
     fibord = np.argsort(platesum2['FIBERID'])
     plSum2 = platesum2[fibord]
     nfiber = len(plSum2['HMAG'])
@@ -1385,6 +1390,68 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     oldplotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     if os.path.exists(plotsdir + oldplotfile): os.remove(plotsdir + oldplotfile)
 
+    #----------------------------------------------------------------------------------------------
+    # PLOTS 7: sky, telluric, science fiber positions, colored by Hmag
+    #----------------------------------------------------------------------------------------------
+    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    flux = load.apFlux(fluxid)
+    ypos = 300 - platesum2['FIBERID']
+    block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
+    fiblabs = np.array(['SKY', 'HOT_STD', 'STAR'])
+
+    plotfile = fluxfile.replace('.fits', '.png').replace('Flux', 'FibLoc')
+    if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+        print("----> makeObsPlots: Making "+plotfile)
+
+        fig=plt.figure(figsize=(25,10))
+        plotrad = 1.6
+
+        for itype in range(3):
+            ax = plt.subplot2grid((1, 3), (0,itype))
+            ax.set_xlim(-plotrad, plotrad)
+            ax.set_ylim(-plotrad, plotrad)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_xlabel(r'Zeta (deg.)')
+            if itype == 0: ax.set_ylabel(r'Eta (deg.)')
+            if itype != 0: ax.axes.yaxis.set_ticklabels([])
+
+            try:
+                gd, = np.where((platesum2['objtype'] == fiblabs[itype]) & (platesum2['assigned']))
+                if len(gd) > 0:
+                    x = platesum2['Zeta'][gd]
+                    y = platesum2['Eta'][gd]
+                    c = platesum2['HMAG'][gd]
+                    sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1)
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("top", size="4%", pad="1%")
+                    if (len(gd) > 1) & (fiblabs[itype] != 'SKY'): 
+                        cb = colorbar(sc, cax=cax, orientation="horizontal")
+                        ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
+                    cax.xaxis.set_ticks_position("top")
+                    cax.minorticks_on()
+                else:
+                    sc = ax.scatter([-100,-100], [-100,-100], marker='o', s=100, edgecolors='k', cmap='afmhot', alpha=1)
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("top", size="4%", pad="1%")
+                    cax.xaxis.set_ticks_position("top")
+                    cax.axes.yaxis.set_ticklabels([])
+                    cax.minorticks_on()
+            except:
+                nothing = 5
+
+            txt = fiblabs[itype].replace('HOT_STD', 'TELLURIC').replace('STAR', 'SCIENCE').lower() + ' (' + str(len(gd)) + ')'
+            ax.text(0.03, 0.97, txt, transform=ax.transAxes, ha='left', va='top', color='k')
+
+        fig.subplots_adjust(left=0.045,right=0.985,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
+        plt.savefig(plotsdir+plotfile)
+        plt.close('all')
+        
     #----------------------------------------------------------------------------------------------
     # PLOT 7: guider rms plot
     #----------------------------------------------------------------------------------------------
@@ -1556,13 +1623,23 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 #gdcmap = mplcolors.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, 
                 #           a=minval, b=maxval), cmap(np.linspace(minval, maxval, ncol)))
 
-                x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
-                c = plSum2['HMAG'][science] - plSum2['obsmag'][science,ii,1]
+                try:
+                    ass, = np.where(plSum2['ASSIGNED'][science])
+                    x = plSum2['ZETA'][science][ass];    y = plSum2['ETA'][science][ass]
+                    c = plSum2['HMAG'][science][ass] - plSum2['obsmag'][science[ass],ii,1]
+                except:
+                    x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
+                    c = plSum2['HMAG'][science] - plSum2['obsmag'][science,ii,1]
                 psci = ax1.scatter(x, y, marker='*', s=400, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
                 if ntelluric>0:
-                    x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
-                    c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,ii,1]
+                    try:
+                        ass, = np.where(plSum2['ASSIGNED'][telluric])
+                        x = plSum2['ZETA'][telluric][ass];    y = plSum2['ETA'][telluric][ass]
+                        c = plSum2['HMAG'][telluric][ass] - plSum2['obsmag'][telluric[ass],ii,1]
+                    except:
+                        x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
+                        c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,ii,1]
                     ptel = ax1.scatter(x, y, marker='o', s=215, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
                 #try:
@@ -1637,48 +1714,51 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 skylines['C4']   = 16255.0, 0.0
                 skylines['TYPE'] = 1, 0
 
-                for iline in range(nskylines):
-                    skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
+                try:
+                    for iline in range(nskylines):
+                        skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
 
-                medsky = np.nanmedian(skylines['FLUX'][0][fibersky])
+                    medsky = np.nanmedian(skylines['FLUX'][0][fibersky])
 
-                fig=plt.figure(figsize=(14,15))
-                ax1 = plt.subplot2grid((1,1), (0,0))
-                ax1.set_xlim(-1.6,1.6)
-                ax1.set_ylim(-1.6,1.6)
-                ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-                ax1.minorticks_on()
-                ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax1.tick_params(axis='both',which='major',length=axmajlen)
-                ax1.tick_params(axis='both',which='minor',length=axminlen)
-                ax1.tick_params(axis='both',which='both',width=axwidth)
-                ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
+                    fig=plt.figure(figsize=(14,15))
+                    ax1 = plt.subplot2grid((1,1), (0,0))
+                    ax1.set_xlim(-1.6,1.6)
+                    ax1.set_ylim(-1.6,1.6)
+                    ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+                    ax1.minorticks_on()
+                    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                    ax1.tick_params(axis='both',which='major',length=axmajlen)
+                    ax1.tick_params(axis='both',which='minor',length=axminlen)
+                    ax1.tick_params(axis='both',which='both',width=axwidth)
+                    ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
 
-                xx = platesum2['ZETA'][fiberobj]
-                yy = platesum2['ETA'][fiberobj]
-                cc = skylines['FLUX'][0][fiberobj] / medsky
-                ax1.scatter(xx, yy, marker='*', s=400, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
+                    xx = platesum2['ZETA'][fiberobj]
+                    yy = platesum2['ETA'][fiberobj]
+                    cc = skylines['FLUX'][0][fiberobj] / medsky
+                    ax1.scatter(xx, yy, marker='*', s=400, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
 
-                if ntelluric>0:
-                    xx = platesum2['ZETA'][fibertelluric]
-                    yy = platesum2['ETA'][fibertelluric]
-                    cc = skylines['FLUX'][0][fibertelluric] / medsky
-                    ax1.scatter(xx, yy, marker='o', s=215, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
+                    if ntelluric>0:
+                        xx = platesum2['ZETA'][fibertelluric]
+                        yy = platesum2['ETA'][fibertelluric]
+                        cc = skylines['FLUX'][0][fibertelluric] / medsky
+                        ax1.scatter(xx, yy, marker='o', s=215, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
 
-                if nsky>0:
-                    xx = platesum2['ZETA'][fibersky]
-                    yy = platesum2['ETA'][fibersky]
-                    cc = skylines['FLUX'][0][fibersky] / medsky
-                    sc = ax1.scatter(xx, yy, marker='s', s=230, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
+                    if nsky>0:
+                        xx = platesum2['ZETA'][fibersky]
+                        yy = platesum2['ETA'][fibersky]
+                        cc = skylines['FLUX'][0][fibersky] / medsky
+                        sc = ax1.scatter(xx, yy, marker='s', s=230, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
 
-                ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+                    ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-                ax1_divider = make_axes_locatable(ax1)
-                cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-                cb = colorbar(sc, cax=cax1, orientation="horizontal")
-                cax1.xaxis.set_ticks_position("top")
-                cax1.minorticks_on()
-                ax1.text(0.5, 1.12, r'Sky emission deviation',ha='center', transform=ax1.transAxes)
+                    ax1_divider = make_axes_locatable(ax1)
+                    cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+                    cb = colorbar(sc, cax=cax1, orientation="horizontal")
+                    cax1.xaxis.set_ticks_position("top")
+                    cax1.minorticks_on()
+                    ax1.text(0.5, 1.12, r'Sky emission deviation',ha='center', transform=ax1.transAxes)
+                except:
+                    nothing = 5
 
                 fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
                 plt.savefig(plotsdir+plotfile)
@@ -2130,8 +2210,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                     ccart = '?'
                     platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd, fps=fps)
                     if os.path.exists(platefile):
-                        platehdus = fits.open(platefile)
-                        platetab = platehdus[1].data
+                        platetab = fits.getdata(platefile,1)
                         ccart = str(platetab['CART'][0])
                     
                     csnr = str("%.1f" % round(vcat['snr'][k],1))
@@ -2197,6 +2276,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
     #matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
     bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
     axwidth=1.5
     axmajlen=7
@@ -2378,6 +2458,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     # Basic plotting parameters
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
     bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
     axwidth=1.5
     axmajlen=7
@@ -2574,6 +2655,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+    matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
     alpha = 0.6
     axwidth=1.5
     axmajlen=7
@@ -2755,9 +2837,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             platefilebase = os.path.basename(platefile)
             platefiledir = os.path.dirname(planfiles[i])
             if (planstr['platetype'] == 'normal') & (os.path.exists(platefile)): 
-                platehdus = fits.open(platefile)
-                platetab = platehdus[1].data
-                platefiber = platehdus[2].data
+                platetab = fits.getdata(platefile,1)
+                platefiber = fits.getdata(platefile,2)
                 # Nframes
                 html.write('<TD align="right">' + str(len(platetab)) + '\n')
                 # Zero and zerorms
@@ -2797,8 +2878,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         nplates = len(platefiles)
         for i in range(nplates):
             platefiledir = os.path.dirname(platefiles[i])
-            platehdus = fits.open(platefiles[i])
-            platetab = platehdus[1].data
+            platetab = fits.getdata(platefiles[i],1)
             mjd = str(int(round(platetab['MJD'][0])))
             #sntab, tabs=platefiles[i], outfile=platefiledir + '/sn-' + plate + '-' + mjd + '.dat'
             #sntab, tabs=platefiles[i], outfile=platefiledir + '/altsn-' + plate + '-' + mjd + '.dat', /altsn
@@ -2922,8 +3002,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         th1 = '<TH>Plate <TH>Frame <TH>Cart <TH>sec(z) <TH>HA <TH>Design HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads '
         th2 = '<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n'
         for i in range(nplates):
-            platehdus = fits.open(platefiles[i])
-            platetab = platehdus[1].data
+            platetab = fits.getdata(platefiles[i],1)
             plate = str(int(round(platetab['PLATE'][0])))
             try:
                 cart = str(int(round(platetab['CART'][0])))
@@ -3058,6 +3137,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<TR bgcolor="#eaeded"><TH>(1)<BR>Date <TH>(2)<BR>Observer Log <TH>(3)<BR>Exposure Log <TH>(4)<BR>Raw Data <TH>(5)<BR>Night QA')
         html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Plots of Spectra <TH>(8)<BR>Summary Files <TH>(9)<BR> Phase\n')
         for i in range(nmjd):
+            fps = False
+            if mjd[i] > 59556: fps = True
+
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
             date = tt.fits[0:10]
@@ -3125,16 +3207,25 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     # Check for failed plates
                     plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
                     if os.path.exists(plateQAfile):
+                        note = ''
+                        if fps:
+                            visSumFile = load.filename('VisitSum', plate=int(plate), mjd=cmjd, fps=fps)
+                            if os.path.exists(visSumFile):
+                                visSum = fits.getdata(visSumFile)
+                                assignedFib, = np.where(visSum['assigned'] == 1)
+                                note = ' (' + str(len(assignedFib)) + ' assigned)'
+                                #if len(assignedFib) < 1: note = ' (ZERO assigned)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>'+note+'<BR>\n')
                         else:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>\n')
+                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>'+note+'<BR>\n')
                     else:
+                        note = ' (failed)'
                         if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT><BR>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</A>'+note+'<BR>\n')
                         else:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</A>'+note+'\n')
 
                 # Column 7: Visit spectra plots
                 html.write('<TD align="left">')
@@ -3151,9 +3242,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                             html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>\n')
                     else:
                         if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT><BR>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</FONT><BR>\n')
                         else:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)</FONT>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</FONT>\n')
 
                 # Column 7: Combined files for this night
                 #html.write('<TD>\n')
@@ -3245,8 +3336,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<br><br>Click on column headings to sort<br>\n')
 
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
-        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASPCAP <TH>PLATE<BR>OR<BR>CONFIG <TH>MJD')
-        html.write('<TH>LOC <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>S/N(red) <TH>S/N(green) <TH>S/N(blue)')
+        html.write('<TR bgcolor="#DCDCDC"><TH>FIELD <TH>PROGRAM <TH>ASSIGNED<BR>FIBERS <TH>ASPCAP <TH>PLATE<BR>OR<BR>CONFIG <TH>MJD')
+        html.write('<TH>LOC <TH>RA <TH>DEC <TH>GLON <TH>GLAT <TH>S/N(blue) <TH>S/N(green) <TH>S/N(red)')
         html.write('<TH>N<BR>EXP. <TH>TOTAL<BR>EXPTIME <TH>CART <TH>ZERO <TH>MOON<BR>PHASE\n')
     #    html.write('<TR><TD>FIELD<TD>Program<TD>ASPCAP<br>'+apred_vers+'/'+aspcap_vers+'<TD>PLATE<TD>MJD<TD>LOCATION<TD>RA<TD>DEC<TD>S/N(red)<TD>S/N(green)<TD>S/N(blue)\n')
 
@@ -3260,6 +3351,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Get arrays of observed data values (plate ID, mjd, telescope, field name, program, location ID, ra, dec)
         iplate = np.zeros(nplates).astype(str)
         imjd = np.zeros(nplates).astype(str)
+        iassigned = np.full(nplates, '---')
         itel = np.zeros(nplates).astype(str)
         iname = np.zeros(nplates).astype(str)
         iprogram = np.zeros(nplates).astype(str)
@@ -3270,6 +3362,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         ilat = np.zeros(nplates).astype(str)
         inexposures = np.zeros(nplates).astype(str)
         iexptime = np.zeros(nplates).astype(str)
+        isnr = np.full((nplates,3), 0).astype(str)
         icart = np.zeros(nplates).astype(str)
         izero = np.zeros(nplates).astype(str)
         imoonphase = np.zeros(nplates)
@@ -3294,6 +3387,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if itel[i] != 'apo25m': inst[i] = 'apogee-s'
 
             load = apload.ApLoad(apred=apred, telescope=itel[i])
+            platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
 
             if fps:
                 # Get field center RA and DEC from confSummary file
@@ -3306,6 +3400,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 c_icrs = SkyCoord(ra=tra*u.degree, dec=tdec*u.degree, frame='icrs')
                 ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
                 ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
+                if os.path.exists(platesumfile):
+                    try:
+                        plsum2 = fits.getdata(platesumfile,2)
+                        ass, = np.where(plsum2['assigned'])
+                        iassigned[i] = str(len(ass))
+                    except:
+                        nothing = 5
 
                 ## Read planfile
                 #planfile = load.filename('Plan', plate=int(iplate[i]), mjd=imjd[i], fps=fps)
@@ -3314,7 +3415,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 #badfiberid = planstr['badfiberid']
                 #plugmap =    planstr['plugmap']
                 #plug = platedata.getdata(int(iplate[i]), int(imjd[i]), apred, tel, plugid=plugmap, badfiberid=badfiberid)
-                iprogram[i] = '???'
+                iprogram[i] = 'SDSS-V'
                 iloc[i] = name
             else:
                 gd, = np.where(int(plate) == plans['PLATEPLANS']['plateid'])
@@ -3329,19 +3430,24 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
                     ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
 
-            platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
             if os.path.exists(platesumfile) is False:
                 tmp = glob.glob(platesumfile.replace('None','*'))
                 if len(tmp) > 0: 
                     platesumfile = tmp[0]
             if os.path.exists(platesumfile):
-                tmp = fits.open(platesumfile)
-                plsum1 = tmp[1].data
+                plsum1 = fits.getdata(platesumfile,1)
                 inexposures[i] = str(len(plsum1['IM']))
                 iexptime[i] = str(np.sum(plsum1['EXPTIME']))
                 icart[i] = str(plsum1['CART'][0])
                 izero[i] = str("%.2f" % round(np.mean(plsum1['ZERO']),2))
                 imoonphase[i] = np.mean(plsum1['MOONPHASE'])
+                try:
+                    plsum3 = fits.getdata(platesumfile,3)
+                    isnr[i,0] = str(int(round(plsum3['SN'][0][0])))
+                    isnr[i,1] = str(int(round(plsum3['SN'][0][1])))
+                    isnr[i,2] = str(int(round(plsum3['SN'][0][2])))
+                except:
+                    print("----> makeMasterQApages: no 3rd extension in apPlateSum for plate " + iplate[i] + ', MJD ' + imjd[i])
             else:
                 print('----> makeMasterQApages: Problem with plate/config ' + iplate[i] + ', MJD ' + imjd[i] + '. PlateSum not found.')
 
@@ -3350,6 +3456,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         plates = plates[order]
         iplate = iplate[order]
         imjd = imjd[order]
+        iassigned = iassigned[order]
         itel = itel[order]
         iname = iname[order]
         iprogram = iprogram[order]
@@ -3360,19 +3467,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         ilat = ilat[order]
         inexposures = inexposures[order]
         iexptime = iexptime[order]
+        isnr = isnr[order]
         icart = icart[order]
         izero = izero[order]
         imoonphase = imoonphase[order]
         inst = inst[order]
 
         for i in range(nplates):
-            tmp = fits.open(plates[i])
-            try:
-                platetab = tmp[3].data
-            except:
-                print("----> makeMasterQApages: no 3rd extension in apPlateSum for plate " + iplate[i] + ', MJD ' + imjd[i])
-                continue
-
             color = '#ffb3b3'
             if len(iprogram[i]) < 3:
                 if iprogram[i] == 'RM': 
@@ -3386,6 +3487,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
             html.write('<TR bgcolor=' + color + '><TD>' + iname[i]) 
             html.write('<TD>' + str(iprogram[i])) 
+            html.write('<TD>' + iassigned[i]) 
             html.write('<TD> --- ')
             qalink = '../visit/' + itel[i] + '/' + iname[i] + '/' + iplate[i] + '/' + imjd[i] + '/html/apQA-' + iplate[i] + '-' + imjd[i] + '.html'
             html.write('<TD align="center"><A HREF="' + qalink + '" target="_blank">' + iplate[i] + '</A>')
@@ -3395,9 +3497,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD align="right">' + idec[i])
             html.write('<TD align="right">' + ilon[i]) 
             html.write('<TD align="right">' + ilat[i])
-            html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][0],1))) 
-            html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][1],1))) 
-            html.write('<TD align="right">' + str("%.1f" % round(platetab['SN'][0][2],1))) 
+            html.write('<TD align="right">' + isnr[i,2]) 
+            html.write('<TD align="right">' + isnr[i,1]) 
+            html.write('<TD align="right">' + isnr[i,0]) 
             html.write('<TD align="right">' + inexposures[i]) 
             html.write('<TD align="right">' + iexptime[i]) 
             html.write('<TD align="right">' + icart[i]) 
@@ -3428,6 +3530,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         matplotlib.use('agg')
         fontsize = 24;   fsz = fontsize * 0.60
         matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+        matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
         alf = 0.80
         axwidth = 1.5
         axmajlen = 7

@@ -392,6 +392,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#sciobs> Science observation history</a>\n')
+    html.write('<li> <a href=#scisnr> S/N history</a>\n')
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#qflux>Quartz lamp median brightness</a>\n')
@@ -421,6 +422,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     html.write('<h3> <a name=sciobs></a> Science observation history </h3>\n')
     html.write('<A HREF=' + instrument + '/sciobs.png target="_blank"><IMG SRC=' + instrument + '/sciobs.png WIDTH=1000></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<h3> <a name=scisnr></a> S/N history for H=10.8-11.2 stars</h3>\n')
+    html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=1100></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
@@ -844,8 +849,1458 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.savefig(plotfile)
                 plt.close('all')
 
+    if makeplots is True:
+        ###########################################################################################
+        # sciobs.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/sciobs.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,12))
+            ymax = 100
+            ymin = 0
+            yspan = ymax - ymin
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(ymin, ymax)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_xlabel(r'JD - 2,400,000')
+            ax.set_ylabel(r'$N_{\rm obs}$')
+            ax.axvline(x=59146, color='teal', linewidth=2)
+            ax.axvline(x=59555, color='teal', linewidth=2)
+            ax.text(59146-xspan*0.005, ymax-yspan*0.02, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+            ax.text(59353, ymax-yspan*0.02, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax.text(59555+xspan*0.005, ymax-yspan*0.02, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+
+            for iyear in range(nyears):
+                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
+
+            umjd = np.unique(allsci['MJD'])
+            nmjd = len(umjd)
+            nexp = np.zeros(nmjd)
+            nvis = np.zeros(nmjd)
+            for i in range(nmjd):
+                gd, = np.where(umjd[i] == allsci['MJD'])
+                nexp[i] = len(gd)
+                uplate = np.unique(allsci['PLATE'][gd])
+                nvis[i] = len(uplate)
+                if i < nmjd-1:
+                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='k')#, label='exposures')
+                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='r')#, label='visits')
+                else:
+                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='k', label='exposures')
+                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='r', label='visits')
+
+            #ax.scatter(umjd, nexp, marker='o', s=markersz, c='grey', alpha=alf, label='exposures')
+            #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
+
+            ax.legend(loc='upper left', labelspacing=0.5, handletextpad=0.3, markerscale=1, 
+                      fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.08,top=0.94,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # snhistory.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            snbin = 10
+            magmin = '10.8'
+            magmax = '11.2'
+
+            medesnrG = np.nanmedian(allsnr['ESNBINS'][:,10,1])
+            medesnrG = np.nanstd(allsnr['ESNBINS'][:,10,1])
+            limesnrG = medesnrG + 2*medesnrG
+            gd, = np.where((allsnr['NSNBINS'][:, snbin] > 5) & (allsnr['SNBINS'][:, snbin, 1] > 0) & (allsnr['ESNBINS'][:, snbin, 1] < limesnrG))
+            allsnrg = allsnr[gd]
+            ngd = len(allsnrg)
+
+            ymin = -0.5
+            ymax = 10.5
+            yspan = ymax-ymin
+
+            fig = plt.figure(figsize=(32,14))
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == 1: ax.text(-0.035, 0.5, r'S/N per minute ($' + magmin + r'>=H>' + magmax + r'$)', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                xvals = allsnrg['JD']
+                yvals = (allsnrg['MEDSNBINS'][:, snbin, 2-ichip]) / (allsnrg['EXPTIME'] / 60)
+                #pdb.set_trace()
+                #if ichip == 0: pdb.set_trace()
+                scolors = allsnrg['MOONPHASE']
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+
+                if ichip == 0: ylims = ax.get_ylim()
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
+
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                cax.minorticks_on()
+                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            fig.subplots_adjust(left=0.05,right=0.945,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # qflux.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 70000
+            if instrument == 'apogee-s': 
+                ymax = 125000
+            ymin = 0 - ymax * 0.05
+            yspan = ymax - ymin
+
+            gdcal = allcal[qrtz]
+            caljd = gdcal['JD'] - 2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # qfwhm.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/qfwhm.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 3.0
+            if instrument == 'apogee-s': 
+                ymax = 3.0
+            ymin = 0.8
+            yspan = ymax - ymin
+
+            gd, = np.where(quartztrace['MJD'] > 50000)
+            qtz = quartztrace[gd]
+            qmjd = qtz['MJD']
+            qfwhm = qtz['GAUSS_SIGMA']*2.355
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'FWHM (pixels)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = qfwhm[:, ichip, ifib]
+                    ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # tharflux.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = np.array([510000, 58000, 16000]) 
+            if instrument == 'apogee-s': ymax = np.array([110000, 30000, 3000])
+            ymin = 0 - ymax * 0.05
+            yspan = ymax - ymin
+
+            gdcal = allcal[thar]
+            caljd = gdcal['JD']-2.4e6
+            flux = gdcal['GAUSS'][:,:,:,:,0] * gdcal['GAUSS'][:,:,:,:,2]**2
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin[ichip], ymax[ichip])
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Line Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax[ichip]-yspan[ichip]*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0:
+                        ylims = ax.get_ylim()
+                        ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # uneflux.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/uneflux.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = np.array([45000, 3000, 12000])
+            if instrument == 'apogee-s': ymax = np.array([6000, 1500, 3000])
+            ymin = 0 - ymax*0.05
+            yspan = ymax - ymin
+
+            gdcal = allcal[une]
+            caljd = gdcal['JD'] - 2.4e6
+            flux = gdcal['GAUSS'][:,:,:,:,0] * gdcal['GAUSS'][:,:,:,:,2]**2
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin[ichip], ymax[ichip])
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Line Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax[ichip]-yspan[ichip]*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0:
+                        ylims = ax.get_ylim()
+                        ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # dflux.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/dflux.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 30000
+            ymin = 0 - ymax*0.05
+            yspan = ymax - ymin
+
+            gdcal = allexp[dome]
+            caljd = gdcal['JD'] - 2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                w = np.nanmedian(gdcal['MED'][:, ichip, :])
+                ax.axhline(y=w, color='k', linewidth=3, zorder=1)
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['MED'][:, ichip, fibers[ifib]]
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='fib ' + str(fibers[ifib]), zorder=3)
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # dfwhm.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/dfwhm.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 2.5
+            if instrument == 'apogee-s': 
+                ymax = 2.5
+            ymin = 0.8
+            yspan = ymax - ymin
+
+            gd, = np.where(dometrace['MJD'] > 50000)
+            df = dometrace[gd]
+            dmjd = df['MJD']
+            dfwhm = df['GAUSS_SIGMA']*2.355
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'FWHM (pixels)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = dfwhm[:, ichip, ifib]
+                    ax.scatter(dmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # zero.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/zero.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,8))
+            ymax = 21
+            ymin = 10
+            yspan = ymax - ymin
+
+            ax = plt.subplot2grid((1,1), (0,0))
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(ymin, ymax)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_xlabel(r'JD - 2,400,000')
+            ax.set_ylabel(r'Zeropoint (mag.)')
+            ax.axes.xaxis.set_ticklabels([])
+            ax.axvline(x=59146, color='teal', linewidth=2)
+            ax.axvline(x=59555, color='teal', linewidth=2)
+            ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+            ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+
+            for iyear in range(nyears):
+                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
+
+            t = Time(allsci['DATEOBS'], format='fits')
+            jd = t.jd - 2.4e6
+            ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, c='blueviolet', alpha=alf)
+
+            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # tpos.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/tpos.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+
+            gdcal = allcal[thar]
+            caljd = gdcal['JD']-2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Position (pixel)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                w = np.nanmedian(gdcal['GAUSS'][:, 1, ichip, :, 1])
+                ymin = w - 40
+                ymax = w + 40
+                yspan = ymax - ymin
+                ax.set_ylim(ymin, ymax)
+
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['GAUSS'][:, 1, ichip, ifib, 1] 
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # ThArNe lamp line FWHM
+            for iline in range(2):
+                plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
+                if (os.path.exists(plotfile) == False) | (clobber == True):
+                    print("----> monitor: Making " + os.path.basename(plotfile))
+
+                    fig = plt.figure(figsize=(30,14))
+
+                    gdcal = allcal[thar]
+                    caljd = gdcal['JD']-2.4e6
+
+                    for ichip in range(nchips):
+                        chip = chips[ichip]
+
+                        ax = plt.subplot2grid((nchips,1), (ichip,0))
+                        ax.set_xlim(xmin, xmax)
+                        ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                        ax.minorticks_on()
+                        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                        ax.tick_params(axis='both',which='major',length=axmajlen)
+                        ax.tick_params(axis='both',which='minor',length=axminlen)
+                        ax.tick_params(axis='both',which='both',width=axwidth)
+                        if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                        ax.set_ylabel(r'FWHM ($\rm \AA$)')
+                        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                        w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
+                        ymin = w * 0.8
+                        ymax = w * 1.25
+                        yspan = ymax - ymin
+                        ax.set_ylim(ymin, ymax)
+
+                        ax.axvline(x=59146, color='teal', linewidth=2)
+                        ax.axvline(x=59555, color='teal', linewidth=2)
+                        ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                        ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                        ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                        ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                        for iyear in range(nyears):
+                            ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                            if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                        for ifib in range(nplotfibs):
+                            w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2])
+                            ax.axhline(y=w, color=colors[ifib], linewidth=2, zorder=2)
+                            ax.axhline(y=w, color='k', linewidth=3, zorder=1)
+                            yvals = 2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
+                            ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                                       label='fib ' + str(fibers[ifib]), zorder=3)
+
+                        if ichip == 0: 
+                            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                                      fontsize=fsz, edgecolor='k', framealpha=1)
+
+                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+                    plt.savefig(plotfile)
+                    plt.close('all')
+
+        ###########################################################################################
+        # trace.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,12))
+            ymax = np.nanmedian(allepsf['CENT']) + 1
+            ymin = np.nanmedian(allepsf['CENT']) - 1
+            yspan = ymax - ymin
+
+            caljd = Time(allepsf['MJD'], format='mjd').jd - 2.4e6
+
+            ax1 = plt.subplot2grid((2,1), (0,0))
+            ax2 = plt.subplot2grid((2,1), (1,0))
+            axes = [ax1, ax2]
+
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax1.set_xlim(xmin, xmax)
+            ax1.set_xlabel(r'JD - 2,400,000')
+            ax2.set_xlabel(r'LN2 Level')
+            ax.axvline(x=59146, color='teal', linewidth=2)
+            ax.axvline(x=59555, color='teal', linewidth=2)
+            ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+            ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+            for ax in axes:
+                ax.set_ylim(ymin, ymax)
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.set_ylabel(r'Trace Center')
+
+            for iyear in range(nyears):
+                ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+            ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
+            ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # biasmean.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 1000.0
+            ymin = 0.1
+            yspan = ymax - ymin
+
+            gdcal = alldark[dark]
+            caljd = gdcal['JD'] - 2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == 1: ax.set_ylabel(r'Mean (column median)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.3, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.3, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.3, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.25, cyears[iyear], ha='center')
+
+                for ibias in range(4):
+                    ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
+                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='', label='quad '+str(ibias+1))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # biassig.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/biassig.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 1000.0
+            ymin = 0.1
+            yspan = ymax - ymin
+
+            gdcal = alldark[dark]
+            caljd = gdcal['JD'] - 2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == 1: ax.set_ylabel(r'$\sigma$ (column median)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.3, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.3, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.3, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.25, cyears[iyear], ha='center')
+
+                for ibias in range(4):
+                    ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
+                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='', label='quad '+str(ibias+1))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # moonsky.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/moonsky.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(31,12))
+            ymax = 11
+            ymin = 16.8
+            if instrument == 'apogee-s': 
+                ymax = 12
+                ymin = 19
+            yspan = ymax - ymin
+
+            ax1 = plt.subplot2grid((2,1), (0,0))
+            ax2 = plt.subplot2grid((2,1), (1,0))
+            axes = [ax1, ax2]
+
+            ax1.axes.xaxis.set_ticklabels([])
+            ax2.set_xlabel(r'Moon Phase')
+
+            for ax in axes:
+                ax.set_xlim(0, 1)
+                ax.set_ylim(ymin, ymax)
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.text(-0.03, 0.5, 'Sky Brightness', ha='right', va='center', rotation=90, transform=ax.transAxes)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
+
+            sc1 = ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], 
+                              cmap='rainbow', alpha=0.8, vmin=0, vmax=90.01)
+
+            gd, = np.where((allsci['ZERO'] != -np.inf) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
+            sc2 = ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], 
+                              cmap='rainbow', alpha=0.8, vmin=17, vmax=19)
+
+            ax_divider = make_axes_locatable(ax1)
+            cax = ax_divider.append_axes("right", size="2%", pad="1%")
+            cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+            cax.minorticks_on()
+            cax.yaxis.set_major_locator(ticker.MultipleLocator(15))
+            ax1.text(1.06, 0.5, r'Moon Distance (deg.)',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
+
+            ax_divider = make_axes_locatable(ax2)
+            cax = ax_divider.append_axes("right", size="2%", pad="1%")
+            cb1 = colorbar(sc2, cax=cax, orientation="vertical")
+            cax.minorticks_on()
+            cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            ax2.text(1.066, 0.5, r'Zeropoint (cloudiness)',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
+
+            fig.subplots_adjust(left=0.045,right=0.945,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+    print("----> monitor done")
+
+''' GETQACALSTRUCT: put SDSS-IV and SDSS-V QAcal files in structure '''
+def getQAcalStruct(data=None):
+
+    chips = np.array(['blue','green','red'])
+    nchips = len(chips)
+    fibers = np.array([10,80,150,220,290])
+    nfibers = len(fibers)
+    nlines = 2
+    nquad = 4
+
+    dt = np.dtype([('NAME',    np.str,30),
+                   ('MJD',     np.str,30),
+                   ('JD',      np.float64),
+                   ('NFRAMES', np.int16),
+                   ('NREAD',   np.int16),
+                   ('EXPTIME', np.float32),
+                   ('QRTZ',    np.int16),
+                   ('UNE',     np.int16),
+                   ('THAR',    np.int16),
+                   ('FLUX',    np.float32,(nchips,300)),
+                   ('GAUSS',   np.float32,(nlines,nchips,nfibers,4)),
+                   ('WAVE',    np.float64,(nlines,nchips,nfibers)),
+                   ('FIBERS',  np.int16,(nfibers)),
+                   ('LINES',   np.float32,(nlines,nchips))])
+
+    outstr = np.zeros(len(data['NAME']), dtype=dt)
+
+    outstr['NAME'] =    data['NAME']
+    outstr['MJD'] =     data['MJD']
+    outstr['JD'] =      data['JD']
+    outstr['NFRAMES'] = data['NFRAMES']
+    outstr['NREAD'] =   data['NREAD']
+    outstr['EXPTIME'] = data['EXPTIME']
+    outstr['QRTZ'] =    data['QRTZ']
+    outstr['UNE'] =     data['UNE']
+    outstr['THAR'] =    data['THAR']
+    outstr['FLUX'] =    data['FLUX']
+    outstr['GAUSS'] =   data['GAUSS']
+    outstr['WAVE'] =    data['WAVE']
+    outstr['FIBERS'] =  data['FIBERS']
+    outstr['LINES'] =   data['LINES']
+
+    return outstr
+
+
+''' GETQADARKflatSTRUCT: put SDSS-IV and SDSS-V QAdarkflat files in structure '''
+def getQAdarkflatStruct(data=None):
+
+    chips = np.array(['blue','green','red'])
+    nchips = len(chips)
+    nquad = 4
+
+    dt = np.dtype([('NAME',    np.str, 30),
+                   ('MJD',     np.str, 30),
+                   ('JD',      np.float64),
+                   ('NFRAMES', np.int16),
+                   ('NREAD',   np.int16),
+                   ('EXPTIME', np.float32),
+                   ('QRTZ',    np.int16),
+                   ('UNE',     np.int16),
+                   ('THAR',    np.int16),
+                   ('EXPTYPE', np.str, 30),
+                   ('MEAN',    np.float32, (nquad,nchips)),
+                   ('SIG',     np.float32, (nquad,nchips))])
+
+    outstr = np.zeros(len(data['NAME']), dtype=dt)
+
+    outstr['NAME'] =    data['NAME']
+    outstr['MJD'] =     data['MJD']
+    outstr['JD'] =      data['JD']
+    outstr['NFRAMES'] = data['NFRAMES']
+    outstr['NREAD'] =   data['NREAD']
+    outstr['EXPTIME'] = data['EXPTIME']
+    outstr['QRTZ'] =    data['QRTZ']
+    outstr['UNE'] =     data['UNE']
+    outstr['THAR'] =    data['THAR']
+    outstr['EXPTYPE'] = data['EXPTYPE']
+    outstr['MEAN'] =    data['MEAN']
+    outstr['SIG'] =     data['SIG']
+
+    return outstr
+
+''' GETEXPSTRUCT: put SDSS-IV and SDSS-V MJDexp files in structure '''
+def getExpStruct(data=None):
+
+    chips = np.array(['blue','green','red'])
+    nchips = len(chips)
+
+    dt = np.dtype([('MJD',       np.int32),
+                   ('DATEOBS',   np.str, 30),
+                   ('JD',        np.float64),
+                   ('NUM',       np.int32),
+                   ('NFRAMES',   np.int16),
+                   ('IMAGETYP',  np.str, 30),
+                   ('PLATEID',   np.int16),
+                   ('CARTID',    np.str, 5),
+                   ('RA',        np.float64),
+                   ('DEC',       np.float64),
+                   ('SEEING',    np.float32),
+                   ('ALT',       np.float32),
+                   ('QRTZ',      np.int16),
+                   ('THAR',      np.int16),
+                   ('UNE',       np.int16),
+                   ('FFS',       np.str, 30),
+                   ('LN2LEVEL',  np.float32),
+                   ('DITHPIX',   np.float32),
+                   ('TRACEDIST', np.float32),
+                   ('MED',       np.float32, (nchips,300))])
+
+    outstr = np.zeros(len(data['MJD']), dtype=dt)
+
+    outstr['MJD'] =       data['MJD']
+    outstr['DATEOBS'] =   data['DATEOBS']
+    outstr['JD'] =        data['JD']
+    outstr['NUM'] =       data['NUM']
+    outstr['NFRAMES'] =   data['NFRAMES']
+    outstr['IMAGETYP'] =  data['IMAGETYP']
+    outstr['PLATEID'] =   data['PLATEID']
+    outstr['CARTID'] =    str(data['CARTID'])
+    outstr['RA'] =        data['RA']
+    outstr['DEC'] =       data['DEC']
+    outstr['SEEING'] =    data['SEEING']
+    outstr['ALT'] =       data['ALT']
+    outstr['QRTZ'] =      data['QRTZ']
+    outstr['THAR'] =      data['THAR']
+    outstr['UNE'] =       data['UNE']
+    outstr['FFS'] =       data['FFS']
+    outstr['LN2LEVEL'] =  data['LN2LEVEL']
+    outstr['DITHPIX'] =   data['DITHPIX']
+    outstr['TRACEDIST'] = data['TRACEDIST']
+    outstr['MED'] =       data['MED']
+
+    return outstr
+
+''' GETSCISTRUCT: put SDSS-IV and SDSS-V apPlateSum files in structure '''
+def getSciStruct(data=None):
+    cols = data.columns.names
+
+    dt = np.dtype([('TELESCOPE', np.str, 6),
+                   ('PLATE',     np.int32),
+                   ('NREADS',    np.int32),
+                   ('DATEOBS',   np.str, 30),
+                   ('EXPTIME',   np.int32),
+                   ('SECZ',      np.float64),
+                   ('HA',        np.float64),
+                   ('DESIGN_HA', np.float64, 3),
+                   ('SEEING',    np.float64),
+                   ('FWHM',      np.float64),
+                   ('GDRMS',     np.float64),
+                   ('CART',      np.str, 5),
+                   ('PLUGID',    np.str, 30),
+                   ('DITHER',    np.float64),
+                   ('MJD',       np.int32),
+                   ('IM',        np.int32),
+                   ('ZERO',      np.float64),
+                   ('ZERORMS',   np.float64),
+                   ('ZERONORM',  np.float64),
+                   ('SKY',       np.float64, 3),
+                   ('SN',        np.float64, 3),
+                   ('SNC',       np.float64, 3),
+                   #('SNT',       np.float64, 3),
+                   ('ALTSN',     np.float64, 3),
+                   ('NSN',       np.int32),
+                   ('SNRATIO',   np.float64),
+                   ('MOONDIST',  np.float64),
+                   ('MOONPHASE', np.float64),
+                   ('TELLFIT',   np.float64, (3,6))])
+
+    outstr = np.zeros(len(data['PLATE']), dtype=dt)
+
+    outstr['TELESCOPE'] = data['TELESCOPE']
+    outstr['PLATE'] =     data['PLATE']
+    outstr['NREADS'] =    data['NREADS']
+    outstr['DATEOBS'] =   data['DATEOBS']
+    if 'EXPTIME' in cols: outstr['EXPTIME'] =   data['EXPTIME']
+    outstr['SECZ'] =      data['SECZ']
+    outstr['HA'] =        data['HA']
+    outstr['DESIGN_HA'] = data['DESIGN_HA']
+    outstr['SEEING'] =    data['SEEING']
+    outstr['FWHM'] =      data['FWHM']
+    outstr['GDRMS'] =     data['GDRMS']
+    outstr['CART'] =      str(data['CART'])
+    outstr['PLUGID'] =    data['PLUGID']
+    outstr['DITHER'] =    data['DITHER']
+    outstr['MJD'] =       data['MJD']
+    outstr['IM'] =        data['IM']
+    outstr['ZERO'] =      data['ZERO']
+    outstr['ZERORMS'] =   data['ZERORMS']
+    outstr['ZERONORM'] =  data['ZERONORM']
+    outstr['SKY'] =       data['SKY']
+    outstr['SN'] =        data['SN']
+    outstr['SNC'] =       data['SNC']
+    outstr['ALTSN'] =     data['ALTSN']
+    outstr['NSN'] =       data['NSN']
+    outstr['SNRATIO'] =   data['SNRATIO']
+    outstr['MOONDIST'] =  data['MOONDIST']
+    outstr['MOONPHASE'] = data['MOONPHASE']
+    outstr['TELLFIT'] =   data['TELLFIT']
+
+    return outstr
+
+''' GETSNRSTRUCT: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
+def getSnrStruct(plsum=None):
+    #magbins = np.array([7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5])
+    magrad = 0.2
+    magmin = 7.0
+    magmax = 13.4
+    magbins = np.arange(magmin, magmax, magrad*2)
+#array([ 7. ,  7.4,  7.8,  8.2,  8.6,  9. ,  9.4,  9.8, 10.2, 10.6, 11. , 11.4, 11.8, 12.2, 12.6, 13. ])
+    nmagbins = len(magbins)
+
+    hdul = fits.open(plsum)
+    data1 = hdul[1].data
+    data2 = hdul[2].data
+    nexp = len(data1['IM'])
+    cols = data1.columns.names
+    field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
+    fiberid = data2['FIBERID']
+    hdul.close()
+
+    dt = np.dtype([('SUMFILE',   np.str, 30),
+                   ('IM',        np.int32),
+                   ('TELESCOPE', np.str, 6),
+                   ('FIELD',     np.str, 30),
+                   ('PLATE',     np.int32),
+                   ('MJD',       np.int32),
+                   ('JD',        np.float64),
+                   ('DATEOBS',   np.str, 30),
+                   ('NREADS',    np.int32),
+                   ('EXPTIME',   np.float64),
+                   ('DITHER',    np.float64),
+                   ('SECZ',      np.float64),
+                   ('SEEING',    np.float64),
+                   ('MOONDIST',  np.float64),
+                   ('MOONPHASE', np.float64),
+                   ('FWHM',      np.float64),
+                   ('GDRMS',     np.float64),
+                   ('ZERO',      np.float64),
+                   ('ZERORMS',   np.float64),
+                   ('ZERONORM',  np.float64),
+                   ('SKY',       np.float64, 3),
+                   ('SN',        np.float64, 3),
+                   ('SNC',       np.float64, 3),
+                   ('ALTSN',     np.float64, 3),
+                   ('NSN',       np.int32),
+                   ('SNRATIO',   np.float64),
+                   #('APOGEE_ID', np.str, 300)
+                   #('OBJTYPE',   np.str, 300)
+                   ('HMAG',      np.float64, 300),
+                   ('FIBERID',   np.int32, 300),
+                   ('SNFIBER',   np.float64, (300, 3)),
+                   ('SNBINS',    np.float64, (nmagbins, 3)),
+                   ('MEDSNBINS', np.float64, (nmagbins, 3)),
+                   ('ESNBINS',   np.float64, (nmagbins, 3)),
+                   ('NSNBINS',   np.float64, nmagbins),
+                   ('BINH',      np.float64, nmagbins)])
+
+    outstr = np.zeros(nexp, dtype=dt)
+
+    for iexp in range(nexp):
+        tmp = Time(data1['DATEOBS'][iexp], format='fits')
+        jd = tmp.jd - 2.4e6
+
+        outstr['SUMFILE'][iexp]   = os.path.basename(plsum)
+        outstr['IM'][iexp]        = data1['IM'][iexp]
+        outstr['TELESCOPE'][iexp] = data1['TELESCOPE'][iexp]
+        outstr['FIELD'][iexp]     = field
+        outstr['PLATE'][iexp]     = data1['PLATE'][iexp]
+        outstr['MJD'][iexp]       = data1['MJD'][iexp]
+        outstr['DATEOBS'][iexp]   = data1['DATEOBS'][iexp]
+        outstr['JD'][iexp]        = jd
+        outstr['NREADS'][iexp] =    data1['NREADS'][iexp]
+        if 'EXPTIME' in cols:
+            outstr['EXPTIME'][iexp] =   data1['EXPTIME'][iexp]
+        else:
+            snfile = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
+            if os.path.exists(snfile):
+                snfile = ascii.read(snfile)
+                g, = np.where(data1['IM'][iexp] == snfile['col1'])
+                if len(g) > 0:
+                    outstr['EXPTIME'][iexp] = float(snfile['col8'][g][0].split('\t')[0])
+        outstr['SECZ'][iexp] =      data1['SECZ'][iexp]
+        outstr['SEEING'][iexp] =    data1['SEEING'][iexp]
+        outstr['MOONDIST'][iexp] =  data1['MOONDIST'][iexp]
+        outstr['MOONPHASE'][iexp] = data1['MOONPHASE'][iexp]
+        outstr['FWHM'][iexp] =      data1['FWHM'][iexp]
+        outstr['GDRMS'][iexp] =     data1['GDRMS'][iexp]
+        outstr['DITHER'][iexp] =    data1['DITHER'][iexp]
+        outstr['ZERO'][iexp] =      data1['ZERO'][iexp]
+        outstr['ZERORMS'][iexp] =   data1['ZERORMS'][iexp]
+        outstr['ZERONORM'][iexp] =  data1['ZERONORM'][iexp]
+        outstr['SKY'][iexp] =       data1['SKY'][iexp]
+        outstr['SN'][iexp] =        data1['SN'][iexp]
+        outstr['SNC'][iexp] =       data1['SNC'][iexp]
+        outstr['ALTSN'][iexp]=      data1['ALTSN'][iexp]
+        outstr['NSN'][iexp] =       data1['NSN'][iexp]
+        outstr['SNRATIO'][iexp] =   data1['SNRATIO'][iexp]
+        outstr['HMAG'][iexp, fiberid-1] = data2['HMAG']
+        outstr['FIBERID'][iexp, fiberid-1] = data2['FIBERID']
+        outstr['SNFIBER'][iexp, fiberid-1] =   data2['SN'][:, :, iexp]
+        jj=0
+        for magbin in magbins:
+            g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad))
+            if len(g) > 1:
+                #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
+                snvals = data2['SN'][g, :, iexp]
+                hmags = data2['HMAG'][g]
+                msnvals = np.nanmean(snvals, axis=1)
+                # Reject points below 1 sigma from median
+                medsn = np.nanmedian(msnvals)
+                sigsn = np.nanstd(msnvals)
+                dif = msnvals - medsn
+                mdif = medsn - sigsn
+                g, = np.where(dif > -sigsn)
+                if len(g) > 1:
+                    outstr['SNBINS'][iexp,jj,:] = np.nanmean(snvals[g], axis=0)
+                    outstr['MEDSNBINS'][iexp,jj,:] = np.nanmedian(snvals[g], axis=0)
+                    outstr['ESNBINS'][iexp,jj,:] = np.nanstd(snvals[g], axis=0)
+                    outstr['NSNBINS'][iexp,jj] = len(g)
+                    outstr['BINH'] = np.nanmean(hmags)
+            jj+=1
+
+    return outstr
+
+#            mjdmean = np.zeros((nmjd, nchips))
+#           mjdsig  = np.zeros((nmjd, nchips))
+#            jdmean = np.zeros(nmjd)
+#            for i in range(nmjd):
+#                gd, = np.where(allsnrg['MJD'] == umjd[i])
+#                if len(gd) > 1:
+#                    imean = np.nanmean(allsnrg['SNBINS'][:, snbin][gd], axis=0)
+#                    isig = np.nanstd(allsnrg['SNBINS'][:, snbin][gd], axis=0)
+#                    dif = allsnrg['SNBINS'][:, snbin][gd] - imean
+#                    mdif = isig - imean
+#                    gd1, = np.where((dif[:,0] > mdif[0]) & (dif[:,1] > mdif[1]) & (dif[:,1] > mdif[1]))
+#                    mjdmean[i,:] = np.nanmean(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
+#                    mjdsig[i,:] = np.nanstd(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
+#                    jdmean[i] = np.nanmean(allsnrg['JD'][gd][gd1])
+
+
+
+''' GETSNRSTRUCT2: tabulate SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
+def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
+    #magbins = np.array([7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5])
+    magrad = 0.2
+    magmin = 7.0
+    magmax = 13.4
+    magbins = np.arange(magmin, magmax, magrad*2)
+    #         0     1     2     3     4     5     6     7    8     9     10    11    12    13    14    15
+    #array([ 7. ,  7.4,  7.8,  8.2,  8.6,  9. ,  9.4,  9.8, 10.2, 10.6, 11. , 11.4, 11.8, 12.2, 12.6, 13. ])
+    nmagbins = len(magbins)
+
+    fiberid = data2['FIBERID']
+    cols = data1.columns.names
+
+    dt = np.dtype([('SUMFILE',   np.str, 30),
+                   ('IM',        np.int32),
+                   ('TELESCOPE', np.str, 6),
+                   ('FIELD',     np.str, 30),
+                   ('PLATE',     np.int32),
+                   ('MJD',       np.int32),
+                   ('JD',        np.float64),
+                   ('DATEOBS',   np.str, 30),
+                   ('NREADS',    np.int32),
+                   ('EXPTIME',   np.float64),
+                   ('DITHER',    np.float64),
+                   ('SECZ',      np.float64),
+                   ('SEEING',    np.float64),
+                   ('MOONDIST',  np.float64),
+                   ('MOONPHASE', np.float64),
+                   ('FWHM',      np.float64),
+                   ('GDRMS',     np.float64),
+                   ('ZERO',      np.float64),
+                   ('ZERORMS',   np.float64),
+                   ('ZERONORM',  np.float64),
+                   ('SKY',       np.float64, 3),
+                   ('SN',        np.float64, 3),
+                   ('SNC',       np.float64, 3),
+                   ('ALTSN',     np.float64, 3),
+                   ('NSN',       np.int32),
+                   ('SNRATIO',   np.float64),
+                   #('APOGEE_ID', np.str, 300)
+                   #('OBJTYPE',   np.str, 300)
+                   ('HMAG',      np.float64, 300),
+                   ('FIBERID',   np.int32, 300),
+                   ('SNFIBER',   np.float64, (300, 3)),
+                   ('SNBINS',    np.float64, (nmagbins, 3)),
+                   ('MEDSNBINS', np.float64, (nmagbins, 3)),
+                   ('ESNBINS',   np.float64, (nmagbins, 3)),
+                   ('NSNBINS',   np.float64, nmagbins),
+                   ('BINH',      np.float64, nmagbins)])
+
+    outstr = np.zeros(1, dtype=dt)
+
+    tmp = Time(data1['DATEOBS'][iexp], format='fits')
+    jd = tmp.jd - 2.4e6
+
+    outstr['SUMFILE']   = sumfile
+    outstr['IM']        = data1['IM'][iexp]
+    outstr['TELESCOPE'] = data1['TELESCOPE'][iexp]
+    outstr['FIELD']     = field
+    outstr['PLATE']     = data1['PLATE'][iexp]
+    outstr['MJD']       = data1['MJD'][iexp]
+    outstr['DATEOBS']   = data1['DATEOBS'][iexp]
+    outstr['JD']        = jd
+    outstr['NREADS']    = data1['NREADS'][iexp]
+    if 'EXPTIME' in cols:
+        outstr['EXPTIME'] =   data1['EXPTIME'][iexp]
+    else:
+        snfile = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
+        if os.path.exists(snfile):
+            snfile = ascii.read(snfile)
+            g, = np.where(data1['IM'][iexp] == snfile['col1'])
+            if len(g) > 0:
+                outstr['EXPTIME'] = float(snfile['col8'][g][0].split('\t')[0])
+    outstr['SECZ'] =      data1['SECZ'][iexp]
+    outstr['SEEING'] =    data1['SEEING'][iexp]
+    outstr['MOONDIST'] =  data1['MOONDIST'][iexp]
+    outstr['MOONPHASE'] = data1['MOONPHASE'][iexp]
+    outstr['FWHM'] =      data1['FWHM'][iexp]
+    outstr['GDRMS'] =     data1['GDRMS'][iexp]
+    outstr['DITHER'] =    data1['DITHER'][iexp]
+    outstr['ZERO'] =      data1['ZERO'][iexp]
+    outstr['ZERORMS'] =   data1['ZERORMS'][iexp]
+    outstr['ZERONORM'] =  data1['ZERONORM'][iexp]
+    outstr['SKY'] =       data1['SKY'][iexp]
+    outstr['SN'] =        data1['SN'][iexp]
+    outstr['SNC'] =       data1['SNC'][iexp]
+    outstr['ALTSN'] =     data1['ALTSN'][iexp]
+    outstr['NSN'] =       data1['NSN'][iexp]
+    outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
+    outstr['HMAG'][0][fiberid-1] = data2['HMAG']
+    outstr['FIBERID'][0][fiberid-1] = data2['FIBERID']
+    jj=0
+    for magbin in magbins:
+        g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad) & (np.isnan(data2['HMAG']) == False))
+        if len(g) > 1:
+            snvals = data2['SN'][g, iexp, :]
+            hmags = data2['HMAG'][g]
+            try:
+                msnvals = np.nanmean(snvals, axis=1)
+                # Reject points below 1 sigma from median
+                medsn = np.nanmedian(msnvals)
+                sigsn = np.nanstd(msnvals)
+                dif = msnvals - medsn
+                mdif = medsn - sigsn
+                g, = np.where(dif > -sigsn)
+                if len(g) > 1:
+                    #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 0])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 1])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 2])))))
+                    outstr['SNBINS'][0][jj,:] = np.nanmean(snvals[g], axis=0)
+                    outstr['MEDSNBINS'][0][jj,:] = np.nanmedian(snvals[g], axis=0)
+                    outstr['ESNBINS'][0][jj,:] = np.nanstd(snvals[g], axis=0)
+                    outstr['NSNBINS'][0][jj] = len(g)
+                    outstr['BINH'] = np.nanmean(hmags)
+            except:
+                continue
+        jj+=1
+
+    return outstr
 
     if makecomplots is True:
+        ###########################################################################################
+        # rvparams.png
+        # Plot of stellar parameters, plate vs. FPS
+        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
+        print("----> monitor: Making " + os.path.basename(plotfile))
+
+        remake = 1
+        datafile = 'rvparams_plateVSfps.fits'
+        if remake:
+            gd, = np.where((allv5['MJD'] > 59580) & 
+                           (np.isnan(allv5['vheliobary']) == False) & 
+                           (np.absolute(allv5['vheliobary']) < 400) & 
+                           (np.isnan(allv5['SNR']) == False) & 
+                           (allv5['SNR'] > 10))
+            allv5fps = allv5[gd]
+
+            gd, = np.where((np.isnan(allv4['VHELIO']) == False) &
+                           (np.absolute(allv4['VHELIO']) < 400) &
+                           (np.isnan(allv4['SNR']) == False) & 
+                           (allv4['SNR'] > 10))
+            allv4g = allv4[gd]
+
+            uplateIDs = np.unique(allv4g['APOGEE_ID'])
+            ufpsIDs = np.unique(allv5fps['APOGEE_ID'])
+
+            gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
+            ngd = len(gdIDs)
+            print(ngd)
+
+            dt = np.dtype([('JMAG',      np.float64),
+                           ('HMAG',      np.float64),
+                           ('KMAG',      np.float64),
+                           ('NVIS',      np.int32, 2),
+                           ('SNRTOT',    np.float64, 2),
+                           ('SNRAVG',    np.float64, 2),
+                           ('VHELIO',    np.float64, 2),
+                           ('EVHELIO',   np.float64, 2),
+                           ('TEFF',      np.float64, 2),
+                           ('ETEFF',     np.float64, 2),
+                           ('LOGG',      np.float64, 2),
+                           ('ELOGG',     np.float64, 2),
+                           ('FEH',       np.float64, 2),
+                           ('EFEH',      np.float64, 2)])
+            gdata = np.zeros(ngd, dtype=dt)
+
+            for i in range(ngd):
+                print(i)
+                p4, = np.where(gdIDs[i] == allv4g['APOGEE_ID'])
+                p5, = np.where(gdIDs[i] == allv5fps['APOGEE_ID'])
+                gdata['JMAG'][i] = allv4['J'][p4][0]
+                gdata['HMAG'][i] = allv4['H'][p4][0]
+                gdata['KMAG'][i] = allv4['K'][p4][0]
+                gdata['NVIS'][i,0] = len(p4)
+                gdata['NVIS'][i,1] = len(p5)
+                gdata['SNRTOT'][i,0] = np.nansum(allv4g['SNR'][p4])
+                gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
+                gdata['SNRAVG'][i,0] = np.nanmean(allv4g['SNR'][p4])
+                gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
+                gdata['VHELIO'][i,0] = np.nanmean(allv4g['VHELIO'][p4])
+                gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
+                gdata['EVHELIO'][i,0] = np.nanmean(allv4g['VRELERR'][p4])
+                gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
+                gdata['TEFF'][i,0] = np.nanmean(allv4g['RV_TEFF'][p4])
+                gdata['TEFF'][i,1] = np.nanmean(allv5fps['rv_teff'][p5])
+                gdata['ETEFF'][i,0] = np.nanstd(allv4g['RV_TEFF'][p4])
+                gdata['ETEFF'][i,1] = np.nanstd(allv5fps['rv_teff'][p5])
+                gdata['LOGG'][i,0] = np.nanmean(allv4g['RV_LOGG'][p4])
+                gdata['LOGG'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
+                gdata['ELOGG'][i,0] = np.nanstd(allv4g['RV_LOGG'][p4])
+                gdata['ELOGG'][i,1] = np.nanstd(allv5fps['rv_logg'][p5])
+                gdata['FEH'][i,0] = np.nanmean(allv4g['RV_FEH'][p4])
+                gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_feh'][p5])
+                gdata['EFEH'][i,0] = np.nanstd(allv4g['RV_FEH'][p4])
+                gdata['EFEH'][i,1] = np.nanstd(allv5fps['rv_feh'][p5])
+
+            Table(gdata).write('rvparams_plateVSfps.fits', overwrite=True)
+
+        gdata = fits.getdata(datafile)
+
+        fig = plt.figure(figsize=(22,18))
+        ax1 = plt.subplot2grid((2,2), (0,0))
+        ax2 = plt.subplot2grid((2,2), (0,1))
+        ax3 = plt.subplot2grid((2,2), (1,0))
+        ax4 = plt.subplot2grid((2,2), (1,1))
+        axes = [ax1,ax2,ax3,ax4]
+        #ax1.set_xlim(-150, 150)
+        #ax1.set_ylim(-5, 5)
+        #ax2.set_xlim(3.3, 6.8)
+        #ax2.set_ylim(-0.6, 0.6)
+        #ax3.set_xlim(-0.1, 5.1)
+        #ax3.set_ylim(-1.4, 1.4)
+        #ax4.set_xlim(-1.5, 0.4)
+        #ax4.set_ylim(-0.5, 0.5)
+        #ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
+        #ax1.set_ylabel(r'DR17 $-$ FPS')
+        #ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
+        #ax3.set_xlabel(r'DR17 RV log$\,g$')
+        #ax3.set_ylabel(r'DR17 $-$ FPS')
+        #ax4.set_xlabel(r'DR17 RV [Fe/H]')
+        #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
+        #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
+        #ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
+        #ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
+        #ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
+        for ax in axes:
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.axhline(y=0, linestyle='dashed', color='k', zorder=1)
+            #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
+
+        symbol = 'o'
+        symsz = 40
+
+        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
+        x = gdata['VHELIO'][:,0][g]
+        y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
+        #ax1.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax1.transAxes, va='top')
+        ax1.scatter(x, y, marker=symbol, c=gdata['HMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
+        x = gdata['TEFF'][:,0][g] / 1000
+        y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
+        #ax2.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax2.transAxes, va='top')
+        sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['HMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
+        x = gdata['LOGG'][:,0][g]
+        y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
+        #ax3.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax3.transAxes, va='top')
+        ax3.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
+        x = gdata['FEH'][:,0][g]
+        y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
+        #ax4.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax4.transAxes, va='top')
+        sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['HMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+
+        ax2_divider = make_axes_locatable(ax2)
+        cax2 = ax2_divider.append_axes("right", size="5%", pad="1%")
+        cb2 = colorbar(sc2, cax=cax2, orientation="vertical")
+        cax2.minorticks_on()
+        #cax2.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+        ax2.text(1.12, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
+
+        ax4_divider = make_axes_locatable(ax4)
+        cax4 = ax4_divider.append_axes("right", size="5%", pad="1%")
+        cb4 = colorbar(sc4, cax=cax4, orientation="vertical")
+        cax4.minorticks_on()
+        #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+        ax4.text(1.12, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
+
+        fig.subplots_adjust(left=0.07, right=0.95, bottom=0.055, top=0.98, hspace=0.2, wspace=0.15)
+        plt.savefig(plotfile)
+        plt.close('all')
+
+        return
+
         ###########################################################################################
         # telluricJK.png
         plotfile = specdir5 + 'monitor/' + instrument + '/telluricJK.png'
@@ -1112,161 +2567,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         return
 
-        ###########################################################################################
-        # rvparams.png
-        # Plot of stellar parameters, plate vs. FPS
-        plotfile = specdir5 + 'monitor/' + instrument + '/rvparams1.png'
-        print("----> monitor: Making " + os.path.basename(plotfile))
 
-        remake = 0
-        datafile = 'rvparams_plateVSfps.fits'
-        if remake:
-            gd, = np.where((allv5['MJD'] > 59580) & 
-                           (np.isnan(allv5['vheliobary']) == False) & 
-                           (np.absolute(allv5['vheliobary']) < 400) & 
-                           (np.isnan(allv5['SNR']) == False) & 
-                           (allv5['SNR'] > 10))
-            allv5fps = allv5[gd]
-
-            gd, = np.where((np.isnan(allv4['VHELIO']) == False) &
-                           (np.absolute(allv4['VHELIO']) < 400) &
-                           (np.isnan(allv4['SNR']) == False) & 
-                           (allv4['SNR'] > 10))
-            allv4g = allv4[gd]
-
-            uplateIDs = np.unique(allv4g['APOGEE_ID'])
-            ufpsIDs = np.unique(allv5fps['APOGEE_ID'])
-
-            gdIDs, plate_ind, fps_ind = np.intersect1d(uplateIDs, ufpsIDs, return_indices=True)
-            ngd = len(gdIDs)
-            print(ngd)
-
-            dt = np.dtype([('H',         np.float64),
-                           ('NVIS',      np.int32, 2),
-                           ('SNRTOT',    np.float64, 2),
-                           ('SNRAVG',    np.float64, 2),
-                           ('VHELIO',    np.float64, 2),
-                           ('EVHELIO',   np.float64, 2),
-                           ('TEFF',      np.float64, 2),
-                           ('ETEFF',     np.float64, 2),
-                           ('LOGG',      np.float64, 2),
-                           ('ELOGG',     np.float64, 2),
-                           ('FEH',       np.float64, 2),
-                           ('EFEH',      np.float64, 2)])
-            gdata = np.zeros(ngd, dtype=dt)
-
-            for i in range(ngd):
-                print(i)
-                p4, = np.where(gdIDs[i] == allv4g['APOGEE_ID'])
-                p5, = np.where(gdIDs[i] == allv5fps['APOGEE_ID'])
-                gdata['H'][i] = allv4['H'][p4][0]
-                gdata['NVIS'][i,0] = len(p4)
-                gdata['NVIS'][i,1] = len(p5)
-                gdata['SNRTOT'][i,0] = np.nansum(allv4g['SNR'][p4])
-                gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
-                gdata['SNRAVG'][i,0] = np.nanmean(allv4g['SNR'][p4])
-                gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
-                gdata['VHELIO'][i,0] = np.nanmean(allv4g['VHELIO'][p4])
-                gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
-                gdata['EVHELIO'][i,0] = np.nanmean(allv4g['VRELERR'][p4])
-                gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
-                gdata['TEFF'][i,0] = np.nanmean(allv4g['RV_TEFF'][p4])
-                gdata['TEFF'][i,1] = np.nanmean(allv5fps['rv_teff'][p5])
-                gdata['ETEFF'][i,0] = np.nanstd(allv4g['RV_TEFF'][p4])
-                gdata['ETEFF'][i,1] = np.nanstd(allv5fps['rv_teff'][p5])
-                gdata['LOGG'][i,0] = np.nanmean(allv4g['RV_LOGG'][p4])
-                gdata['LOGG'][i,1] = np.nanmean(allv5fps['rv_logg'][p5])
-                gdata['ELOGG'][i,0] = np.nanstd(allv4g['RV_LOGG'][p4])
-                gdata['ELOGG'][i,1] = np.nanstd(allv5fps['rv_logg'][p5])
-                gdata['FEH'][i,0] = np.nanmean(allv4g['RV_FEH'][p4])
-                gdata['FEH'][i,1] = np.nanmean(allv5fps['rv_feh'][p5])
-                gdata['EFEH'][i,0] = np.nanstd(allv4g['RV_FEH'][p4])
-                gdata['EFEH'][i,1] = np.nanstd(allv5fps['rv_feh'][p5])
-
-            Table(gdata).write('rvparams_plateVSfps.fits', overwrite=True)
-
-        gdata = fits.getdata(datafile)
-
-        fig = plt.figure(figsize=(22,18))
-        ax1 = plt.subplot2grid((2,2), (0,0))
-        ax2 = plt.subplot2grid((2,2), (0,1))
-        ax3 = plt.subplot2grid((2,2), (1,0))
-        ax4 = plt.subplot2grid((2,2), (1,1))
-        axes = [ax1,ax2,ax3,ax4]
-        #ax1.set_xlim(-150, 150)
-        #ax1.set_ylim(-5, 5)
-        #ax2.set_xlim(3.3, 6.8)
-        #ax2.set_ylim(-0.6, 0.6)
-        #ax3.set_xlim(-0.1, 5.1)
-        #ax3.set_ylim(-1.4, 1.4)
-        #ax4.set_xlim(-1.5, 0.4)
-        #ax4.set_ylim(-0.5, 0.5)
-        #ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
-        #ax1.set_ylabel(r'DR17 $-$ FPS')
-        #ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
-        #ax3.set_xlabel(r'DR17 RV log$\,g$')
-        #ax3.set_ylabel(r'DR17 $-$ FPS')
-        #ax4.set_xlabel(r'DR17 RV [Fe/H]')
-        #ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
-        #ax1.yaxis.set_major_locator(ticker.MultipleLocator(50))
-        #ax4.xaxis.set_major_locator(ticker.MultipleLocator(1.0))
-        #ax4.yaxis.set_major_locator(ticker.MultipleLocator(1.0))
-        #ax1.text(1.05, 1.03, tmp, transform=ax1.transAxes, ha='center')
-        for ax in axes:
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.axhline(y=0, linestyle='dashed', color='k', zorder=1)
-            #ax.plot([-100,100000], [-100,100000], linestyle='dashed', color='k')
-
-        symbol = 'o'
-        symsz = 40
-
-        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
-        x = gdata['VHELIO'][:,0][g]
-        y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
-        #ax1.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax1.transAxes, va='top')
-        ax1.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-
-        g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
-        x = gdata['TEFF'][:,0][g] / 1000
-        y = (gdata['TEFF'][:,0][g] - gdata['TEFF'][:,1][g]) / 1000
-        #ax2.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax2.transAxes, va='top')
-        sc2 = ax2.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-
-        g, = np.where((np.isnan(gdata['LOGG'][:,0]) == False) & (np.isnan(gdata['LOGG'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
-        x = gdata['LOGG'][:,0][g]
-        y = gdata['LOGG'][:,0][g] - gdata['LOGG'][:,1][g]
-        #ax3.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax3.transAxes, va='top')
-        ax3.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-
-        g, = np.where((np.isnan(gdata['FEH'][:,0]) == False) & (np.isnan(gdata['FEH'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
-        x = gdata['FEH'][:,0][g]
-        y = gdata['FEH'][:,0][g] - gdata['FEH'][:,1][g]
-        #ax4.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax4.transAxes, va='top')
-        sc4 = ax4.scatter(x, y, marker=symbol, c=gdata['H'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
-
-        ax2_divider = make_axes_locatable(ax2)
-        cax2 = ax2_divider.append_axes("right", size="5%", pad="1%")
-        cb2 = colorbar(sc2, cax=cax2, orientation="vertical")
-        cax2.minorticks_on()
-        #cax2.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-        ax2.text(1.12, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
-
-        ax4_divider = make_axes_locatable(ax4)
-        cax4 = ax4_divider.append_axes("right", size="5%", pad="1%")
-        cb4 = colorbar(sc4, cax=cax4, orientation="vertical")
-        cax4.minorticks_on()
-        #cax4.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-        ax4.text(1.12, 0.5, r'$H$ mag',ha='left', va='center', rotation=-90, transform=ax4.transAxes)
-
-        fig.subplots_adjust(left=0.07, right=0.95, bottom=0.055, top=0.98, hspace=0.2, wspace=0.15)
-        plt.savefig(plotfile)
-        plt.close('all')
-
-        return
 
         ###########################################################################################
         # rvparams.png
@@ -2821,1258 +4122,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #    fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
         #    plt.savefig(plotfile)
         #    plt.close('all')
-
-        ###########################################################################################
-        ## dillum59557.png
-        ## Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
-        #plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
-        #if (os.path.exists(plotfile) == False) | (clobber == True):
-        #    print("----> monitor: Making " + os.path.basename(plotfile))
-
-        #    fig = plt.figure(figsize=(30,22))
-        #    xarr = np.arange(0, 300, 1) + 1
-
-        #    gd, = np.where(allexp['MJD'][dome] == 59557)
-        #    gdcal = allexp[dome][gd]
-        #    ndome = len(gdcal)
-
-        #    mycmap = 'viridis_r'
-        #    cmap = cmaps.get_cmap(mycmap, ndome)
-        #    sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
-
-        #    #pdb.set_trace()
-
-        #    for ichip in range(nchips):
-        #        chip = chips[ichip]
-        #        ax = plt.subplot2grid((nchips, 1), (ichip, 0))
-        #        ax.set_xlim(0, 301)
-        #        #ax.set_ylim(0, 27000)
-        #        ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
-        #        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-        #        ax.minorticks_on()
-        #        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        #        ax.tick_params(axis='both',which='major',length=axmajlen)
-        #        ax.tick_params(axis='both',which='minor',length=axminlen)
-        #        ax.tick_params(axis='both',which='both',width=axwidth)
-        #        if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
-        #        ax.set_ylabel(r'Median Flux')
-        #        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-        #        if ichip == 0:
-        #            ax_divider = make_axes_locatable(ax)
-        #            cax = ax_divider.append_axes("top", size="7%", pad="2%")
-        #            cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
-        #            cax.xaxis.set_ticks_position("top")
-        #            #cax.minorticks_on()
-        #            cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-        #            #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
-        #            cax.xaxis.set_label_position('top') 
-        #            cax.set_xlabel('Exposure')
-
-        #        for idome in range(ndome):
-        #            chp = 'c'
-        #            if ichip == 1: chp = 'b'
-        #            if ichip == 2: chp = 'a'
-        #            file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
-        #            file1d = file1d.replace('1D-', '1D-' + chp + '-')
-        #            #pdb.set_trace()
-        #            if os.path.exists(file1d):
-        #                oned = fits.getdata(file1d)
-        #                onedflux = np.nanmedian(oned, axis=1)[::-1]
-        #                mycolor = cmap(idome)
-        #                gd, = np.where(onedflux > 100)
-        #                ax.plot(xarr[gd], onedflux[gd], color=mycolor)
-        #                #ax.hist(onedflux, 300, color=mycolor, fill=False)
-
-        #        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-        #                ha='center', va='top', color=chip, bbox=bboxpar)
-
-        #    fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
-        #    plt.savefig(plotfile)
-        #    plt.close('all')
-
-
-
-    if makeplots is True:
-        ###########################################################################################
-        # sciobs.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/sciobs.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,12))
-            ymax = 100
-            ymin = 0
-            yspan = ymax - ymin
-
-            ax = plt.subplot2grid((1,1), (0,0))
-            ax.set_xlim(xmin, xmax)
-            ax.set_ylim(ymin, ymax)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_xlabel(r'JD - 2,400,000')
-            ax.set_ylabel(r'$N_{\rm obs}$')
-            ax.axvline(x=59146, color='r', linewidth=2)
-
-            for iyear in range(nyears):
-                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
-
-            umjd = np.unique(allsci['MJD'])
-            nmjd = len(umjd)
-            nexp = np.zeros(nmjd)
-            nvis = np.zeros(nmjd)
-            for i in range(nmjd):
-                gd, = np.where(umjd[i] == allsci['MJD'])
-                nexp[i] = len(gd)
-                uplate = np.unique(allsci['PLATE'][gd])
-                nvis[i] = len(uplate)
-                if i < nmjd-1:
-                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='k')#, label='exposures')
-                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='dodgerblue')#, label='visits')
-                else:
-                    ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='k', label='exposures')
-                    ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='dodgerblue', label='visits')
-
-            #ax.scatter(umjd, nexp, marker='o', s=markersz, c='grey', alpha=alf, label='exposures')
-            #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
-
-            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=0.3, markerscale=1, 
-                      fontsize=fsz, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.08,top=0.94,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # qflux.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,14))
-            ymax = 70000
-            if instrument == 'apogee-s': 
-                ymax = 125000
-            ymin = 0 - ymax * 0.05
-            yspan = ymax - ymin
-
-            gdcal = allcal[qrtz]
-            caljd = gdcal['JD'] - 2.4e6
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Median Flux')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-                for ifib in range(nplotfibs):
-                    yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]  / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # qfwhm.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/qfwhm.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,14))
-            ymax = 3.0
-            if instrument == 'apogee-s': 
-                ymax = 3.0
-            ymin = 0.8
-            yspan = ymax - ymin
-
-            gd, = np.where(quartztrace['MJD'] > 50000)
-            qtz = quartztrace[gd]
-            qmjd = qtz['MJD']
-            qfwhm = qtz['GAUSS_SIGMA']*2.355
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'FWHM (pixels)')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-                for ifib in range(nplotfibs):
-                    yvals = qfwhm[:, ichip, ifib]
-                    ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # tharflux.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/tharflux.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,14))
-            ymax = np.array([510000, 58000, 16000]) 
-            if instrument == 'apogee-s': ymax = np.array([110000, 30000, 3000])
-            ymin = 0 - ymax * 0.05
-            yspan = ymax - ymin
-
-            gdcal = allcal[thar]
-            caljd = gdcal['JD']-2.4e6
-            flux = gdcal['GAUSS'][:,:,:,:,0] * gdcal['GAUSS'][:,:,:,:,2]**2
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin[ichip], ymax[ichip])
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Line Flux')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0:
-                        ylims = ax.get_ylim()
-                        ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
-
-                for ifib in range(nplotfibs):
-                    yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # uneflux.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/uneflux.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,14))
-            ymax = np.array([45000, 3000, 12000])
-            if instrument == 'apogee-s': ymax = np.array([6000, 1500, 3000])
-            ymin = 0 - ymax*0.05
-            yspan = ymax - ymin
-
-            gdcal = allcal[une]
-            caljd = gdcal['JD'] - 2.4e6
-            flux = gdcal['GAUSS'][:,:,:,:,0] * gdcal['GAUSS'][:,:,:,:,2]**2
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin[ichip], ymax[ichip])
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Line Flux')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0:
-                        ylims = ax.get_ylim()
-                        ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
-
-                for ifib in range(nplotfibs):
-                    yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # dflux.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/dflux.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,14))
-            ymax = 30000
-            ymin = 0 - ymax*0.05
-            yspan = ymax - ymin
-
-            gdcal = allexp[dome]
-            caljd = gdcal['JD'] - 2.4e6
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Median Flux')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-                w = np.nanmedian(gdcal['MED'][:, ichip, :])
-                ax.axhline(y=w, color='k', linewidth=3, zorder=1)
-
-                for ifib in range(nplotfibs):
-                    yvals = gdcal['MED'][:, ichip, fibers[ifib]]
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]), zorder=3)
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # dfwhm.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/dfwhm.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,14))
-            ymax = 2.5
-            if instrument == 'apogee-s': 
-                ymax = 2.5
-            ymin = 0.8
-            yspan = ymax - ymin
-
-            gd, = np.where(dometrace['MJD'] > 50000)
-            df = dometrace[gd]
-            dmjd = df['MJD']
-            dfwhm = df['GAUSS_SIGMA']*2.355
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'FWHM (pixels)')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-                for ifib in range(nplotfibs):
-                    yvals = dfwhm[:, ichip, ifib]
-                    ax.scatter(dmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='Fiber ' + str(fibers[ifib]))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # zero.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/zero.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,8))
-            ymax = 21
-            ymin = 10
-            yspan = ymax - ymin
-
-            ax = plt.subplot2grid((1,1), (0,0))
-            ax.set_xlim(xmin, xmax)
-            ax.set_ylim(ymin, ymax)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_xlabel(r'JD - 2,400,000')
-            ax.set_ylabel(r'Zeropoint (mag.)')
-            ax.axes.xaxis.set_ticklabels([])
-            ax.axvline(x=59146, color='r', linewidth=2)
-
-            for iyear in range(nyears):
-                ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
-
-            t = Time(allsci['DATEOBS'], format='fits')
-            jd = t.jd - 2.4e6
-            ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, c='teal', alpha=alf)
-
-            fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # tpos.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/tpos.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,14))
-
-            gdcal = allcal[thar]
-            caljd = gdcal['JD']-2.4e6
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Position (pixel)')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
-
-                w = np.nanmedian(gdcal['GAUSS'][:, 1, ichip, :, 1])
-                ymin = w - 40
-                ymax = w + 40
-                yspan = ymax - ymin
-                ax.set_ylim(ymin, ymax)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-                for ifib in range(nplotfibs):
-                    yvals = gdcal['GAUSS'][:, 1, ichip, ifib, 1] 
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='Fiber ' + str(fibers[ifib]))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # ThArNe lamp line FWHM
-            for iline in range(2):
-                plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
-                if (os.path.exists(plotfile) == False) | (clobber == True):
-                    print("----> monitor: Making " + os.path.basename(plotfile))
-
-                    fig = plt.figure(figsize=(30,14))
-
-                    gdcal = allcal[thar]
-                    caljd = gdcal['JD']-2.4e6
-
-                    for ichip in range(nchips):
-                        chip = chips[ichip]
-
-                        ax = plt.subplot2grid((nchips,1), (ichip,0))
-                        ax.set_xlim(xmin, xmax)
-                        ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                        ax.minorticks_on()
-                        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                        ax.tick_params(axis='both',which='major',length=axmajlen)
-                        ax.tick_params(axis='both',which='minor',length=axminlen)
-                        ax.tick_params(axis='both',which='both',width=axwidth)
-                        if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                        ax.set_ylabel(r'FWHM ($\rm \AA$)')
-                        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                        ax.axvline(x=59146, color='r', linewidth=2)
-
-                        w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
-                        ymin = w * 0.8
-                        ymax = w * 1.25
-                        yspan = ymax - ymin
-                        ax.set_ylim(ymin, ymax)
-
-                        for iyear in range(nyears):
-                            ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                            if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-                        for ifib in range(nplotfibs):
-                            w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2])
-                            ax.axhline(y=w, color=colors[ifib], linewidth=2, zorder=2)
-                            ax.axhline(y=w, color='k', linewidth=3, zorder=1)
-                            yvals = 2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 2]
-                            ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                                       label='Fiber ' + str(fibers[ifib]), zorder=3)
-
-                        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                                ha='center', va='top', color=chip, bbox=bboxpar)
-                        if ichip == 0: 
-                            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                                      fontsize=fsz, edgecolor='k', framealpha=1)
-
-                    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-                    plt.savefig(plotfile)
-                    plt.close('all')
-
-        ###########################################################################################
-        # trace.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,12))
-            ymax = np.nanmedian(allepsf['CENT']) + 1
-            ymin = np.nanmedian(allepsf['CENT']) - 1
-            yspan = ymax - ymin
-
-            caljd = Time(allepsf['MJD'], format='mjd').jd - 2.4e6
-
-            ax1 = plt.subplot2grid((2,1), (0,0))
-            ax2 = plt.subplot2grid((2,1), (1,0))
-            axes = [ax1, ax2]
-
-            ax1.xaxis.set_major_locator(ticker.MultipleLocator(500))
-            ax1.set_xlim(xmin, xmax)
-            ax1.set_xlabel(r'JD - 2,400,000')
-            ax2.set_xlabel(r'LN2 Level')
-            ax1.axvline(x=59146, color='r', linewidth=2)
-            for ax in axes:
-                ax.set_ylim(ymin, ymax)
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                ax.set_ylabel(r'Trace Center')
-
-            for iyear in range(nyears):
-                ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-            ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, c='cyan', edgecolors='k', alpha=alf)
-            ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, c='cyan', edgecolors='k', alpha=alf)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # biasmean.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,14))
-            ymax = 1000.0
-            ymin = 0.1
-            yspan = ymax - ymin
-
-            gdcal = alldark[dark]
-            caljd = gdcal['JD'] - 2.4e6
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                if ichip == 1: ax.set_ylabel(r'Mean (column median)')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.25, cyears[iyear], ha='center')
-
-                for ibias in range(4):
-                    ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
-                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='', label='quad '+str(ibias+1))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # biassig.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/biassig.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,14))
-            ymax = 1000.0
-            ymin = 0.1
-            yspan = ymax - ymin
-
-            gdcal = alldark[dark]
-            caljd = gdcal['JD'] - 2.4e6
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                if ichip == 1: ax.set_ylabel(r'$\sigma$ (column median)')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.25, cyears[iyear], ha='center')
-
-                for ibias in range(4):
-                    ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
-                                mec=colors1[ibias], mfc=colors1[ibias], linestyle='', label='quad '+str(ibias+1))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
-        # moonsky.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/moonsky.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(31,12))
-            ymax = 11
-            ymin = 16.8
-            if instrument == 'apogee-s': 
-                ymax = 12
-                ymin = 19
-            yspan = ymax - ymin
-
-            ax1 = plt.subplot2grid((2,1), (0,0))
-            ax2 = plt.subplot2grid((2,1), (1,0))
-            axes = [ax1, ax2]
-
-            ax1.axes.xaxis.set_ticklabels([])
-            ax2.set_xlabel(r'Moon Phase')
-
-            for ax in axes:
-                ax.set_xlim(0, 1)
-                ax.set_ylim(ymin, ymax)
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                ax.text(-0.03, 0.5, 'Sky Brightness', ha='right', va='center', rotation=90, transform=ax.transAxes)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
-
-            sc1 = ax1.scatter(allsci['MOONPHASE'], allsci['SKY'][:, 1], marker='o', s=markersz, c=allsci['MOONDIST'], 
-                              cmap='rainbow', alpha=0.8, vmin=0, vmax=90.01)
-
-            gd, = np.where((allsci['ZERO'] != -np.inf) & (allsci['ZERO'] < 20) & (allsci['ZERO'] > 0))
-            sc2 = ax2.scatter(allsci['MOONPHASE'][gd], allsci['SKY'][gd][:, 1], marker='o', s=markersz, c=allsci['ZERO'][gd], 
-                              cmap='rainbow', alpha=0.8, vmin=17, vmax=19)
-
-            ax_divider = make_axes_locatable(ax1)
-            cax = ax_divider.append_axes("right", size="2%", pad="1%")
-            cb1 = colorbar(sc1, cax=cax, orientation="vertical")
-            cax.minorticks_on()
-            cax.yaxis.set_major_locator(ticker.MultipleLocator(15))
-            ax1.text(1.06, 0.5, r'Moon Distance (deg.)',ha='left', va='center', rotation=-90, transform=ax1.transAxes)
-
-            ax_divider = make_axes_locatable(ax2)
-            cax = ax_divider.append_axes("right", size="2%", pad="1%")
-            cb1 = colorbar(sc2, cax=cax, orientation="vertical")
-            cax.minorticks_on()
-            cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
-            ax2.text(1.066, 0.5, r'Zeropoint (cloudiness)',ha='left', va='center', rotation=-90, transform=ax2.transAxes)
-
-            fig.subplots_adjust(left=0.045,right=0.945,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-    print("----> monitor done")
-
-''' GETQACALSTRUCT: put SDSS-IV and SDSS-V QAcal files in structure '''
-def getQAcalStruct(data=None):
-
-    chips = np.array(['blue','green','red'])
-    nchips = len(chips)
-    fibers = np.array([10,80,150,220,290])
-    nfibers = len(fibers)
-    nlines = 2
-    nquad = 4
-
-    dt = np.dtype([('NAME',    np.str,30),
-                   ('MJD',     np.str,30),
-                   ('JD',      np.float64),
-                   ('NFRAMES', np.int16),
-                   ('NREAD',   np.int16),
-                   ('EXPTIME', np.float32),
-                   ('QRTZ',    np.int16),
-                   ('UNE',     np.int16),
-                   ('THAR',    np.int16),
-                   ('FLUX',    np.float32,(nchips,300)),
-                   ('GAUSS',   np.float32,(nlines,nchips,nfibers,4)),
-                   ('WAVE',    np.float64,(nlines,nchips,nfibers)),
-                   ('FIBERS',  np.int16,(nfibers)),
-                   ('LINES',   np.float32,(nlines,nchips))])
-
-    outstr = np.zeros(len(data['NAME']), dtype=dt)
-
-    outstr['NAME'] =    data['NAME']
-    outstr['MJD'] =     data['MJD']
-    outstr['JD'] =      data['JD']
-    outstr['NFRAMES'] = data['NFRAMES']
-    outstr['NREAD'] =   data['NREAD']
-    outstr['EXPTIME'] = data['EXPTIME']
-    outstr['QRTZ'] =    data['QRTZ']
-    outstr['UNE'] =     data['UNE']
-    outstr['THAR'] =    data['THAR']
-    outstr['FLUX'] =    data['FLUX']
-    outstr['GAUSS'] =   data['GAUSS']
-    outstr['WAVE'] =    data['WAVE']
-    outstr['FIBERS'] =  data['FIBERS']
-    outstr['LINES'] =   data['LINES']
-
-    return outstr
-
-
-''' GETQADARKflatSTRUCT: put SDSS-IV and SDSS-V QAdarkflat files in structure '''
-def getQAdarkflatStruct(data=None):
-
-    chips = np.array(['blue','green','red'])
-    nchips = len(chips)
-    nquad = 4
-
-    dt = np.dtype([('NAME',    np.str, 30),
-                   ('MJD',     np.str, 30),
-                   ('JD',      np.float64),
-                   ('NFRAMES', np.int16),
-                   ('NREAD',   np.int16),
-                   ('EXPTIME', np.float32),
-                   ('QRTZ',    np.int16),
-                   ('UNE',     np.int16),
-                   ('THAR',    np.int16),
-                   ('EXPTYPE', np.str, 30),
-                   ('MEAN',    np.float32, (nquad,nchips)),
-                   ('SIG',     np.float32, (nquad,nchips))])
-
-    outstr = np.zeros(len(data['NAME']), dtype=dt)
-
-    outstr['NAME'] =    data['NAME']
-    outstr['MJD'] =     data['MJD']
-    outstr['JD'] =      data['JD']
-    outstr['NFRAMES'] = data['NFRAMES']
-    outstr['NREAD'] =   data['NREAD']
-    outstr['EXPTIME'] = data['EXPTIME']
-    outstr['QRTZ'] =    data['QRTZ']
-    outstr['UNE'] =     data['UNE']
-    outstr['THAR'] =    data['THAR']
-    outstr['EXPTYPE'] = data['EXPTYPE']
-    outstr['MEAN'] =    data['MEAN']
-    outstr['SIG'] =     data['SIG']
-
-    return outstr
-
-''' GETEXPSTRUCT: put SDSS-IV and SDSS-V MJDexp files in structure '''
-def getExpStruct(data=None):
-
-    chips = np.array(['blue','green','red'])
-    nchips = len(chips)
-
-    dt = np.dtype([('MJD',       np.int32),
-                   ('DATEOBS',   np.str, 30),
-                   ('JD',        np.float64),
-                   ('NUM',       np.int32),
-                   ('NFRAMES',   np.int16),
-                   ('IMAGETYP',  np.str, 30),
-                   ('PLATEID',   np.int16),
-                   ('CARTID',    np.str, 5),
-                   ('RA',        np.float64),
-                   ('DEC',       np.float64),
-                   ('SEEING',    np.float32),
-                   ('ALT',       np.float32),
-                   ('QRTZ',      np.int16),
-                   ('THAR',      np.int16),
-                   ('UNE',       np.int16),
-                   ('FFS',       np.str, 30),
-                   ('LN2LEVEL',  np.float32),
-                   ('DITHPIX',   np.float32),
-                   ('TRACEDIST', np.float32),
-                   ('MED',       np.float32, (nchips,300))])
-
-    outstr = np.zeros(len(data['MJD']), dtype=dt)
-
-    outstr['MJD'] =       data['MJD']
-    outstr['DATEOBS'] =   data['DATEOBS']
-    outstr['JD'] =        data['JD']
-    outstr['NUM'] =       data['NUM']
-    outstr['NFRAMES'] =   data['NFRAMES']
-    outstr['IMAGETYP'] =  data['IMAGETYP']
-    outstr['PLATEID'] =   data['PLATEID']
-    outstr['CARTID'] =    str(data['CARTID'])
-    outstr['RA'] =        data['RA']
-    outstr['DEC'] =       data['DEC']
-    outstr['SEEING'] =    data['SEEING']
-    outstr['ALT'] =       data['ALT']
-    outstr['QRTZ'] =      data['QRTZ']
-    outstr['THAR'] =      data['THAR']
-    outstr['UNE'] =       data['UNE']
-    outstr['FFS'] =       data['FFS']
-    outstr['LN2LEVEL'] =  data['LN2LEVEL']
-    outstr['DITHPIX'] =   data['DITHPIX']
-    outstr['TRACEDIST'] = data['TRACEDIST']
-    outstr['MED'] =       data['MED']
-
-    return outstr
-
-''' GETSCISTRUCT: put SDSS-IV and SDSS-V apPlateSum files in structure '''
-def getSciStruct(data=None):
-    cols = data.columns.names
-
-    dt = np.dtype([('TELESCOPE', np.str, 6),
-                   ('PLATE',     np.int32),
-                   ('NREADS',    np.int32),
-                   ('DATEOBS',   np.str, 30),
-                   ('EXPTIME',   np.int32),
-                   ('SECZ',      np.float64),
-                   ('HA',        np.float64),
-                   ('DESIGN_HA', np.float64, 3),
-                   ('SEEING',    np.float64),
-                   ('FWHM',      np.float64),
-                   ('GDRMS',     np.float64),
-                   ('CART',      np.str, 5),
-                   ('PLUGID',    np.str, 30),
-                   ('DITHER',    np.float64),
-                   ('MJD',       np.int32),
-                   ('IM',        np.int32),
-                   ('ZERO',      np.float64),
-                   ('ZERORMS',   np.float64),
-                   ('ZERONORM',  np.float64),
-                   ('SKY',       np.float64, 3),
-                   ('SN',        np.float64, 3),
-                   ('SNC',       np.float64, 3),
-                   #('SNT',       np.float64, 3),
-                   ('ALTSN',     np.float64, 3),
-                   ('NSN',       np.int32),
-                   ('SNRATIO',   np.float64),
-                   ('MOONDIST',  np.float64),
-                   ('MOONPHASE', np.float64),
-                   ('TELLFIT',   np.float64, (3,6))])
-
-    outstr = np.zeros(len(data['PLATE']), dtype=dt)
-
-    outstr['TELESCOPE'] = data['TELESCOPE']
-    outstr['PLATE'] =     data['PLATE']
-    outstr['NREADS'] =    data['NREADS']
-    outstr['DATEOBS'] =   data['DATEOBS']
-    if 'EXPTIME' in cols: outstr['EXPTIME'] =   data['EXPTIME']
-    outstr['SECZ'] =      data['SECZ']
-    outstr['HA'] =        data['HA']
-    outstr['DESIGN_HA'] = data['DESIGN_HA']
-    outstr['SEEING'] =    data['SEEING']
-    outstr['FWHM'] =      data['FWHM']
-    outstr['GDRMS'] =     data['GDRMS']
-    outstr['CART'] =      str(data['CART'])
-    outstr['PLUGID'] =    data['PLUGID']
-    outstr['DITHER'] =    data['DITHER']
-    outstr['MJD'] =       data['MJD']
-    outstr['IM'] =        data['IM']
-    outstr['ZERO'] =      data['ZERO']
-    outstr['ZERORMS'] =   data['ZERORMS']
-    outstr['ZERONORM'] =  data['ZERONORM']
-    outstr['SKY'] =       data['SKY']
-    outstr['SN'] =        data['SN']
-    outstr['SNC'] =       data['SNC']
-    outstr['ALTSN'] =     data['ALTSN']
-    outstr['NSN'] =       data['NSN']
-    outstr['SNRATIO'] =   data['SNRATIO']
-    outstr['MOONDIST'] =  data['MOONDIST']
-    outstr['MOONPHASE'] = data['MOONPHASE']
-    outstr['TELLFIT'] =   data['TELLFIT']
-
-    return outstr
-
-''' GETSNRSTRUCT: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
-def getSnrStruct(plsum=None):
-    #magbins = np.array([7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5])
-    magrad = 0.2
-    magmin = 7.0
-    magmax = 13.4
-    magbins = np.arange(magmin, magmax, magrad*2)
-#array([ 7. ,  7.4,  7.8,  8.2,  8.6,  9. ,  9.4,  9.8, 10.2, 10.6, 11. , 11.4, 11.8, 12.2, 12.6, 13. ])
-    nmagbins = len(magbins)
-
-    hdul = fits.open(plsum)
-    data1 = hdul[1].data
-    data2 = hdul[2].data
-    nexp = len(data1['IM'])
-    cols = data1.columns.names
-    field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
-    fiberid = data2['FIBERID']
-    hdul.close()
-
-    dt = np.dtype([('SUMFILE',   np.str, 30),
-                   ('IM',        np.int32),
-                   ('TELESCOPE', np.str, 6),
-                   ('FIELD',     np.str, 30),
-                   ('PLATE',     np.int32),
-                   ('MJD',       np.int32),
-                   ('JD',        np.float64),
-                   ('DATEOBS',   np.str, 30),
-                   ('NREADS',    np.int32),
-                   ('EXPTIME',   np.float64),
-                   ('DITHER',    np.float64),
-                   ('SECZ',      np.float64),
-                   ('SEEING',    np.float64),
-                   ('MOONDIST',  np.float64),
-                   ('MOONPHASE', np.float64),
-                   ('FWHM',      np.float64),
-                   ('GDRMS',     np.float64),
-                   ('ZERO',      np.float64),
-                   ('ZERORMS',   np.float64),
-                   ('ZERONORM',  np.float64),
-                   ('SKY',       np.float64, 3),
-                   ('SN',        np.float64, 3),
-                   ('SNC',       np.float64, 3),
-                   ('ALTSN',     np.float64, 3),
-                   ('NSN',       np.int32),
-                   ('SNRATIO',   np.float64),
-                   #('APOGEE_ID', np.str, 300)
-                   #('OBJTYPE',   np.str, 300)
-                   ('HMAG',      np.float64, 300),
-                   ('FIBERID',   np.int32, 300),
-                   ('SNFIBER',   np.float64, (300, 3)),
-                   ('SNBINS',    np.float64, (nmagbins, 3)),
-                   ('MEDSNBINS', np.float64, (nmagbins, 3)),
-                   ('ESNBINS',   np.float64, (nmagbins, 3)),
-                   ('NSNBINS',   np.float64, nmagbins),
-                   ('BINH',      np.float64, nmagbins)])
-
-    outstr = np.zeros(nexp, dtype=dt)
-
-    for iexp in range(nexp):
-        tmp = Time(data1['DATEOBS'][iexp], format='fits')
-        jd = tmp.jd - 2.4e6
-
-        outstr['SUMFILE'][iexp]   = os.path.basename(plsum)
-        outstr['IM'][iexp]        = data1['IM'][iexp]
-        outstr['TELESCOPE'][iexp] = data1['TELESCOPE'][iexp]
-        outstr['FIELD'][iexp]     = field
-        outstr['PLATE'][iexp]     = data1['PLATE'][iexp]
-        outstr['MJD'][iexp]       = data1['MJD'][iexp]
-        outstr['DATEOBS'][iexp]   = data1['DATEOBS'][iexp]
-        outstr['JD'][iexp]        = jd
-        outstr['NREADS'][iexp] =    data1['NREADS'][iexp]
-        if 'EXPTIME' in cols:
-            outstr['EXPTIME'][iexp] =   data1['EXPTIME'][iexp]
-        else:
-            snfile = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
-            if os.path.exists(snfile):
-                snfile = ascii.read(snfile)
-                g, = np.where(data1['IM'][iexp] == snfile['col1'])
-                if len(g) > 0:
-                    outstr['EXPTIME'][iexp] = float(snfile['col8'][g][0].split('\t')[0])
-        outstr['SECZ'][iexp] =      data1['SECZ'][iexp]
-        outstr['SEEING'][iexp] =    data1['SEEING'][iexp]
-        outstr['MOONDIST'][iexp] =  data1['MOONDIST'][iexp]
-        outstr['MOONPHASE'][iexp] = data1['MOONPHASE'][iexp]
-        outstr['FWHM'][iexp] =      data1['FWHM'][iexp]
-        outstr['GDRMS'][iexp] =     data1['GDRMS'][iexp]
-        outstr['DITHER'][iexp] =    data1['DITHER'][iexp]
-        outstr['ZERO'][iexp] =      data1['ZERO'][iexp]
-        outstr['ZERORMS'][iexp] =   data1['ZERORMS'][iexp]
-        outstr['ZERONORM'][iexp] =  data1['ZERONORM'][iexp]
-        outstr['SKY'][iexp] =       data1['SKY'][iexp]
-        outstr['SN'][iexp] =        data1['SN'][iexp]
-        outstr['SNC'][iexp] =       data1['SNC'][iexp]
-        outstr['ALTSN'][iexp]=      data1['ALTSN'][iexp]
-        outstr['NSN'][iexp] =       data1['NSN'][iexp]
-        outstr['SNRATIO'][iexp] =   data1['SNRATIO'][iexp]
-        outstr['HMAG'][iexp, fiberid-1] = data2['HMAG']
-        outstr['FIBERID'][iexp, fiberid-1] = data2['FIBERID']
-        outstr['SNFIBER'][iexp, fiberid-1] =   data2['SN'][:, :, iexp]
-        jj=0
-        for magbin in magbins:
-            g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad))
-            if len(g) > 1:
-                #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 0, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 1, iexp])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, 2, iexp])))))
-                snvals = data2['SN'][g, :, iexp]
-                hmags = data2['HMAG'][g]
-                msnvals = np.nanmean(snvals, axis=1)
-                # Reject points below 1 sigma from median
-                medsn = np.nanmedian(msnvals)
-                sigsn = np.nanstd(msnvals)
-                dif = msnvals - medsn
-                mdif = medsn - sigsn
-                g, = np.where(dif > -sigsn)
-                if len(g) > 1:
-                    outstr['SNBINS'][iexp,jj,:] = np.nanmean(snvals[g], axis=0)
-                    outstr['MEDSNBINS'][iexp,jj,:] = np.nanmedian(snvals[g], axis=0)
-                    outstr['ESNBINS'][iexp,jj,:] = np.nanstd(snvals[g], axis=0)
-                    outstr['NSNBINS'][iexp,jj] = len(g)
-                    outstr['BINH'] = np.nanmean(hmags)
-            jj+=1
-
-    return outstr
-
-#            mjdmean = np.zeros((nmjd, nchips))
-#           mjdsig  = np.zeros((nmjd, nchips))
-#            jdmean = np.zeros(nmjd)
-#            for i in range(nmjd):
-#                gd, = np.where(allsnrg['MJD'] == umjd[i])
-#                if len(gd) > 1:
-#                    imean = np.nanmean(allsnrg['SNBINS'][:, snbin][gd], axis=0)
-#                    isig = np.nanstd(allsnrg['SNBINS'][:, snbin][gd], axis=0)
-#                    dif = allsnrg['SNBINS'][:, snbin][gd] - imean
-#                    mdif = isig - imean
-#                    gd1, = np.where((dif[:,0] > mdif[0]) & (dif[:,1] > mdif[1]) & (dif[:,1] > mdif[1]))
-#                    mjdmean[i,:] = np.nanmean(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
-#                    mjdsig[i,:] = np.nanstd(allsnrg['SNBINS'][:, snbin][gd][gd1], axis=0)
-#                    jdmean[i] = np.nanmean(allsnrg['JD'][gd][gd1])
-
-
-
-''' GETSNRSTRUCT2: tabulate SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
-def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
-    #magbins = np.array([7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5])
-    magrad = 0.2
-    magmin = 7.0
-    magmax = 13.4
-    magbins = np.arange(magmin, magmax, magrad*2)
-    #         0     1     2     3     4     5     6     7    8     9     10    11    12    13    14    15
-    #array([ 7. ,  7.4,  7.8,  8.2,  8.6,  9. ,  9.4,  9.8, 10.2, 10.6, 11. , 11.4, 11.8, 12.2, 12.6, 13. ])
-    nmagbins = len(magbins)
-
-    fiberid = data2['FIBERID']
-    cols = data1.columns.names
-
-    dt = np.dtype([('SUMFILE',   np.str, 30),
-                   ('IM',        np.int32),
-                   ('TELESCOPE', np.str, 6),
-                   ('FIELD',     np.str, 30),
-                   ('PLATE',     np.int32),
-                   ('MJD',       np.int32),
-                   ('JD',        np.float64),
-                   ('DATEOBS',   np.str, 30),
-                   ('NREADS',    np.int32),
-                   ('EXPTIME',   np.float64),
-                   ('DITHER',    np.float64),
-                   ('SECZ',      np.float64),
-                   ('SEEING',    np.float64),
-                   ('MOONDIST',  np.float64),
-                   ('MOONPHASE', np.float64),
-                   ('FWHM',      np.float64),
-                   ('GDRMS',     np.float64),
-                   ('ZERO',      np.float64),
-                   ('ZERORMS',   np.float64),
-                   ('ZERONORM',  np.float64),
-                   ('SKY',       np.float64, 3),
-                   ('SN',        np.float64, 3),
-                   ('SNC',       np.float64, 3),
-                   ('ALTSN',     np.float64, 3),
-                   ('NSN',       np.int32),
-                   ('SNRATIO',   np.float64),
-                   #('APOGEE_ID', np.str, 300)
-                   #('OBJTYPE',   np.str, 300)
-                   ('HMAG',      np.float64, 300),
-                   ('FIBERID',   np.int32, 300),
-                   ('SNFIBER',   np.float64, (300, 3)),
-                   ('SNBINS',    np.float64, (nmagbins, 3)),
-                   ('MEDSNBINS', np.float64, (nmagbins, 3)),
-                   ('ESNBINS',   np.float64, (nmagbins, 3)),
-                   ('NSNBINS',   np.float64, nmagbins),
-                   ('BINH',      np.float64, nmagbins)])
-
-    outstr = np.zeros(1, dtype=dt)
-
-    tmp = Time(data1['DATEOBS'][iexp], format='fits')
-    jd = tmp.jd - 2.4e6
-
-    outstr['SUMFILE']   = sumfile
-    outstr['IM']        = data1['IM'][iexp]
-    outstr['TELESCOPE'] = data1['TELESCOPE'][iexp]
-    outstr['FIELD']     = field
-    outstr['PLATE']     = data1['PLATE'][iexp]
-    outstr['MJD']       = data1['MJD'][iexp]
-    outstr['DATEOBS']   = data1['DATEOBS'][iexp]
-    outstr['JD']        = jd
-    outstr['NREADS']    = data1['NREADS'][iexp]
-    if 'EXPTIME' in cols:
-        outstr['EXPTIME'] =   data1['EXPTIME'][iexp]
-    else:
-        snfile = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
-        if os.path.exists(snfile):
-            snfile = ascii.read(snfile)
-            g, = np.where(data1['IM'][iexp] == snfile['col1'])
-            if len(g) > 0:
-                outstr['EXPTIME'] = float(snfile['col8'][g][0].split('\t')[0])
-    outstr['SECZ'] =      data1['SECZ'][iexp]
-    outstr['SEEING'] =    data1['SEEING'][iexp]
-    outstr['MOONDIST'] =  data1['MOONDIST'][iexp]
-    outstr['MOONPHASE'] = data1['MOONPHASE'][iexp]
-    outstr['FWHM'] =      data1['FWHM'][iexp]
-    outstr['GDRMS'] =     data1['GDRMS'][iexp]
-    outstr['DITHER'] =    data1['DITHER'][iexp]
-    outstr['ZERO'] =      data1['ZERO'][iexp]
-    outstr['ZERORMS'] =   data1['ZERORMS'][iexp]
-    outstr['ZERONORM'] =  data1['ZERONORM'][iexp]
-    outstr['SKY'] =       data1['SKY'][iexp]
-    outstr['SN'] =        data1['SN'][iexp]
-    outstr['SNC'] =       data1['SNC'][iexp]
-    outstr['ALTSN'] =     data1['ALTSN'][iexp]
-    outstr['NSN'] =       data1['NSN'][iexp]
-    outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
-    outstr['HMAG'][0][fiberid-1] = data2['HMAG']
-    outstr['FIBERID'][0][fiberid-1] = data2['FIBERID']
-    jj=0
-    for magbin in magbins:
-        g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad) & (np.isnan(data2['HMAG']) == False))
-        if len(g) > 1:
-            snvals = data2['SN'][g, iexp, :]
-            hmags = data2['HMAG'][g]
-            try:
-                msnvals = np.nanmean(snvals, axis=1)
-                # Reject points below 1 sigma from median
-                medsn = np.nanmedian(msnvals)
-                sigsn = np.nanstd(msnvals)
-                dif = msnvals - medsn
-                mdif = medsn - sigsn
-                g, = np.where(dif > -sigsn)
-                if len(g) > 1:
-                    #print(str("%.3f" % round(np.mean(data2['HMAG'][g]),3)).rjust(6) + '  ' + str(len(g)).rjust(3) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 0])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 1])))) + '  ' + str(int(round(np.nanmean(data2['SN'][g, iexp, 2])))))
-                    outstr['SNBINS'][0][jj,:] = np.nanmean(snvals[g], axis=0)
-                    outstr['MEDSNBINS'][0][jj,:] = np.nanmedian(snvals[g], axis=0)
-                    outstr['ESNBINS'][0][jj,:] = np.nanstd(snvals[g], axis=0)
-                    outstr['NSNBINS'][0][jj] = len(g)
-                    outstr['BINH'] = np.nanmean(hmags)
-            except:
-                continue
-        jj+=1
-
-    return outstr
 
 
 
