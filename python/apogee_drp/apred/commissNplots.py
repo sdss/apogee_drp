@@ -193,7 +193,7 @@ def dillum(mjdstart=59604):
     html.write('<H1> Fiber-to-fiber Throughput Investigation (using dome flats)</H1>\n')
 
     ################################3
-    html.write('<H3><H2>Night-to-night variation:</H3>\n')
+    html.write('<H3>Night-to-night variation:</H3>\n')
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
 
@@ -228,7 +228,7 @@ def dillum(mjdstart=59604):
     html.write('</table><BR><BR><HR>\n')
 
     ################################3
-    html.write('<HR><H3>Night-to-night variation (no normalization):</H3>\n')
+    html.write('<H3>Night-to-night variation (no normalization):</H3>\n')
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Median Flux \n')
 
@@ -256,7 +256,7 @@ def dillum(mjdstart=59604):
 
 
     ################################3
-    html.write('<HR><H3>Nightly variation using dome flat sequence from 59557:</H3>\n')
+    html.write('<H3>Nightly variation using dome flat sequence from 59557:</H3>\n')
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
 
@@ -291,7 +291,7 @@ def dillum(mjdstart=59604):
     html.write('</table><BR><BR><HR>\n')
 
     ################################3
-    html.write('<HR><H3>Nightly variation using dome flat sequence from 59557 (no normalization):</H3>\n')
+    html.write('<H3>Nightly variation using dome flat sequence from 59557 (no normalization):</H3>\n')
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Median Flux \n')
 
