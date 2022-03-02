@@ -275,9 +275,8 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             for idome in range(ndome):
                 mycolor = cmap(idome)
                 ax.plot(xarr, divmed[idome], color=mycolor)
-                bd, = np.where(divmed[idome] < 0.85)
-                if len(bd) > 0: print(bd)
-
+                #bd, = np.where(divmed[idome] < 0.85)
+                #if len(bd) > 0: print(bd)
 
             medresid = np.nanmedian(np.absolute(divmed))
             medresidpercent = (medresid / np.nanmedian(meanflux))*100
@@ -288,7 +287,6 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             #ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
             ax.text(0.2, 0.15, txt2, transform=ax.transAxes, ha='left')
 
-
         ax.text(0.97,0.06,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                 ha='center', va='bottom', color=chip, bbox=bboxpar)
 
@@ -297,12 +295,19 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
     plt.close('all')
 
 ###########################################################################################
-def dillum59557(resid=False):
+def dillum59557(pix=[824,1224], norm=True, resid=True):
     ###########################################################################################
     # dillum59557.png
     # Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
     plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
-    if resid is True: plotfile = plotfile.replace('.png', '_resid.png')
+    ylabel = r'Median Flux'
+    if norm:
+        plotfile = plotfile.replace('.png', '_norm.png')
+        ylabel = r'Median Flux  /  Max Flux'
+    if resid:
+        plotfile = plotfile.replace('.png', '_resid.png')
+        ylabel = r'Median Fiber Flux  /  Max Fiber Flux  /  Overall Median Flux'
+
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(30,22))
@@ -312,11 +317,11 @@ def dillum59557(resid=False):
     gdcal = allexp[dome][gd]
     ndome = len(gdcal)
 
-    mycmap = 'rainbow'
+    mycmap = 'brg_r'
     cmap = cmaps.get_cmap(mycmap, ndome)
     sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
 
-    #pdb.set_trace()
+    txt = 'median over pixel range ' + str(pix[0]) + ':' + str(pix[1])
 
     for ichip in range(nchips):
         chip = chips[ichip]
@@ -331,10 +336,7 @@ def dillum59557(resid=False):
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
         if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
-        if resid is False:
-            ax.set_ylabel(r'Median Flux')
-        else:
-            ax.set_ylabel(r'Residual Flux')
+        if ichip == 1: ax.set_ylabel(ylabel)
         if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
         if ichip == 0:
             ax_divider = make_axes_locatable(ax)
@@ -346,6 +348,7 @@ def dillum59557(resid=False):
             #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
             cax.xaxis.set_label_position('top') 
             cax.set_xlabel('Exposure')
+        ax.text(0.2, 0.25, txt, transform=ax.transAxes, ha='left')
 
         for idome in range(ndome):
             chp = 'c'
@@ -363,33 +366,32 @@ def dillum59557(resid=False):
             else:
                 print('missing ' + os.path.basename(file1d))
 
+        gd, = np.where(np.nanmean(flux,axis=1) > 0)
+        ndome = len(gd)
+        if ndome > 0: flux=flux[gd]
+
         if resid:
             meanflux = np.nanmean(flux,axis=0)
-            dif = flux - meanflux
+            medflux = np.nanmedian(flux,axis=0)
+            div = flux / meanflux
+            divmed = flux / medflux
             for idome in range(ndome):
                 mycolor = cmap(idome)
-                ax.plot(xarr, dif[idome], color=mycolor)
+                ax.plot(xarr, divmed[idome], color=mycolor)
+                #bd, = np.where(divmed[idome] < 0.85)
+                #if len(bd) > 0: print(bd)
 
-            medresid = np.nanmedian(np.absolute(dif[:,80:240]))
-            medresidpercent = (medresid / np.nanmedian(meanflux[80:240]))*100
-            madresid = dln.mad(np.absolute(dif[:,80:240]))
-            madresidpercent = (madresid / np.nanmedian(meanflux[80:240]))*100
-            txt1 = 'med = ' + str("%.3f" % round(medresid, 1)) + ' (' + str("%.3f" % round(medresidpercent, 1)) + '%)'
-            txt2 = 'MAD = ' + str("%.3f" % round(madresid, 2)) + ' (' + str("%.3f" % round(madresidpercent, 2)) + '%)'
-            ax.text(0.5, 0.07, txt1+',   '+txt2, transform=ax.transAxes, ha='center', color='r')
-            ax.axvline(80, c='r', linestyle='dashed')
-            ax.axvline(240, c='r', linestyle='dashed')
-            medresid = np.nanmedian(np.absolute(dif))
+            medresid = np.nanmedian(np.absolute(divmed))
             medresidpercent = (medresid / np.nanmedian(meanflux))*100
-            madresid = dln.mad(np.absolute(dif))
+            madresid = dln.mad(divmed)
             madresidpercent = (madresid / np.nanmedian(meanflux))*100
-            txt1 = 'med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
+            txt1 = ''#med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
             txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
-            ax.text(0.5, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='center')
+            #ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
+            ax.text(0.2, 0.15, txt2, transform=ax.transAxes, ha='left')
 
-
-        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                ha='center', va='top', color=chip, bbox=bboxpar)
+        ax.text(0.97,0.06,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                ha='center', va='bottom', color=chip, bbox=bboxpar)
 
     fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
