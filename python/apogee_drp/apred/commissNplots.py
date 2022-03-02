@@ -260,7 +260,9 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
                 if resid is False: ax.plot(xarr, flux[idome], color=mycolor)
 
         gd, = np.where(np.nanmean(flux,axis=1) > 0)
-        if len(gd) > 0: flux=flux[gd]
+        ndome = len(gd)
+        if ndome > 0: flux=flux[gd]
+        
 
         if resid:
             meanflux = np.nanmean(flux,axis=0)
