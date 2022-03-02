@@ -355,7 +355,7 @@ def dillum59557(pix=[824,1224], norm=True, resid=True):
             chp = 'c'
             if ichip == 1: chp = 'b'
             if ichip == 2: chp = 'a'
-            file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
+            file1d = load.filename('1D', mjd='59557', num=gdcal['NUM'][idome], chips='c')
             file1d = file1d.replace('1D-', '1D-' + chp + '-')
             if os.path.exists(file1d):
                 hdr = fits.getheader(file1d)
@@ -363,6 +363,8 @@ def dillum59557(pix=[824,1224], norm=True, resid=True):
                 flux[idome] = np.nanmedian(oned[:, pix[0]:pix[1]], axis=1)[::-1]
                 flux[idome][74] = np.nanmean([flux[idome][72],flux[idome][73],flux[idome][75],flux[idome][76]])
                 flux[idome][224] = np.nanmean([flux[idome][222],flux[idome][223],flux[idome][225],flux[idome][226]])
+                if ichip == 0: 
+                    print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(flux[idome]))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
                 mnf = np.nanmin(flux[idome][135:145])
                 if (ichip == 0) & (mnf < 7500): print("BAD FLAT")
                 mycolor = cmap(idome)
