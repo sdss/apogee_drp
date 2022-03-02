@@ -389,7 +389,7 @@ def dillum59557(pix=[824,1224], norm=True, resid=True):
             madresid = dln.mad(divmed)
             madresidpercent = (madresid / np.nanmedian(meanflux))
             txt1 = ''#med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
-            txt2 = 'MAD = ' + str("%.4f" % round(madresid, 4)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
+            txt2 = 'MAD = ' + str("%.4f" % round(madresid, 4))# + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
             #ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
             ax.text(0.2, 0.15, txt2, transform=ax.transAxes, ha='left')
 
