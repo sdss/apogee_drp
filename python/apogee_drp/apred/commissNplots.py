@@ -213,6 +213,8 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
     cmap = cmaps.get_cmap(mycmap, ndome)
     sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
 
+    txt = 'median over pixel range ' + str(pix[0]) + ':' + str(pix[1])
+
     for ichip in range(nchips):
         chip = chips[ichip]
         ax = plt.subplot2grid((nchips, 1), (ichip, 0))
@@ -238,6 +240,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
             cax.xaxis.set_label_position('top') 
             cax.set_xlabel('MJD')
+        ax.text(0.2, 0.25, txt, transform=ax.transAxes, ha='left')
 
         flux = np.zeros((ndome, len(xarr)))
         for idome in range(ndome):
@@ -280,11 +283,9 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             madresid = dln.mad(divmed)
             madresidpercent = (madresid / np.nanmedian(meanflux))*100
             txt1 = ''#med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
-            txt1 = 'median over pixel range ' + str(pix[0]) + ':' + str(pix[1])
             txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
             #ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
-            ax.text(0.04, 0.25, txt1, transform=ax.transAxes, ha='left')
-            ax.text(0.04, 0.15, txt2, transform=ax.transAxes, ha='left')
+            ax.text(0.2, 0.15, txt2, transform=ax.transAxes, ha='left')
 
 
         ax.text(0.97,0.06,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
