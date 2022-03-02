@@ -199,9 +199,30 @@ def dillum(mjdstart=59604):
     pfile = '../dillum_FPSonly_0-2047.png'
     pfile1 = pfile.replace('.png','_norm.png')
     pfile2 = pfile1.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=500></A>\n')
-    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=500></A>\n')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">0:2047\n')
+    pfile = '../dillum_FPSonly_224-624.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">0:2047\n')
+    pfile = '../dillum_FPSonly_824-1224.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">0:2047\n')
+    pfile = '../dillum_FPSonly_1424-1824.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
 
     html.write('</table><HR>\n')
     html.write('<BR><BR>\n')
