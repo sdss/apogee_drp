@@ -350,6 +350,7 @@ def dillum59557(pix=[824,1224], norm=True, resid=True):
             cax.set_xlabel('Exposure')
         ax.text(0.2, 0.25, txt, transform=ax.transAxes, ha='left')
 
+        flux = np.zeros((ndome, len(xarr)))
         for idome in range(ndome):
             chp = 'c'
             if ichip == 1: chp = 'b'
