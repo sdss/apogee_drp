@@ -268,11 +268,12 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             medflux = np.nanmedian(flux,axis=0)
             div = flux / meanflux
             divmed = flux / medflux
-            bd, = np.where(divmed < 0.85)
-            print(bd)
             for idome in range(ndome):
                 mycolor = cmap(idome)
                 ax.plot(xarr, divmed[idome], color=mycolor)
+                bd, = np.where(divmed[idome] < 0.85)
+                if len(bd) > 0: print(bd)
+
 
             medresid = np.nanmedian(np.absolute(divmed))
             medresidpercent = (medresid / np.nanmedian(meanflux))*100
