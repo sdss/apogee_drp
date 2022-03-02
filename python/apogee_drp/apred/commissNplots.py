@@ -257,7 +257,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
                 if (ichip == 0) & (mnf < 7500): print("BAD FLAT")
                 mycolor = cmap(idome)
                 if norm: flux[idome] = flux[idome] / np.nanmax(flux[idome])
-                ax.plot(xarr, flux[idome], color=mycolor)
+                if resid is False: ax.plot(xarr, flux[idome], color=mycolor)
 
         if resid:
             meanflux = np.nanmean(flux,axis=0)
