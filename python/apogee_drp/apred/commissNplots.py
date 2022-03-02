@@ -225,6 +225,7 @@ def dillum(mjdstart=59604):
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('</table><BR><BR><HR>\n')
 
     ################################3
     html.write('<HR><H2>Night-to-night variation:</H2>\n')
@@ -259,10 +260,8 @@ def dillum(mjdstart=59604):
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('</table><BR><BR><HR>\n')
 
-
-    html.write('<BR><BR>\n')
-    html.write('</table><HR>\n')
     html.write('<BR><BR>\n')
     html.write('</BODY></HTML>\n')
     html.close()
