@@ -192,25 +192,15 @@ def dillum(mjdstart=59604):
     html.write('<HTML><HEAD><title>'+os.path.basename(htmlfile).replace('.html','')+'</title></head><BODY>\n')
     html.write('<H1> Fiber-to-fiber Throughput Investigation</H1>\n')
     html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor="'+thcolor+'"><TH> <TH>All FPS (night-to-night variation) <TH>59557 (nightly variation) \n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
 
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">Median Flux<BR>(all pixels)\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">0:2047\n')
     pfile = '../dillum_FPSonly_0-2047.png'
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
+    html.write('<TD><A HREF=' + pfile.replace('.png','_norm.png') + ' target="_blank"><IMG SRC=' + pfile.replace('.png','_norm.png') + ' HEIGHT=500></A>\n')
+    html.write('<TD><A HREF=' + pfile.replace('.png','_resid.png') + ' target="_blank"><IMG SRC=' + pfile.replace('.png','_resid.png') + ' HEIGHT=500></A>\n')
 
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">Median Flux / Max Flux<BR>(all pixels)\n')
-    pfile = '../dillum_FPSonly_0-2047_norm.png'
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
- 
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">Median Flux / Max Flux<BR>(all pixels)\n')
-    pfile = '../dillum_FPSonly_0-2047_norm.png'
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
-
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">Median Flux / Max Flux / Overall Median Flux<BR>(all pixels)\n')
-    pfile = '../dillum_FPSonly_0-2047_norm_resid.png'
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
     html.write('</table><HR>\n')
-
     html.write('<BR><BR>\n')
     html.write('</BODY></HTML>\n')
     html.close()
