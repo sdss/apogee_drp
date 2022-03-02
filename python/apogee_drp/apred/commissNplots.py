@@ -183,6 +183,31 @@ def snhistory3():
     return
 
 ###########################################################################################
+def dillum(mjdstart=59604):
+    # HTML header background color
+    thcolor = '#DCDCDC'
+
+    htmlfile = specdir5 + 'monitor/' + instrument + '/fiber2fiber/fiber2fiber.html'
+    html = open(htmlfile, 'w')
+    html.write('<HTML><HEAD><title>'+os.path.basename(htmlfile).replace('.html','')+'</title></head><BODY>\n')
+    html.write('<H1> Fiber-to-fiber Throughput Investigation</H1>\n')
+    html.write('<TABLE BORDER=2>\n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
+
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">0:2047\n')
+    pfile = '../dillum_FPSonly_0-2047.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=500></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=500></A>\n')
+
+    html.write('</table><HR>\n')
+    html.write('<BR><BR>\n')
+    html.write('</BODY></HTML>\n')
+    html.close()
+
+###########################################################################################
 def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
