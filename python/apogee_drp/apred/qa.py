@@ -537,19 +537,19 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     allzerorms = np.zeros((n_exposures,3), dtype=np.float64)
 
     # Get guider information.
-    if onem is None:
-        gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
-        if os.path.exists(gcamdir) == False: subprocess.call(['mkdir',gcamdir])
-        gcamfile = gcamdir+'gcam-'+mjd+'.fits'
-        if os.path.exists(gcamfile) == False:
-            print("----> makePlateSum: Attempting to make "+os.path.basename(gcamfile)+".")
-            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--output', gcamfile], shell=False)
-            if os.path.exists(gcamfile):
-                print("----> makePlateSum: Successfully made "+os.path.basename(gcamfile))
-            else:
-                print("----> makePlateSum: Failed to make "+os.path.basename(gcamfile))
-        else:
-            gcam = fits.getdata(gcamfile)
+    #if onem is None:
+    #    gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
+    #    if os.path.exists(gcamdir) == False: subprocess.call(['mkdir',gcamdir])
+    #    gcamfile = gcamdir+'gcam-'+mjd+'.fits'
+    #    if os.path.exists(gcamfile) == False:
+    #        print("----> makePlateSum: Attempting to make "+os.path.basename(gcamfile)+".")
+    #        subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--output', gcamfile], shell=False)
+    #        if os.path.exists(gcamfile):
+    #            print("----> makePlateSum: Successfully made "+os.path.basename(gcamfile))
+    #        else:
+    #            print("----> makePlateSum: Failed to make "+os.path.basename(gcamfile))
+    #    else:
+    #        gcam = fits.getdata(gcamfile)
 
     mjd0 = 99999
     mjd1 = 0.
