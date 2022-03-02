@@ -190,7 +190,8 @@ def dillum(mjdstart=59604):
     htmlfile = specdir5 + 'monitor/' + instrument + '/fiber2fiber/fiber2fiber.html'
     html = open(htmlfile, 'w')
     html.write('<HTML><HEAD><title>'+os.path.basename(htmlfile).replace('.html','')+'</title></head><BODY>\n')
-    html.write('<H1> Fiber-to-fiber Throughput Investigation</H1>\n')
+    html.write('<H1> Fiber-to-fiber Throughput Investigation (using dome flats)</H1>\n')
+    html.write('<HR><H2>Night-to-night variation:</H2>\n')
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
 
