@@ -283,8 +283,8 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             txt1 = 'median over pixel range ' + str(pix[0]) + ':' + str(pix[1])
             txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
             #ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
-            ax.text(0.1, 0.2, txt1, transform=ax.transAxes, ha='left')
-            ax.text(0.1, 0.1, txt2, transform=ax.transAxes, ha='left')
+            ax.text(0.04, 0.25, txt1, transform=ax.transAxes, ha='left')
+            ax.text(0.04, 0.15, txt2, transform=ax.transAxes, ha='left')
 
 
         ax.text(0.97,0.06,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
