@@ -194,21 +194,21 @@ def dillum(mjdstart=59604):
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH> <TH>All FPS (night-to-night variation) <TH>59557 (nightly variation) \n')
 
-    html.write('<TR><TD bgcolor="'+thcolor+'">Median Flux<BR>All Pixels\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">Median Flux<BR>(all pixels)\n')
     pfile = '../dillum_FPSonly_0-2047.png'
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=300></A>\n')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
 
-    html.write('<TR><TD bgcolor="'+thcolor+'">Median Flux / Max Flux<BR>(all pixels)\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">Median Flux / Max Flux<BR>(all pixels)\n')
     pfile = '../dillum_FPSonly_0-2047_norm.png'
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=300></A>\n')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
  
-    html.write('<TR><TD bgcolor="'+thcolor+'">Median Flux / Max Flux<BR>(all pixels)\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">Median Flux / Max Flux<BR>(all pixels)\n')
     pfile = '../dillum_FPSonly_0-2047_norm.png'
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=300></A>\n')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
 
-    html.write('<TR><TD bgcolor="'+thcolor+'">Median Flux / Max Flux / Overall Median Flux<BR>(all pixels)\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">Median Flux / Max Flux / Overall Median Flux<BR>(all pixels)\n')
     pfile = '../dillum_FPSonly_0-2047_norm_resid.png'
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=300></A>\n')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
     html.write('</table><HR>\n')
 
     html.write('<BR><BR>\n')
