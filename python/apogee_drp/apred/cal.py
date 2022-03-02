@@ -165,6 +165,7 @@ def darkplot(apred='r14',telescope='apo25m'):
         for ichip,chip in enumerate(chips) :
             dark=fits.open('{:s}/{:s}DarkRate-{:s}-{:s}.fits'.format(
                            darkdir,prefix,chip,im))[0].data
+            import pdb; pdb.set_trace()
             ax[ichip,0].hist(dark.flatten(),bins=np.arange(0,1,0.02),label='{:s}'.format(im),histtype='step')
             ax[ichip,1].hist(dark.flatten(),bins=xbin,label='{:s}'.format(im),histtype='step')
             imax[ichip][i%ny,i//ny].imshow(dark,vmin=0,vmax=0.25,cmap='Greys',interpolation='nearest',resample=False,origin='lower')

@@ -333,6 +333,8 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
 
     mkmastercals('v1.0.0','telescope')
 
+    
+    apogee/bin/mkcal used to make these master calibration files.
     """
 
     if logger is None:
@@ -350,17 +352,16 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if linkvers:
         logger.info('Creating calibration product symlinks to version >>'+str(linkvers)+'<<')
         cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','wave']:
+        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric']:
             for obs in ['apogee-n','apogee-s']:    
                 logger.info('Creating symlinks for '+apogee_redux+apred+'/cal/'+obs+'/'+d)
                 os.chdir(apogee_redux+apred+'/cal/'+obs+'/'+d)
-                if d!='wave':
-                    subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/*fits .'],shell=True)
-                else:
-                    # Only multiwave files
-                    subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/apWave-?-?????.fits .'],shell=True)
+                subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/*fits .'],shell=True)
         return
 
+    # Input MJD range
+    mjdstart = np.min(mjds)
+    mjdstop = np.max(mjds)
 
     # Read in the master calibration index
     caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
@@ -408,24 +409,46 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('--------------------------------')
     logger.info('Making master darks sequentially')
     logger.info('================================')
-    logger.info(str(len(darkdict))+' Darks to make: '+','.join(darkdict['name']))
-    logger.info('')
+    # Give each job LOTS of memory
     logger.info('Slurm settings: '+str(slurm))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkdark', **slurm)
+    docal = np.zeros(len(darkdict),bool)
     for i in range(len(darkdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkdark-'+str(darkdict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --dark '+str(darkdict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        name = darkdict['name'][i]
+        if np.sum((mjds >= darkdict['mjd1'][i]) & (mjds <= darkdict['mjd2'][i])) > 0:
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkdark-'+str(name)+telescope+'.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --dark '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            #logfiles.append(logfile1)
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                outfile = load.filename('Dark',num=name,chips=True)
+                if load.exists('Dark',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[k] = False
+            if docal[i]:
+                logger.info('Dark file %d : %s' % (i+1,name))
+                logger.info(logfile1)
+                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+    if np.sum(docal)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    else:
+        logger.info('No master Dark calibration files need to be run')
     del queue    
     # Make the dark plots
-    cal.darkplot(apred=apred,telescope=telescope)
+    if np.sum(docal)>0:
+        cal.darkplot(apred=apred,telescope=telescope)
+
+    import pdb; pdb.set_trace()
 
     # Make flats sequentially
     #-------------------------
@@ -436,8 +459,6 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('--------------------------------')
     logger.info('Making master flats sequentially')
     logger.info('================================')
-    logger.info(str(len(flatdict))+' Flats to make: '+','.join(flatdict['name']))
-    logger.info('')
     slurm1 = slurm.copy()
     slurm1['nodes'] = 1
     slurm1['cpus'] = 1    
@@ -445,18 +466,39 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     queue = pbsqueue(verbose=True)
     queue.create(label='mkflat', **slurm1)
     for i in range(len(flatdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+str(flatdict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --flat '+str(flatdict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        name = flatdict['name'][i]
+        if np.sum((mjds >= flatdict['mjd1'][i]) & (mjds <= flatdict['mjd2'][i])) > 0:
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+str(name)+telescope+'.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --flat '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            #logfiles.append(logfile1)
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                outfile = load.filename('Flat',num=name,chips=True)
+                if load.exists('Flat',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[i] = False
+            if docal[i]:
+                logger.info('Flat file %d : %s' % (i+1,name))
+                logger.info(logfile1)
+                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+    if np.sum(docal)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    else:
+        logger.info('No master Flat calibration files need to be run')
     del queue    
     # Make the flat plots
-    cal.flatplot(apred=apred,telescope=telescope)
+    if np.sum(docal)>0:
+        cal.flatplot(apred=apred,telescope=telescope)
+
 
     # Make BPM sequentially
     #----------------------
@@ -466,22 +508,40 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('--------------------------------')
     logger.info('Making master BPMs sequentially')
     logger.info('================================')
-    logger.info(str(len(bpmdict))+' BPMs to make: '+','.join(bpmdict['name']))
-    logger.info('')
     logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkbpm', **slurm1)
     for i in range(len(bpmdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkbpm-'+str(bpmdict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --bpm '+str(bpmdict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        name = bpmdict['name'][i]
+        if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkbpm-'+str(name)+telescope+'.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --bpm '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            #logfiles.append(logfile1)
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                outfile = load.filename('BPM',num=name,chips=True)
+                if load.exists('BPM',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[i] = False
+            if docal[i]:
+                logger.info('BPM file %d : %s' % (i+1,name))
+                logger.info(logfile1)
+                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+    if np.sum(docal)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    else:
+        logger.info('No master BPM calibration files need to be run')
     del queue    
+
 
     # Make Littrow sequentially
     #--------------------------
@@ -491,22 +551,40 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('-----------------------------------')
     logger.info('Making master Littrows sequentially')
     logger.info('===================================')
-    logger.info(str(len(littdict))+' Littrows to make: '+','.join(littdict['name']))
-    logger.info('')
     logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklittrow', **slurm1)
     for i in range(len(littdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklittrow-'+str(littdict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --littrow '+str(littdict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        name = littdict['name'][i]
+        if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklittrow-'+str(name)+telescope+'.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --littrow '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            #logfiles.append(logfile1)
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                outfile = load.filename('Littrow',num=name,chips=True)
+                if load.exists('Littrow',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docalik] = False
+            if docal[i]:
+                logger.info('Littrow file %d : %s' % (i+1,name))
+                logger.info(logfile1)
+                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+    if np.sum(docal)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    else:
+        logger.info('No master Littrow calibration files need to be run')
     del queue    
+
 
     # Make Response sequentially
     #--------------------------
@@ -515,21 +593,38 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('------------------------------------')
     logger.info('Making master responses sequentially')
     logger.info('====================================')
-    logger.info(str(len(responsedict))+' Responses to make: '+','.join(responsedict['name']))
-    logger.info('')
     logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkresponse', **slurm1)
     for i in range(len(responsedict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkresponse-'+str(responsedict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --response '+str(responsedict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        name = responsedict['name'][i]
+        if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkresponse-'+str(name)+telescope+'.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --response '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            #logfiles.append(logfile1)
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                outfile = load.filename('Response',num=name,chips=True)
+                if load.exists('Response',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[k] = False
+            if docal[i]:
+                logger.info('Response file %d : %s' % (i+1,name))
+                logger.info(logfile1)
+                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+    if np.sum(docal)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    else:
+        logger.info('No master Response calibration files need to be run')
     del queue    
 
 
@@ -543,29 +638,29 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     #end
     #wait
 
-    multiwavedict = allcaldict['multiwave']
-    logger.info('')
-    logger.info('-----------------------------------')
-    logger.info('Making master multiwave in parallel')
-    logger.info('===================================')
-    logger.info(str(len(multiwavedict))+' multiwave to make: '+','.join(multiwavedict['name']))
-    logger.info('')
-    slurm1['nodes'] = 1
-    slurm1['cpus'] = 5
-    logger.info('Slurm settings: '+str(slurm1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkmultiwave', **slurm1)
-    for i in range(len(multiwavedict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkmultiwave-'+str(multiwavedict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --multiwave '+str(multiwavedict['name'][i])+' --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-    del queue    
+    #multiwavedict = allcaldict['multiwave']
+    #logger.info('')
+    #logger.info('-----------------------------------')
+    #logger.info('Making master multiwave in parallel')
+    #logger.info('===================================')
+    #logger.info(str(len(multiwavedict))+' multiwave to make: '+','.join(multiwavedict['name']))
+    #logger.info('')
+    #slurm1['nodes'] = 1
+    #slurm1['cpus'] = 5
+    #logger.info('Slurm settings: '+str(slurm1))
+    #queue = pbsqueue(verbose=True)
+    #queue.create(label='mkmultiwave', **slurm1)
+    #for i in range(len(multiwavedict)):
+    #    outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkmultiwave-'+str(multiwavedict['name'][i])+telescope+'.'+logtime+'.log'
+    #    errfile1 = outfile1.replace('.log','.err')
+    #    if os.path.exists(os.path.dirname(outfile1))==False:
+    #        os.makedirs(os.path.dirname(outfile1))
+    #    cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+    #    cmd += ' --multiwave '+str(multiwavedict['name'][i])+' --unlock'
+    #    queue.append(cmd,outfile=outfile1, errfile=errfile1)
+    #queue.commit(hard=True,submit=True)
+    #runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    #del queue    
 
 
     # Make LSFs in parallel
@@ -583,26 +678,46 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('--------------------------------')
     logger.info('Making master LSFs in parallel')
     logger.info('================================')
-    logger.info(str(len(lsfdict))+' LSFs to make: '+','.join(lsfdict['name']))
-    logger.info('')
     slurm1['nodes'] = 1
     slurm1['cpus'] = 5
     logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklsf', **slurm1)
     for i in range(len(littdict)):
-        outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklsf-'+str(lsfdict['name'][i])+telescope+'.'+logtime+'.log'
-        errfile1 = mkvoutfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile1))==False:
-            os.makedirs(os.path.dirname(outfile1))
-        cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-        cmd += ' --lsf '+str(lsfdict['name'][i])+' --full --pl --unlock'
-        queue.append(cmd,outfile=outfile1, errfile=errfile1)
-    queue.commit(hard=True,submit=True)
-    queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        name = lsfdict['name'][i]
+        if np.sum((mjds >= darkdict['mjd1'][i]) & (mjds <= darkdict['mjd2'][i])) > 0:
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklsf-'+str(name)+telescope+'.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --lsf '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            #logfiles.append(logfile1)
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                outfile = load.filename('LSF',num=name,chips=True)
+                if load.exists('LSF',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[i] = False
+            if docal[i]:
+                logger.info('LSF file %d : %s' % (i+1,name))
+                logger.info(logfile1)
+                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+    if np.sum(docal)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    else:
+        logger.info('No master LSF calibration files need to be run')
     del queue    
 
+
     ## UPDATE THE DATABASE!!!
+
+    # Need to check if the master calibration files actually got made
 
     
 def runap3d(load,mjds,slurm,clobber=False,logger=None):
@@ -1374,13 +1489,12 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
     message += '<b>APOGEE DRP Reduction %s %s %s</b><br>\n' % (observatory,apred,str(mjd))
     message += str(nmjd)+' MJDs: '+','.join(np.char.array(mjds).astype(str))+'<br>\n'
     message += 'Steps: '+','.join(steps)+'<br>\n'
-    message += '<p>\n'
-    message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/'+str(apred)+'/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
-
     if clobber:
         message += 'clobber: '+str(clobber)+'<br>\n'
     if slurm:
         message += 'Slurm settings: '+str(slurm)+'<br>\n'
+    message += '<p>\n'
+    message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/'+str(apred)+'/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
 
     # Master Cals step
     if 'master' in steps and chkmaster:
