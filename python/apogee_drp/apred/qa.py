@@ -536,6 +536,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     allzero =    np.zeros((n_exposures,3), dtype=np.float64)
     allzerorms = np.zeros((n_exposures,3), dtype=np.float64)
 
+    gcamfile = gcamdir+'gcam-'+mjd+'.fits'
     # Get guider information.
     #if onem is None:
     #    gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
