@@ -536,20 +536,22 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     allzero =    np.zeros((n_exposures,3), dtype=np.float64)
     allzerorms = np.zeros((n_exposures,3), dtype=np.float64)
 
+    gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
+    gcamfile = gcamdir+'gcam-'+mjd+'.fits'
     # Get guider information.
-    if onem is None:
-        gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
-        if os.path.exists(gcamdir) == False: subprocess.call(['mkdir',gcamdir])
-        gcamfile = gcamdir+'gcam-'+mjd+'.fits'
-        if os.path.exists(gcamfile) == False:
-            print("----> makePlateSum: Attempting to make "+os.path.basename(gcamfile)+".")
-            subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--output', gcamfile], shell=False)
-            if os.path.exists(gcamfile):
-                print("----> makePlateSum: Successfully made "+os.path.basename(gcamfile))
-            else:
-                print("----> makePlateSum: Failed to make "+os.path.basename(gcamfile))
-        else:
-            gcam = fits.getdata(gcamfile)
+    #if onem is None:
+    #    gcamdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'+mjd+'/'
+    #    if os.path.exists(gcamdir) == False: subprocess.call(['mkdir',gcamdir])
+    #    gcamfile = gcamdir+'gcam-'+mjd+'.fits'
+    #    if os.path.exists(gcamfile) == False:
+    #        print("----> makePlateSum: Attempting to make "+os.path.basename(gcamfile)+".")
+    #        subprocess.call(['gcam_process', '--mjd', mjd, '--instrument', instrument, '--output', gcamfile], shell=False)
+    #        if os.path.exists(gcamfile):
+    #            print("----> makePlateSum: Successfully made "+os.path.basename(gcamfile))
+    #        else:
+    #            print("----> makePlateSum: Failed to make "+os.path.basename(gcamfile))
+    #    else:
+    #        gcam = fits.getdata(gcamfile)
 
     mjd0 = 99999
     mjd1 = 0.
@@ -3940,41 +3942,43 @@ def getflux(d=None, skyline=None, rows=None):
     chips = np.array(['a','b','c'])
     nnrows = len(rows)
 
-    ### NOTE:pretty sure that [2047,150] subscript won't work, but 150,2057 will. Hoping for the best.
-    if skyline['W1'] > d['a'][4].data[150,2047]:
-        ichip = 0
-    else:
-        if skyline['W1'] > d['b'][4].data[150,2047]:
-            ichip = 1
+    try:
+        ### NOTE:pretty sure that [2047,150] subscript won't work, but 150,2057 will. Hoping for the best.
+        if skyline['W1'] > d['a'][4].data[150,2047]:
+            ichip = 0
         else:
-            ichip = 2
+            if skyline['W1'] > d['b'][4].data[150,2047]:
+                ichip = 1
+            else:
+                ichip = 2
 
-    cont = np.zeros(nnrows)
-    line = np.zeros(nnrows)
-    nline = np.zeros(nnrows)
+        cont = np.zeros(nnrows)
+        line = np.zeros(nnrows)
+        nline = np.zeros(nnrows)
 
-    for i in range(nnrows):
-        wave = d[chips[ichip]][4].data[rows[i],:]
-        flux = d[chips[ichip]][1].data
+        for i in range(nnrows):
+            wave = d[chips[ichip]][4].data[rows[i],:]
+            flux = d[chips[ichip]][1].data
 
-        icont, = np.where(((wave > skyline['C1']) & (wave < skyline['C2'])) | 
-                          ((wave < skyline['C3']) & (wave < skyline['C4'])))
+            icont, = np.where(((wave > skyline['C1']) & (wave < skyline['C2'])) | 
+                              ((wave < skyline['C3']) & (wave < skyline['C4'])))
 
-        #import pdb; pdb.set_trace()
-        if len(icont) >= 0: cont[i] = np.median(flux[rows[i],icont])
+            #import pdb; pdb.set_trace()
+            if len(icont) >= 0: cont[i] = np.median(flux[rows[i],icont])
 
-        iline, = np.where((wave > skyline['W1']) & (wave < skyline['W2']))
+            iline, = np.where((wave > skyline['W1']) & (wave < skyline['W2']))
 
-        if len(iline) >= 0:
-            line[i] = np.nansum(flux[rows[i],iline])
-            nline[i] = np.nansum(flux[rows[i],iline] / flux[rows[i],iline])
+            if len(iline) >= 0:
+                line[i] = np.nansum(flux[rows[i],iline])
+                nline[i] = np.nansum(flux[rows[i],iline] / flux[rows[i],iline])
 
-    skylineFlux = line - (nline * cont)
-    if skyline['TYPE'] == 0: skylineFlux /= cont
+        skylineFlux = line - (nline * cont)
+        if skyline['TYPE'] == 0: skylineFlux /= cont
 
-    return skylineFlux
+        return skylineFlux
 
-
+    except:
+        return 0
 
 
 ###################################################################################################

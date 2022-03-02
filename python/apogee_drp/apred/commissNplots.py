@@ -85,6 +85,7 @@ dark, = np.where(alldark['EXPTYPE'] == 'DARK')
 matplotlib.use('agg')
 fontsize = 24;   fsz = fontsize * 0.75
 matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
 bboxpar = dict(facecolor='white', edgecolor='none', alpha=0.9)
 axwidth = 1.5
 axmajlen = 7
@@ -117,7 +118,7 @@ xspan = xmax-xmin
 def snhistory3():
     # snhistory3.png
     plotfile = specdir5 + 'monitor/' + instrument + '/snhistory3.png'
-    print("----> monitor: Making " + os.path.basename(plotfile))
+    print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     snbin = 10
     magmin = '10.8'
@@ -181,8 +182,85 @@ def snhistory3():
 
     return
 
+###########################################################################################
+def dillum_FPSonly(mjdstart=59604, norm=True):
+    # dillum_FPSonly.png
+    # Time series plot of median dome flat flux from cross sections across fibers
 
+    plotfile = specdir5 + 'monitor/' + instrument + '/dillum_FPSonly.png'
+    ylabel = r'Median Flux'
+    if norm:
+        plotfile = plotfile.replace('.png', '_norm.png')
+        ylabel = r'Median Flux / Max Flux'
 
+    print("----> commissNplots: Making " + os.path.basename(plotfile))
+
+    fig = plt.figure(figsize=(30,22))
+    xarr = np.arange(0, 300, 1) + 1
+
+    coltickval = 5
+    if mjdstart > 59590: coltickval = 2
+    gd, = np.where((allexp[dome]['MJD'] >= mjdstart) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566) & (allexp[dome]['NUM'] != 40580049))
+    gdcal = allexp[dome][gd]
+    umjd = gdcal['MJD']
+    ndome = len(gdcal)
+
+    mycmap = 'inferno_r'
+    mycmap = 'brg_r'
+    cmap = cmaps.get_cmap(mycmap, ndome)
+    sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
+
+    for ichip in range(nchips):
+        chip = chips[ichip]
+        ax = plt.subplot2grid((nchips, 1), (ichip, 0))
+        ax.set_xlim(0, 301)
+        #ax.set_ylim(0, 27000)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
+        ax.set_ylabel(ylabel)
+        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+        if ichip == 0:
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("top", size="7%", pad="2%")
+            cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+            cax.xaxis.set_ticks_position("top")
+            #cax.minorticks_on()
+            cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
+            #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+            cax.xaxis.set_label_position('top') 
+            cax.set_xlabel('MJD')
+
+        for idome in range(ndome):
+            chp = 'c'
+            if ichip == 1: chp = 'b'
+            if ichip == 2: chp = 'a'
+            file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
+            file1d = file1d.replace('1D-', '1D-' + chp + '-')
+            if os.path.exists(file1d):
+                hdr = fits.getheader(file1d)
+                oned = fits.getdata(file1d)
+                onedflux = np.nanmedian(oned[:, 824:1224], axis=1)[::-1]
+                onedflux[74] = np.nanmean([onedflux[72],onedflux[73],onedflux[75],onedflux[76]])
+                onedflux[224] = np.nanmean([onedflux[222],onedflux[223],onedflux[225],onedflux[226]])
+                print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
+                mnf = np.nanmin(onedflux[135:145])
+                if (ichip == 0) & (mnf < 7500): print("BAD FLAT")
+                mycolor = cmap(idome)
+                if norm: onedflux = onedflux / np.nanmax(onedflux)
+                ax.plot(xarr, onedflux, color=mycolor)
+
+        ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                ha='center', va='top', color=chip, bbox=bboxpar)
+
+    fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+    plt.savefig(plotfile)
+    plt.close('all')
 
 ###########################################################################################
 def dillum59557(resid=False):
