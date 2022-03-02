@@ -85,7 +85,7 @@ dark, = np.where(alldark['EXPTYPE'] == 'DARK')
 matplotlib.use('agg')
 fontsize = 24;   fsz = fontsize * 0.75
 matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-    matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
+matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
 bboxpar = dict(facecolor='white', edgecolor='none', alpha=0.9)
 axwidth = 1.5
 axmajlen = 7
