@@ -191,19 +191,132 @@ def dillum(mjdstart=59604):
     html = open(htmlfile, 'w')
     html.write('<HTML><HEAD><title>'+os.path.basename(htmlfile).replace('.html','')+'</title></head><BODY>\n')
     html.write('<H1> Fiber-to-fiber Throughput Investigation (using dome flats)</H1>\n')
-    html.write('<HR><H2>Night-to-night variation:</H2>\n')
+
+    ################################3
+    html.write('<H3>Night-to-night variation:</H3>\n')
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
 
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">0:2047\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
     pfile = '../dillum_FPSonly_0-2047.png'
     pfile1 = pfile.replace('.png','_norm.png')
     pfile2 = pfile1.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=500></A>\n')
-    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=500></A>\n')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    pfile = '../dillum_FPSonly_224-624.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
+    pfile = '../dillum_FPSonly_824-1224.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    pfile = '../dillum_FPSonly_1424-1824.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('</table><BR><BR><HR>\n')
 
-    html.write('</table><HR>\n')
+    ################################3
+    html.write('<H3>Night-to-night variation (no normalization):</H3>\n')
+    html.write('<TABLE BORDER=2>\n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Median Flux \n')
+
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
+    pfile = '../dillum_FPSonly_0-2047.png'
+    pfile1 = pfile.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    pfile = '../dillum_FPSonly_224-624.png'
+    pfile1 = pfile.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
+    pfile = '../dillum_FPSonly_824-1224.png'
+    pfile1 = pfile.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    pfile = '../dillum_FPSonly_1424-1824.png'
+    pfile1 = pfile.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('</table><BR><BR><HR>\n')
+
+
+    ################################3
+    html.write('<H3>Nightly variation using dome flat sequence from 59557:</H3>\n')
+    html.write('<TABLE BORDER=2>\n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
+
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
+    pfile = '../dillum59557_0-2047.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    pfile = '../dillum59557_224-624.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
+    pfile = '../dillum59557_824-1224.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    pfile = '../dillum59557_1424-1824.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    html.write('</table><BR><BR><HR>\n')
+
+    ################################3
+    html.write('<H3>Nightly variation using dome flat sequence from 59557 (no normalization):</H3>\n')
+    html.write('<TABLE BORDER=2>\n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Median Flux \n')
+
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
+    pfile = '../dillum59557_0-2047.png'
+    pfile1 = pfile.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    pfile = '../dillum59557_224-624.png'
+    pfile1 = pfile.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
+    pfile = '../dillum59557_824-1224.png'
+    pfile1 = pfile.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    pfile = '../dillum59557_1424-1824.png'
+    pfile1 = pfile.replace('.png','_resid.png')
+    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    html.write('</table><BR><BR><HR>\n')
+
     html.write('<BR><BR>\n')
     html.write('</BODY></HTML>\n')
     html.close()
