@@ -768,7 +768,7 @@ class ApLoad:
         if 'mjd' in kwargs.keys():
             mjd = kwargs.pop('mjd')
         else:
-            mjd = int(self.cmjd(num))
+            mjd = int(self.cmjd(int(num)))
         lroot = root.lower()
 
         if lroot=='r' or lroot=='2d' or lroot=='1d' or lroot=='bpm' or lroot=='lsf':
