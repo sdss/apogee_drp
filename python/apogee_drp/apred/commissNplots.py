@@ -255,7 +255,8 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
                 flux[idome] = np.nanmedian(oned[:, pix[0]:pix[1]], axis=1)[::-1]
                 flux[idome][74] = np.nanmean([flux[idome][72],flux[idome][73],flux[idome][75],flux[idome][76]])
                 flux[idome][224] = np.nanmean([flux[idome][222],flux[idome][223],flux[idome][225],flux[idome][226]])
-                print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(flux[idome]))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
+                if ichip == 0: 
+                    print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(flux[idome]))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
                 mnf = np.nanmin(flux[idome][135:145])
                 if (ichip == 0) & (mnf < 7500): print("BAD FLAT")
                 mycolor = cmap(idome)
