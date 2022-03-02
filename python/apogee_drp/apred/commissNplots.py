@@ -241,6 +241,7 @@ def dillum_FPSonly(mjdstart=59604):
                 oned = fits.getdata(file1d)
                 onedflux = np.nanmedian(oned[:, 824:1224], axis=1)[::-1]
                 onedflux[74] = np.nanmean([onedflux[72],onedflux[73],onedflux[75],onedflux[76]])
+                onedflux[224] = np.nanmean([onedflux[222],onedflux[223],onedflux[225],onedflux[226]])
                 print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
                 if (umjd[idome] == 59557) | (umjd[idome] == 59566): continue
                 mycolor = cmap(idome)
