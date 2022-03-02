@@ -194,7 +194,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
         ylabel = r'Median Flux / Max Flux'
     if resid:
         plotfile = plotfile.replace('.png', '_resid.png')
-        ylabel = r'Median Flux / Max Flux / Mean Flux'
+        ylabel = r'Median Fiber Flux / Max Flux / Median Flux'
 
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
