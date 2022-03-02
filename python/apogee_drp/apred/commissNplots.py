@@ -264,7 +264,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             div = flux / meanflux
             for idome in range(ndome):
                 mycolor = cmap(idome)
-                ax.plot(xarr, dif[idome], color=mycolor)
+                ax.plot(xarr, div[idome], color=mycolor)
 
             medresid = np.nanmedian(np.absolute(div))
             medresidpercent = (medresid / np.nanmedian(meanflux))*100
