@@ -187,14 +187,14 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
 
-    plotfile = specdir5 + 'monitor/' + instrument + '/dillum_FPSonly.png'
+    plotfile = specdir5 + 'monitor/' + instrument + '/dillum_FPSonly_' + str(pix[0]) + '-' + str(pix[1]) + '.png'
     ylabel = r'Median Flux'
     if norm:
         plotfile = plotfile.replace('.png', '_norm.png')
         ylabel = r'Median Flux / Max Flux'
     if resid:
         plotfile = plotfile.replace('.png', '_resid.png')
-        ylabel = r'Median Flux / Max Flux / Mean Fiber Flux'
+        ylabel = r'Median Flux / Max Flux / Mean Flux'
 
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
@@ -287,8 +287,8 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             ax.text(0.1, 0.1, txt2, transform=ax.transAxes, ha='left')
 
 
-        ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                ha='center', va='top', color=chip, bbox=bboxpar)
+        ax.text(0.97,0.06,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                ha='center', va='bottom', color=chip, bbox=bboxpar)
 
     fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
