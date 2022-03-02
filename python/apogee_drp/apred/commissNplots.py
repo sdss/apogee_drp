@@ -196,9 +196,11 @@ def dillum(mjdstart=59604):
 
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">0:2047\n')
     pfile = '../dillum_FPSonly_0-2047.png'
+    pfile1 = pfile.replace('.png','_norm.png')
+    pfile2 = pfile1.replace('.png','_resid.png')
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=500></A>\n')
-    html.write('<TD><A HREF=' + pfile.replace('.png','_norm.png') + ' target="_blank"><IMG SRC=' + pfile.replace('.png','_norm.png') + ' HEIGHT=500></A>\n')
-    html.write('<TD><A HREF=' + pfile.replace('.png','_resid.png') + ' target="_blank"><IMG SRC=' + pfile.replace('.png','_resid.png') + ' HEIGHT=500></A>\n')
+    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=500></A>\n')
+    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=500></A>\n')
 
     html.write('</table><HR>\n')
     html.write('<BR><BR>\n')
