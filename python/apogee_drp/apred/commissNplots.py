@@ -183,7 +183,7 @@ def snhistory3():
     return
 
 ###########################################################################################
-def dillum_FPSonly():
+def dillum_FPSonly(mjdstart=59604):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
     plotfile = specdir5 + 'monitor/' + instrument + '/dillum_FPSonly.png'
@@ -192,9 +192,8 @@ def dillum_FPSonly():
     fig = plt.figure(figsize=(30,22))
     xarr = np.arange(0, 300, 1) + 1
 
-    mjdstart = 59599
     coltickval = 5
-    if mjdstart> 59590: coltickval = 2
+    if mjdstart > 59590: coltickval = 2
     gd, = np.where((allexp[dome]['MJD'] >= mjdstart) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566))
     gdcal = allexp[dome][gd]
     umjd = gdcal['MJD']
