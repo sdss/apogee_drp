@@ -46,12 +46,13 @@ if __name__ == '__main__' :
     parser.add_argument('--nskip', type=int, help='Number of arclamps to skip for WAVE')
     parser.add_argument("--vers", type=str, default='daily', help='APOGEE Reduction version')
     parser.add_argument("--telescope", type=str, default='apo25m', help='Telescope')
-    parser.add_argument('--full', type=str, nargs='*', help='Full processing for MKLSF')
+    parser.add_argument('--full', action='store_true', help='Full processing for MKLSF')
     parser.add_argument('--newwave', type=str, nargs='*', help='newwave parameter for MKLSF')
-    parser.add_argument('--nofit', type=str, nargs='*', help='/nofit for MKWAVE')
-    parser.add_argument('--pl', type=str, nargs='*', help='Plotting for MKLSF')
-    parser.add_argument('--clobber', type=str, nargs='*', help='Overwrite files')
-    parser.add_argument('--unlock', type=str, nargs='*', help='Remove lock file and start fresh')
+    parser.add_argument('--nofit', action='store_true', help='/nofit for MKWAVE')
+    parser.add_argument('--pl', action='store_true', help='Plotting for MKLSF')
+    parser.add_argument('--clobber', action='store_true', help='Overwrite files')
+    parser.add_argument('--unlock', action='store_true', help='Remove lock file and start fresh')
+    parser.add_argument('--psflibrary', action='store_true', help='Use PSF library')
     args = parser.parse_args()
     argsdict = vars(args)
 
@@ -84,7 +85,7 @@ if __name__ == '__main__' :
                 cmd += ","+str(key)+"="+str(val)
                 
     # Add flags
-    flagnames = ['full','newwave','nofit','pl','clobber','unlock']
+    flagnames = ['full','newwave','nofit','pl','clobber','unlock','psflibrary']
     for i,key in enumerate(flagnames):
         val = argsdict[key]
         # val=None when the argument was not set

@@ -14,6 +14,7 @@
 ;  /clobber    Overwrite existing files.
 ;  =file       Depricated parameter.
 ;  /unlock     Delete the lockfile and start fresh.
+;  /psflibrary   Use PSF library to get PSF cal for images.
 ;
 ; OUTPUT:
 ;  A set of apWave-[abc]-ID8.fits files in the appropriate location
@@ -26,7 +27,8 @@
 ;  Added doc strings, updates to use data model  D. Nidever, Sep 2020 
 ;-
 
-pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,unlock=unlock
+pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,$
+                unlock=unlock,psflibrary=psflibrary
 
   if n_elements(name) eq 0 then name=string(waveid[0])
   dirs = getdir(apodir,caldir,spectrodir,vers)
@@ -69,7 +71,8 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,unlo
   for i=0,n_elements(waveid)-1,2 do begin
     print,''
     print,'--- Frame ',strtrim(i+1,2),':  ',strtrim(waveid[i],2),' ---'
-    MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock
+    MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',$
+            /nofit,unlock=unlock,psflibrary=psflibrary
   endfor
 
   ;; New Python version!

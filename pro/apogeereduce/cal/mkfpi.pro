@@ -15,6 +15,7 @@
 ;  =fiberid    ETrace frame to be used if images are reduced.
 ;  /clobber    Overwrite existing files.
 ;  /unlock     Delete the lock file and start fresh.
+;  /psflibrary   Use PSF library to get PSF cal for images.
 ;
 ; OUTPUT:
 ;  A set of apWaveFPI-[abc]-ID8.fits files in the appropriate location
@@ -28,7 +29,7 @@
 ;-
 
 pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
-          fiberid=fiberid,clobber=clobber,unlock=unlock
+          fiberid=fiberid,clobber=clobber,unlock=unlock,psflibrary=psflibrary
 
   if n_elements(name) eq 0 then name=string(fpiid[0])
   dirs = getdir(apodir,caldir,spectrodir,vers)
@@ -89,7 +90,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
     ;; Check if they exist
     wavefiles = apogee_filename('Wave',num=waveid[i],chip=chips)
     if total(file_test(wavefiles)) lt 3 or keyword_set(clobber) then begin
-      MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock
+      MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock,psflibrary=psflibrary
     endif else begin
       print,repstr(wavefiles[0],'-a-','-'),' made already'
     endelse

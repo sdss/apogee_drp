@@ -922,14 +922,17 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                     logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif ccode==2:   # flux
                     cmd1 = 'makecal --flux '+str(num1)+' --unlock'
+                    if fps: cmd1 += ' --psflibrary'
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif ccode==4:  # arcs
                     cmd1 = 'makecal --wave '+str(num1)+' --unlock'
+                    if fps: cmd1 += ' --psflibrary'
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
                 elif ccode==8:  # fpi
                     cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
+                    if fps: cmd1 += ' --psflibrary'
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
                 logger.info(logfile1)
