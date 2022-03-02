@@ -194,7 +194,7 @@ def dillum_FPSonly(mjdstart=59604):
 
     coltickval = 5
     if mjdstart > 59590: coltickval = 2
-    gd, = np.where((allexp[dome]['MJD'] >= mjdstart) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566))
+    gd, = np.where((allexp[dome]['MJD'] >= mjdstart) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566) & (allexp[dome]['NUM'] != 40580049))
     gdcal = allexp[dome][gd]
     umjd = gdcal['MJD']
     ndome = len(gdcal)
