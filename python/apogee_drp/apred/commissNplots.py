@@ -275,11 +275,11 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
 
             medresid = np.nanmedian(np.absolute(div))
             medresidpercent = (medresid / np.nanmedian(meanflux))*100
-            madresid = dln.mad(np.absolute(div))
-            madresidpercent = (madresid / np.nanmedian(meanflux))*100
+            madresid = dln.mad(divmed)
+            madresidpercent = (madresid / divmed)*100
             txt1 = 'med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
             txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
-            ax.text(0.5, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='center')
+            ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
 
 
         ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
