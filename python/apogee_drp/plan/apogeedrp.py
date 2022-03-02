@@ -399,6 +399,10 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
 
     # Maybe have an option to copy/symlink them from a previous apred version
 
+
+    # It's trying to make linearity first!!!
+
+
     # Make darks sequentially
     #-------------------------
     # they take too much memory to run in parallel
@@ -439,6 +443,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     docal[k] = False
             if docal[i]:
                 logger.info('Dark file %d : %s' % (i+1,name))
+                logger.info(cmd1)
                 logger.info(logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
@@ -486,6 +491,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     docal[i] = False
             if docal[i]:
                 logger.info('Flat file %d : %s' % (i+1,name))
+                logger.info(cmd1)
                 logger.info(logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
@@ -532,6 +538,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     docal[i] = False
             if docal[i]:
                 logger.info('BPM file %d : %s' % (i+1,name))
+                logger.info(cmd1)
                 logger.info(logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
@@ -575,6 +582,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     docal[i] = False
             if docal[i]:
                 logger.info('Littrow file %d : %s' % (i+1,name))
+                logger.info(cmd1)
                 logger.info(logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
@@ -617,6 +625,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     docal[k] = False
             if docal[i]:
                 logger.info('Response file %d : %s' % (i+1,name))
+                logger.info(cmd1)
                 logger.info(logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
@@ -702,6 +711,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     docal[i] = False
             if docal[i]:
                 logger.info('LSF file %d : %s' % (i+1,name))
+                logger.info(cmd1)
                 logger.info(logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
@@ -946,6 +956,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                         docal[k] = False
                 if docal[k]:
                     logger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
+                    logger.info(cmd1)
                     logger.info(logfile1)
                     queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
             if np.sum(docal)>0:
@@ -1109,12 +1120,14 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='apred', **slurm1)
-    for pf in planfiles:
+    for i,pf in enumerate(planfiles):
+        logger.info('planfile %d : %s' % (i+1,pf))
         logfile = pf.replace('.yaml','_pbs.'+logtime+'.log')
         errfile = logfile.replace('.log','.err')
         cmd = 'apred {0}'.format(pf)
         if clobber:
             cmd += ' --clobber'
+        logger.info(cmd)
         queue.append(cmd, outfile=logfile,errfile=errfile)
     queue.commit(hard=True,submit=True)
     logger.info('PBS key is '+queue.key)
@@ -1244,6 +1257,7 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
                 dorv[i] = False
         if dorv[i]:
             logger.info('rv %d : %s' % (i+1,obj))
+            logger.info(cmd)
             logger.info(logfile)
             queue.append(cmd,outfile=logfile,errfile=errfile)
     if np.sum(dorv)>0:
@@ -1428,6 +1442,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
         errfile = logfile.replace('.log','.err')
         cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjd,observatory,apred,telescope,plate)
         cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
+        logger.info(cmd)
         queue.append(cmd, outfile=logfile, errfile=errfile)
     queue.commit(hard=True,submit=True)
     logger.info('PBS key is '+queue.key)

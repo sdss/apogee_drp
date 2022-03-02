@@ -1089,6 +1089,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                             docal[k] = False
                     if docal[k]:
                         rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
+                        rootLogger.info(cmd1)
                         rootLogger.info(logfile1)
                         queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
                 if np.sum(docal)>0:
@@ -1147,8 +1148,14 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
         queue = pbsqueue(verbose=True)
         queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
                      qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
-        for pf in planfiles:
-            queue.append('apred {0}'.format(pf), outfile=pf.replace('.yaml','_pbs.'+logtime+'.log'), errfile=pf.replace('.yaml','_pbs.'+logtime+'.err'))
+        for i,pf in enumerate(planfiles):
+            rootLogger.info('planfile %d : %s' % (i+1,pf))
+            logfile = pf.replace('.yaml','_pbs.'+logtime+'.log')
+            errfile = logfile.replace('.log','.err')
+            cmd1 = 'apred {0}'.format(pf)
+            rootLogger.info(cmd1)
+            rootLogger.info(logfile)
+            queue.append(cmd1, outfile=logfile, errfile=errfile)
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
@@ -1180,14 +1187,19 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
         queue = pbsqueue(verbose=True)
         queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
                      walltime=walltime, notification=False)
-        for obj in vcat['apogee_id']:
+        for i,obj in enumerate(vcat['apogee_id']):
             apstarfile = load.filename('Star',obj=obj)
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
             if os.path.exists(outdir)==False:
                 os.makedirs(outdir)
             # Run with --verbose and --clobber set
-            queue.append('rv %s %s %s -c -v -m %s' % (obj,apred,telescope,mjd5),outfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.log'),
-                         errfile=apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.err'))
+            rootLogger.info('rv %d : %s' % (i+1,obj))
+            logfile = apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.log')
+            errfile = logfile.replace('.log','.err')
+            cmd1 = 'rv %s %s %s -c -v -m %s' % (obj,apred,telescope,mjd5)
+            rootLogger.info(cmd1)
+            rootLogger.info(logfile)
+            queue.append(cmd1,outfile=logfile,errfile=errfile)
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)        
         queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
