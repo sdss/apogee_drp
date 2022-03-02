@@ -417,7 +417,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(darkdict)):
         name = darkdict['name'][i]
         if np.sum((mjds >= darkdict['mjd1'][i]) & (mjds <= darkdict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkdark-'+str(name)+telescope+'.'+logtime+'.log'
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkdark-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -468,7 +468,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(flatdict)):
         name = flatdict['name'][i]
         if np.sum((mjds >= flatdict['mjd1'][i]) & (mjds <= flatdict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+str(name)+telescope+'.'+logtime+'.log'
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -514,7 +514,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(bpmdict)):
         name = bpmdict['name'][i]
         if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkbpm-'+str(name)+telescope+'.'+logtime+'.log'
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkbpm-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -557,7 +557,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(littdict)):
         name = littdict['name'][i]
         if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklittrow-'+str(name)+telescope+'.'+logtime+'.log'
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklittrow-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -599,7 +599,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(responsedict)):
         name = responsedict['name'][i]
         if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkresponse-'+str(name)+telescope+'.'+logtime+'.log'
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkresponse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -685,8 +685,8 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     queue.create(label='mklsf', **slurm1)
     for i in range(len(littdict)):
         name = lsfdict['name'][i]
-        if np.sum((mjds >= darkdict['mjd1'][i]) & (mjds <= darkdict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklsf-'+str(name)+telescope+'.'+logtime+'.log'
+        if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:
+            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklsf-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
