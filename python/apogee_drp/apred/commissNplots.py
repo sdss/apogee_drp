@@ -299,7 +299,7 @@ def dillum59557(pix=[824,1224], norm=True, resid=True):
     ###########################################################################################
     # dillum59557.png
     # Time series plot of median dome flat flux from cross sections across fibers from series of 59557 flats
-    plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557.png'
+    plotfile = specdir5 + 'monitor/' + instrument + '/dillum59557_' + str(pix[0]) + '-' + str(pix[1]) + '.png'
     ylabel = r'Median Flux'
     if norm:
         plotfile = plotfile.replace('.png', '_norm.png')
