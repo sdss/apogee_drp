@@ -268,6 +268,8 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             medflux = np.nanmedian(flux,axis=0)
             div = flux / meanflux
             divmed = flux / medflux
+            bd, = np.where(divmed < 0.85)
+            print(bd)
             for idome in range(ndome):
                 mycolor = cmap(idome)
                 ax.plot(xarr, divmed[idome], color=mycolor)
@@ -276,9 +278,12 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             medresidpercent = (medresid / np.nanmedian(meanflux))*100
             madresid = dln.mad(divmed)
             madresidpercent = (madresid / np.nanmedian(meanflux))*100
-            txt1 = 'med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
+            txt1 = ''#med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
+            txt1 = 'median over pixel range ' + str(pix[0]) + ':' + str(pix[1])
             txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
-            ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
+            #ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
+            ax.text(0.1, 0.2, txt1, transform=ax.transAxes, ha='left')
+            ax.text(0.1, 0.1, txt2, transform=ax.transAxes, ha='left')
 
 
         ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
