@@ -546,7 +546,10 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     for idome in range(ndome):
         mycolor = cmap(idome)
         ax3.plot(xarr, divmed[idome], color=mycolor)
-        pdb.set_trace()
+
+    percentDif = np.nanmax(np.absolute(divmed-1),axis=0)*100
+    ax4.plot(xarr, percentDif, marker='o', c='seagreen', s=10, edgecolors='k')
+
     #madresid = dln.mad(div)
     #madresidpercent = (madresid / np.nanmean(div))*100
     #txt = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
