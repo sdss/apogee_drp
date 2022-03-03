@@ -501,8 +501,6 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
         i += 1
     ax3.set_xlabel(r'Fiber Index')
     ax3.set_ylim(0.75, 1.25)
-    #ax2.set_ylabel(ylabels[1])
-    #ax3.set_ylabel(ylabels[2])
     ax1.axes.xaxis.set_ticklabels([])
     ax2.axes.xaxis.set_ticklabels([])
     ax_divider = make_axes_locatable(ax1)
@@ -510,7 +508,9 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
     cax.xaxis.set_ticks_position("top")
     cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
-    cax.xaxis.set_label_position('top') 
+    cax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+    cax.xaxis.set_label_position('top')
+    cax.minorticks_on()
     ax1.text(0.5, 1.21, 'MJD', transform=ax1.transAxes, ha='center')
 
     flux = np.zeros((ndome, len(xarr)))
