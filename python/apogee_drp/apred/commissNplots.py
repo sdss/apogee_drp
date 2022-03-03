@@ -191,11 +191,21 @@ def dillum(mjdstart=59604):
     html = open(htmlfile, 'w')
     html.write('<HTML><HEAD><title>'+os.path.basename(htmlfile).replace('.html','')+'</title></head><BODY>\n')
     html.write('<H1> Fiber-to-fiber Throughput Investigation (using dome flats)</H1>\n')
+    html.write('<HR>\n')
 
     ################################3
     html.write('<H3>Night-to-night variation:</H3>\n')
+    html.write('<P>The following plots show dome flat fluxes since MJD 59590. The leftmost columns of plots, ')
+    html.write('shows the median flux in spatial direction over all fibers, taken in pixel slices as indicated ')
+    html.write('in the first column of the table. Due to the bimodal fluxes (i.e. green versus blue+red fluxes), ')
+    html.write('the fluxes are normalized by the maximum flux in the "Median Flux / Max Flux" column. The rightmost ')
+    html.write('column of plots then has the mean flux across all dome flats for each fiber divided out to highlight ')
+    html.write('the fiber-to-fiber throughput variations. The Mean Absolute Deviation is given, indicating that ')
+    html.write('night-to-night variations are typically on the 1.5% level.</P>\n')
+    html.write('<BR>\n')
+
     html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Mean Flux \n')
 
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
     pfile = '../dillum_FPSonly_0-2047.png'
@@ -204,13 +214,13 @@ def dillum(mjdstart=59604):
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
-    pfile = '../dillum_FPSonly_224-624.png'
-    pfile1 = pfile.replace('.png','_norm.png')
-    pfile2 = pfile1.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    #pfile = '../dillum_FPSonly_224-624.png'
+    #pfile1 = pfile.replace('.png','_norm.png')
+    #pfile2 = pfile1.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
     pfile = '../dillum_FPSonly_824-1224.png'
     pfile1 = pfile.replace('.png','_norm.png')
@@ -218,47 +228,53 @@ def dillum(mjdstart=59604):
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
-    pfile = '../dillum_FPSonly_1424-1824.png'
-    pfile1 = pfile.replace('.png','_norm.png')
-    pfile2 = pfile1.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    #pfile = '../dillum_FPSonly_1424-1824.png'
+    #pfile1 = pfile.replace('.png','_norm.png')
+    #pfile2 = pfile1.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
     html.write('</table><BR><BR><HR>\n')
 
     ################################3
     html.write('<H3>Night-to-night variation (no normalization):</H3>\n')
+    html.write('<P>On the other hand, if we skip the normalization step, variations are on the 3.2% level.</P>\n')
+
     html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Median Flux \n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Mean Flux \n')
 
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
     pfile = '../dillum_FPSonly_0-2047.png'
     pfile1 = pfile.replace('.png','_resid.png')
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
-    pfile = '../dillum_FPSonly_224-624.png'
-    pfile1 = pfile.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    #pfile = '../dillum_FPSonly_224-624.png'
+    #pfile1 = pfile.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
     pfile = '../dillum_FPSonly_824-1224.png'
     pfile1 = pfile.replace('.png','_resid.png')
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
-    pfile = '../dillum_FPSonly_1424-1824.png'
-    pfile1 = pfile.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    #pfile = '../dillum_FPSonly_1424-1824.png'
+    #pfile1 = pfile.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('</table><BR><BR><HR>\n')
 
 
     ################################3
     html.write('<H3>Nightly variation using dome flat sequence from 59557:</H3>\n')
+    html.write('<P>These plots are similar to the above, but looking only at the series of ')
+    html.write('36 dome flats taken on MJD 59557. If we normalize by maximum flux, fiber-to-fiber ')
+    html.write('variations over the course of a night are on the ~1.5% level.</P>\n')
+
     html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Mean Flux \n')
 
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
     pfile = '../dillum59557_0-2047.png'
@@ -267,13 +283,13 @@ def dillum(mjdstart=59604):
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
-    pfile = '../dillum59557_224-624.png'
-    pfile1 = pfile.replace('.png','_norm.png')
-    pfile2 = pfile1.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    #pfile = '../dillum59557_224-624.png'
+    #pfile1 = pfile.replace('.png','_norm.png')
+    #pfile2 = pfile1.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
     pfile = '../dillum59557_824-1224.png'
     pfile1 = pfile.replace('.png','_norm.png')
@@ -281,40 +297,42 @@ def dillum(mjdstart=59604):
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
-    pfile = '../dillum59557_1424-1824.png'
-    pfile1 = pfile.replace('.png','_norm.png')
-    pfile2 = pfile1.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    #pfile = '../dillum59557_1424-1824.png'
+    #pfile1 = pfile.replace('.png','_norm.png')
+    #pfile2 = pfile1.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
     html.write('</table><BR><BR><HR>\n')
 
     ################################3
     html.write('<H3>Nightly variation using dome flat sequence from 59557 (no normalization):</H3>\n')
+    html.write('<P>If we apply no normalization, nightly varations are on the ~0.5% level.</P>\n')
+
     html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Median Flux \n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Mean Flux \n')
 
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
     pfile = '../dillum59557_0-2047.png'
     pfile1 = pfile.replace('.png','_resid.png')
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
-    pfile = '../dillum59557_224-624.png'
-    pfile1 = pfile.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    #pfile = '../dillum59557_224-624.png'
+    #pfile1 = pfile.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
     pfile = '../dillum59557_824-1224.png'
     pfile1 = pfile.replace('.png','_resid.png')
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
-    pfile = '../dillum59557_1424-1824.png'
-    pfile1 = pfile.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    #pfile = '../dillum59557_1424-1824.png'
+    #pfile1 = pfile.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('</table><BR><BR><HR>\n')
 
     html.write('<BR><BR>\n')
@@ -333,7 +351,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
         ylabel = r'Median Flux  /  Max Flux'
     if resid:
         plotfile = plotfile.replace('.png', '_resid.png')
-        ylabel = r'Median Fiber Flux  /  Max Fiber Flux  /  Overall Median Flux'
+        ylabel = r'Median Fiber Flux  /  Max Fiber Flux  /  Overall Mean Flux'
 
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
@@ -379,7 +397,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
             cax.xaxis.set_label_position('top') 
             cax.set_xlabel('MJD')
-        ax.text(0.2, 0.25, txt, transform=ax.transAxes, ha='left')
+        ax.text(0.2, 0.19, txt, transform=ax.transAxes, ha='left', bbox=bboxpar)
 
         flux = np.zeros((ndome, len(xarr)))
         for idome in range(ndome):
@@ -419,12 +437,12 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
 
             medresid = np.nanmedian(np.absolute(divmed))
             medresidpercent = (medresid / np.nanmedian(meanflux))*100
-            madresid = dln.mad(divmed)
-            madresidpercent = (madresid / np.nanmedian(meanflux))*100
+            madresid = dln.mad(div)
+            madresidpercent = (madresid / np.nanmean(div))*100
             txt1 = ''#med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
             txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
             #ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
-            ax.text(0.2, 0.15, txt2, transform=ax.transAxes, ha='left')
+            ax.text(0.2, 0.10, txt2, transform=ax.transAxes, ha='left', bbox=bboxpar)
 
         ax.text(0.97,0.06,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                 ha='center', va='bottom', color=chip, bbox=bboxpar)
@@ -487,7 +505,7 @@ def dillum59557(pix=[824,1224], norm=True, resid=True):
             #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
             cax.xaxis.set_label_position('top') 
             cax.set_xlabel('Exposure')
-        ax.text(0.2, 0.25, txt, transform=ax.transAxes, ha='left')
+        ax.text(0.2, 0.19, txt, transform=ax.transAxes, ha='left', bbox=bboxpar)
 
         flux = np.zeros((ndome, len(xarr)))
         for idome in range(ndome):
@@ -525,12 +543,12 @@ def dillum59557(pix=[824,1224], norm=True, resid=True):
 
             medresid = np.nanmedian(np.absolute(divmed))
             medresidpercent = (medresid / np.nanmedian(meanflux))*100
-            madresid = dln.mad(divmed)
-            madresidpercent = (madresid / np.nanmedian(meanflux))
+            madresid = dln.mad(div)
+            madresidpercent = (madresid / np.nanmean(div))*100
             txt1 = ''#med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
-            txt2 = 'MAD = ' + str("%.4f" % round(madresid, 4))# + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
+            txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
             #ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
-            ax.text(0.2, 0.15, txt2, transform=ax.transAxes, ha='left')
+            ax.text(0.2, 0.10, txt2, transform=ax.transAxes, ha='left', bbox=bboxpar)
 
         ax.text(0.97,0.06,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                 ha='center', va='bottom', color=chip, bbox=bboxpar)
