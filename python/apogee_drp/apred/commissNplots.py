@@ -195,13 +195,14 @@ def dillum(mjdstart=59604):
 
     ################################3
     html.write('<H3>Night-to-night variation:</H3>\n')
-    html.write('<P>The following plots show dome flat fluxes since MJD 59590. The leftmost columns of plots,')
-    html.write('shows the median flux in spatial direction over all fibers, taken in pixel slices as indicated')
-    html.write('in the first column of the table. Due to the bimodal fluxes (i.e. green versus blue+red fluxes),')
-    html.write('the fluxes are normalized by the maximum flux in the "Median Flux / Max Flux" column. The rightmost')
-    html.write('column of plots then has the mean flux across all dome flats for each fiber divided out to highlight')
-    html.write('the fiber-to-fiber throughput variations. The Mean Absolute Deviation is given, indicating that')
+    html.write('<P>The following plots show dome flat fluxes since MJD 59590. The leftmost columns of plots, ')
+    html.write('shows the median flux in spatial direction over all fibers, taken in pixel slices as indicated ')
+    html.write('in the first column of the table. Due to the bimodal fluxes (i.e. green versus blue+red fluxes), ')
+    html.write('the fluxes are normalized by the maximum flux in the "Median Flux / Max Flux" column. The rightmost ')
+    html.write('column of plots then has the mean flux across all dome flats for each fiber divided out to highlight ')
+    html.write('the fiber-to-fiber throughput variations. The Mean Absolute Deviation is given, indicating that ')
     html.write('night-to-night variations are typically on the 1.5% level.\n')
+    html.write('<BR>\n')
 
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Mean Flux \n')
