@@ -452,7 +452,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[0, 2047], norm=True, resid=True):
     plt.close('all')
 
 ###########################################################################################
-def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
+def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
 
@@ -461,7 +461,7 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
     if chip == 2: schip = 'c'
 
     plotfile = specdir5 + 'monitor/' + instrument + '/fiber2fiber/tputVar-' + schip + '.png'
-    plotfiles = np.array([plotfile, plotfile.replace('.png','_norm.png'), plotfile.replace('.png','_var.png')])
+    if do59557: plotfile = plotfile.replace('tputVar', 'tputVar59557')
     ylabels = np.array(['Flux', 'Normalized Flux', 'Normalized Flux / Median Fiber Flux'])
     nplots = len(plotfiles)
 
@@ -473,6 +473,7 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
     coltickval = 5
     if mjdstart > 59590: coltickval = 2
     gd, = np.where((allexp[dome]['MJD'] >= mjdstart) & (allexp[dome]['MJD'] != 59566) & (allexp[dome]['NUM'] != 40580049))# & (allexp[dome]['MJD'] != 59557))
+    if do59557: gd, = np.where(allexp['MJD'][dome] == 59557)
     gdcal = allexp[dome][gd]
     umjd = gdcal['MJD']
     if mjdmean: umjd = np.unique(umjd)
@@ -507,11 +508,15 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
     cax = ax_divider.append_axes("top", size="7%", pad="2%")
     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
     cax.xaxis.set_ticks_position("top")
-    cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
-    cax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
     cax.xaxis.set_label_position('top')
-    cax.minorticks_on()
-    ax1.text(0.5, 1.21, 'MJD', transform=ax1.transAxes, ha='center')
+    if do59557:
+        cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax1.text(0.5, 1.21, 'Exposure', transform=ax1.transAxes, ha='center')
+    else:
+        cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
+        cax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        cax.minorticks_on()
+        ax1.text(0.5, 1.21, 'MJD', transform=ax1.transAxes, ha='center')
 
     flux = np.zeros((ndome, len(xarr)))
     for idome in range(ndome):
