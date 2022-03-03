@@ -456,7 +456,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
 
-    fsize = 32
+    fsize = 33
     matplotlib.rcParams.update({'font.size':fsize, 'font.family':'serif'})
 
 
