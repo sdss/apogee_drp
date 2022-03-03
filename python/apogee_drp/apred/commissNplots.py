@@ -555,7 +555,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
 
     ymin,ymax = ax4.get_ylim()
     ax4.set_ylim(0, ymax)
-    ax4.grid(True)
+    #ax4.grid(True)
 
     mad = dln.mad(percentDif)
     med = np.nanmedian(percentDif)
