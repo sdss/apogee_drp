@@ -269,6 +269,10 @@ def dillum(mjdstart=59604):
 
     ################################3
     html.write('<H3>Nightly variation using dome flat sequence from 59557:</H3>\n')
+    html.write('<P>These plots are similar to the above, but looking only at the series of ')
+    html.write('36 dome flats taken on MJD 59557. If we normalize by maximum flux, fiber-to-fiber ')
+    html.write('variations over the course of a night are on the ~1.5% level.</P>\n')
+
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Mean Flux \n')
 
@@ -304,6 +308,8 @@ def dillum(mjdstart=59604):
 
     ################################3
     html.write('<H3>Nightly variation using dome flat sequence from 59557 (no normalization):</H3>\n')
+    html.write('<P>If we apply no normalization, varations are on the ~0.5% level.</P>\n')
+
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Mean Flux \n')
 
