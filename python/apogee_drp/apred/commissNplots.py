@@ -502,7 +502,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
-        ax.text(-0.09, 0.5, ylabels[i], transform=ax.transAxes, rotation=90, ha='left', va='center')
+        ax.text(-0.08, 0.5, ylabels[i], transform=ax.transAxes, rotation=90, ha='left', va='center')
         if i < 3: ax.axes.xaxis.set_ticklabels([])
         i += 1
     ax4.set_xlabel(r'Fiber Index')
