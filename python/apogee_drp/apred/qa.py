@@ -3234,10 +3234,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                             plsumfile = load.filename('PlateSum', plate=int(plate), mjd=cmjd, fps=fps)
                             if os.path.exists(plsumfile):
                                 plsum = fits.getdata(plsumfile,2)
-                                assignedSky, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'SKY'))
-                                assignedTel, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'HOT_STD'))
-                                assignedSci, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'STAR'))
-                                note = '   [' + str(len(assignedSky)).rjust(3) + ', ' + str(len(assignedTel)).rjust(3) + ', ' + str(len(assignedSci)).rjust(3) + ']'
+                                try:
+                                    assignedSky, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'SKY'))
+                                    assignedTel, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'HOT_STD'))
+                                    assignedSci, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'STAR'))
+                                    note = '   [' + str(len(assignedSky)).rjust(3) + ', ' + str(len(assignedTel)).rjust(3) + ', ' + str(len(assignedSci)).rjust(3) + ']'
+                                except:
+                                    note = '   [?]'
                                 #if len(assignedFib) < 1: note = ' (ZERO assigned)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
