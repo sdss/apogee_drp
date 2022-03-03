@@ -559,7 +559,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
 
     mad = dln.mad(percentDif)
     med = np.nanmedian(percentDif)
-    txt = 'median deviation = ' + str("%.3f" % round(med, 3)) + '%'
+    txt = 'median variation = ' + str("%.3f" % round(med, 3)) + '%'
     ax4.text(0.4, 0.95, txt, transform=ax4.transAxes, ha='center', va='top', bbox=bboxpar, c='r')
     ax4.axhline(med, color='r', linestyle='dashed')
 
