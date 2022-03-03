@@ -3131,8 +3131,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
         html.write('<p> <b>Summary files:</b> <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
         #html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
-        html.write( '<P>Yellow: APO 2.5m, Green: LCO 2.5m </P><BR>\n')
-        html.write( '<P>Note: numbers in brackets in the "Plots of Spectra" column give the numbers of assigned skies, tellurics, and science targets.</P><BR>\n')
+        html.write( '<P>Yellow: APO 2.5m, Green: LCO 2.5m <BR>\n')
+        html.write( 'Note: numbers in brackets in the "Plots of Spectra" column give the numbers of assigned skies, tellurics, and science targets.</P>\n')
         #html.write('<br>Click on column headings to sort\n')
 
         # Create web page with entry for each MJD
