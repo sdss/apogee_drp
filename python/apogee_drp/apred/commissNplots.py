@@ -466,7 +466,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
 
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
-    fig = plt.figure(figsize=(28,20))
+    fig = plt.figure(figsize=(28,28))
     xarr = np.arange(0, 300, 1) + 1
 
     coltickval = 5
@@ -483,10 +483,11 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     cmap = cmaps.get_cmap(mycmap, ndome)
     sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
 
-    ax1 = plt.subplot2grid((3, 1), (0, 0))
-    ax2 = plt.subplot2grid((3, 1), (1, 0))
-    ax3 = plt.subplot2grid((3, 1), (2, 0))
-    axes = [ax1, ax2, ax3]
+    ax1 = plt.subplot2grid((4, 1), (0, 0))
+    ax2 = plt.subplot2grid((4, 1), (1, 0))
+    ax3 = plt.subplot2grid((4, 1), (2, 0))
+    ax4 = plt.subplot2grid((4, 1), (3, 0))
+    axes = [ax1, ax2, ax3, ax4]
     i = 0
     for ax in axes:
         ax.set_xlim(0, 301)
@@ -498,11 +499,10 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
         ax.text(-0.06, 0.5, ylabels[i], transform=ax.transAxes, rotation=90, ha='left', va='center')
+        if i < 3: ax.axes.xaxis.set_ticklabels([])
         i += 1
-    ax3.set_xlabel(r'Fiber Index')
+    ax4.set_xlabel(r'Fiber Index')
     ax3.set_ylim(0.75, 1.25)
-    ax1.axes.xaxis.set_ticklabels([])
-    ax2.axes.xaxis.set_ticklabels([])
     ax_divider = make_axes_locatable(ax1)
     cax = ax_divider.append_axes("top", size="7%", pad="2%")
     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
