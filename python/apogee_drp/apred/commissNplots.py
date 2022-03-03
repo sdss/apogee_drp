@@ -456,6 +456,10 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
 
+    fsize = 32
+    matplotlib.rcParams.update({'font.size':fsize, 'font.family':'serif'})
+
+
     if chip == 0: schip = 'a'
     if chip == 1: schip = 'b'
     if chip == 2: schip = 'c'
