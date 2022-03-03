@@ -202,7 +202,7 @@ def dillum(mjdstart=59604):
     html.write('column of plots then has the mean flux across all dome flats for each fiber divided out to highlight ')
     html.write('the fiber-to-fiber throughput variations. The Mean Absolute Deviation is given, indicating that ')
     html.write('night-to-night variations are typically on the 1.5% level.</P>\n')
-    html.write('<BR><BR>\n')
+    html.write('<BR>\n')
 
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Mean Flux \n')
