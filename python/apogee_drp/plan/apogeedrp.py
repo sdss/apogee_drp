@@ -499,6 +499,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
         cal.darkplot(apred=apred,telescope=telescope)
 
 
+    # I could process the individual flat exposures in parallel first
+    # that would dramatically speed things up
+
     # Make flats in parallel
     #-------------------------
     #idl -e "makecal,flat=1,vers='$vers',telescope='$telescope'" >& log/mkflat-$telescope.$host.log

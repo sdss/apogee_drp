@@ -221,6 +221,7 @@ def flatplot(apred='r14',telescope='apo25m'):
     files=np.sort(glob.glob(flatdir+'/'+prefix+'Flat-a-*.fits'))
 
     ny=len(files)//2
+    if ny==0: ny=1
     if ny%2 == 1 : ny+=1
     fig,ax=plots.multi(1,3,figsize=(8,12))
     imfig=[]
