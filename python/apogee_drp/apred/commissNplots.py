@@ -506,7 +506,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
         if i < 3: ax.axes.xaxis.set_ticklabels([])
         i += 1
     ax4.set_xlabel(r'Fiber Index')
-    ax3.set_ylim(0.75, 1.25)
+    ax3.set_ylim(0.9, 1.1)
     ax_divider = make_axes_locatable(ax1)
     cax = ax_divider.append_axes("top", size="7%", pad="2%")
     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
