@@ -461,7 +461,7 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
     if chip == 2: schip = 'c'
 
     plotfile = specdir5 + 'monitor/' + instrument + '/fiber2fiber/tputVar-' + schip + '.png'
-    plotfiles = np.array([plotfile1, plotfile1.replace('.png','_norm.png'), plotfile1.replace('.png','_var.png')])
+    plotfiles = np.array([plotfile, plotfile.replace('.png','_norm.png'), plotfile.replace('.png','_var.png')])
     ylabels = np.array(['Flux', 'Normalized Flux', 'Normalized Flux / Median Fiber Flux'])
     nplots = len(plotfiles)
 
