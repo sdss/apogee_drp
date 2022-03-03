@@ -508,6 +508,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
         i += 1
     ax4.set_xlabel(r'Fiber Index')
     ax3.set_ylim(0.92, 1.08)
+
     ax_divider = make_axes_locatable(ax1)
     cax = ax_divider.append_axes("top", size="7%", pad="2%")
     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
@@ -549,7 +550,10 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
         ax3.plot(xarr, divmed[idome], color=mycolor)
 
     percentDif = np.nanmax(np.absolute(divmed-1),axis=0)*100
-    ax4.scatter(xarr, percentDif, marker='o', c='aquamarine', s=50, edgecolors='k')
+    ax4.bar(xarr, percentDif, color='aquamarine', edgecolor='k')
+
+    lims = ax4.get_ylim()
+    ax4.set_ylim(0, lims[1])
 
     #madresid = dln.mad(div)
     #madresidpercent = (madresid / np.nanmean(div))*100
