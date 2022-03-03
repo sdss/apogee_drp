@@ -496,7 +496,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     i = 0
     for ax in axes:
         ax.set_xlim(0, 301)
-        ax.minorticks_on()
+        if i != 3: ax.minorticks_on()
         ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
         ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
