@@ -462,7 +462,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
 
     plotfile = specdir5 + 'monitor/' + instrument + '/fiber2fiber/tputVar-' + schip + '.png'
     if do59557: plotfile = plotfile.replace('tputVar', 'tputVar59557')
-    ylabels = np.array(['Flux', 'Normalized Flux', 'Normalized Flux / Median Fiber Flux'])
+    ylabels = np.array(['Flux', 'Normalized Flux', 'Normalized Flux / Median Fiber Flux', ''])
 
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
