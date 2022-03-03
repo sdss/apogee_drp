@@ -556,7 +556,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     #txt = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
     #ax3.text(0.2, 0.10, txt, transform=ax3.transAxes, ha='left', bbox=bboxpar)
 
-    fig.subplots_adjust(left=0.08,right=0.988,bottom=0.04,top=0.95,hspace=0.08,wspace=0.1)
+    fig.subplots_adjust(left=0.084,right=0.985,bottom=0.043,top=0.95,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
