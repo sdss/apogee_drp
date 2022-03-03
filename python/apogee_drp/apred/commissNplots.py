@@ -552,8 +552,8 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     percentDif = np.nanmax(np.absolute(divmed-1),axis=0)*100
     ax4.bar(xarr, percentDif, color='aquamarine', edgecolor='k')
 
-    lims = ax4.get_ylim()
-    ax4.set_ylim(0, lims[1])
+    ymin,ymax = ax4.get_ylim()
+    ax4.set_ylim(0, ymax)
 
     #madresid = dln.mad(div)
     #madresidpercent = (madresid / np.nanmean(div))*100
