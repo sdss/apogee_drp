@@ -201,8 +201,8 @@ def dillum(mjdstart=59604):
     html.write('the fluxes are normalized by the maximum flux in the "Median Flux / Max Flux" column. The rightmost ')
     html.write('column of plots then has the mean flux across all dome flats for each fiber divided out to highlight ')
     html.write('the fiber-to-fiber throughput variations. The Mean Absolute Deviation is given, indicating that ')
-    html.write('night-to-night variations are typically on the 1.5% level.\n')
-    html.write('<BR><BR><BR>\n')
+    html.write('night-to-night variations are typically on the 1.5% level.</P>\n')
+    html.write('<BR><BR>\n')
 
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Mean Flux \n')
@@ -239,6 +239,8 @@ def dillum(mjdstart=59604):
 
     ################################3
     html.write('<H3>Night-to-night variation (no normalization):</H3>\n')
+    html.write('<P>The following plots show dome flat fluxes since MJD 59590. The leftmost columns of plots, ')
+
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Mean Flux \n')
 
@@ -389,7 +391,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
             cax.xaxis.set_label_position('top') 
             cax.set_xlabel('MJD')
-        ax.text(0.2, 0.25, txt, transform=ax.transAxes, ha='left')
+        ax.text(0.2, 0.19, txt, transform=ax.transAxes, ha='left', bbox=bboxpar)
 
         flux = np.zeros((ndome, len(xarr)))
         for idome in range(ndome):
@@ -434,7 +436,7 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
             txt1 = ''#med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
             txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
             #ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
-            ax.text(0.2, 0.15, txt2, transform=ax.transAxes, ha='left')
+            ax.text(0.2, 0.10, txt2, transform=ax.transAxes, ha='left', bbox=bboxpar)
 
         ax.text(0.97,0.06,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                 ha='center', va='bottom', color=chip, bbox=bboxpar)
@@ -497,7 +499,7 @@ def dillum59557(pix=[824,1224], norm=True, resid=True):
             #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
             cax.xaxis.set_label_position('top') 
             cax.set_xlabel('Exposure')
-        ax.text(0.2, 0.25, txt, transform=ax.transAxes, ha='left')
+        ax.text(0.2, 0.19, txt, transform=ax.transAxes, ha='left', bbox=bboxpar)
 
         flux = np.zeros((ndome, len(xarr)))
         for idome in range(ndome):
@@ -540,7 +542,7 @@ def dillum59557(pix=[824,1224], norm=True, resid=True):
             txt1 = ''#med = ' + str("%.1f" % round(medresid, 1)) + ' (' + str("%.1f" % round(medresidpercent, 1)) + '%)'
             txt2 = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
             #ax.text(0.1, 0.15, txt1+',   '+txt2, transform=ax.transAxes, ha='left')
-            ax.text(0.2, 0.15, txt2, transform=ax.transAxes, ha='left')
+            ax.text(0.2, 0.10, txt2, transform=ax.transAxes, ha='left', bbox=bboxpar)
 
         ax.text(0.97,0.06,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                 ha='center', va='bottom', color=chip, bbox=bboxpar)
