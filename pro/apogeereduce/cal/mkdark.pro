@@ -71,7 +71,7 @@ for ichip=0,n_elements(chips)-1 do begin
   for jj=0,n_elements(ims)-1 do begin
     i = ims[jj]
     if not keyword_set(cmjd) then cm=getcmjd(i) else cm=cmjd
-    print,strtrim(jj,2)+'/'+strtrim(n_elements(ims),2),chip,i
+    print,strtrim(jj,2)+'/'+strtrim(n_elements(ims),2),' ',chip,i
 
     ;; Process (bias-only) each individual frame
     d = process(cm,i,chip,head,r,step=step,/nofs,/nofix,/nocr)
