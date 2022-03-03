@@ -486,7 +486,7 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
     ax1 = plt.subplot2grid((3, 1), (0, 0))
     ax2 = plt.subplot2grid((3, 1), (1, 0))
     ax3 = plt.subplot2grid((3, 1), (2, 0))
-    axes = [ax1, ax2, ax3]
+    axes = np.array([ax1, ax2, ax3])
     for ax in axes():
         ax.set_xlim(0, 301)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
