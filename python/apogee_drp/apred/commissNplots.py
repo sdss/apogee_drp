@@ -486,6 +486,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     mycmap = 'brg_r'
     cmap = cmaps.get_cmap(mycmap, ndome)
     sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
+    if do59557: sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
 
     ax1 = plt.subplot2grid((4, 1), (0, 0))
     ax2 = plt.subplot2grid((4, 1), (1, 0))
