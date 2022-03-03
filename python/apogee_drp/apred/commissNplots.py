@@ -487,6 +487,7 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
     ax2 = plt.subplot2grid((3, 1), (1, 0))
     ax3 = plt.subplot2grid((3, 1), (2, 0))
     axes = [ax1, ax2, ax3]
+    i = 0
     for ax in axes:
         ax.set_xlim(0, 301)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
@@ -496,9 +497,10 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
+        ax.text(-0.08, 0.5, ylabels[i], transform=ax.transAxes, rotation=90, ha='left', va='center')
+        i += 1
     ax3.set_xlabel(r'Fiber Index')
     ax3.set_ylim(0.75, 1.25)
-    ax1.set_ylabel(ylabels[0])
     ax2.set_ylabel(ylabels[1])
     ax3.set_ylabel(ylabels[2])
     ax1.axes.xaxis.set_ticklabels([])
