@@ -554,6 +554,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
 
     ymin,ymax = ax4.get_ylim()
     ax4.set_ylim(0, ymax)
+    ax4.grid(True)
 
     #madresid = dln.mad(div)
     #madresidpercent = (madresid / np.nanmean(div))*100
