@@ -513,13 +513,14 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
     cax.xaxis.set_ticks_position("top")
     cax.xaxis.set_label_position('top')
+    cax.minorticks_on()
     if do59557:
-        #cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        cax.xaxis.set_major_locator(ticker.MultipleLocator(5))
+        cax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax1.text(0.5, 1.23, 'Exposure', transform=ax1.transAxes, ha='center')
     else:
         cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
         cax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-        cax.minorticks_on()
         ax1.text(0.5, 1.23, 'MJD', transform=ax1.transAxes, ha='center')
 
     flux = np.zeros((ndome, len(xarr)))
