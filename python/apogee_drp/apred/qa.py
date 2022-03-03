@@ -3217,9 +3217,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                             html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                     else:
                         if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)<BR>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+' (failed)<BR>\n')
                         else:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)\n')
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+' (failed)\n')
 
                 # Column 7: Visit spectra plots
                 html.write('<TD align="left">')
@@ -3246,9 +3246,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                             html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>'+note+'\n')
                     else:
                         if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</FONT><BR>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT><BR>\n')
                         else:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</FONT>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
 
                 # Column 7: Combined files for this night
                 #html.write('<TD>\n')
