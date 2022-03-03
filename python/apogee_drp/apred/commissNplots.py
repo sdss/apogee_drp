@@ -558,8 +558,9 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     ax4.grid(True)
 
     mad = dln.mad(percentDif)
-    txt = 'MAD = ' + str("%.3f" % round(mad, 3)) + '%'
-    ax4.text(0.5, 0.95, txt, transform=ax3.transAxes, ha='center', va='top', bbox=bboxpar)
+    med = np.nanmedian(percentDif)
+    txt = 'median deviation = ' + str("%.3f" % round(med, 3)) + '%'
+    ax4.text(0.5, 0.95, txt, transform=ax4.transAxes, ha='center', va='top', bbox=bboxpar)
 
     fig.subplots_adjust(left=0.084,right=0.985,bottom=0.043,top=0.95,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
