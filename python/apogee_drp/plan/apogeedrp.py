@@ -399,16 +399,61 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
 
     # Maybe have an option to copy/symlink them from a previous apred version
 
-    # Make darks sequentially
-    #-------------------------
+
+    # Make Detector and Linearity 
+    #----------------------------
+    # MKDET.PRO makes both
+    detdict = allcaldict['det']
+    logger.info('--------------------------------------------')
+    logger.info('Making master Detector/Linearity in parallel')
+    logger.info('============================================')
+    logger.info('Slurm settings: '+str(slurm))
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkdet', **slurm)
+    docal = np.zeros(len(detdict),bool)
+    for i in range(len(detdict)):
+        name = detdict['name'][i]
+        if np.sum((mjds >= detdict['mjd1'][i]) & (mjds <= detdict['mjd2'][i])) > 0:
+            outfile = load.filename('Detector',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mkdet-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --det '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            #logfiles.append(logfile1)
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                if load.exists('Detector',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[k] = False
+            if docal[i]:
+                logger.info('Detector file %d : %s' % (i+1,name))
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
+                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+    if np.sum(docal)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    else:
+        logger.info('No master Detector calibration files need to be run')
+    del queue    
+
+
+    # Make darks in parallel
+    #-----------------------
     # they take too much memory to run in parallel
     #idl -e "makecal,dark=1,vers='$vers',telescope='$telescope'" >& log/mkdark-$telescope.$host.log
     #darkplot --apred $vers --telescope $telescope
     darkdict = allcaldict['dark']
     logger.info('')
-    logger.info('--------------------------------')
-    logger.info('Making master darks sequentially')
-    logger.info('================================')
+    logger.info('-------------------------------')
+    logger.info('Making master darks in parallel')
+    logger.info('===============================')
     # Give each job LOTS of memory
     slurm1 = slurm.copy()
     slurm1['nodes'] = 2
@@ -421,7 +466,8 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(darkdict)):
         name = darkdict['name'][i]
         if np.sum((mjds >= darkdict['mjd1'][i]) & (mjds <= darkdict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkdark-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            outfile = load.filename('Dark',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mkdark-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -433,13 +479,13 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                outfile = load.filename('Dark',num=name,chips=True)
                 if load.exists('Dark',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[k] = False
             if docal[i]:
                 logger.info('Dark file %d : %s' % (i+1,name))
-                logger.info(logfile1)
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
@@ -468,7 +514,8 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(flatdict)):
         name = flatdict['name'][i]
         if np.sum((mjds >= flatdict['mjd1'][i]) & (mjds <= flatdict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkflat-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            outfile = load.filename('Flat',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mkflat-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -480,13 +527,13 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                outfile = load.filename('Flat',num=name,chips=True)
                 if load.exists('Flat',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
                 logger.info('Flat file %d : %s' % (i+1,name))
-                logger.info(logfile1)
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
@@ -514,7 +561,8 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(bpmdict)):
         name = bpmdict['name'][i]
         if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkbpm-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            outfile = load.filename('BPM',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mkbpm-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -526,13 +574,13 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                outfile = load.filename('BPM',num=name,chips=True)
                 if load.exists('BPM',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
                 logger.info('BPM file %d : %s' % (i+1,name))
-                logger.info(logfile1)
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
@@ -557,7 +605,8 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(littdict)):
         name = littdict['name'][i]
         if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklittrow-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            outfile = load.filename('Littrow',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mklittrow-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -569,13 +618,13 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                outfile = load.filename('Littrow',num=name,chips=True)
                 if load.exists('Littrow',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
                 logger.info('Littrow file %d : %s' % (i+1,name))
-                logger.info(logfile1)
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
@@ -599,7 +648,8 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(responsedict)):
         name = responsedict['name'][i]
         if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkresponse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            outfile = load.filename('Response',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mkresponse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -611,13 +661,13 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                outfile = load.filename('Response',num=name,chips=True)
                 if load.exists('Response',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[k] = False
             if docal[i]:
                 logger.info('Response file %d : %s' % (i+1,name))
-                logger.info(logfile1)
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
@@ -684,7 +734,8 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     for i in range(len(littdict)):
         name = lsfdict['name'][i]
         if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:
-            logfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mklsf-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            outfile = load.filename('LSF',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mklsf-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -696,13 +747,13 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                outfile = load.filename('LSF',num=name,chips=True)
                 if load.exists('LSF',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
                 logger.info('LSF file %d : %s' % (i+1,name))
-                logger.info(logfile1)
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
@@ -789,6 +840,9 @@ def runap3d(load,mjds,slurm,clobber=False,logger=None):
             cmd1 = 'ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope)
             if clobber:
                 cmd1 += ' --clobber'
+            logger.info('Exposure %d : %d' % (i+1,num))
+            logger.info('Command : '+cmd1)
+            logger.info('Logfile : '+logfile1)
             queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
     if np.sum(do3d)>0:
         queue.commit(hard=True,submit=True)
@@ -935,7 +989,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                     if fps: cmd1 += ' --psflibrary'
                     if clobber: cmd1 += ' --clobber'
                     logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
-                logger.info(logfile1)
+                logger.info('Logfile : '+logfile1)
                 logfiles.append(logfile1)
                 # Check if files exist already
                 docal[k] = True
@@ -946,7 +1000,8 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                         docal[k] = False
                 if docal[k]:
                     logger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
-                    logger.info(logfile1)
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
                     queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
             if np.sum(docal)>0:
                 queue.commit(hard=True,submit=True)
@@ -1109,12 +1164,15 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='apred', **slurm1)
-    for pf in planfiles:
+    for i,pf in enumerate(planfiles):
+        logger.info('planfile %d : %s' % (i+1,pf))
         logfile = pf.replace('.yaml','_pbs.'+logtime+'.log')
         errfile = logfile.replace('.log','.err')
         cmd = 'apred {0}'.format(pf)
         if clobber:
             cmd += ' --clobber'
+        logger.info('Command : '+cmd)
+        logger.info('Logfile : '+logfile)
         queue.append(cmd, outfile=logfile,errfile=errfile)
     queue.commit(hard=True,submit=True)
     logger.info('PBS key is '+queue.key)
@@ -1244,7 +1302,8 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
                 dorv[i] = False
         if dorv[i]:
             logger.info('rv %d : %s' % (i+1,obj))
-            logger.info(logfile)
+            logger.info('Command : '+cmd)
+            logger.info('Logfile : '+logfile)
             queue.append(cmd,outfile=logfile,errfile=errfile)
     if np.sum(dorv)>0:
         logger.info('Running RV on '+str(np.sum(dorv))+' stars')
@@ -1417,7 +1476,8 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='apqa', **slurm1)
-    for pf in planfiles:
+    for i,pf in enumerate(planfiles):
+        logger.info('planfile %d : %d' % (i+1,pf))
         fdir = os.path.dirname(pf)
         # apPlan-1491-59587.yaml
         base = os.path.basename(pf)
@@ -1428,6 +1488,8 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
         errfile = logfile.replace('.log','.err')
         cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjd,observatory,apred,telescope,plate)
         cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
+        logger.info('Command : '+cmd)
+        logger.info('Logfile : '+logfile)
         queue.append(cmd, outfile=logfile, errfile=errfile)
     queue.commit(hard=True,submit=True)
     logger.info('PBS key is '+queue.key)
@@ -1677,9 +1739,11 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
         if os.path.exists(os.path.dirname(mkvoutfile))==False:
             os.makedirs(os.path.dirname(mkvoutfile))
         cmd = 'mkvers {0}'.format(apred)
+        rootLogger.info('Command : '+cmd)
+        rootLogger.info('Logfile : '+mkvoutfile)
         queue.append(cmd,outfile=mkvoutfile, errfile=mkverrfile)
         queue.commit(hard=True,submit=True)
-        runapogee.queue_wait(queue,sleeptime=30,logger=rootLogger,verbose=True)  # wait for jobs to complete 
+        runapogee.queue_wait(queue,sleeptime=10,logger=rootLogger,verbose=True)  # wait for jobs to complete 
         del queue    
 
     # 2) Master calibration products, make sure to do them in the right order
