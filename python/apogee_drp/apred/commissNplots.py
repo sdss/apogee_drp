@@ -308,7 +308,7 @@ def dillum(mjdstart=59604):
 
     ################################3
     html.write('<H3>Nightly variation using dome flat sequence from 59557 (no normalization):</H3>\n')
-    html.write('<P>If we apply no normalization, varations are on the ~0.5% level.</P>\n')
+    html.write('<P>If we apply no normalization, nightly varations are on the ~0.5% level.</P>\n')
 
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Mean Flux \n')
