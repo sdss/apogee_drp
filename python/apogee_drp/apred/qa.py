@@ -3234,10 +3234,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                             visSumFile = load.filename('VisitSum', plate=int(plate), mjd=cmjd, fps=fps)
                             if os.path.exists(visSumFile):
                                 visSum = fits.getdata(visSumFile)
-                                assignedSky, = np.where((visSum['assigned']) & (visSum['on_target']) & (visSum['objtype'] == 'SKY'))
+                                assignedSky, = np.where((visSum['assigned']) & (visSum['on_target']) & (visSum['objtype'] == ''))
                                 assignedTel, = np.where((visSum['assigned']) & (visSum['on_target']) & (visSum['objtype'] == 'HOT_STD'))
                                 assignedSci, = np.where((visSum['assigned']) & (visSum['on_target']) & (visSum['objtype'] != 'SKY') & (visSum['objtype'] != 'HOT_STD') & (visSum['objtype'] != ''))
-                                note = ' [' + str(len(assignedSky)) + ', ' + str(len(assignedTel)) + ', ' + str(len(assignedSci)) + ']'
+                                note = '   [' + str(len(assignedSky)).rjust(3) + ', ' + str(len(assignedTel)).rjust(3) + ', ' + str(len(assignedSci)).rjust(3) + ']'
                                 #if len(assignedFib) < 1: note = ' (ZERO assigned)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
