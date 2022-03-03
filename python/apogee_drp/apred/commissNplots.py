@@ -562,8 +562,8 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     vmax = np.nanmax(percentDif)
     vmin = np.nanmin(percentDif)
     ax4.text(0.4, 0.95, 'median = ' + str("%.3f" % round(med, 3)) + '%', transform=ax4.transAxes, ha='center', va='top', bbox=bboxpar, c='r')
-    ax4.text(0.4, 0.85, 'max = ' + str("%.3f" % round(vmax, 3)) + '%', transform=ax4.transAxes, ha='center', va='top', bbox=bboxpar, c='r')
-    ax4.text(0.4, 0.75, 'min = ' + str("%.3f" % round(vmin, 3)) + '%', transform=ax4.transAxes, ha='center', va='top', bbox=bboxpar, c='r')
+    ax4.text(0.4, 0.85, 'max = ' + str("%.3f" % round(vmax, 3)) + '%', transform=ax4.transAxes, ha='center', va='top', bbox=bboxpar, c='k')
+    ax4.text(0.4, 0.75, 'min = ' + str("%.3f" % round(vmin, 3)) + '%', transform=ax4.transAxes, ha='center', va='top', bbox=bboxpar, c='k')
     ax4.axhline(med, color='r', linestyle='dashed')
 
     fig.subplots_adjust(left=0.084,right=0.985,bottom=0.043,top=0.95,hspace=0.08,wspace=0.1)
