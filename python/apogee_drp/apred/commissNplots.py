@@ -557,10 +557,9 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     ax4.set_ylim(0, ymax)
     ax4.grid(True)
 
-    #madresid = dln.mad(div)
-    #madresidpercent = (madresid / np.nanmean(div))*100
-    #txt = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
-    #ax3.text(0.2, 0.10, txt, transform=ax3.transAxes, ha='left', bbox=bboxpar)
+    mad = dln.mad(div)
+    txt = 'MAD = ' + str("%.3f" % round(madresid, 3)) + '%'
+    ax4.text(0.5, 0.95, txt, transform=ax3.transAxes, ha='center', va='top', bbox=bboxpar)
 
     fig.subplots_adjust(left=0.084,right=0.985,bottom=0.043,top=0.95,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
