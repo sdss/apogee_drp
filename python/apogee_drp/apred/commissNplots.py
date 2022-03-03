@@ -507,7 +507,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
         ax.text(-0.082, 0.5, ylabels[i], transform=ax.transAxes, rotation=90, ha='left', va='center')
         if i < 3: ax.axes.xaxis.set_ticklabels([])
         i += 1
-    ax4.set_xlabel(r'Fiber Index')
+    ax4.set_xlabel(r'Fiber ID')
     ax3.set_ylim(0.92, 1.08)
 
     ax_divider = make_axes_locatable(ax1)
