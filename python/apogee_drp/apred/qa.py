@@ -3131,13 +3131,14 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
         html.write('<p> <b>Summary files:</b> <a href="'+visSumPathN+'">allVisit</a>,  <a href="'+starSumPathN+'">allStar</a></p>\n')
         #html.write('<BR>LCO 2.5m Summary Files: <a href="'+visSumPathS+'">allVisit</a>,  <a href="'+starSumPathS+'">allStar</a></p>\n')
-        html.write( 'Yellow: APO 2.5m, Green: LCO 2.5m <BR>\n')
+        html.write( '<P>Yellow: APO 2.5m, Green: LCO 2.5m </P><BR>\n')
+        html.write( '<P>Note: numbers in brackets in the "Plots of Spectra" column give the numbers of assigned skies, tellurics, and science targets.</P><BR>\n')
         #html.write('<br>Click on column headings to sort\n')
 
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#eaeded"><TH>(1)<BR>Date <TH>(2)<BR>Observer Log <TH>(3)<BR>Exposure Log <TH>(4)<BR>Raw Data <TH>(5)<BR>Night QA')
-        html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Plots of Spectra <TH>(8)<BR>Summary Files <TH>(9)<BR> Phase\n')
+        html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Plots of Spectra <TH>(8)<BR>Summary Files <TH>(9)Moon<BR>Phase\n')
         for i in range(nmjd):
             fps = False
             if mjd[i] > 59556: fps = True
@@ -3209,25 +3210,16 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     # Check for failed plates
                     plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
                     if os.path.exists(plateQAfile):
-                        note = ''
-                        if fps:
-                            visSumFile = load.filename('VisitSum', plate=int(plate), mjd=cmjd, fps=fps)
-                            if os.path.exists(visSumFile):
-                                visSum = fits.getdata(visSumFile)
-                                assignedFib, = np.where(visSum['assigned'] == 1)
-                                note = ' (' + str(len(assignedFib)) + ' assigned)'
-                                #if len(assignedFib) < 1: note = ' (ZERO assigned)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>'+note+'<BR>\n')
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                         else:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A>'+note+'<BR>\n')
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                     else:
-                        note = ' (failed)'
                         if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</A>'+note+'<BR>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)<BR>\n')
                         else:
-                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</A>'+note+'\n')
+                            html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+' (failed)\n')
 
                 # Column 7: Visit spectra plots
                 html.write('<TD align="left">')
@@ -3237,11 +3229,21 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     # Check for failed plates
                     plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
                     if os.path.exists(plateQAfile):
+                        note = ''
+                        if fps:
+                            visSumFile = load.filename('VisitSum', plate=int(plate), mjd=cmjd, fps=fps)
+                            if os.path.exists(visSumFile):
+                                visSum = fits.getdata(visSumFile)
+                                assignedSky, = np.where((visSum['assigned']) & (visSum['on_target']) & (visSum['objtype'] == 'SKY'))
+                                assignedTel, = np.where((visSum['assigned']) & (visSum['on_target']) & (visSum['objtype'] == 'HOT_STD'))
+                                assignedSci, = np.where((visSum['assigned']) & (visSum['on_target']) & (visSum['objtype'] !== 'SKY') & (visSum['objtype'] !== 'HOT_STD') & (visSum['objtype'] !== ''))
+                                note = ' [' + str(len(assignedSky)) + ', ' + str(len(assignedTel)) + ', ' + str(len(assignedSci)) + ']'
+                                #if len(assignedFib) < 1: note = ' (ZERO assigned)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A><BR>\n')
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>'+note+'<BR>\n')
                         else:
-                            html.write('('+str(j+1)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>\n')
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>'+note+'\n')
                     else:
                         if j < nplatesall:
                             html.write('<FONT COLOR="black">('+str(j+1)+') '+plate+': '+field+'</FONT><BR>\n')
