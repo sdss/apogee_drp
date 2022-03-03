@@ -989,8 +989,11 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                     rootLogger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     do3d[i] = False
             if do3d[i]:
-                queue.append('ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope),
-                             outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+                cmd1 = 'ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope)
+                rootLogger.info('Exposure %d : %d' % (i+1,num))
+                rootLogger.info('Command : '+cmd1)
+                rootLogger.info('Logfile : '+logfile1)
+                queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
         if np.sum(do3d)>0:
             queue.commit(hard=True,submit=True)
             rootLogger.info('PBS key is '+queue.key)
@@ -1089,8 +1092,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
                             docal[k] = False
                     if docal[k]:
                         rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
-                        rootLogger.info(cmd1)
-                        rootLogger.info(logfile1)
+                        rootLogger.info('Command : '+cmd1)
+                        rootLogger.info('Logfile : '+logfile1)
                         queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
                 if np.sum(docal)>0:
                     queue.commit(hard=True,submit=True)
@@ -1153,8 +1156,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
             logfile = pf.replace('.yaml','_pbs.'+logtime+'.log')
             errfile = logfile.replace('.log','.err')
             cmd1 = 'apred {0}'.format(pf)
-            rootLogger.info(cmd1)
-            rootLogger.info(logfile)
+            rootLogger.info('Command : '+cmd1)
+            rootLogger.info('Logfile : '+logfile)
             queue.append(cmd1, outfile=logfile, errfile=errfile)
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)
@@ -1197,8 +1200,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
             logfile = apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.log')
             errfile = logfile.replace('.log','.err')
             cmd1 = 'rv %s %s %s -c -v -m %s' % (obj,apred,telescope,mjd5)
-            rootLogger.info(cmd1)
-            rootLogger.info(logfile)
+            rootLogger.info('Command : '+cmd1)
+            rootLogger.info('Logfile : '+logfile)
             queue.append(cmd1,outfile=logfile,errfile=errfile)
         queue.commit(hard=True,submit=True)
         rootLogger.info('PBS key is '+queue.key)        
