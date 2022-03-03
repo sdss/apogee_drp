@@ -557,7 +557,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     ax4.set_ylim(0, ymax)
     ax4.grid(True)
 
-    mad = dln.mad(div)
+    mad = dln.mad(percentDif)
     txt = 'MAD = ' + str("%.3f" % round(madresid, 3)) + '%'
     ax4.text(0.5, 0.95, txt, transform=ax3.transAxes, ha='center', va='top', bbox=bboxpar)
 
