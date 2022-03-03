@@ -214,13 +214,13 @@ def dillum(mjdstart=59604):
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
-    pfile = '../dillum_FPSonly_224-624.png'
-    pfile1 = pfile.replace('.png','_norm.png')
-    pfile2 = pfile1.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    #pfile = '../dillum_FPSonly_224-624.png'
+    #pfile1 = pfile.replace('.png','_norm.png')
+    #pfile2 = pfile1.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
     pfile = '../dillum_FPSonly_824-1224.png'
     pfile1 = pfile.replace('.png','_norm.png')
@@ -228,13 +228,13 @@ def dillum(mjdstart=59604):
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
-    pfile = '../dillum_FPSonly_1424-1824.png'
-    pfile1 = pfile.replace('.png','_norm.png')
-    pfile2 = pfile1.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    #pfile = '../dillum_FPSonly_1424-1824.png'
+    #pfile1 = pfile.replace('.png','_norm.png')
+    #pfile2 = pfile1.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
     html.write('</table><BR><BR><HR>\n')
 
     ################################3
@@ -249,21 +249,21 @@ def dillum(mjdstart=59604):
     pfile1 = pfile.replace('.png','_resid.png')
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
-    pfile = '../dillum_FPSonly_224-624.png'
-    pfile1 = pfile.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    #pfile = '../dillum_FPSonly_224-624.png'
+    #pfile1 = pfile.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
     pfile = '../dillum_FPSonly_824-1224.png'
     pfile1 = pfile.replace('.png','_resid.png')
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
-    pfile = '../dillum_FPSonly_1424-1824.png'
-    pfile1 = pfile.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    #pfile = '../dillum_FPSonly_1424-1824.png'
+    #pfile1 = pfile.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('</table><BR><BR><HR>\n')
 
 
@@ -283,13 +283,13 @@ def dillum(mjdstart=59604):
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
-    pfile = '../dillum59557_224-624.png'
-    pfile1 = pfile.replace('.png','_norm.png')
-    pfile2 = pfile1.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    #pfile = '../dillum59557_224-624.png'
+    #pfile1 = pfile.replace('.png','_norm.png')
+    #pfile2 = pfile1.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
     pfile = '../dillum59557_824-1224.png'
     pfile1 = pfile.replace('.png','_norm.png')
@@ -297,13 +297,13 @@ def dillum(mjdstart=59604):
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
-    pfile = '../dillum59557_1424-1824.png'
-    pfile1 = pfile.replace('.png','_norm.png')
-    pfile2 = pfile1.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    #pfile = '../dillum59557_1424-1824.png'
+    #pfile1 = pfile.replace('.png','_norm.png')
+    #pfile2 = pfile1.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile2 + ' target="_blank"><IMG SRC=' + pfile2 + ' HEIGHT=400></A>\n')
     html.write('</table><BR><BR><HR>\n')
 
     ################################3
@@ -318,21 +318,21 @@ def dillum(mjdstart=59604):
     pfile1 = pfile.replace('.png','_resid.png')
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
-    pfile = '../dillum59557_224-624.png'
-    pfile1 = pfile.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">224:624\n')
+    #pfile = '../dillum59557_224-624.png'
+    #pfile1 = pfile.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">824:1224\n')
     pfile = '../dillum59557_824-1224.png'
     pfile1 = pfile.replace('.png','_resid.png')
     html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
     html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
-    html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
-    pfile = '../dillum59557_1424-1824.png'
-    pfile1 = pfile.replace('.png','_resid.png')
-    html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
-    html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
+    #html.write('<TR><TD align="center" bgcolor="'+thcolor+'">1424:1824\n')
+    #pfile = '../dillum59557_1424-1824.png'
+    #pfile1 = pfile.replace('.png','_resid.png')
+    #html.write('<TD><A HREF=' + pfile + ' target="_blank"><IMG SRC=' + pfile + ' HEIGHT=400></A>\n')
+    #html.write('<TD><A HREF=' + pfile1 + ' target="_blank"><IMG SRC=' + pfile1 + ' HEIGHT=400></A>\n')
     html.write('</table><BR><BR><HR>\n')
 
     html.write('<BR><BR>\n')
