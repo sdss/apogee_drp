@@ -511,7 +511,7 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
     cax.xaxis.set_ticks_position("top")
     cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
     cax.xaxis.set_label_position('top') 
-    ax1.text(0.5, 1.08, 'MJD', transform=ax1.transAxes, ha='center')
+    ax1.text(0.5, 1.16, 'MJD', transform=ax1.transAxes, ha='center')
 
     flux = np.zeros((ndome, len(xarr)))
     for idome in range(ndome):
