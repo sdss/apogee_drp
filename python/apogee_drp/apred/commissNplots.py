@@ -511,7 +511,7 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
     cax.xaxis.set_ticks_position("top")
     cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
     cax.xaxis.set_label_position('top') 
-    ax1.text(0.5, 1.2, 'MJD', transform=ax1.transAxes, ha='center')
+    ax1.text(0.5, 1.21, 'MJD', transform=ax1.transAxes, ha='center')
 
     flux = np.zeros((ndome, len(xarr)))
     for idome in range(ndome):
@@ -545,7 +545,7 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
     #txt = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
     #ax3.text(0.2, 0.10, txt, transform=ax3.transAxes, ha='left', bbox=bboxpar)
 
-    fig.subplots_adjust(left=0.065,right=0.985,bottom=0.045,top=0.945,hspace=0.08,wspace=0.1)
+    fig.subplots_adjust(left=0.065,right=0.988,bottom=0.045,top=0.945,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
