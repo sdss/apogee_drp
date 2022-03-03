@@ -538,10 +538,10 @@ def dillum_FPSonly2(mjdstart=59557, mjdmean=False, chip=2):
         mycolor = cmap(idome)
         ax3.plot(xarr, divmed[idome], color=mycolor)
 
-    madresid = dln.mad(div)
-    madresidpercent = (madresid / np.nanmean(div))*100
-    txt = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
-    ax3.text(0.2, 0.10, txt, transform=ax3.transAxes, ha='left', bbox=bboxpar)
+    #madresid = dln.mad(div)
+    #madresidpercent = (madresid / np.nanmean(div))*100
+    #txt = 'MAD = ' + str("%.3f" % round(madresid, 3)) + ' (' + str("%.3f" % round(madresidpercent, 3)) + '%)'
+    #ax3.text(0.2, 0.10, txt, transform=ax3.transAxes, ha='left', bbox=bboxpar)
 
     fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
