@@ -239,7 +239,7 @@ def dillum(mjdstart=59604):
 
     ################################3
     html.write('<H3>Night-to-night variation (no normalization):</H3>\n')
-    html.write('<P>The following plots show dome flat fluxes since MJD 59590. The leftmost columns of plots, ')
+    html.write('<P>On the other hand, if we skip the normalization step, variations are on the 3.2% level.</P>\n')
 
     html.write('<TABLE BORDER=2>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Mean Flux \n')
