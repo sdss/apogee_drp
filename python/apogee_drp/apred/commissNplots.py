@@ -195,7 +195,7 @@ def dillum(mjdstart=59604):
     ################################3
     html.write('<H3>Night-to-night variation:</H3>\n')
     html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Mean Flux \n')
 
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
     pfile = '../dillum_FPSonly_0-2047.png'
@@ -230,7 +230,7 @@ def dillum(mjdstart=59604):
     ################################3
     html.write('<H3>Night-to-night variation (no normalization):</H3>\n')
     html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Median Flux \n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Mean Flux \n')
 
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
     pfile = '../dillum_FPSonly_0-2047.png'
@@ -258,7 +258,7 @@ def dillum(mjdstart=59604):
     ################################3
     html.write('<H3>Nightly variation using dome flat sequence from 59557:</H3>\n')
     html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Median Flux \n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Flux / Max Flux <TH>Median Flux / Max Flux / Overall Mean Flux \n')
 
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
     pfile = '../dillum59557_0-2047.png'
@@ -293,7 +293,7 @@ def dillum(mjdstart=59604):
     ################################3
     html.write('<H3>Nightly variation using dome flat sequence from 59557 (no normalization):</H3>\n')
     html.write('<TABLE BORDER=2>\n')
-    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Median Flux \n')
+    html.write('<TR bgcolor="'+thcolor+'"><TH>Pixels <TH>Median Flux <TH>Median Fiber Flux / Overall Mean Flux \n')
 
     html.write('<TR><TD align="center" bgcolor="'+thcolor+'">all\n')
     pfile = '../dillum59557_0-2047.png'
