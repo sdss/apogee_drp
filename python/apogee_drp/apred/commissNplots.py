@@ -490,9 +490,9 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     i = 0
     for ax in axes:
         ax.set_xlim(0, 301)
+        ax.minorticks_on()
         ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
         ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-        ax.minorticks_on()
         ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
@@ -509,7 +509,7 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
     cax.xaxis.set_ticks_position("top")
     cax.xaxis.set_label_position('top')
     if do59557:
-        cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        #cax.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.text(0.5, 1.21, 'Exposure', transform=ax1.transAxes, ha='center')
     else:
         cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
@@ -528,8 +528,6 @@ def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
             flux[idome][74] = np.nanmean([flux[idome][72],flux[idome][73],flux[idome][75],flux[idome][76]])
             flux[idome][224] = np.nanmean([flux[idome][222],flux[idome][223],flux[idome][225],flux[idome][226]])
             print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(flux[idome]))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
-            #mnf = np.nanmin(flux[idome][135:145])
-            #if (ichip == 0) & (mnf < 7500): print("BAD FLAT")
             mycolor = cmap(idome)
             ax1.plot(xarr, flux[idome], color=mycolor)
             flux[idome] = flux[idome] / np.nanmedian(flux[idome])
