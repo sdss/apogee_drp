@@ -1055,7 +1055,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
             gd, = np.where((dtrace['MJD'] > 50000) & (dtrace['GAUSS_NPEAKS'][:,1] > 295))
             gdtrace = dtrace[gd]
-            gcent = gdtrace['GAUSS_CENT'][:,:,gfibers]
+            gcent = gdtrace['GAUSS_CENT'][:,:,fibers]
             xvals = gdtrace['MJD']
 
             for ichip in range(nchips):
