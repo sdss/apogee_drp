@@ -382,12 +382,17 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
                     subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
                 elif d=='fiber':
-                    # Create symlinks for all the fiber cal files
+                    # Create symlinks for all the fiber cal files, PSF, EPSF, ETrace
                     caldict = mkcal.readcal(caldir+obs+'.par')
                     fiberdict = caldict['fiber']
                     for f in fiberdict['name']:
                         subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+f+'.fits .'],shell=True)
                         subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSF-?-'+f+'.fits .'],shell=True)
+                        tsrcdir = apogee_redux+linkvers+'/cal/'+obs+'/trace'
+                        tdestdir = apogee_redux+apred+'/cal/'+obs+'/trace'
+                        os.chdir(tdestdir)
+                        subprocess.run(['ln -s '+tsrcdir+'/'+prefix+'ETrace-?-'+f+'.fits .'],shell=True)
+                        os.chdir(destdir)
                 else:
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
         return
