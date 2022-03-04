@@ -1145,7 +1145,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 yvals = qpos[:, ichip, fib]
                 ax.scatter(qmjd, yvals, marker='o', s=markersz, c='r', alpha=alf, 
-                           label='fib ' + str(fib)#s[ifib]))
+                           label='fib ' + str(fib))#s[ifib]))
 
                 #if ichip == 0: 
                 #    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
