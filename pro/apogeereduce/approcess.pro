@@ -111,7 +111,7 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
     ;; Exposure loop
     for inum=0,n_elements(nums)-1 do begin
       num = nums[inum]
-      if n_elements(cmjd) eq 0 then cmjd=getcmjd(num)
+      if n_elements(cmjd) eq 0 then cmjd=getcmjd(long(num))
       if n_elements(outdir) eq 0 then outdir=dirs.expdir+cmjd+'/'
       ifile = apogee_filename('R',num=num,chip=chip[ichip],mjd=cmjd)
       ofile = apogee_filename('2D',num=num,chip=chip[ichip])

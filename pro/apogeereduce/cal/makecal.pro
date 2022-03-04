@@ -377,7 +377,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     print,'makecal flux: ', flux
     if flux gt 1 then begin
       file = apogee_filename('Flux',num=flux,chip='c')
-      fluxdir = file_dirname(flux)
+      fluxdir = file_dirname(file)
       sfluxid = string(flux,format='(i08)')
       allfiles = fluxdir+'/'+dirs.prefix+'Flux-'+chips+'-'+sfluxid+'.fits'      
       if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin

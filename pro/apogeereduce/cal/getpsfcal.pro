@@ -51,7 +51,7 @@ function getpsfcal,num,psflibrary=psflibrary
       outarr = strsplitter(out[lo+1:hi-1],' ',/extract)
       ims = reform(outarr[0,*])
       psfflatims = reform(outarr[1,*])
-      psfid = psfflatims[0]
+      psfid = long(psfflatims[0])
       print,'  psf: ',psfid
       return,psfid
     endif else begin
@@ -124,6 +124,7 @@ function getpsfcal,num,psflibrary=psflibrary
 
   endelse
 
+  psfid = long(psfid)
   print,'psf: ',psfid
   return,psfid
 
