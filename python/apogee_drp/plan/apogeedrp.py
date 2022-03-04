@@ -347,12 +347,17 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
 
     apogee_redux = os.environ['APOGEE_REDUX']+'/'
     apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
+
+    # Read in the master calibration index
+    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
+    caldictn = mkcal.readcal(caldir+'apogee-n.par')
+    caldicts = mkcal.readcal(caldir+'apogee-s.par')
     
     # Symbolic links to another version
     if linkvers:
         logger.info('Creating calibration product symlinks to version >>'+str(linkvers)+'<<')
         cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','sparse']:
+        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','sparse','fiber']:
             for obs in ['apogee-n','apogee-s']:
                 if obs=='apogee-n':
                     prefix = 'ap'
@@ -360,7 +365,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     prefix = 'as'
                 srcdir = apogee_redux+linkvers+'/cal/'+obs+'/'+d
                 destdir = apogee_redux+apred+'/cal/'+obs+'/'+d
-                if d=='sparse':
+                if d=='sparse' or d=='fiber':
                     srcdir = apogee_redux+linkvers+'/cal/'+obs+'/psf'
                     destdir = apogee_redux+apred+'/cal/'+obs+'/psf'
                 logger.info('Creating symlinks for '+d+' '+obs)
@@ -372,11 +377,19 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     if len(sfiles)>0:
                         snum = [os.path.basename(s)[9:-5] for s in sfiles]
                         for num in snum:
-                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+num+'.fits .'],shell=True)                        
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+num+'.fits .'],shell=True)
+                elif d=='darkcorr' or d=='flatcorr':
+                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
+                elif d=='fiber':
+                    # Create symlinks for all the fiber cal files
+                    caldict = mkcal.readcal(caldir+obs+'.par')
+                    fiberdict = caldict['fiber']
+                    for f in fiberdict['name']:
+                        subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+f+'.fits .'],shell=True)
+                        subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSF-?-'+f+'.fits .'],shell=True)
                 else:
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
-                if d=='darkcorr' or d=='flatcorr':
-                    subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
         return
 
     # Input MJD range

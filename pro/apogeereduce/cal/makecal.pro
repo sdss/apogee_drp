@@ -309,11 +309,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   if keyword_set(littrow) then begin
     print,'makecal littrow: ', littrow
     if littrow gt 1 then begin
-      file = apogee_filename('Littrow',num=littrow,chip='c')
-      litdir = file_dirname(file)
-      slitid = string(littrow,format='(i08)')
-      allfiles = litdir+'/'+dirs.prefix+'Littrow-'+chips+'-'+slitid+'.fits'
-      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+      file = apogee_filename('Littrow',num=littrow,chip='b')
+      if file_test(file) and not keyword_set(clobber) then begin
         print,' littrow file: ',file, ' already made'
         return
       endif
