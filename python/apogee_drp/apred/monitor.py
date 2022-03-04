@@ -1103,8 +1103,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 1020
-            ymin = 1028
+            ymax = 1010
+            ymin = 1038
             yspan = ymax - ymin
 
             fibs = np.arange(148,153)
