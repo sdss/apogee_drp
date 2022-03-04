@@ -1104,11 +1104,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             fig = plt.figure(figsize=(30,14))
             ymax = 1020
-            ymin = 1028
+            ymin = 1025
             yspan = ymax - ymin
 
             fibs = np.arange(148,153)
             nfibs = len(fibs)
+            fib = 150
 
             gd, = np.where(qtrace['MJD'] > 50000)
             qtz = qtrace[gd]
@@ -1142,14 +1143,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                for ifib in range(nfibs):
-                    yvals = qpos[:, ichip, fibs[ifib]]
-                    ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='fib ' + str(fibs[ifib]))
+                yvals = qpos[:, ichip, fib]
+                ax.scatter(qmjd, yvals, marker='o', s=markersz, c='r', alpha=alf, 
+                           label='fib ' + str(fib)#s[ifib]))
 
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
+                #if ichip == 0: 
+                #    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                #              fontsize=fsz, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
