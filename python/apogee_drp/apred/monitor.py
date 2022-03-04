@@ -1049,8 +1049,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ngplotfibs = len(gfibers)
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 2.8
-            ymin = -2.8
+            ymax = 1.5
+            ymin = -1.5
             yspan = ymax - ymin
             dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
             gd, = np.where((dtrace['MJD'] > 50000) & (dtrace['GAUSS_NPEAKS'][:,1] > 295))
