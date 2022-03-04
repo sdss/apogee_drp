@@ -1043,19 +1043,19 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gfibers = np.array([10, 45, 80, 115, 150, 185, 220, 255, 290])[::-1]
-            gcolors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange', 'magenta', 'darkgreen', 'limegreen', 'maroon'])[::-1]
+            #gfibers = np.array([20, 70, 120, 170, 220, 270])[::-1]
+            #gcolors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange', 'magenta', 'darkgreen', 'limegreen', 'maroon'])[::-1]
             #gfibers = np.array([0, 49, 99, 149, 199, 249, 299])[::-1]
-            ngplotfibs = len(gfibers)
+            #ngplotfibs = len(gfibers)
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 2.8
-            ymin = -2.8
+            ymax = 1.0
+            ymin = -1.0
             yspan = ymax - ymin
             dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
-            gd, = np.where((dtrace['MJD'] > 58000) & (dtrace['GAUSS_NPEAKS'][:,1] > 295))
+            gd, = np.where((dtrace['MJD'] > 50000) & (dtrace['GAUSS_NPEAKS'][:,1] > 295))
             gdtrace = dtrace[gd]
-            gcent = gdtrace['GAUSS_CENT'][:,:,gfibers]
+            gcent = gdtrace['GAUSS_CENT'][:,:,fibers]
             xvals = gdtrace['MJD']
 
             for ichip in range(nchips):
@@ -1064,7 +1064,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin, xmax)
                 ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
@@ -1073,18 +1073,24 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 if ichip == 1: ax.set_ylabel(r'Quartz Lamp Trace Position Residuals (pixels)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
                 ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                for ifib in range(ngplotfibs):
+                for ifib in range(nplotfibs):
                     medcent = np.nanmedian(gcent[:, ichip, ifib])
                     yvals = gcent[:, ichip, ifib] - medcent
-                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=gcolors[ifib], alpha=alf, 
-                               label='fib ' + str(gfibers[ifib]))
+                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=colors[ifib], #alpha=alf, 
+                               label='fib ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
