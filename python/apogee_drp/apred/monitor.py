@@ -79,11 +79,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
     #snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
     allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
-    dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
-    quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
+    dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
+    qtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
 
-    badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
+    #badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
 
     if makesumfiles is True:
         ###########################################################################################
@@ -396,6 +396,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#qflux>Quartz lamp median brightness</a>\n')
+    html.write('<li> <a href=#qtrace>Quartz lamp trace position</a>\n')
     html.write('<li> <a href=#qfwhm>Quartz lamp trace FWHM</a>\n')
     html.write('<li> <a href=#dflux>Dome flat median brightness</a>\n')
     html.write('<li> <a href=#dfwhm>Dome flat trace FWHM</a>\n')
@@ -430,6 +431,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1000></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<h3> <a name=qtrace></a> Quartz lamp trace position </h3>\n')
+    html.write('<A HREF=' + instrument + '/qtrace.png target="_blank"><IMG SRC=' + instrument + '/qtrace.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qfwhm></a> Quartz lamp trace FWHM </h3>\n')
@@ -1032,6 +1037,126 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.close('all')
 
         ###########################################################################################
+        # qtrace.png
+        # Time series plot of median dome flat flux from cross sections across fibers
+        plotfile = specdir5 + 'monitor/' + instrument + '/qtrace.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            gfibers = np.array([10, 45, 80, 115, 150, 185, 220, 255, 290])[::-1]
+            gcolors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange', 'magenta', 'darkgreen', 'limegreen', 'maroon'])[::-1]
+            #gfibers = np.array([0, 49, 99, 149, 199, 249, 299])[::-1]
+            ngplotfibs = len(gfibers)
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 2.8
+            ymin = -2.8
+            yspan = ymax - ymin
+            dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
+            gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 295))
+            gdtrace = dtrace[gd]
+            gcent = gdtrace['GAUSS_CENT'][:,:,gfibers]
+            xvals = gdtrace['MJD']
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == 1: ax.set_ylabel(r'Quartz Lamp Trace Position Residuals (pixels)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='r', linewidth=2)
+                ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(ngplotfibs):
+                    medcent = np.nanmedian(gcent[:, ichip, ifib])
+                    yvals = gcent[:, ichip, ifib] - medcent
+                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=gcolors[ifib], alpha=alf, 
+                               label='fib ' + str(gfibers[ifib]))
+
+                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                        ha='center', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz*0.8, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.04,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # qtrace2.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/qtrace2.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 1020
+            ymin = 1028
+            yspan = ymax - ymin
+
+            fibs = np.arange(148,153)
+            nfibs = len(fibs)
+
+            gd, = np.where(qtrace['MJD'] > 50000)
+            qtz = qtrace[gd]
+            qpos = qtz['GAUSS_CENT']
+            eqpos = qtz['E_GAUSS_CENT']
+            qmjd = qtz['MJD']
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Trace Position (pix)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nfibs):
+                    yvals = qpos[:, ichip, fibs[ifib]]
+                    ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='fib ' + str(fibs[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+
+        ###########################################################################################
         # qfwhm.png
         plotfile = specdir5 + 'monitor/' + instrument + '/qfwhm.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -1044,8 +1169,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymin = 0.8
             yspan = ymax - ymin
 
-            gd, = np.where(quartztrace['MJD'] > 50000)
-            qtz = quartztrace[gd]
+            gd, = np.where(qtrace['MJD'] > 50000)
+            qtz = qtrace[gd]
             qmjd = qtz['MJD']
             qfwhm = qtz['GAUSS_SIGMA']*2.355
 
@@ -1271,8 +1396,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymin = 0.8
             yspan = ymax - ymin
 
-            gd, = np.where(dometrace['MJD'] > 50000)
-            df = dometrace[gd]
+            gd, = np.where(dtrace['MJD'] > 50000)
+            df = dtrace[gd]
             dmjd = df['MJD']
             dfwhm = df['GAUSS_SIGMA']*2.355
 
@@ -3500,65 +3625,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
 
         return
 
-        ###########################################################################################
-        # qtrace.png
-        # Time series plot of median dome flat flux from cross sections across fibers
-        plotfile = specdir5 + 'monitor/' + instrument + '/qtrace.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gfibers = np.array([10, 45, 80, 115, 150, 185, 220, 255, 290])[::-1]
-            gcolors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange', 'magenta', 'darkgreen', 'limegreen', 'maroon'])[::-1]
-            #gfibers = np.array([0, 49, 99, 149, 199, 249, 299])[::-1]
-            ngplotfibs = len(gfibers)
-
-            fig = plt.figure(figsize=(30,14))
-            ymax = 2.8
-            ymin = -2.8
-            yspan = ymax - ymin
-            dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
-            gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 280))
-            gdtrace = dtrace[gd]
-            gcent = gdtrace['GAUSS_CENT'][:,:,gfibers]
-            xvals = gdtrace['MJD']
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                if ichip == 1: ax.set_ylabel(r'Quartz Lamp Trace Position Residuals (pixels)')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='r', linewidth=2)
-                ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-                for ifib in range(ngplotfibs):
-                    medcent = np.nanmedian(gcent[:, ichip, ifib])
-                    yvals = gcent[:, ichip, ifib] - medcent
-                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=gcolors[ifib], alpha=alf, 
-                               label='fib ' + str(gfibers[ifib]))
-
-                ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*0.8, edgecolor='k', framealpha=1)
-
-            fig.subplots_adjust(left=0.04,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
 
         ###########################################################################################
         # dflattrace.png
@@ -3617,80 +3684,6 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
 
         #pdb.set_trace()
         return 
-
-        ###########################################################################################
-        # dillum_FPSonly.png
-        # Time series plot of median dome flat flux from cross sections across fibers
-        plotfile = specdir5 + 'monitor/' + instrument + '/dillum_FPSonly.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,22))
-            xarr = np.arange(0, 300, 1) + 1
-
-            mjdstart = 59599
-            coltickval = 5
-            if mjdstart> 59590: coltickval = 2
-            gd, = np.where((allexp[dome]['MJD'] >= mjdstart) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566))
-            gdcal = allexp[dome][gd]
-            umjd = gdcal['MJD']
-            ndome = len(gdcal)
-
-            mycmap = 'inferno_r'
-            mycmap = 'brg_r'
-            cmap = cmaps.get_cmap(mycmap, ndome)
-            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-                ax = plt.subplot2grid((nchips, 1), (ichip, 0))
-                ax.set_xlim(0, 301)
-                #ax.set_ylim(0, 27000)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
-                ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
-                ax.set_ylabel(r'Median Flux')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                if ichip == 0:
-                    ax_divider = make_axes_locatable(ax)
-                    cax = ax_divider.append_axes("top", size="7%", pad="2%")
-                    cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
-                    cax.xaxis.set_ticks_position("top")
-                    #cax.minorticks_on()
-                    cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
-                    #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
-                    cax.xaxis.set_label_position('top') 
-                    cax.set_xlabel('MJD')
-
-                for idome in range(ndome):
-                    chp = 'c'
-                    if ichip == 1: chp = 'b'
-                    if ichip == 2: chp = 'a'
-                    file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
-                    file1d = file1d.replace('1D-', '1D-' + chp + '-')
-                    if os.path.exists(file1d):
-                        hdr = fits.getheader(file1d)
-                        oned = fits.getdata(file1d)
-                        onedflux = np.nanmedian(oned, axis=1)[::-1]
-                        print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
-                        if (umjd[idome] == 59557) | (umjd[idome] == 59566): continue
-                        mycolor = cmap(idome)
-                        #gd, = np.where(onedflux > 100)
-                        ax.plot(xarr, onedflux, color=mycolor)
-                        #if (chp == 'c') & (np.nanmax(onedflux) > 30000): pdb.set_trace()
-                        #ax.hist(onedflux, 300, color=mycolor, fill=False)
-
-                ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-
-            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
-            plt.savefig(plotfile)
-            plt.close('all')
 
         #pdb.set_trace()
         #return 
