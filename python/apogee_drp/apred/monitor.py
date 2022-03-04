@@ -1083,7 +1083,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(ngplotfibs):
                     medcent = np.nanmedian(gcent[:, ichip, ifib])
                     yvals = gcent[:, ichip, ifib] - medcent
-                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=gcolors[ifib], alpha=alf, 
+                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=gcolors[ifib], #alpha=alf, 
                                label='fib ' + str(gfibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
