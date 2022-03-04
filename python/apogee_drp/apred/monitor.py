@@ -66,7 +66,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #alldark = fits.open(specdir4 + instrument + 'Cal.fits')[2].data
     #allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
     #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
-    #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
+    allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
     allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
     allsci4 =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
@@ -308,51 +308,51 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         # MAKE MASTER TRACE FILE
         # Append together the individual QAcal files
 
-#        files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
-#        if len(files) < 1:
-#            print("----> monitor: No apEPSF-b files!")
-#        else:
-#            outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
-#            print("----> monitor: Making " + os.path.basename(outfile))
+        files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
+        if len(files) < 1:
+            print("----> monitor: No apEPSF-b files!")
+        else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
-#            dt = np.dtype([('NUM',      np.int32),
-#                           ('MJD',      np.float64),
-#                           ('CENT',     np.float64),
-#                           ('LN2LEVEL', np.int32)])
+            dt = np.dtype([('NUM',      np.int32),
+                           ('MJD',      np.float64),
+                           ('CENT',     np.float64),
+                           ('LN2LEVEL', np.int32)])
 
-#            outstr = np.zeros(len(allepsf['NUM']), dtype=dt)
+            outstr = np.zeros(len(allepsf['NUM']), dtype=dt)
 
-#            outstr['NUM'] =      allepsf['NUM']
-#            outstr['MJD'] =      allepsf['MJD']
-#            outstr['CENT'] =     allepsf['CENT']
-#            outstr['LN2LEVEL'] = allepsf['LN2LEVEL']
+            outstr['NUM'] =      allepsf['NUM']
+            outstr['MJD'] =      allepsf['MJD']
+            outstr['CENT'] =     allepsf['CENT']
+            outstr['LN2LEVEL'] = allepsf['LN2LEVEL']
 
-#            files.sort()
-#            files = np.array(files)
-#            nfiles = len(files)
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
 
-#            for i in range(nfiles):
-#                print("---->    monitor: reading " + os.path.basename(files[i]))
-#                data = fits.open(files[i])[1].data
-#                import pdb; pdb.set_trace()
-#                struct1 = np.zeros(len(data['NUM']), dtype=dt)
-#                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
-#                if num > 1000:
-#                    hdr = fits.getheader(files[i])
-#                    for j in range(147,156):
-#                        data = fits.open(files[i])[j].data
-#                        if a['FIBER'] == 150:
-#                            struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
-#                            struct1['CENT'][i] = data['CENT'][1000]
-#                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
-#                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
-#                            break
-#                if i == 0: outstr = np.concatenate([outstr, struct1])
-#                else:      outstr = np.concatenate([outstr, struct1])
+            for i in range(nfiles):
+                print("---->    monitor: reading " + os.path.basename(files[i]))
+                data = fits.open(files[i])[1].data
+                import pdb; pdb.set_trace()
+                struct1 = np.zeros(len(data['NUM']), dtype=dt)
+                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
+                if num > 1000:
+                    hdr = fits.getheader(files[i])
+                    for j in range(147,156):
+                        data = fits.open(files[i])[j].data
+                        if a['FIBER'] == 150:
+                            struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
+                            struct1['CENT'][i] = data['CENT'][1000]
+                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
+                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
+                            break
+                if i == 0: outstr = np.concatenate([outstr, struct1])
+                else:      outstr = np.concatenate([outstr, struct1])
 
-#            Table(outstr).write(outfile, overwrite=True)
-#            print("----> monitor: Finished making " + os.path.basename(outfile))
+            Table(outstr).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
 
     ###############################################################################################
     # Read in the SDSS-V summary files
@@ -360,7 +360,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
     allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
-    #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
+    allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
     # Read in the APOGEE2 Trace.fits file since the columns don't match between APOGEE2 and SDSS-V
     allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
@@ -3617,80 +3617,6 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
 
         #pdb.set_trace()
         return 
-
-        ###########################################################################################
-        # dillum_FPSonly.png
-        # Time series plot of median dome flat flux from cross sections across fibers
-        plotfile = specdir5 + 'monitor/' + instrument + '/dillum_FPSonly.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,22))
-            xarr = np.arange(0, 300, 1) + 1
-
-            mjdstart = 59599
-            coltickval = 5
-            if mjdstart> 59590: coltickval = 2
-            gd, = np.where((allexp[dome]['MJD'] >= mjdstart) & (allexp[dome]['MJD'] != 59557) & (allexp[dome]['MJD'] != 59566))
-            gdcal = allexp[dome][gd]
-            umjd = gdcal['MJD']
-            ndome = len(gdcal)
-
-            mycmap = 'inferno_r'
-            mycmap = 'brg_r'
-            cmap = cmaps.get_cmap(mycmap, ndome)
-            sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-                ax = plt.subplot2grid((nchips, 1), (ichip, 0))
-                ax.set_xlim(0, 301)
-                #ax.set_ylim(0, 27000)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
-                ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'Fiber Index')
-                ax.set_ylabel(r'Median Flux')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                if ichip == 0:
-                    ax_divider = make_axes_locatable(ax)
-                    cax = ax_divider.append_axes("top", size="7%", pad="2%")
-                    cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
-                    cax.xaxis.set_ticks_position("top")
-                    #cax.minorticks_on()
-                    cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
-                    #cax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
-                    cax.xaxis.set_label_position('top') 
-                    cax.set_xlabel('MJD')
-
-                for idome in range(ndome):
-                    chp = 'c'
-                    if ichip == 1: chp = 'b'
-                    if ichip == 2: chp = 'a'
-                    file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
-                    file1d = file1d.replace('1D-', '1D-' + chp + '-')
-                    if os.path.exists(file1d):
-                        hdr = fits.getheader(file1d)
-                        oned = fits.getdata(file1d)
-                        onedflux = np.nanmedian(oned, axis=1)[::-1]
-                        print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(onedflux))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
-                        if (umjd[idome] == 59557) | (umjd[idome] == 59566): continue
-                        mycolor = cmap(idome)
-                        #gd, = np.where(onedflux > 100)
-                        ax.plot(xarr, onedflux, color=mycolor)
-                        #if (chp == 'c') & (np.nanmax(onedflux) > 30000): pdb.set_trace()
-                        #ax.hist(onedflux, 300, color=mycolor, fill=False)
-
-                ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                        ha='center', va='top', color=chip, bbox=bboxpar)
-
-            fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
-            plt.savefig(plotfile)
-            plt.close('all')
 
         #pdb.set_trace()
         #return 
