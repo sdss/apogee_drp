@@ -52,7 +52,7 @@ function getpsfcal,num,psflibrary=psflibrary
       ims = reform(outarr[0,*])
       psfflatims = reform(outarr[1,*])
       psfid = psfflatims[0]
-      print,'psf: ',psfid
+      print,'  psf: ',psfid
       return,psfid
     endif else begin
       print,'Problem running psflibrary for ',strtrim(num,2)

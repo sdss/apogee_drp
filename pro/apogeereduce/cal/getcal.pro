@@ -61,21 +61,21 @@ pro getcal,mjd,file,darkid=darkid,flatid=flatid,sparseid=sparseid,bpmid=bpmid,$
   persistid = readcalstr(persiststr,mjd)
   persistmodelid = readcalstr(persistmodelstr,mjd)
   responseid = readcalstr(responsestr,mjd)
-  print,'dark: ', darkid
-  print,'flat: ', flatid
-  print,'bpm: ', bpmid
-  print,'sparse: ', sparseid
-  print,'fiber: ', fiberid
-  print,'badfiber: ', badfiberid
-  print,'fixfiber: ', fixfiberid
-  print,'wave: ', waveid
-  print,'multiwave: ', multiwaveid
-  print,'lsf: ', lsfid
-  print,'flux: ', fluxid
-  print,'det: ', detid
-  print,'littrow: ', littrowid
-  print,'persist: ', persistid
-  print,'persistmodel: ', persistmodelid
-  print,'response: ', responseid
+  print,'  dark: ', darkid
+  print,'  flat: ', flatid
+  print,'  bpm: ', bpmid
+  print,'  sparse: ', sparseid
+  print,'  fiber: ', fiberid
+  print,'  badfiber: ', badfiberid
+  print,'  fixfiber: ', fixfiberid
+  print,'  wave: ', waveid
+  print,'  multiwave: ', multiwaveid
+  print,'  lsf: ', lsfid
+  print,'  flux: ', fluxid
+  print,'  det: ', detid
+  print,'  littrow: ', littrowid
+  print,'  persist: ', persistid
+  print,'  persistmodel: ', persistmodelid
+  print,'  response: ', responseid
 end
 
