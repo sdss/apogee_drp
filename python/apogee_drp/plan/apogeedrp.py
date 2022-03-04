@@ -353,7 +353,11 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
         logger.info('Creating calibration product symlinks to version >>'+str(linkvers)+'<<')
         cwd = os.path.abspath(os.curdir)
         for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','sparse']:
-            for obs in ['apogee-n','apogee-s']:    
+            for obs in ['apogee-n','apogee-s']:
+                if obs=='apogee-n':
+                    prefix = 'ap'
+                else:
+                    prefix = 'as'
                 srcdir = apogee_redux+linkvers+'/cal/'+obs+'/'+d
                 destdir = apogee_redux+apred+'/cal/'+obs+'/'+d
                 if d=='sparse':
@@ -362,7 +366,13 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                 logger.info('Creating symlinks for '+d+' '+obs)
                 os.chdir(destdir)
                 if d=='sparse':
-                    subprocess.run(['ln -s '+srcdir+'/apSparse*.fits .'],shell=True)
+                    subprocess.run(['ln -s '+srcdir+'/'+prefix+'Sparse*.fits .'],shell=True)
+                    # Need to link apEPSF files as well
+                    sfiles = glob(srcdir+'/'+prefix+'Sparse*.fits')
+                    if len(sfiles)>0:
+                        snum = [os.path.basename(s)[9:-5] for s in sfiles]
+                        for num in snum:
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+num+'.fits .'],shell=True)                        
                 else:
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
                 if d=='darkcorr' or d=='flatcorr':

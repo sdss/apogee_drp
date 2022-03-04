@@ -58,10 +58,20 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   READCAL,file,darkstr,flatstr,sparsestr,fiberstr,badfiberstr,fixfiberstr,wavestr,lsfstr,bpmstr,$
           fluxstr,detstr,littrowstr,persiststr,persistmodelstr,responsestr,multiwavestr
 
-  ;; Make detector file as called for
+  ;; Make Detector calibration files
+  ;;--------------------------------
   if keyword_set(det) then begin
     print,'makecal det: ', det
     if det gt 1 then begin
+      file = apogee_filename('Detector',num=det,/nochip)
+      file = file_dirname(file)+'/'+file_basename(file,'.fits')
+      detdir = apogee_filename('Detector',num=det,chip='a',/dir)
+      sdetid = string(det,format='(i08)')
+      allfiles = detdir+'/'+dirs.prefix+'Detector-'+chips+'-'+sdetid+'.fits'
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' detector file: ',file,' already made'
+        return
+      endif
       i = where(detstr.name eq det)
       if i lt 0 then begin
         print,'No matching calibration line for ', det
@@ -71,7 +81,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     endif 
   endif
 
-  ;; Make darks as called for
+  ;; Make Dark calibration files
+  ;;----------------------------
   if keyword_set(dark) then begin
     print,'makecal dark: ', dark
     if dark gt 1 then begin
@@ -111,7 +122,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     endelse
   endif
 
-  ;; Make flats as called for
+  ;; Make Flat calibration files
+  ;;----------------------------
   if keyword_set(flat) then begin
     print,'makecal flat: ', flat
     if flat gt 1 then begin
@@ -153,6 +165,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make BPM calibration files
+  ;;---------------------------
   if keyword_set(bpm) then begin
     print,'makecal bpm: ', bpm
     if bpm gt 1 then begin
@@ -161,7 +174,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       allfiles = bpmdir+dirs.prefix+'BPM-'+chips+'-'+sbpmid+'.fits'
       file = apogee_filename('BPM',num=bpm,chip='c')
       if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
-        print,' BPM file: ',file, ' already made'
+        print,' bpm file: ',file, ' already made'
         return
       endif
       i = where(bpmstr.name eq bpm)
@@ -188,15 +201,18 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make Sparsepak PSF calibration product
+  ;;---------------------------------------
   if keyword_set(sparse) then begin
     print,'makecal sparse: ', sparse
     if sparse gt 1 then begin
-      file = apogee_filename('EPSF',num=sparse,chip='c')
-      if file_test(file) and not keyword_set(clobber) then begin
-        print,' EPSF file: ',file, ' already made'
+      file = apogee_filename('Sparse',num=sparse,chip='c')
+      psfdir = file_dirname(file)
+      sparseid = string(sparse,format='(i08)')
+      allfiles = psfdir+'/'+[dirs.prefix+'EPSF-'+chips+'-'+sparseid+'.fits',dirs.prefix+'Sparse-'+sparseid+'.fits']
+      if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
+        print,' sparse file: ',file,' already made'
         return
       endif
-
       i = where(sparsestr.name eq sparse)
       if i lt 0 then begin
         print,'No matching calibration line for ', sparse
@@ -220,9 +236,18 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make fiber calibration file
+  ;;----------------------------
   if keyword_set(fiber) then begin
     print,'makecal fiber: ', fiber
     if fiber gt 1 then begin
+      file = apogee_filename('PSF',num=fiber,chip='c')
+      psfdir = file_dirname(file)
+      sfiberid = string(fiber,format='(i08)')
+      allfiles = psfdir+'/'+[dirs.prefix+'EPSF-'+chips+'-'+sfiberid+'.fits',dirs.prefix+'PSF-'+chips+'-'+sfiberid+'.fits']
+      if total(file_test(allfiles)) eq 6 and not keyword_set(clobber) then begin
+        print,' psf file: ',file, ' already made'
+        return
+      endif
       cmjd = getcmjd(fiber,mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid
       MKPSF,fiber,darkid=darkid,flatid=flatid,sparseid=sparseid,unlock=unlock
@@ -230,9 +255,18 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make PSF calibration file
+  ;;--------------------------
   if keyword_set(psf) and ~keyword_set(flux) then begin
     print,'makecal psf: ', psf
     if psf gt 1 then begin
+      file = apogee_filename('PSF',num=psf,chip='c')
+      psfdir = file_dirname(file)
+      spsfid = string(psf,format='(i08)')
+      allfiles = psfdir+'/'+[dirs.prefix+'EPSF-'+chips+'-'+spsfid+'.fits',dirs.prefix+'PSF-'+chips+'-'+spsfid+'.fits']
+      if total(file_test(allfiles)) eq 6 and not keyword_set(clobber) then begin
+        print,' psf file: ',file, ' already made'
+        return
+      endif
       cmjd = getcmjd(psf,mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid
       MAKECAL,littrow=littrowid,unlock=unlock
@@ -241,9 +275,18 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make FPI calibration file
+  ;;--------------------------
   if keyword_set(fpi) then begin
     print,'makecal fpi: ', fpi
     if fpi gt 1 then begin
+      file = apogee_filename('WaveFPI',num=fpi,chip='c')
+      wavedir = file_dirname(file)
+      sfpiid = string(fpi,format='(i08)')
+      allfiles = wavedir+'/'+dirs.prefix+'WaveFPI-'+chips+'-'+sfpiid+'.fits'
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' fpi file: ',file, ' already made'
+        return
+      endif
       cmjd = getcmjd(fpi[0],mjd=mjd)
       ;; What PSF to use
       if keyword_set(psf) then begin
@@ -262,9 +305,18 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make Littrow calibration file
+  ;;------------------------------
   if keyword_set(littrow) then begin
     print,'makecal littrow: ', littrow
     if littrow gt 1 then begin
+      file = apogee_filename('Littrow',num=littrow,chip='c')
+      litdir = file_dirname(file)
+      slitid = string(littrow,format='(i08)')
+      allfiles = litdir+'/'+dirs.prefix+'Littrow-'+chips+'-'+slitid+'.fits'
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' littrow file: ',file, ' already made'
+        return
+      endif
       cmjd = getcmjd(littrow,mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid
       MAKECAL,flat=flatid,unlock=unlock
@@ -273,9 +325,18 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make Persistence calibration file
+  ;;----------------------------------
   if keyword_set(persist) then begin
     print,'makecal persist: ', persist
     if persist gt 1 then begin
+      file = apogee_filename('Persist',num=persist,chip='c')
+      perdir = file_dirname(file)
+      sperid = string(persist,format='(i08)')
+      allfiles = perdir+'/'+dirs.prefix+'Persist-'+chips+'-'+sperid+'.fits'
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' persist file: ',file, ' already made'
+        return
+      endif
       i = where(persiststr.name eq persist)
       if i lt 0 then begin
         print,'No matching calibration line for ', persist
@@ -290,9 +351,18 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make Persistence model calibration file
+  ;;----------------------------------------
   if keyword_set(modelpersist) then begin
     print,'makecal modelpersist: ', modelpersist
     if modelpersist gt 1 then begin
+      file = apogee_filename('PersistModel',num=modelpersist,chip='c')
+      perdir = file_dirname(file)
+      sperid = string(modelpersist,format='(i08)')
+      allfiles = perdir+'/'+dirs.prefix+'PersistModel-'+chips+'-'+sperid+'.fits'
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' modelpersist file: ',file, ' already made'
+        return
+      endif
       i = where(persistmodelstr.name eq modelpersist)
       if i lt 0 then begin
         print,'No matching calibration line for ', modelpersist
@@ -305,18 +375,27 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make Flux calibration file
+  ;;---------------------------
   if keyword_set(flux) then begin
-    cmjd = getcmjd(flux[0],mjd=mjd)
-    ;; What PSF to use
-    if keyword_set(psf) then begin
-      psfid = psf
-    ;; Try to find a PSF from this day
-    endif else begin
-      print,'Trying to automatically find a PSF calibration file'
-      psfid = GETPSFCAL(flux[0],psflibrary=librarypsf)
-    endelse
     print,'makecal flux: ', flux
     if flux gt 1 then begin
+      file = apogee_filename('Flux',num=flux,chip='c')
+      fluxdir = file_dirname(flux)
+      sfluxid = string(flux,format='(i08)')
+      allfiles = fluxdir+'/'+dirs.prefix+'Flux-'+chips+'-'+sfluxid+'.fits'      
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' flux file: ',file, ' already made'
+        return
+      endif
+      cmjd = getcmjd(flux[0],mjd=mjd)
+      ;; What PSF to use
+      if keyword_set(psf) then begin
+        psfid = psf
+      ;; Try to find a PSF from this day
+      endif else begin
+        print,'Trying to automatically find a PSF calibration file'
+        psfid = GETPSFCAL(flux[0],psflibrary=librarypsf)
+      endelse
       cmjd = getcmjd(flux,mjd=mjd)
       MAKECAL,psf=psfid,unlock=unlock
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,littrowid=littrowid,waveid=waveid
@@ -327,27 +406,23 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make Response calibration file
+  ;;-------------------------------
   if keyword_set(response) then begin
     print,'makecal response: ', response
     if response gt 1 then begin
       file = apogee_filename('Response',num=response,chip='c')
-      if file_test(file) and not keyword_set(clobber) then begin
-        print,' Response file: ',file, ' already made'
+      resdir = file_dirname(file)
+      sresid = string(response,format='(i08)')
+      allfiles = resdir+'/'+dirs.prefix+'Response-'+chips+'-'+sresid+'.fits'
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' response file: ',file, ' already made'
         return
       endif
-
       i = where(responsestr.name eq response,nres)
       if nres eq 0 then begin
         print,'No matching calibration line for ', response
         stop
       endif else if nres gt 1 then i=i[0]
-      file = apogee_filename('Response',chip='c',num=response)
-      ;; Does product already exist?
-      if file_test(file) and not keyword_set(clobber) then begin
-        print,' flux file: ',file,' already made'
-        return
-      endif
-
       cmjd = getcmjd(response,mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,littrowid=littrowid,waveid=waveid,fiberid=fiberid
       MAKECAL,psf=responsestr[i].psf,unlock=unlock
@@ -360,9 +435,18 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make Wavelength calibration file
+  ;;---------------------------------
   if keyword_set(wave) then begin
     print,'makecal wave: ', wave
     if wave gt 1 then begin
+      file = apogee_filename('Wave',num=wave,chip='c')
+      wavedir = file_dirname(file)
+      swaveid = string(wave,format='(i08)')
+      allfiles = wavedir+'/'+dirs.prefix+'Wave-'+chips+'-'+swaveid+'.fits'
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' wave file: ',file, ' already made'
+        return
+      endif
       i = where(wavestr.name eq wave,nwave)
       if nwave gt 0 then begin
         ims = getnums(wavestr[i[0]].frames)
@@ -373,7 +457,6 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         ims = wave
         name = ims[0]
         cmjd = getcmjd(ims[0],mjd=mjd)
-
         ;; What PSF to use
         if keyword_set(psf) then begin
           psfid = psf
@@ -409,6 +492,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make multi-night wavelength calibration file
+  ;;---------------------------------------------
   if keyword_set(multiwave) then begin
     print,'makecal multiwave: ', multiwave
     if multiwave gt 1 then begin
@@ -446,20 +530,20 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   endif
 
   ;; Make LSF calibration file
+  ;;--------------------------
   if keyword_set(lsf) then begin
     print,'makecal lsf: ', lsf
-    file = apogee_filename('LSF',num=lsf,/nochip)
-    file = file_dirname(file)+'/'+file_basename(file,'.fits')
-    slsfid = string(lsf,format='(i08)')
-    lsfdir = apogee_filename('LSF',num=lsf,chip='c',/dir)
-    allfiles = lsfdir+dirs.prefix+'LSF-'+chips+'-'+slsfid+'.fits'
-    allfiles = [allfiles,lsfdir+dirs.prefix+'LSF-'+slsfid+'.sav']
-    if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
-      print,' LSF file: ',file+'.sav',' already made'
-      return
-    endif
-
     if lsf gt 1 then begin
+      file = apogee_filename('LSF',num=lsf,/nochip)
+      file = file_dirname(file)+'/'+file_basename(file,'.fits')
+      slsfid = string(lsf,format='(i08)')
+      lsfdir = apogee_filename('LSF',num=lsf,chip='c',/dir)
+      allfiles = lsfdir+dirs.prefix+'LSF-'+chips+'-'+slsfid+'.fits'
+      allfiles = [allfiles,lsfdir+dirs.prefix+'LSF-'+slsfid+'.sav']
+      if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
+        print,' lsf file: ',file+'.sav',' already made'
+        return
+      endif
       i = where(lsfstr.name eq lsf,nlsf)
       if nlsf le 0 then begin
         print,'No matching calibration line for ', lsf
