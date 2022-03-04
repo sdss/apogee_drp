@@ -1043,7 +1043,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gfibers = np.array([25, 75, 125, 175, 225, 275])[::-1]
+            gfibers = np.array([10, 45, 80, 115, 150, 185, 220, 255, 290])[::-1]
             gcolors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange', 'magenta', 'darkgreen', 'limegreen', 'maroon'])[::-1]
             #gfibers = np.array([0, 49, 99, 149, 199, 249, 299])[::-1]
             ngplotfibs = len(gfibers)
@@ -1053,7 +1053,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymin = -2.8
             yspan = ymax - ymin
             dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
-            gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 295))
+            gd, = np.where((dtrace['MJD'] > 58000) & (dtrace['GAUSS_NPEAKS'][:,1] > 295))
             gdtrace = dtrace[gd]
             gcent = gdtrace['GAUSS_CENT'][:,:,gfibers]
             xvals = gdtrace['MJD']
