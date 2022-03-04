@@ -340,7 +340,7 @@ def dillum(mjdstart=59604):
     html.close()
 
 ###########################################################################################
-def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
+def dillum_FPSonly(mjdstart=59604, pix=[0, 2047], norm=True, resid=True):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
 
@@ -448,6 +448,125 @@ def dillum_FPSonly(mjdstart=59604, pix=[824,1224], norm=True, resid=True):
                 ha='center', va='bottom', color=chip, bbox=bboxpar)
 
     fig.subplots_adjust(left=0.06,right=0.985,bottom=0.045,top=0.955,hspace=0.08,wspace=0.1)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def dillum2(mjdstart=59557, mjdmean=False, chip=2, do59557=False):
+    # dillum_FPSonly.png
+    # Time series plot of median dome flat flux from cross sections across fibers
+
+    fsize = 33
+    matplotlib.rcParams.update({'font.size':fsize, 'font.family':'serif'})
+
+
+    if chip == 0: schip = 'a'
+    if chip == 1: schip = 'b'
+    if chip == 2: schip = 'c'
+
+    plotfile = specdir5 + 'monitor/' + instrument + '/fiber2fiber/tputVar-' + schip + '.png'
+    if do59557: plotfile = plotfile.replace('tputVar', 'tputVar59557')
+    ylabels = np.array(['Flux', 'Norm Flux', 'Norm Flux / Med Flux', '% Variation'])
+
+    print("----> commissNplots: Making " + os.path.basename(plotfile))
+
+    fig = plt.figure(figsize=(28,28))
+    xarr = np.arange(0, 300, 1) + 1
+
+    coltickval = 5
+    if mjdstart > 59590: coltickval = 2
+    gd, = np.where((allexp[dome]['MJD'] >= mjdstart) & (allexp[dome]['MJD'] != 59566) & (allexp[dome]['NUM'] != 40580049))# & (allexp[dome]['MJD'] != 59557))
+    if do59557: gd, = np.where(allexp['MJD'][dome] == 59557)
+    gdcal = allexp[dome][gd]
+    umjd = gdcal['MJD']
+    if mjdmean: umjd = np.unique(umjd)
+    nmjd = len(umjd)
+    ndome = len(gdcal)
+
+    mycmap = 'brg_r'
+    cmap = cmaps.get_cmap(mycmap, ndome)
+    sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=np.min(umjd), vmax=np.max(umjd)))
+    if do59557: sm = cmaps.ScalarMappable(cmap=mycmap, norm=plt.Normalize(vmin=1, vmax=ndome))
+
+    ax1 = plt.subplot2grid((4, 1), (0, 0))
+    ax2 = plt.subplot2grid((4, 1), (1, 0))
+    ax3 = plt.subplot2grid((4, 1), (2, 0))
+    ax4 = plt.subplot2grid((4, 1), (3, 0))
+    axes = [ax1, ax2, ax3, ax4]
+    i = 0
+    for ax in axes:
+        ax.set_xlim(0, 301)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+        if i != 3: 
+            ax.minorticks_on()
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        ax.text(-0.082, 0.5, ylabels[i], transform=ax.transAxes, rotation=90, ha='left', va='center')
+        if i < 3: ax.axes.xaxis.set_ticklabels([])
+        i += 1
+    ax4.set_xlabel(r'Fiber ID')
+    ax3.set_ylim(0.92, 1.08)
+
+    ax_divider = make_axes_locatable(ax1)
+    cax = ax_divider.append_axes("top", size="7%", pad="2%")
+    cb = plt.colorbar(sm, cax=cax, orientation="horizontal")
+    cax.xaxis.set_ticks_position("top")
+    cax.xaxis.set_label_position('top')
+    cax.minorticks_on()
+    if do59557:
+        cax.xaxis.set_major_locator(ticker.MultipleLocator(5))
+        cax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        ax1.text(0.5, 1.23, 'Exposure', transform=ax1.transAxes, ha='center')
+    else:
+        cax.xaxis.set_major_locator(ticker.MultipleLocator(coltickval))
+        cax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        ax1.text(0.5, 1.23, 'MJD', transform=ax1.transAxes, ha='center')
+
+    flux = np.zeros((ndome, len(xarr)))
+    for idome in range(ndome):
+        file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
+        file1d = file1d.replace('1D-', '1D-' + schip + '-')
+        if os.path.exists(file1d):
+            hdr = fits.getheader(file1d)
+            oned = fits.getdata(file1d)
+            flux[idome] = np.nanmedian(oned, axis=1)[::-1]
+            flux[idome][74] = np.nanmean([flux[idome][72],flux[idome][73],flux[idome][75],flux[idome][76]])
+            flux[idome][224] = np.nanmean([flux[idome][222],flux[idome][223],flux[idome][225],flux[idome][226]])
+            print(str(umjd[idome])+'   '+str(gdcal['NUM'][idome])+'   '+str(int(round(np.max(flux[idome]))))+'  expt='+str(int(round(hdr['exptime'])))+'  nread='+str(hdr['nread']))
+            mycolor = cmap(idome)
+            ax1.plot(xarr, flux[idome], color=mycolor)
+            flux[idome] = flux[idome] / np.nanmedian(flux[idome])
+            ax2.plot(xarr, flux[idome], color=mycolor)
+
+    gd, = np.where(np.nanmean(flux,axis=1) > 0)
+    ndome = len(gd)
+    flux=flux[gd]
+    medflux = np.nanmedian(flux,axis=0)
+    divmed = flux / medflux
+    for idome in range(ndome):
+        mycolor = cmap(idome)
+        ax3.plot(xarr, divmed[idome], color=mycolor)
+
+    percentDif = np.nanmax(np.absolute(divmed-1),axis=0)*100
+    ax4.bar(xarr, percentDif, color='aquamarine', edgecolor='k')
+
+    ymin,ymax = ax4.get_ylim()
+    ax4.set_ylim(0, ymax)
+    #ax4.grid(True)
+
+    mad = dln.mad(percentDif)
+    med = np.nanmedian(percentDif)
+    vmax = np.nanmax(percentDif)
+    vmin = np.nanmin(percentDif)
+    ax4.text(0.47, 0.95, 'median = ' + str("%.3f" % round(med, 3)) + '%', transform=ax4.transAxes, ha='right', va='top', bbox=bboxpar, c='r')
+    ax4.text(0.47, 0.85, 'max = ' + str("%.3f" % round(vmax, 3)) + '%', transform=ax4.transAxes, ha='right', va='top', bbox=bboxpar, c='k')
+    ax4.text(0.47, 0.75, 'min = ' + str("%.3f" % round(vmin, 3)) + '%', transform=ax4.transAxes, ha='right', va='top', bbox=bboxpar, c='k')
+    ax4.axhline(med, color='r', linestyle='dashed')
+
+    fig.subplots_adjust(left=0.084,right=0.985,bottom=0.043,top=0.95,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
