@@ -36,7 +36,7 @@ def loadmjd(mjd):
                 multimjd = list(np.arange(int(part1),int(part2)+1))
                 newmjds += multimjd
             else:
-                newmjds.append(m)
+                newmjds.append(int(m))
         newmjds = list(np.unique(newmjds))
         mjds = newmjds
     else:
@@ -352,11 +352,21 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if linkvers:
         logger.info('Creating calibration product symlinks to version >>'+str(linkvers)+'<<')
         cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric']:
+        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','sparse']:
             for obs in ['apogee-n','apogee-s']:    
-                logger.info('Creating symlinks for '+apogee_redux+apred+'/cal/'+obs+'/'+d)
-                os.chdir(apogee_redux+apred+'/cal/'+obs+'/'+d)
-                subprocess.run(['ln -s '+apogee_redux+linkvers+'/cal/'+obs+'/'+d+'/*fits .'],shell=True)
+                srcdir = apogee_redux+linkvers+'/cal/'+obs+'/'+d
+                destdir = apogee_redux+apred+'/cal/'+obs+'/'+d
+                if d=='sparse':
+                    srcdir = apogee_redux+linkvers+'/cal/'+obs+'/psf'
+                    destdir = apogee_redux+apred+'/cal/'+obs+'/psf'
+                logger.info('Creating symlinks for '+d+' '+obs)
+                os.chdir(destdir)
+                if d=='sparse':
+                    subprocess.run(['ln -s '+srcdir+'/apSparse*.fits .'],shell=True)
+                else:
+                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                if d=='darkcorr' or d=='flatcorr':
+                    subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
         return
 
     # Input MJD range
@@ -681,6 +691,49 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     del queue    
 
 
+    # Make Sparse in parallel
+    #--------------------------
+    sparsedict = allcaldict['sparse']
+    logger.info('')
+    logger.info('---------------------------------')
+    logger.info('Making master Sparses in parallel')
+    logger.info('=================================')
+    logger.info('Slurm settings: '+str(slurm))
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mksparse', **slurm)
+    for i in range(len(littdict)):
+        name = sparsedict['name'][i]
+        if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
+            outfile = load.filename('Sparse',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mksparse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --sparse '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            #logfiles.append(logfile1)
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                if load.exists('Sparse',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[i] = False
+            if docal[i]:
+                logger.info('Sparse file %d : %s' % (i+1,name))
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
+                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+    if np.sum(docal)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    else:
+        logger.info('No master Sparse calibration files need to be run')
+    del queue    
+
+
     # Make multiwave cals in parallel
     #--------------------------------
     #set n = 0
@@ -854,6 +907,7 @@ def runap3d(load,mjds,slurm,clobber=False,logger=None):
         # This should check if the ap3d ran okay and puts the status in the database
         chk3d = runapogee.check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
     else:
+        chk3d = None
         logger.info('No exposures need AP3D processing')
     del queue
         
@@ -970,27 +1024,29 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
             for k in range(len(cind)):
                 num1 = expinfo['num'][cind[k]]
                 mjd1 = int(load.cmjd(num1))
+                if mjd1>=59556:
+                    fps = True
+                else:
+                    fps = False
                 calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd1))
                 exptype1 = expinfo['exptype'][cind[k]]
                 arctype1 = expinfo['arctype'][cind[k]]                    
+                cmd1 = 'makecal --vers {0} --telescope {1} --unlock'.format(apred,telescope)
+                if clobber: cmd1 += ' --clobber'                
                 if ccode==1:    # psfs
-                    cmd1 = 'makecal --psf '+str(num1)+' --unlock'
-                    if clobber: cmd1 += ' --clobber'
+                    cmd1 += ' --psf '+str(num1)
                     logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif ccode==2:   # flux
-                    cmd1 = 'makecal --flux '+str(num1)+' --unlock'
-                    if fps: cmd1 += ' --psflibrary'
-                    if clobber: cmd1 += ' --clobber'
+                    cmd1 += ' --flux '+str(num1)
+                    if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif ccode==4:  # arcs
-                    cmd1 = 'makecal --wave '+str(num1)+' --unlock'
-                    if fps: cmd1 += ' --psflibrary'
-                    if clobber: cmd1 += ' --clobber'
+                    cmd1 = ' --wave '+str(num1)
+                    if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
                 elif ccode==8:  # fpi
-                    cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
-                    if fps: cmd1 += ' --psflibrary'
-                    if clobber: cmd1 += ' --clobber'
+                    cmd1 = ' --fpi '+str(num1)
+                    if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
                 logger.info('Logfile : '+logfile1)
                 logfiles.append(logfile1)
@@ -1021,6 +1077,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                 chkcal = np.hstack((chkcal,chkcal1))
             del queue
         else:
+            chkcal = None
             logger.info('No '+str(calnames[j])+' calibration files to run')
             
     return chkcal
@@ -1167,22 +1224,66 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     logger.info('Slurm settings: '+str(slurm1))
     queue = pbsqueue(verbose=True)
     queue.create(label='apred', **slurm1)
+    dorun = np.zeros(len(planfiles),bool)
     for i,pf in enumerate(planfiles):
+        pfbase = os.path.basename(pf)
         logger.info('planfile %d : %s' % (i+1,pf))
-        logfile = pf.replace('.yaml','_pbs.'+logtime+'.log')
-        errfile = logfile.replace('.log','.err')
-        cmd = 'apred {0}'.format(pf)
+        logfile1 = pf.replace('.yaml','_pbs.'+logtime+'.log')
+        errfile1 = logfile1.replace('.log','.err')
+        cmd1 = 'apred {0}'.format(pf)
         if clobber:
-            cmd += ' --clobber'
-        logger.info('Command : '+cmd)
-        logger.info('Logfile : '+logfile)
-        queue.append(cmd, outfile=logfile,errfile=errfile)
-    queue.commit(hard=True,submit=True)
-    logger.info('PBS key is '+queue.key)
-    runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            cmd1 += ' --clobber'
+        # Check if files exist already
+        dorun[i] = True
+        if clobber is not True:
+            # apPlan
+            if pfbase.startswith('apPlan'):
+                # apPlan-3370-59623.yaml
+                config1,mjd1 = pfbase.split('.')[0].split('-')[1:3]
+                # check for apVisitSum file
+                outfile = load.filename('VisitSum',plate=config1,mjd=mjd1,chips=True)
+                outexists = os.path.exists(outfile)
+            # apCalPlan
+            elif pfbase.startswith('apCalPlan'):
+                # apCalPlan-apogee-n-59640.yaml
+                # It will take too long to load all of the plan files and check all of
+                #  the output files.  Default is to redo them.
+                outexists = False
+                outfile = pf+' output files '
+            # apDarkPlan
+            elif pfbase.startswith('apDarkPlan'):
+                # apDarkPlan-apogee-n-59640.yaml
+                # It will take too long to load all of the plan files and check all of
+                #  the output files.  Default is to redo them.
+                outexists = False
+                outfile = pf+' output files '
+            # apExtraPlan
+            elif pfbase.startswith('apExtraPlan'):
+                # apExtraPlan-apogee-n-59629.yaml
+                # It will take too long to load all of the plan files and check all of
+                #  the output files.  Default is to redo them.
+                outexists = False
+                outfile = pf+' output files '
+            if outexists:
+                logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                dorun[i] = False
+        if dorun[i]:
+            logger.info('planfile %d : %s' % (i+1,pf))
+            logger.info('Command : '+cmd1)
+            logger.info('Logfile : '+logfile1)
+            queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+    if np.sum(dorun)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    else:
+        logger.info('No planfiles need to be run')
+
     # This also loads the status into the database using the correct APRED version
     chkexp,chkvisit = runapogee.check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
     del queue
+
+
 
     # -- Summary statistics --
     # Exposure status
@@ -1318,7 +1419,7 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
         chkrv = runapogee.check_rv(vcat[ind],queue.key,logger=logger,verbose=False)
     else:
         logger.info('No RVs need to be run')
-        chkrv = []
+        chkrv = None
     del queue
 
     # -- Summary statistics --
@@ -1546,7 +1647,10 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
     address = 'apogee-pipeline-log@sdss.org'
     if debug:
         address = 'dnidever@montana.edu'
-    subject = 'APOGEE DRP Reduction %s %s %s-%s' % (observatory,apred,mjdstart,mjdstop)
+    if nmjd>1:
+        subject = 'APOGEE DRP Reduction %s %s %s-%s' % (observatory,apred,mjdstart,mjdstop)
+    else:
+        subject = 'APOGEE DRP Reduction %s %s %s' % (observatory,apred,mjdstart)
     message = """\
               <html>
                 <body>
@@ -1563,31 +1667,31 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
     message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/'+str(apred)+'/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
 
     # Master Cals step
-    if 'master' in steps and chkmaster:
+    if 'master' in steps and chkmaster is not None:
         ind, = np.where(chkmaster['success']==True)
         message += '%d/%d Master calibrations successfully processed<br> \n' % (len(ind),len(chkmaster))
         
     # AP3D step
-    if '3d' in steps and chk3d:
+    if '3d' in steps and chk3d is not None:
         ind, = np.where(chk3d['success']==True)
         message += 'AP3D: %d/%d exposures successfully processed through AP3D<br> \n' % (len(ind),len(chk3d))
 
     # Daily Cals step
-    if 'cal' in steps and chkcal:
+    if 'cal' in steps and chkcal is not None:
         ind, = np.where(chkcal['success']==True)
         message += 'Cal: %d/%d daily calibrations successfully processed<br> \n' % (len(ind),len(chkcal))
  
     # Plan files
-    if 'plan' in steps and planfiles:
+    if 'plan' in steps and planfiles is not None:
         message += 'Plan: %d plan files successfully made<br> \n' % len(planfiles)
 
     # APRED step
-    if 'apred' in steps and chkapred:
+    if 'apred' in steps and chkapred is not None:
         ind, = np.where(chkapred['success']==True)
         message += 'APRED: %d/%d visits successfully processed<br> \n' % (len(ind),len(chkapred))
 
     # RV step
-    if 'rv' in steps and chkrv:
+    if 'rv' in steps and chkrv is not None:
         ind, = np.where(chkrv['success']==True)
         message += 'RV: %d/%d RV+visit combination successfully processed<br> \n' % (len(ind),len(chkrv))
 
@@ -1862,7 +1966,10 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
 
     ## UPDATE THE DATABASE!!!
     
-    rootLogger.info('APOGEE DRP reduction finished for %s APRED=%s MJD=%d to MJD=%d' % (observatory,apred,mjdstart,mjdstop))
+    if nmjd>1:
+        rootLogger.info('APOGEE DRP reduction finished for %s APRED=%s MJD=%d to MJD=%d' % (observatory,apred,mjdstart,mjdstop))
+    else:
+        rootLogger.info('APOGEE DRP reduction finished for %s APRED=%s MJD=%d' % (observatory,apred,mjdstart))
 
 
     # Summary email

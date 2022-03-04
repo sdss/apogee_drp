@@ -17,7 +17,7 @@
 ;  /lsf          Make all of the lsfs in the file
 ;  lsf=lsfid     Make the lsf with name=lsfid 
 ;  fpi=fpiid     Make the FPI with name=fpiid
-;  /psflibrary   Use PSF library to get PSF cal for images.
+;  /librarypsf   Use PSF library to get PSF cal for images.
 ;
 ; OUTPUT:
 ;  Calibration products are generated in places specified by the
@@ -38,7 +38,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
             littrow=littrow,persist=persist,modelpersist=modelpersist,$
             response=response,mjd=mjd,full=full,newwave=newwave,nskip=nskip,$
             average=average,clobber=clobber,vers=vers,telescope=telescope,$
-            nofit=nofit,pl=pl,unlock=unlock,fpi=fpi,psflibrary=psflibrary
+            nofit=nofit,pl=pl,unlock=unlock,fpi=fpi,librarypsf=librarypsf
 
   if keyword_set(vers) and keyword_set(telescope) then apsetver,vers=vers,telescope=telescope
   dirs = getdir(apo_dir,cal_dir,spectro_dir,apo_vers,lib_dir)
@@ -251,13 +251,13 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       ;; Try to find a PSF from this day
       endif else begin
         print,'Trying to automatically find a PSF calibration file'
-        psfid = GETPSFCAL(fpi[0],psflibrary=psflibrary)
+        psfid = GETPSFCAL(fpi[0],psflibrary=librarypsf)
       endelse
       MAKECAL,psf=psfid,unlock=unlock
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
       MAKECAL,fiber=fiberid,unlock=unlock
       MKFPI,fpi,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
-            fiberid=fiberid,clobber=clobber,unlock=unlock,psflibrary=psflibrary
+            fiberid=fiberid,clobber=clobber,unlock=unlock,psflibrary=librarypsf
     endif
   endif
 
@@ -313,7 +313,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     ;; Try to find a PSF from this day
     endif else begin
       print,'Trying to automatically find a PSF calibration file'
-      psfid = GETPSFCAL(flux[0],psflibrary=psflibrary)
+      psfid = GETPSFCAL(flux[0],psflibrary=librarypsf)
     endelse
     print,'makecal flux: ', flux
     if flux gt 1 then begin
@@ -380,7 +380,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         ;; Try to find a PSF from this day
         endif else begin
           print,'Trying to automatically find a PSF calibration file'
-          psfid = GETPSFCAL(ims[0],psflibrary=psflibrary)
+          psfid = GETPSFCAL(ims[0],psflibrary=librarypsf)
         endelse
       endelse
       cmjd = getcmjd(ims[0],mjd=mjd)
@@ -429,7 +429,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       endif
       ims = getnums(multiwavestr[i[0]].frames)
       MKMULTIWAVE,ims,name=multiwavestr[i[0]].name,clobber=clobber,file=file,unlock=unlock,$
-                  psflibrary=psflibrary
+                  psflibrary=librarypsf
     endif else begin
       if keyword_set(mjd) then  begin
         num = getnum(mjd) 
@@ -439,7 +439,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
        for i=0,n_elements(red)-1,nskip do begin
         ims = getnums(multiwavestr[red[i]].frames)
         MKMULTIWAVE,ims,name=multiwavestr[red[i]].name,clobber=clobber,file=file,unlock=unlock,$
-                    /nowait,psflibrary=psflibrary
+                    /nowait,psflibrary=librarypsf
        endfor
       endif
     endelse
@@ -481,7 +481,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
           ims = getnums(lsfstr[red[i]].frames)
           cmjd = getcmjd(ims[0],mjd=mjd)
           GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,multiwaveid=waveid,fiberid=fiberid
-          MAKECAL,multiwave=waveid,unlock=unlock,psflibrary=psflibrary
+          MAKECAL,multiwave=waveid,unlock=unlock,psflibrary=librarypsf
           print,'calling mklsf'
           MKLSF,ims,waveid,darkid=darkid,flatid=flatid,psfid=lsfstr[i].psfid,fiberid=fiberid,$
                 full=full,newwave=newwave,clobber=clobber,pl=pl,unlock=unlock,/nowait
