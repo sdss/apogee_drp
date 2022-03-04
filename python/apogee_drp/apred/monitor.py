@@ -1043,10 +1043,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gfibers = np.array([20, 70, 120, 170, 220, 270])[::-1]
-            gcolors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange', 'magenta', 'darkgreen', 'limegreen', 'maroon'])[::-1]
+            #gfibers = np.array([20, 70, 120, 170, 220, 270])[::-1]
+            #gcolors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange', 'magenta', 'darkgreen', 'limegreen', 'maroon'])[::-1]
             #gfibers = np.array([0, 49, 99, 149, 199, 249, 299])[::-1]
-            ngplotfibs = len(gfibers)
+            #ngplotfibs = len(gfibers)
 
             fig = plt.figure(figsize=(30,14))
             ymax = 1.0
@@ -1086,11 +1086,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                for ifib in range(ngplotfibs):
+                for ifib in range(nplotfibs):
                     medcent = np.nanmedian(gcent[:, ichip, ifib])
                     yvals = gcent[:, ichip, ifib] - medcent
-                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=gcolors[ifib], #alpha=alf, 
-                               label='fib ' + str(gfibers[ifib]))
+                    ax.scatter(xvals, yvals, marker='o', s=markersz, c=colors[ifib], #alpha=alf, 
+                               label='fib ' + str(fibers[ifib]))
 
                 ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
                         ha='center', va='top', color=chip, bbox=bboxpar)
