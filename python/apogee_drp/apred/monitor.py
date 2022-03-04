@@ -1053,7 +1053,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymin = -2.8
             yspan = ymax - ymin
             dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
-            gd, = np.where((dtrace['MJD'] > 1000) & (dtrace['GAUSS_NPEAKS'][:,1] > 295))
+            gd, = np.where((dtrace['MJD'] > 58000) & (dtrace['GAUSS_NPEAKS'][:,1] > 295))
             gdtrace = dtrace[gd]
             gcent = gdtrace['GAUSS_CENT'][:,:,gfibers]
             xvals = gdtrace['MJD']
@@ -1103,8 +1103,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 1020
-            ymin = 1028
+            ymax = 1010
+            ymin = 1038
             yspan = ymax - ymin
 
             fibs = np.arange(148,153)
@@ -1155,6 +1155,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
+        return
 
         ###########################################################################################
         # qfwhm.png
