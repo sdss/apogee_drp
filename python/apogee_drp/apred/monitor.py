@@ -1043,7 +1043,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            gfibers = np.array([10, 45, 80, 115, 150, 185, 220, 255, 290])[::-1]
+            gfibers = np.array([25, 75, 125, 175, 225, 275])[::-1]
             gcolors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange', 'magenta', 'darkgreen', 'limegreen', 'maroon'])[::-1]
             #gfibers = np.array([0, 49, 99, 149, 199, 249, 299])[::-1]
             ngplotfibs = len(gfibers)
