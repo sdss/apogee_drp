@@ -1057,6 +1057,8 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                 else:
                     fps = False
                 calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd1))
+                if os.path.exists(calplandir)==False:
+                    os.makedirs(calplandir)
                 exptype1 = expinfo['exptype'][cind[k]]
                 arctype1 = expinfo['arctype'][cind[k]]                    
                 cmd1 = 'makecal --vers {0} --telescope {1} --unlock'.format(apred,telescope)
@@ -1069,14 +1071,15 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                     if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif ccode==4:  # arcs
-                    cmd1 = ' --wave '+str(num1)
+                    cmd1 += ' --wave '+str(num1)
                     if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
                 elif ccode==8:  # fpi
-                    cmd1 = ' --fpi '+str(num1)
+                    cmd1 += ' --fpi '+str(num1)
                     if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
-                logger.info('Logfile : '+logfile1)
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
                 logfiles.append(logfile1)
                 # Check if files exist already
                 docal[k] = True
