@@ -1,4 +1,3 @@
-import pdb
 import sys
 import glob
 import os
@@ -67,7 +66,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #alldark = fits.open(specdir4 + instrument + 'Cal.fits')[2].data
     #allexp =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
     #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
-    allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
+    #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
     allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
     allsci4 =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
@@ -80,65 +79,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
     #snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
     allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
-    dometrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
-    quartztrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
+    dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
+    qtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
 
-    badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
+    #badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
 
     if makesumfiles is True:
-        ###########################################################################################
-        # MAKE MASTER TRACE FILE
-        # Append together the individual QAcal files
-
-        files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
-        import pdb; pdb.set_trace()
-        if len(files) < 1:
-            print("----> monitor: No apEPSF-b files!")
-        else:
-            outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
-            print("----> monitor: Making " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            dt = np.dtype([('NUM',      np.int32),
-                           ('MJD',      np.float64),
-                           ('CENT',     np.float64),
-                           ('LN2LEVEL', np.int32)])
-
-            outstr = np.zeros(len(allepsf['NUM']), dtype=dt)
-
-            outstr['NUM'] =      allepsf['NUM']
-            outstr['MJD'] =      allepsf['MJD']
-            outstr['CENT'] =     allepsf['CENT']
-            outstr['LN2LEVEL'] = allepsf['LN2LEVEL']
-
-            files.sort()
-            files = np.array(files)
-            nfiles = len(files)
-
-            for i in range(nfiles):
-                print("---->    monitor: reading " + os.path.basename(files[i]))
-                data = fits.open(files[i])[1].data
-                import pdb; pdb.set_trace()
-                struct1 = np.zeros(len(data['NUM']), dtype=dt)
-                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
-                if num > 1000:
-                    hdr = fits.getheader(files[i])
-                    for j in range(147,156):
-                        data = fits.open(files[i])[j].data
-                        if a['FIBER'] == 150:
-                            struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
-                            struct1['CENT'][i] = data['CENT'][1000]
-                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
-                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
-                            break
-                if i == 0: outstr = np.concatenate([outstr, struct1])
-                else:      outstr = np.concatenate([outstr, struct1])
-
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
-
-
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
@@ -357,13 +304,63 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
 
+        ###########################################################################################
+        # MAKE MASTER TRACE FILE
+        # Append together the individual QAcal files
+
+#        files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
+#        if len(files) < 1:
+#            print("----> monitor: No apEPSF-b files!")
+#        else:
+#            outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+#            print("----> monitor: Making " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+#            dt = np.dtype([('NUM',      np.int32),
+#                           ('MJD',      np.float64),
+#                           ('CENT',     np.float64),
+#                           ('LN2LEVEL', np.int32)])
+
+#            outstr = np.zeros(len(allepsf['NUM']), dtype=dt)
+
+#            outstr['NUM'] =      allepsf['NUM']
+#            outstr['MJD'] =      allepsf['MJD']
+#            outstr['CENT'] =     allepsf['CENT']
+#            outstr['LN2LEVEL'] = allepsf['LN2LEVEL']
+
+#            files.sort()
+#            files = np.array(files)
+#            nfiles = len(files)
+
+#            for i in range(nfiles):
+#                print("---->    monitor: reading " + os.path.basename(files[i]))
+#                data = fits.open(files[i])[1].data
+#                import pdb; pdb.set_trace()
+#                struct1 = np.zeros(len(data['NUM']), dtype=dt)
+#                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
+#                if num > 1000:
+#                    hdr = fits.getheader(files[i])
+#                    for j in range(147,156):
+#                        data = fits.open(files[i])[j].data
+#                        if a['FIBER'] == 150:
+#                            struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
+#                            struct1['CENT'][i] = data['CENT'][1000]
+#                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
+#                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
+#                            break
+#                if i == 0: outstr = np.concatenate([outstr, struct1])
+#                else:      outstr = np.concatenate([outstr, struct1])
+
+#            Table(outstr).write(outfile, overwrite=True)
+#            print("----> monitor: Finished making " + os.path.basename(outfile))
+
     ###############################################################################################
     # Read in the SDSS-V summary files
     allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
     alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
     allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
     allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
-    allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
+    #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
     # Read in the APOGEE2 Trace.fits file since the columns don't match between APOGEE2 and SDSS-V
     allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
@@ -399,6 +396,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#qflux>Quartz lamp median brightness</a>\n')
+    html.write('<li> <a href=#qtrace>Quartz lamp trace position</a>\n')
     html.write('<li> <a href=#qfwhm>Quartz lamp trace FWHM</a>\n')
     html.write('<li> <a href=#dflux>Dome flat median brightness</a>\n')
     html.write('<li> <a href=#dfwhm>Dome flat trace FWHM</a>\n')
@@ -433,6 +431,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1000></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<h3> <a name=qtrace></a> Quartz lamp trace position </h3>\n')
+    html.write('<A HREF=' + instrument + '/qtrace.png target="_blank"><IMG SRC=' + instrument + '/qtrace.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qfwhm></a> Quartz lamp trace FWHM </h3>\n')
@@ -1035,6 +1037,65 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.close('all')
 
         ###########################################################################################
+        # qtrace.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/qtrace.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            ymax = 1013
+            ymin = 1039
+            yspan = ymax - ymin
+
+            fibs = np.arange(148,153)
+            nfibs = len(fibs)
+
+            gd, = np.where(qtrace['MJD'] > 50000)
+            qtz = qtrace[gd]
+            qpos = qtz['GAUSS_CENT']
+            eqpos = qtz['E_GAUSS_CENT']
+            qmjd = qtz['MJD']
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Trace Position (pix)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=59555, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for fib in fibs:
+                    yvals = qpos[:, ichip, fib]
+                    ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='fib ' + str(fibs[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
         # qfwhm.png
         plotfile = specdir5 + 'monitor/' + instrument + '/qfwhm.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -1047,8 +1108,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymin = 0.8
             yspan = ymax - ymin
 
-            gd, = np.where(quartztrace['MJD'] > 50000)
-            qtz = quartztrace[gd]
+            gd, = np.where(qtrace['MJD'] > 50000)
+            qtz = qtrace[gd]
             qmjd = qtz['MJD']
             qfwhm = qtz['GAUSS_SIGMA']*2.355
 
@@ -1274,8 +1335,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymin = 0.8
             yspan = ymax - ymin
 
-            gd, = np.where(dometrace['MJD'] > 50000)
-            df = dometrace[gd]
+            gd, = np.where(dtrace['MJD'] > 50000)
+            df = dtrace[gd]
             dmjd = df['MJD']
             dfwhm = df['GAUSS_SIGMA']*2.355
 
