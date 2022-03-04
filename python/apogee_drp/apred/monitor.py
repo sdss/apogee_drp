@@ -1082,8 +1082,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                for fib in fibs:
-                    yvals = qpos[:, ichip, fib]
+                for ifib in range(nfibs):
+                    yvals = qpos[:, ichip, fibs[ifib]]
                     ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='fib ' + str(fibs[ifib]))
 
