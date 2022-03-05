@@ -562,7 +562,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
           ims = getnums(lsfstr[red[i]].frames)
           cmjd = getcmjd(ims[0],mjd=mjd)
           GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,multiwaveid=waveid,fiberid=fiberid
-          MAKECAL,multiwave=waveid,unlock=unlock,psflibrary=librarypsf
+          MAKECAL,multiwave=waveid,unlock=unlock,librarypsf=librarypsf
           print,'calling mklsf'
           MKLSF,ims,waveid,darkid=darkid,flatid=flatid,psfid=lsfstr[i].psfid,fiberid=fiberid,$
                 full=full,newwave=newwave,clobber=clobber,pl=pl,unlock=unlock,/nowait

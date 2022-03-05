@@ -90,7 +90,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
     ;; Check if they exist
     wavefiles = apogee_filename('Wave',num=waveid[i],chip=chips)
     if total(file_test(wavefiles)) lt 3 or keyword_set(clobber) then begin
-      MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock,psflibrary=psflibrary
+      MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock,librarypsf=psflibrary
     endif else begin
       print,repstr(wavefiles[0],'-a-','-'),' made already'
     endelse
