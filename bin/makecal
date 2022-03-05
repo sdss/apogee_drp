@@ -31,6 +31,7 @@ if __name__ == '__main__' :
     parser.add_argument('--flat', type=int, help='apFlat ID')
     parser.add_argument('--wave', type=int, help='apWave ID')
     parser.add_argument('--multiwave', type=int, help='multiwave ID')
+    parser.add_argument('--dailywave', type=int, help='daily wavelength ID')
     parser.add_argument('--lsf', type=int, help='LSF ID')
     parser.add_argument('--bpm', type=int, help='apBPM ID')
     parser.add_argument('--psf', type=int, help='PSF ID')
@@ -72,9 +73,9 @@ if __name__ == '__main__' :
     cmd = "makecal"
 
     # Add inputs
-    inpnames = ['file','det','dark','flat','wave','multiwave','lsf','bpm','psf','flux',
-                'sparse','fiber','littrow','persist','modelpersist','response','fpi','mjd',
-                'nskip','vers','telescope']
+    inpnames = ['file','det','dark','flat','wave','multiwave','dailywave','lsf','bpm','psf',
+                'flux','sparse','fiber','littrow','persist','modelpersist','response','fpi',
+                'mjd','nskip','vers','telescope']
     for i,key in enumerate(inpnames):
         val = argsdict[key]
         if val is not None:

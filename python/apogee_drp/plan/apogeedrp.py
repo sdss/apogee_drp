@@ -395,6 +395,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                         os.chdir(destdir)
                 else:
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    
+        # Link all of the PSF files in the PSF library
+
         return
 
     # Input MJD range
@@ -1017,8 +1020,13 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
         todel = np.delete(todel,ui)  # remove the ones we want to keep
         expinfo = np.delete(expinfo,todel)
 
+    # ADD DAILY MULTIWAVE CALIBRATION FILES
+    # after wave and before fpi
+    # make sure to run mkwave on all arclamps needed for daily cals
+
+
     # 1: psf, 2: flux, 4: arcs, 8: fpi
-    calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':4, 'FPI':8}
+    calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':4, 'DAILYWAVE':8, 'FPI':16}
     calcode = [calcodedict[etype] for etype in expinfo['exptype']]
     # Do NOT use DOMEFLATS for apPSF with FPS, MJD>=59556 (only quarzflats)
     #  Only use domeflats for apFlux cal files, need to chance calcode
@@ -1027,9 +1035,9 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
         calcode = np.array(calcode)
         calcode[dome] = 2
         calcode = list(calcode)
-    calnames = ['DOMEFLAT/QUARTZFLAT','FLUX','ARCLAMP','FPI']
-    shcalnames = ['psf','flux','arcs','fpi']
-    filecodes = ['PSF','Flux','Wave','WaveFPI']
+    calnames = ['DOMEFLAT/QUARTZFLAT','FLUX','ARCLAMP','DAILYWAVE','FPI']
+    shcalnames = ['psf','flux','arcs','dailywave','fpi']
+    filecodes = ['PSF','Flux','Wave','Wave','WaveFPI']
     chkcal = []
     for j,ccode in enumerate([1,2,4,8]):
         logger.info('')
@@ -1074,7 +1082,11 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                     cmd1 += ' --wave '+str(num1)
                     if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
-                elif ccode==8:  # fpi
+                elif ccode==8:  # dailywave
+                    cmd1 += ' --dailywave '+str(num1)
+                    if fps: cmd1 += ' --librarypsf'
+                    logfile1 = calplandir+'/apDailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
+                elif ccode==16:  # fpi
                     cmd1 += ' --fpi '+str(num1)
                     if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'

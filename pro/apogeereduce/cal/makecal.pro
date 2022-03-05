@@ -18,6 +18,7 @@
 ;  lsf=lsfid     Make the lsf with name=lsfid 
 ;  fpi=fpiid     Make the FPI with name=fpiid
 ;  /librarypsf   Use PSF library to get PSF cal for images.
+;  =dailwavey    Daily wavelength solution ID.
 ;
 ; OUTPUT:
 ;  Calibration products are generated in places specified by the
@@ -38,7 +39,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
             littrow=littrow,persist=persist,modelpersist=modelpersist,$
             response=response,mjd=mjd,full=full,newwave=newwave,nskip=nskip,$
             average=average,clobber=clobber,vers=vers,telescope=telescope,$
-            nofit=nofit,pl=pl,unlock=unlock,fpi=fpi,librarypsf=librarypsf
+            nofit=nofit,pl=pl,unlock=unlock,fpi=fpi,librarypsf=librarypsf,$
+            dailywave=dailywave
 
   if keyword_set(vers) and keyword_set(telescope) then apsetver,vers=vers,telescope=telescope
   dirs = getdir(apo_dir,cal_dir,spectro_dir,apo_vers,lib_dir)
@@ -524,6 +526,29 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
        endfor
       endif
     endelse
+  endif
+
+  ;; Make daily wavelength calibration file
+  ;;---------------------------------------
+  if keyword_set(dailywave) then begin
+    print,'makecal dailywave: ', dailywave
+    if dailywave gt 1 then begin
+      dir = apogee_filename('Wave',num=dailywave,/nochip,/dir)
+      file = dir+dirs.prefix+'Wave-'+strtrim(dailywave,2)+'.fits'
+      swaveid = strtrim(dailywave,2)
+      allfiles = dir+dirs.prefix+'Wave-'+chips+'-'+swaveid+'.fits'
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' dailywave file: ',file,' already made'
+        return
+      endif
+      mjd = dailywave
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
+      MAKECAL,bpm=bpmid,unlock=unlock
+      MAKECAL,fiber=fiberid,unlock=unlock
+      MKDAILYWAVE,dailywave,darkid=darkid,flatid=flatid,psfid=psfid,$
+             fiberid=fiberid,clobber=clobber,nofit=nofit,unlock=unlock,$
+             psflibrary=librarypsf
+    endif
   endif
 
   ;; Make LSF calibration file

@@ -72,7 +72,7 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,$
     print,''
     print,'--- Frame ',strtrim(i+1,2),':  ',strtrim(waveid[i],2),' ---'
     MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',$
-            /nofit,unlock=unlock,psflibrary=psflibrary
+            /nofit,unlock=unlock,librarypsf=psflibrary
   endfor
 
   ;; New Python version!
