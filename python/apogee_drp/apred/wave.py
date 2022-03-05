@@ -27,7 +27,8 @@ from scipy import signal, interpolate
 from scipy.optimize import curve_fit
 from scipy.special import erf, erfc
 from scipy.signal import medfilt, convolve, boxcar
-from ..utils import apload, yanny, plan
+from ..database import apogeedb
+from ..utils import apload, yanny, plan, info
 from holtztools import plots, html
 from astropy.table import Table
 #from pyvista import tv
@@ -42,6 +43,105 @@ colors = ['r','g','b','c','m','y']
 xlim = [[16400,17000],[15900,16500],[15100,15800]]
 
 DEBUG = False
+
+def dailywave(mjd,observatory='apo',apred='daily',clobber=False,verbose=True):
+    """
+    Function to run daily that generates a wavelength solution using a week's worth of
+    arclamp data simultaneously fit with "apmultiwavecal".
+
+    Parameters
+    ----------
+    mjd : int
+       The MJD number for the night to make the daily wavelength solution.
+    observatory : str, optional
+       The observatory name 'apo' or 'lco'.  Default is 'apo'.
+    apred : str, optional
+       The APOGEE reduction version.  Default is 'daily'.
+    clobber : boolean, optional
+       Overwrite any existing files.
+    verbose : boolean, optional
+       Verbose output to the screen.
+
+    Returns
+    -------
+    The Wavelength solution is written to the file apWave-[abc]-MJD.fits
+
+    Example
+    -------
+
+    dailywave(59626,'apo','daily')
+
+    """
+
+    t0 = time.time()
+
+    db = apogeedb.DBSession()
+
+    print('Getting daily wavelength solution for MJD='+str(mjd))
+    
+    reduxdir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
+    datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
+    instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
+    load = apload.ApLoad(apred=apred,instrument=instrument)
+
+    # Step 1: Find the arclamp frames for the last week
+    #--------------------------------------------------
+    print(' ')
+    print('Step 1: Find the arclamp frames to use')
+    print('--------------------------------------')
+
+    # Get nights in range MJD+/-7 days
+    mjdlist = os.listdir(datadir)
+    mjds = [m for m in mjdlist if int(m) >= (int(mjd)-10) and int(m)<=(int(mjd)+10) and m.isdigit()]
+    # Trim it down to 8 days
+    mjds = np.array(mjds).astype(int)
+    diff = np.abs(mjds-mjd)
+    si = np.argsort(diff)
+    mjds = mjds[si[0:8]]
+    mjds = list(mjds[np.argsort(mjds)])
+    print('Using MJDs ('+str(len(mjds))+'): '+','.join(np.char.array(mjds).astype(str)))
+    # Get exposure information
+    for i,m in enumerate(mjds):
+        expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
+        nexp = len(expinfo1)
+        if i==0:
+            expinfo = expinfo1
+        else:
+            expinfo = np.hstack((expinfo,expinfo1))
+    # Sort them
+    si = np.argsort(expinfo['num'])
+    expinfo = expinfo[si]
+
+    # Get arclamp exposures
+    arc, = np.where((expinfo['exptype']=='ARCLAMP') & ((expinfo['arctype']=='UNE') | (expinfo['arctype']=='THAR')))
+    narc = len(arc)
+    if narc==0:
+        print('No arclamp exposures for these nights')
+        return
+    arcframes = expinfo['num'][arc]
+    print(str(len(arcframes))+' arclamp exposures for these nights')
+
+    # Step 2: Fit wavelength solutions simultaneously
+    #------------------------------------------------
+    print(' ')
+    print('Step 2: Fit wavelength solutions simultaneously')
+    print('------------------------------------------------')
+    # This is what apmultiwavecal does
+    if verbose:
+        print('Solving wavelength solutions simultaneously using all arclamp exposures')
+    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%s.fits' % str(mjd)
+    if os.path.exists(wfile.replace('apWave-','apWave-b-'))==False or clobber:
+        # The previously measured lines in the apLines files will be reused if they exist
+        npoly = 4 # 5
+        pars,arclinestr = wave.wavecal(arcframes,rows=np.arange(300),name=str(mjd),
+                                       npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
+        # npoly=4 gives lower RMS values
+        # Check that it's there
+        if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False:
+            raise Exception(wfile+' not found')
+    else:
+        print(wfile+' wavelength calibration file already exists')
+
 
 def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npoly=4,reject=3,
             plot=False,hard=True,verbose=False,clobber=False,init=False,nofit=False,test=False) :

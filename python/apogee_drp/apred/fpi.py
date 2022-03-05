@@ -53,46 +53,26 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
     load = apload.ApLoad(apred=apred,instrument=instrument)
 
-    # Check if multiple new MJDs
-    mjdlist = os.listdir(datadir)
-    mjds = [mjd for mjd in mjdlist if int(mjd) >= (int(mjd5)-7) and int(mjd)<=int(mjd5) and mjd.isdigit()]
-    if verbose:
-        print(len(mjds), ' nights: ',','.join(mjds))
+    # Make daily wavelength solution if it doesn't exist
+    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%s.fits' % str(mjd5)
+    if os.path.exists(wfile.replace('apWave-','apWave-b-'))==False:
+        wave.dailywave(mjd5,observatory=observatory,apred=apred,verbose=verbose)
+
+
 
     # Get exposure information
     if verbose:
         print('Getting exposure information')
-    for i,m in enumerate(mjds):
-        expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
-        nexp = len(expinfo1)
-        if verbose:
-            print(m,' ',nexp,' exposures')
-        if i==0:
-            expinfo = expinfo1
-        else:
-            expinfo = np.hstack((expinfo,expinfo1))
+    expinfo = info.expinfo(observatory=observatory,mjd5=mjd5)
+    nexp = len(expinfo)
+    print(nexp,' exposures')
     # Sort them
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]
 
-    # Step 1: Find the arclamp frames for the last week
-    #--------------------------------------------------
-    print(' ')
-    print('Step 1: Find the arclamp frames for the last week')
-    print('--------------------------------------------------')
-
-    # Get arclamp exposures
-    arc, = np.where((expinfo['exptype']=='ARCLAMP') & ((expinfo['arctype']=='UNE') | (expinfo['arctype']=='THAR')) &
-                    (expinfo['mjd']>=mjd5-7) & (expinfo['mjd']<=mjd5))
-    narc = len(arc)
-    if narc==0:
-        print('No arclamp exposures for these nights')
-        return
-    arcframes = expinfo['num'][arc]
-    print(len(arcframes),' arclamp exposures for these nights')
 
     # Get full frame FPI exposure to use
-    fpi, = np.where((expinfo['exptype']=='FPI') & (expinfo['mjd']==mjd5))
+    fpi, = np.where(expinfo['exptype']=='FPI')
     if num is None:
         if len(fpi)==0:
             raise ValueError('No FPI exposures for MJD='+str(mjd5))
@@ -110,38 +90,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     print('FPI full-frame exposure ',fpinum)
     fpiframe = load.ap1D(fpinum)
 
-
-    # Step 2: Fit wavelength solutions simultaneously
-    #------------------------------------------------
-    print(' ')
-    print('Step 2: Fit wavelength solutions simultaneously')
-    print('------------------------------------------------')
-    # This is what apmultiwavecal does
-    if verbose:
-        print('Solving wavelength solutions simultaneously using all arclamp exposures')
-    #wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%08d.fits' % mjd5
-    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%s.fits' % str(mjd5)
-    if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False or clobber is True:
-        # The previously measured lines in the apLines files will be reused if they exist
-        npoly = 4 # 5
-        #print('KLUDGE!! only using existing frames!!')
-        #arcframes = arcframes[0:4]
-        #afiles = ['/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-'+str(e)+'_lines.fits' for e in arcframes]
-        #exists = dln.exists(afiles)
-        #arcframes = arcframes[exists]
-        #import pdb; pdb.set_trace()
-        #arcframes = arcframes[-12:]
-        pars,arclinestr = wave.wavecal(arcframes,rows=np.arange(300),name=str(mjd5),npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
-        # npoly=4 gives lower RMS values
-        # Check that it's there
-
-        if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False:
-            raise Exception(wfile+' not found')
-    else:
-        print(wfile,' wavelength calibration file already exists')
-
-
-    # Load the wavelength solution from today
+    # Load the daily wavelength solution for this night
     daynum = mjd2day(mjd5)
     print('Using ',wfile,' wavelength calibration file')
     wavecal = load._readchip(wfile,'Wave')
