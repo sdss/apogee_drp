@@ -97,7 +97,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   endfor
 
   ;; New Python version! 
-  cmd = ['mkfpiwave',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--verbose']
+  cmd = ['mkfpi',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--verbose']
   print,'Running: ',cmd
   spawn,cmd,/noshell
 
