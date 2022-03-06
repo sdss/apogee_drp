@@ -44,7 +44,7 @@ xlim = [[16400,17000],[15900,16500],[15100,15800]]
 
 DEBUG = False
 
-def dailywave(mjd,observatory='apo',apred='daily',clobber=False,verbose=True):
+def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=False,verbose=True):
     """
     Function to run daily that generates a wavelength solution using a week's worth of
     arclamp data simultaneously fit with "apmultiwavecal".
@@ -57,6 +57,10 @@ def dailywave(mjd,observatory='apo',apred='daily',clobber=False,verbose=True):
        The observatory name 'apo' or 'lco'.  Default is 'apo'.
     apred : str, optional
        The APOGEE reduction version.  Default is 'daily'.
+    npoly : int, optional
+       Polynomial fit order.  Default is 4.
+    init : boolean, optional
+       Use initial quadratic guess.  Default is False.
     clobber : boolean, optional
        Overwrite any existing files.
     verbose : boolean, optional
@@ -132,9 +136,8 @@ def dailywave(mjd,observatory='apo',apred='daily',clobber=False,verbose=True):
     wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%s.fits' % str(mjd)
     if os.path.exists(wfile.replace('apWave-','apWave-b-'))==False or clobber:
         # The previously measured lines in the apLines files will be reused if they exist
-        npoly = 4 # 5
-        pars,arclinestr = wave.wavecal(arcframes,rows=np.arange(300),name=str(mjd),
-                                       npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
+        pars,arclinestr = wavecal(arcframes,rows=np.arange(300),name=str(mjd),init=init,
+                                  npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
         # npoly=4 gives lower RMS values
         # Check that it's there
         if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False:
