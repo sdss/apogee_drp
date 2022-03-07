@@ -433,7 +433,7 @@ def skysub(dosky=True):
         snum = str(allsnrg['im'][iexp])
         specdir = specdir5 + 'visit/' + stel + '/' + sfield + '/' + splate + '/' + smjd + '/'
 
-        cframe = glob.glob(specdir + 'apCframe-c-' + snum + '.fits')
+        cframe = glob.glob(specdir + 'apCframe-a-' + snum + '.fits')
         if os.path.exists(cframe[0]) == False: continue
 
         apPlate = load.apPlate(int(splate), smjd)
