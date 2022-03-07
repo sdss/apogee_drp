@@ -436,16 +436,20 @@ def skysub(dosky=True):
 
         apPlate = load.apPlate(int(splate), smjd)
         objdata = apPlate['a'][11].data[::-1]
-        gdind, = np.where((objdata['objtype'] == 'none') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
-                          (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
-                          (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
+
+        asstot = np.sum(objdata['assigned'])
+        if asstot < 20: continue
+
+        if dosky is False:
+            gdind, = np.where((objdata['objtype'] == 'none') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
+                              (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
+                              (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
         if dosky:
             gdind, = np.where((objdata['objtype'] == 'SKY') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
                               (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
                               (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
 
-        if len(gdind) < 50: continue
-        pdb.set_trace()
+        if len(gdind) < 20: continue
 
         print(str(iexp) + '/' + str(nexp))
 
