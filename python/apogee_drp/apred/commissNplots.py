@@ -460,8 +460,8 @@ def skysub(dosky=True):
             ichip = 0
             for ax in axes:
                 gfile = cframe[0]
-                if ichip == 1: gfile = gfile.replace('-c-', '-b-')
-                if ichip == 2: gfile = gfile.replace('-c-', '-a-')
+                if ichip == 1: gfile = gfile.replace('-a-', '-b-')
+                if ichip == 2: gfile = gfile.replace('-a-', '-c-')
                 cflux = fits.getdata(gfile)
                 msky = np.nanmedian(cflux[299-gdind], axis=0)
                 oneDflux = load.apread('1D', num=int(snum))[ichip].flux
@@ -470,7 +470,7 @@ def skysub(dosky=True):
                 for iline in range(nskylines):
                     lstart = int(round(skylines[ichip, iline] - pixrad))
                     lstop  = int(round(skylines[ichip, iline] + pixrad))
-                    diff = (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
+                    diff = (np.nansum(np.absolute(msky[lstart:lstop])) / np.nansum(np.absolute(msky0[lstart:lstop]))) * 100.0
                     c = colors1[iline]
                     x = [allsnrg['JD'][iexp], allsnrg['JD'][iexp]]
                     y = [diff, diff]
