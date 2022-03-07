@@ -340,7 +340,7 @@ def dillum(mjdstart=59604):
     html.close()
 
 ###########################################################################################
-def skysub(sky=True, field='20833', plate='3801', mjd='59638'):
+def skysub(dosky=True, field='20833', plate='3801', mjd='59638'):
     pixrad = 9
     skylinesa = np.array([ 210.5,  497.0, 1139.6, 1908.0])
     skylinesb = np.array([1100.0, 1270.8, 1439.8, 1638.4])
@@ -366,7 +366,7 @@ def skysub(sky=True, field='20833', plate='3801', mjd='59638'):
                        (data['fiberid'] != 109) & (data['fiberid'] != 289))
 
     goodind = notsky
-    if sky is True: goodind = sky
+    if dosky: goodind = sky
     diff = np.zeros((ncframes, nchips, nskylines))
     for iframe in range(ncframes):
         num = int(os.path.basename(cframes[iframe]).split('-')[2].split('.')[0])
@@ -375,7 +375,7 @@ def skysub(sky=True, field='20833', plate='3801', mjd='59638'):
             if ichip == 1: gfile = gfile.replace('-a-', '-b-')
             if ichip == 2: gfile = gfile.replace('-a-', '-c-')
             cflux = fits.getdata(cframes[iframe])
-            msky = np.nanmedian(cflux[goodind],axis=0)
+            msky = np.nanmedian(cflux[goodind], axis=0)
             oneDflux = load.apread('1D', num=num)[ichip].flux
             msky0 = np.nanmedian(oneDflux[:,300-goodind], axis=1)
             for iline in range(nskylines):
