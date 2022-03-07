@@ -395,7 +395,7 @@ def skysub(dosky=True):
     skylinesa = np.array([ 210.5,  497.0, 1139.6, 1908.0])
     skylinesb = np.array([1100.0, 1270.8, 1439.8, 1638.4])
     skylinesc = np.array([ 656.2, 1467.0, 1599.7, 1738.0])
-    skylines = np.array([skylinesc, skylinesb, skylinesa])
+    skylines = np.array([skylinesa, skylinesb, skylinesc])
     nskylines = len(skylinesa)
 
     plotfile = specdir5 + 'monitor/' + instrument + '/skysub.png'
