@@ -341,7 +341,7 @@ def dillum(mjdstart=59604):
 
 ###########################################################################################
 def skysub(field='20833', plate='3801', mjd='59638'):
-    pixrad = 5
+    pixrad = 7
     skylinesa = np.array([ 210.5, 1138.0, 1908.0])
     skylinesb = np.array([1100.0, 1270.8, 1439.8])
     skylinesc = np.array([1467.0, 1599.7, 1738.0])
