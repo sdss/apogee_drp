@@ -374,7 +374,7 @@ def skysub(dosky=True, field='20833', plate='3801', mjd='59638'):
             gfile = cframes[iframe]
             if ichip == 1: gfile = gfile.replace('-a-', '-b-')
             if ichip == 2: gfile = gfile.replace('-a-', '-c-')
-            cflux = fits.getdata(cframes[iframe])
+            cflux = fits.getdata(gfile)
             msky = np.nanmedian(cflux[goodind], axis=0)
             oneDflux = load.apread('1D', num=num)[ichip].flux
             msky0 = np.nanmedian(oneDflux[:,300-goodind], axis=1)
