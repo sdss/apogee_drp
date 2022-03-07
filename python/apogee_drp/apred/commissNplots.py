@@ -372,7 +372,7 @@ def skysub(field='20833', plate='3801', mjd='59638'):
             for iline in range(nskylines):
                 lstart = int(round(skylines[ichip, iline] - pixrad))
                 lstop  = int(round(skylines[ichip, iline] + pixrad))
-                diff[iframe, ichip, iline] = (np.nansum(np.absolute(msky[lstart:lstop])) / np.nansum(np.absolute(msky0[lstart:lstop]))) * 100.0
+                diff[iframe, ichip, iline] = (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
 
     print(diff)
 
