@@ -455,7 +455,7 @@ def skysub(dosky=True):
 
         if len(gdind) < 20: continue
 
-        print(str(iexp) + '/' + str(nexp))
+        print('(' + str(iexp) + '/' + str(nexp) + '):  field=' + sfield + ', plate=' + splate + ', mjd=' + smjd + ', num=' + snum)
 
         ichip = 0
         for ax in axes:
