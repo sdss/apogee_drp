@@ -405,6 +405,8 @@ def skysub(dosky=True):
 
     g, = np.where(allsnr['MJD'] >= 59590)
     allsnrg = allsnr[g]
+    snrord = np.argsort(allsnr['JD'])
+    allsnrg = allsnrg[snrord]
     nexp = len(g)
 
     ax1 = plt.subplot2grid((nchips,1), (0,0))
@@ -437,7 +439,7 @@ def skysub(dosky=True):
         apPlate = load.apPlate(int(splate), smjd)
         objdata = apPlate['a'][11].data[::-1]
 
-        if splate == '1634': pdb.set_trace()
+        #if splate == '1634': pdb.set_trace()
 
         asstot = np.sum(objdata['assigned'])
         if asstot < 20: continue
@@ -463,12 +465,12 @@ def skysub(dosky=True):
             cflux = fits.getdata(gfile)
             msky = np.nanmedian(cflux[gdind], axis=0)
             oneDflux = load.apread('1D', num=int(snum))[ichip].flux
-            msky0 = np.nanmedian(oneDflux[:,299-gdind], axis=1)
+            msky0 = np.nanmedian(oneDflux[:,300-gdind], axis=1)
             for iline in range(nskylines):
                 lstart = int(round(skylines[ichip, iline] - pixrad))
                 lstop  = int(round(skylines[ichip, iline] + pixrad))
                 diff = (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
-                c = colors1[ilines]
+                c = colors1[iline]
                 x = [allsnrg['JD'][iexp], allsnrg['JD'][iexp]]
                 y = [diff, diff]
                 ax.scatter(x, y, marker='o', s=10, c=c, alpha=0.7)
