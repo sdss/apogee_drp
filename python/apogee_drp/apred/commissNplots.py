@@ -404,8 +404,8 @@ def skysub(dosky=True):
     fig = plt.figure(figsize=(26,14))
 
     g, = np.where(allsnr['MJD'] >= 59590)
-    allsnrg = allsnrg[g]
-    snrord = np.argsort(allsnr['JD'])
+    allsnrg = allsnr[g]
+    snrord = np.argsort(allsnrg['JD'])
     allsnrg = allsnrg[snrord]
     nexp = len(g)
 
