@@ -464,9 +464,9 @@ def skysub(dosky=True):
                 if ichip == 1: gfile = gfile.replace('-c-', '-b-')
                 if ichip == 2: gfile = gfile.replace('-c-', '-a-')
                 cflux = fits.getdata(gfile)
-                msky = np.nanmedian(cflux[gdind], axis=0)
+                msky = np.nanmedian(cflux[299-gdind], axis=0)
                 oneDflux = load.apread('1D', num=int(snum))[ichip].flux
-                msky0 = np.nanmedian(oneDflux[:,300-gdind], axis=1)
+                msky0 = np.nanmedian(oneDflux[:,299-gdind], axis=1)
                 pdb.set_trace()
                 for iline in range(nskylines):
                     lstart = int(round(skylines[ichip, iline] - pixrad))
