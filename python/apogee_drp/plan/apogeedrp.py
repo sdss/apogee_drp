@@ -459,7 +459,6 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
 
         num = expinfo['num'][i]
         mjd = int(expinfo['mjd'][i])
-        chkcal['exposure_pk'][i] = expinfo['pk'][i]
         chkcal['logfile'][i] = lgfile
         chkcal['num'][i] = num
         chkcal['apred_vers'][i] = apred
@@ -484,20 +483,26 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         load = apload.ApLoad(apred=apred,telescope=chkcal['telescope'][i])
         # AP3D
         #-----
-        base = load.filename('2D',num=num,mjd=mjd,chips=True)
-        chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
-        exists = [os.path.exists(chf) for chf in chfiles]
-        if exists[0]==True:  # get V_APRED (git version) from file
-            chead = fits.getheader(chfiles[0])
-            chkcal['v_apred'][i] = chead.get('V_APRED')
-        if np.sum(exists)==3:
+        if caltype != 'DailyWave':
+            base = load.filename('2D',num=num,mjd=mjd,chips=True)
+            chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
+            exists = [os.path.exists(chf) for chf in chfiles]
+            if exists[0]==True:  # get V_APRED (git version) from file
+                chead = fits.getheader(chfiles[0])
+                chkcal['v_apred'][i] = chead.get('V_APRED')
+            if np.sum(exists)==3:
+                chkcal['success3d'][i] = True
+        else:
             chkcal['success3d'][i] = True
         # AP2D
         #-----
-        base = load.filename('1D',num=num,mjd=mjd,chips=True)
-        chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
-        exists = [os.path.exists(chf) for chf in chfiles]
-        if np.sum(exists)==3:
+        if caltype != 'DailyWave':
+            base = load.filename('1D',num=num,mjd=mjd,chips=True)
+            chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
+            exists = [os.path.exists(chf) for chf in chfiles]
+            if np.sum(exists)==3:
+                chkcal['success2d'][i] = True
+        else:
             chkcal['success2d'][i] = True
         # Final calibration file
         #-----------------------
@@ -1745,15 +1750,14 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     # Run QA check on the files
     logger.info(' ')
     logger.info('Doing quality checks on all calibration exposures')
-    #qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=logger)
-    #logger.info(' ')
-    #okay, = np.where(qachk['okay']==True)
-    #if len(okay)>0:
-    #    expinfo = expinfo[okay]
-    #else:
-    #    logger.info('No good calibration files to run')
-    #    return None        
-    print("UNCOMMENT HERE!!!!!!!!!!!!!!")
+    qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=logger)
+    logger.info(' ')
+    okay, = np.where(qachk['okay']==True)
+    if len(okay)>0:
+        expinfo = expinfo[okay]
+    else:
+        logger.info('No good calibration files to run')
+        return None        
 
     # Create cal plan directories for each night
     for m in mjds:
@@ -1793,11 +1797,12 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                 calinfo = expinfo[ind]
         elif caltype=='dailywave':
             ncal = len(mjds)
-            calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',np.str,20),('configid',int),
-                                                    ('designid',int),('fieldid',int)]))
+            calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',np.str,20),('observatory',np.str,3),
+                                                    ('configid',int),('designid',int),('fieldid',int)]))
             calinfo['num'] = mjds
             calinfo['mjd'] = mjds
             calinfo['exptype'] = 'dailywave'
+            calinfo['observatory'] = load.observatory
         elif caltype=='fpi':
             # Only FPI exposure number per MJD
             fpi, = np.where(expinfo['exptype']=='FPI')
@@ -1805,7 +1810,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                 # Take the first for each night
                 vals,ui = np.unique(expinfo['mjd'][fpi],return_index=True)
                 ncal = len(ui)
-                calinfo = expinfo[ui]
+                calinfo = expinfo[fpi][ui]
                 si = np.argsort(calinfo['num'])
                 calinfo = calinfo[si]
 
@@ -1879,10 +1884,9 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
             logger.info('Logfile : '+logfile1)
             queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
         if ntorun>0:
-            pass
-        #    queue.commit(hard=True,submit=True)
-        #    logger.info('PBS key is '+queue.key)
-        #    queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+            queue.commit(hard=True,submit=True)
+            logger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         else:
             logger.info('No '+str(calnames[i])+' calibration files need to be run')
         # Checks the status and updates the database
@@ -1893,12 +1897,6 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
             else:
                 chkcal = np.hstack((chkcal,chkcal1))
         del queue
-
-        import pdb; pdb.set_trace()
-
-    else:
-        chkcal = None
-        logger.info('No '+str(calnames[j])+' calibration files to run')
 
 
     # make sure to run mkwave on all arclamps needed for daily cals
