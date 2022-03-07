@@ -425,7 +425,7 @@ def skysub(dosky=True):
     ax1.axes.xaxis.set_ticklabels([])
     ax2.axes.xaxis.set_ticklabels([])
 
-    for iexp in range(80):
+    for iexp in range(nexp):
         stel = allsnrg['telescope'][iexp]
         sfield = allsnrg['field'][iexp]
         splate = str(allsnrg['plate'][iexp])
@@ -455,9 +455,8 @@ def skysub(dosky=True):
 
         if len(gdind) < 20: continue
 
-        print('(' + str(iexp) + '/' + str(nexp) + '):  field=' + sfield + ', plate=' + splate + ', mjd=' + smjd + ', num=' + snum)
-
         try:
+            print('(' + str(iexp) + '/' + str(nexp) + '):  field=' + sfield + ', plate=' + splate + ', mjd=' + smjd + ', num=' + snum)
             ichip = 0
             for ax in axes:
                 gfile = cframe[0]
