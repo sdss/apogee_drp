@@ -453,6 +453,7 @@ def skysub(dosky=True):
 
         print(str(iexp) + '/' + str(nexp))
 
+        if splate == '1634': pdb.set_trace()
         ichip = 0
         for ax in axes:
             gfile = cframe[0]
