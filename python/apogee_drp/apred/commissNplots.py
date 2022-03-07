@@ -425,7 +425,7 @@ def skysub(dosky=True):
     ax1.axes.xaxis.set_ticklabels([])
     ax2.axes.xaxis.set_ticklabels([])
 
-    for iexp in range(100):
+    for iexp in range(50):
         stel = allsnrg['telescope'][iexp]
         sfield = allsnrg['field'][iexp]
         splate = str(allsnrg['plate'][iexp])
@@ -448,7 +448,7 @@ def skysub(dosky=True):
             gdind, = np.where((objdata['objtype'] == 'none') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
                               (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
                               (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
-        if dosky:
+        else:
             gdind, = np.where((objdata['objtype'] == 'SKY') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
                               (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
                               (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
@@ -457,25 +457,28 @@ def skysub(dosky=True):
 
         print('(' + str(iexp) + '/' + str(nexp) + '):  field=' + sfield + ', plate=' + splate + ', mjd=' + smjd + ', num=' + snum)
 
-        ichip = 0
-        for ax in axes:
-            gfile = cframe[0]
-            if ichip == 1: gfile = gfile.replace('-c-', '-b-')
-            if ichip == 2: gfile = gfile.replace('-c-', '-a-')
-            cflux = fits.getdata(gfile)
-            msky = np.nanmedian(cflux[gdind], axis=0)
-            oneDflux = load.apread('1D', num=int(snum))[ichip].flux
-            msky0 = np.nanmedian(oneDflux[:,299-gdind], axis=1)
-            for iline in range(nskylines):
-                lstart = int(round(skylines[ichip, iline] - pixrad))
-                lstop  = int(round(skylines[ichip, iline] + pixrad))
-                diff = (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
-                c = colors1[iline]
-                x = [allsnrg['JD'][iexp], allsnrg['JD'][iexp]]
-                y = [diff, diff]
-                ax.scatter(x, y, marker='o', s=10, c=c, alpha=0.7)
+        try:
+            ichip = 0
+            for ax in axes:
+                gfile = cframe[0]
+                if ichip == 1: gfile = gfile.replace('-c-', '-b-')
+                if ichip == 2: gfile = gfile.replace('-c-', '-a-')
+                cflux = fits.getdata(gfile)
+                msky = np.nanmedian(cflux[gdind], axis=0)
+                oneDflux = load.apread('1D', num=int(snum))[ichip].flux
+                msky0 = np.nanmedian(oneDflux[:,300-gdind], axis=1)
+                for iline in range(nskylines):
+                    lstart = int(round(skylines[ichip, iline] - pixrad))
+                    lstop  = int(round(skylines[ichip, iline] + pixrad))
+                    diff = (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
+                    c = colors1[iline]
+                    x = [allsnrg['JD'][iexp], allsnrg['JD'][iexp]]
+                    y = [diff, diff]
+                    ax.scatter(x, y, marker='o', s=10, c=c, alpha=0.7)
 
-            ichip += 1
+                ichip += 1
+        except:
+            print('problem')
 
     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
