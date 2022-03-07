@@ -365,6 +365,8 @@ def skysub(sky=True, field='20833', plate='3801', mjd='59638'):
                        (data['fiberid'] != 25) & (data['fiberid'] != 18) & (data['fiberid'] != 21) & 
                        (data['fiberid'] != 109) & (data['fiberid'] != 289))
 
+    goodind = notsky
+    if sky is True: goodind = sky
     diff = np.zeros((ncframes, nchips, nskylines))
     for iframe in range(ncframes):
         num = int(os.path.basename(cframes[iframe]).split('-')[2].split('.')[0])
@@ -373,9 +375,9 @@ def skysub(sky=True, field='20833', plate='3801', mjd='59638'):
             if ichip == 1: gfile = gfile.replace('-a-', '-b-')
             if ichip == 2: gfile = gfile.replace('-a-', '-c-')
             cflux = fits.getdata(cframes[iframe])
-            msky = np.nanmedian(cflux[sky],axis=0)
+            msky = np.nanmedian(cflux[goodind],axis=0)
             oneDflux = load.apread('1D', num=num)[ichip].flux
-            msky0 = np.nanmedian(oneDflux[:,300-sky], axis=1)
+            msky0 = np.nanmedian(oneDflux[:,300-goodind], axis=1)
             for iline in range(nskylines):
                 lstart = int(round(skylines[ichip, iline] - pixrad))
                 lstop  = int(round(skylines[ichip, iline] + pixrad))
