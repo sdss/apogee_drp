@@ -357,9 +357,7 @@ def skysub(field='20833', plate='3801', mjd='59638'):
     data = apPlate['a'][11].data[::-1]
     sky, = np.where(data['objtype'] == 'SKY')
 
-    pdb.set_trace()
-
-    diff = np.zeros([ncframes, 3, 3])
+    diff = np.zeros((ncframes, 3, 3))
     for iframe in range(ncframes):
         num = int(os.path.basename(cframes[iframe]).split('-')[2].split('.')[0])
         for ichip in range(nchips):
