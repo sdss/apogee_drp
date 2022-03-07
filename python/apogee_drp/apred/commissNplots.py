@@ -437,6 +437,8 @@ def skysub(dosky=True):
         apPlate = load.apPlate(int(splate), smjd)
         objdata = apPlate['a'][11].data[::-1]
 
+        if splate == '1634': pdb.set_trace()
+
         asstot = np.sum(objdata['assigned'])
         if asstot < 20: continue
 
@@ -453,7 +455,6 @@ def skysub(dosky=True):
 
         print(str(iexp) + '/' + str(nexp))
 
-        if splate == '1634': pdb.set_trace()
         ichip = 0
         for ax in axes:
             gfile = cframe[0]
