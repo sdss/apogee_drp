@@ -50,8 +50,10 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;; Does product already exist?
   ;; check all three chip files
   sfpiid = string(fpiid,format='(i08)')
+  cmjd = getcmjd(psfid)
+  mjd = long(cmjd)
   chips = ['a','b','c']
-  allfiles = wavedir+dirs.prefix+'WaveFPI-'+chips+'-'+sfpiid+'.fits'
+  allfiles = wavedir+dirs.prefix+'WaveFPI-'+chips+'-'+cmjd+'-'+sfpiid+'.fits'
   if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
     print,' Wavecal file: ', wavedir+file+'.fits', ' already made'
     return
@@ -64,37 +66,13 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   free_lun,lock
 
   ;; Process the frames
-  cmjd = getcmjd(psfid)
-  mjd = long(cmjd)
   MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
   w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc,unlock=unlock)
-  
-  ;; Get the individual arclamp exposures and make sure they have been processed
-  expinfo = dbquery("select * from apogee_drp.exposure where mjd>="+strtrim(mjd-7,2)+" and mjd<="+strtrim(mjd,2)+" and exptype='ARCLAMP'")
-  expinfo.arctype = strtrim(expinfo.arctype,2)
-  gdarc = where(expinfo.arctype eq 'UNE' or expinfo.arctype eq 'THAR',ngdarc)
-  if ngdarc eq 0 then begin
-    print,'No good arclamp exposures for '+strtrim(mjd-7,2)+'<=MJD<='+strtrim(mjd,2)
-    return
-  endif
-  waveid = expinfo[gdarc].num
-  print,strtrim(ngdarc,2),' good arclamp exposures'
 
-  ;; Process the frames and find lines
-  print,''
-  print,'***** Processing the frames and finding the lines *****'
-  print,''
-  for i=0,n_elements(waveid)-1 do begin
-    print,''
-    print,'--- Frame ',strtrim(i+1,2),':  ',strtrim(waveid[i],2),' ---'
-    ;; Check if they exist
-    wavefiles = apogee_filename('Wave',num=waveid[i],chip=chips)
-    if total(file_test(wavefiles)) lt 3 or keyword_set(clobber) then begin
-      MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',/nofit,unlock=unlock,librarypsf=psflibrary
-    endif else begin
-      print,repstr(wavefiles[0],'-a-','-'),' made already'
-    endelse
-  endfor
+  ;; Make sure the dailywave file is there
+  MAKECAL,dailywave=mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
+           fiberid=fiberid,clobber=clobber,nowait=nowait,nofit=nofit,$
+           unlock=unlock,librarypsf=psflibrary
 
   ;; New Python version! 
   cmd = ['mkfpi',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--verbose']

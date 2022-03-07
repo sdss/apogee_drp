@@ -284,12 +284,12 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       file = apogee_filename('WaveFPI',num=fpi,chip='c')
       wavedir = file_dirname(file)
       sfpiid = string(fpi,format='(i08)')
-      allfiles = wavedir+'/'+dirs.prefix+'WaveFPI-'+chips+'-'+sfpiid+'.fits'
+      cmjd = getcmjd(fpi[0],mjd=mjd)
+      allfiles = wavedir+'/'+dirs.prefix+'WaveFPI-'+chips+'-'+cmjd+'-'+sfpiid+'.fits'
       if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
         print,' fpi file: ',file, ' already made'
         return
       endif
-      cmjd = getcmjd(fpi[0],mjd=mjd)
       ;; What PSF to use
       if keyword_set(psf) then begin
         psfid = psf
@@ -301,6 +301,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       MAKECAL,psf=psfid,unlock=unlock
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
       MAKECAL,fiber=fiberid,unlock=unlock
+      MAKECAL,dailywave=mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
+              fiberid=fiberid,clobber=clobber,unlock=unlock,librarypsf=librarypsf
       MKFPI,fpi,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
             fiberid=fiberid,clobber=clobber,unlock=unlock,psflibrary=librarypsf
     endif

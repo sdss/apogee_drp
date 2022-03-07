@@ -9,7 +9,7 @@ from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email,info
 from ..apred import mkcal,cal,qa,monitor
 from ..database import apogeedb
-from . import mkplan,runapogee,check
+from . import mkplan,check
 from sdss_access.path import path
 from astropy.io import fits
 from astropy.table import Table,hstack,vstack
@@ -21,6 +21,20 @@ from slurm import queue as pbsqueue
 import time
 import traceback
 import subprocess
+
+
+def lastnightmjd5():
+    """ Compute last night's MJD."""
+    tnow = Time.now()
+    mjdnow = tnow.mjd
+    # The Julian day starts at NOON, while MJD starts at midnight
+    # For SDSS MJD we add 0.3 days
+    mjdnow += 0.3
+    # Truncate for MJD5 number
+    mjd5now = int(mjdnow)
+    # Subtract one for yesterday
+    mjd5 = mjd5now-1
+    return mjd5
 
 def loadmjd(mjd):
     """ Parse and expand input MJD range/list."""
@@ -40,7 +54,7 @@ def loadmjd(mjd):
         newmjds = list(np.unique(newmjds))
         mjds = newmjds
     else:
-        mjds = np.arange(59146,runapogee.lastnightmjd()+1)
+        mjds = np.arange(59146,lastnightmjd()+1)
     return mjds
 
 def loadsteps(steps):
@@ -80,6 +94,113 @@ def loadsteps(steps):
     steps = fsteps
 
     return steps
+
+
+def dbload_plans(planfiles):
+    """  Load plan files into the database."""
+    db = apogeedb.DBSession()   # open db session
+    nplans = len(planfiles)
+    
+    gitvers = plan.getgitvers()
+
+    # Loop over the planfiles
+    dtype = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),('telescope',(np.str,10)),
+                      ('instrument',(np.str,20)),('mjd',int),('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),
+                      ('fieldid',(np.str,20)),('fps',bool),('platetype',(np.str,20))])
+    plantab = np.zeros(nplans,dtype=dtype)
+    for i,planfile in enumerate(planfiles):
+        planstr = plan.load(planfile)
+        plantab['planfile'][i] = planfile
+        plantab['apred_vers'][i] = planstr['apred_vers']
+        plantab['v_apred'][i] = gitvers
+        plantab['telescope'][i] = planstr['telescope']
+        plantab['instrument'][i] = planstr['instrument']
+        plantab['mjd'][i] = planstr['mjd']
+        plantab['plate'][i] = planstr['plateid']
+        if planstr['fps']:
+            plantab['configid'] = planstr['configid']
+            plantab['designid'] = planstr['designid']
+            plantab['fieldid'] = planstr['fieldid']
+            plantab['fps'] = True
+        else:
+            plantab['fps'] = False
+        plantab['platetype'][i] = planstr['platetype']
+
+    # Insert into the database
+    db.ingest('plan',plantab)
+    db.close()   # close db session
+
+
+def check_queue_status(queue):
+    """
+    Check the status of the slurm jobs.
+
+    This performs a rigorous check of the status of the tasks and
+    of the individual tasks running on each cpu.  Sometimes the signal
+    that a task completed does *not* go through.  This function should
+    be able to deal with that.
+    """
+
+    # Get the tasks
+    tasks = queue.client.job.tasks
+
+    # Gather the information on all the tasks
+    dt = np.dtype([('task_number',int),('node_number',int),('proc_number',int),('status',int),('complete',bool)])
+    data = np.zeros(len(tasks),dtype=dt)
+    nodeproc = []
+    for i,t in enumerate(tasks):
+        # Make sure we have the most up-to-date information
+        #  redo the query to update the task
+        slurm.db.session.refresh(t)
+        data['task_number'][i] = t.task_number
+        data['node_number'][i] = t.node_number
+        data['proc_number'][i] = t.proc_number
+        data['status'][i] = t.status
+        if t.status==5:
+            data['complete'][i] = True
+        nodeproc.append(str(t.node_number)+'-'+str(t.proc_number))
+
+    index = dln.create_index(nodeproc)
+    for i,unp in enumerate(index['value']):
+        ind = index['index'][index['lo'][i]:index['hi'][i]+1]
+        data1 = data[ind]
+        node,proc = unp.split('-')
+        # Order by task number
+        si = np.argsort(data1['task_number'])
+        data1 = data1[si]
+        # If last task in this group is complete,
+        #   then they should all be done!
+        if data1['status'][-1]==5:
+            data['complete'][ind] = True
+
+    # Calculate the completeness percentage
+    ncomplete = np.sum(data['complete']==True)
+    ntasks = len(data)
+    percent_complete = ncomplete/ntasks*100
+    return percent_complete
+
+
+def queue_wait(queue,sleeptime=60,verbose=True,logger=None):
+    """ Wait for the pbs queue to finish."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    # Wait for jobs to complete
+    running = True
+    while running:
+        time.sleep(sleeptime)
+        percent_complete = queue.get_percent_complete()
+        # Do a more detailed check once some have finished
+        ntasks_complete = queue.client.job.task_count_with_status(5)
+        if ntasks_complete>0:
+            percent_complete2 = check_queue_status(queue)
+            percent_complete = np.maximum(percent_complete,percent_complete2)
+        if verbose==True:
+            logger.info('percent complete = %d' % percent_complete)
+        if percent_complete == 100:
+            running = False
+
 
 def getexpinfo(load,mjds,logger=None,verbose=True):
     """
@@ -222,6 +343,628 @@ def getplanfiles(load,mjds,exist=False,logger=None):
         planfiles = [f for f in planfiles if os.path.exists(f)]
     return planfiles
 
+
+def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=None):
+    """ Check that ap3d ran okay and load into database."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    db = apogeedb.DBSession()  # open db session
+
+    if verbose==True:
+        logger.info('')
+        logger.info('-----------------')
+        logger.info('Checking ap3D run')
+        logger.info('=================')
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+
+    if verbose:
+        logger.info('')
+        logger.info('%d exposures' % len(expinfo))
+        logger.info(' NUM         SUCCESS')
+
+    # Loop over the stars
+    nexp = len(expinfo)
+
+    dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
+                      ('instrument',(np.str,20)),('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),
+                      ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
+                      ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
+                      ('num',int),('success',bool)])
+    chk3d = np.zeros(nexp,dtype=dtype)
+    chk3d['apred_vers'] = apred
+    chk3d['telescope'] = telescope
+    chk3d['pbskey'] = pbskey
+    chk3d['proctype'] = 'AP3D'
+    chk3d['success'] = False
+    chips = ['a','b','c']
+    for i,num in enumerate(expinfo['num']):
+        chk3d['exposure_pk'] = expinfo['pk'][i]
+        chk3d['num'][i] = num
+        mjd = int(load.cmjd(num))
+        outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
+        outfiles = [outfile.replace('2D-','2D-'+ch+'-') for ch in chips]
+        planfile = os.path.dirname(outfile)+'/logs/'+os.path.basename(outfile)
+        planfile = outfile.replace('2D','3DPlan').replace('.fits','.yaml')
+        chk3d['planfile'][i] = planfile
+        exist = [os.path.exists(o) for o in outfiles]
+        if exist[0]:
+            head = fits.getheader(outfiles[0])
+            chk3d['v_apred'][i] = head.get('V_APRED')
+            head = fits.getheader(outfiles[0])
+            chk3d['v_apred'][i] = head.get('V_APRED')
+            head = fits.getheader(outfiles[0])
+            chk3d['v_apred'][i] = head.get('V_APRED')
+            head = fits.getheader(outfiles[0])
+            chk3d['v_apred'][i] = head.get('V_APRED')
+        chk3d['checktime'][i] = str(datetime.now())
+        chk3d['success'][i] = np.sum(exist)==3
+
+        if verbose:
+            logger.info('%5d %20s %9s' % (i+1,num,chk3d['success'][i]))
+    success, = np.where(chk3d['success']==True)
+    logger.info('%d/%d succeeded' % (len(success),nexp))
+    
+    # Inset into the database
+    db.ingest('exposure_status',chk3d)
+    db.close()        
+
+    return chk3d
+
+
+def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
+    """ Check that the calibration files ran okay and load into database."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    if verbose==True:
+        logger.info('')
+        logger.info('-------------------------')
+        logger.info('Checking Calibration runs')
+        logger.info('=========================')
+
+    expinfo = np.atleast_1d(expinfo)
+
+    chkcal = None
+
+    # Exposure-level processing: ap3d, ap2d, calibration file
+    ncal = np.array(expinfo).size
+    dtype = np.dtype([('logfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
+                      ('instrument',(np.str,20)),('telescope',(np.str,10)),('mjd',int),('caltype',(np.str,30)),
+                      ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
+                      ('pbskey',(np.str,50)),('checktime',(np.str,100)),
+                      ('num',int),('calfile',(np.str,300)),('success3d',bool),('success2d',bool),('success',bool)])
+    chkcal = np.zeros(ncal,dtype=dtype)
+
+    # Loop over the planfiles
+    for i in range(ncal):
+        # domeflat, quartzflat
+        # arclamp
+        # fpi
+        lgfile = logfiles[i]
+
+        # apWave-49920071_pbs.123232121.log
+        caltype = os.path.basename(lgfile)
+        caltype = caltype.split('_pbs')[0]
+        caltype = caltype.split('-')[0]
+        caltype = caltype[2:]  # remove 
+        filecode = caltype
+        if caltype=='DailyWave':
+            filecode = 'Wave'
+        if caltype=='FPI':
+            filecode = 'WaveFPI'
+
+        num = expinfo['num'][i]
+        mjd = int(expinfo['mjd'][i])
+        chkcal['exposure_pk'][i] = expinfo['pk'][i]
+        chkcal['logfile'][i] = lgfile
+        chkcal['num'][i] = num
+        chkcal['apred_vers'][i] = apred
+        if expinfo['observatory'][i]=='apo':
+            chkcal['instrument'][i] = 'apogee-n'
+            chkcal['telescope'][i] = 'apo25m'
+        else:
+            chkcal['instrument'][i] = 'apogee-s'
+            chkcal['telescope'] = 'lco25m'
+        chkcal['mjd'][i] = mjd
+        chkcal['caltype'][i] = caltype
+        try:
+            chkcal['plate'][i] = expinfo['plateid'][i]
+        except:
+            chkcal['plate'][i] = -1
+        chkcal['configid'][i] = expinfo['configid'][i]
+        chkcal['designid'][i] = expinfo['designid'][i]
+        chkcal['fieldid'][i] = expinfo['fieldid'][i]
+        chkcal['pbskey'][i] = pbskey
+        chkcal['checktime'][i] = str(datetime.now())
+        chkcal['success'][i] = False
+        load = apload.ApLoad(apred=apred,telescope=chkcal['telescope'][i])
+        # AP3D
+        #-----
+        base = load.filename('2D',num=num,mjd=mjd,chips=True)
+        chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
+        exists = [os.path.exists(chf) for chf in chfiles]
+        if exists[0]==True:  # get V_APRED (git version) from file
+            chead = fits.getheader(chfiles[0])
+            chkcal['v_apred'][i] = chead.get('V_APRED')
+        if np.sum(exists)==3:
+            chkcal['success3d'][i] = True
+        # AP2D
+        #-----
+        base = load.filename('1D',num=num,mjd=mjd,chips=True)
+        chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
+        exists = [os.path.exists(chf) for chf in chfiles]
+        if np.sum(exists)==3:
+            chkcal['success2d'][i] = True
+        # Final calibration file
+        #-----------------------
+        if caltype.lower()=='fpi':
+            # Should really check fpi/apFPILines-EXPNUM8.fits
+            base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-'+str(mjd)+'-')
+        elif caltype.lower()=='dailywave':
+            # Should really check fpi/apFPILines-EXPNUM8.fits
+            base = load.filename('Wave',num=num,chips=True)[0:-13]+str(num)+'.fits'
+        else:
+            base = load.filename(caltype,num=num,chips=True)
+        chkcal['calfile'][i] = base
+        chfiles = [base.replace(filecode+'-',filecode+'-'+ch+'-') for ch in ['a','b','c']]
+        exists = [os.path.exists(chf) for chf in chfiles]
+        if exists[0]==True:  # get V_APRED (git version) from file
+            chead = fits.getheader(chfiles[0])
+            chkcal['v_apred'][i] = chead.get('V_APRED')
+        # Overall success
+        if np.sum(exists)==3:
+            chkcal['success'][i] = True
+
+        if verbose:
+            logger.info('')
+            logger.info('%d/%d' % (i+1,ncal))
+            logger.info('Calibration type: %s' % chkcal['caltype'][i])
+            logger.info('Calibration file: %s' % chkcal['calfile'][i])
+            logger.info('log/errfile: '+os.path.basename(lgfile)+', '+os.path.basename(lgfile).replace('.log','.err'))
+            logger.info('Calibration success: %s ' % chkcal['success'][i])
+
+    # Load everything into the database
+    db = apogeedb.DBSession()
+    db.ingest('calib_status',chkcal)
+    db.close()
+
+    return chkcal
+
+
+def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
+    """ Check that apred ran okay and load into database."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    if verbose==True:
+        logger.info('')
+        logger.info('--------------------')
+        logger.info('Checking APRED runs')
+        logger.info('====================')
+
+    chkexp = None
+    chkap = None
+
+    # Loop over the planfiles
+    nplanfiles = len(planfiles)
+    for ip,pfile in enumerate(planfiles):
+        if os.path.exists(pfile)==False:
+            logger.info(pfile+' NOT FOUND')
+            continue
+        planstr = plan.load(pfile,np=True)
+        apred_vers = planstr['apred_vers']
+        telescope = planstr['telescope']
+        instrument = planstr['instrument']
+        platetype = planstr['platetype']
+        mjd = planstr['mjd']
+        plate = planstr['plateid']
+        expstr = planstr['APEXP']
+        nexp = len(expstr)
+        load = apload.ApLoad(apred=apred_vers,telescope=telescope)
+
+        # normal: ap3d, ap2d, apCframe and ap1dvisit
+        # dark: ap3d  (apDarkPlan)
+        # cal: ap3d and ap2d (apCalPlan)
+
+        # Load the plugmap information
+        if platetype=='normal' and str(plate) != '0':
+            plugmap = platedata.getdata(plate,mjd,apred_vers,telescope,plugid=planstr['plugmap'])
+            fiberdata = plugmap['fiberdata']
+        else:
+            fiberdata = None
+
+        # Exposure-level processing: ap3d, ap2d, apcframe
+        dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
+                          ('instrument',(np.str,20)),('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),
+                          ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
+                          ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
+                          ('num',int),('success',bool)])
+        chkexp1 = np.zeros(nexp*3,dtype=dtype)
+        chkexp1['planfile'] = pfile
+        chkexp1['apred_vers'] = apred_vers
+        chkexp1['instrument'] = instrument
+        chkexp1['telescope'] = telescope
+        chkexp1['platetype'] = platetype
+        chkexp1['mjd'] = mjd
+        chkexp1['plate'] = plate
+        if planstr['fps']:
+            chkexp1['configid'] = planstr['configid']
+            chkexp1['designid'] = planstr['designid']
+            chkexp1['fieldid'] = planstr['fieldid']
+            field = planstr['fieldid']
+        else:
+            field,survey,program = apload.apfield(planstr['plate'])
+        chkexp1['proctype'] = 'AP3D'
+        chkexp1['pbskey'] = pbskey
+        chkexp1['checktime'] = str(datetime.now())
+        chkexp1['success'] = False
+        cnt = 0
+        for num in expstr['name']:
+            ind, = np.where(expinfo['num']==num)
+            exposure_pk = expinfo['pk'][ind[0]]
+            # AP3D
+            #-----
+            chkexp1['exposure_pk'][cnt] = exposure_pk
+            chkexp1['num'][cnt] = num
+            chkexp1['proctype'][cnt] = 'AP3D'
+            base = load.filename('2D',num=num,mjd=mjd,chips=True)
+            chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
+            exists = [os.path.exists(chf) for chf in chfiles]
+            if exists[0]==True:  # get V_APRED (git version) from file
+                chead = fits.getheader(chfiles[0])
+                chkexp1['v_apred'][cnt] = chead.get('V_APRED')
+            chkexp1['checktime'][cnt] = str(datetime.now())
+            if np.sum(exists)==3:
+                chkexp1['success'][cnt] = True
+            cnt += 1  # increment counter
+            # AP2D
+            #-----
+            if (platetype=='normal') | (platetype=='cal'):
+                chkexp1['exposure_pk'][cnt] = exposure_pk
+                chkexp1['num'][cnt] = num
+                chkexp1['proctype'][cnt] = 'AP2D'
+                base = load.filename('1D',num=num,mjd=mjd,chips=True)
+                chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
+                exists = [os.path.exists(chf) for chf in chfiles]
+                if exists[0]==True:  # get V_APRED (git version) from file
+                    chead = fits.getheader(chfiles[0])
+                    chkexp1['v_apred'][cnt] = chead.get('V_APRED')
+                if np.sum(exists)==3:
+                    chkexp1['success'][cnt] = True
+                cnt += 1  # increment counter
+            # APCframe
+            #---------
+            if platetype=='normal':
+                chkexp1['exposure_pk'][cnt] = exposure_pk
+                chkexp1['num'][cnt] = num
+                chkexp1['proctype'][cnt] = 'APCFRAME'
+                base = load.filename('Cframe',num=num,mjd=mjd,plate=plate,chips=True,field=field)
+                chfiles = [base.replace('Cframe-','Cframe-'+ch+'-') for ch in ['a','b','c']]
+                exists = [os.path.exists(chf) for chf in chfiles]
+                if exists[0]==True:  # get V_APRED (git version) from file
+                    chead = fits.getheader(chfiles[0])
+                    chkexp1['v_apred'][cnt] = chead.get('V_APRED')
+                if np.sum(exists)==3:
+                    chkexp1['success'][cnt] = True
+                cnt += 1  # increment counter
+        # Trim extra elements
+        chkexp1 = chkexp1[0:cnt]
+
+        # Plan summary and ap1dvisit
+        #---------------------------
+        dtypeap = np.dtype([('planfile',(np.str,300)),('logfile',(np.str,300)),('errfile',(np.str,300)),
+                            ('apred_vers',(np.str,20)),('v_apred',(np.str,50)),('instrument',(np.str,20)),
+                            ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
+                            ('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
+                            ('nobj',int),('pbskey',(np.str,50)),('checktime',(np.str,100)),('ap3d_success',bool),
+                            ('ap3d_nexp_success',int),('ap2d_success',bool),('ap2d_nexp_success',int),
+                            ('apcframe_success',bool),('apcframe_nexp_success',int),('applate_success',bool),
+                            ('apvisit_success',bool),('apvisit_nobj_success',int),
+                            ('apvisitsum_success',bool),('success',bool)])
+        chkap1 = np.zeros(1,dtype=dtypeap)
+        chkap1['planfile'] = pfile
+        chkap1['logfile'] = pfile.replace('.yaml','_pbs.log')
+        chkap1['errfile'] = pfile.replace('.yaml','_pbs.err')
+        chkap1['apred_vers'] = apred_vers
+        chkap1['instrument'] = instrument
+        chkap1['telescope'] = telescope
+        chkap1['platetype'] = platetype
+        chkap1['mjd'] = mjd
+        chkap1['plate'] = plate
+        if planstr['fps']:
+            chkap1['configid'] = planstr['configid']
+            chkap1['designid'] = planstr['designid']
+            chkap1['fieldid'] = planstr['fieldid']
+        if platetype=='normal' and fiberdata is not None:
+            chkap1['nobj'] = np.sum(fiberdata['objtype']!='SKY')  # stars and tellurics
+        chkap1['pbskey'] = pbskey
+        chkap1['checktime'] = str(datetime.now())
+        # ap3D, ap2D, apCframe success
+        ind3d, = np.where(chkexp1['proctype']=='AP3D')
+        chkap1['ap3d_nexp_success'] = np.sum(chkexp1['success'][ind3d])
+        chkap1['ap3d_success'] = np.sum(chkexp1['success'][ind3d])==nexp
+        ind2d, = np.where(chkexp1['proctype']=='AP2D')
+        if len(ind2d)>0:
+            chkap1['ap2d_nexp_success'] = np.sum(chkexp1['success'][ind2d])
+            chkap1['ap2d_success'] = np.sum(chkexp1['success'][ind2d])==nexp
+        indcf, = np.where(chkexp1['proctype']=='APCFRAME')
+        if len(indcf)>0:
+            chkap1['apcframe_nexp_success'] = np.sum(chkexp1['success'][indcf])
+            chkap1['apcframe_success'] = np.sum(chkexp1['success'][indcf])==nexp
+        if platetype=='normal':
+            # apPlate
+            chkap1['applate_success'] = False
+            base = load.filename('Plate',plate=plate,mjd=mjd,chips=True,field=field)
+            chfiles = [base.replace('Plate-','Plate-'+ch+'-') for ch in ['a','b','c']]
+            exists = [os.path.exists(chf) for chf in chfiles]
+            if exists[0]==True:  # get V_APRED (git version) from file
+                chead = fits.getheader(chfiles[0])
+                chkap1['v_apred'] = chead.get('V_APRED')
+            if np.sum(exists)==3:
+                chkap1['applate_success'] = True
+            # apVisit
+            base = load.filename('Visit',plate=plate,mjd=mjd,fiber=1,field=field) 
+            visitfiles = glob(base.replace('-001.fits','-???.fits'))
+            nvisitfiles = len(visitfiles)
+            chkap1['apvisit_nobj_success']  = nvisitfiles
+            # take broken fibers into account for visit success!!!
+            nbadfiber = dln.size(planstr['badfiberid'])
+            if planstr['fps']:
+                # take two FPI fibers into account
+                chkap1['apvisit_success'] = (nvisitfiles>=(chkap1['nobj']-nbadfiber-2))
+            else:
+                chkap1['apvisit_success'] = (nvisitfiles>=(chkap1['nobj']-nbadfiber))
+            apvisitsumfile = load.filename('VisitSum',plate=plate,mjd=mjd,field=field)
+            chkap1['apvisitsum_success'] = os.path.exists(apvisitsumfile)
+        # Success of plan file
+        if platetype=='normal':
+            chkap1['success'] = chkap1['ap3d_success'][0] and chkap1['ap2d_success'][0] and chkap1['apcframe_success'][0] and \
+                                chkap1['applate_success'][0] and chkap1['apvisit_success'][0] and chkap1['apvisitsum_success'][0]
+        elif platetype=='cal':
+            chkap1['success'] = chkap1['ap3d_success'][0] and chkap1['ap2d_success'][0]
+        elif platetype=='dark':
+            chkap1['success'] = chkap1['ap3d_success'][0]
+        else:
+            chkap1['success'] = chkap1['ap3d_success'][0]
+
+        if verbose:
+            logger.info('')
+            logger.info('%d/%d' % (ip+1,nplanfiles))
+            logger.info('planfile: '+pfile)
+            logger.info('log/errfile: '+os.path.basename(chkap1['logfile'][0])+', '+os.path.basename(chkap1['errfile'][0]))
+            logger.info('platetype: %s' % platetype)
+            logger.info('mjd: %d' % mjd)
+            if platetype=='normal': logger.info('plate: %d' % plate)
+            logger.info('nexp: %d' % nexp)
+            if platetype=='normal': logger.info('Nobj: %d' % chkap1['nobj'][0])
+            logger.info('3D/2D/Cframe:')
+            logger.info('Num    EXPID   NREAD  3D     2D  Cframe')
+            for k,num in enumerate(expstr['name']):
+                ind, = np.where(expinfo['num']==num)
+                success3d,success2d,successcf = False,False,False
+                ind3d, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='AP3D'))
+                if len(ind3d)>0: success3d=chkexp1['success'][ind3d[0]]
+                ind2d, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='AP2D'))
+                if len(ind2d)>0: success2d=chkexp1['success'][ind2d[0]]
+                indcf, = np.where((chkexp1['num']==num) & (chkexp1['proctype']=='APCFRAME'))
+                if len(indcf)>0: successcf=chkexp1['success'][indcf[0]]
+                logger.info('%2d %10d %4d %6s %6s %6s' % (k+1,chkexp1['num'][ind3d],expinfo['nread'][ind],
+                                                          success3d,success2d,successcf))
+            if platetype=='normal':
+                logger.info('apPlate files: %s ' % chkap1['applate_success'][0])
+                logger.info('N apVisit files: %d ' % chkap1['apvisit_nobj_success'][0])
+                logger.info('apVisitSum file: %s ' % chkap1['apvisitsum_success'][0])
+            logger.info('Plan success: %s ' % chkap1['success'][0])
+            
+
+        # Add to the global catalog
+        if chkexp is not None:
+            chkexp = np.hstack((chkexp,chkexp1))
+        else:
+            chkexp = chkexp1.copy()
+        if chkap is not None:
+            chkap = np.hstack((chkap,chkap1))
+        else:
+            chkap = chkap1.copy()
+
+
+    # Load everything into the database
+    db = apogeedb.DBSession()
+    db.ingest('exposure_status',chkexp)
+    db.ingest('visit_status',chkap)
+    db.close()
+
+    return chkexp,chkap
+
+
+def check_rv(visits,pbskey,verbose=False,logger=None):
+    """ Check that rv ran okay and load into database."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    db = apogeedb.DBSession()  # open db session
+
+    if verbose==True:
+        logger.info('')
+        logger.info('-------------------------------------')
+        logger.info('Checking RV + Visit Combination runs')
+        logger.info('=====================================')
+
+    apred_vers = visits['apred_vers'][0]
+    telescope = visits['telescope'][0]
+    load = apload.ApLoad(apred=apred_vers,telescope=telescope)
+
+    if verbose:
+        logger.info('')
+        logger.info('%d stars' % len(visits))
+        logger.info('apred_vers: %s' % apred_vers)
+        logger.info('telescope: %s' % telescope)
+        logger.info(' NUM         APOGEE_ID       HEALPIX NVISITS SUCCESS')
+
+    # Loop over the stars
+    nstars = len(visits)
+    dtype = np.dtype([('apogee_id',(np.str,50)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
+                      ('telescope',(np.str,10)),('healpix',int),('nvisits',int),('pbskey',(np.str,50)),
+                      ('file',(np.str,300)),('checktime',(np.str,100)),('success',bool)])
+    chkrv = np.zeros(nstars,dtype=dtype)
+    chkrv['apred_vers'] = apred_vers
+    chkrv['telescope'] = telescope
+    chkrv['pbskey'] = pbskey
+    for i,visit in enumerate(visits):
+        starfilenover = load.filename('Star',obj=visit['apogee_id'])
+        # add version number, should be MJD of the latest visit
+        stardir = os.path.dirname(starfilenover)
+        starbase = os.path.splitext(os.path.basename(starfilenover))[0]
+        starbase += '-'+str(visit['mjd'])   # add star version 
+        starfile = stardir+'/'+starbase+'.fits'
+        # Get nvisits for this star
+        starvisits = db.query('visit',cols='*',where="apogee_id='"+visit['apogee_id']+"' and "+\
+                              "telescope='"+telescope+"' and apred_vers='"+apred_vers+"'")
+        chkrv['apogee_id'][i] = visit['apogee_id']
+        chkrv['healpix'][i] = apload.obj2healpix(visit['apogee_id'])
+        chkrv['nvisits'][i] = len(starvisits)
+        chkrv['file'][i] = starfile
+        if os.path.exists(starfile):
+            head = fits.getheader(starfile)
+            chkrv['v_apred'][i] = head.get('V_APRED')
+        chkrv['checktime'][i] = str(datetime.now())
+        chkrv['success'][i] = os.path.exists(starfile)
+
+        if verbose:
+            logger.info('%5d %20s %8d %5d %9s' % (i+1,chkrv['apogee_id'][i],chkrv['healpix'][i],
+                                                  chkrv['nvisits'][i],chkrv['success'][i]))
+    success, = np.where(chkrv['success']==True)
+    if verbose:
+        logger.info('%d/%d succeeded' % (len(success),nstars))
+    
+    # Inset into the database
+    db.ingest('rv_status',chkrv)
+    db.close()        
+
+    return chkrv
+
+
+def create_sumfiles_mjd(apred,telescope,mjd5,logger=None):
+    """ Create allVisit/allStar files and summary of objects for this night."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+
+    # Start db session
+    db = apogeedb.DBSession()
+
+    # Nightly summary files
+
+    # Nightly allStar, allStarMJD
+    allstarmjd = db.query('star',cols='*',where="apred_vers='%s' and telescope='%s' and starver='%s'" % (apred,telescope,mjd5))
+
+    # for visit except that we'll get the multiple visit rows returned for each unique star row
+    #   Get more info by joining with the visit table.
+    vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
+             'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
+             'apogee_target4', 'catalogid', 'gaiadr2_plx', 'gaiadr2_plx_error', 'gaiadr2_pmra', 'gaiadr2_pmra_error',
+             'gaiadr2_pmdec', 'gaiadr2_pmdec_error', 'gaiadr2_gmag', 'gaiadr2_gerr', 'gaiadr2_bpmag', 'gaiadr2_bperr',
+             'gaiadr2_rpmag', 'gaiadr2_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
+             'starflags','dateobs','jd']
+    rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
+              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
+
+    # Nightly allVisit, allVisitMJD
+    cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
+    allvisitmjd = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
+                           "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' and v.mjd="+str(mjd5)+" and rv.starver='"+str(mjd5)+"'")
+
+    # maybe in summary/MJD/ or qa/MJD/ ?
+    #allstarmjdfile = load.filename('allStarMJD')
+    allstarfile = load.filename('allStar').replace('.fits','-'+telescope+'.fits')
+    allstarmjdfile = allstarfile.replace('allStar','allStarMJD').replace('.fits','-'+str(mjd5)+'.fits')
+    mjdsumdir = os.path.dirname(allstarmjdfile)+'/'+str(mjd5)
+    allstarmjdfile = mjdsumdir+'/'+os.path.basename(allstarmjdfile)
+    if os.path.exists(mjdsumdir)==False:
+        os.makedirs(mjdsumdir)
+    logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
+    logger.info(str(len(allstarmjd))+' stars for '+str(mjd5))
+    Table(allstarmjd).write(allstarmjdfile,overwrite=True)
+
+    allvisitfile = load.filename('allVisit').replace('.fits','-'+telescope+'.fits')
+    allvisitmjdfile = allvisitfile.replace('allVisit','allVisitMJD').replace('.fits','-'+str(mjd5)+'.fits')
+    allvisitmjdfile = mjdsumdir+'/'+os.path.basename(allvisitmjdfile)
+    logger.info('Writing Nightly allVisitMJD file to '+allvisitmjdfile)
+    logger.info(str(len(allvisitmjd))+' visits for '+str(mjd5))
+    Table(allvisitmjd).write(allvisitmjdfile,overwrite=True)
+
+    db.close()
+
+
+def create_sumfiles(apred,telescope,mjd5=None,logger=None):
+    """ Create allVisit/allStar files and summary of objects for this night."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+
+    # Start db session
+    db = apogeedb.DBSession()
+
+    # USE STAR_LATEST AND VISIT_LATEST "VIEWS" IN THE FUTURE!
+
+    # Full allVisit and allStar files
+    #  apogee_id+apred_vers+telescope+starver uniquely identifies a particular star row
+    #  For each apogee_id+apred_vers+telescope we want the maximum starver
+    #  The subquery does this for us by grouping by apogee_id+apred_vers+telescope and
+    #    calculating the aggregate value MAX(starver).
+    #  We then select the particular row (with all columns) using apogee_id+apred_vers+telescope+starver
+    #    from this subquery.
+    #allstar = db.query(sql="select * from apogee_drp.star where (apogee_id, apred_vers, telescope, starver) in "+\
+    #                   "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\
+    #                   "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    # Using STAR_LATEST seems much faster
+    allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    allstarfile = load.filename('allStar').replace('.fits','-'+telescope+'.fits')
+    logger.info('Writing allStar file to '+allstarfile)
+    logger.info(str(len(allstar))+' stars')
+    if os.path.exists(os.path.dirname(allstarfile))==False:
+        os.makedirs(os.path.dirname(allstarfile))
+    allstar = Table(allstar)
+    del allstar['nres']    # temporary kludge, nres is causing write problems
+    allstar.write(allstarfile,overwrite=True)
+
+    # allVisit
+    # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
+    #   Get more info by joining with the visit table.
+    vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
+             'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
+             'apogee_target4', 'catalogid', 'gaiadr2_plx', 'gaiadr2_plx_error', 'gaiadr2_pmra', 'gaiadr2_pmra_error',
+             'gaiadr2_pmdec', 'gaiadr2_pmdec_error', 'gaiadr2_gmag', 'gaiadr2_gerr', 'gaiadr2_bpmag', 'gaiadr2_bperr',
+             'gaiadr2_rpmag', 'gaiadr2_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
+             'starflags','dateobs','jd']
+    rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
+              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
+    cols = ','.join(vcols+rvcols)
+    allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    allvisitfile = load.filename('allVisit').replace('.fits','-'+telescope+'.fits')
+    logger.info('Writing allVisit file to '+allvisitfile)
+    logger.info(str(len(allvisit))+' visits')
+    if os.path.exists(os.path.dirname(allvisitfile))==False:
+        os.makedirs(os.path.dirname(allvisitfile))
+    Table(allvisit).write(allvisitfile,overwrite=True)
+
+    db.close()
+
+    # Nightly summary files
+    if mjd5 is not None:
+        create_sumfiles_mjd(apred,telescope,mjd5,logger=logger)
 
 def mkvers(apred,logger=None):
     """
@@ -479,7 +1222,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     else:
         logger.info('No master Detector calibration files need to be run')
     del queue    
@@ -531,7 +1274,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     else:
         logger.info('No master Dark calibration files need to be run')
     del queue    
@@ -582,7 +1325,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     else:
         logger.info('No master Flat calibration files need to be run')
     del queue    
@@ -629,7 +1372,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     else:
         logger.info('No master BPM calibration files need to be run')
     del queue    
@@ -673,7 +1416,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     else:
         logger.info('No master Littrow calibration files need to be run')
     del queue    
@@ -716,7 +1459,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     else:
         logger.info('No master Response calibration files need to be run')
     del queue    
@@ -759,7 +1502,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     else:
         logger.info('No master Sparse calibration files need to be run')
     del queue    
@@ -796,7 +1539,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     #    cmd += ' --multiwave '+str(multiwavedict['name'][i])+' --unlock'
     #    queue.append(cmd,outfile=outfile1, errfile=errfile1)
     #queue.commit(hard=True,submit=True)
-    #runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     #del queue    
 
 
@@ -845,7 +1588,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     else:
         logger.info('No master LSF calibration files need to be run')
     del queue    
@@ -934,15 +1677,16 @@ def runap3d(load,mjds,slurm,clobber=False,logger=None):
     if np.sum(do3d)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This should check if the ap3d ran okay and puts the status in the database
-        chk3d = runapogee.check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
+        chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
     else:
         chk3d = None
         logger.info('No exposures need AP3D processing')
     del queue
         
     return chk3d
+
 
 def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     """
@@ -980,6 +1724,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     telescope = load.telescope
     observatory = telescope[0:3]
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
+    chips = ['a','b','c']
     
     # Get exposures
     logger.info('Getting exposure information')
@@ -1000,130 +1745,168 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     # Run QA check on the files
     logger.info(' ')
     logger.info('Doing quality checks on all calibration exposures')
-    qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=logger)
-    logger.info(' ')
-    okay, = np.where(qachk['okay']==True)
-    if len(okay)>0:
-        expinfo = expinfo[okay]
-    else:
-        logger.info('No good calibration files to run')
-        return None        
+    #qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=logger)
+    #logger.info(' ')
+    #okay, = np.where(qachk['okay']==True)
+    #if len(okay)>0:
+    #    expinfo = expinfo[okay]
+    #else:
+    #    logger.info('No good calibration files to run')
+    #    return None        
+    print("UNCOMMENT HERE!!!!!!!!!!!!!!")
 
-    # Only need one FPI per night
-    # The FPI processing is done at a NIGHT level
-    fpi, = np.where(expinfo['exptype']=='FPI')
-    if len(fpi)>0:
-        # Take the first for each night
-        logger.info('Only keeping ONE FPI exposure per night/MJD')
-        vals,ui = np.unique(expinfo['mjd'][fpi],return_index=True)
-        todel = np.copy(fpi)
-        todel = np.delete(todel,ui)  # remove the ones we want to keep
-        expinfo = np.delete(expinfo,todel)
+    # Create cal plan directories for each night
+    for m in mjds:
+        calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=m))
+        if os.path.exists(calplandir)==False:
+            os.makedirs(calplandir)
 
-    # ADD DAILY MULTIWAVE CALIBRATION FILES
-    # after wave and before fpi
-    # make sure to run mkwave on all arclamps needed for daily cals
-
-
-    # 1: psf, 2: flux, 4: arcs, 8: fpi
-    calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':4, 'DAILYWAVE':8, 'FPI':16}
-    calcode = [calcodedict[etype] for etype in expinfo['exptype']]
-    # Do NOT use DOMEFLATS for apPSF with FPS, MJD>=59556 (only quarzflats)
-    #  Only use domeflats for apFlux cal files, need to chance calcode
-    dome, = np.where((expinfo['exptype']=='DOMEFLAT') & (expinfo['mjd']>=59556))
-    if len(dome)>0:
-        calcode = np.array(calcode)
-        calcode[dome] = 2
-        calcode = list(calcode)
-    calnames = ['DOMEFLAT/QUARTZFLAT','FLUX','ARCLAMP','DAILYWAVE','FPI']
-    shcalnames = ['psf','flux','arcs','dailywave','fpi']
+    # Loop over calibration types
+    calnames = ['psf','flux','arcs','dailywave','fpi']
     filecodes = ['PSF','Flux','Wave','Wave','WaveFPI']
     chkcal = []
-    for j,ccode in enumerate([1,2,4,8]):
+    for i,caltype in enumerate(calnames):
         logger.info('')
         logger.info('----------------------------------------------')
-        logger.info('Running Calibration Files: '+str(calnames[j]))
+        logger.info('Running Calibration Files: '+caltype.upper())
         logger.info('==============================================')
         logger.info('')
-        cind, = np.where((np.array(calcode) & ccode) > 0)
-        if len(cind)>0:
-            logger.info(str(len(cind))+' file(s)')
-            slurm1 = slurm.copy()
-            if len(cind)<64:
-                slurm1['cpus'] = len(cind)
-            slurm1['numpy_num_threads'] = 2
-            logger.info('Slurm settings: '+str(slurm1))
-            queue = pbsqueue(verbose=True)
-            queue.create(label='makecal-'+shcalnames[j], **slurm1)
-            logfiles = []
-            docal = np.zeros(len(cind),bool)
-            for k in range(len(cind)):
-                num1 = expinfo['num'][cind[k]]
-                mjd1 = int(load.cmjd(num1))
-                if mjd1>=59556:
-                    fps = True
+
+        # Get data for this calibration type
+        if caltype=='psf':
+            # Domeflats and quartzflats for plates
+            # Quartzflats only for FPS
+            ind, = np.where( (((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT')) & (expinfo['mjd']<59556)) | 
+                             ((expinfo['exptype']=='QUARTZFLAT') & (expinfo['mjd']>=59556)) )
+            ncal = len(ind)
+            if len(ind)>0:
+                calinfo = expinfo[ind]
+        elif caltype=='flux':
+            ind, = np.where(expinfo['exptype']=='DOMEFLAT')
+            ncal = len(ind)
+            if len(ind)>=0:
+                calinfo = expinfo[ind]
+        elif caltype=='arcs':
+            ind, = np.where(expinfo['exptype']=='ARCLAMP')
+            ncal = len(ind)
+            if len(ind)>0:
+                calinfo = expinfo[ind]
+        elif caltype=='dailywave':
+            ncal = len(mjds)
+            calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',np.str,20),('configid',int),
+                                                    ('designid',int),('fieldid',int)]))
+            calinfo['num'] = mjds
+            calinfo['mjd'] = mjds
+            calinfo['exptype'] = 'dailywave'
+        elif caltype=='fpi':
+            # Only FPI exposure number per MJD
+            fpi, = np.where(expinfo['exptype']=='FPI')
+            if len(fpi)>0:
+                # Take the first for each night
+                vals,ui = np.unique(expinfo['mjd'][fpi],return_index=True)
+                ncal = len(ui)
+                calinfo = expinfo[ui]
+                si = np.argsort(calinfo['num'])
+                calinfo = calinfo[si]
+
+        logger.info(str(ncal)+' file(s)')
+        slurm1 = slurm.copy()
+        if ncal<64:
+            slurm1['cpus'] = ncal
+        slurm1['numpy_num_threads'] = 2
+        logger.info('Slurm settings: '+str(slurm1))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='makecal-'+calnames[i], **slurm1)
+
+        # Loop over calibration and check if we need to run them
+        docal = np.zeros(ncal,bool)
+        for j in range(ncal):
+            num1 = calinfo['num'][j]
+            mjd1 = calinfo['mjd'][j]
+            # Check if files exist already
+            docal[j] = True
+            if clobber is not True:
+                if caltype=='dailywave':
+                    outfile = load.filename(filecodes[i],num=num1,mjd=mjd1,chips=True)
+                    outfile = outfile[0:-13]+str(mjd1)+'.fits'
+                    allfiles = [outfile.replace('Wave-','Wave-'+ch+'-') for ch in chips]
+                    allexist = [os.path.exists(f) for f in allfiles]
+                    exists = np.sum(allexist)==3
                 else:
-                    fps = False
-                calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd1))
-                if os.path.exists(calplandir)==False:
-                    os.makedirs(calplandir)
-                exptype1 = expinfo['exptype'][cind[k]]
-                arctype1 = expinfo['arctype'][cind[k]]                    
-                cmd1 = 'makecal --vers {0} --telescope {1} --unlock'.format(apred,telescope)
-                if clobber: cmd1 += ' --clobber'                
-                if ccode==1:    # psfs
-                    cmd1 += ' --psf '+str(num1)
-                    logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
-                elif ccode==2:   # flux
-                    cmd1 += ' --flux '+str(num1)
-                    if fps: cmd1 += ' --librarypsf'
-                    logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
-                elif ccode==4:  # arcs
-                    cmd1 += ' --wave '+str(num1)
-                    if fps: cmd1 += ' --librarypsf'
-                    logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
-                elif ccode==8:  # dailywave
-                    cmd1 += ' --dailywave '+str(num1)
-                    if fps: cmd1 += ' --librarypsf'
-                    logfile1 = calplandir+'/apDailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
-                elif ccode==16:  # fpi
-                    cmd1 += ' --fpi '+str(num1)
-                    if fps: cmd1 += ' --librarypsf'
-                    logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
-                if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
-                logfiles.append(logfile1)
-                # Check if files exist already
-                docal[k] = True
-                if clobber is not True:
-                    outfile = load.filename(filecodes[j],num=num1,mjd=mjd1,chips=True)
-                    if load.exists(filecodes[j],num=num1,mjd=mjd1):
-                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                        docal[k] = False
-                if docal[k]:
-                    logger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
-                    logger.info('Command : '+cmd1)
-                    logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-            if np.sum(docal)>0:
-                queue.commit(hard=True,submit=True)
-                logger.info('PBS key is '+queue.key)
-                runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+                    outfile = load.filename(filecodes[i],num=num1,mjd=mjd1,chips=True)
+                    exists = load.exists(filecodes[i],num=num1,mjd=mjd1)
+                if exists:
+                    logger.info(str(j+1)+'  '+os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[j] = False
+        logger.info(str(np.sum(docal))+' '+caltype.upper()+' to run')
+        # Loop over the calibrations and make the commands for the ones that we will run
+        logfiles = []
+        torun, = np.where(docal==True)
+        ntorun = len(torun)
+        for j in range(ntorun):
+            num1 = calinfo['num'][torun[j]]
+            mjd1 = calinfo['mjd'][torun[j]]
+            if mjd1>=59556:
+                fps = True
             else:
-                logger.info('No '+str(calnames[j])+' calibration files need to be run')
-            # Checks the status and updates the database
-            calinfo = expinfo[cind]
-            chkcal1 = runapogee.check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=logger)
+                fps = False
+            cmd1 = 'makecal --vers {0} --telescope {1} --unlock'.format(apred,telescope)
+            if clobber: cmd1 += ' --clobber'                
+            if caltype=='psf':    # psfs
+                cmd1 += ' --psf '+str(num1)
+                logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
+            elif caltype=='flux':   # flux
+                cmd1 += ' --flux '+str(num1)
+                if fps: cmd1 += ' --librarypsf'
+                logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
+            elif caltype=='arcs':  # arcs
+                cmd1 += ' --wave '+str(num1)
+                if fps: cmd1 += ' --librarypsf'
+                logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
+            elif caltype=='dailywave':  # dailywave
+                cmd1 += ' --dailywave '+str(num1)
+                if fps: cmd1 += ' --librarypsf'
+                logfile1 = calplandir+'/apDailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
+            elif caltype=='fpi':  # fpi
+                cmd1 += ' --fpi '+str(num1)
+                if fps: cmd1 += ' --librarypsf'
+                logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            logfiles.append(logfile1)
+            logger.info('Calibration file %d : %s %d' % (j+1,caltype,num1))
+            logger.info('Command : '+cmd1)
+            logger.info('Logfile : '+logfile1)
+            queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+        if ntorun>0:
+            pass
+        #    queue.commit(hard=True,submit=True)
+        #    logger.info('PBS key is '+queue.key)
+        #    queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+        else:
+            logger.info('No '+str(calnames[i])+' calibration files need to be run')
+        # Checks the status and updates the database
+        if ntorun>0:
+            chkcal1 = check_calib(calinfo[torun],logfiles,queue.key,apred,verbose=True,logger=logger)
             if len(chkcal)==0:
                 chkcal = chkcal1
             else:
                 chkcal = np.hstack((chkcal,chkcal1))
-            del queue
-        else:
-            chkcal = None
-            logger.info('No '+str(calnames[j])+' calibration files to run')
-            
+        del queue
+
+        import pdb; pdb.set_trace()
+
+    else:
+        chkcal = None
+        logger.info('No '+str(calnames[j])+' calibration files to run')
+
+
+    # make sure to run mkwave on all arclamps needed for daily cals
+
+
     return chkcal
+
+
 
 def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
     """
@@ -1185,7 +1968,7 @@ def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
 
         logger.info('Writing list of plan files to '+logdir+str(m)+'.plans')
         if nplanfiles1>0:
-            runapogee.dbload_plans(planfiles1)  # load plans into db
+            dbload_plans(planfiles1)  # load plans into db
             # Write planfiles to MJD5.plans
             dln.writelines(logdir+str(m)+'.plans',[os.path.basename(pf) for pf in planfiles1])
             planfiles += planfiles1
@@ -1204,6 +1987,7 @@ def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
         #db.ingest('daily_status',daycat)
 
     return planfiles
+
 
 def runapred(load,mjds,slurm,clobber=False,logger=None):
     """
@@ -1318,12 +2102,12 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     if np.sum(dorun)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     else:
         logger.info('No planfiles need to be run')
 
     # This also loads the status into the database using the correct APRED version
-    chkexp,chkvisit = runapogee.check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
+    chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
     del queue
 
 
@@ -1456,10 +2240,10 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
         logger.info('Running RV on '+str(np.sum(dorv))+' stars')
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
-        runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+        queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This checks the status and puts it into the database
         ind, = np.where(dorv)
-        chkrv = runapogee.check_rv(vcat[ind],queue.key,logger=logger,verbose=False)
+        chkrv = check_rv(vcat[ind],queue.key,logger=logger,verbose=False)
     else:
         logger.info('No RVs need to be run')
         chkrv = None
@@ -1508,7 +2292,7 @@ def runsumfiles(load,mjds,logger=None):
     #for m in mjds:
     #    runapogee.create_sumfiles_mjd(apred,telescope,m,logger=logger)
     # Create allStar/allVisit file
-    runapogee.create_sumfiles(apred,telescope,logger=logger)
+    create_sumfiles(apred,telescope,logger=logger)
 
 
 def rununified(load,mjds,slurm,clobber=False,logger=None):
@@ -1566,7 +2350,7 @@ def rununified(load,mjds,slurm,clobber=False,logger=None):
                      outfile=outfile, errfile=errfile)
     queue.commit(hard=True,submit=True)
     logger.info('PBS key is '+queue.key)        
-    runapogee.queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+    queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
     del queue    
     #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
 
@@ -1640,7 +2424,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
         queue.append(cmd, outfile=logfile, errfile=errfile)
     queue.commit(hard=True,submit=True)
     logger.info('PBS key is '+queue.key)
-    runapogee.queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
+    queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
     del queue
 
     # Make nightly QA/summary pages
@@ -1893,7 +2677,7 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
         rootLogger.info('Logfile : '+mkvoutfile)
         queue.append(cmd,outfile=mkvoutfile, errfile=mkverrfile)
         queue.commit(hard=True,submit=True)
-        runapogee.queue_wait(queue,sleeptime=10,logger=rootLogger,verbose=True)  # wait for jobs to complete 
+        queue_wait(queue,sleeptime=10,logger=rootLogger,verbose=True)  # wait for jobs to complete 
         del queue    
 
     # 2) Master calibration products, make sure to do them in the right order
