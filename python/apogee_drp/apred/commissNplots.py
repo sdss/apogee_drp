@@ -340,6 +340,153 @@ def dillum(mjdstart=59604):
     html.close()
 
 ###########################################################################################
+def skysub0(dosky=True, field='20833', plate='3801', mjd='59638'):
+    pixrad = 9
+    skylinesa = np.array([ 210.5,  497.0, 1139.6, 1908.0])
+    skylinesb = np.array([1100.0, 1270.8, 1439.8, 1638.4])
+    skylinesc = np.array([ 656.2, 1467.0, 1599.7, 1738.0])
+    skylines = np.array([skylinesa, skylinesb, skylinesc])
+    nskylines = len(skylinesa)
+
+    specdir = specdir5 + 'visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/'
+    cframes = glob.glob(specdir + '*Cframe-a*')
+    cframes.sort()
+    cframes = np.array(cframes)
+    ncframes = len(cframes)
+
+    apPlate = load.apPlate(int(plate), mjd)
+    data = apPlate['a'][11].data[::-1]
+    sky, = np.where((data['objtype'] == 'SKY') & (data['fiberid'] != 75) & (data['fiberid'] != 225) & 
+                    (data['fiberid'] != 25) & (data['fiberid'] != 18) & (data['fiberid'] != 21) & 
+                    (data['fiberid'] != 109) & (data['fiberid'] != 289))
+
+
+    notsky, = np.where((data['objtype'] == 'none') & (data['fiberid'] != 75) & (data['fiberid'] != 225) & 
+                       (data['fiberid'] != 25) & (data['fiberid'] != 18) & (data['fiberid'] != 21) & 
+                       (data['fiberid'] != 109) & (data['fiberid'] != 289))
+
+    goodind = notsky
+    if dosky: goodind = sky
+    diff = np.zeros((ncframes, nchips, nskylines))
+    for iframe in range(ncframes):
+        num = int(os.path.basename(cframes[iframe]).split('-')[2].split('.')[0])
+        for ichip in range(nchips):
+            gfile = cframes[iframe]
+            if ichip == 1: gfile = gfile.replace('-a-', '-b-')
+            if ichip == 2: gfile = gfile.replace('-a-', '-c-')
+            cflux = fits.getdata(gfile)
+            msky = np.nanmedian(cflux[goodind], axis=0)
+            oneDflux = load.apread('1D', num=num)[ichip].flux
+            msky0 = np.nanmedian(oneDflux[:,299-goodind], axis=1)
+            for iline in range(nskylines):
+                lstart = int(round(skylines[ichip, iline] - pixrad))
+                lstop  = int(round(skylines[ichip, iline] + pixrad))
+                diff[iframe, ichip, iline] = (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
+
+    print(diff)
+
+    return
+
+###########################################################################################
+def skysub(dosky=True):
+    # skysub.png
+
+    pixrad = 9
+    skylinesa = np.array([ 210.5,  497.0, 1139.6, 1908.0])
+    skylinesb = np.array([1100.0, 1270.8, 1439.8, 1638.4])
+    skylinesc = np.array([ 656.2, 1467.0, 1599.7, 1738.0])
+    skylines = np.array([skylinesa, skylinesb, skylinesc])
+    nskylines = len(skylinesa)
+
+    plotfile = specdir5 + 'monitor/' + instrument + '/skysub.png'
+    print("----> monitor: Making " + os.path.basename(plotfile))
+
+    fig = plt.figure(figsize=(26,14))
+
+    g, = np.where(allsnr['MJD'] >= 59590)
+    allsnrg = allsnr[g]
+    snrord = np.argsort(allsnrg['JD'])
+    allsnrg = allsnrg[snrord]
+    nexp = len(g)
+
+    ax1 = plt.subplot2grid((nchips,1), (0,0))
+    ax2 = plt.subplot2grid((nchips,1), (1,0))
+    ax3 = plt.subplot2grid((nchips,1), (2,0))
+    axes = [ax1,ax2,ax3]
+    for ax in axes:
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+
+    ax3.set_xlabel(r'JD - 2,400,000')
+    ax2.set_ylabel(r'Residual (%)')
+    ax1.axes.xaxis.set_ticklabels([])
+    ax2.axes.xaxis.set_ticklabels([])
+
+    for iexp in range(nexp):
+        stel = allsnrg['telescope'][iexp]
+        sfield = allsnrg['field'][iexp]
+        splate = str(allsnrg['plate'][iexp])
+        smjd = str(allsnrg['mjd'][iexp])
+        snum = str(allsnrg['im'][iexp])
+        specdir = specdir5 + 'visit/' + stel + '/' + sfield + '/' + splate + '/' + smjd + '/'
+
+        cframe = glob.glob(specdir + 'apCframe-c-' + snum + '.fits')
+        if os.path.exists(cframe[0]) == False: continue
+
+        apPlate = load.apPlate(int(splate), smjd)
+        objdata = apPlate['a'][11].data[::-1]
+
+        #if splate == '1634': pdb.set_trace()
+
+        asstot = np.sum(objdata['assigned'])
+        if asstot < 20: continue
+
+        if dosky is False:
+            gdind, = np.where((objdata['objtype'] == 'none') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
+                              (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
+                              (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
+        else:
+            gdind, = np.where((objdata['objtype'] == 'SKY') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
+                              (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
+                              (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
+
+        if len(gdind) < 20: continue
+
+        try:
+            print('(' + str(iexp) + '/' + str(nexp) + '):  field=' + sfield + ', plate=' + splate + ', mjd=' + smjd + ', num=' + snum)
+            ichip = 0
+            for ax in axes:
+                gfile = cframe[0]
+                if ichip == 1: gfile = gfile.replace('-c-', '-b-')
+                if ichip == 2: gfile = gfile.replace('-c-', '-a-')
+                cflux = fits.getdata(gfile)
+                msky = np.nanmedian(cflux[299-gdind], axis=0)
+                oneDflux = load.apread('1D', num=int(snum))[ichip].flux
+                msky0 = np.nanmedian(oneDflux[:,299-gdind], axis=1)
+                #pdb.set_trace()
+                for iline in range(nskylines):
+                    lstart = int(round(skylines[ichip, iline] - pixrad))
+                    lstop  = int(round(skylines[ichip, iline] + pixrad))
+                    diff = (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
+                    c = colors1[iline]
+                    x = [allsnrg['JD'][iexp], allsnrg['JD'][iexp]]
+                    y = [diff, diff]
+                    ax.scatter(x, y, marker='o', s=10, c=c, alpha=0.7)
+
+                ichip += 1
+        except:
+            print('problem')
+
+    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+
+
+###########################################################################################
 def dillum_FPSonly(mjdstart=59604, pix=[0, 2047], norm=True, resid=True):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
