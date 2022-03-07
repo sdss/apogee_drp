@@ -423,7 +423,7 @@ def skysub(dosky=True):
     ax1.axes.xaxis.set_ticklabels([])
     ax2.axes.xaxis.set_ticklabels([])
 
-    for iexp in range(30):
+    for iexp in range(100):
         stel = allsnrg['telescope'][iexp]
         sfield = allsnrg['field'][iexp]
         splate = str(allsnrg['plate'][iexp])
