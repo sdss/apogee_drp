@@ -342,10 +342,11 @@ def dillum(mjdstart=59604):
 ###########################################################################################
 def skysub(field='20833', plate='3801', mjd='59638'):
     pixrad = 9
-    skylinesa = np.array([ 210.5, 1139.6, 1908.0])
-    skylinesb = np.array([1100.0, 1270.8, 1439.8])
-    skylinesc = np.array([1467.0, 1599.7, 1738.0])
+    skylinesa = np.array([ 210.5,  497.0, 1139.6, 1908.0])
+    skylinesb = np.array([1100.0, 1270.8, 1439.8, 1638.4])
+    skylinesc = np.array([ 656.2, 1467.0, 1599.7, 1738.0])
     skylines = np.array([skylinesa, skylinesb, skylinesc])
+    nskylines = len(skylinesa)
 
     specdir = specdir5 + 'visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/'
     cframes = glob.glob(specdir + '*Cframe-a*')
@@ -368,7 +369,7 @@ def skysub(field='20833', plate='3801', mjd='59638'):
             msky = np.nanmedian(cflux[sky],axis=0)
             oneDflux = load.apread('1D', num=num)[ichip].flux
             msky0 = np.nanmedian(oneDflux[:,300-sky], axis=1)
-            for iline in range(3):
+            for iline in range(nskylines):
                 lstart = int(round(skylines[ichip, iline] - pixrad))
                 lstop  = int(round(skylines[ichip, iline] + pixrad))
                 diff[iframe, ichip, iline] = (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
