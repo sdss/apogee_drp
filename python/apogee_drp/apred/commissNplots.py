@@ -369,8 +369,8 @@ def skysub(field='20833', plate='3801', mjd='59638'):
             oneDflux = load.apread('1D', num=num)[ichip].flux
             msky0 = np.nanmedian(oneDflux[:,300-sky], axis=1)
             for iline in range(3):
-                lstart = skylines[ichip, iline] - pixrad
-                lstop  = skylines[ichip, iline] + pixrad
+                lstart = int(np.floor(skylines[ichip, iline] - pixrad))
+                lstop  = int(np.ceil(skylines[ichip, iline] + pixrad))
                 diff[iframe, ichip, iline] = (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
 
     pdb.set_trace()
