@@ -423,16 +423,15 @@ def skysub(dosky=True):
     ax1.axes.xaxis.set_ticklabels([])
     ax2.axes.xaxis.set_ticklabels([])
 
-    for iexp in range(nexp):
+    for iexp in range(30):
         stel = allsnrg['telescope'][iexp]
         sfield = allsnrg['field'][iexp]
         splate = str(allsnrg['plate'][iexp])
-        smjd = str(allsnrg['plate'][iexp])
+        smjd = str(allsnrg['mjd'][iexp])
         snum = str(allsnrg['im'][iexp])
         specdir = specdir5 + 'visit/' + stel + '/' + sfield + '/' + splate + '/' + smjd + '/'
 
         cframe = glob.glob(specdir + 'apCframe-c-' + snum + '.fits')
-        pdb.set_trace()
         if os.path.exists(cframe[0]) == False: continue
 
         apPlate = load.apPlate(int(splate), smjd)
