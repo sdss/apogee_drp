@@ -340,6 +340,45 @@ def dillum(mjdstart=59604):
     html.close()
 
 ###########################################################################################
+def skysub(field='20833', plate='3801', mjd='59638'):
+    pixrad = 5
+    skylinesa = np.array([ 210.5, 1138.0, 1908.0])
+    skylinesb = np.array([1100.0, 1270.8, 1439.8])
+    skylinesc = np.array([1467.0, 1599.7, 1738.0])
+    skylines = np.array([skylinesa, skylinesb, skylinesc])
+
+    specdir = specdir5 + 'visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/'
+    cframes = glob.glob(specdir + '*Cframe-a*')
+    cframes.sort()
+    cframes = np.array(cframes)
+    ncframes = len(cframes)
+
+    apPlate = load.apPlate(int(plate), mjd)
+    data = apPlate['a'][11].data[::-1]
+    sky, = np.where(data['objtype'] == 'SKY')
+
+    diff = np.zeros([ncframes, 3, 3])
+    for iframe in range(ncframes):
+        num = int(os.path.basename(cframes[iframe]).split('-')[2].split('.')[0])
+        for ichip in range(nchips):
+            gfile = cframes[iframe]
+            if ichip == 1: gfile = gfile.replace('-a-', '-b-')
+            if ichip == 2: gfile = gfile.replace('-a-', '-c-')
+            cflux = fits.getdata(cframes[iframe])
+            msky = np.nanmedian(cflux[sky],axis=0)
+            oneDflux = load.apread('1D', num=num)[ichip].flux
+            msky0 = np.nanmedian(oneDflux[:,300-sky], axis=1)
+            for iline in range(3):
+                lstart = skylines[ichip, iline] - pixrad
+                lstop  = skylines[ichip, iline] + pixrad
+                diff[iframe, ichip, iline] = (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
+
+    pdb.set_trace()
+
+    return
+
+
+###########################################################################################
 def dillum_FPSonly(mjdstart=59604, pix=[0, 2047], norm=True, resid=True):
     # dillum_FPSonly.png
     # Time series plot of median dome flat flux from cross sections across fibers
