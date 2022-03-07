@@ -340,7 +340,7 @@ def dillum(mjdstart=59604):
     html.close()
 
 ###########################################################################################
-def skysub(field='20833', plate='3801', mjd='59638'):
+def skysub(sky=True, field='20833', plate='3801', mjd='59638'):
     pixrad = 9
     skylinesa = np.array([ 210.5,  497.0, 1139.6, 1908.0])
     skylinesb = np.array([1100.0, 1270.8, 1439.8, 1638.4])
@@ -356,7 +356,14 @@ def skysub(field='20833', plate='3801', mjd='59638'):
 
     apPlate = load.apPlate(int(plate), mjd)
     data = apPlate['a'][11].data[::-1]
-    sky, = np.where(data['objtype'] == 'SKY')
+    sky, = np.where((data['objtype'] == 'SKY') & (data['fiberid'] != 75) & (data['fiberid'] != 225) & 
+                    (data['fiberid'] != 25) & (data['fiberid'] != 18) & (data['fiberid'] != 21) & 
+                    (data['fiberid'] != 109) & (data['fiberid'] != 289))
+
+
+    notsky, = np.where((data['objtype'] == 'none') & (data['fiberid'] != 75) & (data['fiberid'] != 225) & 
+                       (data['fiberid'] != 25) & (data['fiberid'] != 18) & (data['fiberid'] != 21) & 
+                       (data['fiberid'] != 109) & (data['fiberid'] != 289))
 
     diff = np.zeros((ncframes, nchips, nskylines))
     for iframe in range(ncframes):
