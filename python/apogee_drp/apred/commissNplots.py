@@ -445,6 +445,7 @@ def skysub(dosky=True):
                               (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
 
         if len(gdind) < 50: continue
+        pdb.set_trace()
 
         print(str(iexp) + '/' + str(nexp))
 
