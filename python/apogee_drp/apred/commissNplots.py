@@ -465,7 +465,7 @@ def skysub(dosky=True):
             cflux = fits.getdata(gfile)
             msky = np.nanmedian(cflux[gdind], axis=0)
             oneDflux = load.apread('1D', num=int(snum))[ichip].flux
-            msky0 = np.nanmedian(oneDflux[:,300-gdind], axis=1)
+            msky0 = np.nanmedian(oneDflux[:,299-gdind], axis=1)
             for iline in range(nskylines):
                 lstart = int(round(skylines[ichip, iline] - pixrad))
                 lstop  = int(round(skylines[ichip, iline] + pixrad))
