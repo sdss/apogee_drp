@@ -440,7 +440,7 @@ def skysub(dosky=True):
                           (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
                           (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
         if dosky:
-            gdind, = np.where((objdata['objtype'] == 'none') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
+            gdind, = np.where((objdata['objtype'] == 'SKY') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
                               (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
                               (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
 
