@@ -467,6 +467,8 @@ def skysub(dosky=True):
                 y = [diff, diff]
                 ax.scatter(x, y, marker='o', s=10, c=c, alpha=0.7)
 
+            ichip += 1
+
     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
     plt.close('all')
