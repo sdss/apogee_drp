@@ -499,15 +499,15 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
                         ax.text(0.97, 0.44, 'airglow' + '\n' + 'pixels', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
                         ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=1, fontsize=fsz, edgecolor='k', framealpha=1)
 
+            except:
+                print('problem')
+
         ichip = 0
         for ax in axes:
             for iline in range(nskylines):
                 med = np.nanmedian(resid[:, ichip, iline])
                 ax.axhline(y=med, color=colors[iline], linestyle='dashed')
             ichip += 1
-
-            except:
-                print('problem')
     else:
         ichip = 0
         for ax in axes:
