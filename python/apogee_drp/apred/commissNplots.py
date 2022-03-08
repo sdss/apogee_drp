@@ -519,13 +519,13 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
                 c = colors[iline]
                 x = [ajd, ajd]
                 y = [resid[:, ichip, iline], resid[:, ichip, iline]]
-                lab = str(int(round(skylines[ichip, iline]))).rjust(4) + ' (' + str("%.2f" % round(med, 2)) + '%)'
+                lab = str(int(round(skylines[ichip, iline]))).rjust(4) + '  (' + str("%.2f" % round(med, 2)) + '%)'
                 ax.scatter(x, y, marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=lab)
 
             ichip += 1
 
             ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-            ax.text(0.93, 0.45, 'airglow' + '\n' + 'pixel', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
+            ax.text(0.925, 0.45, 'airglow' + '\n' + 'pixel', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
             ax.text(0.97, 0.45, 'median' + '\n' + 'resid', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz, edgecolor='k', framealpha=1)
 
