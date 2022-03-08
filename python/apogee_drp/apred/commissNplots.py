@@ -474,6 +474,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
                 print('(' + str(iexp) + '/' + str(nexp) + '):  field=' + sfield + ', plate=' + splate + ', mjd=' + smjd + ', num=' + snum)
                 ichip = 0
                 for ax in axes:
+                    chip = chips[ichip]
                     gfile = cframe[0]
                     if ichip == 1: gfile = gfile.replace('-a-', '-b-')
                     if ichip == 2: gfile = gfile.replace('-a-', '-c-')
@@ -494,6 +495,9 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
                     ichip += 1
 
                     if iexp == 0:
+                        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                                ha='center', va='top', color=chip, bbox=bboxpar)
+
                         ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=1, 
                                   fontsize=fsz, edgecolor='k', framealpha=1)
             except:
@@ -501,6 +505,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
     else:
         ichip = 0
         for ax in axes:
+            chip = chips[ichip]
             for iline in range(nskylines):
                 c = colors[iline]
                 x = [ajd, ajd]
@@ -508,6 +513,9 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
                 ax.scatter(x, y, marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=str(int(round(skylines[ichip, iline]))))
 
             ichip += 1
+
+            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
+                    ha='center', va='top', color=chip, bbox=bboxpar)
 
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, 
                       fontsize=fsz, edgecolor='k', framealpha=1)
