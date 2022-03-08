@@ -495,11 +495,8 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
                     ichip += 1
 
                     if iexp == 0:
-                        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                                ha='center', va='top', color=chip, bbox=bboxpar)
-
-                        ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=1, 
-                                  fontsize=fsz, edgecolor='k', framealpha=1)
+                        ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
+                        ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=1, fontsize=fsz, edgecolor='k', framealpha=1)
             except:
                 print('problem')
     else:
@@ -514,11 +511,8 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
 
             ichip += 1
 
-            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, 
-                    ha='center', va='top', color=chip, bbox=bboxpar)
-
-            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, 
-                      fontsize=fsz, edgecolor='k', framealpha=1)
+            ax.text(0.97,0.92,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
+            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz, edgecolor='k', framealpha=1)
 
     fig.subplots_adjust(left=0.055,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
