@@ -434,7 +434,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
         ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
 
     ax1.set_xlabel(r'JD - 2,400,000')
-    ax2.set_ylabel(r'Residual (%)')
+    ax2.set_ylabel(r'Airglow Line Residual (%)')
     ax2.axes.xaxis.set_ticklabels([])
     ax3.axes.xaxis.set_ticklabels([])
 
@@ -526,7 +526,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
             ax.text(0.97, 0.44, 'airglow' + '\n' + 'pixels', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz, edgecolor='k', framealpha=1)
 
-    fig.subplots_adjust(left=0.055,right=0.985,bottom=0.06,top=0.98,hspace=0.12,wspace=0.00)
+    fig.subplots_adjust(left=0.05,right=0.985,bottom=0.06,top=0.98,hspace=0.12,wspace=0.00)
     plt.savefig(plotfile)
     plt.close('all')
 
