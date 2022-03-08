@@ -89,10 +89,14 @@ def writeNewMJD(observatory,mjd,apred='daily'):
     f.close()
 
 
-def summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None):
+def summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None,debug=False):
     """ Send a summary email."""
 
-    address = 'apogee-pipeline-log@sdss.org'
+    if debug:
+        address = 'dnidever@montana.edu'
+    else:
+        address = 'apogee-pipeline-log@sdss.org'
+
     subject = 'Daily APOGEE Reduction %s %s' % (observatory,mjd5)
     message = """\
               <html>
@@ -140,8 +144,37 @@ def summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None):
     email.send(address,subject,message,files=logfiles)
 
 
-def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
-    """ Perform daily APOGEE data reduction."""
+def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,debug=False):
+    """
+    Perform daily APOGEE data reduction.
+
+    Parameters
+    ----------
+    observatory : str
+       Observatory code, 'apo' or 'lco'.
+    mjd5 : int, optional
+       MJD number of the night of data to reduce.  Default is to process the next night
+          of data.
+    apred : str, optional
+       APOGEE reduction version.  Default is 'daily'.
+    qos : str, optional
+       The type of slurm queue to use.  Default is "sdss-fast".
+    clobber : boolean, optional
+       Overwrite any existing files.
+    debug : boolean, optional
+       For debugging/testing purposes. No email will be sent to the pipeline list.
+
+    Returns
+    -------
+    Data are processed and output files are created on disk.
+
+    Example
+    -------
+
+    run_daily('apo',59640)
+
+
+    """
 
     begtime = str(datetime.now())
 
@@ -156,6 +189,9 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     cpus = 32
     walltime = '23:00:00'
     chips = ['a','b','c']
+
+    slurm = {'nodes':nodes, 'alloc':alloc, 'ppn':ppn, 'cpus':cpus, 'qos':qos, 'shared':shared,
+             'numpy_num_threads':2,'walltime':walltime,'notification':False}
 
     # No version input, use 'daily'
     if apred is None:
@@ -253,41 +289,10 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     #-----------------------------------------
     if len(expinfo)>0:
         rootLogger.info('')
-        rootLogger.info('-----------------------------')
-        rootLogger.info('Running AP3D on all exposures')
-        rootLogger.info('=============================')
-        rootLogger.info('')
-        queue = pbsqueue(verbose=True)
-        queue.create(label='ap3d', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(expinfo)),
-                     qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
-        do3d = np.zeros(len(expinfo),bool)
-        for i,num in enumerate(expinfo['num']):
-            logfile1 = load.filename('2D',num=num,mjd=mjd5,chips=True).replace('2D','3D')
-            logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
-            logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
-            if os.path.dirname(logfile1)==False:
-                os.makedirs(os.path.dirname(logfile1))
-            # Check if files exist already
-            do3d[i] = True
-            if clobber is not True:
-                outfile = load.filename('2D',num=num,mjd=mjd5,chips=True)
-                if load.exists('2D',num=num):
-                    rootLogger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    do3d[i] = False
-            if do3d[i]:
-                cmd1 = 'ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope)
-                rootLogger.info('Exposure %d : %d' % (i+1,num))
-                rootLogger.info('Command : '+cmd1)
-                rootLogger.info('Logfile : '+logfile1)
-                queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-        if np.sum(do3d)>0:
-            queue.commit(hard=True,submit=True)
-            rootLogger.info('PBS key is '+queue.key)
-            apogeedrp.queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
-            chk3d = apogeedrp.check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=rootLogger)
-        else:
-            rootLogger.info('No exposures need AP3D processing')
-        del queue
+        rootLogger.info('--------------------------------')
+        rootLogger.info('1) Running AP3D on all exposures')
+        rootLogger.info('================================')
+        chk3d = apogeedrp.run3d(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     else:
         rootLogger.info('No exposures to process with AP3D')
 
@@ -297,8 +302,9 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=rootLogger)
     rootLogger.info(' ')
 
-    # Run calibration files using "pbs" packages
-    #-------------------------------------------
+
+    # Run daily calibration files
+    #----------------------------
     # First we need to run domeflats and quartzflats so there are apPSF files
     # Then the arclamps
     # Then the FPI exposures last (needs apPSF and apWave files)
@@ -306,114 +312,24 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     calind, = np.where(((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
                         (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI')) &
                        (qachk['okay']==True))
-
     if len(calind)>0:
-        # Only need one FPI per night
-        # The FPI processing is done at a NIGHT level
-        fpi, = np.where(expinfo['exptype'][calind]=='FPI')
-        if len(fpi)>1:
-            # Take the first FPI exposure
-            rootLogger.info('Only keeping ONE FPI exposure per night/MJD')
-            calind = np.delete(calind,fpi[1:])  # remove all except the first one
-
-
-        # 1: psf, 2: flux, 4: arcs, 8: fpi
-        if fps:
-            # Only use QUARTZFLATs in the FPS era because they have all 300 fibers
-            #  domeflats are missing the 2 dedicated FPI fibers
-            calcodedict = {'DOMEFLAT':2, 'QUARTZFLAT':1, 'ARCLAMP':4, 'FPI':8}
-        else:
-            calcodedict = {'DOMEFLAT':3, 'QUARTZFLAT':1, 'ARCLAMP':4, 'FPI':8}
-        calcode = [calcodedict[etype] for etype in expinfo['exptype'][calind]]
-        calnames = ['DOMEFLAT/QUARTZFLAT','FLUX','ARCLAMP','FPI']
-        shcalnames = ['psf','flux','arcs','fpi']
-        filecodes = ['PSF','Flux','Wave','WaveFPI']
-        chkcal = []
-        for j,ccode in enumerate([1,2,4,8]):
-            rootLogger.info('')
-            rootLogger.info('----------------------------------------------')
-            rootLogger.info('Running Calibration Files: '+str(calnames[j]))
-            rootLogger.info('==============================================')
-            rootLogger.info('')
-            cind, = np.where((np.array(calcode) & ccode) > 0)
-            if len(cind)>0:
-                if ccode==8: cind = cind[[0]] # Only run first FPI exposure
-                rootLogger.info(str(len(cind))+' file(s)')
-                queue = pbsqueue(verbose=True)
-                queue.create(label='makecal-'+shcalnames[j], nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(cind)),
-                             qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
-                calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd5))
-                logfiles = []
-                docal = np.zeros(len(cind),bool)
-                for k in range(len(cind)):
-                    num1 = expinfo['num'][calind[cind[k]]]
-                    exptype1 = expinfo['exptype'][calind[cind[k]]]
-                    arctype1 = expinfo['arctype'][calind[cind[k]]]
-                    if ccode==1:   # psfs                    
-                        cmd1 = 'makecal --psf '+str(num1)+' --unlock'
-                        if clobber: cmd1 += ' --clobber'
-                        logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
-                    elif ccode==2:  # flux
-                        cmd1 = 'makecal --flux '+str(num1)+' --unlock'
-                        if fps: cmd1 += ' --psflibrary'
-                        if clobber: cmd1 += ' --clobber'
-                        logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
-                    elif ccode==4: # and exptype1=='ARCLAMP' and (arctype1=='UNE' or arctype1=='THARNE'):  # arcs
-                        cmd1 = 'makecal --wave '+str(num1)+' --unlock'
-                        if fps: cmd1 += ' --psflibrary'
-                        if clobber: cmd1 += ' --clobber'
-                        logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log'
-                    elif ccode==8: # and exptype1=='ARCLAMP' and arctype1=='FPI':    # fpi
-                        cmd1 = 'makecal --fpi '+str(num1)+' --unlock'
-                        if fps: cmd1 += ' --psflibrary'
-                        if clobber: cmd1 += ' --clobber'
-                        logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
-                    logfiles.append(logfile1)
-                    # Check if files exist already
-                    docal[k] = True
-                    if clobber is not True:
-                        outfile = load.filename(filecodes[j],num=num1,mjd=mjd5,chips=True)
-                        if load.exists(filecodes[j],num=num1,mjd=mjd5):
-                            rootLogger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                            docal[k] = False
-                    if docal[k]:
-                        rootLogger.info('Calibration file %d : %s %d' % (k+1,exptype1,num1))
-                        rootLogger.info('Command : '+cmd1)
-                        rootLogger.info('Logfile : '+logfile1)
-                        queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-                if np.sum(docal)>0:
-                    queue.commit(hard=True,submit=True)
-                    rootLogger.info('PBS key is '+queue.key)
-                    apogeedrp.queue_wait(queue,sleeptime=60,verbose=True,logger=rootLogger)  # wait for jobs to complete
-                else:
-                    rootLogger.info('No '+str(calnames[j])+' calibration files need to be run') 
-                calinfo = expinfo[calind[cind]]
-                chkcal1 = apogeedrp.check_calib(calinfo,logfiles,queue.key,apred,verbose=True,logger=rootLogger)
-                if len(chkcal)==0:
-                    chkcal = chkcal1
-                else:
-                    chkcal = np.hstack((chkcal,chkcal1))
-                del queue
-            else:
-                rootLogger.info('No '+str(calnames[j])+' calibration files to run')
+        rootLogger.info('')
+        rootLogger.info('----------------------------------------')
+        rootLogger.info('2) Generating daily calibration products')
+        rootLogger.info('========================================')
+        chkcal = apogeedrp.rundailycals(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
+    else:
+        rootLogger.info('No calibration files to run')
 
 
     # Make MJD5 and plan files
     #--------------------------
     # Check that the necessary daily calibration files exist
     rootLogger.info(' ')
-    rootLogger.info('Making plan files')
-    plandicts,planfiles = mkplan.make_mjd5_yaml(mjd5,apred,telescope,clobber=True,logger=rootLogger)
-    dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd5)+'.yaml'
-    planfiles = mkplan.run_mjd5_yaml(dailyplanfile,logger=rootLogger)
-    nplanfiles = len(planfiles)
-    if nplanfiles>0:
-        dbload_plans(planfiles)  # load plans into db
-        # Write planfiles to MJD5.plans
-        dln.writelines(logdir+str(mjd5)+'.plans',[os.path.basename(pf) for pf in planfiles])
-    else:
-        dln.writelines(logdir+str(mjd5)+'.plans','')   # write blank file
-
+    rootLogger.info('--------------------')
+    rootLogger.info('3) Making plan files')
+    rootLogger.info('====================')
+    planfiles = apogeedrp.makeplanfiles(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     # Start entry in daily_status table
     daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
                                         ('nexposures',int),('begtime',(np.str,50)),('success',bool)]))
@@ -426,101 +342,51 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     db.ingest('daily_status',daycat)
 
 
-    # Run APRED on all planfiles using "pbs" package
-    #------------------------------------------------
+    # Run APRED on all planfiles
+    #---------------------------
     if nplanfiles>0:
         rootLogger.info('')
-        rootLogger.info('--------------')
-        rootLogger.info('Running APRED')
-        rootLogger.info('==============')
-        rootLogger.info('')
-        queue = pbsqueue(verbose=True)
-        queue.create(label='apred', nodes=nodes, alloc=alloc, ppn=ppn, cpus=np.minimum(cpus,len(planfiles)),
-                     qos=qos, shared=shared, numpy_num_threads=2, walltime=walltime, notification=False)
-        for i,pf in enumerate(planfiles):
-            rootLogger.info('planfile %d : %s' % (i+1,pf))
-            logfile = pf.replace('.yaml','_pbs.'+logtime+'.log')
-            errfile = logfile.replace('.log','.err')
-            cmd1 = 'apred {0}'.format(pf)
-            rootLogger.info('Command : '+cmd1)
-            rootLogger.info('Logfile : '+logfile)
-            queue.append(cmd1, outfile=logfile, errfile=errfile)
-        queue.commit(hard=True,submit=True)
-        rootLogger.info('PBS key is '+queue.key)
-        apogeedrp.queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-        chkexp,chkvisit = apogeedrp.check_apred(expinfo,planfiles,queue.key,verbose=True,logger=rootLogger)
-        del queue
+        rootLogger.info('----------------')
+        rootLogger.info('4) Running APRED')
+        rootLogger.info('================')
+        chkexp,chkvisit = apogeedrp.runapred(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     else:
         rootLogger.info('No plan files to run')
         chkexp,chkvisit = None,None
 
-    # Run "rv" on all stars
-    #----------------------
+    # Run RV + combination on all stars
+    #----------------------------------
     rootLogger.info('')
-    rootLogger.info('------------------------------')
-    rootLogger.info('Running RV+Visit Combination')
-    rootLogger.info('==============================')
-    rootLogger.info('')
-    vcat = db.query('visit',cols='*',where="apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjd5,telescope))
-    if len(vcat)>0:
-        # Get unique stars
-        objects,ui = np.unique(vcat['apogee_id'],return_index=True)
-        vcat = vcat[ui]
-        # Remove ones with missing or blank apogee_ids
-        bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone') | (vcat['apogee_id']=='2M'))
-        if len(bd)>0:
-            vcat = np.delete(vcat,bd)
-        else:
-            vcat = []
-    if len(vcat)>0:
-        queue = pbsqueue(verbose=True)
-        queue.create(label='rv', nodes=nodes, alloc=alloc, ppn=ppn, cpus=cpus, qos=qos, shared=shared, numpy_num_threads=2,
-                     walltime=walltime, notification=False)
-        for i,obj in enumerate(vcat['apogee_id']):
-            apstarfile = load.filename('Star',obj=obj)
-            outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
-            if os.path.exists(outdir)==False:
-                os.makedirs(outdir)
-            # Run with --verbose and --clobber set
-            rootLogger.info('rv %d : %s' % (i+1,obj))
-            logfile = apstarfile.replace('.fits','-'+str(mjd5)+'_pbs.'+logtime+'.log')
-            errfile = logfile.replace('.log','.err')
-            cmd1 = 'rv %s %s %s -c -v -m %s' % (obj,apred,telescope,mjd5)
-            rootLogger.info('Command : '+cmd1)
-            rootLogger.info('Logfile : '+logfile)
-            queue.append(cmd1,outfile=logfile,errfile=errfile)
-        queue.commit(hard=True,submit=True)
-        rootLogger.info('PBS key is '+queue.key)        
-        apogeedrp.queue_wait(queue,sleeptime=120,verbose=True,logger=rootLogger)  # wait for jobs to complete
-        chkrv = apogeedrp.check_rv(vcat,queue.key)
-        del queue
-    else:
-        rootLogger.info('No visit files for MJD=%d' % mjd5)
-        chkrv = None
+    rootLogger.info('--------------------------------')
+    rootLogger.info('5) Running RV+Visit Combination')
+    rootLogger.info('================================')
+    chkrv = apogeedrp.runrv(load,[mjd5],slurm,daily=True,clobber=clobber,logger=rootLogger)
 
 
     # Create daily and full allVisit/allStar files
     # The QA code needs these
+    rootLogger.info('')
+    rootLogger.info('-----------------------')
+    rootLogger.info('6) Create summary files')
+    rootLogger.info('=======================')
     apogeedrp.create_sumfiles(apred,telescope,mjd5)
 
 
-    # Run QA script
-    #--------------
+    # 7) Unified directory structure
+    #-------------------------------
+    #rootLogger.info('')
+    #rootLogger.info('---------------------------------------------')
+    #rootLogger.info('7) Generating unified MWM directory structure')
+    #rootLogger.info('=============================================')
+    #apogeedrp.rununified(load[,mjd5],**kws) 
+
+    # 8) Run QA script
+    #------------------    
     rootLogger.info('')
-    rootLogger.info('------------')
-    rootLogger.info('Running QA')
-    rootLogger.info('============')
-    rootLogger.info('')
-    queue = pbsqueue(verbose=True)
-    queue.create(label='qa', nodes=1, alloc=alloc, ppn=ppn, qos=qos, cpus=1, shared=shared, walltime=walltime, notification=False)
-    qaoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-qa.'+logtime+'.log'
-    qaerrfile = qaoutfile.replace('-qa.log','-qa.'+logtime+'.err')
-    if os.path.exists(os.path.dirname(qaoutfile))==False:
-        os.makedirs(os.path.dirname(qaoutfile))
-    queue.append('apqa {0} {1}'.format(mjd5,observatory),outfile=qaoutfile, errfile=qaerrfile)
-    queue.commit(hard=True,submit=True)
-    apogeedrp.queue_wait(queue)  # wait for jobs to complete
-    del queue
+    rootLogger.info('--------------')
+    rootLogger.info('8) Running QA')
+    rootLogger.info('==============')
+    apogeedrp.runqa(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
 
     # Update daily_status table
     daycat = np.zeros(1,dtype=np.dtype([('pk',int),('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
@@ -546,9 +412,4 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False):
     db.close()    # close db session
 
     # Summary email
-    # send to apogee_reduction email list
-    # include basic information
-    # give link to QA page
-    # attach full run_daily() log (as attachment)
-    # don't see it if using --debug mode
-    summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfile)
+    summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfile,debug=debug)

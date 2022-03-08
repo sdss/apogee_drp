@@ -2127,7 +2127,7 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     return chkexp,chkvisit
 
 
-def runrv(load,mjds,slurm,clobber=False,logger=None):
+def runrv(load,mjds,slurm,daily=False,clobber=False,logger=None):
     """
     Run RV on all the stars observed from a list of MJDs.
 
@@ -2139,6 +2139,8 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
        List of MJDs to process
     slurm : dictionary
        Dictionary of slurm settings.
+    daily : boolean, optional
+       Run for the daily processing.  Only include visits up to and including this night.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -2146,7 +2148,7 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
 
     Returns
     -------
-    The unified directory structure software is run on the MJDs and relevant symlinks are generated.
+    The RV + combination software is run on the MJDs and relevant output files are created.
 
     Example
     -------
@@ -2166,11 +2168,14 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
 
     # Get the stars that were observed in the MJD range and the MAXIMUM MJD for each star
-    sql = "WITH mv as (SELECT apogee_id, apred_vers, telescope, max(mjd) as maxmjd FROM apogee_drp.visit"
-    sql += " WHERE apred_vers='%s' and telescope='%s'" % (apred,telescope)
-    sql += " GROUP BY apogee_id, apred_vers, telescope)"
-    sql += " SELECT v.*,mv.maxmjd from apogee_drp.visit AS v LEFT JOIN mv on mv.apogee_id=v.apogee_id"
-    sql += " Where v.apred_vers='%s' and v.mjd>=%d and v.mjd<=%d and v.telescope='%s'" % (apred,mjdstart,mjdstop,telescope)
+    if daily==False:
+        sql = "WITH mv as (SELECT apogee_id, apred_vers, telescope, max(mjd) as maxmjd FROM apogee_drp.visit"
+        sql += " WHERE apred_vers='%s' and telescope='%s'" % (apred,telescope)
+        sql += " GROUP BY apogee_id, apred_vers, telescope)"
+        sql += " SELECT v.*,mv.maxmjd from apogee_drp.visit AS v LEFT JOIN mv on mv.apogee_id=v.apogee_id"
+        sql += " Where v.apred_vers='%s' and v.mjd>=%d and v.mjd<=%d and v.telescope='%s'" % (apred,mjdstart,mjdstop,telescope)
+    else:
+        sql = "SELECT * from apogee_drp.visit WHERE apred_vers='%s' mjd=%d and telescope='%s'" % (apred,mjds[0],telescope))
 
     db = apogeedb.DBSession()
     vcat = db.query(sql=sql)
@@ -2213,7 +2218,11 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
         # Use the MAXMJD in the table, now called MJD
         mjd = vcat['mjd'][i]
         apstarfile = load.filename('Star',obj=obj)
-        apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
+        if daily:
+            # Want all visits up to this day
+            apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
+        else:
+            apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
         outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
         if os.path.exists(outdir)==False:
             os.makedirs(outdir)
@@ -2223,6 +2232,8 @@ def runrv(load,mjds,slurm,clobber=False,logger=None):
         cmd = 'rv %s %s %s -v' % (obj,apred,telescope)
         if clobber:
             cmd += ' -c'
+        if daily:
+            cmd += '  --m '+str(mjds[0])
         # Check if file exists already
         dorv[i] = True
         if clobber==False:
