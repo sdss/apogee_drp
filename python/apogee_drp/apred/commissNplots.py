@@ -486,7 +486,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
                         lstart = int(round(skylines[ichip, iline] - pixrad))
                         lstop  = int(round(skylines[ichip, iline] + pixrad))
                         resid[iexp, ichip, iline] = (np.nansum(np.absolute(msky[lstart:lstop])) / np.nansum(np.absolute(msky0[lstart:lstop]))) * 100.0
-                        c = colors1[iline]
+                        c = colors[iline]
                         x = [allsnrg['JD'][iexp], allsnrg['JD'][iexp]]
                         y = [resid[iexp, ichip, iline], resid[iexp, ichip, iline]]
                         ax.scatter(x, y, marker=skysyms[iline], s=15, c=c, alpha=0.7, zorder=50, label=str(int(round(skylines[ichip, iline]))))
@@ -502,7 +502,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
         ichip = 0
         for ax in axes:
             for iline in range(nskylines):
-                c = colors1[iline]
+                c = colors[iline]
                 x = [ajd, ajd]
                 y = [resid[:, ichip, iline], resid[:, ichip, iline]]
                 ax.scatter(x, y, marker=skysyms[iline], s=15, c=c, alpha=0.7, zorder=50, label=str(int(round(skylines[ichip, iline]))))
