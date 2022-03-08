@@ -526,7 +526,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
             ax.text(0.97, 0.44, 'airglow' + '\n' + 'pixels', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz, edgecolor='k', framealpha=1)
 
-    fig.subplots_adjust(left=0.055,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+    fig.subplots_adjust(left=0.055,right=0.985,bottom=0.06,top=0.98,hspace=0.12,wspace=0.00)
     plt.savefig(plotfile)
     plt.close('all')
 
