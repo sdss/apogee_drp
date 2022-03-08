@@ -420,6 +420,7 @@ def skysub(dosky=True):
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
         ax.set_ylim(0.0, 2.6)
+        ax.axhline(y=1, linestyle='dashed', zorder=1, color='grey')
 
     ax3.set_xlabel(r'JD - 2,400,000')
     ax2.set_ylabel(r'Residual (%)')
@@ -475,7 +476,7 @@ def skysub(dosky=True):
                     c = colors1[iline]
                     x = [allsnrg['JD'][iexp], allsnrg['JD'][iexp]]
                     y = [diff, diff]
-                    ax.scatter(x, y, marker='o', s=10, c=c, alpha=0.7)
+                    ax.scatter(x, y, marker='o', s=10, c=c, alpha=0.7, zorder=50)
 
                 ichip += 1
         except:
