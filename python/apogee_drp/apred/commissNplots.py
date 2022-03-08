@@ -492,8 +492,9 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
 
                     ichip += 1
 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1)
+                    if iexp == 0:
+                        ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, 
+                                  fontsize=fsz, edgecolor='k', framealpha=1)
             except:
                 print('problem')
     else:
