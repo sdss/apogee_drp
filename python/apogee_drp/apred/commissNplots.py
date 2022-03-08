@@ -502,7 +502,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
     else:
         ichip = 0
         for ax in axes:
-            chip = chips[ichip]
+            chip = chips[3-ichip]
             for iline in range(nskylines):
                 c = colors[iline]
                 x = [ajd, ajd]
