@@ -427,7 +427,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
         ax.tick_params(axis='both',which='both',width=axwidth)
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(0.0, 2.6)
-        ax.axhline(y=1, zorder=1, color='grey')#, linestyle='dashed')
+        ax.axhline(y=1, zorder=1, color='grey', linewidth=3)#, linestyle='dashed')
         ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
         ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
