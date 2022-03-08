@@ -388,19 +388,29 @@ def skysub0(dosky=True, field='20833', plate='3801', mjd='59638'):
     return
 
 ###########################################################################################
-def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
+def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
     # skysub.png
+
+    skysyms = np.array(['o', '^', 'v', 'P'])
 
     pixrad = 9
     skylinesa = np.array([ 210.5,  497.0, 1139.6, 1908.0])
     skylinesb = np.array([1100.0, 1270.8, 1439.8, 1638.4])
     skylinesc = np.array([ 656.2, 1467.0, 1599.7, 1738.0])
-    skylines = np.array([skylinesa, skylinesb, skylinesc])
-    nskylines = len(skylinesa)
-    skysyms = np.array(['o', '^', 'v', 'P'])
 
     plotfile = specdir5 + 'monitor/' + instrument + '/skysub.png'
     if dosky: plotfile = plotfile.replace('.png', '_sky.png')
+
+    if cont is True:
+        pixrad = 40
+        skylinesa = np.array([1340])
+        skylinesa = np.array([1545])
+        skylinesc = np.array([1825])
+        plotfile = plotfile.replace('.png', '_cont.png')
+
+    skylines = np.array([skylinesa, skylinesb, skylinesc])
+    nskylines = len(skylinesa)
+
     print("----> monitor: Making " + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(26,14))
