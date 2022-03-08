@@ -421,6 +421,10 @@ def skysub(dosky=True):
         ax.tick_params(axis='both',which='both',width=axwidth)
         ax.set_ylim(0.0, 2.6)
         ax.axhline(y=1, linestyle='dashed', zorder=1, color='grey')
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
 
     ax3.set_xlabel(r'JD - 2,400,000')
     ax2.set_ylabel(r'Residual (%)')
@@ -482,7 +486,7 @@ def skysub(dosky=True):
         except:
             print('problem')
 
-    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+    fig.subplots_adjust(left=0.055,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
     plt.close('all')
 
