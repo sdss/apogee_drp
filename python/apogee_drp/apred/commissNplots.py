@@ -439,7 +439,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
     ax2.axes.xaxis.set_ticklabels([])
     ax3.axes.xaxis.set_ticklabels([])
 
-    if (ajd is None) | (resid is None):
+    if resid is None:
         resid = np.zeros((nexp, nchips, nskylines))
         for iexp in range(nexp):
             stel = allsnrg['telescope'][iexp]
@@ -454,8 +454,6 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
 
             apPlate = load.apPlate(int(splate), smjd)
             objdata = apPlate['a'][11].data[::-1]
-
-            #if splate == '1634': pdb.set_trace()
 
             asstot = np.sum(objdata['assigned'])
             if asstot < 20: continue
@@ -473,8 +471,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
 
             try:
                 print('(' + str(iexp) + '/' + str(nexp) + '):  field=' + sfield + ', plate=' + splate + ', mjd=' + smjd + ', num=' + snum)
-                ichip = 0
-                for ax in axes:
+                for ichip in range(nchips):
                     chip = chips[ichip]
                     gfile = cframe[0]
                     if ichip == 1: gfile = gfile.replace('-a-', '-b-')
@@ -488,47 +485,27 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
                         lstart = int(round(skylines[ichip, iline] - pixrad))
                         lstop  = int(round(skylines[ichip, iline] + pixrad))
                         resid[iexp, ichip, iline] = (np.nansum(np.absolute(msky[lstart:lstop])) / np.nansum(np.absolute(msky0[lstart:lstop]))) * 100.0
-                        c = colors[iline]
-                        x = [allsnrg['JD'][iexp], allsnrg['JD'][iexp]]
-                        y = [resid[iexp, ichip, iline], resid[iexp, ichip, iline]]
-                        ax.scatter(x, y, marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=str(int(round(skylines[ichip, iline]))))
-
-                    ichip += 1
             except:
                 print('problem')
 
-        ichip = 0
-        for ax in axes:
-            chip = chips[ichip]
-            for iline in range(nskylines):
-                med = np.nanmedian(resid[:, ichip, iline])
-                ax.axhline(y=med, color=colors[iline], linestyle='dashed')
-                lab = str(int(round(skylines[ichip, iline]))).rjust(4) + ' (' + str("%.2f" % round(med, 2)) + '%)'
-                ax.scatter([-100,-100], [-100,-100], marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=lab)
-            ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-            ax.text(0.97, 0.45, 'airglow' + '\n' + 'pixels', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
-            ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=1, fontsize=fsz, edgecolor='k', framealpha=1)
+    ichip = 0
+    for ax in axes:
+        chip = chips[2-ichip]
+        for iline in range(nskylines):
+            med = np.nanmedian(resid[:, ichip, iline])
+            ax.axhline(y=med, color=colors[iline], linestyle='dashed')
+            c = colors[iline]
+            x = [jd, jd]
+            y = [resid[:, ichip, iline], resid[:, ichip, iline]]
+            lab = str(int(round(skylines[ichip, iline]))).rjust(4) + '  (' + str("%.2f" % round(med, 2)) + '%)'
+            ax.scatter(x, y, marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=lab)
 
-            ichip += 1
-    else:
-        ichip = 0
-        for ax in axes:
-            chip = chips[2-ichip]
-            for iline in range(nskylines):
-                med = np.nanmedian(resid[:, ichip, iline])
-                ax.axhline(y=med, color=colors[iline], linestyle='dashed')
-                c = colors[iline]
-                x = [ajd, ajd]
-                y = [resid[:, ichip, iline], resid[:, ichip, iline]]
-                lab = str(int(round(skylines[ichip, iline]))).rjust(4) + '  (' + str("%.2f" % round(med, 2)) + '%)'
-                ax.scatter(x, y, marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=lab)
+        ichip += 1
 
-            ichip += 1
-
-            ax.text(0.03,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-            ax.text(0.93, 0.85, 'airglow' + '\n' + 'pixel', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
-            ax.text(0.97, 0.85, 'median' + '\n' + 'resid', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
-            ax.legend(loc=[0.9,0.45], labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz*0.9, edgecolor='k', framealpha=1)
+        ax.text(0.03,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
+        ax.text(0.93, 0.85, 'airglow' + '\n' + 'pixel', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
+        ax.text(0.97, 0.85, 'median' + '\n' + 'resid', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
+        ax.legend(loc=[0.9,0.45], labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz*0.9, edgecolor='k', framealpha=1)
 
     fig.subplots_adjust(left=0.05,right=0.985,bottom=0.065,top=0.98,hspace=0.2,wspace=0.00)
     plt.savefig(plotfile)
