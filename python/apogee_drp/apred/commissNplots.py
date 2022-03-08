@@ -403,7 +403,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
     if cont:
         pixrad = 30
         skylinesa = np.array([764., 1340.])
-        skylinesa = np.array([915., 1545.])
+        skylinesb = np.array([915., 1545.])
         skylinesc = np.array([423., 1825.])
         plotfile = plotfile.replace('.png', '_cont.png')
 
