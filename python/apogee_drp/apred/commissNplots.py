@@ -525,8 +525,8 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
             ichip += 1
 
             ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-            ax.text(0.91, 0.45, 'airglow' + '\n' + 'pixels', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
-            ax.text(0.97, 0.45, 'median' + '\n' + 'resid', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
+            ax.text(0.93, 0.45, 'airglow' + '\n' + 'pixels', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
+            ax.text(0.98, 0.45, 'median' + '\n' + 'resid', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz, edgecolor='k', framealpha=1)
 
     fig.subplots_adjust(left=0.05,right=0.985,bottom=0.065,top=0.98,hspace=0.2,wspace=0.00)
