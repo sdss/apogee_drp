@@ -502,7 +502,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
             for iline in range(nskylines):
                 med = np.nanmedian(resid[:, ichip, iline])
                 ax.axhline(y=med, color=colors[iline], linestyle='dashed')
-                lab = str(int(round(skylines[ichip, iline]))) + ' (' + str("%.2f" % round(med, 2)) + '%)'
+                lab = str(int(round(skylines[ichip, iline]))).rjust(4) + ' (' + str("%.2f" % round(med, 2)) + '%)'
                 ax.scatter([-100,-100], [-100,-100], marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=lab)
             ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
             ax.text(0.97, 0.45, 'airglow' + '\n' + 'pixels', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
@@ -519,13 +519,14 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
                 c = colors[iline]
                 x = [ajd, ajd]
                 y = [resid[:, ichip, iline], resid[:, ichip, iline]]
-                lab = str(int(round(skylines[ichip, iline]))) + ' (' + str("%.2f" % round(med, 2)) + '%)'
+                lab = str(int(round(skylines[ichip, iline]))).rjust(4) + ' (' + str("%.2f" % round(med, 2)) + '%)'
                 ax.scatter(x, y, marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=lab)
 
             ichip += 1
 
             ax.text(0.97,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
-            ax.text(0.97, 0.45, 'airglow' + '\n' + 'pixels', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
+            ax.text(0.91, 0.45, 'airglow' + '\n' + 'pixels', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
+            ax.text(0.97, 0.45, 'median' + '\n' + 'resid', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz)
             ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz, edgecolor='k', framealpha=1)
 
     fig.subplots_adjust(left=0.05,right=0.985,bottom=0.065,top=0.98,hspace=0.2,wspace=0.00)
