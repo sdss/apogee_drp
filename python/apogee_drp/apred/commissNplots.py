@@ -400,6 +400,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
     skysyms = np.array(['o', '^', 'v', 'P'])
 
     plotfile = specdir5 + 'monitor/' + instrument + '/skysub.png'
+    if dosky: plotfile = plotfile.replace('.png', '_sky.png')
     print("----> monitor: Making " + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(26,14))
