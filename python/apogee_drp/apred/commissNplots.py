@@ -400,11 +400,11 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
 
     plotfile = specdir5 + 'monitor/' + instrument + '/skysub.png'
 
-    if cont is True:
+    if cont:
         pixrad = 30
-        skylinesa = [764., 1340.]
-        skylinesa = [915., 1545.]
-        skylinesc = [423., 1825.]
+        skylinesa = np.array([764., 1340.])
+        skylinesa = np.array([915., 1545.])
+        skylinesc = np.array([423., 1825.])
         plotfile = plotfile.replace('.png', '_cont.png')
 
     skylines = np.array([skylinesa, skylinesb, skylinesc])
@@ -446,7 +446,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
 
     ax1.set_xlabel(r'JD - 2,400,000')
     if cont is False: ax2.set_ylabel(r'Airglow Line Residual (%)')
-    if cont is True: ax2.set_ylabel(r'Airglow Continuum Residual (%)')
+    if cont: ax2.set_ylabel(r'Airglow Continuum Residual (%)')
     ax2.axes.xaxis.set_ticklabels([])
     ax3.axes.xaxis.set_ticklabels([])
 
