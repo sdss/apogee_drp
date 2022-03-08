@@ -397,6 +397,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
     skylinesc = np.array([ 656.2, 1467.0, 1599.7, 1738.0])
     skylines = np.array([skylinesa, skylinesb, skylinesc])
     nskylines = len(skylinesa)
+    skysyms = np.array(['o', '^', 'v', 'P'])
 
     plotfile = specdir5 + 'monitor/' + instrument + '/skysub.png'
     print("----> monitor: Making " + os.path.basename(plotfile))
@@ -488,12 +489,12 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
                         c = colors1[iline]
                         x = [allsnrg['JD'][iexp], allsnrg['JD'][iexp]]
                         y = [resid[iexp, ichip, iline], resid[iexp, ichip, iline]]
-                        ax.scatter(x, y, marker='o', s=10, c=c, alpha=0.7, zorder=50, label=str(int(round(skylines[ichip, iline]))))
+                        ax.scatter(x, y, marker=skysyms[iline], s=15, c=c, alpha=0.7, zorder=50, label=str(int(round(skylines[ichip, iline]))))
 
                     ichip += 1
 
                     if iexp == 0:
-                        ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=2, 
+                        ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=1, 
                                   fontsize=fsz, edgecolor='k', framealpha=1)
             except:
                 print('problem')
