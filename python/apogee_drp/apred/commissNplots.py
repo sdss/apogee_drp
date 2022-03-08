@@ -437,7 +437,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
     ax2.axes.xaxis.set_ticklabels([])
     ax3.axes.xaxis.set_ticklabels([])
 
-    if (ajd == None) & (resid == None):
+    if (ajd is None) | (resid is None):
         resid = np.zeros((nexp, nchips, nskylines))
         for iexp in range(nexp):
             stel = allsnrg['telescope'][iexp]
