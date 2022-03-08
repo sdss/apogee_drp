@@ -399,7 +399,6 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
     skylinesc = np.array([ 656.2, 1467.0, 1599.7, 1738.0])
 
     plotfile = specdir5 + 'monitor/' + instrument + '/skysub.png'
-    if dosky: plotfile = plotfile.replace('.png', '_sky.png')
 
     if cont is True:
         pixrad = 40
@@ -411,6 +410,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
     skylines = np.array([skylinesa, skylinesb, skylinesc])
     nskylines = len(skylinesa)
 
+    if dosky: plotfile = plotfile.replace('.png', '_sky.png')
     print("----> monitor: Making " + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(26,14))
