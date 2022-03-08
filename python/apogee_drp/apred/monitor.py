@@ -959,6 +959,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['MEDSNBINS'][:, snbin, 2-ichip]) / (allsnrg['EXPTIME'] / 60)
+
+                plate, = np.where(xvals < 59500)
+                fpsi, = np.where(xvals > 59500)
+                print('  S/N Plate:  ' + str("%.3f" % round(np.nanmedian(yvals[plate]),3)))
+                print('  S/N FPS:  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
+                print('  Ratio: ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]) / np.nanmedian(yvals[plate]),3)))
+
                 #pdb.set_trace()
                 #if ichip == 0: pdb.set_trace()
                 scolors = allsnrg['MOONPHASE']
@@ -1227,8 +1234,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
-
-        return
 
         ###########################################################################################
         # qfwhm.png
