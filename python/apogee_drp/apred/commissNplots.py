@@ -419,6 +419,7 @@ def skysub(dosky=True):
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
+        ax.set_ylim(-0.2, 2)
 
     ax3.set_xlabel(r'JD - 2,400,000')
     ax2.set_ylabel(r'Residual (%)')
