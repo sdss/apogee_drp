@@ -421,7 +421,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
     axes = [ax1,ax2,ax3]
     for ax in axes:
         ax.minorticks_on()
-        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
