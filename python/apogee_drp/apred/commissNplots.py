@@ -501,7 +501,6 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None):
         ichip = 0
         for ax in axes:
             for iline in range(nskylines):
-                resid[iexp, ichip, iline] = (np.nansum(np.absolute(msky[lstart:lstop])) / np.nansum(np.absolute(msky0[lstart:lstop]))) * 100.0
                 c = colors1[iline]
                 x = [ajd, ajd]
                 y = [resid[:, ichip, iline], resid[:, ichip, iline]]
