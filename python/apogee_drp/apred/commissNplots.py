@@ -388,104 +388,141 @@ def skysub0(dosky=True, field='20833', plate='3801', mjd='59638'):
     return
 
 ###########################################################################################
-def skysub(dosky=True):
+def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
     # skysub.png
+
+    skysyms = np.array(['o', '^', 'v', 'P'])
 
     pixrad = 9
     skylinesa = np.array([ 210.5,  497.0, 1139.6, 1908.0])
     skylinesb = np.array([1100.0, 1270.8, 1439.8, 1638.4])
     skylinesc = np.array([ 656.2, 1467.0, 1599.7, 1738.0])
+
+    plotfile = specdir5 + 'monitor/' + instrument + '/skysub.png'
+
+    if cont:
+        pixrad = 30
+        skylinesa = np.array([764., 1340.])
+        skylinesb = np.array([915., 1545.])
+        skylinesc = np.array([423., 1825.])
+        plotfile = plotfile.replace('.png', '_cont.png')
+
     skylines = np.array([skylinesa, skylinesb, skylinesc])
     nskylines = len(skylinesa)
 
-    plotfile = specdir5 + 'monitor/' + instrument + '/skysub.png'
+    if dosky: plotfile = plotfile.replace('.png', '_sky.png')
     print("----> monitor: Making " + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(26,14))
 
-    g, = np.where(allsnr['MJD'] >= 59590)
+    g, = np.where(allsnr['MJD'] >= xmin)
     allsnrg = allsnr[g]
     snrord = np.argsort(allsnrg['JD'])
     allsnrg = allsnrg[snrord]
+    jd = allsnrg['JD']
     nexp = len(g)
 
-    ax1 = plt.subplot2grid((nchips,1), (0,0))
+    mxjd = np.nanmax(jd)
+    xspan = mxjd - xmin
+    xmax = mxjd + xspan*0.15
+
+    ax1 = plt.subplot2grid((nchips,1), (2,0))
     ax2 = plt.subplot2grid((nchips,1), (1,0))
-    ax3 = plt.subplot2grid((nchips,1), (2,0))
+    ax3 = plt.subplot2grid((nchips,1), (0,0))
     axes = [ax1,ax2,ax3]
     for ax in axes:
         ax.minorticks_on()
-        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
-        ax.set_ylim(0.0, 2.3)
+        ax.set_xlim(xmin, xmax)
+        if cont is False: ax.set_ylim(0.0, 2.6)
+        ax.axhline(y=1, zorder=1, color='grey', linewidth=3)#, linestyle='dashed')
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        if cont is False: ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+        if cont is False: ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
 
-    ax3.set_xlabel(r'JD - 2,400,000')
-    ax2.set_ylabel(r'Residual (%)')
-    ax1.axes.xaxis.set_ticklabels([])
+    ax1.set_xlabel(r'JD - 2,400,000')
+    if cont is False: ax2.set_ylabel(r'Airglow Line Residual (%)')
+    if cont: ax2.set_ylabel(r'Airglow Continuum Residual (%)')
     ax2.axes.xaxis.set_ticklabels([])
+    ax3.axes.xaxis.set_ticklabels([])
 
-    for iexp in range(nexp):
-        stel = allsnrg['telescope'][iexp]
-        sfield = allsnrg['field'][iexp]
-        splate = str(allsnrg['plate'][iexp])
-        smjd = str(allsnrg['mjd'][iexp])
-        snum = str(allsnrg['im'][iexp])
-        specdir = specdir5 + 'visit/' + stel + '/' + sfield + '/' + splate + '/' + smjd + '/'
+    if resid is None:
+        resid = np.zeros((nexp, nchips, nskylines))
+        for iexp in range(nexp):
+            stel = allsnrg['telescope'][iexp]
+            sfield = allsnrg['field'][iexp]
+            splate = str(allsnrg['plate'][iexp])
+            smjd = str(allsnrg['mjd'][iexp])
+            snum = str(allsnrg['im'][iexp])
+            specdir = specdir5 + 'visit/' + stel + '/' + sfield + '/' + splate + '/' + smjd + '/'
 
-        cframe = glob.glob(specdir + 'apCframe-a-' + snum + '.fits')
-        if os.path.exists(cframe[0]) == False: continue
+            cframe = glob.glob(specdir + 'apCframe-a-' + snum + '.fits')
+            if os.path.exists(cframe[0]) == False: continue
 
-        apPlate = load.apPlate(int(splate), smjd)
-        objdata = apPlate['a'][11].data[::-1]
+            apPlate = load.apPlate(int(splate), smjd)
+            objdata = apPlate['a'][11].data[::-1]
 
-        #if splate == '1634': pdb.set_trace()
+            asstot = np.sum(objdata['assigned'])
+            if asstot < 20: continue
 
-        asstot = np.sum(objdata['assigned'])
-        if asstot < 20: continue
+            if dosky is False:
+                gdind, = np.where((objdata['objtype'] == 'none') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
+                                  (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
+                                  (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
+            else:
+                gdind, = np.where((objdata['objtype'] == 'SKY') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
+                                  (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
+                                  (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
 
-        if dosky is False:
-            gdind, = np.where((objdata['objtype'] == 'none') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
-                              (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
-                              (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
-        else:
-            gdind, = np.where((objdata['objtype'] == 'SKY') & (objdata['fiberid'] != 75) & (objdata['fiberid'] != 225) & 
-                              (objdata['fiberid'] != 25) & (objdata['fiberid'] != 18) & (objdata['fiberid'] != 21) & 
-                              (objdata['fiberid'] != 109) & (objdata['fiberid'] != 289))
+            if len(gdind) < 20: continue
 
-        if len(gdind) < 20: continue
+            try:
+                print('(' + str(iexp) + '/' + str(nexp) + '):  field=' + sfield + ', plate=' + splate + ', mjd=' + smjd + ', num=' + snum)
+                for ichip in range(nchips):
+                    chip = chips[ichip]
+                    gfile = cframe[0]
+                    if ichip == 1: gfile = gfile.replace('-a-', '-b-')
+                    if ichip == 2: gfile = gfile.replace('-a-', '-c-')
+                    cflux = fits.getdata(gfile)
+                    msky = np.nanmedian(cflux[299-gdind], axis=0)
+                    oneDflux = load.apread('1D', num=int(snum))[ichip].flux
+                    msky0 = np.nanmedian(oneDflux[:,299-gdind], axis=1)
+                    #pdb.set_trace()
+                    for iline in range(nskylines):
+                        lstart = int(round(skylines[ichip, iline] - pixrad))
+                        lstop  = int(round(skylines[ichip, iline] + pixrad))
+                        resid[iexp, ichip, iline] = (np.nansum(np.absolute(msky[lstart:lstop])) / np.nansum(np.absolute(msky0[lstart:lstop]))) * 100.0
+            except:
+                print('problem')
 
-        try:
-            print('(' + str(iexp) + '/' + str(nexp) + '):  field=' + sfield + ', plate=' + splate + ', mjd=' + smjd + ', num=' + snum)
-            ichip = 0
-            for ax in axes:
-                gfile = cframe[0]
-                if ichip == 1: gfile = gfile.replace('-a-', '-b-')
-                if ichip == 2: gfile = gfile.replace('-a-', '-c-')
-                cflux = fits.getdata(gfile)
-                msky = np.nanmedian(cflux[299-gdind], axis=0)
-                oneDflux = load.apread('1D', num=int(snum))[ichip].flux
-                msky0 = np.nanmedian(oneDflux[:,299-gdind], axis=1)
-                #pdb.set_trace()
-                for iline in range(nskylines):
-                    lstart = int(round(skylines[ichip, iline] - pixrad))
-                    lstop  = int(round(skylines[ichip, iline] + pixrad))
-                    diff = (np.nansum(np.absolute(msky[lstart:lstop])) / np.nansum(np.absolute(msky0[lstart:lstop]))) * 100.0
-                    c = colors1[iline]
-                    x = [allsnrg['JD'][iexp], allsnrg['JD'][iexp]]
-                    y = [diff, diff]
-                    ax.scatter(x, y, marker='o', s=10, c=c, alpha=0.7)
+    ichip = 0
+    for ax in axes:
+        chip = chips[2-ichip]
+        for iline in range(nskylines):
+            med = np.nanmedian(resid[:, ichip, iline])
+            ax.axhline(y=med, color=colors[iline], linestyle='dashed')
+            c = colors[iline]
+            x = [jd, jd]
+            y = [resid[:, ichip, iline], resid[:, ichip, iline]]
+            lab = str(int(round(skylines[ichip, iline]))).rjust(4) + '  (' + str("%.2f" % round(med, 2)) + '%)'
+            ax.scatter(x, y, marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=lab)
 
-                ichip += 1
-        except:
-            print('problem')
+        ichip += 1
 
-    fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+        ax.text(0.03,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
+        ax.text(0.93, 0.85, 'airglow' + '\n' + 'pixel', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
+        ax.text(0.97, 0.85, 'median' + '\n' + 'resid', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
+        ax.legend(loc=[0.9,0.45], labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz*0.9, edgecolor='k', framealpha=1)
+
+    fig.subplots_adjust(left=0.05,right=0.985,bottom=0.065,top=0.98,hspace=0.2,wspace=0.00)
     plt.savefig(plotfile)
     plt.close('all')
 
-
+    return jd, resid
 
 ###########################################################################################
 def dillum_FPSonly(mjdstart=59604, pix=[0, 2047], norm=True, resid=True):
