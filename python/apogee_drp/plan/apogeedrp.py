@@ -1793,7 +1793,7 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
     # Loop over calibration types
     calnames = ['psf','flux','arcs','dailywave','fpi']
     filecodes = ['PSF','Flux','Wave','Wave','WaveFPI']
-    chkcal = []
+    chkcal = None
     for i,caltype in enumerate(calnames):
         logger.info('')
         logger.info('----------------------------------------------')
@@ -1919,7 +1919,7 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
         # Checks the status and updates the database
         if ntorun>0:
             chkcal1 = check_calib(calinfo[torun],logfiles,queue.key,apred,verbose=True,logger=logger)
-            if len(chkcal)==0:
+            if chkcal is None:
                 chkcal = chkcal1
             else:
                 chkcal = np.hstack((chkcal,chkcal1))
@@ -2056,14 +2056,14 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
     planfiles = getplanfiles(load,mjds,exist=True,logger=logger)
     # No plan files for these MJDs
     if len(planfiles)==0:
-        return []
+        return None,None
     logger.info(str(len(planfiles))+' plan files')
 
     # Get exposure information
     expinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
     if len(expinfo)==0:
         logger.info('No exposures')
-        return []
+        return None,None
 
     # Loop over planfiles and see if the outputs exist already
     dorun = np.zeros(len(planfiles),bool)
@@ -2139,6 +2139,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
         del queue
     else:
         logger.info('No planfiles need to be run')
+        chkexp,chkvisit = None,None
 
 
     # -- Summary statistics --

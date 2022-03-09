@@ -369,7 +369,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False,logger=None,configid=None,designid=None,
            fieldid=None,fps=False,force=False,fpi=None,ap3d=False,ap2d=False,
-           psflibrary=None,clobber=False):
+           waveid=None,psflibrary=None,clobber=False):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -438,6 +438,11 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         This is a simple plan file for a ap3d run.
     ap2d : boolean, optional
         This is a simple plan file for a ap2d run.
+    waveid : int, optional
+        Name of wavelength calibration file.  By default the multiwave
+          calibration file from the master calibration inventory is used.
+    psflibrary : boolean, optional
+        Use PSF library for extraction.
     clobber : boolean, optional
         Overwrite existing file.
 
@@ -689,8 +694,9 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
 
     if ap3d==False:
         # We use multiwaveid for waveid
-        waveid = caldata['multiwave']
-        if str(waveid).isdigit(): waveid=int(waveid)
+        if waveid is None:
+            waveid = caldata['multiwave']
+            if str(waveid).isdigit(): waveid=int(waveid)
         out['waveid'] = waveid
         # Input PSFID and FLUXID
         if psfid is not None:
@@ -947,6 +953,17 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         fpi = []
         logger.info('No apWaveFPI files exist')
 
+    # Check for daily wavelength calibration file
+    dailywave = load.filename('Wave',num=0,chips=True)[0:-13]+str(mjd)+'.fits'
+    allfiles = [dailywave.replace('Wave-','Wave-'+ch+'-') for ch in chips]
+    allexists = [os.path.exists(f) for f in allfiles]
+    if np.sum(allexists)==3:
+        logger.info('Dailywave '+dailywave+' exists')
+        waveid = mjd
+    else:
+        logger.info('Dailywave '+dailywave+' not found')
+        waveid = None
+
     # Scan through all files, accumulate IDs of the various types
     dark, cal, exp, exppluggroup, sky, extra, calpsfid = [], [], [], [], [], [], None
     domeused, out, planfiles = [], [], []
@@ -1078,6 +1095,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             else:  # plates
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
+            if waveid:
+                objplan['waveid'] = waveid
             out.append(objplan)
             planfile = load.filename('Plan',plate=plate,field=expinfo['fieldid'][i],mjd=mjd)
             planfiles.append(planfile)
@@ -1096,6 +1115,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                     skyplan['configid'] = str(expinfo['configid'][i])
                     skyplan['designid'] = str(expinfo['designid'][i])
                     skyplan['fieldid'] = str(expinfo['fieldid'][i])
+                if waveid:
+                    skyplan['waveid'] = waveid
                 out.append(skyplan)
                 skyplanfile = planfile.replace('.yaml','sky.yaml')
                 planfiles.append(skyplanfile)
@@ -1137,6 +1158,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         calplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                    'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':cal, 'fps':fps,
                    'cal':True}
+        if waveid:
+            calplan['waveid'] = waveid
         if fps:
             # Use PSF library during FPS era
             #   quartzflat PSFID is a "backup" 
@@ -1152,6 +1175,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         extraplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                      'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':extra, 'fps':fps,
                      'extra':True}
+        if waveid:
+            extraplan['waveid'] = wawveid
         if fps:
             # Use PSF library during FPS era
             #   quartzflat PSFID is a "backup" 

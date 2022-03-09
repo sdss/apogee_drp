@@ -119,6 +119,8 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
       if keyword_set(bbtemp) then begin
         wavedir = apogee_filename('Wave',num=waveid,chip=chips[ichip],/dir)
         file = apogee_filename('Wave',num=waveid,chip=chips[ichip],/base)
+        if waveid lt 1e7 then $   ;; We are often using dailywave with MJD names now
+          file = wavedir+dirs.prefix+'Wave-'+chips[ichip]+'-'+strtrim(waveid,2)+'.fits'
         ;file = dirs.prefix+string(format='("Wave-",a,"-",i8.8)',chips[ichip],waveid)
         wavetab = mrdfits(wavedir+file,1)
         refspec = fltarr(sz[1],sz[2])
@@ -168,13 +170,23 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
     free_lun,lock
 
     chips = ['a','b','c']
-    wave = mrdfits(apogee_filename('Wave',num=waveid,chip=chips[1]),2)
+    if waveid lt 1e7 then begin
+      wavefile1 = apogee_filename('Wave',num=waveid,chip=chips[1],/dir)+dirs.prefix+'Wave-'+chips[1]+'-'+strtrim(waveid,2)+'.fits'
+    endif else begin
+      wavefile1 = apogee_filename('Wave',num=waveid,chip=chips[1])
+    endelse
+    wave = mrdfits(wavefile1,2)
     flux = mrdfits(apogee_filename('Flux',num=ims[0],chip=chips[1]),3)
     ;wave = mrdfits(caldir+'/wave/'+dirs.prefix+'Wave-'+chips[1]+'-'+string(format='(i8.8)',waveid)+'.fits',2)
     ;flux = mrdfits(caldir+'/flux/'+dirs.prefix+'Flux-'+chips[1]+'-'+string(format='(i8.8)',ims[0])+'.fits',3)
     bbnorm = flux[1024] / PLANCK(wave[1024,150],temp)
     for i=0,2 do begin
-      wave = mrdfits(apogee_filename('Wave',num=waveid,chip=chips[i]),2)
+      if waveid lt 1e7 then begin     
+        wavefile1 = apogee_filename('Wave',num=waveid,chip=chips[2],/dir)+dirs.prefix+'Wave-'+chips[1]+'-'+strtrim(waveid,2)+'.fits'
+      endif else begin
+        wavefile1= apogee_filename('Wave',num=waveid,chip=chips[i])
+      endelse
+      wave = mrdfits(wavefile1,2)      
       flux = mrdfits(apogee_filename('Flux',num=ims[0],chip=chips[i]),3)
       ;wave = mrdfits(caldir+'/wave/'+dirs.prefix+'Wave-'+chips[i]+'-'+string(format='(i8.8)',waveid)+'.fits',2)
       ;flux = mrdfits(caldir+'/flux/'+dirs.prefix+'Flux-'+chips[i]+'-'+string(format='(i8.8)',ims[0])+'.fits',3)

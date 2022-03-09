@@ -138,6 +138,9 @@ FOR i=0L,nplanfiles-1 do begin
   ;--------------------------------------
   MAKECAL,lsf=planstr.lsfid,/full
   wavefiles = apogee_filename('Wave',chip=chiptag,num=planstr.waveid)
+  ;; We are now using dailywave files with MJD names
+  if planstr.waveid lt 1e7 then $
+    wavefiles = file_dirname(wavefiles[0])+'/'+dirs.prefix+'Wave-'+chiptag+'-'+strtrim(planstr.waveid,2)+'.fits'
   wavetest = FILE_TEST(wavefiles)
   lsffiles = apogee_filename('LSF',chip=chiptag,num=planstr.lsfid)
   lsftest = FILE_TEST(lsffiles)

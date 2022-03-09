@@ -414,7 +414,5 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
 
     db.close()    # close db session
 
-    import pdb; pdb.set_trace()
-
     # Summary email
     summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfile,debug=debug)
