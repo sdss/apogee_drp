@@ -292,7 +292,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
         rootLogger.info('--------------------------------')
         rootLogger.info('1) Running AP3D on all exposures')
         rootLogger.info('================================')
-        chk3d = apogeedrp.run3d(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
+        chk3d = apogeedrp.runap3d(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     else:
         rootLogger.info('No exposures to process with AP3D')
 
@@ -330,6 +330,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     rootLogger.info('3) Making plan files')
     rootLogger.info('====================')
     planfiles = apogeedrp.makeplanfiles(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
+    nplanfiles = len(planfiles)
     # Start entry in daily_status table
     daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
                                         ('nexposures',int),('begtime',(np.str,50)),('success',bool)]))
