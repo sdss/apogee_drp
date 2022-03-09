@@ -369,7 +369,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False,logger=None,configid=None,designid=None,
            fieldid=None,fps=False,force=False,fpi=None,ap3d=False,ap2d=False,
-           psflibrary=None):
+           psflibrary=None,clobber=False):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -438,6 +438,8 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         This is a simple plan file for a ap3d run.
     ap2d : boolean, optional
         This is a simple plan file for a ap2d run.
+    clobber : boolean, optional
+        Overwrite existing file.
 
     Returns
     -------
@@ -525,6 +527,11 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     outdir = os.path.dirname(planfile)+'/'
     if os.path.exists(outdir)==False:
         os.makedirs(outdir)
+
+    # Check if it exists already
+    if os.path.exists(planfile) and clobber==False:
+        logger.info(planfile+' already exists and clobber not set')
+        return planfile
     
     # Get calibration files for this date
     if fixfiberid is not None:
@@ -1166,7 +1173,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     return out, planfiles
 
 
-def run_mjd5_yaml(yamlfile,logger=None):
+def run_mjd5_yaml(yamlfile,clobber=False,logger=None):
     """
     Run the MJD5 yaml file and create the relevant plan files.
 
@@ -1174,6 +1181,10 @@ def run_mjd5_yaml(yamlfile,logger=None):
     ----------
     yamlfile : str
          Name of the MJD5 yaml file.
+    clobber : bool
+        Overwrite any existing files.
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.
 
     Returns
     -------
@@ -1214,7 +1225,7 @@ def run_mjd5_yaml(yamlfile,logger=None):
         mjd = pargs.pop('mjd')
         psfid = pargs.pop('psfid')
         fluxid = pargs.pop('fluxid')
-        planfile = mkplan(ims,plate,mjd,psfid,fluxid,**pargs,logger=logger)
+        planfile = mkplan(ims,plate,mjd,psfid,fluxid,**pargs,clobber=clobber,logger=logger)
         planfiles.append(planfile)
 
     return planfiles

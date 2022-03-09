@@ -1666,21 +1666,10 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
         logger.info('No exposures to process with AP3D')
         chk3d = []
 
-    slurmpars1 = slurmpars.copy()
-    if len(expinfo)<64:
-        slurmpars1['cpus'] = len(expinfo)
-    slurmpars1['numpy_num_threads'] = 2
-    logger.info('Slurm settings: '+str(slurmpars1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='ap3d', **slurmpars1)
+    # Loop over exposures and see if the outputs exist already
     do3d = np.zeros(len(expinfo),bool)
-    for i,num in enumerate(expinfo['num']):
+    for i,num in enumerate(expinfo['num']):    
         mjd = int(load.cmjd(num))
-        logfile1 = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D','3D')
-        logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
-        logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
-        if os.path.dirname(logfile1)==False:
-            os.makedirs(os.path.dirname(logfile1))
         # Check if files exist already
         do3d[i] = True
         if clobber is not True:
@@ -1688,7 +1677,27 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             if load.exists('2D',num=num):
                 logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                 do3d[i] = False
-        if do3d[i]:
+    logger.info(str(np.sum(do3d))+' exposures to run')
+
+    # Loop over the exposures and make the commands for the ones that we will run
+    torun, = np.where(do3d==True)
+    ntorun = len(torun)
+    if ntorun>0:
+        slurmpars1 = slurmpars.copy()
+        if ntorun<64:
+            slurmpars1['cpus'] = ntorun
+        slurmpars1['numpy_num_threads'] = 2
+        logger.info('Slurm settings: '+str(slurmpars1))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='ap3d', **slurmpars1)
+        for i in range(ntorun):
+            num = expinfo['num'][torun[i]]
+            mjd = int(load.cmjd(num))
+            logfile1 = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D','3D')
+            logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
+            logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
+            if os.path.dirname(logfile1)==False:
+                os.makedirs(os.path.dirname(logfile1))
             cmd1 = 'ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope)
             if clobber:
                 cmd1 += ' --clobber'
@@ -1696,16 +1705,15 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             logger.info('Command : '+cmd1)
             logger.info('Logfile : '+logfile1)
             queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-    if np.sum(do3d)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This should check if the ap3d ran okay and puts the status in the database
         chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
+        del queue
     else:
         chk3d = None
         logger.info('No exposures need AP3D processing')
-    del queue
         
     return chk3d
 
@@ -1917,12 +1925,9 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
                 chkcal = np.hstack((chkcal,chkcal1))
         del queue
 
-
     # make sure to run mkwave on all arclamps needed for daily cals
 
-
     return chkcal
-
 
 
 def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
@@ -1977,7 +1982,7 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
         plandicts,planfiles0 = mkplan.make_mjd5_yaml(m,apred,telescope,clobber=clobber,logger=logger)
         dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(m)+'.yaml'
         try:
-            planfiles1 = mkplan.run_mjd5_yaml(dailyplanfile,logger=logger)
+            planfiles1 = mkplan.run_mjd5_yaml(dailyplanfile,clobber=clobber,logger=logger)
             nplanfiles1 = len(planfiles1)
         except:
             traceback.print_exc()
@@ -2059,23 +2064,10 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
     if len(expinfo)==0:
         logger.info('No exposures')
         return []
-        
-    slurmpars1 = slurmpars.copy()
-    if len(planfiles)<64:
-        slurmpars1['cpus'] = len(planfiles)
-    slurmpars1['numpy_num_threads'] = 2
 
-    logger.info('Slurm settings: '+str(slurmpars1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='apred', **slurmpars1)
+    # Loop over planfiles and see if the outputs exist already
     dorun = np.zeros(len(planfiles),bool)
-    for i,pf in enumerate(planfiles):
-        pfbase = os.path.basename(pf)
-        logfile1 = pf.replace('.yaml','_pbs.'+logtime+'.log')
-        errfile1 = logfile1.replace('.log','.err')
-        cmd1 = 'apred {0}'.format(pf)
-        if clobber:
-            cmd1 += ' --clobber'
+    for i,pf in enumerate(planfiles):    
         # Check if files exist already
         dorun[i] = True
         if clobber is not True:
@@ -2108,24 +2100,45 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
                 outexists = False
                 outfile = pf+' output files '
             if outexists:
-                logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                logger.info(str(i+1)+' '+os.path.basename(outfile)+' already exists and clobber==False')
                 dorun[i] = False
-        if dorun[i]:
+    logger.info(str(np.sum(dorun))+' planfiles to run')
+
+    # Loop over the planfiles and make the commands for the ones that we will run
+    torun, = np.where(dorun==True)
+    ntorun = len(torun)
+    if ntorun>0:
+        slurmpars1 = slurmpars.copy()
+        if ntorun<64:
+            slurmpars1['cpus'] = ntorun
+        slurmpars1['numpy_num_threads'] = 2
+        logger.info('Slurm settings: '+str(slurmpars1))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='apred', **slurmpars1)
+        for i in range(ntorun):
+            pf = planfiles[torun[i]]
+            pfbase = os.path.basename(pf)
+            logfile1 = pf.replace('.yaml','_pbs.'+logtime+'.log')
+            errfile1 = logfile1.replace('.log','.err')
+            outdir = os.path.dirname(logfile1)
+            if os.path.exists(outdir)==False:   # make sure the output directory exists
+                os.makedirs(outdir)
+            cmd1 = 'apred {0}'.format(pf)
+            if clobber:
+                cmd1 += ' --clobber'
             logger.info('planfile %d : %s' % (i+1,pf))
             logger.info('Command : '+cmd1)
             logger.info('Logfile : '+logfile1)
             queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(dorun)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        del queue
     else:
         logger.info('No planfiles need to be run')
 
     # This also loads the status into the database using the correct APRED version
     chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
-    del queue
-
 
 
     # -- Summary statistics --
@@ -2224,13 +2237,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     if daily==False:
         vcat['mjd'] = vcat['maxmjd']    
 
-    slurmpars1 = slurmpars.copy()
-    if len(vcat)<64:
-        slurmpars1['cpus'] = len(vcat)
-    slurmpars1['numpy_num_threads'] = 2
-    logger.info('Slurm settings: '+str(slurmpars1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='rv', **slurmpars1)
+    # Loop over the stars and figure out the ones that need to be run
     dorv = np.zeros(len(vcat),bool)
     for i,obj in enumerate(vcat['apogee_id']):
         # We are going to run RV on ALL the visits
@@ -2242,40 +2249,61 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
         else:
             apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
-        outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
-        if os.path.exists(outdir)==False:
-            os.makedirs(outdir)
-        logfile = apstarfile.replace('.fits','_pbs.'+logtime+'.log')
-        errfile = logfile.replace('.log','.err')
-        # Run with --verbose
-        cmd = 'rv %s %s %s -v' % (obj,apred,telescope)
-        if clobber:
-            cmd += ' -c'
-        if daily:
-            cmd += '  --m '+str(mjds[0])
         # Check if file exists already
         dorv[i] = True
         if clobber==False:
             if os.path.exists(apstarfile):
                 logger.info(os.path.basename(apstarfile)+' already exists and clobber==False')
                 dorv[i] = False
-        if dorv[i]:
+    logger.info(str(np.sum(dorv))+' objects to run')
+
+    # Loop over the objects and make the commands for the ones that we will run
+    torun, = np.where(dorv==True)
+    ntorun = len(torun)
+    if ntorun>0:
+        slurmpars1 = slurmpars.copy()
+        if ntorun<64:
+            slurmpars1['cpus'] = ntorun
+        slurmpars1['numpy_num_threads'] = 2
+        logger.info('Slurm settings: '+str(slurmpars1))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='rv', **slurmpars1)
+        for i in range(ntorun):
+            obj = vcat['obj'][torun[i]]
+            # We are going to run RV on ALL the visits
+            # Use the MAXMJD in the table, now called MJD
+            mjd = vcat['mjd'][torun[i]]
+            apstarfile = load.filename('Star',obj=obj)
+            if daily:
+                # Want all visits up to this day
+                apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
+            else:
+                apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
+            outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
+            if os.path.exists(outdir)==False:
+                os.makedirs(outdir)
+            logfile = apstarfile.replace('.fits','_pbs.'+logtime+'.log')
+            errfile = logfile.replace('.log','.err')
+            # Run with --verbose
+            cmd = 'rv %s %s %s -v' % (obj,apred,telescope)
+            if clobber:
+                cmd += ' -c'
+            if daily:
+                cmd += '  --m '+str(mjds[0])
             logger.info('rv %d : %s' % (i+1,obj))
             logger.info('Command : '+cmd)
             logger.info('Logfile : '+logfile)
             queue.append(cmd,outfile=logfile,errfile=errfile)
-    if np.sum(dorv)>0:
-        logger.info('Running RV on '+str(np.sum(dorv))+' stars')
+        logger.info('Running RV on '+str(ntorun)+' stars')
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This checks the status and puts it into the database
-        ind, = np.where(dorv)
-        chkrv = check_rv(vcat[ind],queue.key,logger=logger,verbose=False)
+        chkrv = check_rv(vcat[torun],queue.key,logger=logger,verbose=False)
+        del queue
     else:
         logger.info('No RVs need to be run')
         chkrv = None
-    del queue
 
     # -- Summary statistics --
     # RV status

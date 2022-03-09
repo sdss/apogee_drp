@@ -320,6 +320,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
         chkcal = apogeedrp.rundailycals(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     else:
         rootLogger.info('No calibration files to run')
+        chkcal = None
 
 
     # Make MJD5 and plan files
