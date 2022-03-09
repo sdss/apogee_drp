@@ -59,7 +59,6 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         wave.dailywave(mjd5,observatory=observatory,apred=apred,verbose=verbose)
 
 
-
     # Get exposure information
     if verbose:
         print('Getting exposure information')
@@ -158,12 +157,11 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
             x[2,:] = 0
             waves[ichip,row,:] = wave.func_multi_poly(x,*wpars[:,row],npoly=npoly)
 
-
-    # Step 3: Fit peaks to the full-frame FPI data
-    # --------------------------------------------
+    # Fit peaks to the full-frame FPI data
+    # ------------------------------------
     print(' ')
-    print('Step 3: Fit peaks to the full-frame FPI data')
-    print('--------------------------------------------')
+    print('Fit peaks to the full-frame FPI data')
+    print('------------------------------------')
     fpilinesfile = reduxdir+'cal/'+instrument+'/fpi/apFPILines-%8d.fits' % fpinum
     if os.path.exists(fpilinesfile) and clobber is False:
         print('Loading previously measured FPI lines for ',fpinum)
@@ -175,12 +173,11 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         fpilines.write(fpilinesfile,overwrite=True)
     # write out median numbes of lines per chip
 
-
-    # Step 4: Determine median wavelength per FPI lines
-    # -------------------------------------------------
+    # Determine median wavelength per FPI lines
+    # -----------------------------------------
     print(' ')
-    print('Step 4: Determine median wavelength per FPI lines')
-    print(' -------------------------------------------------')
+    print('Determine median wavelength per FPI lines')
+    print('-----------------------------------------')
     # Load initial guesses
     fpipeaksfile = reduxdir+'cal/'+instrument+'/fpi/fpi_peaks.fits'
     if os.path.exists(fpipeaksfile):
@@ -190,24 +187,58 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         fpipeaks = None
     fpilinestr, fpilines = getfpiwave(fpilines,wpars,fpipeaks)
 
-
-    # Step 5: Refit wavelength solutions using FPI lines
-    # --------------------------------------------------
+    # Refit wavelength solutions using FPI lines for each full-frame FPI exposure
+    # ---------------------------------------------------------------------------
     print(' ')
-    print('Step 5: Refit wavelength solutions using FPI lines')
-    print('--------------------------------------------------')
-    fpiwcoef,fpiwaves = fpiwavesol(fpilinestr,fpilines,wpars)
+    print('Refit wavelength solutions using FPI lines for each full-frame FPI exposure')
+    print('--------------------------------------------------------------------------')
+    ind, = np.where(expinfo['exptype']=='FPI')
+    print(str(len(ind))+' full-frame FPI exposures')
+    for i in range(len(ind)):
+        fpinum = expinfo['num'][ind[i]]
+        print('%d/%d  %d' % (i+1,len(ind),fpinum))
+        # Check if the file exists already
+        fpiwavefile = reduxdir+'cal/'+instrument+'/wave/apWaveFPI-%5d-%8d.fits' % (mjd5,fpinum)
+        if load.exists('WaveFPI',num=fpinum) and clobber==False:
+            print(fpiwavefile+' already exists and clobber not set')
+            continue
+        # 1) Fit peaks to the FPI data
+        print('  1) Fit peaks to the FPI data')
+        fpilinesfile = reduxdir+'cal/'+instrument+'/fpi/apFPILines-%8d.fits' % fpinum
+        if os.path.exists(fpilinesfile) and clobber is False:
+            print('  Loading previously measured FPI lines for ',fpinum)
+            fpilines = Table.read(fpilinesfile)
+        else:
+            fpilines = fitlines(fpiframe,verbose=verbose)
+            # Save the catalog
+            print('  Writing FPI lines to ',fpilinesfile)
+            fpilines.write(fpilinesfile,overwrite=True)
+        # 2) Apply the daily wavelenth solution
+        print('2) Apply the daily wavelength solution')
+        if 'wave' not in fpilines.colnames:
+            fpilines['wave'] = 999999.
+            for row in range(300):
+                x = np.zeros([3,2048])
+                for ichip,chip in enumerate(chips):
+                    ind, = np.where((fpilines['chip']==chip) & (fpilines['row']==row))
+                    if len(ind)>0:
+                        x = np.zeros([3,len(ind)],float)
+                        x[0,:] = fpilines['pars'][ind,1]
+                        x[1,:] = ichip+1
+                        x[2,:] = 0
+                        fpilines['wave'][ind] = wave.func_multi_poly(x,*wpars[:,row],npoly=npoly)
+        # 3) Refit the wavelength solution
+        print('  3) Refit the wavelength solution')
+        fpiwcoef,fpiwaves,fpilines = fpiwavesol(fpilinestr,fpilines,wpars)
 
-
-    # Save the results
-    #-----------------
-    fpiwavefile = reduxdir+'cal/'+instrument+'/wave/apWaveFPI-%5d-%8d.fits' % (mjd5,fpinum)
-    print('Writing new FPI wavelength information to '+fpiwavefile)
-    save_fpiwave(fpiwavefile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines)
-    # table of FPI lines data: chip, gauss center, Gaussian parameters, wavelength, flux
-    # wavelength coefficients
-    # wavelength array??
-
+        # Save the results
+        #-----------------
+        print('  Writing new FPI wavelength information to '+fpiwavefile)
+        save_fpiwave(fpiwavefile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines)
+        # table of FPI lines data: chip, gauss center, Gaussian parameters, wavelength, flux
+        # wavelength coefficients
+        # wavelength array??
+        
     print("elapsed: %0.1f sec." % (time.time()-t0))
     db.close()   # close the database connection
 
@@ -338,6 +369,24 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
     wcoef: original arclamp wavelength solution coefficients
     """
 
+    # Get the unique FPI line ID and wavelength
+    if 'lineid' not in fpilines.colnames:
+        fpilines['linewave'] = 999999.
+        fpilines['lineid'] = -1
+        # chip loop
+        #  not entirely necessary, but speeds up the where statements a bit
+        for ichip,chip in enumerate(['a','b','c']):
+            ind, = np.where(fpilinestr['chip']==chip)
+            fpilinestr1 = fpilinestr[ind]
+            lineind, = np.where(fpilines['chip']==chip)
+            fpilines1 = fpilines[lineind]
+            for i in range(len(ind)):
+                ind1, = np.where(np.abs(fpilinestr1['wave'][i]-fpilines1['wave']) < 1.0)
+                if len(ind1)>0:
+                    fpilines1['linewave'][ind1] = fpilinestr1['wave'][i]
+                    fpilines1['lineid'][ind1] = fpilinestr1['id'][i]
+            fpilines[lineind] = fpilines1
+
     # Prune out lines that had unsuccessful fits or no mean wavelength
     bd, = np.where((fpilines['success']==False) | (fpilines['lineid']==-1))
     if len(bd)>0:
@@ -462,7 +511,7 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
 
     #import pdb; pdb.set_trace()
 
-    return newwcoef,newwaves
+    return newwcoef,newwaves,fpilines
     
 def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines):
     """

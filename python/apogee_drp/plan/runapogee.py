@@ -295,6 +295,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
         chk3d = apogeedrp.runap3d(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     else:
         rootLogger.info('No exposures to process with AP3D')
+        chk3d = None
 
     # Do QA check of the files
     rootLogger.info(' ')
@@ -412,6 +413,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     rootLogger.info('Daily APOGEE reduction finished for MJD=%d and observatory=%s' % (mjd5,observatory))
 
     db.close()    # close db session
+
+    import pdb; pdb.set_trace()
 
     # Summary email
     summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfile,debug=debug)

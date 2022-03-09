@@ -1675,7 +1675,7 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
         if clobber is not True:
             outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
             if load.exists('2D',num=num):
-                logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                logger.info(str(i+1)+' '+os.path.basename(outfile)+' already exists and clobber==False')
                 do3d[i] = False
     logger.info(str(np.sum(do3d))+' exposures to run')
 
@@ -1840,13 +1840,6 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
                 calinfo = calinfo[si]
 
         logger.info(str(ncal)+' file(s)')
-        slurmpars1 = slurmpars.copy()
-        if ncal<64:
-            slurmpars1['cpus'] = ncal
-        slurmpars1['numpy_num_threads'] = 2
-        logger.info('Slurm settings: '+str(slurmpars1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='makecal-'+calnames[i], **slurmpars1)
 
         # Loop over calibration and check if we need to run them
         docal = np.zeros(ncal,bool)
@@ -1875,6 +1868,13 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
         torun, = np.where(docal==True)
         ntorun = len(torun)
         if ntorun>0:
+            slurmpars1 = slurmpars.copy()
+            if ntorun<64:
+                slurmpars1['cpus'] = ntorun
+            slurmpars1['numpy_num_threads'] = 2
+            logger.info('Slurm settings: '+str(slurmpars1))
+            queue = pbsqueue(verbose=True)
+            queue.create(label='makecal-'+calnames[i], **slurmpars1)
             for j in range(ntorun):
                 num1 = calinfo['num'][torun[j]]
                 mjd1 = calinfo['mjd'][torun[j]]
@@ -1923,7 +1923,7 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
                 chkcal = chkcal1
             else:
                 chkcal = np.hstack((chkcal,chkcal1))
-        del queue
+            del queue
 
     # make sure to run mkwave on all arclamps needed for daily cals
 
@@ -2068,6 +2068,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
     # Loop over planfiles and see if the outputs exist already
     dorun = np.zeros(len(planfiles),bool)
     for i,pf in enumerate(planfiles):    
+        pfbase = os.path.basename(pf)
         # Check if files exist already
         dorun[i] = True
         if clobber is not True:
@@ -2133,12 +2134,11 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This also loads the status into the database using the correct APRED version
+        chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
         del queue
     else:
         logger.info('No planfiles need to be run')
-
-    # This also loads the status into the database using the correct APRED version
-    chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
 
 
     # -- Summary statistics --
@@ -2253,7 +2253,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         dorv[i] = True
         if clobber==False:
             if os.path.exists(apstarfile):
-                logger.info(os.path.basename(apstarfile)+' already exists and clobber==False')
+                logger.info(str(i+1)+' '+os.path.basename(apstarfile)+' already exists and clobber==False')
                 dorv[i] = False
     logger.info(str(np.sum(dorv))+' objects to run')
 
@@ -2269,7 +2269,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         queue = pbsqueue(verbose=True)
         queue.create(label='rv', **slurmpars1)
         for i in range(ntorun):
-            obj = vcat['obj'][torun[i]]
+            obj = vcat['apogee_id'][torun[i]]
             # We are going to run RV on ALL the visits
             # Use the MAXMJD in the table, now called MJD
             mjd = vcat['mjd'][torun[i]]

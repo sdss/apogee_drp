@@ -1064,7 +1064,12 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                 #   quartzflat PSFID is a "backup" 
                 objplan['psflibrary'] = 1  
                 if len(fpi)>0 and mjd>=59604:  # two-FPI fibers weren't used routinely until 59604
-                    objplan['fpi'] = str(fpi[0])
+                    # Get closest FPI to this exposure
+                    if len(fpi)>1:
+                        si = np.argsort(np.abs(np.array(fpi)-np.mean(np.array(exp))))
+                        objplan['fpi'] = str(fpi[si[0]])
+                    else:
+                        objplan['fpi'] = str(fpi[0])
                 objplan['configid'] = str(expinfo['configid'][i])
                 objplan['designid'] = str(expinfo['designid'][i])
                 objplan['fieldid'] = str(expinfo['fieldid'][i])
