@@ -2436,7 +2436,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     queue = pbsqueue(verbose=True)
     queue.create(label='apqa', **slurmpars1)
     for i,pf in enumerate(planfiles):
-        logger.info('planfile %d : %d' % (i+1,pf))
+        logger.info('planfile %d : %s' % (i+1,pf))
         fdir = os.path.dirname(pf)
         # apPlan-1491-59587.yaml
         base = os.path.basename(pf)
