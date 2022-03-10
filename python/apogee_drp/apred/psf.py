@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d
 from scipy.signal import argrelextrema
 from scipy.optimize import curve_fit
 import statsmodels.api as sm
-from apogee_drp.utils import peakfit, mmm
+from apogee_drp.utils import peakfit, mmm, apload
 from numba import njit
 import copy
 
@@ -19,7 +19,7 @@ WARNMASK = -16640
 BADMASK = 16639
 BADERR = 1.00000e+10
 maskval = {'NOT_ENOUGH_PSF': 16384}
-
+chips = ['a','b','c']
 
 #####  EMPIRICAL PSF MODEL CLASS #######
 
@@ -191,11 +191,11 @@ class PSF(object):
             self._grid = grid
             self._log = log        
             self._labels = labels
-            self._xgrid = labels[:,:,0]
-            self._ygrid = labels[:,:,1]
+            self._xgrid = labels[0]
+            self._ygrid = labels[1]
             self.y = y
-            self.xmin = [np.min(labels[:,:,0]),np.min(labels[:,:,1])]
-            self.xmax = [np.max(labels[:,:,0]),np.max(labels[:,:,1])]
+            self.xmin = [np.min(labels[0]),np.min(labels[1])]
+            self.xmax = [np.max(labels[1]),np.max(labels[1])]
             nxgrid,nygrid,npix = grid.shape
         else:
             raise ValueError('Only "ann" and "grid" supported at this time')
@@ -644,7 +644,10 @@ def avgprofile(fibs,cols,hdulist,fiber2hdu):
     ybinsm = dln.gsmooth(temp,5)
     bad = ~np.isfinite(ybinsm)
     if np.sum(bad)>0:
-        ybinsm[bad] = interp1d(xbin[~bad],ybinsm[~bad])(bad)
+        bd, = np.where(bad)
+        gd, = np.where(~bad)
+        fill_value = (ybinsm[gd[0]],ybinsm[gd[1]])
+        ybinsm[bd] = interp1d(xbin[~bad],ybinsm[~bad],bounds_error=False,fill_value=fill_value)(bd)
 
     # Make sure it's normalized
     ybinsm /= np.sum(ybinsm)*binsize
@@ -663,7 +666,7 @@ def avgprofile(fibs,cols,hdulist,fiber2hdu):
     return data, xbin, ybin, ybinsm
 
 
-def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
+def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
     """
     Construct a grid in X and Y across the detector of average
     PSF profiles.
@@ -678,6 +681,8 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
       Number of fibers to bin/average.  Default is 5.
     ncbin : int
       Number of column to bin/average.  Default is 200.
+    verbose : boolean, optional
+      Verbose output to the screen.
 
     Returns
     -------
@@ -691,13 +696,22 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
       Mean Y values for each average/grid profile point [Ncols,Nfibers].
     profiles : numpy array
       Averaged profile data [Ncols, Nfibers, 300].
+    xx : numpy array
+      The profile X values [300].
 
     Example
     -------
 
-    data,mnx,mny,profiles = makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200)
+    data,mnx,mny,profiles,xx = makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200)
 
     """
+
+    if verbose:
+        print('Making Model PSF grid')
+        print('EPSF file: '+psffile)
+        print('Sparse file: '+sparsefile)
+        print('Fiber binning: '+str(nfbin))
+        print('Column binning: '+str(ncbin))
 
     allim,head = fits.getdata(sparsefile,0,header=True)
     sim = allim[1,:,:]
@@ -741,7 +755,8 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
         # Fiber loop
         for j,f in enumerate(fibers):
 
-            print(f,c)
+            if verbose:
+                print(f,c)
             #data1, xbin,ybin,lowess,ylowess = avgprofile([f,f+nfbin],[c,c+ncbin],psfhdu,fiber2hdu)
             data1, xbin,ybin,ybinsm = avgprofile([f,f+nfbin],[c,c+ncbin],psfhdu,fiber2hdu)            
             
@@ -764,7 +779,8 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
             if len(bad)>0:
                 good = len(fluxsparse)-bad-1
                 fluxsparse[bad] = fluxsparse[good]
-                print('fixing fluxsparse edge bad value')
+                if verbose:
+                    print('fixing fluxsparse edge bad value')
                 #import matplotlib.pyplot as plt
                 #import pdb; pdb.set_trace()
             fluxsparse /= np.sum(fluxsparse)   # normalize again          
@@ -841,14 +857,60 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
             mnx[i,j] = np.median(data1[:,2])
             mny[i,j] = np.median(data1[:,3])
             profiles[i,j,:] = yprofile 
-            
-            #import pdb; pdb.set_trace()
+
+    return data,mnx,mny,profiles,xx
 
 
-            
-    import pdb; pdb.set_trace()
+def mkmodelpsf(name,psfid,sparseid,apred,telescope,nfbin=5,ncbin=200,verbose=False):
+    """
+    Makes the Model PSF calibration file.
 
-    return data,mnx,mny,profiles
+    Parameters
+    ----------
+    name : int
+      Name of the output model PSF file (apPSFModel).
+    psfid : int
+      ID of apEPSF exposure empirical PSF profiles.
+    sparseid : int
+      ID of apSparse file with APOGEE sparse PSF profile data.
+    apred : str
+      APOGEE Reduction version.
+    telescope : str
+      Telescope name: apo25m or lco25m.
+    nfbin : int
+      Number of fibers to bin/average.  Default is 5.
+    ncbin : int
+      Number of column to bin/average.  Default is 200.
+    verbose : boolean, optional
+      Verbose output to the screen.
+
+    Returns
+    -------
+
+    Example
+    -------
+
+    mkmodelpsf(psfid,sparseid)
+
+    """
+
+    print('Making Model PSF calibration file')
+    print('EPSF ID: '+str(psfid))
+    print('Sparse ID: '+str(+sparseid))
+    print('Fiber binning: '+str(nfbin))
+    print('Column binning: '+str(ncbin))
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    sparsefile = load.filename('Sparse',num=sparseid,chips=True)
+    psffile = load.filename('EPSF',num=psfid,chips=True)
+    for ch in chips:
+        psffile1 = psffile.replace('EPSF-','EPSF-'+ch+'-')
+        data,mnx,mny,profiles,y = makeprofilegrid(psffile1,sparsefile,verbose=verbose)
+        labels = [mnx,mny]
+        p = PSF((profiles,labels,y),kind='grid',log=False)
+        outfile = load.filename('PSFModel',num=name,chips=True).replace('PSFModel-','PSFModel-'+ch+'-')
+        print('Writing to '+outfile)
+        p.write(outfile)
 
 
 #####  EXTRACTION #######

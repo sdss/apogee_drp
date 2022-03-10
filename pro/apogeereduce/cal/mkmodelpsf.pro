@@ -30,7 +30,7 @@ pro mkmodelpsf,modelpsf,sparseid=sparseid,psfid=psfid,$
   dirs = getdir(apodir,caldir,spectrodir,vers)
   psfdir = apogee_filename('PSFModel',num=name,chip='a',/dir)
   file = dirs.prefix+string(format='("PSFModel-",i8.8)',name)
-  lockfile = wavedir+file+'.lock'
+  lockfile = psfdir+file+'.lock'
 
   ;; If another process is alreadying make this file, wait!
   if not keyword_set(unlock) then begin
@@ -48,7 +48,7 @@ pro mkmodelpsf,modelpsf,sparseid=sparseid,psfid=psfid,$
   cmjd = getcmjd(modelpsf)
   mjd = long(cmjd)
   chips = ['a','b','c']
-  allfiles = wavedir+dirs.prefix+'PSFModel-'+chips+'-'+cmjd+'-'+smodelpsf+'.fits'
+  allfiles = psfdir+dirs.prefix+'PSFModel-'+chips+'-'+cmjd+'-'+smodelpsf+'.fits'
   if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
     print,' modelpsf file: ', psfdir+file+'.fits', ' already made'
     return
@@ -61,14 +61,14 @@ pro mkmodelpsf,modelpsf,sparseid=sparseid,psfid=psfid,$
   free_lun,lock
 
   ;; New Python version! 
-  cmd = ['mkmodelwave',strtrim(modelpsf,2),strtrim(sparseid,2),strtrim(psfid,2),dirs.apred,strmid(dirs.telescope,0,3),'--verbose']
+  cmd = ['mkmodelpsf',strtrim(modelpsf,2),strtrim(sparseid,2),strtrim(psfid,2),dirs.apred,dirs.telescope,'--verbose']
   print,'Running: ',cmd
   spawn,cmd,/noshell
 
   ;; Check that the calibration file was successfully created
-  outfile = wavedir+repstr(file,dirs.prefix+'PSFModel-',dirs.prefix+'PSFModel-a-')
+  outfile = psfdir+repstr(file,dirs.prefix+'PSFModel-',dirs.prefix+'PSFModel-a-')
   if file_test(outfile) then begin
-    openw,lock,/get_lun,wavedir+file+'.dat'
+    openw,lock,/get_lun,psfdir+file+'.dat'
     free_lun,lock
   endif
 

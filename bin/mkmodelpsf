@@ -2,8 +2,10 @@
 #
 # Make APOGEE master PSF model calibration file
 
+import numpy as np
 import traceback
 from argparse import ArgumentParser
+from apogee_drp.utils import apload
 from apogee_drp.apred import psf
 
 # Main command-line program
@@ -13,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument('sparseid', type=int, nargs=1, help='Sparse ID')
     parser.add_argument('psfid', type=int, nargs=1, help='PSF ID')
     parser.add_argument('apred', type=str, nargs=1, help='APOGEE Reduction version')
-    parser.add_argument('telescoep', type=str, nargs=1, help='Telescope')
+    parser.add_argument('telescope', type=str, nargs=1, help='Telescope')
     parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     args = parser.parse_args()
@@ -23,18 +25,8 @@ if __name__ == "__main__":
     psfid = args.psfid[0]
     apred = args.apred[0]
     telescope = args.telescope[0]
-    chips = ['a','b','c']
 
     try:
-        load = apload.ApLoad(apred=apred,telescope=telescope)
-        sparsefile = load.filename('Sparse',num=sparseid,chips=True)
-        psffile = load.filename('PSF',num=psfid,chips=True)
-        for ch in chips:
-            sparsefile1 = psffile.replace('Sparse-','Sparse-'+ch+'-')
-            psffile1 = psffile.replace('PSF-','PSF-'+ch+'-')
-            p = psf.makeprofilegrid(psffile1,sparsefile1,verbose=args.verbose)
-            outfile = load.filename('PSFModel',num=modelpsf,chips=True).replace('PSFModel-','PSFModel-'+ch+'-')
-            print('Writing to '+outfile)
-            p.write(outfile)
+        psf.mkmodelpsf(modelpsf,psfid,sparseid,apred,telescope,verbose=args.verbose)
     except:
         traceback.print_exc()

@@ -56,7 +56,7 @@ free_lun,lun
 
 ;; Establish generic variable types
 mjd1=0L & mjd2=0L & name=0L & frames='' & darkframes='' & nframes=0 & nrep=0 & dithered=0 & maxread=''
-darkid=0L & flatid=0L & psfid=0L & fluxid=0L & linid=0L & fixfiberid=0L & waveid=0 & multiwaveid=0
+darkid=0L & flatid=0L & sparseid=0L & psfid=0L & fluxid=0L & linid=0L & fixfiberid=0L & waveid=0 & multiwaveid=0
 
 ;; Extract the darks information and load dark structure
 darks = where(strpos(line,'dark') eq 0)
@@ -115,8 +115,8 @@ for i=0,n_elements(modelpsf)-1 do begin
     reads,fields[3],name
     reads,fields[4],sparseid
     reads,fields[5],psfid
-    str = {mjd1:mjd1, mjd2:mjd2, name:name, sparse:sparseid, psf:psf}
-    if i eq 0 then modelpsfestr=str else modelpsfstr = struct_append(modelpsfstr,str)
+    str = {mjd1:mjd1, mjd2:mjd2, name:name, sparse:sparseid, psf:psfid}
+    if i eq 0 then modelpsfstr=str else modelpsfstr = struct_append(modelpsfstr,str)
   endif
 endfor
 

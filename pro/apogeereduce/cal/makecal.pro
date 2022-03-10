@@ -209,10 +209,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     print,'makecal sparse: ', sparse
     if sparse gt 1 then begin
       file = apogee_filename('Sparse',num=sparse,chip='c')
-      psfdir = file_dirname(file)
-      sparseid = string(sparse,format='(i08)')
-      allfiles = psfdir+'/'+[dirs.prefix+'EPSF-'+chips+'-'+sparseid+'.fits',dirs.prefix+'Sparse-'+sparseid+'.fits']
-      if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
+      if file_test(file) eq 1 and not keyword_set(clobber) then begin
         print,' sparse file: ',file,' already made'
         return
       endif
@@ -295,9 +292,9 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         print,'No matching calibration line for ', modelpsf
         stop
       endif
-      MAKECAL,sparse=modelstr[i].sparse,unlock=unlock
-      MAKECAL,psf=modelstr[i].psf,unlock=unlock
-      MKMODELPSF,modelpsf,sparseid=modelstr[i].sparse,psfid=modelstr[i].psfid,clobber=clobber,unlock=unlock
+      MAKECAL,sparse=modelpsfstr[i].sparse,unlock=unlock
+      MAKECAL,psf=modelpsfstr[i].psf,unlock=unlock
+      MKMODELPSF,modelpsf,sparseid=modelpsfstr[i].sparse,psfid=modelpsfstr[i].psf,clobber=clobber,unlock=unlock
     endif
   endif
 
