@@ -1091,10 +1091,20 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             if planstr['platetype'] == 'cal' or planstr['platetype'] == 'extra': 
                 waveid = 0 
         if waveid > 0: 
-            if load.exists('Wave',num=planstr['waveid']):
-                print(load.filename('Wave',num=planstr['waveid'],chips=True)+' already made')
+            # This is now normally a dailywave with the MJD name  
+            if int(waveid) < 1e7:
+                wavefile = load.filename('Wave',num=planstr['waveid'],chips=True)[0:-13]+str(planstr['waveid'])+'.fits'
+                allfiles = [wavefile.replace('Wave-','Wave-'+ch+'-') for ch in chiptag]
+                exists = [os.path.exists(f) for f in allfiles]
+                if np.sum(exists)==3:
+                    print(wavefile+' already made')
+                else:
+                    sout = subprocess.run(['makecal','--dailywave',str(waveid)],shell=False)
             else:
-                sout = subprocess.run(['makecal','--multiwave',str(waveid)],shell=False)
+                if load.exists('Wave',num=planstr['waveid']):
+                    print(load.filename('Wave',num=planstr['waveid'],chips=True)+' already made')
+                else:
+                    sout = subprocess.run(['makecal','--multiwave',str(waveid)],shell=False)
 
         # FPI calibration file
         if 'fpi' in planstr.keys():
