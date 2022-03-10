@@ -488,6 +488,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
                     if ichip == 1: gfile = gfile.replace('-a-', '-b-')
                     if ichip == 2: gfile = gfile.replace('-a-', '-c-')
                     cflux = fits.getdata(gfile)
+                    pdb.set_trace()
                     msky = np.nanmedian(cflux[299-gdind], axis=0)
                     oneDflux = load.apread('1D', num=int(snum))[ichip].flux
                     msky0 = np.nanmedian(oneDflux[:,299-gdind], axis=1)
@@ -496,6 +497,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
                         lstart = int(round(skylines[ichip, iline] - pixrad))
                         lstop  = int(round(skylines[ichip, iline] + pixrad))
                         resid[iexp, ichip, iline] = (np.nansum(np.absolute(msky[lstart:lstop])) / np.nansum(np.absolute(msky0[lstart:lstop]))) * 100.0
+                        if cont: (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
             except:
                 print('problem')
 
