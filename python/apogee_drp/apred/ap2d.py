@@ -1173,6 +1173,25 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 if nbd1 > 0 : 
                     print('halt: ',responsefiles[bd1],' not found')
                     import pdb; pdb.set_trace()
+         
+        # Model PSF files
+        if 'modelpsf' in planstr.keys():
+            if load.exists('ModelPSF',num=planstr['modelpsf']):
+                print(load.filename('ModelPSF',num=planstr['modelpsf'])+' exists already')
+            else:
+                sout = subprocess.run(['makecal','--modelpsf',str(planstr['responseid'])],shell=False)
+            modelpsffiles = load.filename('ModelPSF',num=planstr['modelpsf'],chips=True)
+            modelpsffiles = [modelpsffiles.replace('ModelPSF-','ModelPSF-'+ch+'-') for ch in chiptag]
+            modelpsffile = os.path.dirname(modelpsffiles[0])+'/'+str(planstr['modelpsf'])
+            modelpsftest = [os.path.exists(t) for t in modelpsffiles]
+            if np.sum(modelpsftest) != 3:
+                bd1, = np.where(np.array(modelpsftest)==False)
+                nbd1 = len(bd1)
+                if nbd1 > 0: 
+                    print('halt: ',modelpsffiles[bd1],' not found')
+                    import pdb; pdb.set_modelpsf()
+        else:
+            modelpsffile = None
  
         # Load the Plug Plate Map file
         #-----------------------------
@@ -1211,7 +1230,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         # Process each frame
         #-------------------
         for j in range(nframes):
-            # get trace files
+            # Get trace files
             tracefiles = load.filename('PSF',num=planstr['APEXP']['psfid'][i],chips=True)
             tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
             tracefile = os.path.dirname(tracefiles[0])+'/%8d' % planstr['APEXP']['psfid'][i]
@@ -1262,14 +1281,14 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             if os.path.exists(outdir)==False:
                 file_mkdir,outdir 
             if fluxtest==False or planstr['APEXP']['flavor'][j]=='flux': 
-                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,
+                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,modelpsffile=modelpsffile,
                          wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,compress=True)
             elif waveid > 0: 
-                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,
+                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,modelpsffile=modelpsffile,
                          fluxcalfile=fluxfile,responsefile=responsefile,
                          wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,compress=True)
             else:
-                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,
+                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,modelpsffile=modelpsffile,
                          fluxcalfile=fluxfile,responsefile=responsefile,
                          clobber=clobber,compress=True)
  

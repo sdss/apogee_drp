@@ -1404,9 +1404,9 @@ def getoffset(frame,traceim):
             hi = int(np.ceil(medcent[ind]+3))
             yy = np.arange(hi-lo+1)+lo
             ff = medflux[lo:hi+1]
-            initpar = [ff[3],medcent[j],1.0,0.0]
+            initpar = [ff[3],medcent[ind],1.0,0.0]
             try:
-                pars,perror = dln.gaussfit(yy,ff,initpar=initpar,binned=True)
+                pars,perror = dln.gaussfit(yy,ff,initpar=initpar,binned=True,bounds=(-np.inf,np.inf))
                 gcent[j] = pars[1]
                 offset[j] = pars[1]-medcent[j]                
             except:
@@ -1563,9 +1563,10 @@ def extractwing(frame,psf,tracefile):
     # Step 2) Generate full PSFs for this image
     # Generate the input that extract() expects
     # this currently takes about 176 sec. to run
-    #epsf = fullepsgrid(psf,traceim,offcoef)
+    print('Generating full EPSF grid with spatial offsets')
+    epsf = fullepsfgrid(psf,traceim,offcoef)
     #np.savez('fullepsfgrid.npz',epsf=epsf)
-    epsf = np.load('fullepsfgrid.npz',allow_pickle=True)['epsf']
+    #epsf = np.load('fullepsfgrid.npz',allow_pickle=True)['epsf']
     
     # Step 3) Regular fiber+2 neighbor extraction
     out1,back1,model1 = extract(frame,epsf)
