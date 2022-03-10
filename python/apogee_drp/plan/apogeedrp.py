@@ -1162,6 +1162,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
             for ch in chips:
                 srcfile1 = srcfile.replace('PSF-','PSF-'+ch+'-')
                 destfile1 = destfile.replace('PSF-','PSF-'+ch+'-')
+                # NEED apEPSF and apETrace files as well!!!!!
                 subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
 
         return
@@ -2215,7 +2216,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     db.close()
     if len(vcat)==0:
         logger.info('No visits found for MJDs')
-        return []
+        return None
     # Pick on the MJDs we want
     ind = []
     for m in mjds:
@@ -2224,7 +2225,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     ind = np.array(ind)
     if len(ind)==0:
         logger.info('No visits found for MJDs')
-        return []
+        return None
     vcat = vcat[ind]
     # Get unique stars
     objects,ui = np.unique(vcat['apogee_id'],return_index=True)
