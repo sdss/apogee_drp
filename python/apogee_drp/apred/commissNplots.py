@@ -522,7 +522,10 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
         ax.text(0.03,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
         ax.text(0.93, 0.85, 'airglow' + '\n' + 'pixel', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
         ax.text(0.97, 0.85, 'median' + '\n' + 'resid', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
-        ax.legend(loc=[0.9,0.45], labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz*0.9, edgecolor='k', framealpha=1)
+        if cont:
+            ax.legend(loc=[0.9,0.65], labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz*0.9, edgecolor='k', framealpha=1)
+        else:
+            ax.legend(loc=[0.9,0.45], labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz*0.9, edgecolor='k', framealpha=1)
 
     fig.subplots_adjust(left=0.05,right=0.985,bottom=0.065,top=0.98,hspace=0.2,wspace=0.00)
     plt.savefig(plotfile)
