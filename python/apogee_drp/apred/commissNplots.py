@@ -512,8 +512,8 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
             med = np.nanmedian(resid[gd, ichip, iline])
             ax.axhline(y=med, color=colors[iline], linestyle='dashed')
             c = colors[iline]
-            x = [jd, jd]
-            y = [resid[:, ichip, iline], resid[gd, ichip, iline]]
+            x = [jd[gd], jd[gd]]
+            y = [resid[gd, ichip, iline], resid[gd, ichip, iline]]
             lab = str(int(round(skylines[ichip, iline]))).rjust(4) + '  (' + str("%.2f" % round(med, 2)) + '%)'
             ax.scatter(x, y, marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=lab)
 
