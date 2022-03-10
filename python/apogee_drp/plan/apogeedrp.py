@@ -17,11 +17,13 @@ from collections import OrderedDict
 #from astropy.time import Time
 from datetime import datetime
 import logging
+import slurm
 from slurm import queue as pbsqueue
 import time
 import traceback
 import subprocess
 
+chips = ['a','b','c']
 
 def lastnightmjd5():
     """ Compute last night's MJD."""
@@ -1053,7 +1055,7 @@ def mkvers(apred,logger=None):
         shutil.copyfile(apogee_drp_dir+'etc/sorttable.js',apogee_redux+apred+'/qa/sorttable.js')
 
 
-def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
+def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     """
     Make the master calibration products for a reduction version and MJD range.
 
@@ -1063,8 +1065,8 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
-    slurm : dictionary
-       Dictionary of slurm settings.
+    slurmpars : dictionary
+       Dictionary of slurmpars settings.
     clobber : boolean, optional
        Overwrite any existing files.  Default is False.
     linkvers : str, optional
@@ -1145,6 +1147,45 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
                     
         # Link all of the PSF files in the PSF library
+        for obs in ['apogee-n','apogee-s']:
+            logger.info('Creating symlinks for PSF library files '+obs)
+            sload = apload.ApLoad(apred=linkvers,telescope=load.telescope)
+            dpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+obs+'DomeFlatTrace-all.fits'
+            qpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+obs+'QuartzFlatTrace-all.fits'
+            psfid = []
+            if os.path.exists(dpsflibraryfile):
+                dpsf = Table.read(dpsflibraryfile)
+                psfid = np.array(dpsf['PSFID'])
+            else:
+                logger.info(dpsflibraryfile+' not found')
+            if os.path.exists(qpsflibraryfile):
+                qpsf = Table.read(qpsflibraryfile)
+                if len(psfid)==0:
+                    psfid = np.array(qpsf['PSFID'])
+                else:
+                    psfid = np.hstack((psfid,np.array(qpsf['PSFID'])))
+            else:
+                logger.info(qpsflibraryfile+' not found')
+            if len(psfid)==0:
+                continue
+            # Loop over the files and link them
+            psfid = np.unique(psfid)
+            for i in range(len(psfid)):
+                srcfile = sload.filename('PSF',num=psfid[i],chips=True)
+                destfile = load.filename('PSF',num=psfid[i],chips=True)
+                for ch in chips:
+                    srcfile1 = srcfile.replace('PSF-','PSF-'+ch+'-')
+                    destfile1 = destfile.replace('PSF-','PSF-'+ch+'-')
+                    if os.path.exists(srcfile1):
+                        subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
+                    srcfile1 = srcfile.replace('PSF-','EPSF-'+ch+'-')
+                    destfile1 = destfile.replace('PSF-','EPSF-'+ch+'-')
+                    if os.path.exists(srcfile1):
+                        subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
+                    srcfile1 = sload.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
+                    destfile1 = load.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
+                    if os.path.exists(srcfile1):
+                        subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
 
         return
 
@@ -1196,9 +1237,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('--------------------------------------------')
     logger.info('Making master Detector/Linearity in parallel')
     logger.info('============================================')
-    logger.info('Slurm settings: '+str(slurm))
+    logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mkdet', **slurm)
+    queue.create(label='mkdet', **slurmpars)
     docal = np.zeros(len(detdict),bool)
     for i in range(len(detdict)):
         name = detdict['name'][i]
@@ -1244,13 +1285,13 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('Making master darks in parallel')
     logger.info('===============================')
     # Give each job LOTS of memory
-    slurm1 = slurm.copy()
-    slurm1['nodes'] = 2
-    slurm1['cpus'] = 4
-    slurm1['mem_per_cpu'] = 20000  # in MB
-    logger.info('Slurm settings: '+str(slurm1))
+    slurmpars1 = slurmpars.copy()
+    slurmpars1['nodes'] = 2
+    slurmpars1['cpus'] = 4
+    slurmpars1['mem_per_cpu'] = 20000  # in MB
+    logger.info('Slurm settings: '+str(slurmpars1))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mkdark', **slurm1)
+    queue.create(label='mkdark', **slurmpars1)
     docal = np.zeros(len(darkdict),bool)
     for i in range(len(darkdict)):
         name = darkdict['name'][i]
@@ -1300,9 +1341,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('-------------------------------')
     logger.info('Making master flats in parallel')
     logger.info('===============================')
-    logger.info('Slurm settings: '+str(slurm1))
+    logger.info('Slurm settings: '+str(slurmpars1))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mkflat', **slurm1)
+    queue.create(label='mkflat', **slurmpars1)
     for i in range(len(flatdict)):
         name = flatdict['name'][i]
         if np.sum((mjds >= flatdict['mjd1'][i]) & (mjds <= flatdict['mjd2'][i])) > 0:
@@ -1347,9 +1388,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('------------------------------')
     logger.info('Making master BPMs in parallel')
     logger.info('==============================')
-    logger.info('Slurm settings: '+str(slurm))
+    logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mkbpm', **slurm)
+    queue.create(label='mkbpm', **slurmpars)
     for i in range(len(bpmdict)):
         name = bpmdict['name'][i]
         if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
@@ -1391,9 +1432,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('----------------------------------')
     logger.info('Making master Littrows in parallel')
     logger.info('==================================')
-    logger.info('Slurm settings: '+str(slurm))
+    logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mklittrow', **slurm)
+    queue.create(label='mklittrow', **slurmpars)
     for i in range(len(littdict)):
         name = littdict['name'][i]
         if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
@@ -1434,9 +1475,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('-----------------------------------')
     logger.info('Making master responses in parallel')
     logger.info('===================================')
-    logger.info('Slurm settings: '+str(slurm))
+    logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mkresponse', **slurm)
+    queue.create(label='mkresponse', **slurmpars)
     for i in range(len(responsedict)):
         name = responsedict['name'][i]
         if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
@@ -1477,9 +1518,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('---------------------------------')
     logger.info('Making master Sparses in parallel')
     logger.info('=================================')
-    logger.info('Slurm settings: '+str(slurm))
+    logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mksparse', **slurm)
+    queue.create(label='mksparse', **slurmpars)
     for i in range(len(littdict)):
         name = sparsedict['name'][i]
         if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
@@ -1530,11 +1571,11 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     #logger.info('===================================')
     #logger.info(str(len(multiwavedict))+' multiwave to make: '+','.join(multiwavedict['name']))
     #logger.info('')
-    #slurm1['nodes'] = 1
-    #slurm1['cpus'] = 5
-    #logger.info('Slurm settings: '+str(slurm1))
+    #slurmpars1['nodes'] = 1
+    #slurmpars1['cpus'] = 5
+    #logger.info('Slurm settings: '+str(slurmpars1))
     #queue = pbsqueue(verbose=True)
-    #queue.create(label='mkmultiwave', **slurm1)
+    #queue.create(label='mkmultiwave', **slurmpars1)
     #for i in range(len(multiwavedict)):
     #    outfile1 = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkmultiwave-'+str(multiwavedict['name'][i])+telescope+'.'+logtime+'.log'
     #    errfile1 = outfile1.replace('.log','.err')
@@ -1563,9 +1604,9 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     logger.info('--------------------------------')
     logger.info('Making master LSFs in parallel')
     logger.info('================================')
-    logger.info('Slurm settings: '+str(slurm))
+    logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mklsf', **slurm)
+    queue.create(label='mklsf', **slurmpars)
     for i in range(len(littdict)):
         name = lsfdict['name'][i]
         if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:
@@ -1604,7 +1645,7 @@ def mkmastercals(load,mjds,slurm,clobber=False,linkvers=None,logger=None):
     # Need to check if the master calibration files actually got made
 
     
-def runap3d(load,mjds,slurm,clobber=False,logger=None):
+def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
     """
     Run AP3D on all exposures for a list of MJDs.
 
@@ -1614,8 +1655,8 @@ def runap3d(load,mjds,slurm,clobber=False,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
-    slurm : dictionary
-       Dictionary of slurm settings.
+    slurmpars : dictionary
+       Dictionary of slurmpars settings.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -1649,29 +1690,38 @@ def runap3d(load,mjds,slurm,clobber=False,logger=None):
         logger.info('No exposures to process with AP3D')
         chk3d = []
 
-    slurm1 = slurm.copy()
-    if len(expinfo)<64:
-        slurm1['cpus'] = len(expinfo)
-    slurm1['numpy_num_threads'] = 2
-    logger.info('Slurm settings: '+str(slurm1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='ap3d', **slurm1)
+    # Loop over exposures and see if the outputs exist already
     do3d = np.zeros(len(expinfo),bool)
-    for i,num in enumerate(expinfo['num']):
+    for i,num in enumerate(expinfo['num']):    
         mjd = int(load.cmjd(num))
-        logfile1 = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D','3D')
-        logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
-        logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
-        if os.path.dirname(logfile1)==False:
-            os.makedirs(os.path.dirname(logfile1))
         # Check if files exist already
         do3d[i] = True
         if clobber is not True:
             outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
             if load.exists('2D',num=num):
-                logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                logger.info(str(i+1)+' '+os.path.basename(outfile)+' already exists and clobber==False')
                 do3d[i] = False
-        if do3d[i]:
+    logger.info(str(np.sum(do3d))+' exposures to run')
+
+    # Loop over the exposures and make the commands for the ones that we will run
+    torun, = np.where(do3d==True)
+    ntorun = len(torun)
+    if ntorun>0:
+        slurmpars1 = slurmpars.copy()
+        if ntorun<64:
+            slurmpars1['cpus'] = ntorun
+        slurmpars1['numpy_num_threads'] = 2
+        logger.info('Slurm settings: '+str(slurmpars1))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='ap3d', **slurmpars1)
+        for i in range(ntorun):
+            num = expinfo['num'][torun[i]]
+            mjd = int(load.cmjd(num))
+            logfile1 = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D','3D')
+            logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
+            logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
+            if os.path.dirname(logfile1)==False:
+                os.makedirs(os.path.dirname(logfile1))
             cmd1 = 'ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope)
             if clobber:
                 cmd1 += ' --clobber'
@@ -1679,21 +1729,20 @@ def runap3d(load,mjds,slurm,clobber=False,logger=None):
             logger.info('Command : '+cmd1)
             logger.info('Logfile : '+logfile1)
             queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-    if np.sum(do3d)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This should check if the ap3d ran okay and puts the status in the database
         chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
+        del queue
     else:
         chk3d = None
         logger.info('No exposures need AP3D processing')
-    del queue
         
     return chk3d
 
 
-def rundailycals(load,mjds,slurm,clobber=False,logger=None):
+def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
     """
     Run daily calibration frames for a list of MJDs.
 
@@ -1703,8 +1752,8 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
-    slurm : dictionary
-       Dictionary of slurm settings.
+    slurmpars : dictionary
+       Dictionary of slurmpars settings.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -1768,7 +1817,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
     # Loop over calibration types
     calnames = ['psf','flux','arcs','dailywave','fpi']
     filecodes = ['PSF','Flux','Wave','Wave','WaveFPI']
-    chkcal = []
+    chkcal = None
     for i,caltype in enumerate(calnames):
         logger.info('')
         logger.info('----------------------------------------------')
@@ -1815,13 +1864,6 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                 calinfo = calinfo[si]
 
         logger.info(str(ncal)+' file(s)')
-        slurm1 = slurm.copy()
-        if ncal<64:
-            slurm1['cpus'] = ncal
-        slurm1['numpy_num_threads'] = 2
-        logger.info('Slurm settings: '+str(slurm1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='makecal-'+calnames[i], **slurm1)
 
         # Loop over calibration and check if we need to run them
         docal = np.zeros(ncal,bool)
@@ -1840,6 +1882,7 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
                 else:
                     outfile = load.filename(filecodes[i],num=num1,mjd=mjd1,chips=True)
                     exists = load.exists(filecodes[i],num=num1,mjd=mjd1)
+                # WaveFPI files are not getting checked properly!!!!
                 if exists:
                     logger.info(str(j+1)+'  '+os.path.basename(outfile)+' already exists and clobber==False')
                     docal[j] = False
@@ -1848,42 +1891,50 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
         logfiles = []
         torun, = np.where(docal==True)
         ntorun = len(torun)
-        for j in range(ntorun):
-            num1 = calinfo['num'][torun[j]]
-            mjd1 = calinfo['mjd'][torun[j]]
-            if mjd1>=59556:
-                fps = True
-            else:
-                fps = False
-            cmd1 = 'makecal --vers {0} --telescope {1} --unlock'.format(apred,telescope)
-            if clobber: cmd1 += ' --clobber'                
-            if caltype=='psf':    # psfs
-                cmd1 += ' --psf '+str(num1)
-                logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
-            elif caltype=='flux':   # flux
-                cmd1 += ' --flux '+str(num1)
-                if fps: cmd1 += ' --librarypsf'
-                logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
-            elif caltype=='arcs':  # arcs
-                cmd1 += ' --wave '+str(num1)
-                if fps: cmd1 += ' --librarypsf'
-                logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
-            elif caltype=='dailywave':  # dailywave
-                cmd1 += ' --dailywave '+str(num1)
-                if fps: cmd1 += ' --librarypsf'
-                logfile1 = calplandir+'/apDailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
-            elif caltype=='fpi':  # fpi
-                cmd1 += ' --fpi '+str(num1)
-                if fps: cmd1 += ' --librarypsf'
-                logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
-            if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
-            logfiles.append(logfile1)
-            logger.info('Calibration file %d : %s %d' % (j+1,caltype,num1))
-            logger.info('Command : '+cmd1)
-            logger.info('Logfile : '+logfile1)
-            queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
         if ntorun>0:
+            slurmpars1 = slurmpars.copy()
+            if ntorun<64:
+                slurmpars1['cpus'] = ntorun
+            slurmpars1['numpy_num_threads'] = 2
+            logger.info('Slurm settings: '+str(slurmpars1))
+            queue = pbsqueue(verbose=True)
+            queue.create(label='makecal-'+calnames[i], **slurmpars1)
+            for j in range(ntorun):
+                num1 = calinfo['num'][torun[j]]
+                mjd1 = calinfo['mjd'][torun[j]]
+                if mjd1>=59556:
+                    fps = True
+                else:
+                    fps = False
+                cmd1 = 'makecal --vers {0} --telescope {1} --unlock'.format(apred,telescope)
+                if clobber: cmd1 += ' --clobber'                
+                if caltype=='psf':    # psfs
+                    cmd1 += ' --psf '+str(num1)
+                    logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
+                elif caltype=='flux':   # flux
+                    cmd1 += ' --flux '+str(num1)
+                    if fps: cmd1 += ' --librarypsf'
+                    logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
+                elif caltype=='arcs':  # arcs
+                    cmd1 += ' --wave '+str(num1)
+                    if fps: cmd1 += ' --librarypsf'
+                    logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
+                elif caltype=='dailywave':  # dailywave
+                    cmd1 += ' --dailywave '+str(num1)
+                    if fps: cmd1 += ' --librarypsf'
+                    logfile1 = calplandir+'/apDailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
+                elif caltype=='fpi':  # fpi
+                    cmd1 += ' --fpi '+str(num1)
+                    if fps: cmd1 += ' --librarypsf'
+                    logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+                    if os.path.exists(os.path.dirname(logfile1))==False:
+                        os.makedirs(os.path.dirname(logfile1))
+                logfiles.append(logfile1)
+                logger.info('Calibration file %d : %s %d' % (j+1,caltype,num1))
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
+                queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+
             queue.commit(hard=True,submit=True)
             logger.info('PBS key is '+queue.key)
             queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
@@ -1892,21 +1943,18 @@ def rundailycals(load,mjds,slurm,clobber=False,logger=None):
         # Checks the status and updates the database
         if ntorun>0:
             chkcal1 = check_calib(calinfo[torun],logfiles,queue.key,apred,verbose=True,logger=logger)
-            if len(chkcal)==0:
+            if chkcal is None:
                 chkcal = chkcal1
             else:
                 chkcal = np.hstack((chkcal,chkcal1))
-        del queue
-
+            del queue
 
     # make sure to run mkwave on all arclamps needed for daily cals
-
 
     return chkcal
 
 
-
-def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
+def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
     """
     Make plan files for a list of MJDs.
 
@@ -1916,8 +1964,8 @@ def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
-    slurm : dictionary
-       Dictionary of slurm settings.
+    slurmpars : dictionary
+       Dictionary of slurmpars settings.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -1958,7 +2006,7 @@ def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
         plandicts,planfiles0 = mkplan.make_mjd5_yaml(m,apred,telescope,clobber=clobber,logger=logger)
         dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(m)+'.yaml'
         try:
-            planfiles1 = mkplan.run_mjd5_yaml(dailyplanfile,logger=logger)
+            planfiles1 = mkplan.run_mjd5_yaml(dailyplanfile,clobber=clobber,logger=logger)
             nplanfiles1 = len(planfiles1)
         except:
             traceback.print_exc()
@@ -1987,7 +2035,7 @@ def makeplanfiles(load,mjds,slurm,clobber=False,logger=None):
     return planfiles
 
 
-def runapred(load,mjds,slurm,clobber=False,logger=None):
+def runapred(load,mjds,slurmpars,clobber=False,logger=None):
     """
     Run APRED on all plan files for a list of MJDs.
 
@@ -1997,8 +2045,8 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
-    slurm : dictionary
-       Dictionary of slurm settings.
+    slurmpars : dictionary
+       Dictionary of slurmpars settings.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -2032,32 +2080,19 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     planfiles = getplanfiles(load,mjds,exist=True,logger=logger)
     # No plan files for these MJDs
     if len(planfiles)==0:
-        return []
+        return None,None
     logger.info(str(len(planfiles))+' plan files')
 
     # Get exposure information
     expinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
     if len(expinfo)==0:
         logger.info('No exposures')
-        return []
-        
-    slurm1 = slurm.copy()
-    if len(planfiles)<64:
-        slurm1['cpus'] = len(planfiles)
-    slurm1['numpy_num_threads'] = 2
+        return None,None
 
-    logger.info('Slurm settings: '+str(slurm1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='apred', **slurm1)
+    # Loop over planfiles and see if the outputs exist already
     dorun = np.zeros(len(planfiles),bool)
-    for i,pf in enumerate(planfiles):
+    for i,pf in enumerate(planfiles):    
         pfbase = os.path.basename(pf)
-        logger.info('planfile %d : %s' % (i+1,pf))
-        logfile1 = pf.replace('.yaml','_pbs.'+logtime+'.log')
-        errfile1 = logfile1.replace('.log','.err')
-        cmd1 = 'apred {0}'.format(pf)
-        if clobber:
-            cmd1 += ' --clobber'
         # Check if files exist already
         dorun[i] = True
         if clobber is not True:
@@ -2090,24 +2125,45 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
                 outexists = False
                 outfile = pf+' output files '
             if outexists:
-                logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                logger.info(str(i+1)+' '+os.path.basename(outfile)+' already exists and clobber==False')
                 dorun[i] = False
-        if dorun[i]:
+    logger.info(str(np.sum(dorun))+' planfiles to run')
+
+    # Loop over the planfiles and make the commands for the ones that we will run
+    torun, = np.where(dorun==True)
+    ntorun = len(torun)
+    if ntorun>0:
+        slurmpars1 = slurmpars.copy()
+        if ntorun<64:
+            slurmpars1['cpus'] = ntorun
+        slurmpars1['numpy_num_threads'] = 2
+        logger.info('Slurm settings: '+str(slurmpars1))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='apred', **slurmpars1)
+        for i in range(ntorun):
+            pf = planfiles[torun[i]]
+            pfbase = os.path.basename(pf)
+            logfile1 = pf.replace('.yaml','_pbs.'+logtime+'.log')
+            errfile1 = logfile1.replace('.log','.err')
+            outdir = os.path.dirname(logfile1)
+            if os.path.exists(outdir)==False:   # make sure the output directory exists
+                os.makedirs(outdir)
+            cmd1 = 'apred {0}'.format(pf)
+            if clobber:
+                cmd1 += ' --clobber'
             logger.info('planfile %d : %s' % (i+1,pf))
             logger.info('Command : '+cmd1)
             logger.info('Logfile : '+logfile1)
             queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(dorun)>0:
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This also loads the status into the database using the correct APRED version
+        chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
+        del queue
     else:
         logger.info('No planfiles need to be run')
-
-    # This also loads the status into the database using the correct APRED version
-    chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
-    del queue
-
+        chkexp,chkvisit = None,None
 
 
     # -- Summary statistics --
@@ -2127,7 +2183,7 @@ def runapred(load,mjds,slurm,clobber=False,logger=None):
     return chkexp,chkvisit
 
 
-def runrv(load,mjds,slurm,daily=False,clobber=False,logger=None):
+def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     """
     Run RV on all the stars observed from a list of MJDs.
 
@@ -2137,8 +2193,8 @@ def runrv(load,mjds,slurm,daily=False,clobber=False,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
-    slurm : dictionary
-       Dictionary of slurm settings.
+    slurmpars : dictionary
+       Dictionary of slurmpars settings.
     daily : boolean, optional
        Run for the daily processing.  Only include visits up to and including this night.
     clobber : boolean, optional
@@ -2175,14 +2231,14 @@ def runrv(load,mjds,slurm,daily=False,clobber=False,logger=None):
         sql += " SELECT v.*,mv.maxmjd from apogee_drp.visit AS v LEFT JOIN mv on mv.apogee_id=v.apogee_id"
         sql += " Where v.apred_vers='%s' and v.mjd>=%d and v.mjd<=%d and v.telescope='%s'" % (apred,mjdstart,mjdstop,telescope)
     else:
-        sql = "SELECT * from apogee_drp.visit WHERE apred_vers='%s' mjd=%d and telescope='%s'" % (apred,mjds[0],telescope))
+        sql = "SELECT * from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
 
     db = apogeedb.DBSession()
     vcat = db.query(sql=sql)
     db.close()
     if len(vcat)==0:
         logger.info('No visits found for MJDs')
-        return []
+        return None
     # Pick on the MJDs we want
     ind = []
     for m in mjds:
@@ -2191,7 +2247,7 @@ def runrv(load,mjds,slurm,daily=False,clobber=False,logger=None):
     ind = np.array(ind)
     if len(ind)==0:
         logger.info('No visits found for MJDs')
-        return []
+        return None
     vcat = vcat[ind]
     # Get unique stars
     objects,ui = np.unique(vcat['apogee_id'],return_index=True)
@@ -2203,15 +2259,10 @@ def runrv(load,mjds,slurm,daily=False,clobber=False,logger=None):
     logger.info(str(len(vcat))+' stars to run')
 
     # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
-    vcat['mjd'] = vcat['maxmjd']    
+    if daily==False:
+        vcat['mjd'] = vcat['maxmjd']    
 
-    slurm1 = slurm.copy()
-    if len(vcat)<64:
-        slurm1['cpus'] = len(vcat)
-    slurm1['numpy_num_threads'] = 2
-    logger.info('Slurm settings: '+str(slurm1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='rv', **slurm1)
+    # Loop over the stars and figure out the ones that need to be run
     dorv = np.zeros(len(vcat),bool)
     for i,obj in enumerate(vcat['apogee_id']):
         # We are going to run RV on ALL the visits
@@ -2223,40 +2274,61 @@ def runrv(load,mjds,slurm,daily=False,clobber=False,logger=None):
             apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
         else:
             apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
-        outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
-        if os.path.exists(outdir)==False:
-            os.makedirs(outdir)
-        logfile = apstarfile.replace('.fits','_pbs.'+logtime+'.log')
-        errfile = logfile.replace('.log','.err')
-        # Run with --verbose
-        cmd = 'rv %s %s %s -v' % (obj,apred,telescope)
-        if clobber:
-            cmd += ' -c'
-        if daily:
-            cmd += '  --m '+str(mjds[0])
         # Check if file exists already
         dorv[i] = True
         if clobber==False:
             if os.path.exists(apstarfile):
-                logger.info(os.path.basename(apstarfile)+' already exists and clobber==False')
+                logger.info(str(i+1)+' '+os.path.basename(apstarfile)+' already exists and clobber==False')
                 dorv[i] = False
-        if dorv[i]:
+    logger.info(str(np.sum(dorv))+' objects to run')
+
+    # Loop over the objects and make the commands for the ones that we will run
+    torun, = np.where(dorv==True)
+    ntorun = len(torun)
+    if ntorun>0:
+        slurmpars1 = slurmpars.copy()
+        if ntorun<64:
+            slurmpars1['cpus'] = ntorun
+        slurmpars1['numpy_num_threads'] = 2
+        logger.info('Slurm settings: '+str(slurmpars1))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='rv', **slurmpars1)
+        for i in range(ntorun):
+            obj = vcat['apogee_id'][torun[i]]
+            # We are going to run RV on ALL the visits
+            # Use the MAXMJD in the table, now called MJD
+            mjd = vcat['mjd'][torun[i]]
+            apstarfile = load.filename('Star',obj=obj)
+            if daily:
+                # Want all visits up to this day
+                apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
+            else:
+                apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
+            outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
+            if os.path.exists(outdir)==False:
+                os.makedirs(outdir)
+            logfile = apstarfile.replace('.fits','_pbs.'+logtime+'.log')
+            errfile = logfile.replace('.log','.err')
+            # Run with --verbose
+            cmd = 'rv %s %s %s -v' % (obj,apred,telescope)
+            if clobber:
+                cmd += ' -c'
+            if daily:
+                cmd += '  --m '+str(mjds[0])
             logger.info('rv %d : %s' % (i+1,obj))
             logger.info('Command : '+cmd)
             logger.info('Logfile : '+logfile)
             queue.append(cmd,outfile=logfile,errfile=errfile)
-    if np.sum(dorv)>0:
-        logger.info('Running RV on '+str(np.sum(dorv))+' stars')
+        logger.info('Running RV on '+str(ntorun)+' stars')
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This checks the status and puts it into the database
-        ind, = np.where(dorv)
-        chkrv = check_rv(vcat[ind],queue.key,logger=logger,verbose=False)
+        chkrv = check_rv(vcat[torun],queue.key,logger=logger,verbose=False)
+        del queue
     else:
         logger.info('No RVs need to be run')
         chkrv = None
-    del queue
 
     # -- Summary statistics --
     # RV status
@@ -2304,7 +2376,7 @@ def runsumfiles(load,mjds,logger=None):
     create_sumfiles(apred,telescope,logger=logger)
 
 
-def rununified(load,mjds,slurm,clobber=False,logger=None):
+def rununified(load,mjds,slurmpars,clobber=False,logger=None):
     """
     Create the unified MWM directory structure for the relevant MJDs.
 
@@ -2314,8 +2386,8 @@ def rununified(load,mjds,slurm,clobber=False,logger=None):
        ApLoad object that contains "apred" and "telescope".
     mjds : list
        List of MJDs to process
-    slurm : dictionary
-       Dictionary of slurm settings.
+    slurmpars : dictionary
+       Dictionary of slurmpars settings.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -2342,13 +2414,13 @@ def rununified(load,mjds,slurm,clobber=False,logger=None):
     mjdstop = np.max(mjds)
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     
-    slurm1 = slurm.copy()
+    slurmpars1 = slurmpars.copy()
     if len(mjds)<64:
-        slurm1['cpus'] = len(mjds)
-    slurm1['numpy_num_threads'] = 2    
-    logger.info('Slurm settings: '+str(slurm1))
+        slurmpars1['cpus'] = len(mjds)
+    slurmpars1['numpy_num_threads'] = 2    
+    logger.info('Slurm settings: '+str(slurmpars1))
     queue = pbsqueue(verbose=True)
-    queue.create(label='unidir', **slurm1)
+    queue.create(label='unidir', **slurmpars1)
     # Loop over all MJDs
     for m in mjds:
         outfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-unidir.'+logtime+'.log'
@@ -2364,7 +2436,7 @@ def rununified(load,mjds,slurm,clobber=False,logger=None):
     #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
 
 
-def runqa(load,mjds,slurm,clobber=False,logger=None):
+def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     """
     Run QA on a list of MJDs.
 
@@ -2409,15 +2481,15 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
     logger.info(str(len(planfiles))+' plan file(s)')
 
     # Run apqa on each plate visit
-    slurm1 = slurm.copy()
+    slurmpars1 = slurmpars.copy()
     if len(planfiles)<64:
-        slurm1['cpus'] = len(planfiles)
-    slurm1['numpy_num_threads'] = 2    
-    logger.info('Slurm settings: '+str(slurm1))
+        slurmpars1['cpus'] = len(planfiles)
+    slurmpars1['numpy_num_threads'] = 2    
+    logger.info('Slurm settings: '+str(slurmpars1))
     queue = pbsqueue(verbose=True)
-    queue.create(label='apqa', **slurm1)
+    queue.create(label='apqa', **slurmpars1)
     for i,pf in enumerate(planfiles):
-        logger.info('planfile %d : %d' % (i+1,pf))
+        logger.info('planfile %d : %s' % (i+1,pf))
         fdir = os.path.dirname(pf)
         # apPlan-1491-59587.yaml
         base = os.path.basename(pf)
@@ -2472,7 +2544,7 @@ def runqa(load,mjds,slurm,clobber=False,logger=None):
 
 
 def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=None, 
-                  planfiles=None,chkapred=None,chkrv=None,logfile=None,slurm=None,
+                  planfiles=None,chkapred=None,chkrv=None,logfile=None,slurmpars=None,
                   clobber=None,debug=False):   
     """ Send a summary email."""
 
@@ -2497,8 +2569,8 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
     message += 'Steps: '+','.join(steps)+'<br>\n'
     if clobber:
         message += 'clobber: '+str(clobber)+'<br>\n'
-    if slurm:
-        message += 'Slurm settings: '+str(slurm)+'<br>\n'
+    if slurmpars:
+        message += 'Slurm settings: '+str(slurmpars)+'<br>\n'
     message += '<p>\n'
     message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/'+str(apred)+'/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
 
@@ -2607,7 +2679,7 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
     ppn = 64
     walltime = '336:00:00'
     # Only set cpus if you want to use less than 64 cpus
-    slurm = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn,
+    slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn,
              'walltime':walltime, 'notification':False}
     
     # Get software version (git hash)
@@ -2659,10 +2731,10 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
     rootLogger.info('Clobber: '+str(clobber))
     if fresh:
         rootLogger.info('Starting '+str(apred)+' fresh')
-    rootLogger.info('Slurm settings: '+str(slurm))
+    rootLogger.info('Slurm settings: '+str(slurmpars))
 
     # Common keyword arguments
-    kws = {'slurm':slurm, 'clobber':clobber, 'logger':rootLogger}
+    kws = {'slurmpars':slurmpars, 'clobber':clobber, 'logger':rootLogger}
 
     # Defaults for check tables
     chkmaster,chk3d,chkcal,planfiles,chkapred,chkrv = None,None,None,None,None,None
@@ -2810,6 +2882,6 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
 
     # Summary email
     summary_email(observatory,apred,mjd,steps,chkmaster=chkmaster,chk3d=chk3d,chkcal=chkcal,
-                  planfiles=planfiles,chkapred=chkapred,chkrv=chkrv,logfile=logfile,slurm=slurm,
+                  planfiles=planfiles,chkapred=chkapred,chkrv=chkrv,logfile=logfile,slurmpars=slurmpars,
                   clobber=clobber,debug=debug)
 

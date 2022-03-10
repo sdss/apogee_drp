@@ -168,7 +168,14 @@ FOR i=0L,nplanfiles-1 do begin
   ; apWave files : wavelength calibration
   waveid = planstr.waveid
   if tag_exist(planstr,'platetype') then if planstr.platetype eq 'cal' or planstr.platetype eq 'extra' then waveid=0
-  if waveid gt 0 then MAKECAL,multiwave=waveid
+  ;; This is now normally a dailywave with the MJD name
+  if waveid gt 0 then begin
+    if long(waveid) lt 1e7 then begin
+      MAKECAL,dailywave=waveid
+    endif else begin
+      MAKECAL,multiwave=waveid
+    endelse
+  endif
 
   ; FPI calibration file
   if tag_exist(planstr,'fpi') then fpiid = planstr.fpi else fpiid=0

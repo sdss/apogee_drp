@@ -50,7 +50,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;; Does product already exist?
   ;; check all three chip files
   sfpiid = string(fpiid,format='(i08)')
-  cmjd = getcmjd(psfid)
+  cmjd = getcmjd(fpiid)
   mjd = long(cmjd)
   chips = ['a','b','c']
   allfiles = wavedir+dirs.prefix+'WaveFPI-'+chips+'-'+cmjd+'-'+sfpiid+'.fits'
@@ -70,9 +70,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc,unlock=unlock)
 
   ;; Make sure the dailywave file is there
-  MAKECAL,dailywave=mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
-           fiberid=fiberid,clobber=clobber,nowait=nowait,nofit=nofit,$
-           unlock=unlock,librarypsf=psflibrary
+  MAKECAL,dailywave=mjd,clobber=clobber,unlock=unlock,librarypsf=psflibrary
 
   ;; New Python version! 
   cmd = ['mkfpi',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--verbose']

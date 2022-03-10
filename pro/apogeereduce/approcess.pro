@@ -134,7 +134,12 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
       num = nums[inum]
       tracefile = apogee_filename('PSF',num=psfid,chip='c',/dir)+string(format='(i8.8)',psfid) 
       wavefile = 0
-      if keyword_set(waveid) then wavefile=apogee_filename('Wave',num=waveid,chip='c',/dir)+string(format='(i8.8)',waveid)
+      if keyword_set(waveid) then begin
+        wavefile = apogee_filename('Wave',num=waveid,chip='c',/dir)+string(format='(i8.8)',waveid)
+        ;; We are now using dailywave files with MJD names
+        if waveid lt 1e7 then $
+          wavefile = apogee_filename('Wave',num=waveid,chip='c',/dir)+strtrim(waveid,2)
+      endif
       wavedir = apogee_filename('Wave',num=0,chip='a',/dir)
       expdir = apogee_filename('2D',num=num,chip='a',/dir)
       AP2DPROC,expdir+'/'+string(format='(i8.8)',num),$
