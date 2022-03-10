@@ -1519,7 +1519,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mksparse', **slurmpars)
-    for i in range(len(littdict)):
+    for i in range(len(sparsedict)):
         name = sparsedict['name'][i]
         if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
             outfile = load.filename('Sparse',num=name,chips=True)
@@ -1549,6 +1549,49 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
     else:
         logger.info('No master Sparse calibration files need to be run')
+    del queue    
+
+
+    # Make Model PSFs in parallel
+    #--------------------------
+    modelpsfdict = allcaldict['modelpsf']
+    logger.info('')
+    logger.info('------------------------------------')
+    logger.info('Making master Model PSFs in parallel')
+    logger.info('====================================')
+    logger.info('Slurm settings: '+str(slurmpars))
+    queue = pbsqueue(verbose=True)
+    queue.create(label='mkmodelpsf', **slurmpars)
+    for i in range(len(modelpsfdict)):
+        name = modelpsfdict['name'][i]
+        if np.sum((mjds >= modelpsfdict['mjd1'][i]) & (mjds <= modelpsfdict['mjd2'][i])) > 0:
+            outfile = load.filename('Modelpsf',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mkmodelpsf-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --modelpsf '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            #logfiles.append(logfile1)
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                if load.exists('Modelpsf',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[i] = False
+            if docal[i]:
+                logger.info('Modelpsf file %d : %s' % (i+1,name))
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
+                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+    if np.sum(docal)>0:
+        queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+queue.key)
+        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+    else:
+        logger.info('No master Model PSF calibration files need to be run')
     del queue    
 
 
@@ -1605,7 +1648,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklsf', **slurmpars)
-    for i in range(len(littdict)):
+    for i in range(len(lsfdict)):
         name = lsfdict['name'][i]
         if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:
             outfile = load.filename('LSF',num=name,chips=True)

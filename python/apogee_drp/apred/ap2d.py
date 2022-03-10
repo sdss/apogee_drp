@@ -27,7 +27,7 @@ def errout(data):
     return data
     
 def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
-             outdir=None,clobber=False,fixbadpix=False,
+             modelpsffile=None,outdir=None,clobber=False,fixbadpix=False,
              fluxcalfile=None,responsefile=None,wavefile=None,skywave=False,
              plugmap=0,highrej=7,lowrej=10,recenterfit=False,recenterln2=False,fitsigma=False,
              refpixzero=False,outlong=False,nowrite=False,npolyback=0,
@@ -53,7 +53,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
           2-PSF image extraction
           3-Gaussian PSF fitting extraction
           4-Jon's Empirical PSF extraction
-          5-Full Gaussian-Hermite PSF fitting extraction
+          5-Model PSF extraction
     apred : str, optional
         The APOGEE reduction version, e.g. 'daily'.
     telescope : str, optional
@@ -61,6 +61,10 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     load : ApLoad
         The ApLoad object.  Either this must be input or
           apred and telescope
+    modelpsffile : str
+        The name of the Model PSF calibration file to
+          use. This should also be the directory
+          and "base" name or ID concatenated.
     outdir : str, optional
         The output directory.  By default the 1D extracted
           files are written to the same directory that
@@ -157,7 +161,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     # Need load or apred+telescope
     if apred is None and telescope is None and load is None:
         raise ValueError(' Must input load or apred+telescope')
-     
+    if load is None:
+        load = apload.ApLoad(apred=apred,telescope=telescope)
+
     # outdir must be a string outdir must be a string 
     #if size(outdir,/type) != 7:if size(outdir,/type) != 7: 
     #  print('outdir must be a string'  print('outdir must be a string' 
@@ -503,7 +509,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                      
             # Recenter, shift the traces recenter, shift the traces 
             if recenterfit or recenterln2: 
-                tracest['coef'][0] += xshift 
+                tracestr['coef'][0] += xshift 
                 tracestr['gaussy'] += xshift 
                 if recenterfit and not recenterln2: 
                     head['HISTORY'] = leadstr+' /RECENTERFIT set, shifting traces by %0.3f' % xshift
@@ -671,12 +677,24 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             outstr,back,ymodel = psf.extract(chstr,epsf,outstr,scat=True)
 
      
-        # Full Gaussian-Hermite PSF fitting
-        #----------------------------------
+        # Model PSF extraction
+        #---------------------
         elif extract_type==5:
             if not silent: 
-                print('Full Gaussian-Hermite psf fitting is not supported yet')
-            return [],[]
+                print('Using Model PSF extraction')
+         
+            # Update header
+            head['HISTORY'] = leadstr+'Extract_type=5 - Model PSF Extraction'
+            head['EXTRTYPE'] = 5,'Extraction Type' 
+
+            if modelpsffile is None:
+                raise ValueError('Need Model PSF file for Model PSF Extraction')
+            modelpsfid = os.path.basename(modelpsffile)
+            modelpsffile1 = load.filename('PSFModel',num=modelpsfid,chips=True).replace('PSFModel-','PSFModel-'+chiptag[i]+'-')
+            epsf = psf.PSF.read(modelpsffile1)
+            tracefile = load.filename('ETrace',num=psfframeid,chips=True).replace('ETrace-','ETrace-'+chiptag[i]+'-')
+            outstr,back,ymodel = psf.extractwing(chstr,epsf,tracefile)
+
  
         t2 = time.time()
         #import pdb; pdb.set_trace()
