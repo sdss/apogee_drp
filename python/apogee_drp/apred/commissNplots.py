@@ -488,9 +488,14 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
                     if ichip == 1: gfile = gfile.replace('-a-', '-b-')
                     if ichip == 2: gfile = gfile.replace('-a-', '-c-')
                     cflux = fits.getdata(gfile)
-                    pdb.set_trace()
-                    msky = np.nanmedian(cflux[299-gdind], axis=0)
                     oneDflux = load.apread('1D', num=int(snum))[ichip].flux
+                    contcheck = np.nanmedian(oneDflux[:,299-gdind], axis=0)
+                    medall = np.nanmedian(contcheck)
+                    stdall = np.nanstd(contcheck)
+                    gdsky, = np.where(contcheck < medall+stdall)
+                    pdb.set_trace()
+                    gdind = gdind[gdsky]
+                    msky = np.nanmedian(cflux[299-gdind], axis=0)
                     msky0 = np.nanmedian(oneDflux[:,299-gdind], axis=1)
                     #pdb.set_trace()
                     for iline in range(nskylines):
