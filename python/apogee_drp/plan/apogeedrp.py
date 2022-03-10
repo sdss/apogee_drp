@@ -23,6 +23,7 @@ import time
 import traceback
 import subprocess
 
+chips = ['a','b','c']
 
 def lastnightmjd5():
     """ Compute last night's MJD."""
@@ -1146,14 +1147,15 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
                     
         # Link all of the PSF files in the PSF library
-        dpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+load.apred+'/monitor/'+load.instrument+'DomeFlatTrace-all.fits'
-        qpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+load.apred+'/monitor/'+load.instrument+'QuartzFlatTrace-all.fits'
+        logger.info('Creating symlinks for PSF library files')
+        sload = apload.ApLoad(apred=linkvers,telescope=load.telescope)
+        dpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+load.instrument+'DomeFlatTrace-all.fits'
+        qpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+load.instrument+'QuartzFlatTrace-all.fits'
         dpsf = Table.read(dpsflibraryfile)
         qpsf = Table.read(qpsflibraryfile)
         # Loop over the files and link them
         psfid = np.hstack((np.array(dpsf['PSFID']),np.array(qpsf['PSFID'])))
         psfid = np.unique(psfid)
-        sload = apload.ApLoad(apred=linkvers,telescope=load.telescope)
         for i in range(len(psfid)):
             srcfile = sload.filename('PSF',num=psfid[i],chips=True)
             destfile = load.filename('PSF',num=psfid[i],chips=True)
@@ -1161,7 +1163,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                 srcfile1 = srcfile.replace('PSF-','PSF-'+ch+'-')
                 destfile1 = destfile.replace('PSF-','PSF-'+ch+'-')
                 subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
-                import pdb; pdb.set_trace()
 
         return
 
