@@ -492,7 +492,7 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
                     contcheck = np.nanmedian(oneDflux[:,299-gdind], axis=0)
                     medall = np.nanmedian(contcheck)
                     stdall = np.nanstd(contcheck)
-                    gdsky, = np.where(contcheck < medall+stdall)
+                    gdsky, = np.where((contcheck < medall+stdall) & (contcheck > 0))
                     pdb.set_trace()
                     gdind = gdind[gdsky]
                     msky = np.nanmedian(cflux[299-gdind], axis=0)
