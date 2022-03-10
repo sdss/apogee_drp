@@ -1178,13 +1178,11 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                     destfile1 = destfile.replace('PSF-','PSF-'+ch+'-')
                     if os.path.exists(srcfile1):
                         subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
-                    srcfile1 = srcfile.replace('PSF-','EPSF-'+ch+'-')
-                    destfile1 = destfile.replace('PSF-','EPSF-'+ch+'-')
-                    if os.path.exists(srcfile1):
+                        srcfile1 = srcfile.replace('PSF-','EPSF-'+ch+'-')
+                        destfile1 = destfile.replace('PSF-','EPSF-'+ch+'-')
                         subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
-                    srcfile1 = sload.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
-                    destfile1 = load.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
-                    if os.path.exists(srcfile1):
+                        srcfile1 = sload.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
+                        destfile1 = load.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
                         subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
 
         return

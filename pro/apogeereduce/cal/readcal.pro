@@ -41,7 +41,7 @@
 
 pro readcal,file,darkstr,flatstr,sparsestr,fiberstr,badfiberstr,fixfiberstr,wavestr,$
             lsfstr,bpmstr,fluxstr,detstr,littrowstr,persiststr,persistmodelstr,$
-            responsestr,multiwavestr
+            responsestr,multiwavestr,modelpsfstr
 
 ;; Read all the lines in the calibration listfile
 openr, lun, /get_lun, file
@@ -102,6 +102,21 @@ for i=0,n_elements(sparse)-1 do begin
     reads,fields[7],maxread
     str = {mjd1:mjd1, mjd2:mjd2, name:name, frames:frames, darkframes:darkframes, dmax:dmax, maxread:maxread}
     if i eq 0 then sparsestr=str else sparsestr = struct_append(sparsestr,str)
+  endif
+endfor
+
+;; Extract the model PSF information
+modelpsf = where(strpos(line,'modelpsf') eq 0)
+for i=0,n_elements(modelpsf)-1 do begin
+  if modelpsf[i] ge 0 then begin
+    fields = strsplit(line(modelpsf[i]),/extract)
+    reads,fields[1],mjd1
+    reads,fields[2],mjd2
+    reads,fields[3],name
+    reads,fields[4],sparseid
+    reads,fields[5],psfid
+    str = {mjd1:mjd1, mjd2:mjd2, name:name, sparse:sparseid, psf:psf}
+    if i eq 0 then modelpsfestr=str else modelpsfstr = struct_append(modelpsfstr,str)
   endif
 endfor
 

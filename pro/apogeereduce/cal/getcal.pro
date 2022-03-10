@@ -26,6 +26,7 @@
 ;  =persistid       Persistence calibration frame number.
 ;  =persistmodelid  Persistesnce model calibration frame number.
 ;  =responseid      Response calibration frame number.
+;  =modelpsfid      Model PSF calibration frame number.
 ;
 ; USAGE:
 ;  IDL>getcal,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid
@@ -39,12 +40,12 @@ pro getcal,mjd,file,darkid=darkid,flatid=flatid,sparseid=sparseid,bpmid=bpmid,$
            waveid=waveid,multiwaveid=multiwaveid,lsfid=lsfid,fluxid=fluxid,$
            detid=detid,fiberid=fiberid,badfiberid=badfiberid,fixfiberid=fixfiberid,$
            littrowid=littrowid,persistid=persistid,persistmodelid=persistmodelid,$
-           responseid=responseid
+           responseid=responseid,modelpsfid=modelpsfid
 
   ;; Get the calibration files for desired date (mjd) from master calibration index (file)
   readcal,file,darkstr,flatstr,sparsestr,fiberstr,badfiberstr,fixfiberstr,wavestr,$
           lsfstr,bpmstr,fluxstr,detstr,littrowstr,persiststr,persistmodelstr,$
-          responsestr,multiwavestr
+          responsestr,multiwavestr,modelpsfstr
   darkid = readcalstr(darkstr,mjd)
   flatid = readcalstr(flatstr,mjd)
   sparseid = readcalstr(sparsestr,mjd)
@@ -61,10 +62,12 @@ pro getcal,mjd,file,darkid=darkid,flatid=flatid,sparseid=sparseid,bpmid=bpmid,$
   persistid = readcalstr(persiststr,mjd)
   persistmodelid = readcalstr(persistmodelstr,mjd)
   responseid = readcalstr(responsestr,mjd)
+  modelpsfid = readcalstr(modelpsfstr,mjd)
   print,'  dark: ', darkid
   print,'  flat: ', flatid
   print,'  bpm: ', bpmid
   print,'  sparse: ', sparseid
+  print,'  modelpsf: ', modelpsfid
   print,'  fiber: ', fiberid
   print,'  badfiber: ', badfiberid
   print,'  fixfiber: ', fixfiberid

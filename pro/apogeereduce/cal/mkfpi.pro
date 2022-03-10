@@ -78,7 +78,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   spawn,cmd,/noshell
 
   ;; Check that the calibration file was successfully created
-  outfile = wavedir+repstr(file,'apWaveFPI-','apWaveFPI-a-')
+  outfile = wavedir+repstr(file,dirs.prefix+'WaveFPI-',dirs.prefix+'WaveFPI-a-')
   if file_test(outfile) then begin
     openw,lock,/get_lun,wavedir+file+'.dat'
     free_lun,lock

@@ -165,11 +165,6 @@ class PSFProfile(object):
         new._coef = self._coef / other._coef
         return new
     
-        
-    # add some arithemtic so that you can ADD profiles together
-    # this will also add the coefficients
-        
-    
 class PSF(object):
 
     def __init__(self,data,nxgrid=20,nygrid=50,kind='ann',log=True):
@@ -384,7 +379,7 @@ class PSF(object):
         
         return profile
 
-    # Make make a new method that does the interpolation for an entire fiber all at once (all 2048 pixels)
+    # Make a new method that does the interpolation for an entire fiber all at once (all 2048 pixels)
     # might allow for some speedups.  Would need to have y values (trace) input.
     def fiber(self,y):
         """ Construct profiles for all columns of a fiber."""
@@ -468,6 +463,20 @@ class PSF(object):
         self._ygrid = ygrid
         self._nygrid = ny 
         self._grid = grid
+
+
+    def write(self,outfile):
+        # Write to a file
+        hdu = fits.HDUList()
+        hdu.append(fits.ImageHDU(self._grid))
+        hdu[0].header['TYPE'] = self.kind
+        hdu[0].header['LOG'] = self._log
+        hdu[0].header['COMMENT'] = 'Data (log)'
+        hdu.append(fits.ImageHDU(self._labels))
+        hdu[1].header['COMMENT'] = 'Labels'
+        hdu.append(fits.ImageHDU(self.y))
+        hdu[2].header['COMMENT'] = 'x'
+        hdu.writeto(outfile,overwrite=True)
     
     @classmethod
     def read(cls,infile):
@@ -1044,7 +1053,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
     Parameters
     ----------
     frame : dict
-       The 2D input structure with FLUX, VAR and MASK.
+       The 2D input structure with flux, err, mask and header.
     epsf : list
        A list with the empirical PSF.
     doback : boolean, optional
@@ -1064,6 +1073,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
 
     Example
     -------
+
     outstr,back,model = extract(frame,epsf)
 
     By J. Holtzman  2011
@@ -1278,7 +1288,25 @@ def func_poly2d(inp,*args):
     
 def getoffset(frame,traceim):
     """
-    Measure the offset of an object exposure and the PSF model/traces.
+    Measure the spatial offset of an object exposure and the PSF model/traces.
+
+    Parameters
+    ----------
+    frame : dict
+       The 2D input structure with flux, err, mask and header.
+    traceim : numpy array
+       APOGEE trace information (Y-position) from a trace file [Nfibers, 2048].
+
+    Returns
+    -------
+    offcoef : numpy array
+       Offset coefficients (4-elements) of the 2D linear equation: c0 + c1*X + c2*X*Y + c3*Y
+
+    Example
+    -------
+
+    offcoef = getoffset(frame,traceim)
+
     """
     
     # Find bright fibers and measure the centroid
@@ -1348,8 +1376,31 @@ def getoffset(frame,traceim):
 
 
 def fullepsfgrid(psf,traceim,offcoef,verbose=True):
-    """ Generate a full EPSF grid for all fibers and columns and dealing with offsets."""
+    """
+    Generate a full EPSF grid for all fibers and columns and applying spatial offsets.
 
+    Parameters
+    ----------
+    psf : 
+       PSF information.
+    traceim : numpy array
+       APOGEE trace information (Y-position) from a trace file [Nfibers, 2048].
+    offcoef : numpy array
+       Offset coefficients (4-elements) of the 2D linear equation: c0 + c1*X + c2*X*Y + c3*Y
+    verbose : boolean, optional
+       Verbose output to the screen.
+
+    Returns
+    -------
+    epsf : list
+      Empirical PSF model for the full image.
+
+    Example
+    -------
+
+    epsf = fullepsfgrid(psf,traceim,offcoef)
+
+    """
     
     nfibers = traceim.shape[0]
     
@@ -1393,9 +1444,35 @@ def fullepsfgrid(psf,traceim,offcoef,verbose=True):
         
 
 def extractwing(frame,psf,tracefile):
-    """ Extract taking wings into account."""
+    """
+    Extract taking wings into account.
 
-    # ideas for extraction with wings if I can't fit fiber and 4 neighbors simultaneously:
+    Parameters
+    ----------
+    frame : dict
+       The 2D input structure with flux, err, mask and header.
+    psf : str or PSF object
+       PSF model filename or PSF object.
+    tracefile : str
+       Name of the trace filename.
+
+    Returns
+    -------
+    outstr : dict
+        The 1D output structure with FLUX, VAR and MASK.
+    back : numpy array
+        The background
+    model : numpy array
+        The model 2D image
+
+    Example
+    -------
+
+    outstr,back,model = extractwing(frame,psf,tracefile)
+
+    """
+
+    # Ideas for extraction with wings if I can't fit fiber and 4 neighbors simultaneously:
     # 1) do usual fiber + 2 neighbor extraction using narrower profile
     # 2) create model using the broad profile and find the residual of data-model.
     # 3) loop through each fiber and add its broad profile back in (this is the same as
