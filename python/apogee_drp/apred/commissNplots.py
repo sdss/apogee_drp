@@ -488,14 +488,19 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
                     if ichip == 1: gfile = gfile.replace('-a-', '-b-')
                     if ichip == 2: gfile = gfile.replace('-a-', '-c-')
                     cflux = fits.getdata(gfile)
-                    msky = np.nanmedian(cflux[299-gdind], axis=0)
                     oneDflux = load.apread('1D', num=int(snum))[ichip].flux
+                    contcheck = np.nanmedian(oneDflux[:,299-gdind], axis=0)
+                    medall = np.nanmedian(contcheck)
+                    stdall = np.nanstd(contcheck)
+                    gdsky, = np.where((contcheck < medall+stdall) & (contcheck > 0))
+                    gdind = gdind[gdsky]
+                    msky = np.nanmedian(cflux[299-gdind], axis=0)
                     msky0 = np.nanmedian(oneDflux[:,299-gdind], axis=1)
-                    #pdb.set_trace()
                     for iline in range(nskylines):
                         lstart = int(round(skylines[ichip, iline] - pixrad))
                         lstop  = int(round(skylines[ichip, iline] + pixrad))
                         resid[iexp, ichip, iline] = (np.nansum(np.absolute(msky[lstart:lstop])) / np.nansum(np.absolute(msky0[lstart:lstop]))) * 100.0
+                        if cont: (np.nansum(msky[lstart:lstop]) / np.nansum(msky0[lstart:lstop])) * 100.0
             except:
                 print('problem')
 
@@ -503,11 +508,12 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
     for ax in axes:
         chip = chips[2-ichip]
         for iline in range(nskylines):
-            med = np.nanmedian(resid[:, ichip, iline])
+            gd, = np.where(resid[:, ichip, iline] < 50)
+            med = np.nanmedian(resid[gd, ichip, iline])
             ax.axhline(y=med, color=colors[iline], linestyle='dashed')
             c = colors[iline]
-            x = [jd, jd]
-            y = [resid[:, ichip, iline], resid[:, ichip, iline]]
+            x = [jd[gd], jd[gd]]
+            y = [resid[gd, ichip, iline], resid[gd, ichip, iline]]
             lab = str(int(round(skylines[ichip, iline]))).rjust(4) + '  (' + str("%.2f" % round(med, 2)) + '%)'
             ax.scatter(x, y, marker=skysyms[iline], s=25, c=c, alpha=0.7, zorder=50, label=lab)
 
@@ -516,7 +522,10 @@ def skysub(dosky=True, xmin=59597, ajd=None, resid=None, cont=False):
         ax.text(0.03,0.94,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, ha='center', va='top', color=chip, bbox=bboxpar)
         ax.text(0.93, 0.85, 'airglow' + '\n' + 'pixel', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
         ax.text(0.97, 0.85, 'median' + '\n' + 'resid', transform=ax.transAxes, ha='center', va='bottom', color='k', bbox=bboxpar, fontsize=fsz*0.9)
-        ax.legend(loc=[0.9,0.45], labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz*0.9, edgecolor='k', framealpha=1)
+        if cont:
+            ax.legend(loc=[0.9,0.63], labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz*0.9, edgecolor='k', framealpha=1)
+        else:
+            ax.legend(loc=[0.9,0.45], labelspacing=0.5, handletextpad=-0.1, markerscale=2, fontsize=fsz*0.9, edgecolor='k', framealpha=1)
 
     fig.subplots_adjust(left=0.05,right=0.985,bottom=0.065,top=0.98,hspace=0.2,wspace=0.00)
     plt.savefig(plotfile)
