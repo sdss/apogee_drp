@@ -117,7 +117,7 @@ xspan = xmax-xmin
 ###########################################################################################
 def telescopePos(field='17049', star='2M07311564+3145469'):
     # telescopePosPerform.png
-    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePosPerform.png'
+    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePosPerform_' + star + '.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     p, = np.where((allsnr['FIELD'] == field) & (allsnr['exptime'] == 457))
