@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import numpy as np
-from ..utils import plan,apload,platedata
+from ..utils import plan,apload,platedata,utils
 from . import psf,wave
 from dlnpyutils import utils as dln
 from astropy.io import fits
@@ -691,10 +691,11 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 raise ValueError('Need Model PSF file for Model PSF Extraction')
             modelpsfid = os.path.basename(modelpsffile)
             modelpsffile1 = load.filename('PSFModel',num=modelpsfid,chips=True).replace('PSFModel-','PSFModel-'+chiptag[i]+'-')
-            epsf = psf.PSF.read(modelpsffile1)
+            head['HISTORY'] = 'Model PSF file: '+modelpsffile1
             tracefile = load.filename('ETrace',num=psfframeid,chips=True).replace('ETrace-','ETrace-'+chiptag[i]+'-')
             chstr['header'] = head
-            outstr,back,ymodel = psf.extractwing(chstr,epsf,tracefile)
+            epsffile1 = epsffiles[i]
+            outstr,back,ymodel = psf.extractwing(chstr,modelpsffile1,epsffile1,tracefile)
             head = outstr['header']
  
         t2 = time.time()
@@ -779,7 +780,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             if not silent: 
                 print('Writing 2D model to: ',modelfile)
             hdu = fits.HDUList()
-            hdu.append(fits.PrimaryHDU(ymodel))
+            hdu.append(fits.PrimaryHDU(ymodel.astype(np.float32)))
             hdu.writeto(modelfile,overwrite=True)
             hdu.close()
             #    # compress model and 2D image done in ap2d
@@ -1017,6 +1018,11 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             apexp = planstr['APEXP']
             apexp = dln.addcatcols(apexp,np.dtype([('psfid',int)]))
             planstr['APEXP'] = apexp
+
+        if 'modelpsf' in planstr.keys():
+            modelpsf = planstr['modelpsf']
+        else:
+            modelpsf = 0
  
         # Use domeflat/quartzflat PSF library
         #------------------------------------
@@ -1026,7 +1032,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             planpsflibrary = planstr['psflibrary']
         else: 
             planpsflibrary = None
-        if psflibrary or planstr['psfid']==0 or planpsflibrary:
+        if (psflibrary or planstr['psfid']==0 or planpsflibrary) and modelpsf==0:
             usepsflibrary = True
         else:
             usepsflibrary = False
@@ -1038,23 +1044,22 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             # force single domeflat if a short visit or domelibrary=='single'
             observatory = planstr['telescope'][0:3]
             if str(psflibrary) == 'single' or str(planpsflibrary) == 'single' or len(planstr['APEXP']) <= 3: 
-                out = subprocess.run(['psflibrary',observatory,'--planfile',planfile,'--s'],shell=False)
+                out = subprocess.check_output(['psflibrary',observatory,'--planfile',planfile,'--s'],shell=False)
             else: 
-                out = subprocess.run(['psflibrary',observatory,'--planfile',planfile],shell=False)
+                out = subprocess.check_output(['psflibrary',observatory,'--planfile',planfile],shell=False)
+            out = out.decode().split('\n')
             nout = len(out) 
-            for f in range(nout): 
-                print(out[f])
             # parse the output parse the output 
-            lo = re.search(out,'^PSF FLAT RESULTS:')
-            hi = np.where((str(out)=='') & (np.arange(nout) > lo[0]))[0][0]
+            lo = dln.grep(out,'^PSF FLAT RESULTS:',index=True)[0]
+            hi = np.where((np.char.array(out)=='') & (np.arange(nout) > lo))[0][0]
             if lo == -1 or hi == -1: 
                 print('Problem running psflibrary for '+planfile+'. Skipping this planfile.')
                 continue 
-            outarr = out[lo+1:hi].split()
-            ims = outarr[0,:]
-            psfflatims = outarr[1,:]
+            outarr = [o.split() for o in out[lo+1:hi]]
+            ims = np.array([int(o[0]) for o in outarr])
+            psfflatims = np.array([int(o[1]) for o in outarr])
             # update planstr
-            ind1,ind2,vals = np.intersect1d(apexp['name'],ims)
+            vals,ind1,ind2 = np.intersect1d(apexp['name'],ims,return_indices=True)
             planstr['APEXP']['psfid'][ind1] = psfflatims[ind2] 
             planstr['psfid'] = psfflatims[0]
         else: 
@@ -1105,7 +1110,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                         print( 'halt: tracefile ', tracefiles[ichip],' does not have 300 traces')
  
         # apWave files : wavelength calibration
-        waveid = planstr['waveid']
+        waveid = int(planstr['waveid'])
         if 'platetype' in planstr.keys():
             if planstr['platetype'] == 'cal' or planstr['platetype'] == 'extra': 
                 waveid = 0 
@@ -1127,7 +1132,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
 
         # FPI calibration file
         if 'fpi' in planstr.keys():
-            fpiid = planstr['fpi']
+            fpiid = int(planstr['fpi'])
         else: 
             fpiid = 0 
  
@@ -1177,14 +1182,16 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
          
         # Model PSF files
         if 'modelpsf' in planstr.keys():
-            if load.exists('ModelPSF',num=planstr['modelpsf']):
-                print(load.filename('ModelPSF',num=planstr['modelpsf'])+' exists already')
+            if load.exists('PSFModel',num=planstr['modelpsf']):
+                print(load.filename('PSFModel',num=planstr['modelpsf'],chips=True)+' exists already')
             else:
                 sout = subprocess.run(['makecal','--modelpsf',str(planstr['responseid'])],shell=False)
-            modelpsffiles = load.filename('ModelPSF',num=planstr['modelpsf'],chips=True)
-            modelpsffiles = [modelpsffiles.replace('ModelPSF-','ModelPSF-'+ch+'-') for ch in chiptag]
+            print('Using Model PSF: '+str(modelpsf))
+            modelpsffiles = load.filename('PSFModel',num=planstr['modelpsf'],chips=True)
+            modelpsffiles = [modelpsffiles.replace('PSFModel-','PSFModel-'+ch+'-') for ch in chiptag]
             modelpsffile = os.path.dirname(modelpsffiles[0])+'/'+str(planstr['modelpsf'])
             modelpsftest = [os.path.exists(t) for t in modelpsffiles]
+            exttype = 5
             if np.sum(modelpsftest) != 3:
                 bd1, = np.where(np.array(modelpsftest)==False)
                 nbd1 = len(bd1)
@@ -1300,20 +1307,20 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         if waveid > 0 or fpiid > 0: 
             cmd = ['ap1dwavecal',planfile] 
 
-            # check if there is fpi flux in the 2 fibers
+            # Check if there is FPI flux in the 2 fibers
             if fpiid > 0: 
-                outfile1 = apogee_filename('1d',num=framenum,chip='b') 
-                if os.path.exists(outfile1) == 0: 
-                    print(outfile1,' not found')
+                outfile1 = load.filename('1D',num=framenum,chips=True).replace('1D-','1D-b-')
+                if os.path.exists(outfile1)==False: 
+                    print(outfile1+' not found')
                     return      
                 head0 = fits.getheader(outfile1,0)
                 nread = head0['nread']
                 exptime = head0['exptime']
-                flux, head = fits.getdata(outfile1,1)
-                flux1 = flux[:,[75,225]]
+                flux, head = fits.getdata(outfile1,1,header=True)
+                flux1 = flux[[75,225],:]
                 # average on the level of the lsf, ~13 pixels
-                bflux1 = flux1[0:157*13].reshape(157,2).sum(axis=1) 
-                medbflux = np.median(bflux1) 
+                bflux1 = flux1[:,0:157*13].reshape(2,157,13).mean(axis=2) 
+                medbflux = np.nanmedian(bflux1) 
                 medbfluxnread = medbflux/nread
                 # flux/nreads ~65 for FPI (chip b)  
                 if medbfluxnread < 20: 
@@ -1321,26 +1328,28 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                     fpiid = 0 
 
             if fpiid > 0:  # use FPI lines
-                cmd = [cmd,'--fpiid',str(fpiid)] 
+                cmd += ['--fpiid',str(fpiid)] 
             else:  # use sky lines
                 if skywave==False:
-                    cmd = [cmd,'--nosky']
+                    cmd += ['--nosky']
             sout = subprocess.run(cmd,shell=False)
      
         # Compress 2D files
         nframes = len(planstr['APEXP']) 
         for j in range(nframes): 
-            files = apogee_filename('2d',num=planstr['APEXP']['name'][j],chip=chiptag) 
-            modfiles = apogee_filename('2dmodel',num=planstr['APEXP']['name'][j],chip=chiptag) 
+            files = load.filename('2D',num=planstr['APEXP']['name'][j],chips=True)
+            files = [files.replace('2D-','2D-'+ch+'-') for ch in chiptag]
+            modfiles = load.filename('2Dmodel',num=planstr['APEXP']['name'][j],mjd=load.cmjd(planstr['APEXP']['name'][j]),chips=True)
+            modfiles = [modfiles.replace('2Dmodel-','2Dmodel-'+ch+'-') for ch in chiptag]
             for jj in range(len(files)): 
                 if os.path.exists(files[jj]): 
                     if os.path.exists(files[jj]+'.fz'): os.remove(files[jj]+'.fz')
-                    # spawn,['fpack','-d','-y',files[jj]],/noshell
+                #sout = subprocess.run(['fpack','-D','-Y',files[jj]],shell=False)
                 if os.path.exists(modfiles[jj]): 
                     if os.path.exists(modfiles[jj]+'.fz'): os.remove(modfiles[jj]+'.fz')
-                sout = subprocess.run(['fpack','-d','-y',modfiles[jj]],shell=False)
+                sout = subprocess.run(['fpack','-D','-Y',modfiles[jj]],shell=False)
                               
-        writelog(logfile,'AP2D: '+os.path.basename(planfile)+('%.1f' % time.time()-t0))
+        utils.writelog(logfile,'AP2D: '+os.path.basename(planfile)+('%.1f' % (time.time()-t0)))
  
     del epsfchip 
 
