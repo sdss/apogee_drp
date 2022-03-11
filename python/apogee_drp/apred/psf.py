@@ -975,7 +975,7 @@ def scat_remove(a,scat=None,mask=None):
         bot = np.nanmedian(flux[100:1948,5:11])
         top = np.nanmedian(flux[100:1948,2038:2043])
         scatlevel = (bot+top)/2.
-        print('scatlevel: ',scatlevel)
+        print('scatlevel: %.5f ' % scatlevel)
         flux -= scatlevel
 
     else:
@@ -1447,7 +1447,7 @@ def getoffset(frame,traceim):
     return coef2,medoff
 
 
-def fullepsfgrid(psf,traceim,offcoef,verbose=True):
+def fullepsfgrid(psf,traceim,fibers,offcoef,verbose=True):
     """
     Generate a full EPSF grid for all fibers and columns and applying spatial offsets.
 
@@ -1457,6 +1457,8 @@ def fullepsfgrid(psf,traceim,offcoef,verbose=True):
        PSF information.
     traceim : numpy array
        APOGEE trace information (Y-position) from a trace file [Nfibers, 2048].
+    fibers : list or numpy array
+       List of fiber numbers.
     offcoef : numpy array
        Additive offset coefficients (4-elements) of the 2D linear equation:
          c0 + c1*X + c2*X*Y + c3*Y
@@ -1471,15 +1473,17 @@ def fullepsfgrid(psf,traceim,offcoef,verbose=True):
     Example
     -------
 
-    epsf = fullepsfgrid(psf,traceim,offcoef)
+    epsf = fullepsfgrid(psf,traceim,fibers,offcoef)
 
     """
     
     nfibers = traceim.shape[0]
-    
+    if nfibers != len(fibers):
+        raise ValueError('traceim dimensions do NOT agree with fibers')
+
     epsf = []
     # Fiber loop
-    for i in range(nfibers):
+    for i in range(len(fibers)):
         if verbose:
             if i % 50==0: print('fiber = ',i)
         off = func_poly2d([np.arange(2048),traceim[i,:]],*offcoef)
@@ -1499,13 +1503,13 @@ def fullepsfgrid(psf,traceim,offcoef,verbose=True):
             m1 /= np.sum(m1)
             img[:,j] = m1
                 
-        data = {'fiber':i, 'lo':ylo, 'hi':yhi, 'img':img, 'ycen':ycen}
+        data = {'fiber':fibers[i], 'lo':ylo, 'hi':yhi, 'img':img, 'ycen':ycen}
         epsf.append(data)
         
     return epsf
         
 
-def extractwing(frame,psf,tracefile):
+def extractwing(frame,modelpsffile,epsffile,tracefile):
     """
     Extract taking wings into account.
 
@@ -1513,8 +1517,10 @@ def extractwing(frame,psf,tracefile):
     ----------
     frame : dict
        The 2D input structure with flux, err, mask and header.
-    psf : str or PSF object
-       PSF model filename or PSF object.
+    modelpsffile : str
+       Model PSF filename.
+    epsffile : str
+       Name of the EPSF filename.
     tracefile : str
        Name of the trace filename.
 
@@ -1530,7 +1536,7 @@ def extractwing(frame,psf,tracefile):
     Example
     -------
 
-    outstr,back,model = extractwing(frame,psf,tracefile)
+    outstr,back,model = extractwing(frame,modelpsffile,epsffile,tracefile)
 
     """
 
@@ -1544,9 +1550,7 @@ def extractwing(frame,psf,tracefile):
     # -could do this just around bright stars?
 
     # Load PSF
-    if type(psf) is not PSF:
-        psffile = psf
-        psf = PSF.read(psffile)
+    psf = PSF.read(modelpsffile)
 
     # Load the data
     if type(frame) is str:
@@ -1556,16 +1560,24 @@ def extractwing(frame,psf,tracefile):
     traceim = fits.getdata(tracefile,0)  # [Nfibers,2048]
     nfibers,npix = traceim.shape
 
+    # Load the EPSF fiber information
+    # Need this to get the missing fiber numbers
+    hdu = fits.open(epsffile)
+    fibers = []
+    for i in np.arange(1,len(hdu)):
+        fibers.append(hdu[i].data['FIBER'][0])
+    hdu.close()
+
     # Step 1) Measure the offset
     #  returns 2D linear of the offset
     #  c0 + c1*x + c2*x*y + c3*y
-    offcoef,medoff =  getoffset(frame,traceim)
+    offcoef,medoff = getoffset(frame,traceim)
 
     # Step 2) Generate full PSFs for this image
     # Generate the input that extract() expects
     # this currently takes about 176 sec. to run
     print('Generating full EPSF grid with spatial offsets')
-    epsf = fullepsfgrid(psf,traceim,offcoef)
+    epsf = fullepsfgrid(psf,traceim,fibers,offcoef)
     #np.savez('fullepsfgrid.npz',epsf=epsf)
     #epsf = np.load('fullepsfgrid.npz',allow_pickle=True)['epsf']
     
@@ -1577,6 +1589,7 @@ def extractwing(frame,psf,tracefile):
 
     # Add information to header
     out['header']['HISTORY'] = 'psf.extractwing: Extracting '+str(nfibers)+' fibers at '+time.asctime()
+    out['header']['HISTORY'] = 'psf.extractwing: EPSF file: '+epsffile
     out['header']['HISTORY'] = 'psf.extractwing: Median Trace offset %.3f pixels' % medoff
     out['header']['medtroff'] = medoff
     out['header']['HISTORY'] = 'psf.extractwing: Additive trace offset coefficients:'
