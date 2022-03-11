@@ -125,7 +125,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     allsnrg = allsnr[p][uind]
     nexp = len(allsnrg)
 
-    fig = plt.figure(figsize=(20,12))
+    fig = plt.figure(figsize=(30,12))
     ax = plt.subplot2grid((1,1), (0,0))
     ax.minorticks_on()
     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -144,7 +144,10 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TMASS_STYLE'] == star)
-        ax.plot(wave[g][0], flux[g][0])
+        p = ax.plot(wave[g][0], flux[g][0])
+        g, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
+        color = p.get_color()
+        ax.text(0.05, 0.97-.08*iexp, 'alt = ' + str("%.3f" % round(allexp['ALT'][g][0],3)), transform=ax.transAxes, va='top')
 
     fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
