@@ -131,12 +131,14 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     axes = [ax1, ax2]
     for ax in axes:
         ax.minorticks_on()
+        ax.set_xlim(16475, 16945)
         ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
     ax1.axes.xaxis.set_ticklabels([])
     ax1.text(0.5, 1.02, star, transform=ax1.transAxes, ha='center')
+    ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
     for iexp in range(nexp):
@@ -152,7 +154,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             p = ax1.plot(wave[g][0], flux[g][0])
             c = p[0].get_color()
             txt = 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
-            ax1.text(0.05, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
+            ax1.text(0.02, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
 
     fig.subplots_adjust(left=0.07,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
