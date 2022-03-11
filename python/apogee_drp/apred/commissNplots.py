@@ -148,10 +148,9 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         g, = np.where(obj['TMASS_STYLE'] == star)
         if len(g) > 0:
             p = ax1.plot(wave[g][0], flux[g][0])
-            g, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
+            g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
             c = p[0].get_color()
-            ax1.text(0.05, 0.97-.04*iexp, 'alt = ' + str("%.3f" % round(allexp['ALT'][g][0],3)), color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
-            pdb.set_trace()
+            ax1.text(0.05, 0.97-.04*iexp, 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)), color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
 
     fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
