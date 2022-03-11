@@ -1324,7 +1324,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
 
 
     # Put together the output dictionary
-    outstr = {'flux':spec, 'err':err, 'mask':outmask}
+    outstr = {'flux':spec, 'err':err, 'mask':outmask, 'header':frame['header'].copy()}
 
     # Create the Model 2D image
     model = epsfmodel(epsf,spec,subonly=subonly,skip=skip)
@@ -1362,12 +1362,15 @@ def getoffset(frame,traceim):
     Returns
     -------
     offcoef : numpy array
-       Offset coefficients (4-elements) of the 2D linear equation: c0 + c1*X + c2*X*Y + c3*Y
+       Additive offset coefficients (4-elements) of the 2D linear equation:
+          c0 + c1*X + c2*X*Y + c3*Y
+    medoff : float
+       Median offset.
 
     Example
     -------
 
-    offcoef = getoffset(frame,traceim)
+    offcoef,medoff = getoffset(frame,traceim)
 
     """
     
@@ -1378,6 +1381,7 @@ def getoffset(frame,traceim):
     # Loop over X locations
     xx = [512, 1024, 1536]
     coef = np.zeros((len(xx),2),float)
+    alloffset = np.array([],float)
     for i,x in enumerate(xx):
         # Get median flux/centers
         medflux = np.median(flux[:,x-100:x+100],axis=1)
@@ -1408,7 +1412,7 @@ def getoffset(frame,traceim):
             try:
                 pars,perror = dln.gaussfit(yy,ff,initpar=initpar,binned=True,bounds=(-np.inf,np.inf))
                 gcent[j] = pars[1]
-                offset[j] = pars[1]-medcent[j]                
+                offset[j] = pars[1]-medcent[ind]  
             except:
                 gcent[j] = np.nan
                 offset[j] = np.nan
@@ -1420,6 +1424,8 @@ def getoffset(frame,traceim):
         gd, = np.where(np.isfinite(offset) & (np.abs(offset-medoff) < 3*sigoff))
         coef1 = np.polyfit(ycen[gd],offset[gd],1)
         coef[i,:] = coef1
+        alloffset = np.hstack((alloffset,offset))
+
 
     # Fit 2D linear model
     xvals = np.zeros((len(xx),2048),float)
@@ -1434,7 +1440,11 @@ def getoffset(frame,traceim):
     coef2,cov2 = curve_fit(func_poly2d,[xvals.ravel(),yvals.ravel()],zvals.ravel(),p0=initpar)
     coeferr2 = np.sqrt(np.diag(cov2))
 
-    return coef2
+    medoff = np.nanmedian(alloffset)
+    print('Median offset = %.3f pixels' % medoff)
+    print('Offset coefficients = ',coef2)
+
+    return coef2,medoff
 
 
 def fullepsfgrid(psf,traceim,offcoef,verbose=True):
@@ -1448,7 +1458,8 @@ def fullepsfgrid(psf,traceim,offcoef,verbose=True):
     traceim : numpy array
        APOGEE trace information (Y-position) from a trace file [Nfibers, 2048].
     offcoef : numpy array
-       Offset coefficients (4-elements) of the 2D linear equation: c0 + c1*X + c2*X*Y + c3*Y
+       Additive offset coefficients (4-elements) of the 2D linear equation:
+         c0 + c1*X + c2*X*Y + c3*Y
     verbose : boolean, optional
        Verbose output to the screen.
 
@@ -1466,17 +1477,6 @@ def fullepsfgrid(psf,traceim,offcoef,verbose=True):
     
     nfibers = traceim.shape[0]
     
-    ## Loop over X locations
-    #xx = [512, 1024, 1536]
-    #coef = np.zeros((len(xx),2),float)
-    #for i,x in enumerate(xx):
-    #    # Get median flux/centers
-    #    medflux = np.median(flux[:,x-100:x+100],axis=1)
-    #    medcent = np.median(traceim[:,x-100:x+100],axis=1)
-
-    # It should be possible to do linear interpolation of all 2048 profiles
-    # at once without using a loop
-    
     epsf = []
     # Fiber loop
     for i in range(nfibers):
@@ -1489,15 +1489,15 @@ def fullepsfgrid(psf,traceim,offcoef,verbose=True):
         ny = yhi-ylo+1
         y = np.arange(ny)+ylo        
         img = np.zeros((ny,2048),float)
-        #ylo = np.zeros(2048,int)
-        #yhi = np.zeros(2048,int)
         # Column loop
         for j in range(2048):
-            m1 = psf([j,ycen[j]],y=y,ycen=ycen[j])
+            try:
+                m1 = psf([j,ycen[j]],y=y,ycen=ycen[j])
+            except:
+                print('problem')
+                import pdb; pdb.set_trace()
             m1 /= np.sum(m1)
             img[:,j] = m1
-            #ylo[j] = y[0]
-            #yhi[j] = y[-1]
                 
         data = {'fiber':i, 'lo':ylo, 'hi':yhi, 'img':img, 'ycen':ycen}
         epsf.append(data)
@@ -1554,11 +1554,12 @@ def extractwing(frame,psf,tracefile):
         frame = loadframe(framefile)
     # Load the trace imformation
     traceim = fits.getdata(tracefile,0)  # [Nfibers,2048]
-        
+    nfibers,npix = traceim.shape
+
     # Step 1) Measure the offset
     #  returns 2D linear of the offset
     #  c0 + c1*x + c2*x*y + c3*y
-    offcoef =  getoffset(frame,traceim)
+    offcoef,medoff =  getoffset(frame,traceim)
 
     # Step 2) Generate full PSFs for this image
     # Generate the input that extract() expects
@@ -1573,63 +1574,17 @@ def extractwing(frame,psf,tracefile):
     
     # Step 4) Subtract all profiles except the fibers+2 neighbors and refit
     out,back,model = extract(frame,epsf,guess=out1['flux'])
-    
-    import pdb; pdb.set_trace()
+
+    # Add information to header
+    out['header']['HISTORY'] = 'psf.extractwing: Extracting '+str(nfibers)+' fibers at '+time.asctime()
+    out['header']['HISTORY'] = 'psf.extractwing: Median Trace offset %.3f pixels' % medoff
+    out['header']['medtroff'] = medoff
+    out['header']['HISTORY'] = 'psf.extractwing: Additive trace offset coefficients:'
+    out['header']['HISTORY'] = 'psf.extractwing: %.3e %.3e %.3e %.3e' % tuple(offcoef)
+    out['header']['HISTORY'] = 'psf.extractwing: c0 + c1*X + c2*X*Y + c3*Y'
+    out['header']['toffpar0'] = offcoef[0],'constant term'
+    out['header']['toffpar1'] = offcoef[1],'X term'
+    out['header']['toffpar2'] = offcoef[2],'X*Y term'
+    out['header']['toffpar3'] = offcoef[3],'Y term'
     
     return out,back,model
-
-      
-if __name__ == '__main__' :
-
-    psfdir = '/Users/nidever/sdss5/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/'
-    psffile = 'apEPSF-b-39880014.fits'
-    sparsefile = 'apSparse-39870034.fits'
-    allim,head = fits.getdata(psfdir+sparsefile,0,header=True)
-    im = allim[1,:,:]
-    psfhdu = fits.open(psfdir+psffile)
-
-    data = makeprofilegrid(psfdir+psffile,psfdir+sparsefile)
-
-
-    import pdb; pdb.set_trace()
-
-    # Check domeflat vs. quartzflat profile to see if the profile changes
-    # if the light goes through the FPS octagonal fibers or not
-
-    # To combine the 300-fiber quartzflat ("narrow") and sparse data
-    # for each "narrow" profile, find the closest good sparse profile
-    # then scale the narrow profile to the sparse profile for the inner
-    # points (r<4 or so).  Then splice them together, or maybe use
-    # an average in the crossover region
-
-    # Interpolating the profiles
-    # 1) grid interpolation
-    #  Use the whole 3D grid (Nprofile,Nx,Ny) to do interpolation
-    #  For each profile point, we can use RectBivariateSpline
-    #  to get the value for any detector X/Y position.
-
-    # For each fiber, you could interpolate the profile for all columns
-    # at once.  Then use
-
-    # When we do extraction, we do it one column at a time.
-    # We want profiles for all 300 fibers and a single column
-    # take the two closest Y positions in the 3D profile grid
-    # then linearly interpolate (Nprofile,Ny) for those two X points,
-    # Then we have (Nprofile,Ny) for the column of interest.
-    # Use RectBivariateSpline on the (Nprofile,Ny) data for this column
-    # and the trace positions for the 300 fibers for this column to
-    # get full profiles for each fiber (Nprofile,300).
-    # Then get the actual profiles for each fiber using the trace
-    # positions and pixel values (could do the last two steps together).
-    
-    # 2) ANN
-    # train an ANN on the profiles as an emulator
-    # you give it the detector X/Y position and it returns the profile
-    # for that position
-  
-
-    # When we do extraction, we want to solve the three neighbors simultanously
-    # but the wings affect +/-15 pixels or two neighbors on each side.
-    # The pixels nearest the peak have the most weight for solving the fiber's
-    # flux, but wings will affect the solution (especially for bright fibers).
-    

@@ -693,8 +693,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             modelpsffile1 = load.filename('PSFModel',num=modelpsfid,chips=True).replace('PSFModel-','PSFModel-'+chiptag[i]+'-')
             epsf = psf.PSF.read(modelpsffile1)
             tracefile = load.filename('ETrace',num=psfframeid,chips=True).replace('ETrace-','ETrace-'+chiptag[i]+'-')
+            chstr['header'] = head
             outstr,back,ymodel = psf.extractwing(chstr,epsf,tracefile)
-
+            head = outstr['header']
  
         t2 = time.time()
         #import pdb; pdb.set_trace()
