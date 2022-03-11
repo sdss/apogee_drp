@@ -936,60 +936,84 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
 
     Parameters
     ----------
-    files        The filename(s) of an APOGEE chip file, e.g. apR-a-test3.fits
-                   A compressed file can also be input (e.g. apR-a-00000033.apz)
-                   and the file will be automatically uncompressed.
-    outfile      The output filename.  
-    =detcorr     The filename of the detector file (containing gain,
-                   rdnoise, and linearity correction).
-    =bpmcorr     The filename of the bad pixel mask file.
-    =darkcorr    The filaname of the dark correction file.
-    =flatcorr    The filename of the flat field correction file.
-    =littrowcorr The filename of the Littrow ghost mask file.
-    =persistcorr   The filename of the persistence mask file.
-    =persistmodelcorr   The filename for the persistence model parameter file.
-    =histcorr    The filename of the 2D exposure history cube for this night.
-    =crfix       Fix cosmic rays.  This is done by default.
-                  If crfix=0 then cosmic rays are still detected and
-                  flagged in the mask file, but NOT corrected.
-    =satfix      Fix saturated pixels.  This is done by default
-                  If satfix=0 then saturated pixels are still detected
-                  and flagged in the mask file, but NOT corrected - 
-                  instead they are set to 0.  Saturated pixels that are
-                  not fixable ("unfixable", less than 3 unsaturated reads)
-                  are also set to 0.
-    =rd3satfix   Fix saturated pixels for 3 reads, and assume they don't
-                  have CRs.
-    =saturation  The saturation level.  The default is 65000
-    =nfowler      The number of samples to use for the Fowler sampling.
-                  The default is 10
-    /uptheramp   Do up-the-ramp sampling instead of Fowler.  Currently
-                  this does NOT taken throughput variations into account
-                  and is only meant for Darks and Flats
-    /outelectrons  The output images should be in electrons instead of ADU.
-                    The default is ADU.
-    /refonly     Only do reference subtraction of the cube and return.
-                  This is used for creating superdarks.
-    /criter      Iterative CR detection.  Check neighbors of pixels
-                  with detected CRs for CRs as well using a lower
-                  threshold.  This is the default.
-    /clobber     Overwrite output file if it already exists.  clobber=0
-                  by default.
-    /outlong     The output files should use LONG type intead of FLOAT.
-                   This actually takes up the same amount of space, but
-                   this can be losslessly compressed with FPACK.
-    /cleanuprawfile   If a compressed file is input and ap3dproc needs to
-                      Decompress the file (no decompressed file is on disk)
-                      then setting this keyword will delete the decompressed
-                      file at the very end of processing.  This is the default.
-                      Set cleanuprawfile=0 if you want to keep the decompressed
-                      file.  An input decompressed FITS file will always
-                      be kept.
-    /debug       For debugging.  Will make a plot of every pixel with a
-                  CR or saturation showing hot it was corrected (if
-                  that option was set) and gives more verbose output.
-    /verbose     Verbose output to the screen.
-    /silent      Don't print anything to the screen
+    files : str or list
+       The filename(s) of an APOGEE chip file, e.g. apR-a-test3.fits
+         A compressed file can also be input (e.g. apR-a-00000033.apz)
+         and the file will be automatically uncompressed.
+    outfile : str
+       The output filename.  
+    detcorr : str
+       The filename of the detector file (containing gain,
+         rdnoise, and linearity correction).
+    bpmcorr : str
+       The filename of the bad pixel mask file.
+    darkcorr : str
+       The filaname of the dark correction file.
+    flatcorr : str
+       The filename of the flat field correction file.
+    littrowcorr : str
+       The filename of the Littrow ghost mask file.
+    persistcorr : str
+       The filename of the persistence mask file.
+    persistmodelcorr : str
+       The filename for the persistence model parameter file.
+    histcorr : str
+       The filename of the 2D exposure history cube for this night.
+    crfix : boolean, optional
+       Fix cosmic rays.  This is done by default.
+         If crfix is False then cosmic rays are still detected and
+         flagged in the mask file, but NOT corrected.  Default is crfix=True.
+    satfix : boolean, optional
+       Fix saturated pixels.  This is done by default
+         If satfix is False then saturated pixels are still detected
+         and flagged in the mask file, but NOT corrected - 
+         instead they are set to 0.  Saturated pixels that are
+         not fixable ("unfixable", less than 3 unsaturated reads)
+         are also set to 0.  Default is True.
+    rd3satfix : boolean, optional
+       Fix saturated pixels for 3 reads, and assume they don't
+       have CRs.  Default is False.
+    saturation : int or float, optional
+       The saturation level.  The default is 65000.  
+    nfowler : int, optional
+       The number of samples to use for the Fowler sampling.
+         The default is 10
+    uptheramp : boolean, optional
+       Do up-the-ramp sampling instead of Fowler.  Currently
+         this does NOT take throughput variations into account
+         and is only meant for Darks and Flats.
+    outelectrons : boolean, optional
+       The output images should be in electrons instead of ADU.
+         The default is ADU.
+    refonly : boolean, optional
+       Only do reference subtraction of the cube and return.
+         This is used for creating superdarks.
+    criter : boolean, optional
+       Iterative CR detection.  Check neighbors of pixels
+         with detected CRs for CRs as well using a lower
+         threshold.  Default is False.
+    clobber : boolean, optional
+       Overwrite output file if it already exists.  Default is False.
+    outlong : boolean, optional
+       The output files should use LONG type intead of FLOAT.
+         This actually takes up the same amount of space, but
+         this can be losslessly compressed with FPACK.
+    cleanuprawfile : boolean, optional
+       If a compressed file is input and ap3dproc needs to
+         Decompress the file (no decompressed file is on disk)
+         then setting this keyword will delete the decompressed
+         file at the very end of processing.  This is the default.
+         Set cleanuprawfile=0 if you want to keep the decompressed
+         file.  An input decompressed FITS file will always
+         be kept.
+    debug : boolean, optional
+       For debugging.  Will make a plot of every pixel with a
+         CR or saturation showing hot it was corrected (if
+         that option was set) and gives more verbose output.
+    verbose : boolean, optional
+       Verbose output to the screen.  Default is False.
+    silent : boolean, optional
+       Don't print anything to the screen. Default is False.
 
     Returns
     -------
@@ -1003,17 +1027,24 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             4-saturated, 8-unfixable
           where unfixable means that there are not enough unsaturated
           reads (need at least 3) to fix the saturation.
-    =cube        The "fixed" datacube
-    =head        The final header
-    =output      The final output data [Nx,Ny,3].
-    =crstr       The Cosmic Ray structure.
-    =satmask     The saturation mask [Nx,Ny,3], where the 1st plane is
-                  the 0/1 mask for saturation or not, 2nd plane is
-                  the read # at which it saturated (starting with 0), 3rd
-                  plane is the # of saturated pixels.
+    cube : numpy array
+       The "fixed" datacube
+    head : header object
+       The final header
+    output : numpy array
+       The final output data [Nx,Ny,3].
+    crstr : table
+       The Cosmic Ray structure.
+    satmask : numpy array
+       The saturation mask [Nx,Ny,3], where the 1st plane is
+         the 0/1 mask for saturation or not, 2nd plane is
+         the read # at which it saturated (starting with 0), 3rd
+         plane is the # of saturated pixels.
 
-    USAGE:
-    >>>im = ap3dproc('apR-a-test3.fits','ap2D-a-test3.fits')
+    Example
+    ------
+    
+    im = ap3dproc('apR-a-test3.fits','ap2D-a-test3.fits')
 
     SUBROUTINES:
     ap3dproc_lincorr   Does the linearity correction
@@ -2463,6 +2494,8 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             if silent==False:
                 print('dt = ',str(string(dt,format='(F10.1)')),' sec')
 
+    return flux,cube
+                
 
 def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=False):
     """
@@ -2484,6 +2517,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
 
     Example
     -------
+
     ap3d(planfiles,'apred')
 
     Written by D.Nidever  Feb. 2010
@@ -2544,90 +2578,23 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
         # Then check if the calibration files exist
         #--------------------------------------
 
-        # apDetector file : sets gain and readout noise
-        #if planstr['detid'] != 0:
-        #    mkdet,planstr.detid
-        #    detfiles = apogee_filename('Detector',num=planstr.detid,chip=chiptag)
-        #    dettest = FILE_TEST(detfiles)
-        #    if min(dettest) == 0:
-        #        bd = where(dettest == 0,nbd)
-        #        if nbd > 0 then stop,'halt: ', detfiles[bd],' NOT FOUND'
+        caltypes = ['det','dark','flat','bpm','littrow','persist','persistmodel','hist']
+        calnames = ['Detector','Dark','Flat','BPM','Littrow','Persist','PersistModel','Hist']
+        for in range(len(caltypes)):
+            caltype = cals[i]
+            calid = caltype+'id'
+            calname = calnames[i]
+            if planstr[calid] != 0:
+                if load.exists(calname,num=planstr[calid]):
+                    print(load.filename(calname,num=planstr[calid],chips=True)+' already exists')
+                else:
+                    if caltype == 'hist':
+                        mjdcube.mjdcube(planstr['mjd'],dark=planstr['darkid'])
+                    else:
+                        out = subprocess.run(['makecal','--'+calname.lower(),planstr[calid]],shell=False)
+                    if load.exists(calname,num=planstr[calid])==False:
+                        raise ValueError(load.filename(calname,num=planstr[calid],chips=True)+' NOT FOUND')
 
-        # apDark file  : dark frame
-        #if planstr['darkid'] != 0:
-        #    makecal,dark=planstr.darkid
-        #    darkfiles = apogee_filename('Dark',num=planstr.darkid,chip=chiptag)
-        #    darktest = FILE_TEST(darkfiles)
-        #    if min(darktest) == 0:
-        #        bd = where(darktest == 0,nbd)
-        #        if nbd > 0 then stop,'halt: ',darkfiles[bd],' NOT FOUND'
-
-        # apFlat file : flat field
-        #if planstr['flatid'] != 0:
-        #    makecal,flat=planstr.flatid
-        #    flatfiles = apogee_filename('Flat',num=planstr.flatid,chip=chiptag)
-        #    flattest = FILE_TEST(flatfiles)
-        #    if min(flattest) == 0:
-        #        bd = where(flattest == 0,nbd)
-        #        if nbd > 0 then stop,'halt: ',flatfiles[bd],' NOT FOUND'
-
-        # apBPM file : bad pixel mask
-        #if planstr['bpmid'] != 0:
-        #    makecal,bpm=planstr.bpmid
-        #    bpmfiles = apogee_filename('BPM',num=planstr.bpmid,chip=chiptag)
-        #    bpmtest = FILE_TEST(bpmfiles)
-        #    if min(bpmtest) == 0:
-        #        bd = where(bpmtest == 0,nbd)
-        #        if nbd > 0 then stop,'halt: ',bpmfiles[bd],' NOT FOUND'
-
-        # apLittrow file : littrow ghost pixel mask
-        #if tag_exist(planstr,'littrowid') == 0 then add_tag,planstr,'littrowid',0,planstr
-        #if planstr['littrowid'] != 0:
-        #    makecal,littrow=planstr.littrowid
-        #    littrowfiles = apogee_filename('Littrow',num=planstr.littrowid,chip='b')
-        #    littrowtest = FILE_TEST(littrowfiles)
-        #    if min(littrowtest) == 0:
-        #        bd = where(littrowtest == 0,nbd)
-        #        if nbd > 0 then stop,'halt: ',littrowfiles[bd],' NOT FOUND'
-
-        # apPersist file : persistence pixel mask
-        #if tag_exist(planstr,'persistid') == 0 then add_tag,planstr,'persistid',0,planstr
-        #if planstr['persistid'] != 0:
-        #    makecal,persist=planstr.persistid
-        #    persistfiles = apogee_filename('Persist',num=planstr.persistid,chip=chiptag)
-        #    persisttest = FILE_TEST(persistfiles)
-        #    if min(persisttest) == 0:
-        #        bd = where(persisttest == 0,nbd)
-        #        if nbd > 0 then stop,'halt: ',persistfiles[bd],' NOT FOUND'
-
-        # apPersistModel file : persistence model parameters
-        #if tag_exist(planstr,'persistmodelid') == 0 then add_tag,planstr,'persistmodelid',0,planstr
-        #if planstr['persistmodelid'] != 0:
-        #    #makecal,modelpersist=persistmodelid
-        #    # The apPersistModel calibration files are created separately
-        #    #  corrections exist only for "b" (green) and "c" (blue) for now
-        #    persistmodelfiles = apogee_filename('PersistModel',mjd=planstr.persistmodelid,chip=['b','c'])
-        #    persistmodeltest = FILE_TEST(persistmodelfiles)
-        #    if min(persistmodeltest) == 0:
-        #        bd = where(persistmodeltest == 0,nbd)
-        #        if nbd > 0 then stop,'halt: ',persistmodelfiles[bd],' NOT FOUND'
-        #    makehist,planstr.mjd,dark=planstr.darkid
-        #    histfiles = apogee_filename('Hist',mjd=planstr.mjd,chip=chiptag)
-        #    histtest = FILE_TEST(histfiles)
-        #    if min(histtest) == 0:
-        #        bd = where(histtest == 0,nbd)
-        #        if nbd > 0 then stop,'halt: ',histfiles[bd],' NOT FOUND'
-
-        # Make apHistory file
-        if 'persistmodelid' in planstr:
-            if planstr['persistmodelid'] != 0 and kws['dopersistcorr']:
-                if load.exists('Hist',mjd=planstr['mjd']):
-                    mjdcube.mjdcube(planstr['mjd'],dark=planstr['darkid'])
-                    histfile = load.filename('Hist',mjd=planstr['mjd'],chips=True)
-                    histfiles = [histfile.replace('Hist-','Hist-'+ch+'-') for ch in chips]
-                    if load.exists('Hist',mjd=planstr['mjd'])==False:
-                        print(histfile,' NOT FOUND')
-                        continue
   
         # Are there enough files
         if 'APEXP' not in planstr:
