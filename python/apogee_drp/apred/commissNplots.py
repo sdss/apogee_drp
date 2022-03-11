@@ -115,6 +115,53 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
+def telescopePos(field='17049', star='2M07311564+3145469'):
+    # telescopePosPerform.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePosPerform_' + star + '.png'
+    print("----> commissNplots: Making " + os.path.basename(plotfile))
+
+    p, = np.where((allsnr['FIELD'] == field) & (allsnr['exptime'] == 457))
+    upl,uind = np.unique(allsnr['plate'][p], return_index=True)
+    allsnrg = allsnr[p][uind]
+    nexp = len(allsnrg)
+
+    fig = plt.figure(figsize=(25,16))
+    ax1 = plt.subplot2grid((2,1), (0,0))
+    ax2 = plt.subplot2grid((2,1), (1,0))
+    axes = [ax1, ax2]
+    for ax in axes:
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+    ax1.axes.xaxis.set_ticklabels([])
+    ax1.text(0.5, 1.02, star, transform=ax1.transAxes, ha='center')
+    visdir = specdir5 + 'visit/apo25m/' + field + '/'
+
+    for iexp in range(nexp):
+        visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
+        cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
+        print(os.path.basename(cfile))
+        flux = fits.getdata(cfile)
+        wave = fits.getdata(cfile,4)
+        obj = fits.getdata(cfile,11)
+        g, = np.where(obj['TMASS_STYLE'] == star)
+        g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
+        if len(g) > 0:
+            p = ax1.plot(wave[g][0], flux[g][0])
+            c = p[0].get_color()
+            txt = 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
+            ax1.text(0.05, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
+            ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
+
+    fig.subplots_adjust(left=0.07,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+    return
+
+###########################################################################################
 def snhistory3():
     # snhistory3.png
     plotfile = specdir5 + 'monitor/' + instrument + '/snhistory3.png'
