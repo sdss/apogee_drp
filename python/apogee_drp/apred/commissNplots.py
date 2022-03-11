@@ -138,6 +138,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         ax.tick_params(axis='both',which='both',width=axwidth)
     ax1.axes.xaxis.set_ticklabels([])
     ax1.text(0.5, 1.02, star, transform=ax1.transAxes, ha='center')
+    ax1.set_ylabel(r'Flux')
+    ax2.set_ylabel(r'Norm Flux')
     ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
