@@ -133,10 +133,12 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     for iexp in range(nexp):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
         cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
+        print(os.path.basename(cfile))
         flux = fits.getdata(cfile)
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TWOMASS_DESIGNATION'] == star)
+        pdb.set_trace()
         ax.plot(wave[g][0], flux[g][0])
 
         ax.minorticks_on()
