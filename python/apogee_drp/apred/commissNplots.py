@@ -140,7 +140,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     ax1.set_ylabel(r'Flux')
     ax2.set_ylabel(r'Norm Flux')
     ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
-    ax2.set_ylim(0.25, 1.25)
+    ax2.set_ylim(0.25, 1.35)
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
     for iexp in range(nexp):
