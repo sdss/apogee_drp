@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+#
+# Make APOGEE master PSF model calibration file
+
+import numpy as np
+import traceback
+from argparse import ArgumentParser
+from apogee_drp.utils import apload
+from apogee_drp.apred import psf
+
+# Main command-line program
+if __name__ == "__main__":
+    parser = ArgumentParser(description='Make APOGEE master PSF calibration file')
+    parser.add_argument('modelpsf', type=int, nargs=1, help='model PSF ID')
+    parser.add_argument('sparseid', type=int, nargs=1, help='Sparse ID')
+    parser.add_argument('psfid', type=int, nargs=1, help='PSF ID')
+    parser.add_argument('apred', type=str, nargs=1, help='APOGEE Reduction version')
+    parser.add_argument('telescope', type=str, nargs=1, help='Telescope')
+    parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
+    parser.add_argument('--verbose', action='store_true', help='Verbose output')
+    args = parser.parse_args()
+
+    modelpsf = args.modelpsf[0]
+    sparseid = args.sparseid[0]
+    psfid = args.psfid[0]
+    apred = args.apred[0]
+    telescope = args.telescope[0]
+
+    try:
+        psf.mkmodelpsf(modelpsf,psfid,sparseid,apred,telescope,verbose=args.verbose)
+    except:
+        traceback.print_exc()

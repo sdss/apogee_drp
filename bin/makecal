@@ -45,8 +45,8 @@ if __name__ == '__main__' :
     parser.add_argument('--fpi', type=int, help='FPI ID')
     parser.add_argument('--mjd', type=int, help='MJD')
     parser.add_argument('--nskip', type=int, help='Number of arclamps to skip for WAVE')
-    parser.add_argument("--vers", type=str, default='daily', help='APOGEE Reduction version')
-    parser.add_argument("--telescope", type=str, default='apo25m', help='Telescope')
+    parser.add_argument('--vers', type=str, default='daily', help='APOGEE Reduction version')
+    parser.add_argument('--telescope', type=str, default='apo25m', help='Telescope')
     parser.add_argument('--full', type=str, nargs='*', help='Full processing for MKLSF')
     parser.add_argument('--newwave', type=str, nargs='*', help='newwave parameter for MKLSF')
     parser.add_argument('--nofit', type=str, nargs='*', help='/nofit for MKWAVE')
@@ -58,7 +58,7 @@ if __name__ == '__main__' :
     argsdict = vars(args)
 
     # Check that we have some inputs 
-    chknames = ['file','det','dark','flat','wave','multiwave','lsf','bpm','psf','flux',
+    chknames = ['file','det','dark','flat','wave','multiwave','dailywave','lsf','bpm','psf','flux',
                 'sparse','fiber','littrow','persist','modelpersist','response','fpi','mjd']
     inputs = []
     for n in chknames:

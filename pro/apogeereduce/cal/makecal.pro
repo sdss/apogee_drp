@@ -18,7 +18,8 @@
 ;  lsf=lsfid     Make the lsf with name=lsfid 
 ;  fpi=fpiid     Make the FPI with name=fpiid
 ;  /librarypsf   Use PSF library to get PSF cal for images.
-;  =dailwavey    Daily wavelength solution ID.
+;  =dailwavy     Daily wavelength solution ID.
+;  =modelpsf     Model PSF ID.
 ;
 ; OUTPUT:
 ;  Calibration products are generated in places specified by the
@@ -40,7 +41,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
             response=response,mjd=mjd,full=full,newwave=newwave,nskip=nskip,$
             average=average,clobber=clobber,vers=vers,telescope=telescope,$
             nofit=nofit,pl=pl,unlock=unlock,fpi=fpi,librarypsf=librarypsf,$
-            dailywave=dailywave
+            dailywave=dailywave,modelpsf=modelpsf
 
   if keyword_set(vers) and keyword_set(telescope) then apsetver,vers=vers,telescope=telescope
   dirs = getdir(apo_dir,cal_dir,spectro_dir,apo_vers,lib_dir)
@@ -58,7 +59,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
 
   ;; Read calibration master file into calibration structures
   READCAL,file,darkstr,flatstr,sparsestr,fiberstr,badfiberstr,fixfiberstr,wavestr,lsfstr,bpmstr,$
-          fluxstr,detstr,littrowstr,persiststr,persistmodelstr,responsestr,multiwavestr
+          fluxstr,detstr,littrowstr,persiststr,persistmodelstr,responsestr,multiwavestr,modelpsfstr
 
   ;; Make Detector calibration files
   ;;--------------------------------
@@ -208,10 +209,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     print,'makecal sparse: ', sparse
     if sparse gt 1 then begin
       file = apogee_filename('Sparse',num=sparse,chip='c')
-      psfdir = file_dirname(file)
-      sparseid = string(sparse,format='(i08)')
-      allfiles = psfdir+'/'+[dirs.prefix+'EPSF-'+chips+'-'+sparseid+'.fits',dirs.prefix+'Sparse-'+sparseid+'.fits']
-      if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
+      if file_test(file) eq 1 and not keyword_set(clobber) then begin
         print,' sparse file: ',file,' already made'
         return
       endif
@@ -273,6 +271,30 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid
       MAKECAL,littrow=littrowid,unlock=unlock
       MKPSF,psf,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid,clobber=clobber,unlock=unlock
+    endif
+  endif
+
+  ;; Make Model PSF calibration file
+  ;;--------------------------------
+  if keyword_set(modelpsf) then begin
+    print,'makecal modelpsf: ',modelpsf
+    if modelpsf gt 0 then begin
+      file = apogee_filename('PSFModel',num=modelpsf,chip='c')
+      psfdir = file_dirname(file)
+      spsfid = string(modelpsf,format='(i08)')
+      allfiles = psfdir+'/'+dirs.prefix+'PSFModel-'+chips+'-'+spsfid+'.fits'
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' modelpsf file: ',file, ' already made'
+        return
+      endif
+      i = where(modelpsfstr.name eq modelpsf)
+      if i lt 0 then begin
+        print,'No matching calibration line for ', modelpsf
+        stop
+      endif
+      MAKECAL,sparse=modelpsfstr[i].sparse,unlock=unlock
+      MAKECAL,psf=modelpsfstr[i].psf,unlock=unlock
+      MKMODELPSF,modelpsf,sparseid=modelpsfstr[i].sparse,psfid=modelpsfstr[i].psf,clobber=clobber,unlock=unlock
     endif
   endif
 

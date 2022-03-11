@@ -102,6 +102,11 @@ def readcal(calfile):
     #  sparse     55797 99999 02410059 2410059-2410068  2410058,2410069     21  30,30,20
     dtdict['sparse'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50),('frames',np.str,100),
                                  ('darkframes',np.str,100),('dmax',int),('maxread',np.str,100)])
+    # -- ModelPSF --
+    # modelpsf start end   name      sparse    psf
+    # modelpsf   59549 99999 39870034  39870034  39870034
+    dtdict['modelpsf'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50),('sparse',np.str,100),
+                                   ('psf',np.str,100)])
     # -- Fiber --
     #  mjd1, mjd2, name
     #  fiber      55600 55761 01970078

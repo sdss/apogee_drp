@@ -27,7 +27,7 @@ def errout(data):
     return data
     
 def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
-             outdir=None,clobber=False,fixbadpix=False,
+             modelpsffile=None,outdir=None,clobber=False,fixbadpix=False,
              fluxcalfile=None,responsefile=None,wavefile=None,skywave=False,
              plugmap=0,highrej=7,lowrej=10,recenterfit=False,recenterln2=False,fitsigma=False,
              refpixzero=False,outlong=False,nowrite=False,npolyback=0,
@@ -53,7 +53,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
           2-PSF image extraction
           3-Gaussian PSF fitting extraction
           4-Jon's Empirical PSF extraction
-          5-Full Gaussian-Hermite PSF fitting extraction
+          5-Model PSF extraction
     apred : str, optional
         The APOGEE reduction version, e.g. 'daily'.
     telescope : str, optional
@@ -61,6 +61,10 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     load : ApLoad
         The ApLoad object.  Either this must be input or
           apred and telescope
+    modelpsffile : str
+        The name of the Model PSF calibration file to
+          use. This should also be the directory
+          and "base" name or ID concatenated.
     outdir : str, optional
         The output directory.  By default the 1D extracted
           files are written to the same directory that
@@ -157,7 +161,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     # Need load or apred+telescope
     if apred is None and telescope is None and load is None:
         raise ValueError(' Must input load or apred+telescope')
-     
+    if load is None:
+        load = apload.ApLoad(apred=apred,telescope=telescope)
+
     # outdir must be a string outdir must be a string 
     #if size(outdir,/type) != 7:if size(outdir,/type) != 7: 
     #  print('outdir must be a string'  print('outdir must be a string' 
@@ -503,7 +509,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                      
             # Recenter, shift the traces recenter, shift the traces 
             if recenterfit or recenterln2: 
-                tracest['coef'][0] += xshift 
+                tracestr['coef'][0] += xshift 
                 tracestr['gaussy'] += xshift 
                 if recenterfit and not recenterln2: 
                     head['HISTORY'] = leadstr+' /RECENTERFIT set, shifting traces by %0.3f' % xshift
@@ -671,12 +677,25 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             outstr,back,ymodel = psf.extract(chstr,epsf,outstr,scat=True)
 
      
-        # Full Gaussian-Hermite PSF fitting
-        #----------------------------------
+        # Model PSF extraction
+        #---------------------
         elif extract_type==5:
             if not silent: 
-                print('Full Gaussian-Hermite psf fitting is not supported yet')
-            return [],[]
+                print('Using Model PSF extraction')
+         
+            # Update header
+            head['HISTORY'] = leadstr+'Extract_type=5 - Model PSF Extraction'
+            head['EXTRTYPE'] = 5,'Extraction Type' 
+
+            if modelpsffile is None:
+                raise ValueError('Need Model PSF file for Model PSF Extraction')
+            modelpsfid = os.path.basename(modelpsffile)
+            modelpsffile1 = load.filename('PSFModel',num=modelpsfid,chips=True).replace('PSFModel-','PSFModel-'+chiptag[i]+'-')
+            epsf = psf.PSF.read(modelpsffile1)
+            tracefile = load.filename('ETrace',num=psfframeid,chips=True).replace('ETrace-','ETrace-'+chiptag[i]+'-')
+            chstr['header'] = head
+            outstr,back,ymodel = psf.extractwing(chstr,epsf,tracefile)
+            head = outstr['header']
  
         t2 = time.time()
         #import pdb; pdb.set_trace()
@@ -1155,6 +1174,25 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 if nbd1 > 0 : 
                     print('halt: ',responsefiles[bd1],' not found')
                     import pdb; pdb.set_trace()
+         
+        # Model PSF files
+        if 'modelpsf' in planstr.keys():
+            if load.exists('ModelPSF',num=planstr['modelpsf']):
+                print(load.filename('ModelPSF',num=planstr['modelpsf'])+' exists already')
+            else:
+                sout = subprocess.run(['makecal','--modelpsf',str(planstr['responseid'])],shell=False)
+            modelpsffiles = load.filename('ModelPSF',num=planstr['modelpsf'],chips=True)
+            modelpsffiles = [modelpsffiles.replace('ModelPSF-','ModelPSF-'+ch+'-') for ch in chiptag]
+            modelpsffile = os.path.dirname(modelpsffiles[0])+'/'+str(planstr['modelpsf'])
+            modelpsftest = [os.path.exists(t) for t in modelpsffiles]
+            if np.sum(modelpsftest) != 3:
+                bd1, = np.where(np.array(modelpsftest)==False)
+                nbd1 = len(bd1)
+                if nbd1 > 0: 
+                    print('halt: ',modelpsffiles[bd1],' not found')
+                    import pdb; pdb.set_modelpsf()
+        else:
+            modelpsffile = None
  
         # Load the Plug Plate Map file
         #-----------------------------
@@ -1193,7 +1231,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         # Process each frame
         #-------------------
         for j in range(nframes):
-            # get trace files
+            # Get trace files
             tracefiles = load.filename('PSF',num=planstr['APEXP']['psfid'][i],chips=True)
             tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
             tracefile = os.path.dirname(tracefiles[0])+'/%8d' % planstr['APEXP']['psfid'][i]
@@ -1244,14 +1282,14 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             if os.path.exists(outdir)==False:
                 file_mkdir,outdir 
             if fluxtest==False or planstr['APEXP']['flavor'][j]=='flux': 
-                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,
+                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,modelpsffile=modelpsffile,
                          wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,compress=True)
             elif waveid > 0: 
-                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,
+                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,modelpsffile=modelpsffile,
                          fluxcalfile=fluxfile,responsefile=responsefile,
                          wavefile=wavefile,skywave=skywave,plugmap=plugmap,clobber=clobber,compress=True)
             else:
-                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,
+                ap2dproc(inpfile,tracefile,exttype,load=load,outdir=outdir,unlock=unlock,modelpsffile=modelpsffile,
                          fluxcalfile=fluxfile,responsefile=responsefile,
                          clobber=clobber,compress=True)
  

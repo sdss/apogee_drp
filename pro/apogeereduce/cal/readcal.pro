@@ -41,7 +41,7 @@
 
 pro readcal,file,darkstr,flatstr,sparsestr,fiberstr,badfiberstr,fixfiberstr,wavestr,$
             lsfstr,bpmstr,fluxstr,detstr,littrowstr,persiststr,persistmodelstr,$
-            responsestr,multiwavestr
+            responsestr,multiwavestr,modelpsfstr
 
 ;; Read all the lines in the calibration listfile
 openr, lun, /get_lun, file
@@ -56,7 +56,7 @@ free_lun,lun
 
 ;; Establish generic variable types
 mjd1=0L & mjd2=0L & name=0L & frames='' & darkframes='' & nframes=0 & nrep=0 & dithered=0 & maxread=''
-darkid=0L & flatid=0L & psfid=0L & fluxid=0L & linid=0L & fixfiberid=0L & waveid=0 & multiwaveid=0
+darkid=0L & flatid=0L & sparseid=0L & psfid=0L & fluxid=0L & linid=0L & fixfiberid=0L & waveid=0 & multiwaveid=0
 
 ;; Extract the darks information and load dark structure
 darks = where(strpos(line,'dark') eq 0)
@@ -102,6 +102,21 @@ for i=0,n_elements(sparse)-1 do begin
     reads,fields[7],maxread
     str = {mjd1:mjd1, mjd2:mjd2, name:name, frames:frames, darkframes:darkframes, dmax:dmax, maxread:maxread}
     if i eq 0 then sparsestr=str else sparsestr = struct_append(sparsestr,str)
+  endif
+endfor
+
+;; Extract the model PSF information
+modelpsf = where(strpos(line,'modelpsf') eq 0)
+for i=0,n_elements(modelpsf)-1 do begin
+  if modelpsf[i] ge 0 then begin
+    fields = strsplit(line(modelpsf[i]),/extract)
+    reads,fields[1],mjd1
+    reads,fields[2],mjd2
+    reads,fields[3],name
+    reads,fields[4],sparseid
+    reads,fields[5],psfid
+    str = {mjd1:mjd1, mjd2:mjd2, name:name, sparse:sparseid, psf:psfid}
+    if i eq 0 then modelpsfstr=str else modelpsfstr = struct_append(modelpsfstr,str)
   endif
 endfor
 

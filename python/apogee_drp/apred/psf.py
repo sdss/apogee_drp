@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d
 from scipy.signal import argrelextrema
 from scipy.optimize import curve_fit
 import statsmodels.api as sm
-from apogee_drp.utils import peakfit, mmm
+from apogee_drp.utils import peakfit, mmm, apload
 from numba import njit
 import copy
 
@@ -19,7 +19,7 @@ WARNMASK = -16640
 BADMASK = 16639
 BADERR = 1.00000e+10
 maskval = {'NOT_ENOUGH_PSF': 16384}
-
+chips = ['a','b','c']
 
 #####  EMPIRICAL PSF MODEL CLASS #######
 
@@ -165,11 +165,6 @@ class PSFProfile(object):
         new._coef = self._coef / other._coef
         return new
     
-        
-    # add some arithemtic so that you can ADD profiles together
-    # this will also add the coefficients
-        
-    
 class PSF(object):
 
     def __init__(self,data,nxgrid=20,nygrid=50,kind='ann',log=True):
@@ -196,11 +191,11 @@ class PSF(object):
             self._grid = grid
             self._log = log        
             self._labels = labels
-            self._xgrid = labels[:,:,0]
-            self._ygrid = labels[:,:,1]
+            self._xgrid = labels[0]
+            self._ygrid = labels[1]
             self.y = y
-            self.xmin = [np.min(labels[:,:,0]),np.min(labels[:,:,1])]
-            self.xmax = [np.max(labels[:,:,0]),np.max(labels[:,:,1])]
+            self.xmin = [np.min(labels[0]),np.min(labels[1])]
+            self.xmax = [np.max(labels[1]),np.max(labels[1])]
             nxgrid,nygrid,npix = grid.shape
         else:
             raise ValueError('Only "ann" and "grid" supported at this time')
@@ -384,7 +379,7 @@ class PSF(object):
         
         return profile
 
-    # Make make a new method that does the interpolation for an entire fiber all at once (all 2048 pixels)
+    # Make a new method that does the interpolation for an entire fiber all at once (all 2048 pixels)
     # might allow for some speedups.  Would need to have y values (trace) input.
     def fiber(self,y):
         """ Construct profiles for all columns of a fiber."""
@@ -468,6 +463,20 @@ class PSF(object):
         self._ygrid = ygrid
         self._nygrid = ny 
         self._grid = grid
+
+
+    def write(self,outfile):
+        # Write to a file
+        hdu = fits.HDUList()
+        hdu.append(fits.ImageHDU(self._grid))
+        hdu[0].header['TYPE'] = self.kind
+        hdu[0].header['LOG'] = self._log
+        hdu[0].header['COMMENT'] = 'Data (log)'
+        hdu.append(fits.ImageHDU(self._labels))
+        hdu[1].header['COMMENT'] = 'Labels'
+        hdu.append(fits.ImageHDU(self.y))
+        hdu[2].header['COMMENT'] = 'x'
+        hdu.writeto(outfile,overwrite=True)
     
     @classmethod
     def read(cls,infile):
@@ -635,7 +644,10 @@ def avgprofile(fibs,cols,hdulist,fiber2hdu):
     ybinsm = dln.gsmooth(temp,5)
     bad = ~np.isfinite(ybinsm)
     if np.sum(bad)>0:
-        ybinsm[bad] = interp1d(xbin[~bad],ybinsm[~bad])(bad)
+        bd, = np.where(bad)
+        gd, = np.where(~bad)
+        fill_value = (ybinsm[gd[0]],ybinsm[gd[1]])
+        ybinsm[bd] = interp1d(xbin[~bad],ybinsm[~bad],bounds_error=False,fill_value=fill_value)(bd)
 
     # Make sure it's normalized
     ybinsm /= np.sum(ybinsm)*binsize
@@ -654,7 +666,7 @@ def avgprofile(fibs,cols,hdulist,fiber2hdu):
     return data, xbin, ybin, ybinsm
 
 
-def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
+def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
     """
     Construct a grid in X and Y across the detector of average
     PSF profiles.
@@ -669,6 +681,8 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
       Number of fibers to bin/average.  Default is 5.
     ncbin : int
       Number of column to bin/average.  Default is 200.
+    verbose : boolean, optional
+      Verbose output to the screen.
 
     Returns
     -------
@@ -682,13 +696,22 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
       Mean Y values for each average/grid profile point [Ncols,Nfibers].
     profiles : numpy array
       Averaged profile data [Ncols, Nfibers, 300].
+    xx : numpy array
+      The profile X values [300].
 
     Example
     -------
 
-    data,mnx,mny,profiles = makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200)
+    data,mnx,mny,profiles,xx = makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200)
 
     """
+
+    if verbose:
+        print('Making Model PSF grid')
+        print('EPSF file: '+psffile)
+        print('Sparse file: '+sparsefile)
+        print('Fiber binning: '+str(nfbin))
+        print('Column binning: '+str(ncbin))
 
     allim,head = fits.getdata(sparsefile,0,header=True)
     sim = allim[1,:,:]
@@ -732,7 +755,8 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
         # Fiber loop
         for j,f in enumerate(fibers):
 
-            print(f,c)
+            if verbose:
+                print(f,c)
             #data1, xbin,ybin,lowess,ylowess = avgprofile([f,f+nfbin],[c,c+ncbin],psfhdu,fiber2hdu)
             data1, xbin,ybin,ybinsm = avgprofile([f,f+nfbin],[c,c+ncbin],psfhdu,fiber2hdu)            
             
@@ -755,7 +779,8 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
             if len(bad)>0:
                 good = len(fluxsparse)-bad-1
                 fluxsparse[bad] = fluxsparse[good]
-                print('fixing fluxsparse edge bad value')
+                if verbose:
+                    print('fixing fluxsparse edge bad value')
                 #import matplotlib.pyplot as plt
                 #import pdb; pdb.set_trace()
             fluxsparse /= np.sum(fluxsparse)   # normalize again          
@@ -832,14 +857,60 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200):
             mnx[i,j] = np.median(data1[:,2])
             mny[i,j] = np.median(data1[:,3])
             profiles[i,j,:] = yprofile 
-            
-            #import pdb; pdb.set_trace()
+
+    return data,mnx,mny,profiles,xx
 
 
-            
-    import pdb; pdb.set_trace()
+def mkmodelpsf(name,psfid,sparseid,apred,telescope,nfbin=5,ncbin=200,verbose=False):
+    """
+    Makes the Model PSF calibration file.
 
-    return data,mnx,mny,profiles
+    Parameters
+    ----------
+    name : int
+      Name of the output model PSF file (apPSFModel).
+    psfid : int
+      ID of apEPSF exposure empirical PSF profiles.
+    sparseid : int
+      ID of apSparse file with APOGEE sparse PSF profile data.
+    apred : str
+      APOGEE Reduction version.
+    telescope : str
+      Telescope name: apo25m or lco25m.
+    nfbin : int
+      Number of fibers to bin/average.  Default is 5.
+    ncbin : int
+      Number of column to bin/average.  Default is 200.
+    verbose : boolean, optional
+      Verbose output to the screen.
+
+    Returns
+    -------
+
+    Example
+    -------
+
+    mkmodelpsf(psfid,sparseid)
+
+    """
+
+    print('Making Model PSF calibration file')
+    print('EPSF ID: '+str(psfid))
+    print('Sparse ID: '+str(+sparseid))
+    print('Fiber binning: '+str(nfbin))
+    print('Column binning: '+str(ncbin))
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    sparsefile = load.filename('Sparse',num=sparseid,chips=True)
+    psffile = load.filename('EPSF',num=psfid,chips=True)
+    for ch in chips:
+        psffile1 = psffile.replace('EPSF-','EPSF-'+ch+'-')
+        data,mnx,mny,profiles,y = makeprofilegrid(psffile1,sparsefile,verbose=verbose)
+        labels = [mnx,mny]
+        p = PSF((profiles,labels,y),kind='grid',log=False)
+        outfile = load.filename('PSFModel',num=name,chips=True).replace('PSFModel-','PSFModel-'+ch+'-')
+        print('Writing to '+outfile)
+        p.write(outfile)
 
 
 #####  EXTRACTION #######
@@ -1044,7 +1115,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
     Parameters
     ----------
     frame : dict
-       The 2D input structure with FLUX, VAR and MASK.
+       The 2D input structure with flux, err, mask and header.
     epsf : list
        A list with the empirical PSF.
     doback : boolean, optional
@@ -1064,6 +1135,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
 
     Example
     -------
+
     outstr,back,model = extract(frame,epsf)
 
     By J. Holtzman  2011
@@ -1252,7 +1324,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
 
 
     # Put together the output dictionary
-    outstr = {'flux':spec, 'err':err, 'mask':outmask}
+    outstr = {'flux':spec, 'err':err, 'mask':outmask, 'header':frame['header'].copy()}
 
     # Create the Model 2D image
     model = epsfmodel(epsf,spec,subonly=subonly,skip=skip)
@@ -1278,7 +1350,28 @@ def func_poly2d(inp,*args):
     
 def getoffset(frame,traceim):
     """
-    Measure the offset of an object exposure and the PSF model/traces.
+    Measure the spatial offset of an object exposure and the PSF model/traces.
+
+    Parameters
+    ----------
+    frame : dict
+       The 2D input structure with flux, err, mask and header.
+    traceim : numpy array
+       APOGEE trace information (Y-position) from a trace file [Nfibers, 2048].
+
+    Returns
+    -------
+    offcoef : numpy array
+       Additive offset coefficients (4-elements) of the 2D linear equation:
+          c0 + c1*X + c2*X*Y + c3*Y
+    medoff : float
+       Median offset.
+
+    Example
+    -------
+
+    offcoef,medoff = getoffset(frame,traceim)
+
     """
     
     # Find bright fibers and measure the centroid
@@ -1288,6 +1381,7 @@ def getoffset(frame,traceim):
     # Loop over X locations
     xx = [512, 1024, 1536]
     coef = np.zeros((len(xx),2),float)
+    alloffset = np.array([],float)
     for i,x in enumerate(xx):
         # Get median flux/centers
         medflux = np.median(flux[:,x-100:x+100],axis=1)
@@ -1314,11 +1408,11 @@ def getoffset(frame,traceim):
             hi = int(np.ceil(medcent[ind]+3))
             yy = np.arange(hi-lo+1)+lo
             ff = medflux[lo:hi+1]
-            initpar = [ff[3],medcent[j],1.0,0.0]
+            initpar = [ff[3],medcent[ind],1.0,0.0]
             try:
-                pars,perror = dln.gaussfit(yy,ff,initpar=initpar,binned=True)
+                pars,perror = dln.gaussfit(yy,ff,initpar=initpar,binned=True,bounds=(-np.inf,np.inf))
                 gcent[j] = pars[1]
-                offset[j] = pars[1]-medcent[j]                
+                offset[j] = pars[1]-medcent[ind]  
             except:
                 gcent[j] = np.nan
                 offset[j] = np.nan
@@ -1330,6 +1424,8 @@ def getoffset(frame,traceim):
         gd, = np.where(np.isfinite(offset) & (np.abs(offset-medoff) < 3*sigoff))
         coef1 = np.polyfit(ycen[gd],offset[gd],1)
         coef[i,:] = coef1
+        alloffset = np.hstack((alloffset,offset))
+
 
     # Fit 2D linear model
     xvals = np.zeros((len(xx),2048),float)
@@ -1344,25 +1440,42 @@ def getoffset(frame,traceim):
     coef2,cov2 = curve_fit(func_poly2d,[xvals.ravel(),yvals.ravel()],zvals.ravel(),p0=initpar)
     coeferr2 = np.sqrt(np.diag(cov2))
 
-    return coef2
+    medoff = np.nanmedian(alloffset)
+    print('Median offset = %.3f pixels' % medoff)
+    print('Offset coefficients = ',coef2)
+
+    return coef2,medoff
 
 
 def fullepsfgrid(psf,traceim,offcoef,verbose=True):
-    """ Generate a full EPSF grid for all fibers and columns and dealing with offsets."""
+    """
+    Generate a full EPSF grid for all fibers and columns and applying spatial offsets.
 
+    Parameters
+    ----------
+    psf : 
+       PSF information.
+    traceim : numpy array
+       APOGEE trace information (Y-position) from a trace file [Nfibers, 2048].
+    offcoef : numpy array
+       Additive offset coefficients (4-elements) of the 2D linear equation:
+         c0 + c1*X + c2*X*Y + c3*Y
+    verbose : boolean, optional
+       Verbose output to the screen.
+
+    Returns
+    -------
+    epsf : list
+      Empirical PSF model for the full image.
+
+    Example
+    -------
+
+    epsf = fullepsfgrid(psf,traceim,offcoef)
+
+    """
     
     nfibers = traceim.shape[0]
-    
-    ## Loop over X locations
-    #xx = [512, 1024, 1536]
-    #coef = np.zeros((len(xx),2),float)
-    #for i,x in enumerate(xx):
-    #    # Get median flux/centers
-    #    medflux = np.median(flux[:,x-100:x+100],axis=1)
-    #    medcent = np.median(traceim[:,x-100:x+100],axis=1)
-
-    # It should be possible to do linear interpolation of all 2048 profiles
-    # at once without using a loop
     
     epsf = []
     # Fiber loop
@@ -1376,15 +1489,15 @@ def fullepsfgrid(psf,traceim,offcoef,verbose=True):
         ny = yhi-ylo+1
         y = np.arange(ny)+ylo        
         img = np.zeros((ny,2048),float)
-        #ylo = np.zeros(2048,int)
-        #yhi = np.zeros(2048,int)
         # Column loop
         for j in range(2048):
-            m1 = psf([j,ycen[j]],y=y,ycen=ycen[j])
+            try:
+                m1 = psf([j,ycen[j]],y=y,ycen=ycen[j])
+            except:
+                print('problem')
+                import pdb; pdb.set_trace()
             m1 /= np.sum(m1)
             img[:,j] = m1
-            #ylo[j] = y[0]
-            #yhi[j] = y[-1]
                 
         data = {'fiber':i, 'lo':ylo, 'hi':yhi, 'img':img, 'ycen':ycen}
         epsf.append(data)
@@ -1393,9 +1506,35 @@ def fullepsfgrid(psf,traceim,offcoef,verbose=True):
         
 
 def extractwing(frame,psf,tracefile):
-    """ Extract taking wings into account."""
+    """
+    Extract taking wings into account.
 
-    # ideas for extraction with wings if I can't fit fiber and 4 neighbors simultaneously:
+    Parameters
+    ----------
+    frame : dict
+       The 2D input structure with flux, err, mask and header.
+    psf : str or PSF object
+       PSF model filename or PSF object.
+    tracefile : str
+       Name of the trace filename.
+
+    Returns
+    -------
+    outstr : dict
+        The 1D output structure with FLUX, VAR and MASK.
+    back : numpy array
+        The background
+    model : numpy array
+        The model 2D image
+
+    Example
+    -------
+
+    outstr,back,model = extractwing(frame,psf,tracefile)
+
+    """
+
+    # Ideas for extraction with wings if I can't fit fiber and 4 neighbors simultaneously:
     # 1) do usual fiber + 2 neighbor extraction using narrower profile
     # 2) create model using the broad profile and find the residual of data-model.
     # 3) loop through each fiber and add its broad profile back in (this is the same as
@@ -1415,81 +1554,37 @@ def extractwing(frame,psf,tracefile):
         frame = loadframe(framefile)
     # Load the trace imformation
     traceim = fits.getdata(tracefile,0)  # [Nfibers,2048]
-        
+    nfibers,npix = traceim.shape
+
     # Step 1) Measure the offset
     #  returns 2D linear of the offset
     #  c0 + c1*x + c2*x*y + c3*y
-    offcoef =  getoffset(frame,traceim)
+    offcoef,medoff =  getoffset(frame,traceim)
 
     # Step 2) Generate full PSFs for this image
     # Generate the input that extract() expects
     # this currently takes about 176 sec. to run
-    #epsf = fullepsgrid(psf,traceim,offcoef)
+    print('Generating full EPSF grid with spatial offsets')
+    epsf = fullepsfgrid(psf,traceim,offcoef)
     #np.savez('fullepsfgrid.npz',epsf=epsf)
-    epsf = np.load('fullepsfgrid.npz',allow_pickle=True)['epsf']
+    #epsf = np.load('fullepsfgrid.npz',allow_pickle=True)['epsf']
     
     # Step 3) Regular fiber+2 neighbor extraction
     out1,back1,model1 = extract(frame,epsf)
     
     # Step 4) Subtract all profiles except the fibers+2 neighbors and refit
     out,back,model = extract(frame,epsf,guess=out1['flux'])
-    
-    import pdb; pdb.set_trace()
+
+    # Add information to header
+    out['header']['HISTORY'] = 'psf.extractwing: Extracting '+str(nfibers)+' fibers at '+time.asctime()
+    out['header']['HISTORY'] = 'psf.extractwing: Median Trace offset %.3f pixels' % medoff
+    out['header']['medtroff'] = medoff
+    out['header']['HISTORY'] = 'psf.extractwing: Additive trace offset coefficients:'
+    out['header']['HISTORY'] = 'psf.extractwing: %.3e %.3e %.3e %.3e' % tuple(offcoef)
+    out['header']['HISTORY'] = 'psf.extractwing: c0 + c1*X + c2*X*Y + c3*Y'
+    out['header']['toffpar0'] = offcoef[0],'constant term'
+    out['header']['toffpar1'] = offcoef[1],'X term'
+    out['header']['toffpar2'] = offcoef[2],'X*Y term'
+    out['header']['toffpar3'] = offcoef[3],'Y term'
     
     return out,back,model
-
-      
-if __name__ == '__main__' :
-
-    psfdir = '/Users/nidever/sdss5/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/'
-    psffile = 'apEPSF-b-39880014.fits'
-    sparsefile = 'apSparse-39870034.fits'
-    allim,head = fits.getdata(psfdir+sparsefile,0,header=True)
-    im = allim[1,:,:]
-    psfhdu = fits.open(psfdir+psffile)
-
-    data = makeprofilegrid(psfdir+psffile,psfdir+sparsefile)
-
-
-    import pdb; pdb.set_trace()
-
-    # Check domeflat vs. quartzflat profile to see if the profile changes
-    # if the light goes through the FPS octagonal fibers or not
-
-    # To combine the 300-fiber quartzflat ("narrow") and sparse data
-    # for each "narrow" profile, find the closest good sparse profile
-    # then scale the narrow profile to the sparse profile for the inner
-    # points (r<4 or so).  Then splice them together, or maybe use
-    # an average in the crossover region
-
-    # Interpolating the profiles
-    # 1) grid interpolation
-    #  Use the whole 3D grid (Nprofile,Nx,Ny) to do interpolation
-    #  For each profile point, we can use RectBivariateSpline
-    #  to get the value for any detector X/Y position.
-
-    # For each fiber, you could interpolate the profile for all columns
-    # at once.  Then use
-
-    # When we do extraction, we do it one column at a time.
-    # We want profiles for all 300 fibers and a single column
-    # take the two closest Y positions in the 3D profile grid
-    # then linearly interpolate (Nprofile,Ny) for those two X points,
-    # Then we have (Nprofile,Ny) for the column of interest.
-    # Use RectBivariateSpline on the (Nprofile,Ny) data for this column
-    # and the trace positions for the 300 fibers for this column to
-    # get full profiles for each fiber (Nprofile,300).
-    # Then get the actual profiles for each fiber using the trace
-    # positions and pixel values (could do the last two steps together).
-    
-    # 2) ANN
-    # train an ANN on the profiles as an emulator
-    # you give it the detector X/Y position and it returns the profile
-    # for that position
-  
-
-    # When we do extraction, we want to solve the three neighbors simultanously
-    # but the wings affect +/-15 pixels or two neighbors on each side.
-    # The pixels nearest the peak have the most weight for solving the fiber's
-    # flux, but wings will affect the solution (especially for bright fibers).
-    
