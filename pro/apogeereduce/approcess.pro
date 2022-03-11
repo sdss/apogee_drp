@@ -142,9 +142,14 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
       endif
       wavedir = apogee_filename('Wave',num=0,chip='a',/dir)
       expdir = apogee_filename('2D',num=num,chip='a',/dir)
-      AP2DPROC,expdir+'/'+string(format='(i8.8)',num),$
-               tracefile,4,outdir=outdir,wavefile=wavefile,$
-               clobber=clobber,skywave=skywave,unlock=unlock
+      cmd = ['ap2d','--num',string(format='(i8.8)',num),'--apred',dirs.apred,'--telescope',dirs.telescope,'--waveid',waveid]
+      if keyword_set(clobber) then cmd=[cmd,'--clobber']
+      if keyword_set(unlock) then cmd=[cmd,'--unlock']
+      spawn,cmd,/noshell
+
+      ;;AP2DPROC,expdir+'/'+string(format='(i8.8)',num),$
+      ;;         tracefile,4,outdir=outdir,wavefile=wavefile,$
+      ;;         clobber=clobber,skywave=skywave,unlock=unlock
 
       chiptag = ['a','b','c']
       files = apogee_filename('2D',num=num,chip=chiptag)

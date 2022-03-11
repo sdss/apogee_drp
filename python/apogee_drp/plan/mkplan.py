@@ -369,7 +369,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
            names=None,onem=False,hmags=None,mapper_data=None,suffix=None,
            ignore=False,test=False,logger=None,configid=None,designid=None,
            fieldid=None,fps=False,force=False,fpi=None,ap3d=False,ap2d=False,
-           waveid=None,psflibrary=None,clobber=False):
+           waveid=None,psflibrary=None,modelpsf=None,clobber=False):
     """
     Makes plan files given input image numbers, MJD, psfid, fluxid
     includes options for dark frames, calibration frames, sky frames,
@@ -443,6 +443,8 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
           calibration file from the master calibration inventory is used.
     psflibrary : boolean, optional
         Use PSF library for extraction.
+    modelpsf : int, optional
+        The Model PSF calibration file to use.
     clobber : boolean, optional
         Overwrite existing file.
 
@@ -714,8 +716,11 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             psfid = np.array(psfnum)[si][0]
             out['psfid'] = str(psfid)
         # Use psflibrary for all FPS exposures
-        if fps or psflibrary:
+        if fps and psflibrary:
             out['psflibrary'] = 1
+        # Use Model PSF for extraction
+        if modelpsf:
+            out['modelpsf'] = int(caldata['modelpsf'])
         # Flux calibration file
         if fluxid is not None:
             out['fluxid'] = fluxid
@@ -1079,7 +1084,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
                 # Use PSF library during FPS era
                 #   quartzflat PSFID is a "backup" 
-                objplan['psflibrary'] = 1  
+                #objplan['psflibrary'] = 1  
+                objplan['modelpsf'] = True
                 if len(fpi)>0 and mjd>=59604:  # two-FPI fibers weren't used routinely until 59604
                     # Get closest FPI to this exposure
                     if len(fpi)>1:
@@ -1111,7 +1117,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                 if fps:
                     # Use PSF library during FPS era
                     #   quartzflat PSFID is a "backup" 
-                    skyplan['psflibrary'] = 1  
+                    #skyplan['psflibrary'] = 1  
+                    skyplan['modelpsf'] = true
                     skyplan['configid'] = str(expinfo['configid'][i])
                     skyplan['designid'] = str(expinfo['designid'][i])
                     skyplan['fieldid'] = str(expinfo['fieldid'][i])
@@ -1146,7 +1153,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         if fps:
             # Use PSF library during FPS era
             #   quartzflat PSFID is a "backup" 
-            darkplan['psflibrary'] = 1  
+            #darkplan['psflibrary'] = 1  
+            darkplan['modelpsf'] = True
             darkplan['configid'] = str(expinfo['configid'][i])
             darkplan['designid'] = str(expinfo['designid'][i])
             darkplan['fieldid'] = str(expinfo['fieldid'][i])
@@ -1163,7 +1171,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         if fps:
             # Use PSF library during FPS era
             #   quartzflat PSFID is a "backup" 
-            calplan['psflibrary'] = 1  
+            #calplan['psflibrary'] = 1  
+            calplan['modelpsf'] = True
             calplan['configid'] = str(expinfo['configid'][i])
             calplan['designid'] = str(expinfo['designid'][i])
             calplan['fieldid'] = str(expinfo['fieldid'][i])

@@ -20,6 +20,7 @@ import subprocess
 import pdb
 import traceback
 from apogee_drp.plan import mkplan
+from apogee_drp.apred import ap2d
 
 if __name__ == '__main__' :
 
@@ -28,8 +29,10 @@ if __name__ == '__main__' :
         description='Runs apogee ap2D reduction')
     parser.add_argument('--planfile', type=str, nargs=1, help='Plan file')
     parser.add_argument('--num', type=str, nargs=1, help='Exposure number')
-    parser.add_argument('--vers', type=str, nargs=1, help='APOGEE Reduction version')
+    parser.add_argument('--apred', type=str, nargs=1, help='APOGEE Reduction version')
     parser.add_argument('--telescope', type=str, nargs=1, help='Telescope')
+    parser.add_argument('--psfid', type=str, nargs=1, help='PSF calibration file ID')
+    parser.add_argument('--waveid', type=str, nargs=1, help='Wavelength calibration file ID')
     parser.add_argument('--clobber', help='Overwrite files?',action="store_true")
     parser.add_argument('--unlock', help='Remove lock files and start fresh',action="store_true")
     args = parser.parse_args()
@@ -42,6 +45,12 @@ if __name__ == '__main__' :
         unlock = '1'
     else:
         unlock = '0'
+    psfid = args.psfid
+    if type(psfid) is list:
+        psfid = psfid[0]
+    waveid = args.waveid
+    if type(waveid) is list:
+        waveid = waveid[0]
 
     if args.planfile is None and args.num is None:
         raise ValueError('Must input either planfile or exposure number')
@@ -51,13 +60,14 @@ if __name__ == '__main__' :
         if args.vers is None or args.telescope is None:
             raise ValueError('vers and telescope must be input with exposure num')
         num = int(args.num[0])
-        vers = args.vers[0]
+        apred = args.apred[0]
         telescope = args.telescope[0]
-        planfile = mkplan.mkplan(num,apred=vers,telescope=telescope,ap3d=True)
+        planfile = mkplan.mkplan(num,apred=apred,telescope=telescope,waveid=waveid,psfid=psfid,ap3d=True)
     else:
         planfile = args.planfile[0]
 
     try:
-        subprocess.call(["idl","-e","ap2d,'"+planfile+"',clobber="+clobber+",unlock="+unlock])
+        ap2d.ap2d(planfile,clobber=args.clobber,unlock=args.unlock)
+        #subprocess.call(["idl","-e","ap2d,'"+planfile+"',clobber="+clobber+",unlock="+unlock])
     except:
         traceback.print_exc()
