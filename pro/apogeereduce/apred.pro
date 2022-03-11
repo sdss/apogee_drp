@@ -93,7 +93,7 @@ endif else if strpos(planfile,'apPlan-') ge 0 or strpos(planfile,'apCalPlan-') g
 print,'.yaml'
   if (bin and 1) ne 0 then ap3d,planfile,clobber=clobber
   ;;if (bin and 2) ne 0 then ap2d,planfile,clobber=clobber
-  if (bin and 2) ne 0 then spawn,['ap2d',planfile,'--clobber'],/noshell
+  if (bin and 2) ne 0 then spawn,['ap2d','--planfile',planfile,'--clobber'],/noshell
   if (bin and 4) ne 0 then ap1dvisit,planfile,clobber=clobber
 
 ;endif else if strpos(planfile,'apMJD-') ge 0 or strpos(planfile,'asMJD-') ge 0 then  begin

@@ -1006,7 +1006,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         if planstr is None:
             continue
  
-        load = apload.ApLoad(apred=planstr['apogee_drp_ver'],telescope=planstr['telescope'])
+        load = apload.ApLoad(apred=planstr['apred_vers'],telescope=planstr['telescope'])
         logfile = load.filename('Diag',plate=planstr['plateid'],mjd=planstr['mjd'])
 
 
@@ -1117,11 +1117,11 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         if waveid > 0: 
             # This is now normally a dailywave with the MJD name  
             if int(waveid) < 1e7:
-                wavefile = load.filename('Wave',num=planstr['waveid'],chips=True)[0:-13]+str(planstr['waveid'])+'.fits'
-                allfiles = [wavefile.replace('Wave-','Wave-'+ch+'-') for ch in chiptag]
-                exists = [os.path.exists(f) for f in allfiles]
+                wfile = load.filename('Wave',num=planstr['waveid'],chips=True)[0:-13]+str(planstr['waveid'])+'.fits'
+                wavefiles = [wfile.replace('Wave-','Wave-'+ch+'-') for ch in chiptag]
+                exists = [os.path.exists(f) for f in wavefiles]
                 if np.sum(exists)==3:
-                    print(wavefile+' already made')
+                    print(wfile+' already made')
                 else:
                     sout = subprocess.run(['makecal','--dailywave',str(waveid)],shell=False)
             else:

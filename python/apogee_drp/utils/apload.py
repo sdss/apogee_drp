@@ -792,7 +792,7 @@ class ApLoad:
             prefix = [prefix]
         for p in prefix:
             if lroot=='sparse':
-                outfiles = [os.path.dirname(self.filename('PSF',num=0,chips=True))+'/apSparse-'+str(num)+'.fits']
+                outfiles = [self.filename(p,num=num,**kwargs)]
             else:
                 outfile = self.filename(p,num=num,mjd=mjd,chips=True,**kwargs)
                 outfiles += [outfile.replace(p+'-',p+'-'+ch+'-') for ch in chips]
