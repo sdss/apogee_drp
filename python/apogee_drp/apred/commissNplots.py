@@ -144,10 +144,11 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TMASS_STYLE'] == star)
-        p = ax.plot(wave[g][0], flux[g][0])
-        g, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
-        c = p[0].get_color()
-        ax.text(0.05, 0.97-.04*iexp, 'alt = ' + str("%.3f" % round(allexp['ALT'][g][0],3)), color=c, fontsize=fsz, transform=ax.transAxes, va='top')
+        if len(g) > 0:
+            p = ax.plot(wave[g][0], flux[g][0])
+            g, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
+            c = p[0].get_color()
+            ax.text(0.05, 0.97-.04*iexp, 'alt = ' + str("%.3f" % round(allexp['ALT'][g][0],3)), color=c, fontsize=fsz, transform=ax.transAxes, va='top')
 
     fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
