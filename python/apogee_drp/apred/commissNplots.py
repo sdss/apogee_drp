@@ -137,7 +137,6 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
     ax1.axes.xaxis.set_ticklabels([])
-    ax1.text(0.5, 1.02, star, transform=ax1.transAxes, ha='center')
     ax1.set_ylabel(r'Flux')
     ax2.set_ylabel(r'Norm Flux')
     ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
@@ -152,6 +151,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TMASS_STYLE'] == star)
         g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
+        txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3))
+        if exp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
         if len(g) > 0:
             p = ax1.plot(wave[g][0], flux[g][0])
             c = p[0].get_color()
@@ -160,7 +161,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             ax1.text(0.02, 0.97-.04*iexp, txt+txt1, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
 
-    fig.subplots_adjust(left=0.07,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+    fig.subplots_adjust(left=0.073,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
     plt.close('all')
 
