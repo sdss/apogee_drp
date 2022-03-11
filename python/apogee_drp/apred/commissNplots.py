@@ -125,7 +125,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     allsnrg = allsnr[p][uind]
     nexp = len(allsnrg)
 
-    fig = plt.figure(figsize=(25,14))
+    fig = plt.figure(figsize=(25,16))
     ax1 = plt.subplot2grid((2,1), (0,0))
     ax2 = plt.subplot2grid((2,1), (1,0))
     axes = [ax1, ax2]
@@ -135,7 +135,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
-
+    ax1.axes.xaxis.set_ticklabels([])
+    ax1.text(0.5, 1.02, star, transform=ax1.transAxes, ha='center')
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
     for iexp in range(nexp):
@@ -146,14 +147,15 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TMASS_STYLE'] == star)
+        g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
         if len(g) > 0:
             p = ax1.plot(wave[g][0], flux[g][0])
-            g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
             c = p[0].get_color()
-            ax1.text(0.05, 0.97-.04*iexp, 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)), color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
+            txt = 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
+            ax1.text(0.05, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
 
-    fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+    fig.subplots_adjust(left=0.07,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
     plt.close('all')
 
