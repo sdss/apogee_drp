@@ -137,7 +137,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         flux = fits.getdata(cfile)
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
-        g, = np.where(obj['TWOMASS_DESIGNATION'] == star)
+        g, = np.where(obj['TMASS_STYLE'] == star)
         pdb.set_trace()
         ax.plot(wave[g][0], flux[g][0])
 
