@@ -127,6 +127,12 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
 
     fig = plt.figure(figsize=(20,12))
     ax = plt.subplot2grid((1,1), (0,0))
+    ax.minorticks_on()
+    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax.tick_params(axis='both',which='major',length=axmajlen)
+    ax.tick_params(axis='both',which='minor',length=axminlen)
+    ax.tick_params(axis='both',which='both',width=axwidth)
+
 
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
@@ -138,14 +144,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TMASS_STYLE'] == star)
-        pdb.set_trace()
         ax.plot(wave[g][0], flux[g][0])
-
-        ax.minorticks_on()
-        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax.tick_params(axis='both',which='major',length=axmajlen)
-        ax.tick_params(axis='both',which='minor',length=axminlen)
-        ax.tick_params(axis='both',which='both',width=axwidth)
 
     fig.subplots_adjust(left=0.05,right=0.95,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
