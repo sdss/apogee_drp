@@ -9,6 +9,7 @@ from . import psf,wave
 from dlnpyutils import utils as dln
 from astropy.io import fits
 import subprocess
+import getpass
 
 global savedepsf, savedepsffiles, epsfchip 
 try:
@@ -467,7 +468,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         head['APRED'] = load.apred,'APOGEE Reduction version' 
         head['HISTORY'] = leadstr+time.asctime()
         import socket
-        head['HISTORY'] = leadstr+os.getlogin()+' on '+socket.gethostname()
+        #head['HISTORY'] = leadstr+os.getlogin()+' on '+socket.gethostname()
+        head['HISTORY'] = leadstr+getpass.getuser()+' on '+socket.gethostname()
         import platform
         head['HISTORY'] = leadstr+'Python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
         # add reduction pipeline version to the header
