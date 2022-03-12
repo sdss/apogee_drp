@@ -1185,7 +1185,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                      'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':extra, 'fps':fps,
                      'extra':True}
         if waveid:
-            extraplan['waveid'] = wawveid
+            extraplan['waveid'] = waveid
         if fps:
             # Use PSF library during FPS era
             #   quartzflat PSFID is a "backup" 
