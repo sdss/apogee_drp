@@ -28,8 +28,9 @@ from scipy.interpolate import interp1d
 #from lmfit import Model
 #from apogee.utils import yanny, apload
 #from sdss_access.path import path
-from dlnpyutils import bindata
-from ..utils import plan,apload,utils
+import traceback
+from dlnpyutils import utils as dln,bindata
+from ..utils import plan,apload,utils,apzip
 from . import mjdcube
 
 # Ignore these warnings, it's a bug
@@ -403,9 +404,8 @@ def ap3dproc_crfix(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,cr
 def loaddetector(detcorr,silent=True):
     """ Load DETECTOR FILE (with gain, rdnoise and linearity correction). """
     
-
     # DETCORR must be scalar string
-    if (type(detcorr) != str) | (dln.size(bpmcorr) > 1):
+    if (type(detcorr) != str) | (dln.size(detcorr) > 1):
         raise ValueError('DETCORR must be a scalar string with the filename of the DETECTOR file')
     # Check that the file exists
     if os.path.exists(detcorr) is False:
@@ -420,10 +420,12 @@ def loaddetector(detcorr,silent=True):
     #  where the 2 is for a quadratic polynomial
     lindata,linhead = fits.getdata(detcorr,3,header=True)
     if silent is False: print('DET file = '+detcorr)
+
   
     # Check that the file looks reasonable
     # Must be 2048x2048 or 4 and have be float
-    if ((gainim.ndim==2) & (gainim.shape != (2048,2048))) | ((gainim.ndim==1) & (gainim.size != 4)) | (type(gainim) != np.float32):
+    if ((gainim.ndim==2) & (gainim.shape != (2048,2048))) | ((gainim.ndim==1) & (gainim.size != 4)) | \
+        (isinstance(gainim[0], (np.floating, float))==False):
         raise ValueError('GAIN image must be 2048x2048 or 4 FLOAT image')
   
     # If Gain is 4-element then make it an array
@@ -434,8 +436,8 @@ def loaddetector(detcorr,silent=True):
             gainim[:,k*512:(k+1)*512] = gainim0[k]
   
     # Must be 2048x2048 or 4 and have be float
-    rny,rnx = rdnoiseim.shape
-    if ((rdnoiseim.ndim==2) & (rdnoiseim.shape != (2048,2048)) | ((rdnoiseim.ndim==1) & (rdnoiseim.size != 4)) | (type(rdnoiseim) != np.float32)):
+    if ((rdnoiseim.ndim==2) & (rdnoiseim.shape != (2048,2048))) | ((rdnoiseim.ndim==1) & (rdnoiseim.size != 4)) | \
+        (isinstance(rdnoiseim[0], (np.floating, float))==False):
         raise ValueError('RDNOISE image must be 2048x2048 or 4 FLOAT image')
   
     # If rdnoise is 4-element then make it an array
@@ -450,24 +452,25 @@ def loaddetector(detcorr,silent=True):
         #  This should be 2048x2048x3 (each pixel) or 4x3 (each output),
         #  where the 3 is for a quadratic polynomial
         
-        szlin = size(lindata)
+        szlin = lindata.shape
         linokay = 0
-        if (szlin[0] == 2 and szlin[1] == 4 and szlin[2] == 3):
+        if (lindata.ndim == 2 and szlin[0] == 3 and szlin[1] == 4):
             linokay = 1
-        if (szlin[0] == 3 and szlin[1] == 2048 and szlin[2] == 2048 and szlin[3] == 3):
+            lindata = lindata.T  # flip
+        if (lindata.ndim == 3 and szlin[0] == 2048 and szlin[1] == 2048 and szlin[2] == 3):
             linokay = 1
         if linokay==0:
             raise ValueError('Linearity correction data must be 2048x2048x3 or 4x3')
 
 
-    return XX,XX
+    return rdnoiseim,gainim,lindata
   
 
 def loadbpm(bpmcorr,silent=True):
     """ Load BAD PIXEL MASK (BPM) File """
 
     # BPMCORR must be scalar string
-    if (type(bmpcorr) != str) | (dln.size(bpmcorr) > 1):
+    if (type(bpmcorr) != str) | (dln.size(bpmcorr) > 1):
         raise ValueError('BPMCORR must be a scalar string with the filename of the BAD PIXEL MASK file')
     # Check that the file exists
     if os.path.exists(bpmcorr) is False:
@@ -491,6 +494,8 @@ def loadbpm(bpmcorr,silent=True):
 
 def loadlittrow(littrowcorr,silent=True):
     """ Load LITRROW MASK File """
+
+    import pdb; pdb.set_trace()
 
     # LITTROWCORR must be scalar string
     if type(littrowcorr) is not str or np.array(littrowcorr).shape != 1:
@@ -526,7 +531,7 @@ def loadpersist(persistcorr,silent=True):
     """ Load PERSISTENCE MASK File """
   
     # PERSISTCORR must be scalar string
-    if type(persistcorr) is not str or np.array(persistcorr).shape != 1:    
+    if type(persistcorr) != str or dln.size(persistcorr) != 1:    
         error = 'PERSISTCORR must be a scalar string with the filename of the PERSIST MASK file'
         raise ValueError(error)
   
@@ -544,9 +549,9 @@ def loadpersist(persistcorr,silent=True):
   
     # Check that the file looks reasonable
     #  must be 2048x2048 and have 0/1 values
-    szpersist = size(persistim)
+    szpersist = persistim.shape
     persistokay = 0
-    if szpersist[0] != 2 or szpersist[1] != 2048 or szpersist[2] != 2048:
+    if persistim.ndim != 2 or szpersist[0] != 2048 or szpersist[1] != 2048:
         error = 'PERSISTENCE MASK must be 2048x2048'
         raise ValueError(error)
 
@@ -557,7 +562,7 @@ def loaddark(darkcorr,silent=True):
     """ Load DARK CORRECTION file """
 
     # DARKCORR must be scalar string
-    if type(darkcorr) is not str or np.array(darkcorr).shape != 1:    
+    if type(darkcorr) != str or dln.size(darkcorr) != 1:    
         error = 'DARKCORR must be a scalar string with the filename of the dark correction file'
         raise ValueError(error)
   
@@ -577,61 +582,48 @@ def loaddark(darkcorr,silent=True):
         # Extensions
         # Figure out how many reads/extensions there are
         #  the primary unit should be empty
-        nreads_dark = 0
-        message = ''
-        while (message == ''):
-            nreads_dark += 1
-            dum = fits.getheader(darkcorr,nreads_dark,errmsg=message)
-        nreads_dark -= 1  # removing the last one
-  
-
-    # Check that it has enough reads
-    #nreads_dark = sxpar(darkhead,'NAXIS3')
-    if nreads_dark < nreads:
-        error = 'SUPERDARK file '+darkcorr+' does not have enough READS. Have '+str(nreads_dark)+\
-                ' but need '+str(nreads)
-        raise ValueError(error)
+        hdu = fits.open(darkcorr)
+        nreads_dark = len(hdu)-1
+        hdu.close()
     
     # Load the dark correction file
     #  This needs to be 2048x2048xNreads
     #  It's the dark counts for each pixel in counts
   
     # Datacube
-    if darkhead['NAXIS'] == 3:
+    if darkhead1['NAXIS'] == 3:
         darkcube = fits.getdata(darkcorr)
-
+        darkcube = np.swapaxes(darkcube,2,0)  # [nreads,ny,nx] -> [ny,nx,nreads]
     # Extensions
     else:
-  
         # Initializing the cube
-        darkim,exthead = fits.getdata(darkcorr,1)
+        darkim,exthead = fits.getdata(darkcorr,1,header=True)
         ny,nx = darkim.shape
         darkcube = np.zeros((ny,nx,nreads_dark),float)
   
         # Read in the extensions
+        hdu = fits.open(darkcorr)
         for k in np.arange(1,nreads_dark):
-            extim,exthead = fits.getdata(darkcorr,k)
-            darkcube[:,:,k-1] = extim
-  
-    szdark = size(darkcube)
-  
+            darkcube[:,:,k-1] = hdu[k].data
+        hdu.close()
+
     if silent==False:
         print('Dark Correction file = '+darkcorr)
   
     # Check that the file looks reasonable
-    szdark = size(darkcube)
-    if (szdark[0] != 3 or szdark[1] < 2048 or szdark[2] != 2048):
+    szdark = darkcube.shape
+    if (darkcube.ndim != 3 or szdark[0] < 2048 or szdark[1] != 2048):
         error = 'Dark correction data must a 2048x2048xNreads datacube of the dark counts per pixel'
         raise ValueError(error)
     
-    return darkcube,darkhead
+    return darkcube,darkhead1
 
 
 def loadflat(flatcorr,silent=True):
     """ Load FLAT FIELD CORRECTION file """
   
     # FLATCORR must be scalar string
-    if type(flatcorr) is not str or np.array(flatcorr).shape != 1:    
+    if type(flatcorr) != str or dln.size(flatcorr) != 1:    
         error = 'FLATCORR must be a scalar string with the filename of the flat correction file'
         raise ValueError(error)
   
@@ -648,8 +640,8 @@ def loadflat(flatcorr,silent=True):
         print('Flat Field Correction file = '+flatcorr)
   
     # Check that the file looks reasonable
-    szflat = size(flatim)
-    if (szflat[0] != 2 or szflat[1] != 2048 or szflat[2] != 2048):
+    szflat = flatim.shape
+    if (flatim.ndim != 2 or szflat[0] != 2048 or szflat[1] != 2048):
         error = 'Flat Field correction image must a 2048x2048 image'
         raise ValueError(error)
 
@@ -1138,12 +1130,22 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
 
         # if another job is working on this file, wait
         if len(outfile) > 0:
-            #if utils.localdir() is not None:
-            #    lockfile = utils.localdir()+'/'+os.path.basename((outfile[f])+'.lock')
-            #else:
-            #    lockfile = outfile[f]+'.lock'
-            #while os.path.exists(lockfile):
-            #    apwait,lockfile,10
+            if utils.localdir() is not None:
+                lockfile = utils.localdir()+'/'+os.path.basename((outfile[f])+'.lock')
+            else:
+                lockfile = outfile[f]+'.lock'
+            if not unlock and not clobber:
+                while os.path.exists(lockfile):
+                    print('Waiting for lockfile '+lockfile)
+                    time.sleep(10)
+            else: 
+                if os.path.exists(lockfile): 
+                    os.remove(lockfile)
+
+            if os.path.exists(os.path.dirname(lockfile))==False:
+                os.mkdirs(os.path.dirname(lockfile))
+            open(lockfile,'w').close()
+
 
             ## Test if the output file already exists
             #if (os.path.exists(outfile[f]) or os.path.exists(outfile[f]+'.fz')) and clobber==False:
@@ -1183,7 +1185,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             # Check if the decompressed file already exists
             nbase = len(base)
             if fitsdir is not None:
-                fitsfile = fitsdir+'/'+base[0,nbase-4]+'.fits' 
+                fitsfile = fitsdir+'/'+base[0:nbase-4]+'.fits' 
             else:
                 fitsfile = fdir+'/'+base[0:nbase-4]+'.fits'
                 fitsdir = None
@@ -1198,18 +1200,15 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
                 else:
                     no_checksum = 0 
                 print('no_checksum: ', no_checksum)
-                import pdb; pdb.set_trace()
-                apzip.apunzip(ifile,clobber=True,fitsdir=fitsdir,no_checksum=True)
-                print('')
-                doapunzip = True     # we ran apunzip
-  
-                # An error occurred
-                if len(errzip) > 0:
-                    error = 'ERROR in APUNZIP '+errzip
-                    if silent==False:
-                        print('halt: '+error)
+                try:
+                    apzip.unzip(ifile,clobber=True,fitsdir=fitsdir,no_checksum=True)
+                except:
+                    traceback.print_exc()
+                    print('ERROR in APUNZIP')
                     import pdb; pdb.set_trace()
                     continue
+                print('')
+                doapunzip = True     # we ran apunzip
 
             # Decompressed file already exists
             else:
@@ -1232,8 +1231,6 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             if extension == 'apz' and cleanuprawfile and doapunzip == 1:
                 print('Removing recently decompressed FITS file at end of processing')
 
-
-        import pdb; pdb.set_trace()
   
         # Check that the file exists
         if os.path.exists(ifile)==False:
@@ -1244,8 +1241,9 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             continue
  
         # Get header
-        head = fits.getheader(ifile,errmsg=errmsg)
-        if errmsg != '':
+        try:
+            head = fits.getheader(ifile)
+        except:
             error = 'There was an error loading the HEADER for '+ifile
             if silent==False:
                 print('halt: '+error)
@@ -1254,8 +1252,12 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
   
         # Check that this is a data CUBE
         naxis = head['NAXIS']
-        dumim,dumhead = fits.getdata(ifile,1,header=True)
-        if naxis != 3:
+        try:
+            dumim,dumhead = fits.getdata(ifile,1,header=True)
+            readokay = True
+        except:
+            readokay = False
+        if naxis != 3 and readokay==False:
             error = 'FILE must contain a 3D DATACUBE OR image extensions'
             if silent==False:
                 print('halt: '+error)
@@ -1284,12 +1286,8 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             head = fits.getheader(ifile)
             # Figure out how many reads/extensions there are
             #  the primary unit should be empty
-            nreads = 0
-            message = ''
-            while (message == ''):
-                nreads += 1
-                dum = fits.getheader(ifile,nreads,errmsg=message)
-            nreads -= 1  # removing the last one
+            hdu = fits.open(ifile)
+            nreads = len(hdu)-1
   
             # Only 1 read
             if nreads < 2:
@@ -1303,17 +1301,18 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
                   nreads = maxread
   
             # Initializing the cube
-            im1 = fits.getdata(ifile,1)
+            im1 = hdu[1].data
             ny,nx = im1.shape
             cube = np.zeros((ny,nx,nreads),int)    # long is big enough and takes up less memory than float
   
             # Read in the extensions
             for k in np.arange(1,nreads+1):
-                extim,exthead = fits.getdata(ifile,k,header=True)  # uint
-                cube[:,:,k] = extim
+                cube[:,:,k-1] = hdu[k].data
                 # What do we do with the extension headers???
                 # We could make a header structure or array
-  
+            hdu.close()
+
+
         # Dimensions of the cube
         ny,nx,nreads = cube.shape
         #type = size(cube,/type)  # UINT
@@ -1336,20 +1335,27 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             print('Only 2 READS. CANNOT fix Saturated pixels')
 
         # Load the detector file
-        XX,YY,ZZ = loaddetector(detcorr)
+        rdnoiseim,gainim,lindata = loaddetector(detcorr)
         # Load the bad pixel mask
-        bpmim,bpmhead = loadbpm(bpmcorr)
+        if bpmcorr:
+            bpmim,bpmhead = loadbpm(bpmcorr)
         # Load the littrow mask file
-        littrowim,littrowhead = loadlittrow(littrowcorr)
+        if littrowcorr:
+            littrowim,littrowhead = loadlittrow(littrowcorr)
         # Load the persistence file
-        persistim,persisthead = loadpersist(persistcorr)
+        if persistcorr:
+            persistim,persisthead = loadpersist(persistcorr)
         # Load the dark cube
         darkcube,darkhead = loaddark(darkcorr)
         # Load the flat image
         flatim,flathead = loadflat(flatcorr)
 
-        
-        ## I GOT TO HERE !!!!!
+        # Check that it has enough reads
+        _,_,nreads_dark = darkcube.shape
+        if nreads_dark < nreads:
+            error = 'SUPERDARK file '+darkcorr+' does not have enough READS. Have '+str(nreads_dark)+\
+                    ' but need '+str(nreads)
+            raise ValueError(error)
 
         if len(detcorr) > 0 or len(darkcorr) > 0 or len(flatcorr) > 0 and silent==False:
             print('')
@@ -1366,21 +1372,21 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
         import pdb; pdb.set_trace()
     
         if sz[1] == 2560:
-            refout1 = median(cube[2048:,:,0:3<(nreads-1)],dim=3)
+            refout1 = np.median(cube[2048:,:,0:3<(nreads-1)],dim=3)
             sig_refout_arr = np.zeros(nreads,float)
             rms_refout_arr = np.zeros(nreads,float)
   
   
-        refpix1 = [[ median(cube[0:2047,0:3,0:3<(nreads-1)],dim=3) ], 
-                   [transpose( median(cube[0:3,:,0:3<(nreads-1)],dim=3) ) ],
-                   [transpose( median(cube[2044:2047,:,0:3<(nreads-1)],dim=3) ) ],
-                   [ median(cube[0:2047,2044:2047,0:3<(nreads-1)],dim=3) ]]
+        refpix1 = [[ np.median(cube[0:2048,0:3,0:4<nreads],axis=2) ], 
+                   [transpose( np.median(cube[0:4,:,0:4<nreads],axis=2) ) ],
+                   [transpose( np.median(cube[2044:2048,:,0:4<nreads],axis=2) ) ],
+                   [ median(cube[0:2048,2044:2048,0:4<(nreads-1)],axis=2) ]]
         sig_refpix_arr = np.zeros(nreads,float)
         rms_refpix_arr = np.zeros(nreads,float)
 
         for k in range(nreads):
-            refpix = [[cube[0:2047,0:3,k]], [transpose(cube[0:3,:,k])],
-                      [transpose(cube[2044:2047,:,k])], [cube[0:2047,2044:2047,k]]]
+            refpix = [[cube[0:2048,0:4,k]], [transpose(cube[0:4,:,k])],
+                      [transpose(cube[2044:2048,:,k])], [cube[0:2048,2044:2048,k]]]
             refpix = float(refpix)
   
             # The top reference pixels are normally bad
@@ -1575,7 +1581,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
         #---------------------------------
         # Flag BAD pixels
         #---------------------------------
-        if bpmim is not None:
+        if bpmcorr is not None:
             bdpix, = np.where(bpmim[:,i] > 0,nbdpix)
             nbdpix = len(bdpix)
             if nbdpix > 0:
@@ -1586,7 +1592,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
         #---------------------------------
         # Flag LITTROW ghost pixels, but don't change data values
         #---------------------------------
-        if littrowim is not None:
+        if littrowcorr is not None:
             bdpix, = np.where(littrowim[:,i] == 1)
             nbdpix = len(bdpix)
             if nbdpix > 0:
@@ -1595,7 +1601,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
         #---------------------------------
         # Flag persistence pixels, but don't change data values
         #---------------------------------
-        if persistim is not None:
+        if persistcorr is not None:
             bdpix, = np.where(persistim[:,i] and 1)
             if len(bdpix) > 0:
                 mask[bdpix,i] = (mask[bdpix,i] | maskval('PERSIST_HIGH'))
@@ -2578,22 +2584,28 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
         # Then check if the calibration files exist
         #--------------------------------------
 
-        caltypes = ['det','dark','flat','bpm','littrow','persist','persistmodel','hist']
-        calnames = ['Detector','Dark','Flat','BPM','Littrow','Persist','PersistModel','Hist']
-        for in range(len(caltypes)):
-            caltype = cals[i]
+        caltypes = ['det','dark','flat','bpm','littrow','persist','persistmodel']
+        calnames = ['Detector','Dark','Flat','BPM','Littrow','Persist','PersistModel']
+        for i in range(len(caltypes)):
+            caltype = caltypes[i]
             calid = caltype+'id'
             calname = calnames[i]
             if planstr[calid] != 0:
                 if load.exists(calname,num=planstr[calid]):
                     print(load.filename(calname,num=planstr[calid],chips=True)+' already exists')
                 else:
-                    if caltype == 'hist':
-                        mjdcube.mjdcube(planstr['mjd'],dark=planstr['darkid'])
-                    else:
-                        out = subprocess.run(['makecal','--'+calname.lower(),planstr[calid]],shell=False)
+                    out = subprocess.run(['makecal','--'+calname.lower(),planstr[calid]],shell=False)
                     if load.exists(calname,num=planstr[calid])==False:
                         raise ValueError(load.filename(calname,num=planstr[calid],chips=True)+' NOT FOUND')
+
+        # apHist file
+        if planstr['persistmodelid']>0:
+            if load.exists('Hist',num=planstr['mjd']):
+                print(load.filename('Hist',num=planstr['mjd'],chips=True)+' already exists')
+            else:
+                mjdcube.mjdcube(planstr['mjd'],dark=planstr['darkid'])
+                if load.exists('Hist',num=planstr['mjd'])==False:
+                    raise ValueError(load.filename('Hist',num=planstr['mjd'],chips=True)+' NOT FOUND')
 
   
         # Are there enough files
@@ -2783,7 +2795,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 # PROCESS the file
                 #-------------------
                 ap3dproc(chfile,outfile,cleanuprawfile=1,verbose=verbose,clobber=clobber,
-                         logfile=logfile,q3fix=q3fix,maxread=maxread,
+                         logfile=logfile,q3fix=q3fix,maxread=maxread,fitsdir=fitsdir,
                          usereference=usereference,refonly=refonly,seq=seq,unlock=unlock,**kws)
 
     utils.writelog(logfile,'AP3D: '+os.path.basename(planfile)+('%8.2f' % time.time()))

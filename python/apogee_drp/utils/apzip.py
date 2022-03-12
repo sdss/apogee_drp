@@ -14,8 +14,9 @@ import time
 from astropy.io import fits
 from astropy.table import Table, Column
 from glob import glob
-from . import config  # get loaded config values
-from . import __version__
+#from . import config  # get loaded config values
+#from . import __version__
+from dlnpyutils import utils as dln
 import subprocess
 import traceback
 import tempfile
@@ -362,7 +363,8 @@ def zip(files,delete=True,verbose=True):
     if verbose: print('dt = ',dt,' sec')
 
 
-def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir=None,nohalt=True):
+def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir=None,
+          nohalt=True,unlock=False):
     """
     This program uncompresses the raw APOGEE files
     that were compressed with APZIP
@@ -378,12 +380,21 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
 
     Parameters
     ----------
-    input     A list of input compressed raw bundled APOGEE fits files
-                with endings of .apz.
-    clobber  If output file exists then overwrite it.
-    delete   Delete compressed file after successfully uncompressing
-    silent   Don't print anything to the screen.
-    no_checksum If specified, will skip the checksum validation
+    input : str or list
+       A list of input compressed raw bundled APOGEE fits files
+         with endings of .apz.
+    clobber : boolean, optional
+       If output file exists then overwrite it.  Default is False.
+    delete : boolean, optional
+       Delete compressed file after successfully uncompressing
+    silent : boolean, optional
+       Don't print anything to the screen.  Default is False.
+    no_checksum : boolean, optional
+       If specified, will skip the checksum validation
+    fitsdir : str, optional
+       The output directory.
+    unlock : boolean, optional
+       Delete any lock file and start fresh.  Default is False.
 
     Returns
     -------
@@ -392,6 +403,7 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
 
     Example
     -------
+
     unzip('apR-a-00000085.apz')
 
     By D.Nidever  August 2010
@@ -402,13 +414,16 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
     t0 = time.time()
 
     # Get the inputs
-    files = loadinput(input)
+    files = dln.loadinput(input)
+    nfiles = len(files)
 
     # More than one file input
     if nfiles > 1:
         for i in range(nfiles):
             unzip(files[i],clobber=clobber,delete=delete,silent=silent,error=error,no_checksum=no_checksum)
         return
+    if type(files) is list:
+        files = files[0]
 
     # Does file exist
     if os.path.exists(files)==False:
@@ -418,12 +433,11 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
         return
 
     # Check that "funpack" is available
-    spawn,['funpack','-H'],out,errout,/noshell
-    if errout[0] != '':
-        error = 'FUNPACK not found'
-        if silent==False:
-            print(error)
-        return
+    try:
+        out = subprocess.check_output(['which','funpack'],shell=False)
+        out = out.decode().split('\n')
+    except:
+        raise ValueError('FUNPACK not found')
 
     # Check that the extension is ".apz"
     fdir = os.path.dirname(files)+'/'
@@ -435,7 +449,7 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
         if silent==False:
             print(error)
         return
-    base = os.path.basename(files,'.apz')
+    base = os.path.basename(files)[0:-4]
 
     # Temporary directory
     #  use /tmp/ if possible otherwise the directory that the file is in
@@ -444,12 +458,12 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
     if fitsdir is not None:
         tempdir = fitsdir
     else:
-        tempdir = os.path.dirnames(files)
+        tempdir = os.path.dirname(files)
 
     # Getting file info
-    info = FILE_INFO(files)
+    filesize = os.path.getsize(files)
     if silent==False:
-        print('Uncompressing >>',files,'<< (',str(string(info.size/1e6,format='(F10.2)')),' MB)')
+        print('Uncompressing >>'+files+'<< (%.2f MB)' % (filesize/1e6))
 
     # Final output filename
     if fitsdir is not None:
@@ -459,30 +473,32 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
 
     # if another process is working already on this file, wait until done,
     #    then return
-    if os.path.exists(finalfile+'.lock'):
-        while os.path.existst(files+'.lock'):
-            apwait,files+'.lock',10
-        return
+    lockfile = finalfile+'.lock'
+    if not unlock and not clobber:
+        while os.path.exists(lockfile):
+            print('Waiting for lockfile '+lockfile)
+            time.sleep(10)    
+    else: 
+        if os.path.exists(lockfile): 
+            os.remove(lockfile)
 
-    # Does the file exist?
-    # open .lock file
-    openw,lock,/get_lun,finalfile+'.lock'
-    free_lun,lock
+    if os.path.exists(os.path.dirname(lockfile))==False:
+        os.mkdirs(os.path.dirname(lockfile))
+    open(lockfile,'w').close()
 
-    if os.path.exists(finalfile) and clobber=False:
+    if os.path.exists(finalfile) and clobber==False:
         if silent==False:
             print('Overwriting ',finalfile)
         if os.path.exists(finalfile): os.remove(finalfile)
-    if os.path.exists(finalfile) and clobber=False:
+    if os.path.exists(finalfile) and clobber==False:
         if silent==False:
             print(finalfile,' exists already.  Writing compressed file to ',finalfile+'.1')
         finalfile = finalfile+'.1'
 
 
-    # uncompress the input file to a temporary file
+    # Uncompress the input file to a temporary file
     # get a unique filename (and delete the created empty file)
-    outfile_uncmp = MKTEMP('apzip',outdir=tempdir)
-    outfile_uncmp = outfile_uncmp[0]
+    tid2,outfile_uncmp = tempfile.mkstemp(prefix="apzip",dir=tempdir)
     if os.path.exists(outfile_uncmp): os.remove(outfile_uncmp)
 
 
@@ -490,23 +506,25 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
     #-------------------------------------------
     if silent==False:
         print('Step I: Uncompress with funpack')
-    spawn,['funpack','-O',outfile_uncmp,'-C',files],out,errout,/noshell  # -C suppresses checksum update
-    if len(errout) > 1 or errout[0] != '':
-        error = 'halt:    fpack error '+errout
+    try:
+        out = subprocess.run(['funpack','-O',outfile_uncmp,'-C',files],shell=False)  # -C suppresses checksum update  
+    except:
+        traceback.print_exc()
+        error = 'halt:    fpack error '
         if silent==False:
-            if nohalf:
-                print(error):
+            if nohalt:
+                print('nohalt:   fpack error')
             else:
                 print(error)
                 import pdb; pdb.set_trace()
-        return
+                return
 
     # Get number of reads
     flag = 0
     nreads = 0
-    fits_open,outfile_uncmp,fcb
-    nreads=fcb.nextend
-    fits_close,fcb
+    hdu = fits.open(outfile_uncmp)
+    nreads = len(hdu)-1
+    hdu.close()
 
     if silent==False:
         print('        Nreads = ',str(nreads))
@@ -523,95 +541,90 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
         # Load average dCounts image
         avg_dcounts,head0 = fits.getdata(outfile_uncmp,0,header=True)
         #FITS_READ,outfile_uncmp,avg_dcounts,head0,exten=0,/no_abort,/noscale
-        junk=sxpar(head0,'CHECKSUM',count=dcount)
-        sz0 = size(avg_dcounts)
-        if dcount > 0 and no_checksum==False:
+        dcount = head0.get('CHECKSUM')
+        sz0 = avg_dcounts.shape
+        if dcount is not None and no_checksum==False:
             print('checking checksum 0')
-            res = FITS_TEST_CHECKSUM(head0,avg_dcounts,errmsg=errmsg)
-            if res == -1:
-                pass
-                ##error = '        Checksum failed on '+files+' (ext=0)'
-                ##if silent==False then print,error
-                ##return
+            pass
+            #res = FITS_TEST_CHECKSUM(head0,avg_dcounts,errmsg=errmsg)
+            #if res == -1:
+            #    error = '        Checksum failed on '+files+' (ext=0)'
+            #    if silent==False then print,error
+            #    return
 
         # Load read=1 (first one)
         read1,head1 = fits.getdata(outfile_uncmp,1,header=True)
-        #FITS_READ,outfile_uncmp,read1,head1,exten=1,/no_abort,/noscale
-        sz1 = size(read1)
-        junk=sxpar(head1,'CHECKSUM',count=dcount)
-        if dcount > 0 and no_checksum==False:
+        sz1 = read1.shape
+        dcount = head1.get('CHECKSUM')
+        if dcount is not None and no_checksum==False:
             print('checking checksum 1')
-            res = FITS_TEST_CHECKSUM(head1,read1,errmsg=errmsg)
-            if res == -1:
-                pass
-                ##error = '        Checksum failed on '+files+' (ext=1)'
-                ##if silent==False then print,error
-                ##return
+            pass
+            #res = FITS_TEST_CHECKSUM(head1,read1,errmsg=errmsg)
+            #if res == -1:
+            #    error = '        Checksum failed on '+files+' (ext=1)'
+            #    if silent==False then print,error
+            #    return
 
         # Check that image dimensions of AVG_DCOUNTS and READ1 match
-        if sz0[1] != sz1[1] or sz0[2] != sz1[2]:
+        if sz0 != sz1:
             error = '         Images dimensions of AVERAGE DCOUNTS (in exten=0) and READ1 (in exten=1) do NOT MATCH'
             if silent==False:
                 print(error)
             if os.path.exists(outfile_uncmp): os.remove(outfile_uncmp)  # delete temporary file
             return
 
+        # Initiate output HDUList
+        hdu = fits.HDUList()
+
         # Write primary HDU
         head0['SIMPLE'] = 'T',''
         head0['BITPIX'] = 16,''
         head0['NAXIS'] = 0
-        del head0['NAXIS1']
-        del head0['NAXIS2']
-        del head0['PCOUNT']
-        del head0['GCOUNT']
-        del head0['CHECKSUM']
-        del head0['DATASUM']
-        del head0['BZERO']
-        del head0['BSCALE']
-        fits_add_checksum, head0, /no_timestamp
-        MWRFITS,0,finalfile,head0,/silent,/create,/no_comment
+        todel = ['NAXIS1','NAXIS2','PCOUNT','GCOUNT','CHECKSUM','DATASUM','BZERO','BSCALE']
+        for nd in todel:
+            if head0.get(nd) is not None:
+                del head0[nd]
+        hdu.append(fits.PrimaryHDU(header=head0))
 
         # Write first read
-        head1['XTENSION'] = 'IMAGE','',before='SIMPLE'
-        bitpix = sxpar(head1,'BITPIX',count=bxcount)
-        if bxcount>0:
+        head1['XTENSION'] = 'IMAGE',''
+        bitpix = head1.get('BITPIX')
+        if bitpix is not None:
             head1['BITPIX'] = bitpix,''
         head1['NAXIS'] = 2
-        head1['NAXIS1'] = len(read1[*,0]),'', after='NAXIS'
-        head1['NAXIS2'] = len(read1[0,*]),'', after='NAXIS1'
-        head1['PCOUNT'] = 0,'', after='NAXIS2'
-        head1['GCOUNT'] = 1,'', after='PCOUNT'
-        del head1['SIMPLE']      # delete SIMPLE if present, only allowed in PDU
-        del head1['CHECKSUM']
-        del head1['DATASUM']
-        FITS_ADD_CHECKSUM, head1, read1, /no_timestamp
-        MWRFITS,read1,finalfile,head1,/silent, /no_comment       # write first read
-        
+        head1['NAXIS1'] = len(read1[0,:]),''
+        head1['NAXIS2'] = len(read1[:,0]),''
+        head1['PCOUNT'] = 0,''
+        head1['GCOUNT'] = 1,''
+        todel = ['SIMPLE','CHECKSUM','DATASUM']
+        for nd in todel:
+            if head1.get(nd) is not None:
+                del head1[nd]
+        hdu.append(fits.ImageHDU(read1,head1))        
+
         # Loop through extensions and add them together
         lastim = read1
         for i in np.arange(2,nreads+1):
             # Read in "residual" image
             residim,head = fits.getdata(outfile_uncmp,i,header=True)
-            #FITS_READ,outfile_uncmp,residim,head,exten=i,/no_abort,/noscale
-            junk=sxpar(head,'CHECKSUM',count=dcount)
-            sz = size(residim)
-            if dcount > 0 and no_checksum==False:
+            dcount = head.get('CHECKSUM')
+            sz = residim.shape
+            if dcount is not None and no_checksum==False:
                 print('checking checksum',i)
-                res = FITS_TEST_CHECKSUM(head,residim,errmsg=errmsg)
-                if res == -1:
-                    pass
-                    ##error = '         Checksum failed on '+files+' (ext='+strtrim(i,2)+')'
-                    ##if silent==False then print,error
-                    ##return
+                pass
+                #res = FITS_TEST_CHECKSUM(head,residim,errmsg=errmsg)
+                #if res == -1:
+                #    error = '         Checksum failed on '+files+' (ext='+strtrim(i,2)+')'
+                #    if silent==False then print,error
+                #    return
 
             # Check that the image dimension is correct
-            if sz[1] != sz1[1] or sz[2] !- sz1[2]:
+            if sz != sz1:
                 error = '         Images dimensions of READ1 (in exten=1) and RESID'+strtrim(i-1,2)+' (in exten='+strtrim(i,2)+') do NOT MATCH'
                 if silent==False:
                     print(error)
                 if os.path.exists(outfile_uncmp): os.remove(outfile_uncmp)  # delete temporary file
                 return
-
 
             # Re-construct the original counts
             #----------------------------------
@@ -621,35 +634,41 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
             #  So, adding avg_dcounts to resid gives back dcounts
             #  and you just keep adding dCounts to the last read to
             #  reconstruct all of the reads.
-            origim = int(lastim) + residim + avg_dcounts
-            origim = np.uint(origim)            # must be unsigned integer
+            origim = lastim.astype(int) + residim + avg_dcounts
+            origim = origim.astype(np.uint32)         # must be unsigned integer
             
             # Fix header
             head['BITPIX'] = 16,''     # unsigned integer
-            head['XTENSION'] = 'IMAGE','',before='SIMPLE'
+            head['XTENSION'] = 'IMAGE','' #,before='SIMPLE'
             head['NAXIS'] = 2
-            head['NAXIS1'] = len(origim[*,0]),'', after='NAXIS'
-            head['NAXIS2'] = len(origim[0,*]),'', after='NAXIS1'
-            head['PCOUNT'] = 0,'', after='NAXIS2'
-            head['GCOUNT'] = 1,'', after='PCOUNT'
-            del head['SIMPLE']      # delete SIMPLE if present, only allowed in PDU
+            head['NAXIS1'] = len(origim[0,:]),'' #, after='NAXIS'
+            head['NAXIS2'] = len(origim[:,0]),'' #, after='NAXIS1'
+            head['PCOUNT'] = 0,'' #, after='NAXIS2'
+            head['GCOUNT'] = 1,'' #, after='PCOUNT'
             head['BZERO'] = 32768,''
             head['BSCALE'] = 1,''
-            del head['CHECKSUM']
-            del head['DATASUM']
-            FITS_ADD_CHECKSUM, head, origim, /no_timestamp
+            todel = ['SIMPLE','CHECKSUM','DATASUM']
+            for nd in todel:
+                if head.get(nd) is not None:
+                    del head[nd]
             
             # Now write the original read
-            MWRFITS,origim,finalfile,head,/silent,/no_comment
-            
+            hdu.append(fits.ImageHDU(origim,head))   
+
             # Save last read
             lastim = origim
+
+        hdu.writeto(finalfile,overwrite=True,checksum=True)
+        hdu.close()
 
     # No data to uncompress, Nreads=0
     #---------------------------------
     else:
         # Just copy the file
-        FILE_COPY,outfile_uncmp,finalfile,/over,/allow
+        if os.path.exists(finalfile): os.remove(finalfile)
+        shutil.copyfile(outfile_uncmp,finalfile)
+
+    print('Writing to '+finalfile)
 
     # Delete temporary file
     if os.path.exists(outfile_uncmp): os.remove(outfile_uncmp)
@@ -660,7 +679,7 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
             print('Deleting Original file ',files)
         if os.path.exists(files): os.remove(files)
 
-    # remove lock file
+    # Remove lock file
     if os.path.exists(finalfile+'.lock'): os.remove(finalfile+'.lock')
 
     # Time elapsed
