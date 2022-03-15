@@ -157,7 +157,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ')'
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
             p = ax1.plot(wave[g][0], flux[g][0])
-            ylims = p.get_ylims()
+            ylims = ax1.get_ylim()
             ymx[iexp] = ylims[1]
             c = p[0].get_color()
             txt = 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
