@@ -148,8 +148,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     for iexp in range(nexp):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
         cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
-        plfile = visdir1 + 'apPlate-a-' + upl[iexp] + '-' + umjd[iexp] + '.fits'
-        visfile = visdir1 + 'apVisit-daily-apo25m-' + upl[iexp] + '-' + umjd[iexp] + '.fits'
+        plfile = visdir1 + 'apPlate-a-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
+#        visfile = visdir1 + 'apVisit-daily-apo25m-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
         print(os.path.basename(cfile))
         print(os.path.basename(plfile))
         flux = fits.getdata(plfile)
