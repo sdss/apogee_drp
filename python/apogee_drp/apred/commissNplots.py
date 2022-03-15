@@ -202,10 +202,10 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='hot'):
         if len(g) > 0:
             txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ')'
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
-            color = cmap(cmapShift+((np.max(secz)-secz[iex])*cmapConst))
+            c = cmap(cmapShift+((np.max(secz)-secz[iexp])*cmapConst))
             w = wave[g][0]; f = flux[g][0]
-            p = ax1.plot(w, f)
-            c = p[0].get_color()
+            p = ax1.plot(w, f, color=c)
+            #c = p[0].get_color()
             txt = str(allsnrg['IM'][iexp]) + '     ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
             ax1.text(1.01, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(w, f/np.nanmedian(f), color=c)
