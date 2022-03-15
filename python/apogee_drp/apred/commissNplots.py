@@ -117,10 +117,10 @@ xspan = xmax-xmin
 ###########################################################################################
 def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
     # telescopePosPerform.png
-    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePosPerform_' + star + '.png'
+    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_' + star + '.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
-    p, = np.where((allsnr['FIELD'] == field) & ((allsnr['exptime'] == 457) | (allsnr['exptime'] == 489)) & (allsnr['mjd'] != 59609))
+    p, = np.where((allsnr['FIELD'] == field) & ((allsnr['exptime'] == 457) | (allsnr['exptime'] == 489)))# & (allsnr['mjd'] != 59609))
     upl,uind = np.unique(allsnr['plate'][p], return_index=True)
     upl = allsnr['plate'][p]#[uind]
     umjd = allsnr['mjd'][p]#[uind]
@@ -213,7 +213,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
         g, = np.where(obj['TMASS_STYLE'] == star)
         g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
         if len(g) > 0:
-            txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ')'
+            txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ', field = ' + field + ')'
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
             c = cmap(((iexp+1)/nexp)+cmapShift)
             w = wave[g][0]; f = flux[g][0]
