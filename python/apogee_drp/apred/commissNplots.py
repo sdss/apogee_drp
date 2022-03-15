@@ -169,9 +169,9 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             pl1 = fits.getdata(plsumfile,1)
             pl2 = fits.getdata(plsumfile,2)
             gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
-            secz[iexp] = str("%.3f" % round(pl1['SECZ'][gg1][0],3))
+            secz[iexp] = pl1['SECZ'][gg1][0]
             gg2, = np.where(star == pl2['TMASS_STYLE'])
-            snr[iexp] = str(int(round(pl2['sn'][gg2[0], gg1[0], 0])))#.rjust(3)
+            snr[iexp] = pl2['sn'][gg2[0], gg1[0], 0]
             w = wave[g][0]; f = flux[g][0]
             ymxsec, = np.where((w > 16780) & (w < 16820))
             ymx[iexp] = np.nanmax(f[ymxsec])
@@ -200,7 +200,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             w = wave[g][0]; f = flux[g][0]
             p = ax1.plot(w, f)
             c = p[0].get_color()
-            txt = str(allsnrg['IM'][iexp]) + '     ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str("%.3f" % round(snr[iexp],3))
+            txt = str(allsnrg['IM'][iexp]) + '     ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
             ax1.text(1.01, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(w, f/np.nanmedian(f), color=c)
             ax3.plot(w, f/np.nanmedian(f), color=c)
