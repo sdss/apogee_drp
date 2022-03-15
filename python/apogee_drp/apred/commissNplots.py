@@ -141,7 +141,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         ax.tick_params(axis='both',which='both',width=axwidth)
     ax1.set_xlim(16475, 16945)
     ax2.set_xlim(16475, 16945)
-    ax3.set_xlim(16745, 16776)
+    ax3.set_xlim(16747, 16770)
     ax1.axes.xaxis.set_ticklabels([])
     ax3.axes.yaxis.set_ticklabels([])
     ax1.set_ylabel(r'Flux')
