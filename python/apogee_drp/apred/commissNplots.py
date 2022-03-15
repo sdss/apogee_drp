@@ -120,7 +120,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     plotfile = specdir5 + 'monitor/' + instrument + '/telescopePosPerform_' + star + '.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
-    p, = np.where((allsnr['FIELD'] == field) & (allsnr['exptime'] == 457))
+    p, = np.where((allsnr['FIELD'] == field) & (allsnr['exptime'] == 457) & (allsnr['mjd'] != 59609))
     upl,uind = np.unique(allsnr['plate'][p], return_index=True)
     upl = allsnr['plate'][p]#[uind]
     umjd = allsnr['mjd'][p]#[uind]
@@ -152,13 +152,13 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
         cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
         plsumfile = visdir1 + 'apPlateSum-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
-        print(os.path.basename(cfile))
         flux = fits.getdata(cfile)
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TMASS_STYLE'] == star)
         g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
         if len(g) > 0:
+            print(os.path.basename(cfile))
             txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ')'
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
 
