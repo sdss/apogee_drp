@@ -183,7 +183,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
 
     print(ymx/np.nanmax(ymx))
     ax1.set_ylim(0, np.nanmax(ymx)*1.15)
-    gd, = np.where((snr > 0) & (ymx > 0) & (ymx/np.nanmax(ymx) > 0.15))
+    gd, = np.where((snr > 0) & (ymx > 0) & (ymx/np.nanmax(ymx) > 0.2))
     sord = np.argsort(secz[gd])
     secz = secz[gd][sord]
     snr = snr[gd][sord]
