@@ -150,7 +150,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     for iexp in range(nexp):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
         cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
-        plsumfile = visdir1 + 'apPlateSum-a-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
+        plsumfile = visdir1 + 'apPlateSum-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
         print(os.path.basename(cfile))
         flux = fits.getdata(cfile)
         wave = fits.getdata(cfile,4)
