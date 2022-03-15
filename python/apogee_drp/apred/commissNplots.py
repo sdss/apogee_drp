@@ -122,7 +122,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
 
     p, = np.where((allsnr['FIELD'] == field) & (allsnr['exptime'] == 457))
     upl,uind = np.unique(allsnr['plate'][p], return_index=True)
-    umjd = allsnr['mjd'][p][uind]
+    upl = allsnr['plate'][p]#[uind]
+    umjd = allsnr['mjd'][p]#[uind]
     allsnrg = allsnr[p]#[uind]
     nexp = len(allsnrg)
 
