@@ -128,8 +128,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     nexp = len(allsnrg)
 
     fig = plt.figure(figsize=(28,16))
-    ax1 = plt.subplot2grid((2,6), (0,0), colspan=5)
-    ax2 = plt.subplot2grid((2,6), (1,0), colspan=5)
+    ax1 = plt.subplot2grid((2,8), (0,0), colspan=7)
+    ax2 = plt.subplot2grid((2,8), (1,0), colspan=7)
     axes = [ax1, ax2]
     for ax in axes:
         ax.minorticks_on()
