@@ -165,7 +165,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             ymxsec, = np.where((w > 16780) & (w < 16820))
             ymx[iexp] = np.nanmax(f[ymxsec])
             c = p[0].get_color()
-            txt = 'alt = ' + str("%.3f" % round(np.nanmean(allexp['ALT'][g1],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
+            txt = 'alt = ' + str("%.3f" % round(np.nanmean(allexp['ALT'][g1]),3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
             txt1 = ',  mjd = ' + str(allsnrg['mjd'][iexp])
             txt2 = ',  S/N = ' + str(int(round(obj['fiberid'][g][0])))
             #pdb.set_trace()
