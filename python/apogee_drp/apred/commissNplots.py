@@ -165,7 +165,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             pl2 = fits.getdata(plsumfile,2)
             gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
             secz = str("%.3f" % round(pl1['SECZ'][gg1][0],3))
-            gg2, = np.where(star = pl2['TMASS_STYLE'])
+            gg2, = np.where(star == pl2['TMASS_STYLE'])
             snr = str(int(round(pl2['sn'][gg2[0], gg1[0], 0])))
             w = wave[g][0]; f = flux[g][0]
             p = ax1.plot(w, f)
