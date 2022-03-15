@@ -213,7 +213,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
             ax11.plot(w, f, color=c)
             #c = p[0].get_color()
             txt = str(allsnrg['IM'][iexp]) + '     ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
-            ax11.text(1.01, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
+            ax11.text(1.01, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax11.transAxes, va='top')
             ax2.plot(w, f/np.nanmedian(f), color=c)
             ax22.plot(w, f/np.nanmedian(f), color=c)
 
