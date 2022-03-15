@@ -181,7 +181,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
 
     ax1.set_ylim(0, np.nanmax(ymx)*1.15)
 
-    fig.subplots_adjust(left=0.073,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+    fig.subplots_adjust(left=0.073,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
