@@ -129,7 +129,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='hot'):
 
     cmap = cmaps.get_cmap(cmap, 100)
     cmapConst = 1.00
-    cmapShift = 0.26
+    cmapShift = 0.9
 
     fig = plt.figure(figsize=(28,16))
     ax1 = plt.subplot2grid((2,8), (0,0), colspan=7)
