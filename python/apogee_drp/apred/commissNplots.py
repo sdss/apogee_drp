@@ -159,7 +159,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
     ax22.set_ylim(0.25, 1.35)
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
-    ax11.text(1.008, 1.00, r'EXPOSURE  SECZ   S/N', transform=ax11.transAxes, fontsize=fsz)
+    ax11.text(1.01, 1.00, r'EXP      SECZ   S/N', transform=ax11.transAxes, fontsize=fsz)
 
     ymx = np.zeros(nexp)
     secz = np.zeros(nexp)
@@ -212,14 +212,14 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
             p = ax1.plot(w, f, color=c)
             ax11.plot(w, f, color=c)
             #c = p[0].get_color()
-            txt = str(allsnrg['IM'][iexp]) + '     ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
+            txt = str(allsnrg['IM'][iexp]) + '   ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
             ax11.text(1.01, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax11.transAxes, va='top')
             ax2.plot(w, f/np.nanmedian(f), color=c)
             ax22.plot(w, f/np.nanmedian(f), color=c)
 
 
 
-    fig.subplots_adjust(left=0.073,right=0.88,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
+    fig.subplots_adjust(left=0.073,right=0.875,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
