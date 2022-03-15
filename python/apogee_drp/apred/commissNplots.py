@@ -156,16 +156,17 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         if len(g) > 0:
             txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ')'
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
-            p = ax1.plot(wave[g][0], flux[g][0])
-            ylims = ax1.get_ylim()
-            ymx[iexp] = ylims[1]
+            w = wave[g][0]; f = flux[g][0]
+            p = ax1.plot(w, f)
+            ymxsec, np.where((w > 16780) & (w < 16820))
+            ymx[iexp] = np.nanmax(f[ymxsec])
             c = p[0].get_color()
             txt = 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
             txt1 = ',  mjd = ' + str(allsnrg['mjd'][iexp])
             ax1.text(0.02, 0.97-.04*iexp, txt+txt1, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
 
-    pdb.set_trace()
+    ax1.set_ylim(0, np.max(ymx)*1.15)
 
     fig.subplots_adjust(left=0.073,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
