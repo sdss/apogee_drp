@@ -130,6 +130,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     fig = plt.figure(figsize=(28,16))
     ax1 = plt.subplot2grid((2,8), (0,0), colspan=7)
     ax2 = plt.subplot2grid((2,8), (1,0), colspan=7)
+    ax3 = plt.subplot2grid((2,8), (1,7), colspan=1)
     #ax3 = plt.subplot2grid((2,8), (1,6), colspan=1)
     axes = [ax1, ax2]
     for ax in axes:
