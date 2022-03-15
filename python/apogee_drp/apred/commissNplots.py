@@ -148,6 +148,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     ax2.set_ylabel(r'Norm Flux')
     ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
     ax2.set_ylim(0.25, 1.35)
+    ax3.set_ylim(0.25, 1.35)
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
     ax1.text(1.008, 1.00, r'EXPOSURE  SECZ   S/N', transform=ax1.transAxes, fontsize=fsz)
