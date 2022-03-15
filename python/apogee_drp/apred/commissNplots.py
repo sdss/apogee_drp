@@ -120,7 +120,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
     plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_' + star + '.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
-    p, = np.where((allsnr['FIELD'] == field) & ((allsnr['exptime'] == 457) | (allsnr['exptime'] == 489)))# & (allsnr['mjd'] != 59609))
+    p, = np.where((allsnr['FIELD'] == field) & ((allsnr['exptime'] == 457) | (allsnr['exptime'] == 489)) & (allsnr['mjd'] != 59609))
     upl,uind = np.unique(allsnr['plate'][p], return_index=True)
     upl = allsnr['plate'][p]#[uind]
     umjd = allsnr['mjd'][p]#[uind]
