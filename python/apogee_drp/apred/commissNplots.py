@@ -125,7 +125,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     allsnrg = allsnr[p]#[uind]
     nexp = len(allsnrg)
 
-    fig = plt.figure(figsize=(25,16))
+    fig = plt.figure(figsize=(28,16))
     ax1 = plt.subplot2grid((2,1), (0,0))
     ax2 = plt.subplot2grid((2,1), (1,0))
     axes = [ax1, ax2]
@@ -163,12 +163,12 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             c = p[0].get_color()
             txt = 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
             txt1 = ',  mjd = ' + str(allsnrg['mjd'][iexp])
-            ax1.text(0.02, 0.97-.04*iexp, txt+txt1, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
+            ax1.text(1.01, 0.97-.04*iexp, txt+txt1, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
 
     ax1.set_ylim(0, np.nanmax(ymx)*1.15)
 
-    fig.subplots_adjust(left=0.073,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+    fig.subplots_adjust(left=0.073,right=0.92,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
     plt.savefig(plotfile)
     plt.close('all')
 
