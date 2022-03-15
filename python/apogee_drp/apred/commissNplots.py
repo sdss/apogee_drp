@@ -151,9 +151,9 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         plfile = visdir1 + 'apPlate-a-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
 #        visfile = visdir1 + 'apVisit-daily-apo25m-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
         print(os.path.basename(cfile))
-        print(os.path.basename(plfile))
-        flux = fits.getdata(plfile)
-        wave = fits.getdata(plfile,4)
+        #print(os.path.basename(plfile))
+        flux = fits.getdata(cfile)
+        wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TMASS_STYLE'] == star)
         g1, = np.where((allsnrg['MJD'][iexp] == umjd[iexp]) & (allsnrg['plate'][iexp] == upl[iexp]))
