@@ -149,6 +149,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
     ax11.set_xlim(16747, 16770)
     ax22.set_xlim(16747, 16770)
     ax1.axes.xaxis.set_ticklabels([])
+    ax11.axes.xaxis.set_ticklabels([])
     ax11.axes.yaxis.set_ticklabels([])
     ax22.axes.yaxis.set_ticklabels([])
     ax1.set_ylabel(r'Flux')
