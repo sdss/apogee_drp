@@ -115,7 +115,7 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot2_r'):
+def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
     # telescopePosPerform.png
     plotfile = specdir5 + 'monitor/' + instrument + '/telescopePosPerform_' + star + '.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
@@ -129,7 +129,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot2_r'):
 
     cmap = cmaps.get_cmap(cmap, 100)
     cmapConst = 0.5
-    cmapShift = 0.25
+    cmapShift = 0.1
 
     fig = plt.figure(figsize=(28,16))
     ax1 = plt.subplot2grid((2,8), (0,0), colspan=7)
@@ -204,7 +204,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot2_r'):
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
             #c = cmap(secz[iexp]/np.max(secz))
             #c = cmap(cmapShift+(secz[iexp]/np.max(secz))*cmapConst)
-            c = cmap((iexp+1)/nexp)
+            c = cmap(((iexp+1)/nexp)+cmapShift)
             print(c)
             w = wave[g][0]; f = flux[g][0]
             p = ax1.plot(w, f, color=c)
