@@ -122,6 +122,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
 
     p, = np.where((allsnr['FIELD'] == field) & (allsnr['exptime'] == 457))
     upl,uind = np.unique(allsnr['plate'][p], return_index=True)
+    umjd = allsnr['mjd'][p][uind]
     allsnrg = allsnr[p]#[uind]
     nexp = len(allsnrg)
 
@@ -143,12 +144,13 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     ax2.set_ylim(0.25, 1.35)
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
-    ax1.text(1.008, 1.00, r'EXPOSURE  ALT  S/N', transform=ax1.transAxes, fontsize=fsz)
+    ax1.text(1.008, 1.00, r'EXPOSURE  SECZ  S/N', transform=ax1.transAxes, fontsize=fsz)
 
     ymx = np.zeros(nexp)
     for iexp in range(nexp):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
         cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
+        plsumfile = visdir1 + 'apPlateSum-a-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
         print(os.path.basename(cfile))
         flux = fits.getdata(cfile)
         wave = fits.getdata(cfile,4)
@@ -158,17 +160,19 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         if len(g) > 0:
             txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ')'
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
+
+            pl1 = fits.getdata(plsumfile,1)
+            pl2 = fits.getdata(plsumfile,2)
+            gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
+            secz = str("%.3f" % round(pl1['SECZ'][gg1][0],3))
+            gg2, = np.where(star = pl2['TMASS_STYLE'])
+            snr = str(int(round(pl2['sn'][gg2[0], gg1[0], 0])))
             w = wave[g][0]; f = flux[g][0]
             p = ax1.plot(w, f)
             ymxsec, = np.where((w > 16780) & (w < 16820))
             ymx[iexp] = np.nanmax(f[ymxsec])
             c = p[0].get_color()
-            #txt = 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
-            #txt1 = ',  mjd = ' + str(allsnrg['mjd'][iexp])
-            pmf = str(allsnrg['plate'][iexp])+'-'+str(allsnrg['mjd'][iexp])+'-'+str(obj['fiberid'][g][0]).zfill(3)
-            alt = str("%.1f" % round(allexp['ALT'][g1][0],1))
-            txt = alt + '   ' + pmf
-            txt = str(allsnrg['IM'][iexp]) + '     ' + str("%.1f" % round(allexp['ALT'][g1][0],1))
+            txt = str(allsnrg['IM'][iexp]) + '     ' + secz + '   ' + snr
             ax1.text(1.01, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
 
