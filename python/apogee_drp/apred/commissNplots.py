@@ -145,7 +145,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     ax2.set_ylim(0.25, 1.35)
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
-    ax1.text(1.008, 1.00, r'EXPOSURE  SECZ  S/N', transform=ax1.transAxes, fontsize=fsz)
+    ax1.text(1.008, 1.00, r'EXPOSURE  SECZ   S/N', transform=ax1.transAxes, fontsize=fsz)
 
     ymx = np.zeros(nexp)
     for iexp in range(nexp):
@@ -167,7 +167,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
             secz = str("%.3f" % round(pl1['SECZ'][gg1][0],3))
             gg2, = np.where(star == pl2['TMASS_STYLE'])
-            snr = str(int(round(pl2['sn'][gg2[0], gg1[0], 0]))).rjust(3)
+            snr = str(int(round(pl2['sn'][gg2[0], gg1[0], 0])))#.rjust(3)
             w = wave[g][0]; f = flux[g][0]
             p = ax1.plot(w, f)
             ymxsec, = np.where((w > 16780) & (w < 16820))
