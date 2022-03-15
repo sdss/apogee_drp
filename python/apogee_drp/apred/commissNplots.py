@@ -143,6 +143,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     ax2.set_ylim(0.25, 1.35)
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
+    ax1.text(1.01, 1.00, 'ALT   FIBID  MJD', transform=ax1.transAxes, fontsize=fsz)
+
     ymx = np.zeros(nexp)
     for iexp in range(nexp):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
@@ -163,9 +165,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             c = p[0].get_color()
             txt = 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
             txt1 = ',  mjd = ' + str(allsnrg['mjd'][iexp])
-            txt = str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$   ' + str(obj['fiberid'][g][0]).zfill(3)
-            txt1 = '  ' + str(allsnrg['mjd'][iexp])
-            ax1.text(1.01, 0.97-.04*iexp, txt+txt1, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
+            txt = str("%.1f" % round(allexp['ALT'][g1][0],1)) + '   ' + str(obj['fiberid'][g][0]).zfill(3) + '   ' + str(allsnrg['mjd'][iexp])
+            ax1.text(1.01, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
 
     ax1.set_ylim(0, np.nanmax(ymx)*1.15)
