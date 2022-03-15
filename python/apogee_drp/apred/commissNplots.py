@@ -132,15 +132,18 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     ax2 = plt.subplot2grid((2,8), (1,0), colspan=7)
     ax3 = plt.subplot2grid((2,8), (1,7), colspan=1)
     #ax3 = plt.subplot2grid((2,8), (1,6), colspan=1)
-    axes = [ax1, ax2]
+    axes = [ax1, ax2, ax3]
     for ax in axes:
         ax.minorticks_on()
-        ax.set_xlim(16475, 16945)
         ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlim(16475, 16945)
+    ax2.set_xlim(16475, 16945)
+    ax3.set_xlim(16745, 16776)
     ax1.axes.xaxis.set_ticklabels([])
+    ax3.axes.yaxis.set_ticklabels([])
     ax1.set_ylabel(r'Flux')
     ax2.set_ylabel(r'Norm Flux')
     ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
@@ -172,6 +175,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             snr = str(int(round(pl2['sn'][gg2[0], gg1[0], 0])))#.rjust(3)
             w = wave[g][0]; f = flux[g][0]
             p = ax1.plot(w, f)
+            ax3.plot(w, f)
             ymxsec, = np.where((w > 16780) & (w < 16820))
             ymx[iexp] = np.nanmax(f[ymxsec])
             c = p[0].get_color()
