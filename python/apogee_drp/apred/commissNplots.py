@@ -115,7 +115,7 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def telescopePos(field='17049', star='2M07311564+3145469', cmap='hot'):
+def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot2_r'):
     # telescopePosPerform.png
     plotfile = specdir5 + 'monitor/' + instrument + '/telescopePosPerform_' + star + '.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
@@ -129,7 +129,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='hot'):
 
     cmap = cmaps.get_cmap(cmap, 100)
     cmapConst = 0.75
-    cmapShift = 0.0
+    cmapShift = 0.25
 
     fig = plt.figure(figsize=(28,16))
     ax1 = plt.subplot2grid((2,8), (0,0), colspan=7)
