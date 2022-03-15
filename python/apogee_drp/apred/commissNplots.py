@@ -131,12 +131,13 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
     cmapConst = 0.5
     cmapShift = 0.1
 
-    fig = plt.figure(figsize=(28,16))
+    fig = plt.figure(figsize=(28,14))
     ax1 = plt.subplot2grid((2,8), (0,0), colspan=7)
     ax2 = plt.subplot2grid((2,8), (1,0), colspan=7)
-    ax3 = plt.subplot2grid((2,8), (1,7), colspan=1)
+    ax11 = plt.subplot2grid((2,8), (0,7), colspan=1)
+    ax22 = plt.subplot2grid((2,8), (1,7), colspan=1)
     #ax3 = plt.subplot2grid((2,8), (1,6), colspan=1)
-    axes = [ax1, ax2, ax3]
+    axes = [ax1, ax2, ax11, ax22]
     for ax in axes:
         ax.minorticks_on()
         ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -145,14 +146,16 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
         ax.tick_params(axis='both',which='both',width=axwidth)
     ax1.set_xlim(16475, 16945)
     ax2.set_xlim(16475, 16945)
-    ax3.set_xlim(16747, 16770)
+    ax11.set_xlim(16747, 16770)
+    ax22.set_xlim(16747, 16770)
     ax1.axes.xaxis.set_ticklabels([])
-    ax3.axes.yaxis.set_ticklabels([])
+    ax11.axes.yaxis.set_ticklabels([])
+    ax22.axes.yaxis.set_ticklabels([])
     ax1.set_ylabel(r'Flux')
     ax2.set_ylabel(r'Norm Flux')
     ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
     ax2.set_ylim(0.25, 1.35)
-    ax3.set_ylim(0.25, 1.35)
+    ax22.set_ylim(0.25, 1.35)
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
     ax1.text(1.008, 1.00, r'EXPOSURE  SECZ   S/N', transform=ax1.transAxes, fontsize=fsz)
@@ -181,7 +184,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
             ymxsec, = np.where((w > 16780) & (w < 16820))
             ymx[iexp] = np.nanmax(f[ymxsec])
 
-    print(ymx/np.nanmax(ymx))
+    #print(ymx/np.nanmax(ymx))
     ax1.set_ylim(0, np.nanmax(ymx)*1.15)
     gd, = np.where((snr > 0) & (ymx > 0) & (ymx/np.nanmax(ymx) > 0.2))
     sord = np.argsort(secz[gd])
@@ -206,15 +209,16 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
             c = cmap(((iexp+1)/nexp)+cmapShift)
             w = wave[g][0]; f = flux[g][0]
             p = ax1.plot(w, f, color=c)
+            ax11.plot(w, f, color=c)
             #c = p[0].get_color()
             txt = str(allsnrg['IM'][iexp]) + '     ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
             ax1.text(1.01, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(w, f/np.nanmedian(f), color=c)
-            ax3.plot(w, f/np.nanmedian(f), color=c)
+            ax22.plot(w, f/np.nanmedian(f), color=c)
 
 
 
-    fig.subplots_adjust(left=0.073,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
+    fig.subplots_adjust(left=0.073,right=0.88,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
