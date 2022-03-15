@@ -175,13 +175,13 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             snr = str(int(round(pl2['sn'][gg2[0], gg1[0], 0])))#.rjust(3)
             w = wave[g][0]; f = flux[g][0]
             p = ax1.plot(w, f)
-            ax3.plot(w, f)
             ymxsec, = np.where((w > 16780) & (w < 16820))
             ymx[iexp] = np.nanmax(f[ymxsec])
             c = p[0].get_color()
             txt = str(allsnrg['IM'][iexp]) + '     ' + secz + '   ' + snr
             ax1.text(1.01, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
-            ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
+            ax2.plot(w, f/np.nanmedian(f), color=c)
+            ax3.plot(w, f/np.nanmedian(f), color=c)
 
     ax1.set_ylim(0, np.nanmax(ymx)*1.15)
 
