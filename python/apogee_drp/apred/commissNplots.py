@@ -143,7 +143,7 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     ax2.set_ylim(0.25, 1.35)
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
-    ax1.text(1.01, 1.00, r'ALT($^{\circ}$) FIB MJD', transform=ax1.transAxes, fontsize=fsz)
+    ax1.text(1.01, 1.00, r'ALT($^{\circ}$) FIB MJD    S/N', transform=ax1.transAxes, fontsize=fsz)
 
     ymx = np.zeros(nexp)
     for iexp in range(nexp):
