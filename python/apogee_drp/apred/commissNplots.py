@@ -153,6 +153,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     ax1.text(1.008, 1.00, r'EXPOSURE  SECZ   S/N', transform=ax1.transAxes, fontsize=fsz)
 
     ymx = np.zeros(nexp)
+    secz = np.zeros(nexp)
+    snr = np.zeros(nexp)
     for iexp in range(nexp):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
         cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
@@ -164,9 +166,6 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
         g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
         if len(g) > 0:
             print(os.path.basename(cfile))
-            txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ')'
-            if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
-
             pl1 = fits.getdata(plsumfile,1)
             pl2 = fits.getdata(plsumfile,2)
             gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
@@ -174,16 +173,39 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             gg2, = np.where(star == pl2['TMASS_STYLE'])
             snr = str(int(round(pl2['sn'][gg2[0], gg1[0], 0])))#.rjust(3)
             w = wave[g][0]; f = flux[g][0]
-            p = ax1.plot(w, f)
             ymxsec, = np.where((w > 16780) & (w < 16820))
             ymx[iexp] = np.nanmax(f[ymxsec])
+
+    ax1.set_ylim(0, np.nanmax(ymx)*1.15)
+    gd, = np.where(snr > 0)
+    sord = np.argsort(secz[gd])
+    secz = secz[gd][sord]
+    snr = snr[gd][sord]
+    upl = upl[gd][sord]
+    umjd = umjd[gd][sord]
+    allsnrg = allsnrg[gd][sord]
+    nexp = len(gd)
+
+    for iexp in range(nexp):
+        visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
+        cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
+        flux = fits.getdata(cfile)
+        wave = fits.getdata(cfile,4)
+        obj = fits.getdata(cfile,11)
+        g, = np.where(obj['TMASS_STYLE'] == star)
+        g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
+        if len(g) > 0:
+            txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ')'
+            if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
+            w = wave[g][0]; f = flux[g][0]
+            p = ax1.plot(w, f)
             c = p[0].get_color()
-            txt = str(allsnrg['IM'][iexp]) + '     ' + secz + '   ' + snr
+            txt = str(allsnrg['IM'][iexp]) + '     ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str("%.3f" % round(snr[iexp],3))
             ax1.text(1.01, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(w, f/np.nanmedian(f), color=c)
             ax3.plot(w, f/np.nanmedian(f), color=c)
 
-    ax1.set_ylim(0, np.nanmax(ymx)*1.15)
+
 
     fig.subplots_adjust(left=0.073,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
