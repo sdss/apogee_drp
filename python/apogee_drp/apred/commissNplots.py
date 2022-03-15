@@ -159,7 +159,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
     ax22.set_ylim(0.25, 1.35)
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
-    ax1.text(1.008, 1.00, r'EXPOSURE  SECZ   S/N', transform=ax1.transAxes, fontsize=fsz)
+    ax11.text(1.008, 1.00, r'EXPOSURE  SECZ   S/N', transform=ax11.transAxes, fontsize=fsz)
 
     ymx = np.zeros(nexp)
     secz = np.zeros(nexp)
