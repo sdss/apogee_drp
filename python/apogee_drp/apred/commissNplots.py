@@ -128,7 +128,7 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='hot'):
     nexp = len(allsnrg)
 
     cmap = cmaps.get_cmap(cmap, 100)
-    cmapConst = 2.00
+    cmapConst = 0.5
     cmapShift = 0.1
 
     fig = plt.figure(figsize=(28,16))
