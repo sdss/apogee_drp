@@ -122,9 +122,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
 
     p, = np.where((allsnr['FIELD'] == field) & (allsnr['exptime'] == 457))
     upl,uind = np.unique(allsnr['plate'][p], return_index=True)
-    umjd = allsnr['mjd'][p][uind]
-    allsnrg = allsnr[p][uind]
-    nexp = len(umjd)
+    allsnrg = allsnr[p]#[uind]
+    nexp = len(allsnrg)
 
     fig = plt.figure(figsize=(25,16))
     ax1 = plt.subplot2grid((2,1), (0,0))
@@ -148,15 +147,12 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
     for iexp in range(nexp):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
         cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
-        plfile = visdir1 + 'apPlate-a-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
-#        visfile = visdir1 + 'apVisit-daily-apo25m-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
         print(os.path.basename(cfile))
-        #print(os.path.basename(plfile))
         flux = fits.getdata(cfile)
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TMASS_STYLE'] == star)
-        g1, = np.where((allsnrg['MJD'][iexp] == umjd[iexp]) & (allsnrg['plate'][iexp] == upl[iexp]))
+        g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
         if len(g) > 0:
             txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ')'
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
@@ -165,10 +161,8 @@ def telescopePos(field='17049', star='2M07311564+3145469'):
             ymxsec, = np.where((w > 16780) & (w < 16820))
             ymx[iexp] = np.nanmax(f[ymxsec])
             c = p[0].get_color()
-            txt = 'alt = ' + str("%.3f" % round(np.nanmean(allexp['ALT'][g1]),3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
+            txt = 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
             txt1 = ',  mjd = ' + str(allsnrg['mjd'][iexp])
-            txt2 = ',  S/N = ' + str(int(round(obj['fiberid'][g][0])))
-            #pdb.set_trace()
             ax1.text(0.02, 0.97-.04*iexp, txt+txt1, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
             ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
 
