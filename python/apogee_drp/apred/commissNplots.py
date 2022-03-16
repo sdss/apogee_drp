@@ -193,7 +193,7 @@ def telescopePos(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
     ax11.text(1.1, 1.00, r'EXPNUM    SECZ   S/N', transform=ax11.transAxes, fontsize=fsz)
 
     snsecz = open(specdir5 + 'monitor/' + instrument + '/telescopePos/snsecz_'+star+'.dat', 'w')
-    snsecz.write('NUM           SN         SECZ\n')
+    snsecz.write('NUM        SN        SECZ\n')
     ymx = np.zeros(nexp)
     for iexp in range(nexp):
         visdir1 = visdir + str(upl[iexp]) + '/' + str(umjd[iexp]) + '/'
