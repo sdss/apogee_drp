@@ -324,8 +324,7 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
         gd, = np.where(obj['fiberid'] > 0)
         obj = obj[gd]
         gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
-        if iexp == 0:
-            gdstars, = np.where((obj['objtype'] == 'STAR') & (obj['hmag'] < 8) & (pl2['sn'][:, gg1[0], 0] > 100))
+        gdstars, = np.where((obj['objtype'] == 'STAR') & (obj['hmag'] < 8) & (pl2['sn'][:, gg1[0], 0] > 100))
         #pdb.set_trace()
         print(len(gdstars))
         w = np.nanmean(wave[gdstars], axis=0)
