@@ -373,7 +373,7 @@ def telescopePos3(field='17049', cmap='gnuplot_r'):
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     cmap = cmaps.get_cmap(cmap, 100)
-    cmapConst = 0.3
+    cmapConst = 0.1
     cmapShift = 0.1
 
     fig = plt.figure(figsize=(17,14))
