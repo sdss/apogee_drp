@@ -383,7 +383,7 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
     #APOcoords = [ 32.780278, -105.820278, 2788]
     #num = np.array([40630031, 40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
     num = np.array([40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
-    upl = np.array([3468, 3471, 3471, 3477, 3477, 3483, 3483])
+    upl = np.array([3471, 3471, 3477, 3477, 3483, 3483])
     umjd = allexp['mjd'][p][altord]
     allexpg = allexp[p][altord]
     nexp = len(allexpg)
