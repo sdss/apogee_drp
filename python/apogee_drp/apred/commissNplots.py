@@ -316,6 +316,7 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
         cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
         plsumfile = visdir1 + 'apPlateSum-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
+        pl1 = fits.getdata(plsumfile,1)
         pl2 = fits.getdata(plsumfile,2)
         flux = fits.getdata(cfile)
         wave = fits.getdata(cfile,4)
