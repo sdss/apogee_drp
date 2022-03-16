@@ -376,7 +376,7 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
     dateobs = allexp['dateobs'][p][altord]
     fra = 113.495888
     fdec = 32.171619
-    observing_location = EarthLocation(lon=APOcoords[1]*u.deg, lat=APOcoords[0]*u.deg, height=APOcoords[2]*u.m)  
+    apo = EarthLocation.of_site('Apache Point Observatory')
     #            LON          LAT         ALT
     #APOcoords = [ 32.780278, -105.820278, 2788]
     num = np.array([40630031, 40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
@@ -443,7 +443,7 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
             sra = obj['ra'][g][0]
             sdec = obj['dec'][g][0]
             obstime = Time(dateobs[iexp], format='fits')
-            aa = AltAz(location=observing_location, obstime=obstime)
+            aa = AltAz(location=apo, obstime=obstime)
             coord = SkyCoord(sra, sdec, unit='deg')
             coord.transform_to(aa)
             pdb.set_trace()
