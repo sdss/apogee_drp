@@ -400,6 +400,7 @@ def telescopePos3(field='17049', cmap='nipy_spectral'):
         if (y[0] < 0.9) | (y[3] < 0.8): continue
         #c = p[0].get_color()
         c = cmap(cmapConst*((i+1)/nfiles)+cmapShift)
+        c = cmap((i+1)/nfiles)
         ax1.plot(x, y, marker='o', color=c)
         ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, s=50, label=star)
 
