@@ -366,6 +366,7 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
     num = allexp['num'][p][altord]
     alt = allexp['alt'][p][altord]
     upl = allexp['plateid'][p][altord]
+    upl = np.array([3468, 3471, 3471, 3477, 3477, 3483, 3483])
     umjd = allexp['mjd'][p][altord]
     allexpg = allexp[p][altord]
     nexp = len(allexpg)
