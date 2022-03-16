@@ -322,7 +322,7 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
         obj = fits.getdata(cfile,11)
         gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
         if iexp == 0:
-            gdstars, = np.where((obj['objtype'] == 'STAR') & (obj['hmag'] < 9) & (pl2[:, gg1[0], 0] > 100))
+            gdstars, = np.where((obj['objtype'] == 'STAR') & (obj['hmag'] < 9) & (pl2['sn'][:, gg1[0], 0] > 100))
         w = np.nanmean(wave[gdstars], axis=0)       
         pdb.set_trace() 
         c = cmap(((iexp+1)/nexp)+cmapShift)
