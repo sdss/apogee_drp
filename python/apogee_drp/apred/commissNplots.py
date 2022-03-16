@@ -287,6 +287,7 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
     ax11.text(1.1, 1.00, r'EXPNUM    SECZ   S/N', transform=ax11.transAxes, fontsize=fsz)
+    ax1.text(0.5, 1.02, 'field = ' + field, transform=ax1.transAxes, ha='center')
 
     ymx = np.zeros(nexp)
     secz = np.zeros(nexp)
@@ -314,23 +315,24 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
     for iexp in range(nexp):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
         cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
+        plsumfile = visdir1 + 'apPlateSum-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
+        pl2 = fits.getdata(plsumfile,2)
         flux = fits.getdata(cfile)
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
-        pdb.set_trace()
-        g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
-        if len(g) > 0:
-            txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ', field = ' + field + ')'
-            if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
-            c = cmap(((iexp+1)/nexp)+cmapShift)
-            w = wave[g][0]; f = flux[g][0]
-            p = ax1.plot(w, f, color=c)
-            ax11.plot(w, f, color=c)
-            #c = p[0].get_color()
-            txt = str(allsnrg['IM'][iexp]) + '   ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
-            ax11.text(1.1, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax11.transAxes, va='top')
-            ax2.plot(w, f/np.nanmedian(f), color=c)
-            ax22.plot(w, f/np.nanmedian(f), color=c)
+        gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
+        if iexp == 0:
+            gdstars, = np.where((obj['objtype'] == 'STAR') & (obj['hmag'] < 9) & (pl2[:, gg1[0], 0] > 100))
+        w = np.nanmean(wave[gdstars], axis=0)       
+        pdb.set_trace() 
+        c = cmap(((iexp+1)/nexp)+cmapShift)
+        w = wave[g][0]; f = flux[g][0]
+        p = ax1.plot(w, f, color=c)
+        ax11.plot(w, f, color=c)
+        txt = str(allsnrg['IM'][iexp]) + '   ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
+        ax11.text(1.1, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax11.transAxes, va='top')
+        ax2.plot(w, f/np.nanmedian(f), color=c)
+        ax22.plot(w, f/np.nanmedian(f), color=c)
 
 
 
