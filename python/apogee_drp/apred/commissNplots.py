@@ -402,7 +402,7 @@ def telescopePos3(field='17049', cmap='nipy_spectral'):
         c = cmap(cmapConst*((i+1)/nfiles)+cmapShift)
         c = cmap((i+1)/nfiles)
         ax1.plot(x, y, marker='o', color=c)
-        ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, s=50, label=star)
+        ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, edgecolors='k', s=80, label=star)
 
     ax1.legend(loc='lower left', fontsize=fsz)
 
