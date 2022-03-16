@@ -370,6 +370,7 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
 def telescopePos3(field='17049', cmap='nipy_spectral', cut=True):
     # telescopePosPerform.png
     plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_seczXsnr.png'
+    if cut: plotfile = plotfile.replace('.png', '_cut.png')
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     cmap = cmaps.get_cmap(cmap, 100)
