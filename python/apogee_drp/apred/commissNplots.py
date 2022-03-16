@@ -394,7 +394,7 @@ def telescopePos3(field='17049', cmap='gnuplot_r'):
 
     for i in range(nfiles):
         d = ascii.read(infiles[i])
-        p = ax1.scatter(d['SECZ'], d['SN']/np.max(d['SN']), marker='o')
+        pbla = ax1.scatter(d['SECZ'], d['SN']/np.max(d['SN']), marker='o')
         pdb.set_trace()
         c = p[0][0].get_color()
         ax1.plot(d['SECZ'], d['SN']/np.max(d['SN']), marker='o', color=c)
