@@ -239,6 +239,9 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
     plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_all.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
+    gstars = np.array(['2M07355107+3113096','2M07320091+3110341','2M07342631+3151001','2M07295449+3146083',
+                       '2M07303923+3111106','2M07363035+3239591','2M07293021+3227021','2M07330674+3117112'])
+
     p, = np.where((allsnr['FIELD'] == field) & ((allsnr['exptime'] == 457) | (allsnr['exptime'] == 489)) & (allsnr['mjd'] != 59609))
     upl,uind = np.unique(allsnr['plate'][p], return_index=True)
     upl = allsnr['plate'][p]#[uind]
@@ -323,9 +326,11 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
         obj = fits.getdata(cfile,11)
         gd, = np.where(obj['fiberid'] > 0)
         obj = obj[gd]
+        starind = np.where(
         gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
+        #gdstars, = np.where((obj['objtype'] == 'STAR') & (obj['hmag'] < 9) & (pl2['sn'][:, gg1[0], 0] > 100))
         gdstars, = np.where((obj['objtype'] == 'STAR') & (obj['hmag'] < 9) & (pl2['sn'][:, gg1[0], 0] > 100))
-        #pdb.set_trace()
+        pdb.set_trace()
         print(len(gdstars))
         w = np.nanmean(wave[gdstars], axis=0)
         f = np.nanmean(flux[gdstars], axis=0)
