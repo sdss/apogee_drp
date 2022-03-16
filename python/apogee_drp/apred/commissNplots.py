@@ -326,13 +326,14 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
         gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
         if iexp == 0:
             gdstars, = np.where((obj['objtype'] == 'STAR') & (obj['hmag'] < 9) & (pl2['sn'][:, gg1[0], 0] > 100))
-        w = np.nanmean(wave[gdstars], axis=0)       
-        pdb.set_trace() 
+        print(len(gdstars))
+        w = np.nanmean(wave[gdstars], axis=0)
+        f = np.nanmean(flux[gdstars], axis=0)
+        snr = np.nanmean(pl2['sn'][gdstars, gg1[0], 0])
         c = cmap(((iexp+1)/nexp)+cmapShift)
-        w = wave[g][0]; f = flux[g][0]
         p = ax1.plot(w, f, color=c)
         ax11.plot(w, f, color=c)
-        txt = str(allsnrg['IM'][iexp]) + '   ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
+        txt = str(allsnrg['IM'][iexp]) + '   ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr)))
         ax11.text(1.1, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax11.transAxes, va='top')
         ax2.plot(w, f/np.nanmedian(f), color=c)
         ax22.plot(w, f/np.nanmedian(f), color=c)
