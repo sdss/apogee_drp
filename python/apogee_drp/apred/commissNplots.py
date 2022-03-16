@@ -430,7 +430,7 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
             gg1, = np.where(num[iexp] == pl1['IM'])
             gg2, = np.where(star == pl2['TMASS_STYLE'])
             secz = pl1['SECZ'][gg1][0]
-            snr = pl2['sn'][gg2[0], gg1[0], 
+            snr = pl2['sn'][gg2[0], gg1[0], 0]
             pdb.set_trace()
             c = cmap(((iexp+1)/nexp)+cmapShift)
             w = wave[g][0]; f = flux[g][0]
