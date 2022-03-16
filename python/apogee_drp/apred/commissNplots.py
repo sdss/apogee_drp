@@ -398,8 +398,9 @@ def telescopePos3(field='17049', cmap='gnuplot_r'):
         x = d['SECZ']
         y = d['SN'] / np.max(d['SN'])
         if (y[0] < 0.9) | (y[3] < 0.8): continue
-        p = ax1.plot(x, y, marker='o')
-        c = p[0].get_color()
+        #c = p[0].get_color()
+        c = cmap(((i+1)/nfiles)+cmapShift)
+        ax1.plot(x, y, marker='o', color=c)
         ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, s=50, label=star)
 
     ax1.legend(loc='lower left', fontsize=fsz)
