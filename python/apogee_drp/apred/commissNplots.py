@@ -192,7 +192,7 @@ def telescopePos(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
 
     ax11.text(1.1, 1.00, r'EXPNUM    SECZ   S/N', transform=ax11.transAxes, fontsize=fsz)
 
-    snsecz = open('snsecz_'+star+'.dat', 'w')
+    snsecz = open(specdir5 + 'monitor/' + instrument + '/telescopePos/snsecz_'+star+'.dat', 'w')
     snsecz.write('NUM           SN         SECZ\n')
     ymx = np.zeros(nexp)
     for iexp in range(nexp):
@@ -369,7 +369,7 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
 ###########################################################################################
 def telescopePos3(field='17049', cmap='gnuplot_r'):
     # telescopePosPerform.png
-    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_seczXsnr'.png'
+    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_seczXsnr.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     num = allexp['NUM']
