@@ -12,7 +12,7 @@ from astropy.time import Time
 from astropy import units as u
 from numpy.lib.recfunctions import append_fields, merge_arrays
 from astroplan import moon_illumination
-from astropy.coordinates import SkyCoord, get_moon, EarthLocation, AltAx
+from astropy.coordinates import SkyCoord, get_moon, EarthLocation, AltAz
 from astropy import units as astropyUnits
 from scipy.signal import medfilt2d as ScipyMedfilt2D
 from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask
