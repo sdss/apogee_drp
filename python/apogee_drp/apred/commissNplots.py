@@ -366,9 +366,11 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     num = allexp['NUM']
-    p, = np.where((num == 40630031) | (num == 40630039) | (num == 40630040) | 
-                  (num == 40630048) | (num == 40630049) | (num == 40630057) |
-                  (num == 40630058))
+    #p, = np.where((num == 40630031) | (num == 40630039) | (num == 40630040) | 
+    #              (num == 40630048) | (num == 40630049) | (num == 40630057) |
+    #              (num == 40630058))
+    p, = np.where((num == 40630039) | (num == 40630040) | (num == 40630048) |
+                  (num == 40630049) | (num == 40630057) | (num == 40630058))
     altord = np.argsort(allexp['alt'][p])[::-1]
     num = allexp['num'][p][altord]
     alt = allexp['alt'][p][altord]
@@ -379,7 +381,8 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
     apo = EarthLocation.of_site('Apache Point Observatory')
     #            LON          LAT         ALT
     #APOcoords = [ 32.780278, -105.820278, 2788]
-    num = np.array([40630031, 40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
+    #num = np.array([40630031, 40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
+    num = np.array([40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
     upl = np.array([3468, 3471, 3471, 3477, 3477, 3483, 3483])
     umjd = allexp['mjd'][p][altord]
     allexpg = allexp[p][altord]
