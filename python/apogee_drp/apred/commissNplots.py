@@ -367,7 +367,7 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
     return
 
 ###########################################################################################
-def telescopePos3(field='17049', cmap='gnuplot_r'):
+def telescopePos3(field='17049', cmap='nipy_spectral'):
     # telescopePosPerform.png
     plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_seczXsnr.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
