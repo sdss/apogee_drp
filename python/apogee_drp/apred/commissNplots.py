@@ -376,7 +376,9 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
     dateobs = allexp['dateobs'][p][altord]
     fra = 113.495888
     fdec = 32.171619
-    observing_location = EarthLocation(lon=str(APOcoords[0]), lat=str(APOcoords[1]), height=APOcoords[2]*u.m)  
+    observing_location = EarthLocation(lon=APOcoords[0]*u.deg, lat=APOcoords[1]*u.deg, height=APOcoords[2]*u.m)  
+    #            LON          LAT         ALT
+    #APOcoords = [ 32.780278, -105.820278, 2788]
     num = np.array([40630031, 40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
     upl = np.array([3468, 3471, 3471, 3477, 3477, 3483, 3483])
     umjd = allexp['mjd'][p][altord]
