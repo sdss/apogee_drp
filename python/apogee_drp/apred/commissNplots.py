@@ -394,12 +394,15 @@ def telescopePos3(field='17049', cmap='gnuplot_r'):
 
     for i in range(nfiles):
         d = ascii.read(infiles[i])
+        star = os.path.basename(infiles[i]).split('_')[1].split('.')[0]
         x = d['SECZ']
         y = d['SN'] / np.max(d['SN'])
         if (y[0] < 0.9) | (y[3] < 0.8): continue
         p = ax1.plot(x, y, marker='o')
         c = p[0].get_color()
-        ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, s=50)
+        ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, s=50, label=star)
+
+    ax1.legend(loc='lower left', fontsize=fsz)
 
     fig.subplots_adjust(left=0.073,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
