@@ -376,7 +376,7 @@ def telescopePos3(field='17049', cmap='nipy_spectral', cut=True):
     cmapConst = 0.7
     cmapShift = 0.05
 
-    fig = plt.figure(figsize=(17,14))
+    fig = plt.figure(figsize=(21,14))
     ax1 = plt.subplot2grid((1,1), (0,0))
     ax1.minorticks_on()
     ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -384,7 +384,7 @@ def telescopePos3(field='17049', cmap='nipy_spectral', cut=True):
     ax1.tick_params(axis='both',which='minor',length=axminlen)
     ax1.tick_params(axis='both',which='both',width=axwidth)
     ax1.set_xlabel(r'sec(z)')
-    ax1.set_ylabel(r'S/N (red chip)')
+    ax1.set_ylabel(r'Normalized S/N (red chip)')
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
     infiles = glob.glob(specdir5 + 'monitor/' + instrument + '/telescopePos/*dat')
@@ -403,9 +403,9 @@ def telescopePos3(field='17049', cmap='nipy_spectral', cut=True):
         ax1.plot(x, y, marker='o', color=c)
         ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, edgecolors='k', s=80, label=star)
 
-    ax1.legend(loc='lower left', ncol=2, fontsize=fsz)
+    ax1.legend(loc=[1.02, 0.0], ncol=2, fontsize=fsz)
 
-    fig.subplots_adjust(left=0.073,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
+    fig.subplots_adjust(left=0.073,right=0.92,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
