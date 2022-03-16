@@ -305,12 +305,11 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
     #print(ymx/np.nanmax(ymx))
     #ax1.set_ylim(0, np.nanmax(ymx)*1.15)
     #gd, = np.where((snr > 0) & (ymx > 0) & (ymx/np.nanmax(ymx) > 0.2))
-    sord = np.argsort(secz[gd])
-    secz = secz[gd][sord]
-    upl = upl[gd][sord]
-    umjd = umjd[gd][sord]
-    allsnrg = allsnrg[gd][sord]
-    nexp = len(gd)
+    sord = np.argsort(secz)
+    secz = secz[sord]
+    upl = upl[sord]
+    umjd = umjd[sord]
+    allsnrg = allsnrg[sord]
 
     for iexp in range(nexp):
         visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
