@@ -445,14 +445,14 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
             obstime = Time(dateobs[iexp], format='fits')
             aa = AltAz(location=apo, obstime=obstime)
             coord = SkyCoord(sra, sdec, unit='deg')
-            coord.transform_to(aa)
-            pdb.set_trace()
+            staralt = coord.transform_to(aa).alt.degree
+            secz = 1. / np.cos((90-staralt)*(np.pi/180))
 
             pl1 = fits.getdata(plsumfile,1)
             pl2 = fits.getdata(plsumfile,2)
             gg1, = np.where(num[iexp] == pl1['IM'])
             gg2, = np.where(star == pl2['TMASS_STYLE'])
-            secz = pl1['SECZ'][gg1][0]
+            #secz = pl1['SECZ'][gg1][0]
             snr = pl2['sn'][gg2[0], gg1[0], 0]
 
             c = cmap(((iexp+1)/nexp)+cmapShift)
@@ -460,7 +460,7 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
             p = ax1.plot(w, f, color=c)
             ax11.plot(w, f, color=c)
             #c = p[0].get_color()
-            txt = str(num[iexp]) + '   ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
+            txt = str(num[iexp]) + '   ' + str("%.3f" % round(secz,3)) + '   ' + str(int(round(snr)))
             ax11.text(1.1, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax11.transAxes, va='top')
             ax2.plot(w, f/np.nanmedian(f), color=c)
             ax22.plot(w, f/np.nanmedian(f), color=c)
