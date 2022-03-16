@@ -369,7 +369,7 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
     p, = np.where((num == 40630031) | (num == 40630039) | (num == 40630040) | 
                   (num == 40630048) | (num == 40630049) | (num == 40630057) |
                   (num == 40630058))
-    altord = np.argsort(allexp['alt'][p])
+    altord = np.argsort(allexp['alt'][p])[::-1]
     num = allexp['num'][p][altord]
     alt = allexp['alt'][p][altord]
     upl = allexp['plateid'][p][altord]
