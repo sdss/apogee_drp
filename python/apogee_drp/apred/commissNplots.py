@@ -127,12 +127,28 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
     plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_' + star + '.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
-    p, = np.where((allsnr['FIELD'] == field) & ((allsnr['exptime'] == 457) | (allsnr['exptime'] == 489)) & (allsnr['mjd'] != 59609))
-    upl,uind = np.unique(allsnr['plate'][p], return_index=True)
-    upl = allsnr['plate'][p]#[uind]
-    umjd = allsnr['mjd'][p]#[uind]
-    allsnrg = allsnr[p]#[uind]
-    nexp = len(allsnrg)
+    num = allexp['NUM']
+    #p, = np.where((num == 40630031) | (num == 40630039) | (num == 40630040) | 
+    #              (num == 40630048) | (num == 40630049) | (num == 40630057) |
+    #              (num == 40630058))
+    p, = np.where((num == 40630039) | (num == 40630040) | (num == 40630048) |
+                  (num == 40630049) | (num == 40630057) | (num == 40630058))
+    altord = np.argsort(allexp['alt'][p])[::-1]
+    num = allexp['num'][p][altord]
+    alt = allexp['alt'][p][altord]
+    upl = allexp['plateid'][p][altord]
+    dateobs = allexp['dateobs'][p][altord]
+    fra = 113.495888
+    fdec = 32.171619
+    apo = EarthLocation.of_site('Apache Point Observatory')
+    #            LON          LAT         ALT
+    #APOcoords = [ 32.780278, -105.820278, 2788]
+    #num = np.array([40630031, 40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
+    num = np.array([40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
+    upl = np.array([3471, 3471, 3477, 3477, 3483, 3483])
+    umjd = allexp['mjd'][p][altord]
+    allexpg = allexp[p][altord]
+    nexp = len(allexpg)
 
     cmap = cmaps.get_cmap(cmap, 100)
     cmapConst = 0.5
@@ -176,63 +192,54 @@ def telescopePos(field='17049', star='2M07311564+3145469', cmap='gnuplot_r'):
 
     ax11.text(1.1, 1.00, r'EXPNUM    SECZ   S/N', transform=ax11.transAxes, fontsize=fsz)
 
+    snsecz = open('snsecz_'+star+'.dat', 'w')
+    snsecz.write('NUM           SN         SECZ\n')
     ymx = np.zeros(nexp)
-    secz = np.zeros(nexp)
-    snr = np.zeros(nexp)
     for iexp in range(nexp):
-        visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
-        cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
+        visdir1 = visdir + str(upl[iexp]) + '/' + str(umjd[iexp]) + '/'
+        cfile = visdir1 + 'apCframe-a-' + str(num[iexp]) + '.fits'
         plsumfile = visdir1 + 'apPlateSum-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
         flux = fits.getdata(cfile)
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TMASS_STYLE'] == star)
-        g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
-        if len(g) > 0:
-            print(os.path.basename(cfile))
-            pl1 = fits.getdata(plsumfile,1)
-            pl2 = fits.getdata(plsumfile,2)
-            gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
-            secz[iexp] = pl1['SECZ'][gg1][0]
-            gg2, = np.where(star == pl2['TMASS_STYLE'])
-            snr[iexp] = pl2['sn'][gg2[0], gg1[0], 0]
-            w = wave[g][0]; f = flux[g][0]
-            ymxsec, = np.where((w > 16780) & (w < 16820))
-            ymx[iexp] = np.nanmax(f[ymxsec])
-
-    #print(ymx/np.nanmax(ymx))
-    ax1.set_ylim(0, np.nanmax(ymx)*1.15)
-    gd, = np.where((snr > 0) & (ymx > 0) & (ymx/np.nanmax(ymx) > 0.2))
-    sord = np.argsort(secz[gd])
-    secz = secz[gd][sord]
-    snr = snr[gd][sord]
-    upl = upl[gd][sord]
-    umjd = umjd[gd][sord]
-    allsnrg = allsnrg[gd][sord]
-    nexp = len(gd)
-
-    for iexp in range(nexp):
-        visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
-        cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
-        flux = fits.getdata(cfile)
-        wave = fits.getdata(cfile,4)
-        obj = fits.getdata(cfile,11)
-        g, = np.where(obj['TMASS_STYLE'] == star)
-        g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
         if len(g) > 0:
             txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ', field = ' + field + ')'
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
+
+            sra = obj['ra'][g][0]
+            sdec = obj['dec'][g][0]
+            obstime = Time(dateobs[iexp], format='fits')
+            aa = AltAz(location=apo, obstime=obstime)
+            coord = SkyCoord(sra, sdec, unit='deg')
+            staralt = coord.transform_to(aa).alt.degree
+            secz = 1. / np.cos((90-staralt)*(np.pi/180))
+
+            pl1 = fits.getdata(plsumfile,1)
+            pl2 = fits.getdata(plsumfile,2)
+            gg1, = np.where(num[iexp] == pl1['IM'])
+            gg2, = np.where(star == pl2['TMASS_STYLE'])
+            #secz = pl1['SECZ'][gg1][0]
+            snr = pl2['sn'][gg2[0], gg1[0], 0]
+
             c = cmap(((iexp+1)/nexp)+cmapShift)
             w = wave[g][0]; f = flux[g][0]
             p = ax1.plot(w, f, color=c)
             ax11.plot(w, f, color=c)
             #c = p[0].get_color()
-            txt = str(allsnrg['IM'][iexp]) + '   ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr[iexp])))
+            txt = str(num[iexp]) + '   ' + str("%.3f" % round(secz,3)) + '   ' + str(int(round(snr)))
             ax11.text(1.1, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax11.transAxes, va='top')
             ax2.plot(w, f/np.nanmedian(f), color=c)
             ax22.plot(w, f/np.nanmedian(f), color=c)
 
+            ymxsec, = np.where((w > 16780) & (w < 16820))
+            ymx[iexp] = np.nanmax(f[ymxsec])
 
+            snsecz.write(str(num[iexp])+'   '+str("%.5f" % round(secz,5))+'   '+str("%.3f" % round(snr,3)) + '\n')
+
+    ax1.set_ylim(0, np.nanmax(ymx)*1.15)
+
+    snsecz.close()
 
     fig.subplots_adjust(left=0.073,right=0.875,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
@@ -360,9 +367,9 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
     return
 
 ###########################################################################################
-def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
+def telescopePos3(field='17049', cmap='gnuplot_r'):
     # telescopePosPerform.png
-    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_' + star + '.png'
+    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_seczXsnr'.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     num = allexp['NUM']
