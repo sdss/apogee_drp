@@ -403,9 +403,9 @@ def telescopePos3(field='17049', cmap='nipy_spectral', cut=True):
         ax1.plot(x, y, marker='o', color=c)
         ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, edgecolors='k', s=80, label=star)
 
-    ax1.legend(loc=[1.01, 0.0], fontsize=fsz)
+    ax1.legend(loc=[1.01, 0.0], labelspacing=0.5, handletextpad=-0.1, fontsize=fsz, edgecolor='k', framealpha=1)
 
-    fig.subplots_adjust(left=0.073,right=0.88,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
+    fig.subplots_adjust(left=0.073,right=0.86,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
