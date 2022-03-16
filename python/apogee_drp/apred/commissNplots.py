@@ -405,7 +405,7 @@ def telescopePos3(field='17049', cmap='nipy_spectral', cut=True):
 
     ax1.legend(loc=[1.01, 0.0], labelspacing=0.5, handletextpad=-0.1, fontsize=fsz, edgecolor='k', framealpha=1)
 
-    fig.subplots_adjust(left=0.065,right=0.805,bottom=0.06,top=0.985,hspace=0.08,wspace=0.1)
+    fig.subplots_adjust(left=0.06,right=0.805,bottom=0.063,top=0.985,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
