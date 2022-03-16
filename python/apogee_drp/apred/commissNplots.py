@@ -10,10 +10,9 @@ from astropy.io import fits, ascii
 from astropy.table import Table, vstack
 from astropy.time import Time
 from astropy import units as u
-from astropy.coordinates import SkyCoord
 from numpy.lib.recfunctions import append_fields, merge_arrays
 from astroplan import moon_illumination
-from astropy.coordinates import SkyCoord, get_moon
+from astropy.coordinates import SkyCoord, get_moon, EarthLocation, AltAx
 from astropy import units as astropyUnits
 from scipy.signal import medfilt2d as ScipyMedfilt2D
 from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask
@@ -33,7 +32,15 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
 
+
 # import pdb; pdb.set_trace()
+
+""" 
+Location data for APO+LCO
+"""
+#            LON          LAT         ALT
+LCOcoords = [-29.015970,  -70.692080, 2380]
+APOcoords = [ 32.780278, -105.820278, 2788]
 
 apred = 'daily'
 instrument = 'apogee-n'
@@ -366,6 +373,10 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
     num = allexp['num'][p][altord]
     alt = allexp['alt'][p][altord]
     upl = allexp['plateid'][p][altord]
+    dateobs = allexp['dateobs'][p][altord]
+    fra = 113.495888
+    fdec = 32.171619
+    observing_location = EarthLocation(lon=APOcoords[0], lat=APOcoords[1], height=APOcoords[2]*u.m)  
     num = np.array([40630031, 40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
     upl = np.array([3468, 3471, 3471, 3477, 3477, 3483, 3483])
     umjd = allexp['mjd'][p][altord]
@@ -427,13 +438,21 @@ def telescopePos3(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
             txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ', field = ' + field + ')'
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
 
+            sra = obj['ra'][g][0]
+            sdec = obj['dec'][g][0]
+            obstime = Time(dateobs[iexp], format='fits')
+            aa = AltAz(location=observing_location, obstime=obstime)
+            coord = SkyCoord(sra, sdec, unit='deg')
+            coord.transform_to(aa)
+            pdb.set_trace()
+
             pl1 = fits.getdata(plsumfile,1)
             pl2 = fits.getdata(plsumfile,2)
             gg1, = np.where(num[iexp] == pl1['IM'])
             gg2, = np.where(star == pl2['TMASS_STYLE'])
             secz = pl1['SECZ'][gg1][0]
             snr = pl2['sn'][gg2[0], gg1[0], 0]
-            pdb.set_trace()
+
             c = cmap(((iexp+1)/nexp)+cmapShift)
             w = wave[g][0]; f = flux[g][0]
             p = ax1.plot(w, f, color=c)
