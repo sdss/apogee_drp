@@ -373,7 +373,7 @@ def telescopePos3(field='17049', cmap='gnuplot_r'):
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
     cmap = cmaps.get_cmap(cmap, 100)
-    cmapConst = 0.1
+    cmapConst = 0.7
     cmapShift = 0.05
 
     fig = plt.figure(figsize=(17,14))
@@ -399,7 +399,7 @@ def telescopePos3(field='17049', cmap='gnuplot_r'):
         y = d['SN'] / np.max(d['SN'])
         if (y[0] < 0.9) | (y[3] < 0.8): continue
         #c = p[0].get_color()
-        c = cmap(((i+1)/nfiles)+cmapShift)
+        c = cmap(cmapConst*((i+1)/nfiles)+cmapShift)
         ax1.plot(x, y, marker='o', color=c)
         ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, s=50, label=star)
 
