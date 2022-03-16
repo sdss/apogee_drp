@@ -374,7 +374,7 @@ def telescopePos3(field='17049', cmap='gnuplot_r'):
 
     cmap = cmaps.get_cmap(cmap, 100)
     cmapConst = 0.1
-    cmapShift = 0.1
+    cmapShift = 0.05
 
     fig = plt.figure(figsize=(17,14))
     ax1 = plt.subplot2grid((1,1), (0,0))
