@@ -367,7 +367,7 @@ def telescopePos2(field='17049', cmap='gnuplot_r'):
     return
 
 ###########################################################################################
-def telescopePos3(field='17049', cmap='nipy_spectral'):
+def telescopePos3(field='17049', cmap='nipy_spectral', cut=True):
     # telescopePosPerform.png
     plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_seczXsnr.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
@@ -397,9 +397,8 @@ def telescopePos3(field='17049', cmap='nipy_spectral'):
         star = os.path.basename(infiles[i]).split('_')[1].split('.')[0]
         x = d['SECZ']
         y = d['SN'] / np.max(d['SN'])
-        if (y[0] < 0.9) | (y[3] < 0.8): continue
-        #c = p[0].get_color()
-        c = cmap(cmapConst*((i+1)/nfiles)+cmapShift)
+        if cut:
+            if (y[0] < 0.9) | (y[3] < 0.8): continue
         c = cmap((i+1)/nfiles)
         ax1.plot(x, y, marker='o', color=c)
         ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, edgecolors='k', s=80, label=star)
