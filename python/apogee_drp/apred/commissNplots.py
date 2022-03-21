@@ -146,7 +146,7 @@ def tellstats(allv4=None):
         medh = str("%.3f" % round(np.nanmedian(hmag),3))
         sigh = str("%.3f" % round(np.nanstd(hmag),3))
         meanjk = str("%.3f" % round(np.nanmean(jk),3))
-        medjk = str("%.3f" % round(np.nanmedian(),3))
+        medjk = str("%.3f" % round(np.nanmedian(jk),3))
         sigjk = str("%.3f" % round(np.nanstd(jk),3))
         print(upl+'  '+umjd+'  '+nstars+'  '+meanh+'  '+medh+'  '+sigh+'  '+meanjk+'  '+medjk+'  '+sigjk)
 
