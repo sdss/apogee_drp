@@ -131,7 +131,7 @@ def tellstats(allv4=None):
 
     gd, = np.where((allv4['MJD'] > 58000) & ((bitmask.is_bit_set(allv4['APOGEE_TARGET2'],9)) | (bitmask.is_bit_set(allv4['APOGEE2_TARGET2'],9))))
     allv4g = allv4[gd]
-    ufield,uind = np.unique(allv5g['FIELD'], return_index=True)
+    ufield,uind = np.unique(allv4g['FIELD'], return_index=True)
     nfields = len(ufield)
 
     for ifield in range(100):
