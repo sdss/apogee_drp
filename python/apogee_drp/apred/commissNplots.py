@@ -142,13 +142,13 @@ def tellstats(allv4=None):
         hmag = allv4g['H'][gd][uind]
         kmag = allv4g['K'][gd][uind]
         jk = jmag-kmag
-        nstars = len(gd)
-        meanh = str("%.3f" % round(np.nanmean(hmag),3))
-        medh = str("%.3f" % round(np.nanmedian(hmag),3))
-        sigh = str("%.3f" % round(np.nanstd(hmag),3))
-        meanjk = str("%.3f" % round(np.nanmean(jk),3))
-        medjk = str("%.3f" % round(np.nanmedian(jk),3))
-        sigjk = str("%.3f" % round(np.nanstd(jk),3))
+        nstars = str(len(gd))
+        meanh = str("%.3f" % round(np.nanmean(hmag),3)).rjust(6)
+        medh = str("%.3f" % round(np.nanmedian(hmag),3)).rjust(6)
+        sigh = str("%.3f" % round(np.nanstd(hmag),3)).rjust(6)
+        meanjk = str("%.3f" % round(np.nanmean(jk),3)).rjust(6)
+        medjk = str("%.3f" % round(np.nanmedian(jk),3)).rjust(6)
+        sigjk = str("%.3f" % round(np.nanstd(jk),3)).rjust(6)
         print(field.ljust(20)+'  '+nstars+'  '+meanh+'  '+medh+'  '+sigh+'  '+meanjk+'  '+medjk+'  '+sigjk)
 
 
