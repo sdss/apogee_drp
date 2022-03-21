@@ -136,8 +136,8 @@ def tellstats(allv4=None):
     nplatemjd = len(uplatemjd)
 
     for i in range(100):
-        upl = uplatemjd.split('-')[0]
-        umjd = uplatemjd.split('-')[1]
+        upl = uplatemjd[i].split('-')[0]
+        umjd = uplatemjd[i].split('-')[1]
         g, = np.where((allv4g['PLATE'] == upl) & (allv4g['MJD'] == int(umjd)))
         ng = len(g)
         meanh = str("%.3f" % round(np.nanmean(allv4g['H'][g]),3))
