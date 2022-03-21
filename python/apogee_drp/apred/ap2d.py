@@ -1098,7 +1098,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 sout = subprocess.run(cmd,shell=False)
             tracefiles = load.filename('PSF',num=planstr['psfid'],chips=True)
             tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
-            tracefile = os.path.dirname(tracefiles[0])+'/%8d' % planstr['psfid']
+            tracefile = os.path.dirname(tracefiles[0])+'/%8d' % int(planstr['psfid'])
             tracetest = [os.path.exists(t) for t in tracefiles]
             if np.sum(tracetest) != 3:
                 bd1, = np.where(np.array(tracetest)==False)
@@ -1139,7 +1139,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             fpiid = 0 
  
         # apFlux files : since individual frames are usually made per plate
-        if planstr['fluxid'] != 0: 
+        if int(planstr['fluxid']) != 0: 
             if load.exists('Flux',num=planstr['fluxid']):
                 print(load.filename('Flux',num=planstr['fluxid'],chips=True)+' already made')
             else:
@@ -1150,7 +1150,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 sout = subprocess.run(cmd,shell=False)
             fluxfiles = load.filename('Flux',num=planstr['fluxid'],chips=True)
             fluxfiles = [fluxfiles.replace('Flux-','Flux-'+ch+'-') for ch in chiptag]
-            fluxfile = os.path.dirname(fluxfiles[0])+'/%8d' % planstr['fluxid']
+            fluxfile = os.path.dirname(fluxfiles[0])+'/%8d' % int(planstr['fluxid'])
             fluxtest = [os.path.exists(f) for f in fluxfiles]
             fludtest = True if np.sum(fluxtest)==3 else False
             if np.sum(fluxtest) != 3: 
@@ -1166,7 +1166,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         #  these aren't used anymore
         if 'responseid' not in planstr.keys():
             planstr['responseid'] = 0
-        if planstr['responseid'] != 0: 
+        if int(planstr['responseid']) != 0: 
             if load.exists('Response',num=planstr['responseid']):
                 print(load.filename('Response',num=planstr['responseid'])+' exists already')
             else:

@@ -33,6 +33,7 @@ if __name__ == '__main__' :
     parser.add_argument('--telescope', type=str, nargs=1, help='Telescope')
     parser.add_argument('--psfid', type=str, nargs=1, help='PSF calibration file ID')
     parser.add_argument('--waveid', type=str, nargs=1, help='Wavelength calibration file ID')
+    parser.add_argument('--fluxid', type=str, nargs=1, help='Flux calibration file ID')
     parser.add_argument('--clobber', help='Overwrite files?',action="store_true")
     parser.add_argument('--unlock', help='Remove lock files and start fresh',action="store_true")
     args = parser.parse_args()
@@ -51,18 +52,26 @@ if __name__ == '__main__' :
     waveid = args.waveid
     if type(waveid) is list:
         waveid = waveid[0]
+    fluxid = args.fluxid
+    if type(fluxid) is list:
+        fluxid = fluxid[0]
 
     if args.planfile is None and args.num is None:
         raise ValueError('Must input either planfile or exposure number')
 
     # Make plan file for single exposure, if necessary
     if args.num is not None:
-        if args.vers is None or args.telescope is None:
-            raise ValueError('vers and telescope must be input with exposure num')
+        if args.apred is None or args.telescope is None:
+            raise ValueError('apred and telescope must be input with exposure num')
         num = int(args.num[0])
         apred = args.apred[0]
         telescope = args.telescope[0]
-        planfile = mkplan.mkplan(num,apred=apred,telescope=telescope,waveid=waveid,psfid=psfid,ap3d=True)
+        if num >= 59556:
+            fps = True
+        else:
+            fps = False
+        planfile = mkplan.mkplan(num,apred=apred,telescope=telescope,waveid=waveid,
+                                 psfid=psfid,fluxid=fluxid,fps=fps,ap2d=True,clobber=True)
     else:
         planfile = args.planfile[0]
 
