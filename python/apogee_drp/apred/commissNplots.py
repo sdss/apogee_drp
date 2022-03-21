@@ -136,7 +136,7 @@ def tellstats(allv4=None):
 
     for ifield in range(100):
         gd, = np.where(allv4g['FIELD'] == ufield[ifield])
-        ustars,uind = np.unique(allv4g['APOGEE_ID'], return_index=True)
+        ustars,uind = np.unique(allv4g['APOGEE_ID'][gd], return_index=True)
         jmag = allv4g['J'][gd][uind]
         hmag = allv4g['H'][gd][uind]
         kmag = allv4g['K'][gd][uind]
