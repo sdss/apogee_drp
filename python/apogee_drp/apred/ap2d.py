@@ -1306,7 +1306,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         #  FPI or sky lines
         # this used to call "apskywavecal", "ap1dwavecal" now handles
         # both cases (sky lines and fpi lines)
-        if waveid > 0 or fpiid > 0: 
+        if int(waveid) > 0 or int(fpiid) > 0: 
             cmd = ['ap1dwavecal',planfile] 
 
             # Check if there is FPI flux in the 2 fibers

@@ -142,8 +142,8 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
       endif
       wavedir = apogee_filename('Wave',num=0,chip='a',/dir)
       expdir = apogee_filename('2D',num=num,chip='a',/dir)
-      cmd = ['ap2d','--num',string(format='(i8.8)',num),'--apred',dirs.apred,'--telescope',dirs.telescope,'--fluxid','0']
-      if waveid gt 0 then cmd=[cmd,'--waveid',strtrim(waveid,2)]
+      cmd = ['ap2d','--num',string(format='(i8.8)',num),'--apred',dirs.apred,'--telescope',dirs.telescope,$
+             '--fluxid',strtrim(fluxid,2),'--waveid',strtrim(waveid,2)]
       if keyword_set(clobber) then cmd=[cmd,'--clobber']
       if keyword_set(unlock) then cmd=[cmd,'--unlock']
       spawn,cmd,/noshell
