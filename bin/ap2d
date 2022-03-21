@@ -32,6 +32,7 @@ if __name__ == '__main__' :
     parser.add_argument('--apred', type=str, nargs=1, help='APOGEE Reduction version')
     parser.add_argument('--telescope', type=str, nargs=1, help='Telescope')
     parser.add_argument('--psfid', type=str, nargs=1, help='PSF calibration file ID')
+    parser.add_argument('--modelpsf', type=str, nargs=1, help='Model PSF calibration file ID')
     parser.add_argument('--waveid', type=str, nargs=1, help='Wavelength calibration file ID')
     parser.add_argument('--fluxid', type=str, nargs=1, help='Flux calibration file ID')
     parser.add_argument('--clobber', help='Overwrite files?',action="store_true")
@@ -49,6 +50,9 @@ if __name__ == '__main__' :
     psfid = args.psfid
     if type(psfid) is list:
         psfid = psfid[0]
+    modelpsf = args.modelpsf
+    if type(modelpsf) is list:
+        modelpsf = modelpsf[0]
     waveid = args.waveid
     if type(waveid) is list:
         waveid = waveid[0]
@@ -71,7 +75,8 @@ if __name__ == '__main__' :
         else:
             fps = False
         planfile = mkplan.mkplan(num,apred=apred,telescope=telescope,waveid=waveid,
-                                 psfid=psfid,fluxid=fluxid,fps=fps,ap2d=True,clobber=True)
+                                 psfid=psfid,modelpsf=modelpsf,fluxid=fluxid,fps=fps,
+                                 ap2d=True,clobber=True)
     else:
         planfile = args.planfile[0]
 

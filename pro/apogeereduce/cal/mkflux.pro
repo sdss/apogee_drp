@@ -10,6 +10,7 @@
 ;  darkid=darkid : dark frame to be used if images are reduced
 ;  flatid=flatid : flat frame to be used if images are reduced
 ;  psfid=psfid : psf frame to be used if images are reduced
+;  modelpsf=modelpsf : model psf calibration frame to use for extraction
 ;  waveid=waveid : wave frame to be used if images are reduced
 ;  littrowid=littrowid : littrow frame to be used if images are reduced
 ;  persistid=persistid : persist frame to be used if images are reduced
@@ -28,9 +29,9 @@
 ;  Added doc strings, updates to use data model  D. Nidever, Sep 2020 
 ;-
 
-pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,littrowid=littrowid,$
-           persistid=persistid,clobber=clobber,onedclobber=onedclobber,bbtemp=bbtemp,plate=plate,$
-           plugid=plugid,holtz=holtz,temp=temp,unlock=unlock
+pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,modelpsf=modelpsf,waveid=waveid,$
+           littrowid=littrowid,persistid=persistid,clobber=clobber,onedclobber=onedclobber,$
+           bbtemp=bbtemp,plate=plate,plugid=plugid,holtz=holtz,temp=temp,unlock=unlock
 
   dirs = getdir(apodir,caldir,spectrodir,vers)
   caldir = dirs.caldir
@@ -72,10 +73,10 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,waveid=waveid,l
   if total(file_test(files),/int) gt 0 then file_delete,files,/allow
   if keyword_set(cmjd) then begin
     d = approcess(ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,littrowid=littrowid,$
-                  persistid=persistid,fluxid=0,/nocr,nfs=1,/doproc,unlock=unlock)
+                  persistid=persistid,modelpsf=modelpsf,fluxid=0,/nocr,nfs=1,/doproc,unlock=unlock)
   endif else begin
     d = approcess(ims,darkid=darkid,flatid=flatid,psfid=psfid,littrowid=littrowid,$
-                  persistid=persistid,fluxid=0,/nocr,nfs=1,/doproc,unlock=unlock)
+                  persistid=persistid,modelpsf=modelpsf,fluxid=0,/nocr,nfs=1,/doproc,unlock=unlock)
   endelse
   cmjd = getcmjd(i1)
   inpfile = apogee_filename('1D',num=i1,chip='a',/dir)+string(format='(i8.8)',i1)

@@ -12,6 +12,7 @@
 ;  =darkid     Dark frame to be used if images are reduced.
 ;  =flatid     Flat frame to be used if images are reduced.
 ;  =psfid      PSF frame to be used if images are reduced.
+;  =modelpsf   Model PSF calibration frame to use.
 ;  =fiberid    ETrace frame to be used if images are reduced.
 ;  /nowait     If file is already being made then don't wait
 ;                just return.
@@ -31,8 +32,8 @@
 ;-
 
 pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
-           fiberid=fiberid,clobber=clobber,nowait=nowait,nofit=nofit,$
-           unlock=unlock
+           modelpsf=modelpsf,fiberid=fiberid,clobber=clobber,nowait=nowait,$
+           nofit=nofit,unlock=unlock
 
   if n_elements(name) eq 0 then name=string(waveid[0])
   dirs = getdir(apodir,caldir,spectrodir,vers)
@@ -76,7 +77,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;; Process the frames
   cmjd = getcmjd(psfid)
   MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
-  w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc,unlock=unlock)
+  w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,modelpsf=modelpsf,flux=0,/doproc,unlock=unlock)
 
   ;; New Python version! 
   cmd = ['apmultiwavecal','--name',strtrim(name,2),'--vers',dirs.apred]

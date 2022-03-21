@@ -12,6 +12,7 @@
 ;  =darkid      Dark frame to be used if images are reduced.
 ;  =flatid      Flat frame to be used if images are reduced.
 ;  =psfid       PSF frame to be used if images are reduced.
+;  =modelpsf    Model PSF calibration frame to use.
 ;  =fiberid     ETrace frame to be used if images are reduced.
 ;  /nowait      If file is already being made then don't wait
 ;                 just return.
@@ -31,8 +32,8 @@
 ;-
 
 pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
-           fiberid=fiberid,clobber=clobber,nowait=nowait,nofit=nofit,$
-           unlock=unlock,psflibrary=psflibrary
+           modelpsf=modelpsf,fiberid=fiberid,clobber=clobber,$
+           nowait=nowait,nofit=nofit,unlock=unlock,psflibrary=psflibrary
 
   name = strtrim(mjd,2)
   dirs = getdir(apodir,caldir,spectrodir,vers)
@@ -114,7 +115,7 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
     endif
 
     MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',$
-            /nofit,unlock=unlock,librarypsf=psflibrary
+            /nofit,unlock=unlock,librarypsf=psflibrary,modelpsf=modelpsf
   endfor
 
   ;; New Python version! 

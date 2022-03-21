@@ -276,7 +276,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
 
   ;; Make Model PSF calibration file
   ;;--------------------------------
-  if keyword_set(modelpsf) then begin
+  if keyword_set(modelpsf) and (not keyword_set(fpi) and not keyword_set(flux) and not keyword_set(wave)) then begin
     print,'makecal modelpsf: ',modelpsf
     if modelpsf gt 0 then begin
       file = apogee_filename('PSFModel',num=modelpsf,chip='c')
@@ -312,20 +312,27 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         print,' fpi file: ',file, ' already made'
         return
       endif
-      ;; What PSF to use
-      if keyword_set(psf) then begin
-        psfid = psf
-      ;; Try to find a PSF from this day
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid,modelpsf=modelpsf
+      ;; Use Model PSF by default
+      if not keyword_set(psf) and not keyword_set(librarypsf) then begin
+        psfid = 0
+        MAKECAL,modelpsf=modelpsf,unlock=unlock 
+      ;; Use PSF file     
       endif else begin
-        print,'Trying to automatically find a PSF calibration file'
-        psfid = GETPSFCAL(fpi[0],psflibrary=librarypsf)
+        ;; What PSF to use
+        if keyword_set(psf) then begin
+          psfid = psf
+        ;; Try to find a PSF from this day
+        endif else begin
+          print,'Trying to automatically find a PSF calibration file'
+          psfid = GETPSFCAL(fpi[0],psflibrary=librarypsf)
+        endelse
+        MAKECAL,psf=psfid,unlock=unlock
       endelse
-      MAKECAL,psf=psfid,unlock=unlock
-      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
       MAKECAL,fiber=fiberid,unlock=unlock
-      MAKECAL,dailywave=mjd,clobber=clobber,unlock=unlock,librarypsf=librarypsf
+      MAKECAL,dailywave=mjd,clobber=clobber,unlock=unlock,librarypsf=librarypsf,modelpsf-modelpsf
       MKFPI,fpi,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
-            fiberid=fiberid,clobber=clobber,unlock=unlock,psflibrary=librarypsf
+            fiberid=fiberid,clobber=clobber,unlock=unlock,psflibrary=librarypsf,modelpsf=modelpsf
     endif
   endif
 
@@ -374,7 +381,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
 
   ;; Make Persistence model calibration file
   ;;----------------------------------------
-  if keyword_set(modelpersist) then begin
+  if keyword_set(modelpersist) and ~keyword_set(flux) then begin
     print,'makecal modelpersist: ', modelpersist
     if modelpersist gt 1 then begin
       file = apogee_filename('PersistModel',num=modelpersist,chip='c')
@@ -410,20 +417,25 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         return
       endif
       cmjd = getcmjd(flux[0],mjd=mjd)
-      ;; What PSF to use
-      if keyword_set(psf) then begin
-        psfid = psf
-      ;; Try to find a PSF from this day
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,littrowid=littrowid,waveid=waveid,modelpsf=modelpsf
+      ;; Use Model PSF by default
+      if not keyword_set(psf) and not keyword_set(librarypsf) then begin
+        psfid = 0
+        MAKECAL,modelpsf=modelpsf,unlock=unlock 
+      ;; Use PSF file     
       endif else begin
-        print,'Trying to automatically find a PSF calibration file'
-        psfid = GETPSFCAL(flux[0],psflibrary=librarypsf)
+        if keyword_set(psf) then begin
+          psfid = psf
+        ;; Try to find a PSF from this day
+        endif else begin
+          print,'Trying to automatically find a PSF calibration file'
+          psfid = GETPSFCAL(flux[0],psflibrary=librarypsf)
+        endelse
+        MAKECAL,psf=psfid,unlock=unlock
       endelse
-      cmjd = getcmjd(flux,mjd=mjd)
-      MAKECAL,psf=psfid,unlock=unlock
-      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,littrowid=littrowid,waveid=waveid
       MAKECAL,littrow=littrowid,unlock=unlock
-      MKFLUX,flux,darkid=darkid,flatid=flatid,psfid=psfid,littrowid=littrowid,waveid=waveid,$
-             clobber=clobber,unlock=unlock
+      MKFLUX,flux,darkid=darkid,flatid=flatid,psfid=psfid,modelpsf=modelpsf,littrowid=littrowid,$
+             waveid=waveid,clobber=clobber,unlock=unlock
     endif
   endif
 
@@ -479,20 +491,27 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         ims = wave
         name = ims[0]
         cmjd = getcmjd(ims[0],mjd=mjd)
-        ;; What PSF to use
-        if keyword_set(psf) then begin
-          psfid = psf
-        ;; Try to find a PSF from this day
+        GETCAL,mjd,calfile,modelpsf=modelpsf,/silent
+        ;; Use Model PSF by default
+        if not keyword_set(psf) and not keyword_set(librarypsf) then begin
+          psfid = 0
+          MAKECAL,modelpsf=modelpsf,unlock=unlock 
+        ;; Use PSF file     
         endif else begin
-          print,'Trying to automatically find a PSF calibration file'
-          psfid = GETPSFCAL(ims[0],psflibrary=librarypsf)
-        endelse
+          if keyword_set(psf) then begin
+            psfid = psf
+          ;; Try to find a PSF from this day
+          endif else begin
+            print,'Trying to automatically find a PSF calibration file'
+            psfid = GETPSFCAL(ims[0],psflibrary=librarypsf)
+          endelse
+          MAKECAL,psf=psfid,unlock=unlock
       endelse
       cmjd = getcmjd(ims[0],mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
       MAKECAL,bpm=bpmid,unlock=unlock
       MAKECAL,fiber=fiberid,unlock=unlock
-      MKWAVE,ims,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
+      MKWAVE,ims,name=name,darkid=darkid,flatid=flatid,psfid=psfid,modelpsf=modelpsf,$
              fiberid=fiberid,clobber=clobber,nofit=nofit,unlock=unlock
     endif else begin
       if keyword_set(mjd) then  begin
@@ -565,12 +584,13 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         return
       endif
       mjd = dailywave
-      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid,modelpsf=modelpsf
+      if keyword_set(librarypsf) then apundefine,modelpsf
       MAKECAL,bpm=bpmid,unlock=unlock
       MAKECAL,fiber=fiberid,unlock=unlock
       MKDAILYWAVE,dailywave,darkid=darkid,flatid=flatid,psfid=psfid,$
              fiberid=fiberid,clobber=clobber,nofit=nofit,unlock=unlock,$
-             psflibrary=librarypsf
+             psflibrary=librarypsf,modelpsf=modelpsf
     endif
   endif
 
@@ -609,8 +629,9 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         for i=0,n_elements(red)-1,nskip do begin
           ims = getnums(lsfstr[red[i]].frames)
           cmjd = getcmjd(ims[0],mjd=mjd)
-          GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,multiwaveid=waveid,fiberid=fiberid
-          MAKECAL,multiwave=waveid,unlock=unlock,librarypsf=librarypsf
+          GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,multiwaveid=waveid,fiberid=fiberid,modelpsf=modelpsf
+          if keyword_set(librarypsf) then apundefine,modelpsf
+          MAKECAL,multiwave=waveid,unlock=unlock,librarypsf=librarypsf,modelpsf=modelpsf
           print,'calling mklsf'
           MKLSF,ims,waveid,darkid=darkid,flatid=flatid,psfid=lsfstr[i].psfid,fiberid=fiberid,$
                 full=full,newwave=newwave,clobber=clobber,pl=pl,unlock=unlock,/nowait

@@ -16,6 +16,7 @@
 ;  =flatid         Flat calibration frame to be used in reduction.
 ;  =traceid        Trace calibration frame to be used in reduction.
 ;  =psfid          PSF calibration frame to be used in reduction.
+;  =modelpsf       Model PSF calibration frame to be used in reduction.
 ;  =fluxid         Flux calibration frame to be used in reduction.
 ;  =waveid         Wavelength calibration frame to be used in reduction.
 ;  =littrowid      Littrow calibration frame to be used in reduction.
@@ -50,11 +51,11 @@
 
 ; approcess reduces a sequence of images, all 3 chips, and writes out
 function approcess,nums,cmjd=cmjd,clobber=clobber,onedclobber=onedclobber,detid=detid,$
-                   darkid=darkid,flatid=flatid,traceid=traceid,psfid=psfid,fluxid=fluxid,$
-                   waveid=waveid,littrowid=littrowid,persistid=persistid,nocr=nocr,stp=stp,$
-                   jchip=jchip,nfs=nfs,nofs=nofs,doproc=doproc,doap3dproc=doap3dproc,$
-                   doap2dproc=doap2dproc,logfile=logfile,outdir=outdir,maxread=maxread,$
-                   skywave=skywave,step=step,unlock=unlock
+                   darkid=darkid,flatid=flatid,traceid=traceid,psfid=psfid,modelpsf=modelpsf,$
+                   fluxid=fluxid,waveid=waveid,littrowid=littrowid,persistid=persistid,$
+                   nocr=nocr,stp=stp,jchip=jchip,nfs=nfs,nofs=nofs,doproc=doproc,$
+                   doap3dproc=doap3dproc,doap2dproc=doap2dproc,logfile=logfile,outdir=outdir,$
+                   maxread=maxread,skywave=skywave,step=step,unlock=unlock
 
 common savedepsf, savedepsffiles, epsfchip
 savedepsffiles = [' ',' ',' ']
@@ -144,6 +145,7 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
       expdir = apogee_filename('2D',num=num,chip='a',/dir)
       cmd = ['ap2d','--num',string(format='(i8.8)',num),'--apred',dirs.apred,'--telescope',dirs.telescope,$
              '--fluxid',strtrim(fluxid,2),'--waveid',strtrim(waveid,2)]
+      if keyword_set(modelpsf) then cmd=[cmd,'--modelpsf',strtrim(modelpsf,2)]
       if keyword_set(clobber) then cmd=[cmd,'--clobber']
       if keyword_set(unlock) then cmd=[cmd,'--unlock']
       spawn,cmd,/noshell

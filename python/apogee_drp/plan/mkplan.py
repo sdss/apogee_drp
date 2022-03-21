@@ -719,8 +719,11 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         if fps and psflibrary:
             out['psflibrary'] = 1
         # Use Model PSF for extraction
-        if modelpsf:
-            out['modelpsf'] = int(caldata['modelpsf'])
+        if psflibrary is None or modelpsf:
+            if str(modelpsf).isnumeric():
+                out['modelpsf'] = int(modelpsf)
+            else:
+                out['modelpsf'] = int(caldata['modelpsf'])  # use from library
         # Flux calibration file
         if fluxid is not None:
             out['fluxid'] = fluxid
