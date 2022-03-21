@@ -506,6 +506,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
             psfid = GETPSFCAL(ims[0],psflibrary=librarypsf)
           endelse
           MAKECAL,psf=psfid,unlock=unlock
+        endelse
       endelse
       cmjd = getcmjd(ims[0],mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
@@ -514,7 +515,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       MKWAVE,ims,name=name,darkid=darkid,flatid=flatid,psfid=psfid,modelpsf=modelpsf,$
              fiberid=fiberid,clobber=clobber,nofit=nofit,unlock=unlock
     endif else begin
-      if keyword_set(mjd) then  begin
+      if keyword_set(mjd) then begin
         num = getnum(mjd) 
         red = where(wavestr.frames/10000L eq num)
       endif else red=indgen(n_elements(wavestr))

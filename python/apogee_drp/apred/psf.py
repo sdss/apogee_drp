@@ -1394,6 +1394,8 @@ def getoffset(frame,traceim):
             boxflux[j] = np.sum(medflux[int(np.round(medcent[j]))-1:int(np.round(medcent[j]))+1])
         # Find bright fibers
         bright, = np.where(boxflux > 1000)
+        if len(bright)<10:
+            bright = np.argsort(boxflux)[0:30]  # take brightest 30 fibers
         nbright = len(bright)
         
         # Loop over bright fibers
