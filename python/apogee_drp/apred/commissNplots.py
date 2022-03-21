@@ -135,7 +135,7 @@ def tellstats(allv4=None):
     ufield,uind = np.unique(allv4g['FIELD'], return_index=True)
     nfields = len(ufield)
 
-    for ifield in range(100):
+    for ifield in range(nfields):
         field = ufield[ifield]
         gd, = np.where(allv4g['FIELD'] == field)
         ustars,uind = np.unique(allv4g['APOGEE_ID'][gd], return_index=True)
@@ -150,7 +150,7 @@ def tellstats(allv4=None):
         meanjk = str("%.3f" % round(np.nanmean(jk),3)).rjust(6)
         medjk = str("%.3f" % round(np.nanmedian(jk),3)).rjust(6)
         sigjk = str("%.3f" % round(np.nanstd(jk),3)).rjust(6)
-        print(field.ljust(20)+'  '+nstars+'  '+meanh+'  '+medh+'  '+sigh+'  '+meanjk+'  '+medjk+'  '+sigjk)
+        print(field.ljust(24)+'  '+nstars+'  '+meanh+'  '+medh+'  '+sigh+'  '+meanjk+'  '+medjk+'  '+sigjk)
 
 
     return allv4g
