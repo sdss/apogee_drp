@@ -75,8 +75,10 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
 
 
   ;; Process the frames
-  cmjd = getcmjd(psfid)
-  MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
+  if keyword_set(psfid) then begin
+    cmjd = getcmjd(psfid)
+    MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
+  endif
   w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,modelpsf=modelpsf,flux=0,/doproc,unlock=unlock)
 
   ;; New Python version! 

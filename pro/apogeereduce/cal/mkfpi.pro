@@ -12,6 +12,7 @@
 ;  =darkid     Dark frame to be used if images are reduced.
 ;  =flatid     Flat frame to be used if images are reduced.
 ;  =psfid      PSF frame to be used if images are reduced.
+;  =modelpsf   Model PSF calibration frame to use.
 ;  =fiberid    ETrace frame to be used if images are reduced.
 ;  /clobber    Overwrite existing files.
 ;  /unlock     Delete the lock file and start fresh.
@@ -29,7 +30,8 @@
 ;-
 
 pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
-          fiberid=fiberid,clobber=clobber,unlock=unlock,psflibrary=psflibrary
+          modelpsf=modelpsf,fiberid=fiberid,clobber=clobber,$
+          unlock=unlock,psflibrary=psflibrary
 
   if n_elements(name) eq 0 then name=string(fpiid[0])
   dirs = getdir(apodir,caldir,spectrodir,vers)
@@ -66,10 +68,12 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   free_lun,lock
 
   ;; Process the frames
-  MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
-  w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,flux=0,/doproc,unlock=unlock)
+  if keyword_set(psfid) then $
+    MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
+  w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,modelpsf=modelpsf,flux=0,/doproc,unlock=unlock)
 
   ;; Make sure the dailywave file is there
+  ;;  it uses modelpsf by default now
   MAKECAL,dailywave=mjd,clobber=clobber,unlock=unlock,librarypsf=psflibrary
 
   ;; New Python version! 
