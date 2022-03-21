@@ -10,10 +10,9 @@ from astropy.io import fits, ascii
 from astropy.table import Table, vstack
 from astropy.time import Time
 from astropy import units as u
-from astropy.coordinates import SkyCoord
 from numpy.lib.recfunctions import append_fields, merge_arrays
 from astroplan import moon_illumination
-from astropy.coordinates import SkyCoord, get_moon
+from astropy.coordinates import SkyCoord, get_moon, EarthLocation, AltAz
 from astropy import units as astropyUnits
 from scipy.signal import medfilt2d as ScipyMedfilt2D
 from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask
@@ -33,7 +32,15 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
 
+
 # import pdb; pdb.set_trace()
+
+""" 
+Location data for APO+LCO
+"""
+#            LON          LAT         ALT
+LCOcoords = [-29.015970,  -70.692080, 2380]
+APOcoords = [ 32.780278, -105.820278, 2788]
 
 apred = 'daily'
 instrument = 'apogee-n'
@@ -115,54 +122,291 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def telescopePos(field='17049', star='2M07311564+3145469'):
+def telescopePos(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
     # telescopePosPerform.png
-    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePosPerform_' + star + '.png'
+    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_' + star + '.png'
     print("----> commissNplots: Making " + os.path.basename(plotfile))
 
-    p, = np.where((allsnr['FIELD'] == field) & (allsnr['exptime'] == 457))
-    upl,uind = np.unique(allsnr['plate'][p], return_index=True)
-    allsnrg = allsnr[p][uind]
-    nexp = len(allsnrg)
+    num = allexp['NUM']
+    #p, = np.where((num == 40630031) | (num == 40630039) | (num == 40630040) | 
+    #              (num == 40630048) | (num == 40630049) | (num == 40630057) |
+    #              (num == 40630058))
+    p, = np.where((num == 40630039) | (num == 40630040) | (num == 40630048) |
+                  (num == 40630049) | (num == 40630057) | (num == 40630058))
+    altord = np.argsort(allexp['alt'][p])[::-1]
+    num = allexp['num'][p][altord]
+    alt = allexp['alt'][p][altord]
+    upl = allexp['plateid'][p][altord]
+    dateobs = allexp['dateobs'][p][altord]
+    fra = 113.495888
+    fdec = 32.171619
+    apo = EarthLocation.of_site('Apache Point Observatory')
+    #            LON          LAT         ALT
+    #APOcoords = [ 32.780278, -105.820278, 2788]
+    #num = np.array([40630031, 40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
+    num = np.array([40630039, 40630040, 40630048, 40630049, 40630057, 40630058])
+    upl = np.array([3471, 3471, 3477, 3477, 3483, 3483])
+    umjd = allexp['mjd'][p][altord]
+    allexpg = allexp[p][altord]
+    nexp = len(allexpg)
 
-    fig = plt.figure(figsize=(25,16))
-    ax1 = plt.subplot2grid((2,1), (0,0))
-    ax2 = plt.subplot2grid((2,1), (1,0))
-    axes = [ax1, ax2]
+    cmap = cmaps.get_cmap(cmap, 100)
+    cmapConst = 0.5
+    cmapShift = 0.1
+
+    fig = plt.figure(figsize=(28,14))
+    ax1 = plt.subplot2grid((2,8), (0,0), colspan=7)
+    ax2 = plt.subplot2grid((2,8), (1,0), colspan=7)
+    ax11 = plt.subplot2grid((2,8), (0,7), colspan=1)
+    ax22 = plt.subplot2grid((2,8), (1,7), colspan=1)
+    #ax3 = plt.subplot2grid((2,8), (1,6), colspan=1)
+    axes = [ax1, ax2, ax11, ax22]
     for ax in axes:
         ax.minorticks_on()
-        ax.set_xlim(16475, 16945)
         ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlim(16475, 16945)
+    ax2.set_xlim(16475, 16945)
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
+    ax2.xaxis.set_major_locator(ticker.MultipleLocator(50))
+    ax1.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+    ax2.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+    ax11.xaxis.set_major_locator(ticker.MultipleLocator(20))
+    ax22.xaxis.set_major_locator(ticker.MultipleLocator(20))
+    ax11.xaxis.set_minor_locator(ticker.MultipleLocator(5))
+    ax22.xaxis.set_minor_locator(ticker.MultipleLocator(5))
+    ax11.set_xlim(16747, 16770)
+    ax22.set_xlim(16747, 16770)
     ax1.axes.xaxis.set_ticklabels([])
+    ax11.axes.xaxis.set_ticklabels([])
+    ax11.axes.yaxis.set_ticklabels([])
+    ax22.axes.yaxis.set_ticklabels([])
     ax1.set_ylabel(r'Flux')
     ax2.set_ylabel(r'Norm Flux')
     ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
     ax2.set_ylim(0.25, 1.35)
+    ax22.set_ylim(0.25, 1.35)
     visdir = specdir5 + 'visit/apo25m/' + field + '/'
 
+    ax11.text(1.1, 1.00, r'EXPNUM    SECZ   S/N', transform=ax11.transAxes, fontsize=fsz)
+
+    snsecz = open(specdir5 + 'monitor/' + instrument + '/telescopePos/snsecz_'+star+'.dat', 'w')
+    snsecz.write('NUM        SECZ      SN\n')
+    ymx = np.zeros(nexp)
     for iexp in range(nexp):
-        visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
-        cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
-        print(os.path.basename(cfile))
+        visdir1 = visdir + str(upl[iexp]) + '/' + str(umjd[iexp]) + '/'
+        cfile = visdir1 + 'apCframe-a-' + str(num[iexp]) + '.fits'
+        plsumfile = visdir1 + 'apPlateSum-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
         flux = fits.getdata(cfile)
         wave = fits.getdata(cfile,4)
         obj = fits.getdata(cfile,11)
         g, = np.where(obj['TMASS_STYLE'] == star)
-        g1, = np.where(allsnrg['IM'][iexp] == allexp['NUM'])
         if len(g) > 0:
-            txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ')'
+            txt = star + r'  ($H=$' + str("%.3f" % round(obj['hmag'][g][0],3)) + ', field = ' + field + ')'
             if iexp == 0: ax1.text(0.5, 1.02, txt, transform=ax1.transAxes, ha='center')
-            p = ax1.plot(wave[g][0], flux[g][0])
-            c = p[0].get_color()
-            txt = 'alt = ' + str("%.3f" % round(allexp['ALT'][g1][0],3)) + r'$^{\circ}$,  fiberID = ' + str(obj['fiberid'][g][0]).zfill(3)
-            txt1 = ',  mjd = ' + str(allsnrg['mjd'][iexp])
-            ax1.text(0.02, 0.97-.04*iexp, txt+txt1, color=c, fontsize=fsz, transform=ax1.transAxes, va='top')
-            ax2.plot(wave[g][0], flux[g][0]/np.nanmedian(flux[g][0]), color=c)
 
-    fig.subplots_adjust(left=0.073,right=0.98,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            sra = obj['ra'][g][0]
+            sdec = obj['dec'][g][0]
+            obstime = Time(dateobs[iexp], format='fits')
+            aa = AltAz(location=apo, obstime=obstime)
+            coord = SkyCoord(sra, sdec, unit='deg')
+            staralt = coord.transform_to(aa).alt.degree
+            secz = 1. / np.cos((90-staralt)*(np.pi/180))
+
+            pl1 = fits.getdata(plsumfile,1)
+            pl2 = fits.getdata(plsumfile,2)
+            gg1, = np.where(num[iexp] == pl1['IM'])
+            gg2, = np.where(star == pl2['TMASS_STYLE'])
+            #secz = pl1['SECZ'][gg1][0]
+            snr = pl2['sn'][gg2[0], gg1[0], 0]
+
+            c = cmap(((iexp+1)/nexp)+cmapShift)
+            w = wave[g][0]; f = flux[g][0]
+            p = ax1.plot(w, f, color=c)
+            ax11.plot(w, f, color=c)
+            #c = p[0].get_color()
+            txt = str(num[iexp]) + '   ' + str("%.3f" % round(secz,3)) + '   ' + str(int(round(snr)))
+            ax11.text(1.1, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax11.transAxes, va='top')
+            ax2.plot(w, f/np.nanmedian(f), color=c)
+            ax22.plot(w, f/np.nanmedian(f), color=c)
+
+            ymxsec, = np.where((w > 16780) & (w < 16820))
+            ymx[iexp] = np.nanmax(f[ymxsec])
+
+            snsecz.write(str(num[iexp])+'   '+str("%.5f" % round(secz,5))+'   '+str("%.3f" % round(snr,3)) + '\n')
+
+    ax1.set_ylim(0, np.nanmax(ymx)*1.15)
+
+    snsecz.close()
+
+    fig.subplots_adjust(left=0.073,right=0.875,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+    return
+
+###########################################################################################
+def telescopePos2(field='17049', cmap='gnuplot_r'):
+    # telescopePosPerform.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_all.png'
+    print("----> commissNplots: Making " + os.path.basename(plotfile))
+
+    gstars = np.array(['2M07355107+3113096','2M07320091+3110341','2M07342631+3151001','2M07295449+3146083',
+                       '2M07303923+3111106','2M07363035+3239591','2M07293021+3227021','2M07330674+3117112'])
+
+    p, = np.where((allsnr['FIELD'] == field) & ((allsnr['exptime'] == 457) | (allsnr['exptime'] == 489)) & (allsnr['mjd'] != 59609))
+    upl,uind = np.unique(allsnr['plate'][p], return_index=True)
+    upl = allsnr['plate'][p]#[uind]
+    umjd = allsnr['mjd'][p]#[uind]
+    allsnrg = allsnr[p]#[uind]
+    nexp = len(allsnrg)
+
+    cmap = cmaps.get_cmap(cmap, 100)
+    cmapConst = 0.5
+    cmapShift = 0.1
+
+    fig = plt.figure(figsize=(28,14))
+    ax1 = plt.subplot2grid((2,8), (0,0), colspan=7)
+    ax2 = plt.subplot2grid((2,8), (1,0), colspan=7)
+    ax11 = plt.subplot2grid((2,8), (0,7), colspan=1)
+    ax22 = plt.subplot2grid((2,8), (1,7), colspan=1)
+    #ax3 = plt.subplot2grid((2,8), (1,6), colspan=1)
+    axes = [ax1, ax2, ax11, ax22]
+    for ax in axes:
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlim(16475, 16945)
+    ax2.set_xlim(16475, 16945)
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(50))
+    ax2.xaxis.set_major_locator(ticker.MultipleLocator(50))
+    ax1.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+    ax2.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+    ax11.xaxis.set_major_locator(ticker.MultipleLocator(20))
+    ax22.xaxis.set_major_locator(ticker.MultipleLocator(20))
+    ax11.xaxis.set_minor_locator(ticker.MultipleLocator(5))
+    ax22.xaxis.set_minor_locator(ticker.MultipleLocator(5))
+    ax11.set_xlim(16747, 16770)
+    ax22.set_xlim(16747, 16770)
+    ax1.axes.xaxis.set_ticklabels([])
+    ax11.axes.xaxis.set_ticklabels([])
+    ax11.axes.yaxis.set_ticklabels([])
+    ax22.axes.yaxis.set_ticklabels([])
+    ax1.set_ylabel(r'Flux')
+    ax2.set_ylabel(r'Norm Flux')
+    ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
+    ax2.set_ylim(0.25, 1.35)
+    ax22.set_ylim(0.25, 1.35)
+    visdir = specdir5 + 'visit/apo25m/' + field + '/'
+
+    ax11.text(1.1, 1.00, r'EXPNUM    SECZ   S/N', transform=ax11.transAxes, fontsize=fsz)
+    ax1.text(0.5, 1.02, 'field = ' + field, transform=ax1.transAxes, ha='center')
+
+    ymx = np.zeros(nexp)
+    secz = np.zeros(nexp)
+    snr = np.zeros(nexp)
+    for iexp in range(nexp):
+        visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
+        cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
+        plsumfile = visdir1 + 'apPlateSum-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
+        flux = fits.getdata(cfile)
+        wave = fits.getdata(cfile,4)
+        print(os.path.basename(cfile))
+        pl1 = fits.getdata(plsumfile,1)
+        gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
+        secz[iexp] = pl1['SECZ'][gg1][0]
+
+    #print(ymx/np.nanmax(ymx))
+    #ax1.set_ylim(0, np.nanmax(ymx)*1.15)
+    #gd, = np.where((snr > 0) & (ymx > 0) & (ymx/np.nanmax(ymx) > 0.2))
+    sord = np.argsort(secz)
+    secz = secz[sord]
+    upl = upl[sord]
+    umjd = umjd[sord]
+    allsnrg = allsnrg[sord]
+
+    for iexp in range(nexp):
+        visdir1 = visdir + str(allsnrg['plate'][iexp]) + '/' + str(allsnrg['mjd'][iexp]) + '/'
+        cfile = visdir1 + 'apCframe-a-' + str(allsnrg['IM'][iexp]) + '.fits'
+        plsumfile = visdir1 + 'apPlateSum-' + str(upl[iexp]) + '-' + str(umjd[iexp]) + '.fits'
+        pl1 = fits.getdata(plsumfile,1)
+        pl2 = fits.getdata(plsumfile,2)
+        pdb.set_trace()
+        flux = fits.getdata(cfile)
+        wave = fits.getdata(cfile,4)
+        obj = fits.getdata(cfile,11)
+        gd, = np.where(obj['fiberid'] > 0)
+        obj = obj[gd]
+        #starind = np.where(
+        gg1, = np.where(allsnrg['IM'][iexp] == pl1['IM'])
+        #gdstars, = np.where((obj['objtype'] == 'STAR') & (obj['hmag'] < 9) & (pl2['sn'][:, gg1[0], 0] > 100))
+        gdstars, = np.where((pl2['objtype'] == 'STAR') & (pl2['hmag'] < 8) & (pl2['sn'][:, gg1[0], 0] > 100))
+        #pdb.set_trace()
+        print(len(gdstars))
+        w = np.nanmean(wave[gdstars], axis=0)
+        f = np.nanmean(flux[gdstars], axis=0)
+        snr = np.nanmean(pl2['sn'][gdstars, gg1[0], 0])
+        c = cmap(((iexp+1)/nexp)+cmapShift)
+        p = ax1.plot(w, f, color=c)
+        ax11.plot(w, f, color=c)
+        txt = str(allsnrg['IM'][iexp]) + '   ' + str("%.3f" % round(secz[iexp],3)) + '   ' + str(int(round(snr)))
+        ax11.text(1.1, 0.97-.04*iexp, txt, color=c, fontsize=fsz, transform=ax11.transAxes, va='top')
+        ax2.plot(w, f/np.nanmedian(f), color=c)
+        ax22.plot(w, f/np.nanmedian(f), color=c)
+
+
+
+    fig.subplots_adjust(left=0.073,right=0.875,bottom=0.06,top=0.96,hspace=0.08,wspace=0.1)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+    return
+
+###########################################################################################
+def telescopePos3(field='17049', cmap='nipy_spectral', cut=True):
+    # telescopePosPerform.png
+    plotfile = specdir5 + 'monitor/' + instrument + '/telescopePos/telescopePos_' + field + '_seczXsnr.png'
+    if cut: plotfile = plotfile.replace('.png', '_cut.png')
+    print("----> commissNplots: Making " + os.path.basename(plotfile))
+
+    cmap = cmaps.get_cmap(cmap, 100)
+    cmapConst = 0.7
+    cmapShift = 0.05
+
+    fig = plt.figure(figsize=(21,14))
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1.minorticks_on()
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlabel(r'sec(z)')
+    ax1.set_ylabel(r'Normalized S/N (red chip)')
+    visdir = specdir5 + 'visit/apo25m/' + field + '/'
+
+    infiles = glob.glob(specdir5 + 'monitor/' + instrument + '/telescopePos/*dat')
+    infiles.sort()
+    infiles = np.array(infiles)
+    nfiles = len(infiles)
+
+    for i in range(nfiles):
+        d = ascii.read(infiles[i])
+        star = os.path.basename(infiles[i]).split('_')[1].split('.')[0]
+        x = d['SECZ']
+        y = d['SN'] / np.max(d['SN'])
+        if cut:
+            if (y[0] < 0.9) | (y[3] < 0.8): continue
+        c = cmap((i+1)/nfiles)
+        ax1.plot(x, y, marker='o', color=c)
+        ax1.scatter(x, d['SN']/np.max(d['SN']), marker='o', color=c, edgecolors='k', s=80, label=star)
+
+    ax1.legend(loc=[1.01, 0.0], labelspacing=0.5, handletextpad=-0.1, fontsize=fsz, edgecolor='k', framealpha=1)
+
+    fig.subplots_adjust(left=0.06,right=0.805,bottom=0.063,top=0.985,hspace=0.08,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
