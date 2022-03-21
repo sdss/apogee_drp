@@ -137,7 +137,7 @@ def tellstats(allv4=None):
 
     for i in range(100):
         upl = uplatemjd.split('-')[0]
-        umjd = uplatemjd.split('-')[0]
+        umjd = uplatemjd.split('-')[1]
         g, = np.where((allv4g['PLATE'] == upl) & (allv4g['MJD'] == int(umjd)))
         ng = len(g)
         meanh = str("%.3f" % round(np.nanmean(allv4g['H'][g]),3))
@@ -150,7 +150,7 @@ def tellstats(allv4=None):
         print(upl+'  '+umjd+'  '+meanh+'  '+medh+'  '+sigh+'  '+meanjk+'  '+medjk+'  '+sigjk)
 
 
-    return
+    return allv4g
 
 ###########################################################################################
 def telescopePos(field='17049', star='2M07303923+3111106', cmap='gnuplot_r'):
