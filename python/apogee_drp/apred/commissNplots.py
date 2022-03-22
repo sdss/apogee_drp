@@ -198,7 +198,8 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
                         outstr['MAD'][i, ichip, imol] = dln.mad(fitscale[imol, gd])
                         outstr['MADRESID'][i, ichip, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
 
-    Table(outstr).write('tellfitstats1.fits', overwrite=True)            
+    gd, = np.where(outstr['NUM'] > 0)
+    Table(outstr[gd]).write('tellfitstats1.fits', overwrite=True)            
 
     return outstr
 
