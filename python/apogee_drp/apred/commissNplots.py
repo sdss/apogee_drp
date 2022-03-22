@@ -121,7 +121,23 @@ xmin = minjd - jdspan * 0.01
 xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
+###########################################################################################
+def tellfitstats1(mjdstart=58080, mjdstop=58100):
+    medsn = np.nanmedian(allsci['SN'][:,1])
+    gd, = np.where((allsci['MJD'] > mjdstart) & (allsci['MJD'] < mjdstop) & (allsci['SN'][:,1] > medsn))
+    num = allsci['IM'][gd]
+    nexp = len(num)
 
+    dev = np.full((nexp, nchips, 3), -999.99)
+    for iexp in range(nexp):
+        cframe = load.filename('Cframe', num=num[iexp], chips=True)
+        for ichip in range(nchips):
+            if ichip == 0: cframe = cframe.replace('apCframe-', 'apCframe-a-')
+            if ichip == 1: cframe = cframe.replace('apCframe-', 'apCframe-b-')
+            if ichip == 2: cframe = cframe.replace('apCframe-', 'apCframe-c-')
+            tellfit = fits.getdata(cframe,13)
+            plugmap = fits.getdata(cframe,11)
+            pdb.set_trace()
 
 ###########################################################################################
 def tellstats(allv4=None):
