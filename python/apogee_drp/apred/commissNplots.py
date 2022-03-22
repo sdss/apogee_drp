@@ -132,7 +132,7 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
     nexp = len(num)
 
     dev = np.full((nexp, nchips, 3), -999.99)
-    for iexp in range(nexp):
+    for i in range(nexp):
         cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=mjd, num=ims[i], chips=True)
         for ichip in range(nchips):
             if ichip == 0: cframe = cframe.replace('apCframe-', 'apCframe-a-')
