@@ -122,7 +122,7 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def tellfitstats1(mjdstart=59146, mjdstop=59186):
+def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186):
     nmolecules = 3
 
     gd, = np.where((allsnr['TELESCOPE'] == 'apo25m') & (allsnr['MJD'] > mjdstart) & (allsnr['MJD'] < mjdstop))
@@ -199,7 +199,8 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
                         outstr['MADRESID'][i, ichip, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
 
     gd, = np.where(outstr['NUM'] > 0)
-    Table(outstr[gd]).write('tellfitstats1.fits', overwrite=True)            
+    print('writing ' + str(len(gd)) + ' results to ' + outfile)
+    Table(outstr[gd]).write(outfile, overwrite=True)            
 
     return outstr
 
