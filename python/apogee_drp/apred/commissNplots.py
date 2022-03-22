@@ -128,7 +128,7 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
     gd, = np.where((allsnr['MJD'] > mjdstart) & (allsnr['MJD'] < mjdstop))
     allsnrg = allsnr[gd]
     medsn = np.nanmedian(allsnrg['SN'][:,1])
-    gd, = np.where((allsnrg['MJD'] > mjdstart) & (allsnrg['MJD'] < mjdstop) & (allsnrg['SN'][:,1] > medsn))
+    gd, = np.where((allsnrg['MJD'] > mjdstart) & (allsnrg['MJD'] < mjdstop))# & (allsnrg['SN'][:,1] > medsn))
     mjdord = np.argsort(allsnrg['MJD'][gd])
     allsnrg = allsnrg[gd][mjdord]
     num = allsnrg['IM']
@@ -157,20 +157,6 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
                    ('MADRESID',  np.float64, (nchips, nmolecules))])
     outstr = np.zeros(nexp, dtype=dt)
 
-    pdb.set_trace()
-
-    outstr['NUM'] = num
-    outstr['FIELD'] = field
-    outstr['PLATE'] = plate
-    outstr['MJD'] = mjd
-    outstr['JD'] = allsnrg['JD']
-    outstr['SEEING'] = allsnrg['SEEING']
-    outstr['ZERO'] = allsnrg['ZERO']
-    outstr['MOONDIST'] = allsnrg['MOONDIST']
-    outstr['MOONPHASE'] = allsnrg['MOONPHASE']
-    outstr['SKY'] = allsnrg['SKY']
-    outstr['SN'] = allsnrg['SN']
-
     #outCH4 = open('tellfitstats1_CH4.dat', 'w')
     #outCO2 = open('tellfitstats1_CO2.dat', 'w')
     #outH2O = open('tellfitstats1_H2O.dat', 'w')
@@ -193,6 +179,17 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
                 for imol in range(nmolecules):
                     gd, = np.where(fitscale[imol] > 0)
                     if len(gd) > 0:
+                        outstr['NUM'] = num[i]
+                        outstr['FIELD'] = field[i]
+                        outstr['PLATE'] = plate[i]
+                        outstr['MJD'] = mjd[i]
+                        outstr['JD'] = allsnrg['JD'][i]
+                        outstr['SEEING'] = allsnrg['SEEING'][i]
+                        outstr['ZERO'] = allsnrg['ZERO'][i]
+                        outstr['MOONDIST'] = allsnrg['MOONDIST'][i]
+                        outstr['MOONPHASE'] = allsnrg['MOONPHASE'][i]
+                        outstr['SKY'] = allsnrg['SKY'][i]
+                        outstr['SN'] = allsnrg['SN'][i]
                         outstr['NTELL'][i, ichip, imol] = len(gd)
                         outstr['MEANH'][i, ichip, imol] = np.nanmean(plugmap['HMAG'][gd])
                         outstr['SIGH'][i, ichip, imol] = np.nanstd(plugmap['HMAG'][gd])
