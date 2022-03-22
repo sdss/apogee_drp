@@ -156,6 +156,8 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
                    ('MADRESID',  np.float64, (nchips, nmolecules))])
     outstr = np.zeros(nexp, dtype=dt)
 
+    pdb.set_trace()
+
     outstr['NUM'] = num
     outstr['FIELD'] = field
     outstr['PLATE'] = plate
