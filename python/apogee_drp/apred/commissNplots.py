@@ -170,7 +170,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                 if ichip == 1: cframe = cfile.replace('apCframe-', 'apCframe-b-')
                 if ichip == 2: cframe = cfile.replace('apCframe-', 'apCframe-c-')
                 if os.path.exists(cframe):
-                    print(os.path.basename(cframe))
+                    #print(os.path.basename(cframe))
                     tellfit = fits.getdata(cframe,13)
                     plugmap = fits.getdata(cframe,11)
                     scale = np.squeeze(tellfit['SCALE'])
@@ -207,8 +207,8 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
     out = fits.getdata(outfile)
     if plot:
         plotfile = sdir5 + 'tellfitstats1_' + plotx + 'vs' + ploty + '.png'
-        print('making ' + plotfile)
-        fig = plt.figure(figsize=(30,14))
+        print('making ' + os.path.basename(plotfile))
+        fig = plt.figure(figsize=(30,18))
         for ichip in range(nchips):
             for imol in range(nmolecules):
                 ax = plt.subplot2grid((nchips,nmolecules), (ichip,imol))
@@ -217,12 +217,15 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip < 2: ax.axes.xaxis.set_ticklabels([])
                 ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
+                ax.set_xlabel(plotx)
+                if ichip == 1: ax.set_ylabel('MAD (fitscale)')
                 xvals = out[plotx][:,ichip,imol]
                 yvals = out[ploty][:,ichip,imol]
                 ax.scatter(xvals, yvals, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
 
-        fig.subplots_adjust(left=0.073,right=0.875,bottom=0.06,top=0.96,hspace=0.1,wspace=0.1)
+        fig.subplots_adjust(left=0.065,right=0.985,bottom=0.07,top=0.985,hspace=0.1,wspace=0.2)
         plt.savefig(plotfile)
         plt.close('all')
 
