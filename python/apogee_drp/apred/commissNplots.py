@@ -143,10 +143,11 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
                    ('MJD',       np.int32),
                    ('JD',        np.float64),
                    ('SEEING',    np.float64),
-                   ('SKY',       np.float64),
                    ('ZERO',      np.float64),
                    ('MOONDIST',  np.float64),
                    ('MOONPHASE', np.float64),
+                   ('SKY',       np.float64, nchips),
+                   ('SN',        np.float64, nchips),
                    ('NTELL',     np.int32, (nchips, nmolecules)),
                    ('MEANH',     np.float64, (nchips, nmolecules)),
                    ('SIGH',      np.float64, (nchips, nmolecules)),
@@ -164,10 +165,11 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
     outstr['MJD'] = mjd
     outstr['JD'] = allsnrg['JD']
     outstr['SEEING'] = allsnrg['SEEING']
-    outstr['SKY'] = allsnrg['SKY']
     outstr['ZERO'] = allsnrg['ZERO']
     outstr['MOONDIST'] = allsnrg['MOONDIST']
     outstr['MOONPHASE'] = allsnrg['MOONPHASE']
+    outstr['SKY'] = allsnrg['SKY']
+    outstr['SN'] = allsnrg['SN']
 
     #outCH4 = open('tellfitstats1_CH4.dat', 'w')
     #outCO2 = open('tellfitstats1_CO2.dat', 'w')
