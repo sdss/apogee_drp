@@ -251,6 +251,9 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59200,
 
 ###########################################################################################
 def tellfitstats2(infile='tellfitstats1.fits', plotx='MAD'):
+    molecules = np.array(['CH4', 'CO2', 'H2O'])
+    nmolecules = len(molecules)
+
     out = fits.getdata(infile)
     colors = ['r', 'g', 'b']
     plotfile = sdir5 + 'tellfitstats2_' + plotx + '.png'
