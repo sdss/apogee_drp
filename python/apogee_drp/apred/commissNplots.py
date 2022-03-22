@@ -177,7 +177,6 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59200,
                         cframe = cfile[0]
                     else:
                         continue
-                pdb.set_trace()
                 if os.path.exists(cframe):
                     #print(os.path.basename(cframe))
                     tellfit = fits.getdata(cframe,13)
