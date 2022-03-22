@@ -134,7 +134,8 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
     plate = allsnrg['PLATE'][gd][mjdord]
     nexp = len(num)
 
-    dev = np.full((nexp, nchips, 3), -999.99)
+    mad = np.full((nexp, nchips, 3), -999.99)
+    madresid = np.full((nexp, nchips, 3), -999.99)
     for i in range(nexp):
         print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + mjd[i] + ', exp = ' + str(num[i]))
         cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=mjd[i], num=num[i], chips=True)
@@ -145,7 +146,13 @@ def tellfitstats1(mjdstart=59146, mjdstop=59186):
             if os.path.exists(cframe):
                 tellfit = fits.getdata(cframe,13)
                 plugmap = fits.getdata(cframe,11)
-                pdb.set_trace()
+                scale = np.squeeze(tellfit['SCALE'])
+                fitscale = np.squeeze(tellfit['FITSCALE'])
+                for imol in range(3):
+                    gd, = np.where(fitscale[imol] > 0)
+                    mad[i, ichip, imol] = dln.mad(fitscale[imol, gd])
+                    madresid[i, ichip, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
+    pdb.set_trace()
 
 ###########################################################################################
 def tellstats(allv4=None):
