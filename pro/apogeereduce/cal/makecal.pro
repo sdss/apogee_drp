@@ -586,7 +586,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       endif
       mjd = dailywave
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid,modelpsf=modelpsf
-      if keyword_set(librarypsf) then apundefine,modelpsf
+      if keyword_set(librarypsf) then apundef,modelpsf
       MAKECAL,bpm=bpmid,unlock=unlock
       MAKECAL,fiber=fiberid,unlock=unlock
       MKDAILYWAVE,dailywave,darkid=darkid,flatid=flatid,psfid=psfid,$
@@ -631,7 +631,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
           ims = getnums(lsfstr[red[i]].frames)
           cmjd = getcmjd(ims[0],mjd=mjd)
           GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,multiwaveid=waveid,fiberid=fiberid,modelpsf=modelpsf
-          if keyword_set(librarypsf) then apundefine,modelpsf
+          if keyword_set(librarypsf) then apundef,modelpsf
           MAKECAL,multiwave=waveid,unlock=unlock,librarypsf=librarypsf,modelpsf=modelpsf
           print,'calling mklsf'
           MKLSF,ims,waveid,darkid=darkid,flatid=flatid,psfid=lsfstr[i].psfid,fiberid=fiberid,$
