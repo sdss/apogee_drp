@@ -170,7 +170,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                 if ichip == 1: cframe = cfile.replace('apCframe-', 'apCframe-b-')
                 if ichip == 2: cframe = cfile.replace('apCframe-', 'apCframe-c-')
                 if os.path.exists(cframe):
-                    print(cframe)
+                    print(os.path.basename(cframe))
                     tellfit = fits.getdata(cframe,13)
                     plugmap = fits.getdata(cframe,11)
                     scale = np.squeeze(tellfit['SCALE'])
