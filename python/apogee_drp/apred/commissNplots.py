@@ -129,25 +129,28 @@ def tellstats(allv4=None):
         allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
         allv4 = fits.getdata(allv4path)
 
-    gd, = np.where((allv4['MJD'] > 58000) & ((bitmask.is_bit_set(allv4['APOGEE_TARGET2'],9)) | (bitmask.is_bit_set(allv4['APOGEE2_TARGET2'],9))))
+    #gd, = np.where((allv4['MJD'] > 58000) & ((bitmask.is_bit_set(allv4['APOGEE_TARGET2'],9)) | (bitmask.is_bit_set(allv4['APOGEE2_TARGET2'],9))))
+    gd, = np.where((allv4['TELESCOPE'] == 'apo25m') & (bitmask.is_bit_set(allv4['APOGEE2_TARGET2'],9)))
     allv4g = allv4[gd]
-    platemjd = allv4g['PLATE'] + '-' + allv4g['MJD'].astype(str)
-    uplatemjd,uind = np.unique(platemjd, return_index=True)
-    nplatemjd = len(uplatemjd)
+    ufield,uind = np.unique(allv4g['FIELD'], return_index=True)
+    nfields = len(ufield)
 
-    for i in range(100):
-        upl = uplatemjd[i].split('-')[0]
-        umjd = uplatemjd[i].split('-')[1]
-        g, = np.where((allv4g['PLATE'] == upl) & (allv4g['MJD'] == int(umjd)))
-        ng = len(g)
-        meanh = str("%.3f" % round(np.nanmean(allv4g['H'][g]),3))
-        medh = str("%.3f" % round(np.nanmedian(allv4g['H'][g]),3))
-        sigh = str("%.3f" % round(np.nanstd(allv4g['H'][g]),3))
-        jk = allv4g['J'][g] - allv4g['K'][g]
-        meanjk = str("%.3f" % round(np.nanmean(jk),3))
-        medjk = str("%.3f" % round(np.nanmedian(jk),3))
-        sigjk = str("%.3f" % round(np.nanstd(jk),3))
-        print(upl+'  '+umjd+'  '+meanh+'  '+medh+'  '+sigh+'  '+meanjk+'  '+medjk+'  '+sigjk)
+    for ifield in range(nfields):
+        field = ufield[ifield]
+        gd, = np.where(allv4g['FIELD'] == field)
+        ustars,uind = np.unique(allv4g['APOGEE_ID'][gd], return_index=True)
+        jmag = allv4g['J'][gd][uind]
+        hmag = allv4g['H'][gd][uind]
+        kmag = allv4g['K'][gd][uind]
+        jk = jmag-kmag
+        nstars = str(len(ustars))
+        meanh = str("%.3f" % round(np.nanmean(hmag),3)).rjust(6)
+        medh = str("%.3f" % round(np.nanmedian(hmag),3)).rjust(6)
+        sigh = str("%.3f" % round(np.nanstd(hmag),3)).rjust(6)
+        meanjk = str("%.3f" % round(np.nanmean(jk),3)).rjust(6)
+        medjk = str("%.3f" % round(np.nanmedian(jk),3)).rjust(6)
+        sigjk = str("%.3f" % round(np.nanstd(jk),3)).rjust(6)
+        print(field.ljust(24)+'  '+nstars+'  '+meanh+'  '+medh+'  '+sigh+'  '+meanjk+'  '+medjk+'  '+sigjk)
 
 
     return allv4g
