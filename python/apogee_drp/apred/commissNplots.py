@@ -125,10 +125,11 @@ xspan = xmax-xmin
 def tellfitstats1(mjdstart=59146, mjdstop=59186):
     medsn = np.nanmedian(allsnr['SN'][:,1])
     gd, = np.where((allsnr['MJD'] > mjdstart) & (allsnr['MJD'] < mjdstop) & (allsnr['SN'][:,1] > medsn))
-    num = allsnr['IM'][gd]
-    field = allsnr['FIELD'][gd]
-    mjd = allsnr['MJD'][gd].astype(str)
-    plate = allsnr['PLATE'][gd]
+    mjdord = np.argsort(allsnr['MJD'][gd])
+    num = allsnr['IM'][gd][mjdord]
+    field = allsnr['FIELD'][gd][mjdord]
+    mjd = allsnr['MJD'][gd][mjdord].astype(str)
+    plate = allsnr['PLATE'][gd][mjdord]
     nexp = len(num)
 
     dev = np.full((nexp, nchips, 3), -999.99)
