@@ -121,7 +121,88 @@ xmin = minjd - jdspan * 0.01
 xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
+###########################################################################################
+def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186):
+    nmolecules = 3
 
+    gd, = np.where((allsnr['TELESCOPE'] == 'apo25m') & (allsnr['MJD'] > mjdstart) & (allsnr['MJD'] < mjdstop))
+    allsnrg = allsnr[gd]
+    medsn = np.nanmedian(allsnrg['SN'][:,1])
+    gd, = np.where((allsnrg['MJD'] > mjdstart) & (allsnrg['MJD'] < mjdstop))# & (allsnrg['SN'][:,1] > medsn))
+    mjdord = np.argsort(allsnrg['MJD'][gd])
+    allsnrg = allsnrg[gd][mjdord]
+    num = allsnrg['IM']
+    field = allsnrg['FIELD']
+    plate = allsnrg['PLATE']
+    mjd = allsnrg['MJD']
+    nexp = len(num)
+
+    dt = np.dtype([('NUM',       np.int32),
+                   ('FIELD',     np.str),
+                   ('PLATE',     np.int32),
+                   ('MJD',       np.int32),
+                   ('JD',        np.float64),
+                   ('SEEING',    np.float64),
+                   ('ZERO',      np.float64),
+                   ('MOONDIST',  np.float64),
+                   ('MOONPHASE', np.float64),
+                   ('SKY',       np.float64, nchips),
+                   ('SN',        np.float64, nchips),
+                   ('NTELL',     np.int32, (nchips, nmolecules)),
+                   ('MEANH',     np.float64, (nchips, nmolecules)),
+                   ('SIGH',      np.float64, (nchips, nmolecules)),
+                   ('MEANJK',    np.float64, (nchips, nmolecules)),
+                   ('SIGJK',     np.float64, (nchips, nmolecules)),
+                   ('MAD',       np.float64, (nchips, nmolecules)),
+                   ('MADRESID',  np.float64, (nchips, nmolecules))])
+    outstr = np.zeros(nexp, dtype=dt)
+
+    #outCH4 = open('tellfitstats1_CH4.dat', 'w')
+    #outCO2 = open('tellfitstats1_CO2.dat', 'w')
+    #outH2O = open('tellfitstats1_H2O.dat', 'w')
+    #out1.write('EXP       NTELL MADa     MADb     MADc     MADa_r   MADb_r   MADc_r
+    #           36070038   15    0.05800  0.05800  0.05800  0.05800
+    #mad = np.full((nexp, nchips, 3), -999.99)
+    #madresid = np.full((nexp, nchips, 3), -999.99)
+    for i in range(nexp):
+        print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + str(mjd[i]) + ', exp = ' + str(num[i]))
+        cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
+        for ichip in range(nchips):
+            if ichip == 0: cframe = cframe.replace('apCframe-', 'apCframe-a-')
+            if ichip == 1: cframe = cframe.replace('apCframe-', 'apCframe-b-')
+            if ichip == 2: cframe = cframe.replace('apCframe-', 'apCframe-c-')
+            if os.path.exists(cframe):
+                tellfit = fits.getdata(cframe,13)
+                plugmap = fits.getdata(cframe,11)
+                scale = np.squeeze(tellfit['SCALE'])
+                fitscale = np.squeeze(tellfit['FITSCALE'])
+                for imol in range(nmolecules):
+                    gd, = np.where(fitscale[imol] > 0)
+                    if len(gd) > 0:
+                        outstr['NUM'][i] = num[i]
+                        outstr['FIELD'][i] = field[i]
+                        outstr['PLATE'][i] = plate[i]
+                        outstr['MJD'][i] = mjd[i]
+                        outstr['JD'][i] = allsnrg['JD'][i]
+                        outstr['SEEING'][i] = allsnrg['SEEING'][i]
+                        outstr['ZERO'][i] = allsnrg['ZERO'][i]
+                        outstr['MOONDIST'][i] = allsnrg['MOONDIST'][i]
+                        outstr['MOONPHASE'][i] = allsnrg['MOONPHASE'][i]
+                        outstr['SKY'][i] = allsnrg['SKY'][i]
+                        outstr['SN'][i] = allsnrg['SN'][i]
+                        outstr['NTELL'][i, ichip, imol] = len(gd)
+                        outstr['MEANH'][i, ichip, imol] = np.nanmean(plugmap['HMAG'][gd])
+                        outstr['SIGH'][i, ichip, imol] = np.nanstd(plugmap['HMAG'][gd])
+                        outstr['MEANJK'][i, ichip, imol] = np.nanmean(plugmap['JMAG'][gd] - plugmap['KMAG'][gd])
+                        outstr['SIGJK'][i, ichip, imol] = np.nanstd(plugmap['JMAG'][gd] - plugmap['KMAG'][gd])
+                        outstr['MAD'][i, ichip, imol] = dln.mad(fitscale[imol, gd])
+                        outstr['MADRESID'][i, ichip, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
+
+    gd1, = np.where(outstr['NUM'] > 0)
+    print('writing ' + str(len(gd1)) + ' results to ' + outfile)
+    Table(outstr[gd1]).write(outfile, overwrite=True)            
+
+    return outstr
 
 ###########################################################################################
 def tellstats(allv4=None):
