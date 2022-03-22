@@ -179,17 +179,17 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186):
                 for imol in range(nmolecules):
                     gd, = np.where(fitscale[imol] > 0)
                     if len(gd) > 0:
-                        outstr['NUM'] = num[i]
-                        outstr['FIELD'] = field[i]
-                        outstr['PLATE'] = plate[i]
-                        outstr['MJD'] = mjd[i]
-                        outstr['JD'] = allsnrg['JD'][i]
-                        outstr['SEEING'] = allsnrg['SEEING'][i]
-                        outstr['ZERO'] = allsnrg['ZERO'][i]
-                        outstr['MOONDIST'] = allsnrg['MOONDIST'][i]
-                        outstr['MOONPHASE'] = allsnrg['MOONPHASE'][i]
-                        outstr['SKY'] = allsnrg['SKY'][i]
-                        outstr['SN'] = allsnrg['SN'][i]
+                        outstr['NUM'][i] = num[i]
+                        outstr['FIELD'][i] = field[i]
+                        outstr['PLATE'][i] = plate[i]
+                        outstr['MJD'][i] = mjd[i]
+                        outstr['JD'][i] = allsnrg['JD'][i]
+                        outstr['SEEING'][i] = allsnrg['SEEING'][i]
+                        outstr['ZERO'][i] = allsnrg['ZERO'][i]
+                        outstr['MOONDIST'][i] = allsnrg['MOONDIST'][i]
+                        outstr['MOONPHASE'][i] = allsnrg['MOONPHASE'][i]
+                        outstr['SKY'][i] = allsnrg['SKY'][i]
+                        outstr['SN'][i] = allsnrg['SN'][i]
                         outstr['NTELL'][i, ichip, imol] = len(gd)
                         outstr['MEANH'][i, ichip, imol] = np.nanmean(plugmap['HMAG'][gd])
                         outstr['SIGH'][i, ichip, imol] = np.nanstd(plugmap['HMAG'][gd])
@@ -198,9 +198,9 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186):
                         outstr['MAD'][i, ichip, imol] = dln.mad(fitscale[imol, gd])
                         outstr['MADRESID'][i, ichip, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
 
-    gd, = np.where(outstr['NUM'] > 0)
-    print('writing ' + str(len(gd)) + ' results to ' + outfile)
-    Table(outstr[gd]).write(outfile, overwrite=True)            
+    gd1, = np.where(outstr['NUM'] > 0)
+    print('writing ' + str(len(gd1)) + ' results to ' + outfile)
+    Table(outstr[gd1]).write(outfile, overwrite=True)            
 
     return outstr
 
