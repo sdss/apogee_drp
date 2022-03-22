@@ -169,6 +169,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                 if ichip == 0: cframe = cframe.replace('apCframe-', 'apCframe-a-')
                 if ichip == 1: cframe = cframe.replace('apCframe-', 'apCframe-b-')
                 if ichip == 2: cframe = cframe.replace('apCframe-', 'apCframe-c-')
+                pdb.set_trace() 
                 if os.path.exists(cframe):
                     print(cframe)
                     tellfit = fits.getdata(cframe,13)
@@ -178,17 +179,19 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                     for imol in range(nmolecules):
                         gd, = np.where(fitscale[imol] > 0)
                         if len(gd) > 0:
-                            out['NUM'][i] = num[i]
-                            out['FIELD'][i] = field[i]
-                            out['PLATE'][i] = plate[i]
-                            out['MJD'][i] = mjd[i]
-                            out['JD'][i] = allsnrg['JD'][i]
-                            out['SEEING'][i] = allsnrg['SEEING'][i]
-                            out['ZERO'][i] = allsnrg['ZERO'][i]
-                            out['MOONDIST'][i] = allsnrg['MOONDIST'][i]
-                            out['MOONPHASE'][i] = allsnrg['MOONPHASE'][i]
-                            out['SKY'][i] = allsnrg['SKY'][i]
-                            out['SN'][i] = allsnrg['SN'][i]
+                            if ichip == 0:
+                                out['NUM'][i] = num[i]
+                                out['FIELD'][i] = field[i]
+                                out['PLATE'][i] = plate[i]
+                                out['MJD'][i] = mjd[i]
+                                out['JD'][i] = allsnrg['JD'][i]
+                                out['SEEING'][i] = allsnrg['SEEING'][i]
+                                out['ZERO'][i] = allsnrg['ZERO'][i]
+                                out['MOONDIST'][i] = allsnrg['MOONDIST'][i]
+                                out['MOONPHASE'][i] = allsnrg['MOONPHASE'][i]
+                            if imol == 0:
+                                out['SKY'][i, ichip] = allsnrg['SKY'][i, ichip]
+                                out['SN'][i, ichip] = allsnrg['SN'][i, ichip]
                             out['NTELL'][i, ichip, imol] = len(gd)
                             out['MEANH'][i, ichip, imol] = np.nanmean(plugmap['HMAG'][gd])
                             out['SIGH'][i, ichip, imol] = np.nanstd(plugmap['HMAG'][gd])
@@ -197,7 +200,6 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                             out['MAD'][i, ichip, imol] = dln.mad(fitscale[imol, gd])
                             out['MADRESID'][i, ichip, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
 
-                            pdb.set_trace()
 
         gd, = np.where(out['NUM'] > 0)
         print('writing ' + str(len(gd)) + ' results to ' + outfile)
@@ -219,7 +221,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                 ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
                 xvals = out[plotx][:,ichip,imol]
                 yvals = out[ploty][:,ichip,imol]
-                ax.scatter(xvals, yvals, marker='o', s=75, color='dodgerblue', edgecolors='k', alpha=0.6)
+                ax.scatter(xvals, yvals, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
 
         fig.subplots_adjust(left=0.073,right=0.875,bottom=0.06,top=0.96,hspace=0.1,wspace=0.1)
         plt.savefig(plotfile)
