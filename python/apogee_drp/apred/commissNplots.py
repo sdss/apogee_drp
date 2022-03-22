@@ -208,7 +208,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
         fig = plt.figure(figsize=(30,14))
         for ichip in range(nchips):
             for imol in range(nmolecules):
-                ax = plt.subplot2grid((nchips,nmolecules), (ichip,imolecule))
+                ax = plt.subplot2grid((nchips,nmolecules), (ichip,imol))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
