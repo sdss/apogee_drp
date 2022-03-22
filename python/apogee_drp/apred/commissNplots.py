@@ -125,7 +125,7 @@ xspan = xmax-xmin
 def tellfitstats1(mjdstart=59146, mjdstop=59186):
     nmolecules = 3
 
-    gd, = np.where((allsnr['MJD'] > mjdstart) & (allsnr['MJD'] < mjdstop))
+    gd, = np.where((allsnr['TELESCOPE'] == 'apo25m') & (allsnr['MJD'] > mjdstart) & (allsnr['MJD'] < mjdstop))
     allsnrg = allsnr[gd]
     medsn = np.nanmedian(allsnrg['SN'][:,1])
     gd, = np.where((allsnrg['MJD'] > mjdstart) & (allsnrg['MJD'] < mjdstop))# & (allsnrg['SN'][:,1] > medsn))
