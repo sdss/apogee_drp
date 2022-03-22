@@ -173,9 +173,9 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59200,
                 if ichip == 1: cframe = cfile.replace('apCframe-', 'apCframe-b-')
                 if ichip == 2: cframe = cfile.replace('apCframe-', 'apCframe-c-')
                 if os.path.exists(cframe) == False:
-                    cfile = glob.glob(dir4 + field[i] + '/' + str(plate[i]) + '/' + str(mjd[i]) + '/' + os.path.basename(cframe))
-                    if len(cfile) > 0:
-                        cframe = cfile[0]
+                    tmp = glob.glob(dir4 + field[i] + '/' + str(plate[i]) + '/' + str(mjd[i]) + '/' + os.path.basename(cframe))
+                    if len(tmp) > 0:
+                        cframe = tmp[0]
                         sloan4 = True
                     else:
                         continue
