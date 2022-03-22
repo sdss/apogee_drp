@@ -122,15 +122,17 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186, 
+def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59200, 
                   remake=False, plot=True, plotx='MEANH', ploty='MAD'):
+
+    dir4 = specdir4 + 'visit/' + telescope + '/'
 
     molecules = np.array(['CH4', 'CO2', 'H2O'])
     nmolecules = len(molecules)
 
     if remake:
         print('remaking ' + outfile)
-        gd, = np.where((allsnr['TELESCOPE'] == 'apo25m') & (allsnr['MJD'] > mjdstart) & (allsnr['MJD'] < mjdstop))
+        gd, = np.where((allsnr['TELESCOPE'] == telescope) & (allsnr['MJD'] > mjdstart) & (allsnr['MJD'] < mjdstop))
         allsnrg = allsnr[gd]
         medsn = np.nanmedian(allsnrg['SN'][:,1])
         gd, = np.where((allsnrg['MJD'] > mjdstart) & (allsnrg['MJD'] < mjdstop))# & (allsnrg['SN'][:,1] > medsn))
@@ -169,6 +171,12 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                 if ichip == 0: cframe = cfile.replace('apCframe-', 'apCframe-a-')
                 if ichip == 1: cframe = cfile.replace('apCframe-', 'apCframe-b-')
                 if ichip == 2: cframe = cfile.replace('apCframe-', 'apCframe-c-')
+                if os.path.exists(cframe) == False:
+                    cfile = glob.glob(dir4 + field[i] + '/' + str(plate[i]) + '/' + str(mjd[i]) + '/' + os.path.basename(cframe)
+                    if len(cfile) > 0:
+                        cframe = cfile[0]
+                    else:
+                        continue
                 if os.path.exists(cframe):
                     #print(os.path.basename(cframe))
                     tellfit = fits.getdata(cframe,13)
