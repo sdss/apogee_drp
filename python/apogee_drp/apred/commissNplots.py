@@ -219,8 +219,8 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip < 2: ax.axes.xaxis.set_ticklabels([])
                 ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
-                ax.set_xlabel(plotx)
-                if ichip == 1: ax.set_ylabel('MAD (fitscale)')
+                if ichip == 2: ax.set_xlabel(plotx)
+                if imol == 0: ax.set_ylabel('MAD (fitscale)')
                 xvals = out[plotx][:,ichip,imol]
                 yvals = out[ploty][:,ichip,imol]
                 ax.scatter(xvals, yvals, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
