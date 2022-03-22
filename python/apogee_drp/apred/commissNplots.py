@@ -165,6 +165,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59200,
         out = np.zeros(nexp, dtype=dt)
 
         for i in range(nexp):
+            sloan4 = False
             print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + str(mjd[i]) + ', exp = ' + str(num[i]))
             cfile = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
             for ichip in range(nchips):
@@ -175,9 +176,12 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59200,
                     cfile = glob.glob(dir4 + field[i] + '/' + str(plate[i]) + '/' + str(mjd[i]) + '/' + os.path.basename(cframe))
                     if len(cfile) > 0:
                         cframe = cfile[0]
+                        sloan4 = True
                     else:
                         continue
                 if os.path.exists(cframe):
+                    magnames = ['JMAG', 'HMAG', 'KMAG']
+                    if sloan4: magnames = ['J', 'H', 'K']
                     #print(os.path.basename(cframe))
                     tellfit = fits.getdata(cframe,13)
                     plugmap = fits.getdata(cframe,11)
@@ -200,10 +204,10 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59200,
                                 out['SKY'][i, ichip] = allsnrg['SKY'][i, ichip]
                                 out['SN'][i, ichip] = allsnrg['SN'][i, ichip]
                             out['NTELL'][i, ichip, imol] = len(gd)
-                            out['MEANH'][i, ichip, imol] = np.nanmean(plugmap['HMAG'][gd])
-                            out['SIGH'][i, ichip, imol] = np.nanstd(plugmap['HMAG'][gd])
-                            out['MEANJK'][i, ichip, imol] = np.nanmean(plugmap['JMAG'][gd] - plugmap['KMAG'][gd])
-                            out['SIGJK'][i, ichip, imol] = np.nanstd(plugmap['JMAG'][gd] - plugmap['KMAG'][gd])
+                            out['MEANH'][i, ichip, imol] = np.nanmean(plugmap[magnames[1]][gd])
+                            out['SIGH'][i, ichip, imol] = np.nanstd(plugmap[magnames[1]][gd])
+                            out['MEANJK'][i, ichip, imol] = np.nanmean(plugmap[magnames[0]][gd] - plugmap[magnames[2]][gd])
+                            out['SIGJK'][i, ichip, imol] = np.nanstd(plugmap[magnames[0]][gd] - plugmap[magnames[2]][gd])
                             out['MAD'][i, ichip, imol] = dln.mad(fitscale[imol, gd])
                             out['MADRESID'][i, ichip, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
 
