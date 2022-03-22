@@ -215,7 +215,9 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
-                ax.scatter(out[plotx], out[ploty], marker='o', s=75, color='dodgerblue', edgecolors='k', alpha=0.6)
+                xvals = out[plotx][:,ichip,imol]
+                yvals = out[ploty][:,ichip,imol]
+                ax.scatter(xvals, yvals, marker='o', s=75, color='dodgerblue', edgecolors='k', alpha=0.6)
 
         fig.subplots_adjust(left=0.073,right=0.875,bottom=0.06,top=0.96,hspace=0.1,wspace=0.1)
         plt.savefig(plotfile)
