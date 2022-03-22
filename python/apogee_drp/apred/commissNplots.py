@@ -172,11 +172,12 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59200,
                 if ichip == 1: cframe = cfile.replace('apCframe-', 'apCframe-b-')
                 if ichip == 2: cframe = cfile.replace('apCframe-', 'apCframe-c-')
                 if os.path.exists(cframe) == False:
-                    cfile = glob.glob(dir4 + field[i] + '/' + str(plate[i]) + '/' + str(mjd[i]) + '/' + os.path.basename(cframe)
+                    cfile = glob.glob(dir4 + field[i] + '/' + str(plate[i]) + '/' + str(mjd[i]) + '/' + os.path.basename(cframe))
                     if len(cfile) > 0:
                         cframe = cfile[0]
                     else:
                         continue
+                pdb.set_trace()
                 if os.path.exists(cframe):
                     #print(os.path.basename(cframe))
                     tellfit = fits.getdata(cframe,13)
