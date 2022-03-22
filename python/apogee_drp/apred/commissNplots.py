@@ -122,7 +122,7 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def tellfitstats1(mjdstart=58080, mjdstop=58100):
+def tellfitstats1(mjdstart=59146, mjdstop=59186):
     medsn = np.nanmedian(allsci['SN'][:,1])
     gd, = np.where((allsci['MJD'] > mjdstart) & (allsci['MJD'] < mjdstop) & (allsci['SN'][:,1] > medsn))
     num = allsci['IM'][gd]
