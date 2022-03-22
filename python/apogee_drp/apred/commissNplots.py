@@ -170,6 +170,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                 if ichip == 1: cframe = cframe.replace('apCframe-', 'apCframe-b-')
                 if ichip == 2: cframe = cframe.replace('apCframe-', 'apCframe-c-')
                 if os.path.exists(cframe):
+                    print(cframe)
                     tellfit = fits.getdata(cframe,13)
                     plugmap = fits.getdata(cframe,11)
                     scale = np.squeeze(tellfit['SCALE'])
@@ -196,12 +197,13 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                             out['MAD'][i, ichip, imol] = dln.mad(fitscale[imol, gd])
                             out['MADRESID'][i, ichip, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
 
+                            pdb.set_trace()
+
         gd, = np.where(out['NUM'] > 0)
         print('writing ' + str(len(gd)) + ' results to ' + outfile)
         Table(out[gd]).write(outfile, overwrite=True)
-    else:
-        out = fits.getdata(outfile)
 
+    out = fits.getdata(outfile)
     if plot:
         plotfile = sdir5 + 'tellfitstats1_' + plotx + 'vs' + ploty + '.png'
         print('making ' + plotfile)
