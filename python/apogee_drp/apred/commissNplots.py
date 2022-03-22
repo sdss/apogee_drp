@@ -224,9 +224,6 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
     return out
 
 ###########################################################################################
-def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186):
-
-###########################################################################################
 def tellstats(allv4=None):
     if allv4 is None:
         allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
