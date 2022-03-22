@@ -123,14 +123,17 @@ xspan = xmax-xmin
 
 ###########################################################################################
 def tellfitstats1(mjdstart=59146, mjdstop=59186):
-    medsn = np.nanmedian(allsci['SN'][:,1])
-    gd, = np.where((allsci['MJD'] > mjdstart) & (allsci['MJD'] < mjdstop) & (allsci['SN'][:,1] > medsn))
-    num = allsci['IM'][gd]
+    medsn = np.nanmedian(allsnr['SN'][:,1])
+    gd, = np.where((allsnr['MJD'] > mjdstart) & (allsnr['MJD'] < mjdstop) & (allsnr['SN'][:,1] > medsn))
+    num = allsnr['IM'][gd]
+    field = allsnr['FIELD'][gd]
+    mjd = allsnr['MJD'][gd].astype(str)
+    plate = allsnr['PLATE'][gd]
     nexp = len(num)
 
     dev = np.full((nexp, nchips, 3), -999.99)
     for iexp in range(nexp):
-        cframe = load.filename('1D', num=num[iexp]).replace('1D', 'Cframe')
+        cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=mjd, num=ims[i], chips=True)
         for ichip in range(nchips):
             if ichip == 0: cframe = cframe.replace('apCframe-', 'apCframe-a-')
             if ichip == 1: cframe = cframe.replace('apCframe-', 'apCframe-b-')
