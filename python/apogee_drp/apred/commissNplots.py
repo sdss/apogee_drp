@@ -164,12 +164,11 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
 
         for i in range(nexp):
             print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + str(mjd[i]) + ', exp = ' + str(num[i]))
-            cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
+            cfile = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
             for ichip in range(nchips):
-                if ichip == 0: cframe = cframe.replace('apCframe-', 'apCframe-a-')
-                if ichip == 1: cframe = cframe.replace('apCframe-', 'apCframe-b-')
-                if ichip == 2: cframe = cframe.replace('apCframe-', 'apCframe-c-')
-                pdb.set_trace() 
+                if ichip == 0: cframe = cfile.replace('apCframe-', 'apCframe-a-')
+                if ichip == 1: cframe = cfile.replace('apCframe-', 'apCframe-b-')
+                if ichip == 2: cframe = cfile.replace('apCframe-', 'apCframe-c-')
                 if os.path.exists(cframe):
                     print(cframe)
                     tellfit = fits.getdata(cframe,13)
@@ -177,7 +176,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59186,
                     scale = np.squeeze(tellfit['SCALE'])
                     fitscale = np.squeeze(tellfit['FITSCALE'])
                     for imol in range(nmolecules):
-                        gd, = np.where(fitscale[imol] > 0)
+                        gd, = np.where((fitscale[imol] > 0) & (np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
                         if len(gd) > 0:
                             if ichip == 0:
                                 out['NUM'][i] = num[i]
