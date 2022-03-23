@@ -296,23 +296,29 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
         print('making ' + os.path.basename(plotfile))
         fig = plt.figure(figsize=(18,20))
         for imol in range(nmolecules):
-            ax = plt.subplot2grid((nmolecules,1), (imol,0))
-            ax.minorticks_on()
-            if plotx == 'MEANH': ax.set_xlim(6.9, 11.1)
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            if imol < 2: ax.axes.xaxis.set_ticklabels([])
-            ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
-            if imol == 2: 
-                if plotx == 'MEANH': ax.set_xlabel(r'Mean Telluric $H$ (mag)')
-                if plotx == 'MEANJK': ax.set_xlabel(r'Mean Telluric $J-K$ (mag)')
-            if ploty == 'MAD': ax.set_ylabel('MAD (fitscale)')
-            if ploty == 'MADRESID': ax.set_ylabel(r'MAD (fitscale$-$scale)')
+            ax1 = plt.subplot2grid((2,nmolecules), (0,imol))
+            ax2 = plt.subplot2grid((2,nmolecules), (1,imol))
+            axes = [ax1,ax2]
+            for ax in axes:
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
+                if plotx == 'MEANH': ax.set_xlim(6.9, 11.1)
+                if imol == 0:
+                    if ploty == 'MAD': ax.set_ylabel('MAD (fitscale)')
+                    if ploty == 'MADRESID': ax.set_ylabel(r'MAD (fitscale$-$scale)')
+            ax1.axes.xaxis.set_ticklabels([])
+            if plotx == 'MEANH': ax2.set_xlabel(r'Mean Telluric $H$ (mag)')
+            if plotx == 'MEANJK': ax2.set_xlabel(r'Mean Telluric $J-K$ (mag)')
+
             xvals = out[plotx]
-            yvals = out[ploty+str(imol+1)]
-            ax.scatter(xvals, yvals, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
+            yvals1 = out['MAD'+str(imol+1)]
+            yvals2 = out['MAD'+str(imol+1)]
+            ax1.scatter(xvals, yvals, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
+            ax2.scatter(xvals, yvals, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
 
         fig.subplots_adjust(left=0.075,right=0.985,bottom=0.05,top=0.985,hspace=0.05,wspace=0.15)
         plt.savefig(plotfile)
