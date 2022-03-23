@@ -341,7 +341,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                 c = out['MEANH']
             if color == 'seeing':
                 vmin = 0.85
-                vmax = 4
+                vmax = 3
                 c = out['SEEING']
             sc1 = ax1.scatter(xvals, yvals1, marker='o', s=10, cmap=cmap, c=c, alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
             sc2 = ax2.scatter(xvals, yvals2, marker='o', s=10, cmap=cmap, c=c, alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
