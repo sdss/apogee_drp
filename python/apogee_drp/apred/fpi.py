@@ -214,7 +214,9 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
             print('  Writing FPI lines to ',fpilinesfile)
             fpilines.write(fpilinesfile,overwrite=True)
         # 2) Apply the daily wavelenth solution
-        print('2) Apply the daily wavelength solution')
+        print('2) Apply the daily wavelength solution for FPI-line identification')
+        # These wavelengths are ONLY used to identify which unique FPI line it is
+        # NOT for deriving the new wavelength solution
         if 'wave' not in fpilines.colnames:
             fpilines['wave'] = 999999.
             for row in range(300):
@@ -228,7 +230,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
                         x[2,:] = 0
                         fpilines['wave'][ind1] = wave.func_multi_poly(x,*wpars[:,row],npoly=npoly)
         # 3) Refit the wavelength solution
-        print('  3) Refit the wavelength solution')
+        print('  3) Refit the wavelength solution using FPI line wavelengths')
         fpiwcoef,fpiwaves,fpilines = fpiwavesol(fpilinestr,fpilines,wpars)
 
         # Save the results
