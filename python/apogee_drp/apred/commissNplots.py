@@ -483,7 +483,6 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
 def tellfitstats4(infile='tellfitstats2_stardata.fits'):
     out = fits.getdata(infile)
 
-
     plotfile = sdir5 + 'tellfitstats_indstars.png'
     print('making ' + os.path.basename(plotfile))
 
@@ -514,7 +513,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
         vmax = med+0.5
         #ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=bins)
         #ax.imshow(ret.statistic)
-        sc1 = ax.scatter(x, y, marker='o', s=25, cmap='plasma', c=values, alpha=0.75, vmin=vmin, vmax=vmax)
+        sc1 = ax.scatter(x, y, marker='o', s=25, cmap='gnuplot', c=values, alpha=0.75, vmin=vmin, vmax=vmax)
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
