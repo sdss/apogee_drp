@@ -122,7 +122,7 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59200, 
+def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647, 
                   remake=False, plot=True, plotx='MEANH', ploty='MAD'):
 
     dir4 = specdir4 + 'visit/' + telescope + '/'
@@ -144,6 +144,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59200,
         mjd = allsnrg['MJD']
         nexp = len(num)
 
+        pdb.set_trace()
         dt = np.dtype([('NUM',       np.int32),
                        ('FIELD',     np.str),
                        ('PLATE',     np.int32),
@@ -257,6 +258,38 @@ def tellfitstats2(infile='tellfitstats1.fits', plotx='MAD'):
     out = fits.getdata(infile)
     colors = ['r', 'g', 'b']
     plotfile = sdir5 + 'tellfitstats2_' + plotx + '.png'
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(30,18))
+    for ichip in range(nchips):
+        for imol in range(nmolecules):
+            ax = plt.subplot2grid((nchips,nmolecules), (ichip,imol))
+            ax.minorticks_on()
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip < 2: ax.axes.xaxis.set_ticklabels([])
+            ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
+            if ichip == 2: 
+                if plotx == 'MAD': ax.set_xlabel(r'MAD (fitscale)')
+                if plotx == 'MADRESID': ax.set_xlabel(r'MAD (fitscale$-$scale)')
+            if imol == 0: ax.set_ylabel('N')
+            n, bins, patches = ax.hist(out[plotx][:,ichip,imol], 50, density=True, facecolor=colors[ichip], alpha=0.75)
+
+    fig.subplots_adjust(left=0.05,right=0.99,bottom=0.055,top=0.985,hspace=0.1,wspace=0.15)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+    return out
+
+###########################################################################################
+def tellfitstats3(infile='tellfitstats1.fits', plotx='MAD'):
+    molecules = np.array(['CH4', 'CO2', 'H2O'])
+    nmolecules = len(molecules)
+
+    out = fits.getdata(infile)
+    colors = ['r', 'g', 'b']
+    plotfile = sdir5 + 'tellfitstats3_' + plotx + '.png'
     print('making ' + os.path.basename(plotfile))
     fig = plt.figure(figsize=(30,18))
     for ichip in range(nchips):
