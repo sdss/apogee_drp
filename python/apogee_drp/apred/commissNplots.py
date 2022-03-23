@@ -493,7 +493,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
         ax.set_ylim(11.2, 6.8)
         ax.set_xlim(-0.2, 0.53)
         ax.set_xlabel(r'$J-K$')
-        ax.set_ylabel(r'$H$')
+        if imol == 0: ax.set_ylabel(r'$H$')
         ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
