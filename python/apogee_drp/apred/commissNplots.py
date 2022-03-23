@@ -520,7 +520,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     print('making ' + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(18,15))
-    ax = plt.subplot2grid((1,1), (0,imol))
+    ax = plt.subplot2grid((1,1), (0,0))
     ax.minorticks_on()
     ax.set_ylim(11, 7)
     ax.set_xlim(-0.1, 0.43)
