@@ -307,7 +307,8 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
-                if plotx == 'MEANH': ax.set_xlim(7.2, 10.8)
+                if plotx == 'MEANH': ax.set_xlim(7.3, 10.7)
+                if plotx == 'MEANJK': ax.set_xlim(-0.1, 0.43)
             if imol == 0:
                 ax1.set_ylabel('MAD (fitscale)')
                 ax2.set_ylabel(r'MAD (fitscale$-$scale)')
