@@ -305,11 +305,11 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
-                ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
                 if plotx == 'MEANH': ax.set_xlim(6.9, 11.1)
             if imol == 0:
                 ax1.set_ylabel('MAD (fitscale)')
                 ax2.set_ylabel(r'MAD (fitscale$-$scale)')
+            ax1.text(0.5, 1.02, molecules[imol], transform=ax1.transAxes, ha='center', va='bottom', bbox=bboxpar)
             ax1.axes.xaxis.set_ticklabels([])
             if plotx == 'MEANH': ax2.set_xlabel(r'Mean Telluric $H$ (mag)')
             if plotx == 'MEANJK': ax2.set_xlabel(r'Mean Telluric $J-K$ (mag)')
@@ -320,7 +320,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             ax1.scatter(xvals, yvals1, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
             ax2.scatter(xvals, yvals2, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
 
-        fig.subplots_adjust(left=0.06,right=0.985,bottom=0.055,top=0.985,hspace=0.05,wspace=0.15)
+        fig.subplots_adjust(left=0.05,right=0.985,bottom=0.057,top=0.96,hspace=0.05,wspace=0.15)
         plt.savefig(plotfile)
         plt.close('all')
 
