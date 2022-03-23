@@ -505,7 +505,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
         y = out['HMAG']
         values = out['FITSCALE'+str(imol+1)]
         bins = 50
-        ret = stats.binned_statistic_2d(x, y, values, dln.mad, bins)
+        ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=bins)
         ax.imshow(ret)
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
