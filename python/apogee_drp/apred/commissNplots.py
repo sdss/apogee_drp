@@ -121,15 +121,16 @@ xmin = minjd - jdspan * 0.01
 xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
+molecules = np.array(['CH4', 'CO2', 'H2O'])
+nmolecules = len(molecules)
+
+
 ###########################################################################################
 def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647, 
                   remake=False, plot=True, plotx='MEANH', cmap='rainbow',
                   color=None):
 
     dir4 = specdir4 + 'visit/' + telescope + '/'
-
-    molecules = np.array(['CH4', 'CO2', 'H2O'])
-    nmolecules = len(molecules)
 
     if remake:
         print('remaking ' + outfile)
