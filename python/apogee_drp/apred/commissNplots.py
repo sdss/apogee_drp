@@ -294,7 +294,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
     if plot:
         plotfile = sdir5 + 'tellfitstats1_' + plotx + '.png'
         print('making ' + os.path.basename(plotfile))
-        fig = plt.figure(figsize=(30,16))
+        fig = plt.figure(figsize=(32,16))
         for imol in range(nmolecules):
             ax1 = plt.subplot2grid((2,nmolecules), (0,imol))
             ax2 = plt.subplot2grid((2,nmolecules), (1,imol))
@@ -320,7 +320,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             ax1.scatter(xvals, yvals1, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
             ax2.scatter(xvals, yvals2, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
 
-        fig.subplots_adjust(left=0.075,right=0.985,bottom=0.05,top=0.985,hspace=0.05,wspace=0.15)
+        fig.subplots_adjust(left=0.06,right=0.985,bottom=0.055,top=0.985,hspace=0.05,wspace=0.15)
         plt.savefig(plotfile)
         plt.close('all')
 
