@@ -233,7 +233,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                     out['MOONPHASE'][i] = allsnrg['MOONPHASE'][i]
                     out['SECZ'][i] = allsnrg['SECZ'][i]
                     out['SKY'][i] = np.nanmean(allsnrg['SKY'][i])
-                    out['SN'][i] = np.nanmean(allsnrg['SN'][i]
+                    out['SN'][i] = np.nanmean(allsnrg['SN'][i])
                     out['NTELL'][i] = ntell
                     out['MEANH'][i] = np.nanmean(plugmap[magnames[1]][tell])
                     out['SIGH'][i] = np.nanstd(plugmap[magnames[1]][tell])
