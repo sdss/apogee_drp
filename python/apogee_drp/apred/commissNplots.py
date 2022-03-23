@@ -172,7 +172,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
         out = np.zeros(nexp, dtype=dt)
 
         # Structure for individual star level info
-        dtstar = np.dtype([('APOGEE_ID', np.str),
+        dtstar = np.dtype([('APOGEE_ID', np.str, 18),
                            ('RA',        np.float64),
                            ('DEC',       np.float64),
                            ('ETA',       np.float64),
@@ -181,11 +181,11 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                            ('HMAG',      np.float64),
                            ('KMAG',      np.float64),
                            ('EXPNUM',    np.int32),
-                           ('FIELD',     np.str),
+                           ('FIELD',     np.str, 30),
                            ('PLATE',     np.int32),
                            ('MJD',       np.int32),
                            ('JD',        np.float64),
-                           ('DATEOBS',   np.str),
+                           ('DATEOBS',   np.str, 30),
                            ('SEEING',    np.float64),
                            ('ZERO',      np.float64),
                            ('MOONDIST',  np.float64),
@@ -227,6 +227,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                     out['PLATE'][i] = plate[i]
                     out['MJD'][i] = mjd[i]
                     out['JD'][i] = allsnrg['JD'][i]
+                    out['DATEOBS'][i] = allsnrg['DATEOBS'][i]
                     out['SEEING'][i] = allsnrg['SEEING'][i]
                     out['ZERO'][i] = allsnrg['ZERO'][i]
                     out['MOONDIST'][i] = allsnrg['MOONDIST'][i]
