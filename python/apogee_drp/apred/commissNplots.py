@@ -409,6 +409,8 @@ def tellfitstats2(infile='tellfitstats2.fits', plotx='seeing', color=None):
         if imol == 0:
             ax1.set_ylabel('MAD (fitscale)')
             ax2.set_ylabel(r'MAD (fitscale$-$scale)')
+
+        if imol > 0: ax.axes.yaxis.set_ticklabels([])
         ax1.text(0.5, 1.02, molecules[imol], transform=ax1.transAxes, ha='center', va='bottom', bbox=bboxpar)
         ax1.axes.xaxis.set_ticklabels([])
         if plotx == 'seeing': ax2.set_xlabel(r'seeing')
@@ -464,7 +466,7 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
         ax.set_xlabel('MAD (fitscale)')
-        ax.set_ylabel(r'MAD (fitscale$-$scale)')
+        if imol == 0: ax.set_ylabel(r'MAD (fitscale$-$scale)')
         ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
         ax.plot([-100,100], [-100,100], linestyle='dashed', color='grey')
 
