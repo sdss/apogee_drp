@@ -321,8 +321,8 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             yvals2 = out['MADRESID'+str(imol+1)]
             if plotx == 'MEANH': c = out['MEANJK']
             if plotx == 'MEANJK': c = out['MEANH']
-            sc1 = ax1.scatter(xvals, yvals1, marker='o', s=25, cmap=cmap, c=c, edgecolors='k', alpha=0.6)
-            ax2.scatter(xvals, yvals2, marker='o', s=25, cmap=cmap, c=c, edgecolors='k', alpha=0.6)
+            sc1 = ax1.scatter(xvals, yvals1, marker='o', s=25, cmap=cmap, c=c, alpha=0.8)#, edgecolors='k'
+            sc2 = ax2.scatter(xvals, yvals2, marker='o', s=25, cmap=cmap, c=c, alpha=0.8)#, edgecolors='k'
 
             if imol == 2:
                 ii = 0
