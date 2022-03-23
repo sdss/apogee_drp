@@ -457,9 +457,9 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
     for imol in range(nmolecules):
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
-        if imol == 0: ax.set_xlim(0.5, 0.5)
-        if imol == 1: ax.set_xlim(0.5, 0.5)
-        if imol == 2: ax.set_xlim(0.5, 0.5)
+        if imol == 0: ax.set_xlim(0.0, 0.5)
+        if imol == 1: ax.set_xlim(0.0, 0.5)
+        if imol == 2: ax.set_xlim(0.0, 0.5)
         ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
