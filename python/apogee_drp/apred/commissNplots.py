@@ -144,27 +144,52 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647,
         mjd = allsnrg['MJD']
         nexp = len(num)
 
-        pdb.set_trace()
-        dt = np.dtype([('NUM',       np.int32),
+        # Structure for exposure level info
+        dt = np.dtype([('EXPNUM',    np.int32),
                        ('FIELD',     np.str),
                        ('PLATE',     np.int32),
                        ('MJD',       np.int32),
                        ('JD',        np.float64),
+                       ('DATEOBS',   np.float64),
                        ('SEEING',    np.float64),
                        ('ZERO',      np.float64),
                        ('MOONDIST',  np.float64),
                        ('MOONPHASE', np.float64),
-                       ('SKY',       np.float64, nchips),
-                       ('SN',        np.float64, nchips),
-                       ('NTELL',     np.int32, (nchips, nmolecules)),
-                       ('MEANH',     np.float64, (nchips, nmolecules)),
-                       ('SIGH',      np.float64, (nchips, nmolecules)),
-                       ('MEANJK',    np.float64, (nchips, nmolecules)),
-                       ('SIGJK',     np.float64, (nchips, nmolecules)),
-                       ('MAD',       np.float64, (nchips, nmolecules)),
-                       ('MADRESID',  np.float64, (nchips, nmolecules))])
+                       ('SECZ',      np.float64),
+                       ('SKY',       np.float64),
+                       #('SN',        np.float64, nchips),
+                       ('NTELL',     np.int32, nmolecules),
+                       ('MEANH',     np.float64, nmolecules),
+                       ('SIGH',      np.float64, nmolecules),
+                       ('MEANJK',    np.float64, nmolecules),
+                       ('SIGJK',     np.float64, nmolecules),
+                       ('MAD',       np.float64, nmolecules),
+                       ('MADRESID',  np.float64, nmolecules)])
         out = np.zeros(nexp, dtype=dt)
 
+        # Structure for individual star level info
+        dtstar = np.dtype([('APOGEE_ID', np.str),
+                           ('RA',        np.float64),
+                           ('DEC',       np.float64),
+                           ('JMAG',      np.float64),
+                           ('HMAG',      np.float64),
+                           ('KMAG',      np.float64),
+                           ('EXPNUM',    np.int32),
+                           ('FIELD',     np.str),
+                           ('PLATE',     np.int32),
+                           ('MJD',       np.int32),
+                           ('JD',        np.float64),
+                           ('DATEOBS',   np.float64),
+                           ('SEEING',    np.float64),
+                           ('ZERO',      np.float64),
+                           ('MOONDIST',  np.float64),
+                           ('MOONPHASE', np.float64),
+                           ('SECZ',      np.float64),
+                           ('SKY',       np.float64),
+                           ('SCALE',     np.float64, nmolecules),
+                           ('FITSCALE',  np.float64, nmolecules)])
+
+        stardata = open('tellfitstats_stardata.dat', 'w')
         for i in range(nexp):
             sloan4 = False
             print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + str(mjd[i]) + ', exp = ' + str(num[i]))
@@ -190,9 +215,10 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647,
                     fitscale = np.squeeze(tellfit['FITSCALE'])
                     for imol in range(nmolecules):
                         gd, = np.where((fitscale[imol] > 0) & (np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
-                        if len(gd) > 0:
+                        ngd = len(gd)
+                        if ngd > 0:
                             if ichip == 0:
-                                out['NUM'][i] = num[i]
+                                out['EXPNUM'][i] = num[i]
                                 out['FIELD'][i] = field[i]
                                 out['PLATE'][i] = plate[i]
                                 out['MJD'][i] = mjd[i]
@@ -201,10 +227,11 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647,
                                 out['ZERO'][i] = allsnrg['ZERO'][i]
                                 out['MOONDIST'][i] = allsnrg['MOONDIST'][i]
                                 out['MOONPHASE'][i] = allsnrg['MOONPHASE'][i]
+                                out['SECZ'][i] = allsnrg['SECZ'][i]
                             if imol == 0:
                                 out['SKY'][i, ichip] = allsnrg['SKY'][i, ichip]
                                 out['SN'][i, ichip] = allsnrg['SN'][i, ichip]
-                            out['NTELL'][i, ichip, imol] = len(gd)
+                            out['NTELL'][i, ichip, imol] = ngd
                             out['MEANH'][i, ichip, imol] = np.nanmean(plugmap[magnames[1]][gd])
                             out['SIGH'][i, ichip, imol] = np.nanstd(plugmap[magnames[1]][gd])
                             out['MEANJK'][i, ichip, imol] = np.nanmean(plugmap[magnames[0]][gd] - plugmap[magnames[2]][gd])
@@ -212,6 +239,9 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647,
                             out['MAD'][i, ichip, imol] = dln.mad(fitscale[imol, gd])
                             out['MADRESID'][i, ichip, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
 
+                            pdb.set_trace()
+                            outstar = np.zeros(ngd, dtype=dtstar)
+                            outstar['APOGEE_ID'] == plugmap['TWOMASS_STYLE'][gd]
 
         gd, = np.where(out['NUM'] > 0)
         print('writing ' + str(len(gd)) + ' results to ' + outfile)
