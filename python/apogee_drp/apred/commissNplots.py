@@ -323,10 +323,16 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             print(np.max(out['MEANJK']))
             print(np.min(out['MEANH']))
             print(np.max(out['MEANH']))
-            if plotx == 'MEANH': c = out['MEANJK']
-            if plotx == 'MEANJK': c = out['MEANH']
-            sc1 = ax1.scatter(xvals, yvals1, marker='o', s=10, cmap=cmap, c=c, alpha=0.8)#, edgecolors='k'
-            sc2 = ax2.scatter(xvals, yvals2, marker='o', s=10, cmap=cmap, c=c, alpha=0.8)#, edgecolors='k'
+            if plotx == 'MEANH': 
+                vmin = -0.078
+                vmax = 0.41
+                c = out['MEANJK']
+            if plotx == 'MEANJK':
+                vmin = 7.489
+                vmax = 10.544
+                c = out['MEANH']
+            sc1 = ax1.scatter(xvals, yvals1, marker='o', s=10, cmap=cmap, c=c, alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
+            sc2 = ax2.scatter(xvals, yvals2, marker='o', s=10, cmap=cmap, c=c, alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
             if imol == 2:
                 ii = 0
