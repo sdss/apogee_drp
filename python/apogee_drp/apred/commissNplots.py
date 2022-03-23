@@ -483,11 +483,15 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
 def tellfitstats4(infile='tellfitstats2_stardata.fits'):
     out = fits.getdata(infile)
 
+
     plotfile = sdir5 + 'tellfitstats_indstars.png'
     print('making ' + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(32,10))
     for imol in range(nmolecules):
+        g, = np.where(out['FITSCALE1'+str(imol+1)] > 0)
+        outg = out[g]
+
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
         ax.set_ylim(11.2, 6.8)
@@ -501,13 +505,16 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
         if imol > 0: ax.axes.yaxis.set_ticklabels([])
         ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
-        x = out['JMAG'] - out['KMAG']
-        y = out['HMAG']
-        values = out['FITSCALE'+str(imol+1)]
+        x = outg['JMAG'] - outg['KMAG']
+        y = outg['HMAG']
+        values = outg['FITSCALE'+str(imol+1)]
         bins = 50
+        med = np.nanmedian(values)
+        vmin = med-0.5
+        vmax = med+0.5
         #ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=bins)
         #ax.imshow(ret.statistic)
-        sc1 = ax.scatter(x, y, marker='o', s=25, cmap='viridis', c=out['FITSCALE'+str(imol+1)], alpha=0.75)
+        sc1 = ax.scatter(x, y, marker='o', s=25, cmap='plasma', c=values, alpha=0.75, vmin=vmin, vmax=vmax)
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
