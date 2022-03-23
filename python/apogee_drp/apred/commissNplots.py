@@ -332,7 +332,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                 ii = 0
                 for ax in axes:
                     ax_divider = make_axes_locatable(ax)
-                    cax = ax_divider.append_axes("right", size="4%", pad="1%")
+                    cax = ax_divider.append_axes("right", size="4%", pad="3%")
                     cb1 = colorbar(sc1, cax=cax, orientation="vertical")
                     cax.minorticks_on()
                     if plotx == 'MEANH': 
@@ -340,16 +340,16 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                         ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.1))
                         cax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
                         cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
-                        ax.text(1.16, 0.5, r'$J-K$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                        ax.text(1.166, 0.5, r'$J-K$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
                     if plotx == 'MEANJK': 
                         ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
                         ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.05))
                         cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
                         cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-                        ax.text(1.16, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                        ax.text(1.166, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
                     ii += 1
 
-        fig.subplots_adjust(left=0.04,right=0.95,bottom=0.057,top=0.96,hspace=0.05,wspace=0.12)
+        fig.subplots_adjust(left=0.04,right=0.945,bottom=0.057,top=0.96,hspace=0.05,wspace=0.12)
         plt.savefig(plotfile)
         plt.close('all')
 
