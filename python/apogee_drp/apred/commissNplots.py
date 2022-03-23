@@ -123,7 +123,8 @@ xspan = xmax-xmin
 
 ###########################################################################################
 def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647, 
-                  remake=False, plot=True, plotx='MEANH', cmap='rainbow'):
+                  remake=False, plot=True, plotx='MEANH', cmap='rainbow',
+                  color=None):
 
     dir4 = specdir4 + 'visit/' + telescope + '/'
 
@@ -291,8 +292,14 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
         Table(outS).write(starfile, overwrite=True)
 
     out = fits.getdata(outfile)
+
+    if color == 'seeing':
+        gd, = np.where((np.isnan(out[color]) == False) & (out[color] > 0))
+        out = out[gd]
+
     if plot:
         plotfile = sdir5 + 'tellfitstats1_' + plotx + '.png'
+        if color is not None: plotfile = plotfile.replace('.png', '_'+color+'.png')
         print('making ' + os.path.basename(plotfile))
         fig = plt.figure(figsize=(32,16))
         for imol in range(nmolecules):
@@ -332,6 +339,10 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                 vmin = 7.489
                 vmax = 10.544
                 c = out['MEANH']
+            if color == 'seeing':
+                vmin = 0.85
+                vmax = 4
+                c = out['SEEING']
             sc1 = ax1.scatter(xvals, yvals1, marker='o', s=10, cmap=cmap, c=c, alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
             sc2 = ax2.scatter(xvals, yvals2, marker='o', s=10, cmap=cmap, c=c, alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
@@ -342,18 +353,22 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                     cax = ax_divider.append_axes("right", size="4%", pad="3%")
                     cb1 = colorbar(sc1, cax=cax, orientation="vertical")
                     cax.minorticks_on()
-                    if plotx == 'MEANH': 
-                        ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-                        ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-                        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
-                        cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
-                        ax.text(1.18, 0.5, r'$J-K$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-                    if plotx == 'MEANJK': 
-                        ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
-                        ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.05))
-                        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
-                        cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-                        ax.text(1.18, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                    if color is not None:
+                        if color == 'seeing':
+                            ax.text(1.18, 0.5, r'Seeing',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                    else:
+                        if plotx == 'MEANH': 
+                            ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+                            ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+                            cax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+                            cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+                            ax.text(1.18, 0.5, r'$J-K$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                        if plotx == 'MEANJK': 
+                            ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
+                            ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+                            cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+                            cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+                            ax.text(1.18, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
                     ii += 1
 
         fig.subplots_adjust(left=0.04,right=0.95,bottom=0.057,top=0.96,hspace=0.05,wspace=0.12)
