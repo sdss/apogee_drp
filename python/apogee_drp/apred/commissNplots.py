@@ -494,7 +494,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
         ax.set_xlim(-0.1, 0.43)
         ax.set_xlabel(r'$J-K$')
         ax.set_ylabel(r'$H$')
-        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
@@ -504,6 +504,37 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
         x = out['JMAG'] - out['KMAG']
         y = out['HMAG']
         values = out['FITSCALE'+str(imol+1)]
+        bins = 50
+        ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=bins)
+        ax.imshow(ret.statistic)
+
+    fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellfitstats5(infile='tellfitstats2_stardata.fits'):
+    out = fits.getdata(infile)
+
+    plotfile = sdir5 + 'tellfitstats_indstars2.png'
+    print('making ' + os.path.basename(plotfile))
+
+    fig = plt.figure(figsize=(18,15))
+    ax = plt.subplot2grid((1,1), (0,imol))
+    ax.minorticks_on()
+    ax.set_ylim(11, 7)
+    ax.set_xlim(-0.1, 0.43)
+    ax.set_xlabel(r'$J-K$')
+    ax.set_ylabel(r'$H$')
+    ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+    ax.tick_params(axis='both',which='major',length=axmajlen)
+    ax.tick_params(axis='both',which='minor',length=axminlen)
+    ax.tick_params(axis='both',which='both',width=axwidth)
+    ax.text(0.5, 1.02, molecules[0], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+        x = out['JMAG'] - out['KMAG']
+        y = out['HMAG']
+        values = out['FITSCALE1']
         bins = 50
         ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=bins)
         ax.imshow(ret.statistic)
