@@ -442,40 +442,41 @@ def tellfitstats2(infile='tellfitstats2.fits', plotx='seeing', color=None):
         sc1 = ax1.scatter(xvals, yvals1, marker='o', s=10, c='cyan', edgecolor='k', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
         sc2 = ax2.scatter(xvals, yvals2, marker='o', s=10, c='cyan', edgecolor='k', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
-        #if imol == 2:
-        #    ii = 0
-        #    for ax in axes:
-        #        ax_divider = make_axes_locatable(ax)
-        #        cax = ax_divider.append_axes("right", size="4%", pad="3%")
-        #        cb1 = colorbar(sc1, cax=cax, orientation="vertical")
-        #        cax.minorticks_on()
-        #        if color is not None:
-        #            if color == 'seeing':
-        #                ax.text(1.18, 0.5, r'Seeing',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-        #            if color == 'secz':
-        #                ax.text(1.18, 0.5, r'sec $z$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-        #        else:
-        #            if plotx == 'MEANH': 
-        #                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        #                ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-        #                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
-        #                cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
-        #                ax.text(1.18, 0.5, r'$J-K$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-        #            if plotx == 'MEANJK': 
-        #                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
-        #                ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.05))
-        #                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
-        #                cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-        #                ax.text(1.18, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-        #        ii += 1
+    fig.subplots_adjust(left=0.04,right=0.95,bottom=0.057,top=0.96,hspace=0.08,wspace=0.12)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
+    out = fits.getdata(infile)
+
+    plotfile = sdir5 + 'tellfitstats_MAD.png'
+    if color is not None: plotfile = plotfile.replace('.png', '_'+color+'.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,10))
+    for imol in range(nmolecules):
+        ax = plt.subplot2grid((1,nmolecules), (0,imol))
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        ax.set_xlabel('MAD (fitscale)')
+        ax.set_ylabel(r'MAD (fitscale$-$scale)')
+        ax.text(0.5, 1.02, molecules[imol], transform=ax1.transAxes, ha='center', va='bottom', bbox=bboxpar)
+        ax.plot([-100,100], [-100,100], linestyle='dashed', color='grey')
+
+        xvals = out['MAD'+str(imol+1)]
+        yvals = out['MADRESID'+str(imol+1)]
+
+        sc1 = ax.scatter(xvals, yvals1, marker='o', s=10, c='cyan', edgecolor='k', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
     fig.subplots_adjust(left=0.04,right=0.95,bottom=0.057,top=0.96,hspace=0.08,wspace=0.12)
     plt.savefig(plotfile)
     plt.close('all')
 
-
 ###########################################################################################
-def tellfitstats3(infile='tellfitstats1.fits', plotx='MAD'):
+def tellfitstats4(infile='tellfitstats1.fits', plotx='MAD'):
     molecules = np.array(['CH4', 'CO2', 'H2O'])
     nmolecules = len(molecules)
 
