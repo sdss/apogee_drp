@@ -516,6 +516,9 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
 def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     out = fits.getdata(infile)
 
+    g, = np.where(out['FITSCALE1'] > 0)
+    out = out[g]
+
     plotfile = sdir5 + 'tellfitstats_indstars2.png'
     print('making ' + os.path.basename(plotfile))
 
