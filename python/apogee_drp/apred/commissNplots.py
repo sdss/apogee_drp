@@ -342,7 +342,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             if color is not None: c = out[color]
             if color == 'seeing':
                 vmin = 0.85
-                vmax = 3
+                vmax = 2.5
             if color == 'secz':
                 vmin = 1
                 vmax = 1.8
