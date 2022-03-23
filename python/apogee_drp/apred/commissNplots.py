@@ -522,7 +522,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     plotfile = sdir5 + 'tellfitstats_indstars2.png'
     print('making ' + os.path.basename(plotfile))
 
-    fig, ax = plt.subplots()
+    fig = plt.figure(figsize=(18,15))
     ax = plt.subplot2grid((1,1), (0,0))
     ax.minorticks_on()
     ax.set_ylim(11, 7)
@@ -539,7 +539,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     y = out['HMAG']
     values = out['FITSCALE1']
     bins = [10, 10]
-    ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=bins)
+    ret = stats.binned_statistic_2d(x, y, values, statistic='count', bins=bins)
     ax.imshow(ret.statistic, cmap='hot_r', origin='lower')
     #ax.matshow(ret.statistic)#, cmap='hot_r', origin='lower')
 
