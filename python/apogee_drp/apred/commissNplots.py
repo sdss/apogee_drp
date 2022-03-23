@@ -331,7 +331,8 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                     cax = ax_divider.append_axes("right", size="4%", pad="1%")
                     cb1 = colorbar(sc1, cax=cax, orientation="vertical")
                     cax.minorticks_on()
-                    #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                    cax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+                    cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
                     if plotx == 'MEANH': ax.text(1.18, 0.5, r'$J-K$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
                     if plotx == 'MEANJK': ax.text(1.18, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
                     ii += 1
