@@ -535,7 +535,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     x = out['JMAG'] - out['KMAG']
     y = out['HMAG']
     values = out['FITSCALE1']
-    bins = 50
+    bins = [10, 10]
     ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=bins)
     ax.imshow(ret.statistic)
 
