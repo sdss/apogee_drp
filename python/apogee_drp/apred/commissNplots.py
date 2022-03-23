@@ -543,7 +543,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     ax.imshow(ret.statistic, cmap='hot_r', origin='lower')
     #ax.matshow(ret.statistic)#, cmap='hot_r', origin='lower')
 
-    fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
+    #fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
     plt.close('all')
 
