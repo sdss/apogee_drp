@@ -133,11 +133,11 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
     if remake:
         print('remaking ' + outfile)
         gd, = np.where((allsnr['TELESCOPE'] == telescope) & (allsnr['MJD'] > mjdstart) & (allsnr['MJD'] < mjdstop))
-        allsnrg = allsnr[gd]
-        medsn = np.nanmedian(allsnrg['SN'][:,1])
-        gd, = np.where((allsnrg['MJD'] > mjdstart) & (allsnrg['MJD'] < mjdstop))# & (allsnrg['SN'][:,1] > medsn))
-        mjdord = np.argsort(allsnrg['MJD'][gd])
-        allsnrg = allsnrg[gd][mjdord]
+        #allsnrg = allsnr[gd]
+        #medsn = np.nanmedian(allsnrg['SN'][:,1])
+        #gd, = np.where((allsnrg['MJD'] > mjdstart) & (allsnrg['MJD'] < mjdstop))# & (allsnrg['SN'][:,1] > medsn))
+        mjdord = np.argsort(allsnr['MJD'][gd])
+        allsnrg = allsnr[gd][mjdord]
         num = allsnrg['IM']
         field = allsnrg['FIELD']
         plate = allsnrg['PLATE']
@@ -156,15 +156,19 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                        ('MOONDIST',  np.float64),
                        ('MOONPHASE', np.float64),
                        ('SECZ',      np.float64),
-                       #('SKY',       np.float64),
-                       #('SN',        np.float64, nchips),
-                       ('NTELL',     np.int32, nmolecules),
-                       ('MEANH',     np.float64, nmolecules),
-                       ('SIGH',      np.float64, nmolecules),
-                       ('MEANJK',    np.float64, nmolecules),
-                       ('SIGJK',     np.float64, nmolecules),
-                       ('MAD',       np.float64, nmolecules),
-                       ('MADRESID',  np.float64, nmolecules)])
+                       ('SKY',       np.float64),
+                       ('SN',        np.float64),
+                       ('NTELL',     np.int32),
+                       ('MEANH',     np.float64),
+                       ('SIGH',      np.float64),
+                       ('MEANJK',    np.float64),
+                       ('SIGJK',     np.float64),
+                       ('MAD1',      np.float64),
+                       ('MADRESID1', np.float64),
+                       ('MAD2',      np.float64),
+                       ('MADRESID2', np.float64),
+                       ('MAD3',      np.float64),
+                       ('MADRESID3', np.float64)])
         out = np.zeros(nexp, dtype=dt)
 
         # Structure for individual star level info
@@ -187,7 +191,8 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                            ('MOONDIST',  np.float64),
                            ('MOONPHASE', np.float64),
                            ('SECZ',      np.float64),
-                           #('SKY',       np.float64),
+                           ('SKY',       np.float64),
+                           ('SN',        np.float64),
                            ('SCALE1',    np.float64),
                            ('FITSCALE1', np.float64),
                            ('SCALE2',    np.float64),
@@ -210,65 +215,63 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             if os.path.exists(cframe):
                 magnames = ['JMAG', 'HMAG', 'KMAG']
                 if sloan4: magnames = ['J', 'H', 'K']
-                #print(os.path.basename(cframe))
                 tellfit = fits.getdata(cframe,13)
                 plugmap = fits.getdata(cframe,11)
                 scale = np.squeeze(tellfit['SCALE'])
                 fitscale = np.squeeze(tellfit['FITSCALE'])
-                gd1, = np.where((np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
-                ngd1 = len(gd1)
-                for imol in range(nmolecules):
-                    gd, = np.where((fitscale[imol] > 0) & (np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
-                    ngd = len(gd)
-                    if ngd > 0:
-                        out['EXPNUM'][i] = num[i]
-                        out['FIELD'][i] = field[i]
-                        out['PLATE'][i] = plate[i]
-                        out['MJD'][i] = mjd[i]
-                        out['JD'][i] = allsnrg['JD'][i]
-                        out['SEEING'][i] = allsnrg['SEEING'][i]
-                        out['ZERO'][i] = allsnrg['ZERO'][i]
-                        out['MOONDIST'][i] = allsnrg['MOONDIST'][i]
-                        out['MOONPHASE'][i] = allsnrg['MOONPHASE'][i]
-                        out['SECZ'][i] = allsnrg['SECZ'][i]
-                        #if imol == 0:
-                        #    out['SKY'][i, ichip] = allsnrg['SKY'][i, ichip]
-                        #    out['SN'][i, ichip] = allsnrg['SN'][i, ichip]
-                        out['NTELL'][i, imol] = ngd
-                        out['MEANH'][i, imol] = np.nanmean(plugmap[magnames[1]][gd])
-                        out['SIGH'][i, imol] = np.nanstd(plugmap[magnames[1]][gd])
-                        out['MEANJK'][i, imol] = np.nanmean(plugmap[magnames[0]][gd] - plugmap[magnames[2]][gd])
-                        out['SIGJK'][i, imol] = np.nanstd(plugmap[magnames[0]][gd] - plugmap[magnames[2]][gd])
-                        out['MAD'][i, imol] = dln.mad(fitscale[imol, gd])
-                        out['MADRESID'][i, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
+                tell, = np.where((plugmap['objtype'] == 'HOT_STD') & (np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
+                ntell = len(tell)
+                if ntell > 0:
+                    out['EXPNUM'][i] = num[i]
+                    out['FIELD'][i] = field[i]
+                    out['PLATE'][i] = plate[i]
+                    out['MJD'][i] = mjd[i]
+                    out['JD'][i] = allsnrg['JD'][i]
+                    out['SEEING'][i] = allsnrg['SEEING'][i]
+                    out['ZERO'][i] = allsnrg['ZERO'][i]
+                    out['MOONDIST'][i] = allsnrg['MOONDIST'][i]
+                    out['MOONPHASE'][i] = allsnrg['MOONPHASE'][i]
+                    out['SECZ'][i] = allsnrg['SECZ'][i]
+                    out['SKY'][i] = np.nanmean(allsnrg['SKY'][i])
+                    out['SN'][i] = allsnrg['SN'][i, ichip]
+                    out['NTELL'][i] = ntell
+                    out['MEANH'][i] = np.nanmean(plugmap[magnames[1]][tell])
+                    out['SIGH'][i] = np.nanstd(plugmap[magnames[1]][tell])
+                    out['MEANJK'][i] = np.nanmean(plugmap[magnames[0]][tell] - plugmap[magnames[2]][tell])
+                    out['SIGJK'][i] = np.nanstd(plugmap[magnames[0]][tell] - plugmap[magnames[2]][tell])
+                    out['MAD1'][i] = dln.mad(fitscale[0, tell])
+                    out['MADRESID3'][i] = dln.mad(fitscale[0, tell] - scale[0, tell])
+                    out['MAD2'][i] = dln.mad(fitscale[1, tell])
+                    out['MADRESID3'][i] = dln.mad(fitscale[1, tell] - scale[1, tell])
+                    out['MAD3'][i] = dln.mad(fitscale[2, tell])
+                    out['MADRESID3'][i] = dln.mad(fitscale[2, tell] - scale[2, tell])
 
-                if len(gd1) > 0:
-                    outstar = np.empty(ngd1, dtype=dtstar)
-                    outstar['APOGEE_ID'] == plugmap['TMASS_STYLE'][gd1]
-                    outstar['RA'] == plugmap['RA'][gd1]
-                    outstar['DEC'] == plugmap['DEC'][gd1]
-                    outstar['ETA'] == plugmap['ETA'][gd1]
-                    outstar['ZETA'] == plugmap['ZETA'][gd1]
-                    outstar['JMAG'] == plugmap[magnames[0]][gd1]
-                    outstar['HMAG'] == plugmap[magnames[1]][gd1]
-                    outstar['KMAG'] == plugmap[magnames[2]][gd1]
-                    outstar['EXPNUM'] == np.full(ngd1, num[i])
-                    outstar['FIELD'] == np.full(ngd1, field[i])
-                    outstar['PLATE'] == np.full(ngd1, plate[i])
-                    outstar['MJD'] == np.full(ngd1, mjd[i])
-                    outstar['JD'] == np.full(ngd1, allsnrg['JD'][i])
-                    outstar['DATEOBS'] == np.full(ngd1, allsnrg['DATEOBS'][i])
-                    outstar['SEEING'] == np.full(ngd1, allsnrg['SEEING'][i])
-                    outstar['ZERO'] == np.full(ngd1, allsnrg['ZERO'][i])
-                    outstar['MOONDIST'] == np.full(ngd1, allsnrg['MOONDIST'][i])
-                    outstar['MOONPHASE'] == np.full(ngd1, allsnrg['MOONPHASE'][i])
-                    outstar['SECZ'] == np.full(ngd1, allsnrg['SECZ'][i])
-                    outstar['SCALE1'] == scale[0, gd1]
-                    outstar['FITSCALE1'] == fitscale[0, gd1]
-                    outstar['SCALE2'] == scale[1, gd]
-                    outstar['FITSCALE2'] == fitscale[1, gd1]
-                    outstar['SCALE3'] == scale[2, gd]
-                    outstar['FITSCALE3'] == fitscale[2, gd1]
+                    outstar = np.empty(ntell, dtype=dtstar)
+                    outstar['APOGEE_ID'] == plugmap['TMASS_STYLE'][tell]
+                    outstar['RA'] ==        plugmap['RA'][tell]
+                    outstar['DEC'] ==       plugmap['DEC'][tell]
+                    outstar['ETA'] ==       plugmap['ETA'][tell]
+                    outstar['ZETA'] ==      plugmap['ZETA'][tell]
+                    outstar['JMAG'] ==      plugmap[magnames[0]][tell]
+                    outstar['HMAG'] ==      plugmap[magnames[1]][tell]
+                    outstar['KMAG'] ==      plugmap[magnames[2]][tell]
+                    outstar['EXPNUM'] ==    np.full(ntell, num[i])
+                    outstar['FIELD'] ==     np.full(ntell, field[i])
+                    outstar['PLATE'] ==     np.full(ntell, plate[i])
+                    outstar['MJD'] ==       np.full(ntell, mjd[i])
+                    outstar['JD'] ==        np.full(ntell, allsnrg['JD'][i])
+                    outstar['DATEOBS'] ==   np.full(ntell, allsnrg['DATEOBS'][i])
+                    outstar['SEEING'] ==    np.full(ntell, allsnrg['SEEING'][i])
+                    outstar['ZERO'] ==      np.full(ntell, allsnrg['ZERO'][i])
+                    outstar['MOONDIST'] ==  np.full(ntell, allsnrg['MOONDIST'][i])
+                    outstar['MOONPHASE'] == np.full(ntell, allsnrg['MOONPHASE'][i])
+                    outstar['SECZ'] ==      np.full(ntell, allsnrg['SECZ'][i])
+                    outstar['SCALE1'] ==    scale[0, tell]
+                    outstar['FITSCALE1'] == fitscale[0, tell]
+                    outstar['SCALE2'] ==    scale[1, tell]
+                    outstar['FITSCALE2'] == fitscale[1, tell]
+                    outstar['SCALE3'] ==    scale[2, tell]
+                    outstar['FITSCALE3'] == fitscale[2, tell]
 
                     pdb.set_trace()
                     if i == 0:
