@@ -122,7 +122,7 @@ xmax = maxjd + jdspan * 0.08
 xspan = xmax-xmin
 
 ###########################################################################################
-def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647, 
+def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647, 
                   remake=False, plot=False, plotx='MEANH', ploty='MAD'):
 
     dir4 = specdir4 + 'visit/' + telescope + '/'
@@ -171,6 +171,8 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647,
         dtstar = np.dtype([('APOGEE_ID', np.str),
                            ('RA',        np.float64),
                            ('DEC',       np.float64),
+                           ('ETA',       np.float64),
+                           ('ZETA',      np.float64),
                            ('JMAG',      np.float64),
                            ('HMAG',      np.float64),
                            ('KMAG',      np.float64),
@@ -189,8 +191,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647,
                            ('SCALE',     np.float64, nmolecules),
                            ('FITSCALE',  np.float64, nmolecules)])
 
-        stardata = open('tellfitstats_stardata.dat', 'w')
-        for i in range(nexp):
+        for i in range(10):
             sloan4 = False
             print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + str(mjd[i]) + ', exp = ' + str(num[i]))
             cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
@@ -235,13 +236,44 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647,
                         out['MAD'][i, imol] = dln.mad(fitscale[imol, gd])
                         out['MADRESID'][i, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
 
-                        pdb.set_trace()
+                        #pdb.set_trace()
                         outstar = np.zeros(ngd, dtype=dtstar)
-                        outstar['APOGEE_ID'] == plugmap['TWOMASS_STYLE'][gd]
+                        outstar['APOGEE_ID'] == plugmap['TMASS_STYLE'][gd]
+                        outstar['RA'] == plugmap['RA'][gd]
+                        outstar['DEC'] == plugmap['TMASS_STYLE'][gd]
+                        outstar['ETA'] == plugmap['ETA'][gd]
+                        outstar['ZETA'] == plugmap['ZETA'][gd]
+                        outstar['JMAG'] == plugmap[magnames[0]][gd]
+                        outstar['HMAG'] == plugmap[magnames[1]][gd]
+                        outstar['KMAG'] == plugmap[magnames[2]][gd]
+                        outstar['EXPNUM'] == np.full(ngd, num[i])
+                        outstar['FIELD'] == np.full(ngd, field[i])
+                        outstar['PLATE'] == np.full(ngd, plate[i])
+                        outstar['MJD'] == np.full(ngd, mjd[i])
+                        outstar['JD'] == np.full(ngd, allsnrg['JD'][i])
+                        outstar['DATEOBS'] == np.full(ngd, allsnrg['DATEOBS'][i])
+                        outstar['SEEING'] == np.full(ngd, allsnrg['SEEING'][i])
+                        outstar['ZERO'] == np.full(ngd, allsnrg['ZERO'][i])
+                        outstar['MOONDIST'] == np.full(ngd, allsnrg['MOONDIST'][i])
+                        outstar['MOONPHASE'] == np.full(ngd, allsnrg['MOONPHASE'][i])
+                        outstar['SECZ'] == np.full(ngd, allsnrg['SECZ'][i])
+                        outstar['SCALE'] == scale[:, gd]
+                        outstar['FITSCALE'] == fitscale[:, gd]
+
+                        if i == 0:
+                            outS = outstar
+                        else:
+                            outS = np.concatenate([outS, outstar])
+
+
 
         gd, = np.where(out['NUM'] > 0)
         print('writing ' + str(len(gd)) + ' results to ' + outfile)
         Table(out[gd]).write(outfile, overwrite=True)
+
+        starfile = outfile.replace('.fits', '_stardata.fits')
+        print('making ' + starfile)
+        Table(outS).write(starfile, overwrite=True)
 
     out = fits.getdata(outfile)
     if plot:
