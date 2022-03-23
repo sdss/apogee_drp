@@ -316,9 +316,9 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
 
             xvals = out[plotx]
             yvals1 = out['MAD'+str(imol+1)]
-            yvals2 = out['MAD'+str(imol+1)]
-            ax1.scatter(xvals, yvals, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
-            ax2.scatter(xvals, yvals, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
+            yvals2 = out['MADRESID'+str(imol+1)]
+            ax1.scatter(xvals, yvals1, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
+            ax2.scatter(xvals, yvals2, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
 
         fig.subplots_adjust(left=0.075,right=0.985,bottom=0.05,top=0.985,hspace=0.05,wspace=0.15)
         plt.savefig(plotfile)
