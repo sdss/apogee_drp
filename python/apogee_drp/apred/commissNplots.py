@@ -537,7 +537,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     values = out['FITSCALE1']
     bins = [10, 10]
     ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=bins)
-    ax.imshow(ret.statistic, cmap='hot')
+    ax.imshow(ret.statistic, cmap='hot_r')
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
