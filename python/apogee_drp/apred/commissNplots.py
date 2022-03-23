@@ -386,7 +386,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
 
 ###########################################################################################
 def tellfitstats2(infile='tellfitstats2.fits', plotx='seeing', color=None):
-    data = fits.getdata(infile)
+    out = fits.getdata(infile)
 
     plotfile = sdir5 + 'tellfitstats_' + plotx + '.png'
     if color is not None: plotfile = plotfile.replace('.png', '_'+color+'.png')
