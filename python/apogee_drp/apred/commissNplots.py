@@ -438,8 +438,8 @@ def tellfitstats2(infile='tellfitstats2.fits', plotx='seeing', color=None):
             vmin = 1
             vmax = 1.5
 
-        sc1 = ax1.scatter(xvals, yvals1, marker='o', s=10, c='b', alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
-        sc2 = ax2.scatter(xvals, yvals2, marker='o', s=10, c='b', alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
+        sc1 = ax1.scatter(xvals, yvals1, marker='o', s=10, c='b', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+        sc2 = ax2.scatter(xvals, yvals2, marker='o', s=10, c='b', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
         #if imol == 2:
         #    ii = 0
