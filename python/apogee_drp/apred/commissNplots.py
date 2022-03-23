@@ -489,7 +489,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
 
     fig = plt.figure(figsize=(32,10))
     for imol in range(nmolecules):
-        g, = np.where(out['FITSCALE1'+str(imol+1)] > 0)
+        g, = np.where(out['FITSCALE'+str(imol+1)] > 0)
         outg = out[g]
 
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
