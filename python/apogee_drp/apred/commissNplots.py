@@ -247,31 +247,31 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                     out['MADRESID3'][i] = dln.mad(fitscale[2, tell] - scale[2, tell])
 
                     outstar = np.empty(ntell, dtype=dtstar)
-                    outstar['APOGEE_ID'] == plugmap['TMASS_STYLE'][tell]
-                    outstar['RA'] ==        plugmap['RA'][tell]
-                    outstar['DEC'] ==       plugmap['DEC'][tell]
-                    outstar['ETA'] ==       plugmap['ETA'][tell]
-                    outstar['ZETA'] ==      plugmap['ZETA'][tell]
-                    outstar['JMAG'] ==      plugmap[magnames[0]][tell]
-                    outstar['HMAG'] ==      plugmap[magnames[1]][tell]
-                    outstar['KMAG'] ==      plugmap[magnames[2]][tell]
-                    outstar['EXPNUM'] ==    np.full(ntell, num[i])
-                    outstar['FIELD'] ==     np.full(ntell, field[i])
-                    outstar['PLATE'] ==     np.full(ntell, plate[i])
-                    outstar['MJD'] ==       np.full(ntell, mjd[i])
-                    outstar['JD'] ==        np.full(ntell, allsnrg['JD'][i])
-                    outstar['DATEOBS'] ==   np.full(ntell, allsnrg['DATEOBS'][i])
-                    outstar['SEEING'] ==    np.full(ntell, allsnrg['SEEING'][i])
-                    outstar['ZERO'] ==      np.full(ntell, allsnrg['ZERO'][i])
-                    outstar['MOONDIST'] ==  np.full(ntell, allsnrg['MOONDIST'][i])
-                    outstar['MOONPHASE'] == np.full(ntell, allsnrg['MOONPHASE'][i])
-                    outstar['SECZ'] ==      np.full(ntell, allsnrg['SECZ'][i])
-                    outstar['SCALE1'] ==    scale[0, tell]
-                    outstar['FITSCALE1'] == fitscale[0, tell]
-                    outstar['SCALE2'] ==    scale[1, tell]
-                    outstar['FITSCALE2'] == fitscale[1, tell]
-                    outstar['SCALE3'] ==    scale[2, tell]
-                    outstar['FITSCALE3'] == fitscale[2, tell]
+                    outstar['APOGEE_ID'] = plugmap['TMASS_STYLE'][tell]
+                    outstar['RA'] =        plugmap['RA'][tell]
+                    outstar['DEC'] =       plugmap['DEC'][tell]
+                    outstar['ETA'] =       plugmap['ETA'][tell]
+                    outstar['ZETA'] =      plugmap['ZETA'][tell]
+                    outstar['JMAG'] =      plugmap[magnames[0]][tell]
+                    outstar['HMAG'] =      plugmap[magnames[1]][tell]
+                    outstar['KMAG'] =      plugmap[magnames[2]][tell]
+                    outstar['EXPNUM'] =    np.full(ntell, num[i])
+                    outstar['FIELD'] =     np.full(ntell, field[i])
+                    outstar['PLATE'] =     np.full(ntell, plate[i])
+                    outstar['MJD'] =       np.full(ntell, mjd[i])
+                    outstar['JD'] =        np.full(ntell, allsnrg['JD'][i])
+                    outstar['DATEOBS'] =   np.full(ntell, allsnrg['DATEOBS'][i])
+                    outstar['SEEING'] =    np.full(ntell, allsnrg['SEEING'][i])
+                    outstar['ZERO'] =      np.full(ntell, allsnrg['ZERO'][i])
+                    outstar['MOONDIST'] =  np.full(ntell, allsnrg['MOONDIST'][i])
+                    outstar['MOONPHASE'] = np.full(ntell, allsnrg['MOONPHASE'][i])
+                    outstar['SECZ'] =      np.full(ntell, allsnrg['SECZ'][i])
+                    outstar['SCALE1'] =    scale[0, tell]
+                    outstar['FITSCALE1'] = fitscale[0, tell]
+                    outstar['SCALE2'] =    scale[1, tell]
+                    outstar['FITSCALE2'] = fitscale[1, tell]
+                    outstar['SCALE3'] =    scale[2, tell]
+                    outstar['FITSCALE3'] = fitscale[2, tell]
 
                     pdb.set_trace()
                     if i == 0:
