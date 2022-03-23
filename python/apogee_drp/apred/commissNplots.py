@@ -314,16 +314,16 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                 ax2.set_ylabel(r'MAD (fitscale$-$scale)')
             ax1.text(0.5, 1.02, molecules[imol], transform=ax1.transAxes, ha='center', va='bottom', bbox=bboxpar)
             ax1.axes.xaxis.set_ticklabels([])
-            if plotx == 'MEANH': ax2.set_xlabel(r'Mean Telluric $H$ (mag)')
-            if plotx == 'MEANJK': ax2.set_xlabel(r'Mean Telluric $J-K$ (mag)')
+            if plotx == 'MEANH': ax2.set_xlabel(r'Mean Telluric $H$')
+            if plotx == 'MEANJK': ax2.set_xlabel(r'Mean Telluric $J-K$')
 
             xvals = out[plotx]
             yvals1 = out['MAD'+str(imol+1)]
             yvals2 = out['MADRESID'+str(imol+1)]
-            print(np.min(out['MEANJK']))
-            print(np.max(out['MEANJK']))
-            print(np.min(out['MEANH']))
-            print(np.max(out['MEANH']))
+            #print(np.min(out['MEANJK']))
+            #print(np.max(out['MEANJK']))
+            #print(np.min(out['MEANH']))
+            #print(np.max(out['MEANH']))
             if plotx == 'MEANH': 
                 vmin = -0.078
                 vmax = 0.41
