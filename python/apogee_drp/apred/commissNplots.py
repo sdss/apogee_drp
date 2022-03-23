@@ -490,7 +490,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
     for imol in range(nmolecules):
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
-        ax.set_ylim(11, 7)
+        ax.set_ylim(11.2, 6.8)
         ax.set_xlim(-0.1, 0.43)
         ax.set_xlabel(r'$J-K$')
         ax.set_ylabel(r'$H$')
