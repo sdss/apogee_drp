@@ -123,7 +123,7 @@ xspan = xmax-xmin
 
 ###########################################################################################
 def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647, 
-                  remake=False, plot=True, plotx='MEANH', ploty='MAD'):
+                  remake=False, plot=False, plotx='MEANH', ploty='MAD'):
 
     dir4 = specdir4 + 'visit/' + telescope + '/'
 
@@ -156,7 +156,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647,
                        ('MOONDIST',  np.float64),
                        ('MOONPHASE', np.float64),
                        ('SECZ',      np.float64),
-                       ('SKY',       np.float64),
+                       #('SKY',       np.float64),
                        #('SN',        np.float64, nchips),
                        ('NTELL',     np.int32, nmolecules),
                        ('MEANH',     np.float64, nmolecules),
@@ -185,7 +185,7 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647,
                            ('MOONDIST',  np.float64),
                            ('MOONPHASE', np.float64),
                            ('SECZ',      np.float64),
-                           ('SKY',       np.float64),
+                           #('SKY',       np.float64),
                            ('SCALE',     np.float64, nmolecules),
                            ('FITSCALE',  np.float64, nmolecules)])
 
@@ -193,55 +193,51 @@ def tellfitstats1(outfile='tellfitstats1.fits', mjdstart=59146, mjdstop=59647,
         for i in range(nexp):
             sloan4 = False
             print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + str(mjd[i]) + ', exp = ' + str(num[i]))
-            cfile = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
-            for ichip in range(nchips):
-                if ichip == 0: cframe = cfile.replace('apCframe-', 'apCframe-a-')
-                if ichip == 1: cframe = cfile.replace('apCframe-', 'apCframe-b-')
-                if ichip == 2: cframe = cfile.replace('apCframe-', 'apCframe-c-')
-                if os.path.exists(cframe) == False:
-                    tmp = glob.glob(dir4 + field[i] + '/' + str(plate[i]) + '/' + str(mjd[i]) + '/' + os.path.basename(cframe))
-                    if len(tmp) > 0:
-                        cframe = tmp[0]
-                        sloan4 = True
-                    else:
-                        continue
-                if os.path.exists(cframe):
-                    magnames = ['JMAG', 'HMAG', 'KMAG']
-                    if sloan4: magnames = ['J', 'H', 'K']
-                    #print(os.path.basename(cframe))
-                    tellfit = fits.getdata(cframe,13)
-                    plugmap = fits.getdata(cframe,11)
-                    scale = np.squeeze(tellfit['SCALE'])
-                    fitscale = np.squeeze(tellfit['FITSCALE'])
-                    for imol in range(nmolecules):
-                        gd, = np.where((fitscale[imol] > 0) & (np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
-                        ngd = len(gd)
-                        if ngd > 0:
-                            if ichip == 0:
-                                out['EXPNUM'][i] = num[i]
-                                out['FIELD'][i] = field[i]
-                                out['PLATE'][i] = plate[i]
-                                out['MJD'][i] = mjd[i]
-                                out['JD'][i] = allsnrg['JD'][i]
-                                out['SEEING'][i] = allsnrg['SEEING'][i]
-                                out['ZERO'][i] = allsnrg['ZERO'][i]
-                                out['MOONDIST'][i] = allsnrg['MOONDIST'][i]
-                                out['MOONPHASE'][i] = allsnrg['MOONPHASE'][i]
-                                out['SECZ'][i] = allsnrg['SECZ'][i]
-                            if imol == 0:
-                                out['SKY'][i, ichip] = allsnrg['SKY'][i, ichip]
-                                out['SN'][i, ichip] = allsnrg['SN'][i, ichip]
-                            out['NTELL'][i, ichip, imol] = ngd
-                            out['MEANH'][i, ichip, imol] = np.nanmean(plugmap[magnames[1]][gd])
-                            out['SIGH'][i, ichip, imol] = np.nanstd(plugmap[magnames[1]][gd])
-                            out['MEANJK'][i, ichip, imol] = np.nanmean(plugmap[magnames[0]][gd] - plugmap[magnames[2]][gd])
-                            out['SIGJK'][i, ichip, imol] = np.nanstd(plugmap[magnames[0]][gd] - plugmap[magnames[2]][gd])
-                            out['MAD'][i, ichip, imol] = dln.mad(fitscale[imol, gd])
-                            out['MADRESID'][i, ichip, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
+            cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
+            cframe = cframe.replace('apCframe-', 'apCframe-a-')
+            if os.path.exists(cframe) == False:
+                tmp = glob.glob(dir4 + field[i] + '/' + str(plate[i]) + '/' + str(mjd[i]) + '/' + os.path.basename(cframe))
+                if len(tmp) > 0:
+                    cframe = tmp[0]
+                    sloan4 = True
+                else:
+                    continue
+            if os.path.exists(cframe):
+                magnames = ['JMAG', 'HMAG', 'KMAG']
+                if sloan4: magnames = ['J', 'H', 'K']
+                #print(os.path.basename(cframe))
+                tellfit = fits.getdata(cframe,13)
+                plugmap = fits.getdata(cframe,11)
+                scale = np.squeeze(tellfit['SCALE'])
+                fitscale = np.squeeze(tellfit['FITSCALE'])
+                for imol in range(nmolecules):
+                    gd, = np.where((fitscale[imol] > 0) & (np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
+                    ngd = len(gd)
+                    if ngd > 0:
+                        out['EXPNUM'][i] = num[i]
+                        out['FIELD'][i] = field[i]
+                        out['PLATE'][i] = plate[i]
+                        out['MJD'][i] = mjd[i]
+                        out['JD'][i] = allsnrg['JD'][i]
+                        out['SEEING'][i] = allsnrg['SEEING'][i]
+                        out['ZERO'][i] = allsnrg['ZERO'][i]
+                        out['MOONDIST'][i] = allsnrg['MOONDIST'][i]
+                        out['MOONPHASE'][i] = allsnrg['MOONPHASE'][i]
+                        out['SECZ'][i] = allsnrg['SECZ'][i]
+                        #if imol == 0:
+                        #    out['SKY'][i, ichip] = allsnrg['SKY'][i, ichip]
+                        #    out['SN'][i, ichip] = allsnrg['SN'][i, ichip]
+                        out['NTELL'][i, imol] = ngd
+                        out['MEANH'][i, imol] = np.nanmean(plugmap[magnames[1]][gd])
+                        out['SIGH'][i, imol] = np.nanstd(plugmap[magnames[1]][gd])
+                        out['MEANJK'][i, imol] = np.nanmean(plugmap[magnames[0]][gd] - plugmap[magnames[2]][gd])
+                        out['SIGJK'][i, imol] = np.nanstd(plugmap[magnames[0]][gd] - plugmap[magnames[2]][gd])
+                        out['MAD'][i, imol] = dln.mad(fitscale[imol, gd])
+                        out['MADRESID'][i, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
 
-                            pdb.set_trace()
-                            outstar = np.zeros(ngd, dtype=dtstar)
-                            outstar['APOGEE_ID'] == plugmap['TWOMASS_STYLE'][gd]
+                        pdb.set_trace()
+                        outstar = np.zeros(ngd, dtype=dtstar)
+                        outstar['APOGEE_ID'] == plugmap['TWOMASS_STYLE'][gd]
 
         gd, = np.where(out['NUM'] > 0)
         print('writing ' + str(len(gd)) + ' results to ' + outfile)
