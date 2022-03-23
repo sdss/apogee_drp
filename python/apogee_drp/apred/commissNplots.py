@@ -292,9 +292,9 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
 
     out = fits.getdata(outfile)
     if plot:
-        plotfile = sdir5 + 'tellfitstats1_' + plotx + 'vs' + ploty + '.png'
+        plotfile = sdir5 + 'tellfitstats1_' + plotx + '.png'
         print('making ' + os.path.basename(plotfile))
-        fig = plt.figure(figsize=(18,20))
+        fig = plt.figure(figsize=(30,20))
         for imol in range(nmolecules):
             ax1 = plt.subplot2grid((2,nmolecules), (0,imol))
             ax2 = plt.subplot2grid((2,nmolecules), (1,imol))
@@ -307,9 +307,9 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
                 if plotx == 'MEANH': ax.set_xlim(6.9, 11.1)
-                if imol == 0:
-                    if ploty == 'MAD': ax.set_ylabel('MAD (fitscale)')
-                    if ploty == 'MADRESID': ax.set_ylabel(r'MAD (fitscale$-$scale)')
+            if imol == 0:
+                ax1.set_ylabel('MAD (fitscale)')
+                ax2.set_ylabel(r'MAD (fitscale$-$scale)')
             ax1.axes.xaxis.set_ticklabels([])
             if plotx == 'MEANH': ax2.set_xlabel(r'Mean Telluric $H$ (mag)')
             if plotx == 'MEANJK': ax2.set_xlabel(r'Mean Telluric $J-K$ (mag)')
