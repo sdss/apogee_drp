@@ -123,7 +123,7 @@ xspan = xmax-xmin
 
 ###########################################################################################
 def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647, 
-                  remake=False, plot=True, plotx='MEANH', cmap='seismic'):
+                  remake=False, plot=True, plotx='MEANH', cmap='rainbow'):
 
     dir4 = specdir4 + 'visit/' + telescope + '/'
 
@@ -321,7 +321,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             yvals2 = out['MADRESID'+str(imol+1)]
             if plotx == 'MEANH': c = out['MEANJK']
             if plotx == 'MEANJK': c = out['MEANH']
-            ax1.scatter(xvals, yvals1, marker='o', s=25, cmap=cmap, c=c, edgecolors='k', alpha=0.6)
+            sc1 = ax1.scatter(xvals, yvals1, marker='o', s=25, cmap=cmap, c=c, edgecolors='k', alpha=0.6)
             ax2.scatter(xvals, yvals2, marker='o', s=25, cmap=cmap, c=c, edgecolors='k', alpha=0.6)
 
             if imol == 2:
