@@ -451,15 +451,15 @@ def tellfitstats2(infile='tellfitstats2.fits', plotx='seeing', color=None):
 def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
     out = fits.getdata(infile)
 
-    plotfile = sdir5 + 'tellfitstats_MAD.png'
+    plotfile = sdir5 + 'tellfitstats_MAD2.png'
     if color is not None: plotfile = plotfile.replace('.png', '_'+color+'.png')
     print('making ' + os.path.basename(plotfile))
     fig = plt.figure(figsize=(32,10))
     for imol in range(nmolecules):
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
-        ax.set_xlim(0.0, 0.5)
-        ax.set_ylim(0.0, 0.5)
+        ax.set_xlim(0.0, 0.15)
+        ax.set_ylim(0.0, 0.15)
         ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
