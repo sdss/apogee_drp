@@ -301,6 +301,8 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             axes = [ax1,ax2]
             for ax in axes:
                 ax.minorticks_on()
+                ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+                ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
@@ -340,8 +342,6 @@ def tellfitstats2(infile='tellfitstats1.fits', plotx='MAD'):
         for imol in range(nmolecules):
             ax = plt.subplot2grid((nchips,nmolecules), (ichip,imol))
             ax.minorticks_on()
-            ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
-            ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
