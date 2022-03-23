@@ -320,7 +320,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             ax1.scatter(xvals, yvals1, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
             ax2.scatter(xvals, yvals2, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
 
-        fig.subplots_adjust(left=0.05,right=0.985,bottom=0.057,top=0.96,hspace=0.05,wspace=0.15)
+        fig.subplots_adjust(left=0.04,right=0.985,bottom=0.057,top=0.96,hspace=0.05,wspace=0.15)
         plt.savefig(plotfile)
         plt.close('all')
 
