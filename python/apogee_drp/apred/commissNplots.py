@@ -506,7 +506,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
 
         x = outg['JMAG'] - outg['KMAG']
         y = outg['HMAG']
-        values = outg['FITSCALE'+str(imol+1)] - outg['SCALE'+str(imol+1)]
+        values = outg['FITSCALE'+str(imol+1)]# - outg['SCALE'+str(imol+1)]
         bins = 50
         med = np.nanmedian(values)
         #vmin = med-0.5
