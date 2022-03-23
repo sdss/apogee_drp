@@ -310,8 +310,8 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                 if plotx == 'MEANJK': ax.set_xlabel(r'Mean Telluric $J-K$ (mag)')
             if ploty == 'MAD': ax.set_ylabel('MAD (fitscale)')
             if ploty == 'MADRESID': ax.set_ylabel(r'MAD (fitscale$-$scale)')
-            xvals = out[plotx][:,ichip,imol]
-            yvals = out[ploty+str(imol+1)][:,ichip,imol]
+            xvals = out[plotx][:,imol]
+            yvals = out[ploty+str(imol+1)][:,imol]
             ax.scatter(xvals, yvals, marker='o', s=25, color='dodgerblue', edgecolors='k', alpha=0.6)
 
         fig.subplots_adjust(left=0.05,right=0.99,bottom=0.055,top=0.985,hspace=0.1,wspace=0.15)
