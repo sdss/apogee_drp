@@ -31,7 +31,7 @@ from matplotlib import cm as cmaps
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
-
+from scipy import stats
 
 # import pdb; pdb.set_trace()
 
@@ -480,7 +480,40 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
     plt.close('all')
 
 ###########################################################################################
-def tellfitstats4(infile='tellfitstats1.fits', plotx='MAD'):
+def tellfitstats4(infile='tellfitstats2_stardata.fits'):
+    out = fits.getdata(infile)
+
+    plotfile = sdir5 + 'tellfitstats_indstars.png'
+    print('making ' + os.path.basename(plotfile))
+
+    fig = plt.figure(figsize=(32,10))
+    for imol in range(nmolecules):
+        ax = plt.subplot2grid((1,nmolecules), (0,imol))
+        ax.minorticks_on()
+        ax.set_ylim(11, 7)
+        ax.set_xlim(-0.1, 0.43)
+        ax.set_xlabel(r'$J-K$')
+        ax.set_ylabel(r'$H$')
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        if imol > 0: ax.axes.yaxis.set_ticklabels([])
+        ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+        x = out['JMAG'] - out['KMAG']
+        y = out['HMAG']
+        values = out['FITSCALE'+str(imol+1)]
+        bins = 50
+        ret = stats.binned_statistic_2d(x, y, values, dln.mad, bins)
+        ax.imshow(ret)
+
+    fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellfitstats98(infile='tellfitstats1.fits', plotx='MAD'):
     molecules = np.array(['CH4', 'CO2', 'H2O'])
     nmolecules = len(molecules)
 
@@ -512,7 +545,7 @@ def tellfitstats4(infile='tellfitstats1.fits', plotx='MAD'):
     return out
 
 ###########################################################################################
-def tellfitstats5(infile='tellfitstats1.fits', plotx='MAD'):
+def tellfitstats99(infile='tellfitstats1.fits', plotx='MAD'):
     molecules = np.array(['CH4', 'CO2', 'H2O'])
     nmolecules = len(molecules)
 
