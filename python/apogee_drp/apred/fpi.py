@@ -195,7 +195,8 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     ind, = np.where(expinfo['exptype']=='FPI')
     print(str(len(ind))+' full-frame FPI exposures')
     for i in range(len(ind)):
-        fpinum = expinfo['num'][ind[i]]
+        fpinum = expinfo['num'][ind[i]]       
+        fpiframe = load.ap1D(fpinum)
         print('%d/%d  %d' % (i+1,len(ind),fpinum))
         # Check if the file exists already
         fpiwavefile = reduxdir+'cal/'+instrument+'/wave/apWaveFPI-%5d-%8d.fits' % (mjd5,fpinum)
