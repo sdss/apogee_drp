@@ -491,7 +491,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
         ax.set_ylim(11.2, 6.8)
-        ax.set_xlim(-0.1, 0.43)
+        ax.set_xlim(-0.2, 0.53)
         ax.set_xlabel(r'$J-K$')
         ax.set_ylabel(r'$H$')
         ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
@@ -507,7 +507,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
         bins = 50
         #ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=bins)
         #ax.imshow(ret.statistic)
-        sc1 = ax.scatter(x, y, marker='o', s=25, c=out['FITSCALE'+str(imol+1)], alpha=0.75)
+        sc1 = ax.scatter(x, y, marker='o', s=25, cmap='viridis', c=out['FITSCALE'+str(imol+1)], alpha=0.75)
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
