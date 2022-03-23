@@ -457,6 +457,9 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
     for imol in range(nmolecules):
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
+        if imol == 0: ax.set_xlim(0.5, 0.5)
+        if imol == 1: ax.set_xlim(0.5, 0.5)
+        if imol == 2: ax.set_xlim(0.5, 0.5)
         ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
         ax.tick_params(axis='both',which='major',length=axmajlen)
         ax.tick_params(axis='both',which='minor',length=axminlen)
@@ -464,14 +467,14 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
         ax.set_xlabel('MAD (fitscale)')
         ax.set_ylabel(r'MAD (fitscale$-$scale)')
         ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
-        #ax.plot([-100,100], [-100,100], linestyle='dashed', color='grey')
+        ax.plot([-100,100], [-100,100], linestyle='dashed', color='grey')
 
         xvals = out['MAD'+str(imol+1)]
         yvals = out['MADRESID'+str(imol+1)]
 
         sc1 = ax.scatter(xvals, yvals, marker='o', s=10, c='cyan', edgecolor='k', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
-    fig.subplots_adjust(left=0.04,right=0.95,bottom=0.057,top=0.96,hspace=0.08,wspace=0.12)
+    fig.subplots_adjust(left=0.04,right=0.95,bottom=0.075,top=0.94,hspace=0.08,wspace=0.12)
     plt.savefig(plotfile)
     plt.close('all')
 
