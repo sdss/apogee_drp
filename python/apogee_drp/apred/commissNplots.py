@@ -319,6 +319,10 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             xvals = out[plotx]
             yvals1 = out['MAD'+str(imol+1)]
             yvals2 = out['MADRESID'+str(imol+1)]
+            print(np.min(out['MEANJK']))
+            print(np.max(out['MEANJK']))
+            print(np.min(out['MEANH']))
+            print(np.max(out['MEANH']))
             if plotx == 'MEANH': c = out['MEANJK']
             if plotx == 'MEANJK': c = out['MEANH']
             sc1 = ax1.scatter(xvals, yvals1, marker='o', s=10, cmap=cmap, c=c, alpha=0.8)#, edgecolors='k'
@@ -333,11 +337,11 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                     cax.minorticks_on()
                     cax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
                     cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
-                    if plotx == 'MEANH': ax.text(1.18, 0.5, r'$J-K$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-                    if plotx == 'MEANJK': ax.text(1.18, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                    if plotx == 'MEANH': ax.text(1.16, 0.5, r'$J-K$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                    if plotx == 'MEANJK': ax.text(1.16, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
                     ii += 1
 
-        fig.subplots_adjust(left=0.04,right=0.93,bottom=0.057,top=0.96,hspace=0.05,wspace=0.12)
+        fig.subplots_adjust(left=0.04,right=0.945,bottom=0.057,top=0.96,hspace=0.05,wspace=0.12)
         plt.savefig(plotfile)
         plt.close('all')
 
