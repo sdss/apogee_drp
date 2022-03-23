@@ -260,6 +260,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                         outstar['SCALE'] == scale[:, gd]
                         outstar['FITSCALE'] == fitscale[:, gd]
 
+                        pdb.set_trace()
                         if i == 0:
                             outS = outstar
                         else:
