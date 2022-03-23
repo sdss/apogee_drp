@@ -200,7 +200,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                            ('SCALE3',    np.float64),
                            ('FITSCALE3', np.float64)])
 
-        for i in range(10):
+        for i in range(nexp):
             sloan4 = False
             print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + str(mjd[i]) + ', exp = ' + str(num[i]))
             cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
@@ -278,8 +278,6 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                         outS = outstar
                     else:
                         outS = np.concatenate([outS, outstar])
-
-
 
         gd, = np.where(out['EXPNUM'] > 0)
         print('writing ' + str(len(gd)) + ' results to ' + outfile)
