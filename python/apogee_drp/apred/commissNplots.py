@@ -508,7 +508,7 @@ def tellfitstats4(infile='tellfitstats1.fits', plotx='MAD'):
     return out
 
 ###########################################################################################
-def tellfitstats3(infile='tellfitstats1.fits', plotx='MAD'):
+def tellfitstats5(infile='tellfitstats1.fits', plotx='MAD'):
     molecules = np.array(['CH4', 'CO2', 'H2O'])
     nmolecules = len(molecules)
 
