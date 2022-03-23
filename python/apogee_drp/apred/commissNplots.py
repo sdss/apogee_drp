@@ -267,7 +267,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
 
 
 
-        gd, = np.where(out['NUM'] > 0)
+        gd, = np.where(out['EXPNUM'] > 0)
         print('writing ' + str(len(gd)) + ' results to ' + outfile)
         Table(out[gd]).write(outfile, overwrite=True)
 
