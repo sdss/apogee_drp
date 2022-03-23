@@ -1349,7 +1349,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 #sout = subprocess.run(['fpack','-D','-Y',files[jj]],shell=False)
                 if os.path.exists(modfiles[jj]): 
                     if os.path.exists(modfiles[jj]+'.fz'): os.remove(modfiles[jj]+'.fz')
-                sout = subprocess.run(['fpack','-D','-Y',modfiles[jj]],shell=False)
+                    sout = subprocess.run(['fpack','-D','-Y',modfiles[jj]],shell=False)
                               
         utils.writelog(logfile,'AP2D: '+os.path.basename(planfile)+('%.1f' % (time.time()-t0)))
  
