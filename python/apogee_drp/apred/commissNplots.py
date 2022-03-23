@@ -188,8 +188,12 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                            ('MOONPHASE', np.float64),
                            ('SECZ',      np.float64),
                            #('SKY',       np.float64),
-                           ('SCALE',     np.float64, nmolecules),
-                           ('FITSCALE',  np.float64, nmolecules)])
+                           ('SCALE1',    np.float64),
+                           ('FITSCALE1', np.float64),
+                           ('SCALE2',    np.float64),
+                           ('FITSCALE2', np.float64),
+                           ('SCALE3',    np.float64),
+                           ('FITSCALE3', np.float64)])
 
         for i in range(10):
             sloan4 = False
@@ -237,7 +241,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                         out['MADRESID'][i, imol] = dln.mad(fitscale[imol, gd] - scale[imol, gd])
 
                         #pdb.set_trace()
-                        outstar = np.zeros(ngd, dtype=dtstar)
+                        outstar = np.empty(ngd, dtype=dtstar)
                         outstar['APOGEE_ID'] == plugmap['TMASS_STYLE'][gd]
                         outstar['RA'] == plugmap['RA'][gd]
                         outstar['DEC'] == plugmap['DEC'][gd]
@@ -257,8 +261,12 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                         outstar['MOONDIST'] == np.full(ngd, allsnrg['MOONDIST'][i])
                         outstar['MOONPHASE'] == np.full(ngd, allsnrg['MOONPHASE'][i])
                         outstar['SECZ'] == np.full(ngd, allsnrg['SECZ'][i])
-                        outstar['SCALE'] == scale[:, gd]
-                        outstar['FITSCALE'] == fitscale[:, gd]
+                        outstar['SCALE1'] == scale[0, gd]
+                        outstar['FITSCALE1'] == fitscale[0, gd]
+                        outstar['SCALE2'] == scale[1, gd]
+                        outstar['FITSCALE2'] == fitscale[1, gd]
+                        outstar['SCALE3'] == scale[2, gd]
+                        outstar['FITSCALE3'] == fitscale[2, gd]
 
                         pdb.set_trace()
                         if i == 0:
