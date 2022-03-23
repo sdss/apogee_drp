@@ -240,7 +240,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                         outstar = np.zeros(ngd, dtype=dtstar)
                         outstar['APOGEE_ID'] == plugmap['TMASS_STYLE'][gd]
                         outstar['RA'] == plugmap['RA'][gd]
-                        outstar['DEC'] == plugmap['TMASS_STYLE'][gd]
+                        outstar['DEC'] == plugmap['DEC'][gd]
                         outstar['ETA'] == plugmap['ETA'][gd]
                         outstar['ZETA'] == plugmap['ZETA'][gd]
                         outstar['JMAG'] == plugmap[magnames[0]][gd]
