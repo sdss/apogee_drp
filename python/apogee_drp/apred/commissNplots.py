@@ -412,6 +412,7 @@ def tellfitstats2(infile='tellfitstats2.fits', plotx='seeing', color=None):
         ax1.text(0.5, 1.02, molecules[imol], transform=ax1.transAxes, ha='center', va='bottom', bbox=bboxpar)
         ax1.axes.xaxis.set_ticklabels([])
         if plotx == 'seeing': ax2.set_xlabel(r'seeing')
+        if plotx == 'secz': ax2.set_xlabel(r'sec $z$')
         if plotx == 'MEANH': ax2.set_xlabel(r'Mean Telluric $H$')
         if plotx == 'MEANJK': ax2.set_xlabel(r'Mean Telluric $J-K$')
 
