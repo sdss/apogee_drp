@@ -475,7 +475,7 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
 
         sc1 = ax.scatter(xvals, yvals, marker='o', s=10, c='cyan', edgecolor='k', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
-    fig.subplots_adjust(left=0.04,right=0.95,bottom=0.075,top=0.94,hspace=0.08,wspace=0.12)
+    fig.subplots_adjust(left=0.04,right=0.95,bottom=0.079,top=0.94,hspace=0.08,wspace=0.12)
     plt.savefig(plotfile)
     plt.close('all')
 
