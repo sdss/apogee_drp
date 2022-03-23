@@ -464,7 +464,7 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
         ax.set_xlabel('MAD (fitscale)')
         ax.set_ylabel(r'MAD (fitscale$-$scale)')
         ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
-        ax.plot([-100,100], [-100,100], linestyle='dashed', color='grey')
+        #ax.plot([-100,100], [-100,100], linestyle='dashed', color='grey')
 
         xvals = out['MAD'+str(imol+1)]
         yvals = out['MADRESID'+str(imol+1)]
