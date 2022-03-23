@@ -220,13 +220,13 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
             for row in range(300):
                 x = np.zeros([3,2048])
                 for ichip,chip in enumerate(chips):
-                    ind, = np.where((fpilines['chip']==chip) & (fpilines['row']==row))
-                    if len(ind)>0:
-                        x = np.zeros([3,len(ind)],float)
-                        x[0,:] = fpilines['pars'][ind,1]
+                    ind1, = np.where((fpilines['chip']==chip) & (fpilines['row']==row))
+                    if len(ind1)>0:
+                        x = np.zeros([3,len(ind1)],float)
+                        x[0,:] = fpilines['pars'][ind1,1]
                         x[1,:] = ichip+1
                         x[2,:] = 0
-                        fpilines['wave'][ind] = wave.func_multi_poly(x,*wpars[:,row],npoly=npoly)
+                        fpilines['wave'][ind1] = wave.func_multi_poly(x,*wpars[:,row],npoly=npoly)
         # 3) Refit the wavelength solution
         print('  3) Refit the wavelength solution')
         fpiwcoef,fpiwaves,fpilines = fpiwavesol(fpilinestr,fpilines,wpars)
