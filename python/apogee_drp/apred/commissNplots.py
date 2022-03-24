@@ -125,13 +125,14 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
-def tellspatial():
+def tellspatial(zoom=False):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
 
     npars = 3
     molcols = ['mediumseagreen', 'purple', 'darkorange']
 
     plotfile = sdir5 + 'tellspatialRMS.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
     print('making ' + os.path.basename(plotfile))
     fig = plt.figure(figsize=(32,16))
     for imol in range(nmolecules):
@@ -145,6 +146,7 @@ def tellspatial():
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_ylim(-0.05,1.1)
+            if zoom: ax.set_ylim(-0.01, 0.1)
             if ipar == 0: ax.set_ylabel('RMS (measured $-$ fit)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
