@@ -481,7 +481,7 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
 
 ###########################################################################################
 def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75,
-                  vmin=[0, 0, 0], vmax=[0.1, 0.04, 0.15]):
+                  vmin=[0, 0, 0], vmax=[0.1, 0.035, 0.4]):
     data = fits.getdata(infile)
 
     plotfile = sdir5 + 'tellfitstats_indstars.png'
@@ -526,7 +526,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75
 
 ###########################################################################################
 def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75,
-                  vmin=[0, 0, 0], vmax=[0.1, 0.04, 0.15]):
+                  vmin=[0, 0, 0], vmax=[0.1, 0.035, 0.4]):
     data = fits.getdata(infile)
 
     plotfile = sdir5 + 'tellfitstats_indstars_fitscale-scale.png'
