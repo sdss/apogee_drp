@@ -523,7 +523,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
 def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     data = fits.getdata(infile)
 
-    g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11))
+    g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11) & (data['JMAG']-data['KMAG'] < 0.58))
     data = data[g]
 
     plotfile = sdir5 + 'tellfitstats_indstars2.png'
