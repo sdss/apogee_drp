@@ -129,6 +129,7 @@ def tellspatial():
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
 
     npars = 3
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
 
     plotfile = sdir5 + 'tellspatialRMS.png'
     print('making ' + os.path.basename(plotfile))
@@ -160,7 +161,7 @@ def tellspatial():
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
             ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
-            ax.scatter(xvals, yvals, marker='o', s=3, c='b', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+            ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
             #if imol == 2:
             #    ii = 0
