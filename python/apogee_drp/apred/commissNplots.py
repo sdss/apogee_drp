@@ -480,7 +480,7 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
     plt.close('all')
 
 ###########################################################################################
-def tellfitstats4(infile='tellfitstats2_stardata.fits'):
+def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75):
     out = fits.getdata(infile)
 
     plotfile = sdir5 + 'tellfitstats_indstars.png'
@@ -518,7 +518,6 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
             cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
             ax.text(1.12, 0.5, r'MAD (fitscale)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
             cb1 = colorbar(im, cax=cax)
-
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
