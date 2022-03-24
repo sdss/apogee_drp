@@ -547,7 +547,11 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='brg'):
     values = data['FITSCALE1']# - data['SCALE1']
     ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(100,100))
     ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
-    ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=0, vmax=0.1)
+    im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=0, vmax=0.1)
+
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    ax.colorbar(im, cax=cax)
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
