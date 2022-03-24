@@ -552,6 +552,8 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     plt.savefig(plotfile)
     plt.close('all')
 
+    return ret
+
 ###########################################################################################
 def tellfitstats98(infile='tellfitstats1.fits', plotx='MAD'):
     molecules = np.array(['CH4', 'CO2', 'H2O'])
