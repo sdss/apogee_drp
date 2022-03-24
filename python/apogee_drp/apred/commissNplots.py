@@ -486,7 +486,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75
     plotfile = sdir5 + 'tellfitstats_indstars.png'
     print('making ' + os.path.basename(plotfile))
 
-    fig = plt.figure(figsize=(32,10))
+    fig = plt.figure(figsize=(32,12))
     for imol in range(nmolecules):
         g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11) & (data['JMAG']-data['KMAG'] < 0.58))
         gdata = data[g]
