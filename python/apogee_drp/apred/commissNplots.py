@@ -551,7 +551,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='brg'):
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
-    ax.colorbar(im, cax=cax)
+    cb1 = colorbar(im, cax=cax)
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
