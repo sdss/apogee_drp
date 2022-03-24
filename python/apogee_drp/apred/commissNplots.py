@@ -521,10 +521,10 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
 
 ###########################################################################################
 def tellfitstats5(infile='tellfitstats2_stardata.fits'):
-    out = fits.getdata(infile)
+    data = fits.getdata(infile)
 
-    g, = np.where(out['FITSCALE1'] > 0)
-    out = out[g]
+    g, = np.where(data['FITSCALE1'] > 0)
+    data = data[g]
 
     plotfile = sdir5 + 'tellfitstats_indstars2.png'
     print('making ' + os.path.basename(plotfile))
@@ -542,13 +542,11 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     ax.tick_params(axis='both',which='both',width=axwidth)
     ax.text(0.5, 1.02, molecules[0], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
-    x = out['JMAG'] - out['KMAG']
-    y = out['HMAG']
-    values = out['FITSCALE1']
-    bins = [10, 10]
+    x = data['JMAG'] - data['KMAG']
+    y = data['HMAG']
+    values = data['FITSCALE1']
     ret = stats.binned_statistic_2d(x, y, values, statistic='count', bins=100)
-    ax.imshow(ret.statistic, cmap='hot_r', origin='lower')
-    #ax.matshow(ret.statistic)#, cmap='hot_r', origin='lower')
+    ax.imshow(ret.statistic, cmap='hot_r')#, origin='lower')
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
