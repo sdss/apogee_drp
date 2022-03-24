@@ -547,7 +547,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     values = data['FITSCALE1']# - data['SCALE1']
     ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(100,100))
     ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
-    ax.imshow(ret.statistic, cmap='gnuplot', aspect='auto', origin='upper')#, extent=ext)
+    ax.imshow(ret.statistic, cmap='gnuplot', aspect='auto', origin='upper', extent=ext)
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
