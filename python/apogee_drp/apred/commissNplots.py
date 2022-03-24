@@ -520,7 +520,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
     plt.close('all')
 
 ###########################################################################################
-def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='brg'):
+def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=50):
     data = fits.getdata(infile)
 
     g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11) & (data['JMAG']-data['KMAG'] < 0.58))
@@ -545,7 +545,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='brg'):
     x = data['JMAG'] - data['KMAG']
     y = data['HMAG']
     values = data['FITSCALE1']# - data['SCALE1']
-    ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(100,100))
+    ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
     ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
     im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=0, vmax=0.1)
 
