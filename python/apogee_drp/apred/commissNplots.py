@@ -523,7 +523,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
 def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     data = fits.getdata(infile)
 
-    g, = np.where(data['FITSCALE1'] > 0)
+    g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11))
     data = data[g]
 
     plotfile = sdir5 + 'tellfitstats_indstars2.png'
@@ -546,6 +546,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     y = data['HMAG']
     values = data['FITSCALE1']
     ret = stats.binned_statistic_2d(x, y, values, statistic='count', bins=(100,100))
+    ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
     ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
     pdb.set_trace()
     ax.imshow(ret.statistic, cmap='gnuplot', aspect='auto', origin='upper', extent=ext)
