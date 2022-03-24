@@ -553,7 +553,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='brg'):
     cax = divider.append_axes("right", size="3%", pad="2%")
     cax.minorticks_on()
     cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
-    ax.text(1.1, 0.5, r'MAD (fitscale)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+    ax.text(1.13, 0.5, r'MAD (fitscale)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
     cb1 = colorbar(im, cax=cax)
 
