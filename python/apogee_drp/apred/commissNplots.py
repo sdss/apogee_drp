@@ -481,15 +481,15 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
 
 ###########################################################################################
 def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75):
-    out = fits.getdata(infile)
+    data = fits.getdata(infile)
 
     plotfile = sdir5 + 'tellfitstats_indstars.png'
     print('making ' + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(32,10))
     for imol in range(nmolecules):
-        g, = np.where(out['FITSCALE'+str(imol+1)] > 0)
-        outg = out[g]
+        g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11) & (data['JMAG']-data['KMAG'] < 0.58))
+        gdata = data[g]
 
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
@@ -504,9 +504,9 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75
         if imol > 0: ax.axes.yaxis.set_ticklabels([])
         ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
-        x = data['JMAG'] - data['KMAG']
-        y = data['HMAG']
-        values = data['FITSCALE'+str(imol+1)]# - data['SCALE1']
+        x = gdata['JMAG'] - gdata['KMAG']
+        y = gdata['HMAG']
+        values = gdata['FITSCALE'+str(imol+1)]# - data['SCALE1']
         ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
         ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
         im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=0, vmax=0.1)
