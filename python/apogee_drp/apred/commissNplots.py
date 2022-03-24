@@ -480,7 +480,8 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
     plt.close('all')
 
 ###########################################################################################
-def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75):
+def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75,
+                  vmin=[0, 0, 0], vmax=[0.1, 0.07, 0.15):
     data = fits.getdata(infile)
 
     plotfile = sdir5 + 'tellfitstats_indstars.png'
