@@ -546,7 +546,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     y = out['HMAG']
     values = out['FITSCALE1']
     bins = [10, 10]
-    ret = stats.binned_statistic_2d(x, y, values, statistic='count', bins=10)
+    ret = stats.binned_statistic_2d(x, y, values, statistic='count', bins=100)
     ax.imshow(ret.statistic, cmap='hot_r', origin='lower')
     #ax.matshow(ret.statistic)#, cmap='hot_r', origin='lower')
 
