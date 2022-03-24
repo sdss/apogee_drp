@@ -124,6 +124,72 @@ xspan = xmax-xmin
 molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
+###########################################################################################
+def tellspatial():
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+
+    npars = 3
+
+    plotfile = sdir5 + 'tellspatialRMS.png'
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,16))
+    for imol in range(nmolecules):
+        for ipar in range(npars):
+            ax = plt.subplot2grid((nmolecules, npars), (imol,ipar%3))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            #if plotx == 'MEANH': ax.set_xlim(7.3, 10.7)
+            #if plotx == 'MEANJK': ax.set_xlim(-0.1, 0.43)
+            #if imol == 0:
+            #    ax1.set_ylabel('MAD (fitscale)')
+            #    ax2.set_ylabel(r'MAD (fitscale$-$scale)')
+            ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
+            #ax1.axes.xaxis.set_ticklabels([])
+            #if plotx == 'MEANH': ax2.set_xlabel(r'Mean Telluric $H$')
+            #if plotx == 'MEANJK': ax2.set_xlabel(r'Mean Telluric $J-K$')
+
+            xvals = data['JD']-np.nanmin(data['JD'])
+            yvals = data['RMS'+str(imol+1)][:,ipar]
+
+            #ax.scatter(xvals, yvals1, marker='o', s=10, cmap=cmap, c=c, alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
+            ax.scatter(xvals, yvals1, marker='o', s=10, c='cyan', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+
+            #if imol == 2:
+            #    ii = 0
+            #    for ax in axes:
+            #        ax_divider = make_axes_locatable(ax)
+            #        cax = ax_divider.append_axes("right", size="4%", pad="3%")
+            #        cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+            #        cax.minorticks_on()
+            #        if color is not None:
+            #            if color == 'seeing':
+            #                ax.text(1.18, 0.5, r'Seeing',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            #            if color == 'secz':
+            #                ax.text(1.18, 0.5, r'sec $z$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            #        else:
+            #            if plotx == 'MEANH': 
+            #                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            #                ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+            #                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #                cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            #                ax.text(1.18, 0.5, r'$J-K$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            #            if plotx == 'MEANJK': 
+            #                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #                ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            #                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+            #                cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+            #                ax.text(1.18, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            #        ii += 1
+
+    fig.subplots_adjust(left=0.04,right=0.95,bottom=0.057,top=0.96,hspace=0.08,wspace=0.12)
+    plt.savefig(plotfile)
+    plt.close('all')
+
 
 ###########################################################################################
 def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647, 
