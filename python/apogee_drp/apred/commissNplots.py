@@ -143,7 +143,7 @@ def tellspatial():
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_ylim(0,1.1)
+            ax.set_ylim(-0.05,1.1)
             #if plotx == 'MEANJK': ax.set_xlim(-0.1, 0.43)
             #if imol == 0:
             #    ax1.set_ylabel('MAD (fitscale)')
