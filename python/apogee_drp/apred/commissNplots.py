@@ -148,7 +148,7 @@ def tellspatial():
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
             if ipar > 0: ax.axes.yaxis.set_ticklabels([])
-            ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
+            ax.text(0.50, 1.02, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
             if imol == 0:
                 if ipar == 0: ax.text(0.5, 1.02, 'constant', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
                 if ipar == 1: ax.text(0.5, 1.02, 'linear', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
@@ -157,7 +157,9 @@ def tellspatial():
             xvals = data['JD']-np.nanmin(data['JD'])
             yvals = data['RMS'+str(imol+1)][:,ipar]
 
-            ax.axhline(np.nanmedian(yvals), color='grey', linestyle='dashed')
+            med = np.nanmedian(yvals)
+            ax.axhline(med, color='grey', linestyle='dashed')
+            ax.text(0.75, 0.85, 'median RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             ax.scatter(xvals, yvals, marker='o', s=3, c='b', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
             #if imol == 2:
