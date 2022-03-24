@@ -526,7 +526,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75
 
 ###########################################################################################
 def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75,
-                  vmin=[0, 0, 0], vmax=[0.1, 0.035, 0.4]):
+                  vmin=[0, 0, 0], vmax=[0.03, 0.03, 0.03]):
     data = fits.getdata(infile)
 
     plotfile = sdir5 + 'tellfitstats_indstars_fitscale-scale.png'
