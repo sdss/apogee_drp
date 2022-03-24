@@ -148,25 +148,17 @@ def tellspatial():
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
             if ipar > 0: ax.axes.yaxis.set_ticklabels([])
-            #if plotx == 'MEANJK': ax.set_xlim(-0.1, 0.43)
-            #if imol == 0:
-            #    ax1.set_ylabel('MAD (fitscale)')
-            #    ax2.set_ylabel(r'MAD (fitscale$-$scale)')
             ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
-            #ax1.axes.xaxis.set_ticklabels([])
-            #if plotx == 'MEANH': ax2.set_xlabel(r'Mean Telluric $H$')
-            #if plotx == 'MEANJK': ax2.set_xlabel(r'Mean Telluric $J-K$')
             if imol == 0:
                 if ipar == 0: ax.text(0.5, 1.02, 'constant', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
                 if ipar == 1: ax.text(0.5, 1.02, 'linear', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
                 if ipar == 2: ax.text(0.5, 1.02, 'quadratic', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
-
             xvals = data['JD']-np.nanmin(data['JD'])
             yvals = data['RMS'+str(imol+1)][:,ipar]
 
-            #ax.scatter(xvals, yvals1, marker='o', s=10, cmap=cmap, c=c, alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
-            ax.scatter(xvals, yvals, marker='o', s=3, c='k', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+            ax.axhline(np.nanmedian(yvals), color='grey', linestyle='dashed')
+            ax.scatter(xvals, yvals, marker='o', s=3, c='b', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
             #if imol == 2:
             #    ii = 0
