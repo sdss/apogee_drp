@@ -143,7 +143,7 @@ def tellspatial():
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            #if plotx == 'MEANH': ax.set_xlim(7.3, 10.7)
+            ax.set_ylim(0,1.1)
             #if plotx == 'MEANJK': ax.set_xlim(-0.1, 0.43)
             #if imol == 0:
             #    ax1.set_ylabel('MAD (fitscale)')
@@ -157,7 +157,7 @@ def tellspatial():
             yvals = data['RMS'+str(imol+1)][:,ipar]
 
             #ax.scatter(xvals, yvals1, marker='o', s=10, cmap=cmap, c=c, alpha=0.8, vmin=vmin, vmax=vmax)#, edgecolors='k'
-            ax.scatter(xvals, yvals, marker='o', s=10, c='cyan', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+            ax.scatter(xvals, yvals, marker='o', s=3, c='k', alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
             #if imol == 2:
             #    ii = 0
