@@ -532,8 +532,8 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     fig = plt.figure(figsize=(18,15))
     ax = plt.subplot2grid((1,1), (0,0))
     ax.minorticks_on()
-    ax.set_ylim(11, 7)
-    ax.set_xlim(-0.1, 0.43)
+    #ax.set_ylim(11, 7)
+    #ax.set_xlim(-0.1, 0.43)
     ax.set_xlabel(r'$J-K$')
     ax.set_ylabel(r'$H$')
     ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
@@ -546,7 +546,8 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits'):
     y = data['HMAG']
     values = data['FITSCALE1']
     ret = stats.binned_statistic_2d(x, y, values, statistic='count', bins=(100,100))
-    ax.imshow(ret.statistic, cmap='hot_r', aspect='auto', origin='lower')
+    ext = [ret.x_edge[0], ret.x_edge[-1:], ret.y_edge[-1:], ret.y_edge[0]]
+    ax.imshow(ret.statistic, cmap='gnuplot', aspect='auto', origin='lower', extent=ext)
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
