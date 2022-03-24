@@ -486,7 +486,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75
     plotfile = sdir5 + 'tellfitstats_indstars.png'
     print('making ' + os.path.basename(plotfile))
 
-    fig = plt.figure(figsize=(32,12))
+    fig = plt.figure(figsize=(32,10))
     for imol in range(nmolecules):
         g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11) & (data['JMAG']-data['KMAG'] < 0.58))
         gdata = data[g]
@@ -517,9 +517,9 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75
         cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
         cb1 = colorbar(im, cax=cax)
         if imol == 2:
-            ax.text(1.12, 0.5, r'MAD (fitscale)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            ax.text(1.2, 0.5, r'MAD (fitscale)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-    fig.subplots_adjust(left=0.045,right=0.94,bottom=0.085,top=0.94,hspace=0.08,wspace=0.13)
+    fig.subplots_adjust(left=0.045,right=0.94,bottom=0.09,top=0.94,hspace=0.08,wspace=0.13)
     plt.savefig(plotfile)
     plt.close('all')
 
