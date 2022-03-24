@@ -511,13 +511,13 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75
         ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
         im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=0, vmax=0.1)
 
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="3%", pad="2%")
+        cax.minorticks_on()
+        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+        cb1 = colorbar(im, cax=cax)
         if imol == 2:
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="3%", pad="2%")
-            cax.minorticks_on()
-            cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
             ax.text(1.12, 0.5, r'MAD (fitscale)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-            cb1 = colorbar(im, cax=cax)
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
