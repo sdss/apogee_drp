@@ -504,16 +504,21 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits'):
         if imol > 0: ax.axes.yaxis.set_ticklabels([])
         ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
-        x = outg['JMAG'] - outg['KMAG']
-        y = outg['HMAG']
-        values = outg['FITSCALE'+str(imol+1)]# - outg['SCALE'+str(imol+1)]
-        bins = 50
-        med = np.nanmedian(values)
-        #vmin = med-0.5
-        #vmax = med+0.5
-        #ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=bins)
-        #ax.imshow(ret.statistic)
-        sc1 = ax.scatter(x, y, marker='o', s=25, cmap='gnuplot', c=values, alpha=0.75)#, vmin=vmin, vmax=vmax)
+        x = data['JMAG'] - data['KMAG']
+        y = data['HMAG']
+        values = data['FITSCALE'+str(imol+1)]# - data['SCALE1']
+        ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
+        ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+        im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=0, vmax=0.1)
+
+        if imol == 2:
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="3%", pad="2%")
+            cax.minorticks_on()
+            cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+            ax.text(1.12, 0.5, r'MAD (fitscale)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            cb1 = colorbar(im, cax=cax)
+
 
     fig.subplots_adjust(left=0.045,right=0.985,bottom=0.085,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
@@ -554,7 +559,6 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=50
     cax.minorticks_on()
     cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
     ax.text(1.12, 0.5, r'MAD (fitscale)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-
     cb1 = colorbar(im, cax=cax)
 
     fig.subplots_adjust(left=0.075,right=0.91,bottom=0.075,top=0.94,hspace=0.08,wspace=0.08)
