@@ -529,7 +529,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='brg'):
     plotfile = sdir5 + 'tellfitstats_indstars2.png'
     print('making ' + os.path.basename(plotfile))
 
-    fig = plt.figure(figsize=(18,15))
+    fig = plt.figure(figsize=(19,15))
     ax = plt.subplot2grid((1,1), (0,0))
     ax.minorticks_on()
     #ax.set_ylim(11, 7)
@@ -553,7 +553,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='brg'):
     cax = divider.append_axes("right", size="3%", pad="2%")
     cb1 = colorbar(im, cax=cax)
 
-    fig.subplots_adjust(left=0.07,right=0.94,bottom=0.08,top=0.94,hspace=0.08,wspace=0.08)
+    fig.subplots_adjust(left=0.075,right=0.92,bottom=0.075,top=0.94,hspace=0.08,wspace=0.08)
     plt.savefig(plotfile)
     plt.close('all')
 
