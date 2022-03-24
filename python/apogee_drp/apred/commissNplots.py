@@ -144,6 +144,10 @@ def tellspatial():
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_ylim(-0.05,1.1)
+            if ipar == 0: ax.set_ylabel('RMS (measured $-$ fit)')
+            if imol == 2: ax.set_xlabel('Days since time[0]')
+            if imol < 2: ax.axes.xaxis.set_ticklabels([])
+            if ipar > 0: ax.axes.yaxis.set_ticklabels([])
             #if plotx == 'MEANJK': ax.set_xlim(-0.1, 0.43)
             #if imol == 0:
             #    ax1.set_ylabel('MAD (fitscale)')
@@ -152,6 +156,11 @@ def tellspatial():
             #ax1.axes.xaxis.set_ticklabels([])
             #if plotx == 'MEANH': ax2.set_xlabel(r'Mean Telluric $H$')
             #if plotx == 'MEANJK': ax2.set_xlabel(r'Mean Telluric $J-K$')
+            if imol == 0:
+                if ipar == 0: ax.text(0.5, 1.02, 'constant', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 1: ax.text(0.5, 1.02, 'linear', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 2: ax.text(0.5, 1.02, 'quadratic', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
 
             xvals = data['JD']-np.nanmin(data['JD'])
             yvals = data['RMS'+str(imol+1)][:,ipar]
@@ -186,7 +195,7 @@ def tellspatial():
             #                ax.text(1.18, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
             #        ii += 1
 
-    fig.subplots_adjust(left=0.04,right=0.95,bottom=0.057,top=0.96,hspace=0.08,wspace=0.12)
+    fig.subplots_adjust(left=0.04,right=0.95,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
