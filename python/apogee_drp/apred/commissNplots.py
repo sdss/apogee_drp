@@ -520,7 +520,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=75
         if imol == 2:
             ax.text(1.18, 0.5, r'MAD (fitscale)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-    fig.subplots_adjust(left=0.045,right=0.945,bottom=0.093,top=0.94,hspace=0.08,wspace=0.13)
+    fig.subplots_adjust(left=0.045,right=0.945,bottom=0.093,top=0.94,hspace=0.08,wspace=0.18)
     plt.savefig(plotfile)
     plt.close('all')
 
