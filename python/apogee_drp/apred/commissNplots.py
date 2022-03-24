@@ -148,7 +148,7 @@ def tellspatial():
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
             if ipar > 0: ax.axes.yaxis.set_ticklabels([])
-            ax.text(0.50, 1.02, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+            ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
             if imol == 0:
                 if ipar == 0: ax.text(0.5, 1.02, 'constant', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
                 if ipar == 1: ax.text(0.5, 1.02, 'linear', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
