@@ -218,7 +218,7 @@ def tellspatial2(zoom=False):
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             #ax.set_ylim(-0.05,1.1)
-            #if zoom: ax.set_ylim(-0.01, 0.1)
+            if zoom: ax.set_ylim(-0.1, 0.1)
             if ipar == 0: ax.set_ylabel('RMS (measured $-$ fit)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
