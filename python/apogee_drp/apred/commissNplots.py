@@ -839,6 +839,51 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
     plt.close('all')
 
 ###########################################################################################
+def tellfitstats6(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
+                  vmin=[0, 0, 0], vmax=[0.04, 0.03, 0.03]):
+    data = fits.getdata(infile)
+
+    plotfile = sdir5 + 'tellfitstats_indstars_fitscale-scale2.png'
+    print('making ' + os.path.basename(plotfile))
+
+    fig = plt.figure(figsize=(32,10))
+    for imol in range(nmolecules):
+        g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11) & (data['JMAG']-data['KMAG'] < 0.58))
+        gdata = data[g]
+
+        ax = plt.subplot2grid((1,nmolecules), (0,imol))
+        ax.minorticks_on()
+        ax.set_ylim(11.2, 6.8)
+        ax.set_xlim(-0.2, 0.53)
+        ax.set_xlabel(r'$J-K$')
+        if imol == 0: ax.set_ylabel(r'$H$')
+        ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        if imol > 0: ax.axes.yaxis.set_ticklabels([])
+        ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+        x = gdata['JMAG'] - gdata['KMAG']
+        y = gdata['HMAG']
+        values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
+        ret = stats.binned_statistic_2d(x, y, values, statistic='std', bins=(nbins,nbins))
+        ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+        im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext)#, vmin=vmin[imol], vmax=vmax[imol])
+
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="3%", pad="2%")
+        cax.minorticks_on()
+        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+        cb1 = colorbar(im, cax=cax)
+        if imol == 2:
+            ax.text(1.19, 0.5, r'$\sigma$ (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.045,right=0.945,bottom=0.093,top=0.94,hspace=0.08,wspace=0.18)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
 def tellfitstats44(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=50):
     data = fits.getdata(infile)
 
