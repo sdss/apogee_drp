@@ -236,7 +236,6 @@ print,''
 
 ; Load the 1D extracted spectra
 APLOADFRAME,outdir1d+dirs.prefix+'1D-'+info[0].fid8,frame
-APLOADFRAME,outdir1d+dirs.prefix+'1D-39410015',frame
 sz = size(frame.(0).flux)
 npix = sz[1]
 nfibers = sz[2]
