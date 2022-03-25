@@ -145,6 +145,7 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
       expdir = apogee_filename('2D',num=num,chip='a',/dir)
       cmd = ['ap2d','--num',string(format='(i8.8)',num),'--apred',dirs.apred,'--telescope',dirs.telescope,$
              '--fluxid',strtrim(fluxid,2),'--waveid',strtrim(waveid,2)]
+      if keyword_set(psfid) then cmd=[cmd,'--psfid',strtrim(psfid,2)]
       if keyword_set(modelpsf) then cmd=[cmd,'--modelpsf',strtrim(modelpsf,2)]
       if keyword_set(clobber) then cmd=[cmd,'--clobber']
       if keyword_set(unlock) then cmd=[cmd,'--unlock']
