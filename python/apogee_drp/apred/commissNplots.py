@@ -239,7 +239,50 @@ def tellspatial2(zoom=False):
             ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
+    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
 
+###########################################################################################
+def tellspatial3(zoom=False):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+
+    npars = 3
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatialRMS_model.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,16))
+    for imol in range(nmolecules):
+        for ipar in range(npars):
+            ax = plt.subplot2grid((nmolecules, npars), (imol,ipar%3))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            #ax.set_ylim(-0.05,1.1)
+            if zoom: ax.set_ylim(-0.05, 0.05)
+            if ipar == 0: ax.set_ylabel('RMS (modeled)')
+            if imol == 2: ax.set_xlabel('Days since time[0]')
+            if imol < 2: ax.axes.xaxis.set_ticklabels([])
+            if ipar > 0: ax.axes.yaxis.set_ticklabels([])
+            if ipar == 2: ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+            if imol == 0:
+                if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['JD']-np.nanmin(data['JD'])
+            yvals = data['MODELRMS'+str(imol+1)][:,ipar]
+
+            med = np.nanmedian(yvals)
+            ax.axhline(med, color='grey', linestyle='dashed')
+            ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
     fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
