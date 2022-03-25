@@ -840,7 +840,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
 ###########################################################################################
 def tellfitstats6(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
-                  vmin=[0, 0, 0], vmax=[0.04, 0.03, 0.03]):
+                  vmin=[0, 0, 0], vmax=[0.05, 0.05, 0.05]):
     data = fits.getdata(infile)
 
     plotfile = sdir5 + 'tellfitstats_indstars_fitscale-scale2.png'
@@ -869,7 +869,7 @@ def tellfitstats6(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
         ret = stats.binned_statistic_2d(x, y, values, statistic='std', bins=(nbins,nbins))
         ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
-        im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext)#, vmin=vmin[imol], vmax=vmax[imol])
+        im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
 
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="3%", pad="2%")
