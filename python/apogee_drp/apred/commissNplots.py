@@ -264,7 +264,7 @@ def tellspatial3(zoom=False):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_ylim(-0.05,1.2)
+            ax.set_ylim(-0.1,1.5)
             if zoom: ax.set_ylim(-0.05, 0.05)
             if ipar == 0: ax.set_ylabel('RMS (modeled)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
@@ -281,7 +281,7 @@ def tellspatial3(zoom=False):
 
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
-            ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            ax.text(0.75, 0.5, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
     fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
