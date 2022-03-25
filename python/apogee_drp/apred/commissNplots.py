@@ -877,7 +877,7 @@ def tellfitstats6(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
         cb1 = colorbar(im, cax=cax)
         if imol == 2:
-            ax.text(1.21, 0.5, r'Mean (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            ax.text(1.22, 0.5, r'Mean (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
     fig.subplots_adjust(left=0.045,right=0.94,bottom=0.093,top=0.94,hspace=0.08,wspace=0.18)
     plt.savefig(plotfile)
