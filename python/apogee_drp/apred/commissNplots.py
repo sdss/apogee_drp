@@ -371,7 +371,7 @@ def tellspatial6(zoom=False):
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_ylim(-0.05,1.1)
-            if zoom: ax.set_ylim(-0.01, 0.2)
+            if zoom: ax.set_ylim(-0.01, 0.1)
             if (ipar == 0) & (imol == 1): ax.set_ylabel('$\sigma$ (synth)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
