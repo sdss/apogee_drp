@@ -192,7 +192,7 @@ def tellspatial(zoom=False):
             #                ax.text(1.18, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
             #        ii += 1
 
-    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
@@ -217,9 +217,9 @@ def tellspatial2(zoom=False):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_ylim(-0.8,0.8)
-            if zoom: ax.set_ylim(-0.05, 0.05)
-            if (ipar == 0) & (imol == 1): ax.set_ylabel('RMS (measured $-$ modeled)')
+            ax.set_ylim(-0.05, 0.75)
+            if zoom: ax.set_ylim(-0.01, 0.1)
+            if (ipar == 0) & (imol == 1): ax.set_ylabel('RMS (modeled $-$ modeled)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
             if ipar > 0: ax.axes.yaxis.set_ticklabels([])
@@ -230,16 +230,14 @@ def tellspatial2(zoom=False):
                 if ipar == 2: ax.text(0.5, 1.02, r'Linear $-$ Quadratic', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
             xvals = data['JD']-np.nanmin(data['JD'])
-            if ipar == 0: yvals = data['RMS'+str(imol+1)][:,0] - data['RMS'+str(imol+1)][:,1]
-            if ipar == 1: yvals = data['RMS'+str(imol+1)][:,0] - data['RMS'+str(imol+1)][:,2]
-            if ipar == 2: yvals = data['RMS'+str(imol+1)][:,1] - data['RMS'+str(imol+1)][:,2]
+            yvals = data['RMSDIFF'+str(imol+1)][:,ipar]
 
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
             ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
-    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
@@ -284,7 +282,7 @@ def tellspatial3(zoom=False):
             ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
-    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
