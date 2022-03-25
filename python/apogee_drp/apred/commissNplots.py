@@ -338,7 +338,7 @@ def tellspatial5(zoom=False):
                 if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
             xvals = data['JD']-np.nanmin(data['JD'])
-            yvals = data['RMS'+str(imol+1)][:,ipar] / data['MEDOBS'+str(ipar+1)][:,imol]
+            yvals = data['RMS'+str(imol+1)][:,ipar] / data['MEDOBS'+str(imol+1)]
 
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
