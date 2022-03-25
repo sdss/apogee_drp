@@ -225,7 +225,7 @@ def tellspatial2(zoom=False):
             if ipar > 0: ax.axes.yaxis.set_ticklabels([])
             if ipar == 2: ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
             if imol == 0:
-                if ipar == 0: ax.text(0.5, 1.02, r'Constant $-$ Liner', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 0: ax.text(0.5, 1.02, r'Constant $-$ Linear', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
                 if ipar == 1: ax.text(0.5, 1.02, r'Constant $-$ Quadratic', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
                 if ipar == 2: ax.text(0.5, 1.02, r'Linear $-$ Quadratic', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
