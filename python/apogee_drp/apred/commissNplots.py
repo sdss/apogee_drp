@@ -219,7 +219,7 @@ def tellspatial2(zoom=False):
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_ylim(-0.8,0.8)
             if zoom: ax.set_ylim(-0.05, 0.05)
-            if (ipar == 0) & (imol == 1): ax.set_ylabel('RMS (measured $-$ modeled)')
+            if (ipar == 0) & (imol == 1): ax.set_ylabel('RMS (modeled $-$ modeled)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
             if ipar > 0: ax.axes.yaxis.set_ticklabels([])
@@ -230,9 +230,7 @@ def tellspatial2(zoom=False):
                 if ipar == 2: ax.text(0.5, 1.02, r'Linear $-$ Quadratic', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
             xvals = data['JD']-np.nanmin(data['JD'])
-            if ipar == 0: yvals = data['RMS'+str(imol+1)][:,0] - data['RMS'+str(imol+1)][:,1]
-            if ipar == 1: yvals = data['RMS'+str(imol+1)][:,0] - data['RMS'+str(imol+1)][:,2]
-            if ipar == 2: yvals = data['RMS'+str(imol+1)][:,1] - data['RMS'+str(imol+1)][:,2]
+            yvals = data['RMSDIFF'+str(imol+1)][:,ipar]
 
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
