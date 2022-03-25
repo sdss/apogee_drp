@@ -218,7 +218,7 @@ def tellspatial2(zoom=False):
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             #ax.set_ylim(-0.05,1.1)
-            if zoom: ax.set_ylim(-0.1, 0.1)
+            if zoom: ax.set_ylim(-0.05, 0.05)
             if ipar == 0: ax.set_ylabel('RMS (measured $-$ fit)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
@@ -236,7 +236,7 @@ def tellspatial2(zoom=False):
 
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
-            ax.text(0.75, 0.5, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
 
