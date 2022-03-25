@@ -1179,8 +1179,8 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
     tridiag = np.zeros((3,ntrace+nback,2048),float)
     warnmasked = np.zeros((ntrace+nback,2048),int)
     badmasked = np.zeros((ntrace+nback,2048),int)
-    inmask_warn = (inmask & WARNMASK) > 0
-    inmask_bad = (inmask & BADMASK) > 0
+    inmask_warn = (inmask & WARNMASK)
+    inmask_bad = (inmask & BADMASK)
 
     for k in np.arange(0,ntrace+nback):        
         # Background
@@ -1221,12 +1221,8 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
                 img[bad] = np.nan
                 
             # are there any warning flags for this trace? If so, flag the output
-            warnmasked[k,:] = np.sum(inmask_warn[:,lo:hi+1],axis=1)
-            warntot = np.maximum(warnmasked[k,:],1)
-            warnmasked[k,:] = warnmasked[k,:] / warntot
-            badmasked[k,:] = np.sum(inmask_bad[:,lo:hi+1],axis=1)
-            badtot = np.maximum(badmasked[k,:],1)
-            badmasked[k,:] = badmasked[k,:] / badtot
+            warnmasked[k,:] = np.bitwise_or.reduce(inmask_warn[:,lo:hi+1],axis=1)
+            badmasked[k,:] = np.bitwise_or.reduce(inmask_bad[:,lo:hi+1],axis=1)
             
             psftot[k,:] = np.nansum(img,axis=1)
             beta[k,:] = np.nansum(red[:,lo:hi+1]*img,axis=1)
@@ -1312,7 +1308,6 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
 
         if doback:
             back[i] = x[ngood-1]
-
 
     # Catch any NaNs (shouldn't be there, but ....)
     bad = ~np.isfinite(spec)

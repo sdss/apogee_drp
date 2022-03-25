@@ -312,10 +312,11 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         print,' fpi file: ',file, ' already made'
         return
       endif
-      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid,modelpsf=modelpsf
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid,modelpsf=pdfmodel
       ;; Use Model PSF by default
       if not keyword_set(psf) and not keyword_set(librarypsf) then begin
         psfid = 0
+        modelpsf = psfmodel
         MAKECAL,modelpsf=modelpsf,unlock=unlock 
       ;; Use PSF file     
       endif else begin
@@ -417,10 +418,11 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         return
       endif
       cmjd = getcmjd(flux[0],mjd=mjd)
-      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,littrowid=littrowid,waveid=waveid,modelpsf=modelpsf
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,littrowid=littrowid,waveid=waveid,modelpsf=psfmodel
       ;; Use Model PSF by default
       if not keyword_set(psf) and not keyword_set(librarypsf) then begin
         psfid = 0
+        modelpsf = psfmodel
         MAKECAL,modelpsf=modelpsf,unlock=unlock 
       ;; Use PSF file     
       endif else begin
@@ -491,10 +493,11 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         ims = wave
         name = ims[0]
         cmjd = getcmjd(ims[0],mjd=mjd)
-        GETCAL,mjd,calfile,modelpsf=modelpsf,/silent
+        GETCAL,mjd,calfile,modelpsf=psfmodel,/silent
         ;; Use Model PSF by default
         if not keyword_set(psf) and not keyword_set(librarypsf) then begin
           psfid = 0
+          modelpsf = psfmodel
           MAKECAL,modelpsf=modelpsf,unlock=unlock 
         ;; Use PSF file     
         endif else begin

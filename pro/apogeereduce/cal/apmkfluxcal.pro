@@ -236,6 +236,7 @@ print,''
 
 ; Load the 1D extracted spectra
 APLOADFRAME,outdir1d+dirs.prefix+'1D-'+info[0].fid8,frame
+APLOADFRAME,outdir1d+dirs.prefix+'1D-39410015',frame
 sz = size(frame.(0).flux)
 npix = sz[1]
 nfibers = sz[2]
@@ -307,8 +308,8 @@ CASE exptype of
 
       ;refspec1 = median(frame.(i).flux,dim=2)
       ; skip fibers that have zero flux for median
-      medlevel=median(frame.(i).flux,dim=1)
-      gd=where(medlevel gt 0)
+      medlevel = median(frame.(i).flux,dim=1)
+      gd = where(medlevel gt 0 and finite(medlevel) eq 1)
       refspec1 = median(frame.(i).flux[*,gd],dim=2)
 
       tmpflux = frame.(i).flux[*,gd]
@@ -325,7 +326,7 @@ CASE exptype of
       ;smrefspec1[npix-4:npix-1] = median(smrefspec1[npix-10:npix-4])
       refspec0[*,i] = smrefspec1 
       ;refspec0[*,i] = smmaxspec 
-    end
+    endfor
 
 
     ; we want to take out spectral structure of the lamp, which we
@@ -337,19 +338,22 @@ CASE exptype of
     ; fit a polynomial to the spectra, all chips together, avoiding LCO red dip
     x = [ [findgen(npix)-1023.5-2048-150], [findgen(npix)-1023.5], [findgen(npix)-1023.5+2048+150] ]
     if dirs.telescope eq 'lco25m' then begin
-      pix=indgen(3*npix)
-      gd=where(pix lt 700 or pix gt 1900)
+      pix = indgen(3*npix)
+      gd = where(pix lt 700 or pix gt 1900 and finite(refspec0) eq 1)
       coef = robust_poly_fit(x[gd],refspec0[gd],4)
-    endif else coef = robust_poly_fit(x,refspec0,4)
+    endif else begin
+      gd = where(finite(refspec0) eq 1)
+      coef = robust_poly_fit(x[gd],refspec0[gd],4)
+    endelse
     ;; We're using the polynomial fit
     refspec = poly(x,coef)
 
     ; try to get the LCO dip from the ratio of red chip flux to a low order fit
     ; and multiply that back into the reference spectrum
     if dirs.telescope eq 'lco25m' then begin
-      pix=indgen(2048)
-      gd=where(pix lt 700 or pix gt 1900)
-      fit=robust_poly_fit(pix[gd],refspec0[gd,0],2)
+      pix = indgen(2048)
+      gd = where(pix lt 700 or pix gt 1900)
+      fit = robust_poly_fit(pix[gd],refspec0[gd,0],2)
       dip = refspec0[*,0]/poly(pix,fit)
       refspec[*,0] *= dip
     endif
@@ -405,12 +409,21 @@ For i=0,2 do begin
   ratio[bd]=!values.f_nan
 
   ;; Use average of neighbors for FPI fibers 75 and 225
+  ;; and broken fibers
+  medratio = median(ratio,dim=1)
+  broken = where(finite(medratio) eq 0,nbroken)
   if mjd5 ge 59556 then begin
-    ratio[*,75] = 0.5*(ratio[*,74]+ratio[*,76])
-    ratio[*,225] = 0.5*(ratio[*,224]+ratio[*,226])
-  endif
+    dointerp = [75,225]
+    if nbroken gt 0 then dointerp=[dointerp,broken]
+  endif else begin
+    if nbroken gt 0 then dointerp=broken
+  endelse
+  for k=0,n_elements(dointerp)-1 do begin
+    ind1 = dointerp[k]
+    ratio[*,ind1] = 0.5*(ratio[*,ind1-1]+ratio[*,ind1+1])
+  endfor
 
-  ; interpolate over the Littrow ghost using a low order polynomial fit to the region around it
+  ; Interpolate over the Littrow ghost using a low order polynomial fit to the region around it
   for j=0,nfibers-1 do begin
     bd=where(frame.(i).mask[*,j] and maskval('LITTROW_GHOST'),nbd)
     if nbd gt 0 then begin
@@ -468,7 +481,6 @@ For i=0,2 do begin
   ; Plotting
   if keyword_set(pl) then $
     displayc,sm_ratio,/z,xtit='X',ytit='Y',tit='Relative Flux Calibration for Chip '+chiptag[i]
-
 
   ; Output the Flux calibration to file
   ;-------------------------------------

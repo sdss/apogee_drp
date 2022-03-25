@@ -74,9 +74,17 @@ if __name__ == '__main__' :
             fps = True
         else:
             fps = False
+
+        # This makes sure that the plan file uses the input PSFID
+        # otherwise mkplan() will automatically use the default modelpsf
+        # even if the PSFID is input
+        if modelpsf is None and psfid is not None:
+            psflibrary = True
+        else:
+            psflibrary = False
         planfile = mkplan.mkplan(num,apred=apred,telescope=telescope,waveid=waveid,
-                                 psfid=psfid,modelpsf=modelpsf,fluxid=fluxid,fps=fps,
-                                 ap2d=True,clobber=True)
+                                 psfid=psfid,modelpsf=modelpsf,psflibrary=psflibrary,
+                                 fluxid=fluxid,fps=fps,ap2d=True,clobber=True)
     else:
         planfile = args.planfile[0]
 
