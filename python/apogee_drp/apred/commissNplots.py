@@ -933,7 +933,7 @@ def tellfitstats7(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
                   vmin=[0, 0, 0], vmax=[2, 2, 2]):
     data = fits.getdata(infile)
 
-    plotfile = sdir5 + 'tellfitstats_indstars.png'
+    plotfile = sdir5 + 'tellfitstats_indstars_meanFitscale.png'
     print('making ' + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(32,10))
