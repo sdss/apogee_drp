@@ -933,7 +933,7 @@ def tellfitstats7(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
                   vmin=[0.9, 1.1, 0.35], vmax=[1.1, 1.17, 1]):
     data = fits.getdata(infile)
 
-    plotfile = sdir5 + 'tellfitstats_indstars_meanFitscale.png'
+    plotfile = sdir5 + 'tellfitstats_indstars_meanScale.png'
     print('making ' + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(32,10))
@@ -956,7 +956,7 @@ def tellfitstats7(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
         x = gdata['JMAG'] - gdata['KMAG']
         y = gdata['HMAG']
-        values = gdata['FITSCALE'+str(imol+1)]# - data['SCALE1']
+        values = gdata['SCALE'+str(imol+1)]# - data['SCALE1']
         ret = stats.binned_statistic_2d(x, y, values, statistic='mean', bins=(nbins,nbins))
         ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
         im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
@@ -967,7 +967,7 @@ def tellfitstats7(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
         cb1 = colorbar(im, cax=cax)
         if imol == 2:
-            ax.text(1.19, 0.5, r'Mean fitscale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            ax.text(1.19, 0.5, r'Mean scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
     fig.subplots_adjust(left=0.045,right=0.945,bottom=0.093,top=0.94,hspace=0.08,wspace=0.18)
     plt.savefig(plotfile)
