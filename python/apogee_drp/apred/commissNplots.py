@@ -125,7 +125,7 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
-def tellspatial(zoom=False):
+def tellspatial(zoom=False, cmap='brg'):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
 
     npars = 3
@@ -159,11 +159,12 @@ def tellspatial(zoom=False):
 
             xvals = data['JD']-np.nanmin(data['JD'])
             yvals = data['RMS'+str(imol+1)][:,ipar]
+            c = data['NTELL'][imol]
 
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
             ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
-            ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+            ax.scatter(xvals, yvals, marker='o', s=3, c=c, alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
     fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
@@ -933,7 +934,7 @@ def tellfitstats7(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
                   vmin=[0.9, 1.1, 0.35], vmax=[1.1, 1.17, 1]):
     data = fits.getdata(infile)
 
-    plotfile = sdir5 + 'tellfitstats_indstars_meanScale.png'
+    plotfile = sdir5 + 'tellfitstats_indstars_meanFitscale.png'
     print('making ' + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(32,10))
@@ -956,7 +957,7 @@ def tellfitstats7(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
         x = gdata['JMAG'] - gdata['KMAG']
         y = gdata['HMAG']
-        values = gdata['SCALE'+str(imol+1)]# - data['SCALE1']
+        values = gdata['FITSCALE'+str(imol+1)]# - data['SCALE1']
         ret = stats.binned_statistic_2d(x, y, values, statistic='mean', bins=(nbins,nbins))
         ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
         im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
@@ -967,7 +968,7 @@ def tellfitstats7(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
         cb1 = colorbar(im, cax=cax)
         if imol == 2:
-            ax.text(1.19, 0.5, r'Mean scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            ax.text(1.19, 0.5, r'Mean fitscale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
     fig.subplots_adjust(left=0.045,right=0.945,bottom=0.093,top=0.94,hspace=0.08,wspace=0.18)
     plt.savefig(plotfile)
