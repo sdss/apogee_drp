@@ -160,7 +160,7 @@ def tellspatial(zoom=False, cmap='brg'):
             xvals = data['JD']-np.nanmin(data['JD'])
             yvals = data['RMS'+str(imol+1)][:,ipar]
             c = data['NTELL'][imol]
-
+            pdb.set_trace()
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
             ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
