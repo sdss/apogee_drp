@@ -134,7 +134,7 @@ def tellspatial(zoom=False, cmap='brg'):
     plotfile = sdir5 + 'tellspatialRMS.png'
     if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
     print('making ' + os.path.basename(plotfile))
-    fig = plt.figure(figsize=(32,16))
+    fig = plt.figure(figsize=(32,17))
     for imol in range(nmolecules):
         for ipar in range(npars):
             ax = plt.subplot2grid((nmolecules, npars), (imol,ipar%3))
@@ -164,9 +164,18 @@ def tellspatial(zoom=False, cmap='brg'):
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
             ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
-            ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap, alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+            sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap, alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
-    fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+            if ipar == 2:
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="3%", pad="8%")
+                cax.minorticks_on()
+                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+                cb1 = colorbar(im, cax=cax)
+                if imol == 1:
+                    ax.text(1.19, 0.5, r'N tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.055,right=0.92,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
