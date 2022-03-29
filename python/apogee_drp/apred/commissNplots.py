@@ -171,7 +171,7 @@ def tellspatial(zoom=False, cmap='brg'):
                 cax = divider.append_axes("right", size="3%", pad="8%")
                 cax.minorticks_on()
                 #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
-                cb1 = colorbar(im, cax=cax)
+                cb1 = colorbar(sc1, cax=cax)
                 if imol == 1:
                     ax.text(1.19, 0.5, r'N tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
