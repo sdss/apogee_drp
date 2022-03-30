@@ -849,10 +849,14 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
 
 ###########################################################################################
 def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
-                  vmin=[0, 0, 0], vmax=[0.1, 0.035, 0.4]):
+                  vmin=[0, 0, 0], vmax=[0.1, 0.035, 0.4], doall=True):
     data = fits.getdata(infile)
 
     plotfile = sdir5 + 'tellfitstats_indstars.png'
+    if doall: 
+        infile='tellfitstats_all_stardata.fits'
+        plotfile = plotfile.replace('.png', '_all.png')
+
     print('making ' + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(32,10))
