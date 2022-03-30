@@ -968,7 +968,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
 ###########################################################################################
 def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nbins=40, doall=True,
-                     do4=False, do5=False, ntell=15):
+                     do4=False, do5=False, ntell=35):
     #infile='tellfitstats2_stardata.fits'
     expdata = fits.getdata('tellfitstats_all.fits')
 
@@ -977,7 +977,7 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     ymin = 6
     ymax = 11
 
-    plotfile = sdir5 + 'tellfitstats_indstars_grid15.png'
+    plotfile = sdir5 + 'tellfitstats_indstars_grid35.png'
     if doall: 
         #infile='tellfitstats_all_stardata.fits'
         plotfile = plotfile.replace('.png', '_all.png')
