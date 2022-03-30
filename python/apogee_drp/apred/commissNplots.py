@@ -988,9 +988,9 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     print('making ' + os.path.basename(plotfile))
 
     data = fits.getdata(infile)
-    if ntell is not None:
-        gd, = np.where(data['NTELL'] == 15)
-        data = data[gd]
+    #if ntell is not None:
+    #    gd, = np.where(data['NTELL'] == 15)
+    #    data = data[gd]
 
     xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
     pdb.set_trace()
