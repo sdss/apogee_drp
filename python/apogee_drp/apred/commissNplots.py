@@ -968,7 +968,6 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
 ###########################################################################################
 def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40, doall=True):
-
     xmin = -0.2
     xmax = 0.5
     ymin = 6
@@ -993,12 +992,12 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
     cmaps = ['gnuplot2_r', 'rainbow', 'rainbow', 'rainbow']
     nrows = len(statistics)
 
-    fig = plt.figure(figsize=(32,32))
+    fig = plt.figure(figsize=(32,24))
     for irow in range(nrows):
         print(statistics[irow])
         if statistics[irow] == 'count':
             vmin = [0, 0, 0]
-            vmax = [150, 150, 150]
+            vmax = [300, 300, 300]
         if statistics[irow][0:6] == 'median':
             vmin = [0.90, 1.06, 0.35]
             vmax = [1.10, 1.17, 1.00]
@@ -1015,7 +1014,7 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
             ax.minorticks_on()
             ax.set_ylim(ymax, ymin)
             ax.set_xlim(xmin, xmax)
-            ax.set_xlabel(r'$J-K$')
+            if irow == nrows-1: ax.set_xlabel(r'$J-K$')
             if imol == 0: ax.set_ylabel(r'$H$')
             ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
             ax.tick_params(axis='both',which='major',length=axmajlen)
@@ -1059,7 +1058,7 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
                 cax.minorticks_on()
                 cb1 = colorbar(im, cax=cax)
 
-    fig.subplots_adjust(left=0.04,right=0.945,bottom=0.093,top=0.94,hspace=0.05,wspace=0.1)
+    fig.subplots_adjust(left=0.04,right=0.945,bottom=0.093,top=0.94,hspace=0.1,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
