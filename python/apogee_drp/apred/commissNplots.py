@@ -920,13 +920,13 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
     fig = plt.figure(figsize=(32,10))
     for imol in range(nmolecules):
-        g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11) & (data['JMAG']-data['KMAG'] < 1))
+        g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11) & (data['JMAG']-data['KMAG'] < 2))
         gdata = data[g]
 
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
         ax.set_ylim(11.1, 5)
-        ax.set_xlim(-0.242, 1)
+        ax.set_xlim(-0.242, 2)
         ax.set_xlabel(r'$J-K$')
         if imol == 0: ax.set_ylabel(r'$H$')
         ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
