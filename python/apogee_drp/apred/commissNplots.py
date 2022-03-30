@@ -997,7 +997,7 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
         print(statistics[irow])
         if statistics[irow] == 'count':
             vmin = [0, 0, 0]
-            vmax = [300, 300, 300]
+            vmax = [150, 150, 150]
         if statistics[irow][0:6] == 'median':
             vmin = [0.90, 1.06, 0.35]
             vmax = [1.10, 1.17, 1.00]
@@ -1009,6 +1009,10 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
             print(imol)
             g, = np.where(data['FITSCALE'+str(imol+1)] > 0)
             gdata = data[g]
+
+            if statistics[irow] == 'count':
+                uname,uind = np.unique(gdata['APOGEE_ID'], return_index=True)
+                gdata = gdata[uind]
 
             ax = plt.subplot2grid((nrows,nmolecules), (irow,imol))
             ax.minorticks_on()
