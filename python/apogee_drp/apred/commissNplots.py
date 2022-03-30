@@ -995,6 +995,7 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
 
     fig = plt.figure(figsize=(32,32))
     for irow in range(nrows):
+        print(statistics[irow])
         if statistics[irow] == 'count':
             vmin = [0, 0, 0]
             vmax = [150, 150, 150]
@@ -1006,6 +1007,7 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
             vmax=[0.03, 0.03, 0.03]
 
         for imol in range(nmolecules):
+            print(imol)
             g, = np.where(data['FITSCALE'+str(imol+1)] > 0)
             gdata = data[g]
 
