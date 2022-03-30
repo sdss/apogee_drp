@@ -1004,8 +1004,8 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
             vmin = [0.93, 1.085, 0.50]
             vmax = [1.08, 1.13, 1.00]
             if doall is False: 
-                vmin = [0.95, 1.10, 0.35]
-                vmax = [1.05, 1.17, 0.98]
+                vmin = [0.9, 1.10, 0.35]
+                vmax = [1.15, 1.17, 0.98]
         if statistics[irow] == 'mad diff':
             vmin=[0.010, 0.010, 0.010]
             vmax=[0.028, 0.028, 0.028]
