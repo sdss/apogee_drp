@@ -930,6 +930,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
         x = gdata['JMAG'] - gdata['KMAG']
         y = gdata['HMAG']
+        pdb.set_trace()
         values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
         ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
         ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
@@ -938,7 +939,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="3%", pad="2%")
         cax.minorticks_on()
-        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+        cax.xaxis.set_major_locator(ticker.MultipleLocator(0.005))
         cb1 = colorbar(im, cax=cax)
         if imol == 2:
             ax.text(1.19, 0.5, r'MAD (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
