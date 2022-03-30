@@ -967,22 +967,24 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
     plt.close('all')
 
 ###########################################################################################
-def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40, doall=True):
+def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nbins=40, doall=True,
+                     do4=False, do5=False, ntell=15):
+    #infile='tellfitstats2_stardata.fits'
     xmin = -0.2
     xmax = 0.5
     ymin = 6
     ymax = 11
 
-    plotfile = sdir5 + 'tellfitstats_indstars_grid.png'
+    plotfile = sdir5 + 'tellfitstats_indstars_grid15.png'
     if doall: 
-        infile='tellfitstats_all_stardata.fits'
+        #infile='tellfitstats_all_stardata.fits'
         plotfile = plotfile.replace('.png', '_all.png')
 
     print('making ' + os.path.basename(plotfile))
 
     data = fits.getdata(infile)
-    if doall:
-        gd, = np.where(data['MJD'] < 59146)
+    if ntell is not None:
+        gd, = np.where(data['NTELL'] == 15)
         data = data[gd]
 
     g, = np.where((data['HMAG'] <= 11) & (data['HMAG'] >= 6) & (data['JMAG']-data['KMAG'] < 0.5))
