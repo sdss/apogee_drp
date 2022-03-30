@@ -1064,7 +1064,7 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
             cax.minorticks_on()
             cb1 = colorbar(im, cax=cax)
 
-    fig.subplots_adjust(left=0.044,right=0.925,bottom=0.05,top=0.965,hspace=0.1,wspace=0.2)
+    fig.subplots_adjust(left=0.044,right=0.925,bottom=0.047,top=0.963,hspace=0.1,wspace=0.2)
     plt.savefig(plotfile)
     plt.close('all')
 
