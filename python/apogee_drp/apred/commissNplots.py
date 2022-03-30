@@ -899,7 +899,8 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
 ###########################################################################################
 def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
-                  vmin=[0.01, 0.01, 0.01], vmax=[0.03, 0.03, 0.03], doall=True):
+                  vmin=[0.01, 0.01, 0.01], vmax=[0.03, 0.03, 0.03], doall=True,
+                  statistic=dln.mad):
 
     plotfile = sdir5 + 'tellfitstats_indstars_fitscale-scale.png'
     if doall: 
@@ -931,7 +932,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         x = gdata['JMAG'] - gdata['KMAG']
         y = gdata['HMAG']
         values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
-        ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
+        ret = stats.binned_statistic_2d(x, y, values, statistic=statistic, bins=(nbins,nbins))
         ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
         im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
 
@@ -942,7 +943,9 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         cax.minorticks_on()
         cb1 = colorbar(im, cax=cax)
         if imol == 2:
-            ax.text(1.195, 0.5, r'MAD (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistic == dln.mad: ax.text(1.195, 0.5, r'MAD (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistic == 'count': ax.text(1.195, 0.5, r'$N$ stars',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistic == 'median': ax.text(1.195, 0.5, r'Median (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
     fig.subplots_adjust(left=0.04,right=0.945,bottom=0.093,top=0.94,hspace=0.08,wspace=0.18)
     plt.savefig(plotfile)
