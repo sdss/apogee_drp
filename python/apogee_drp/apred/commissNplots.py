@@ -899,7 +899,7 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
 ###########################################################################################
 def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
-                  vmin=[0.003, 0.003, 0.003], vmax=[0.03, 0.03, 0.03], doall=True):
+                  vmin=[0.006, 0.006, 0.006], vmax=[0.033, 0.033, 0.033], doall=True):
 
     plotfile = sdir5 + 'tellfitstats_indstars_fitscale-scale.png'
     if doall: 
@@ -917,8 +917,8 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
-        ax.set_ylim(11.2, 6.5)
-        ax.set_xlim(-0.2, 0.6)
+        ax.set_ylim(11.1, 6.4)
+        ax.set_xlim(-0.22, 0.58)
         ax.set_xlabel(r'$J-K$')
         if imol == 0: ax.set_ylabel(r'$H$')
         ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
