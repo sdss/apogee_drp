@@ -929,7 +929,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
         ax.set_ylim(11.1, 5)
-        ax.set_xlim(-0.242, 2)
+        ax.set_xlim(-0.242, 0.6)
         ax.set_xlabel(r'$J-K$')
         if imol == 0: ax.set_ylabel(r'$H$')
         ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
@@ -948,7 +948,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
             im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
             #print(ext)
         else:
-            H, yedges, xedges = np.histogram2d(y, x, bins=20)
+            H, yedges, xedges = np.histogram2d(y, x, bins=nbins)
             im = ax.pcolormesh(xedges, yedges, H, cmap=cmap)
 
         divider = make_axes_locatable(ax)
