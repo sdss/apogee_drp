@@ -971,9 +971,6 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
                      do4=False, do5=False, ntell=15):
     #infile='tellfitstats2_stardata.fits'
     expdata = fits.getdata('tellfitstats_all.fits')
-    if ntell is not None:
-        gd, = np.where(expdata['NTELL'] == ntell)
-        expnum = expdata['EXPNUM'][gd]
 
     xmin = -0.2
     xmax = 0.5
@@ -988,9 +985,12 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     print('making ' + os.path.basename(plotfile))
 
     data = fits.getdata(infile)
-    #if ntell is not None:
-    #    gd, = np.where(data['NTELL'] == 15)
-    #    data = data[gd]
+    if ntell is not None:
+        gd, = np.where(expdata['NTELL'] == ntell)
+        expnum = expdata['EXPNUM'][gd]
+        mask = np.in1d(data['expnum'], expnum)
+        gd, = np.where(mask == True)
+        data = data[gd]
 
     xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
     pdb.set_trace()
