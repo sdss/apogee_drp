@@ -937,10 +937,10 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="3%", pad="2%")
+        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.005))
+        cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.001))
         cax.minorticks_on()
         cb1 = colorbar(im, cax=cax)
-        cb1.yaxis.set_major_locator(ticker.MultipleLocator(0.005))
-        cb1.yaxis.set_minor_locator(ticker.MultipleLocator(0.001))
         if imol == 2:
             ax.text(1.19, 0.5, r'MAD (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
