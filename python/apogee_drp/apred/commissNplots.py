@@ -1055,15 +1055,14 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
                 im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
                 if imol == 2: ax.text(1.195, 0.5, r'MAD Measured $-$ Polynomial',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-            if imol == 2:
-                divider = make_axes_locatable(ax)
-                cax = divider.append_axes("right", size="3%", pad="2%")
-                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.005))
-                #cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.001))
-                cax.minorticks_on()
-                cb1 = colorbar(im, cax=cax)
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="3%", pad="2%")
+            #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.005))
+            #cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.001))
+            cax.minorticks_on()
+            cb1 = colorbar(im, cax=cax)
 
-    fig.subplots_adjust(left=0.04,right=0.945,bottom=0.06,top=0.96,hspace=0.1,wspace=0.1)
+    fig.subplots_adjust(left=0.04,right=0.945,bottom=0.06,top=0.96,hspace=0.1,wspace=0.2)
     plt.savefig(plotfile)
     plt.close('all')
 
