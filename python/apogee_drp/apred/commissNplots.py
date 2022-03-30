@@ -992,8 +992,8 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
         gd, = np.where(mask == True)
         data = data[gd]
 
-    xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
-    pdb.set_trace()
+    #xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
+    #pdb.set_trace()
 
     g, = np.where((data['HMAG'] <= 11) & (data['HMAG'] >= 6) & (data['JMAG']-data['KMAG'] < 0.5))
     data = data[g]
