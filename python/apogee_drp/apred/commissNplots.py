@@ -993,18 +993,18 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
     nrows = len(statistics)
 
     matplotlib.rcParams.update({'font.size':32, 'font.family':'serif'})
-    fig = plt.figure(figsize=(32,24))
+    fig = plt.figure(figsize=(32,26))
     for irow in range(nrows):
         print(statistics[irow])
         if statistics[irow] == 'count':
             vmin = [0, 0, 0]
             vmax = [150, 150, 150]
         if statistics[irow][0:6] == 'median':
-            vmin = [0.90, 1.06, 0.35]
-            vmax = [1.10, 1.17, 1.00]
+            vmin = [0.85, 1.10, 0.45]
+            vmax = [1.05, 1.12, 1.03]
         if statistics[irow] == 'mad diff':
             vmin=[0.01, 0.01, 0.01]
-            vmax=[0.03, 0.03, 0.03]
+            vmax=[0.028, 0.028, 0.028]
 
         for imol in range(nmolecules):
             print(imol)
@@ -1041,19 +1041,19 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
                 ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=(nbins,nbins))
                 ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
                 im = ax.imshow(ret.statistic, cmap=cmaps[irow], aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
-                if imol == 2: ax.text(1.195, 0.5, r'Median Fit Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                if imol == 2: ax.text(1.21, 0.5, r'Median Fit Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
             if statistics[irow] == 'median scale':
                 values = gdata['SCALE'+str(imol+1)]
                 ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=(nbins,nbins))
                 ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
                 im = ax.imshow(ret.statistic, cmap=cmaps[irow], aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
-                if imol == 2: ax.text(1.195, 0.5, r'Median Poly Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                if imol == 2: ax.text(1.21, 0.5, r'Median Poly Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
             if statistics[irow] == 'mad diff':
                 values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
                 ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
                 ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
                 im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
-                if imol == 2: ax.text(1.195, 0.5, r'MAD Fit $-$ Poly',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                if imol == 2: ax.text(1.21, 0.5, r'MAD Fit $-$ Poly',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="3%", pad="2%")
@@ -1062,7 +1062,7 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
             cax.minorticks_on()
             cb1 = colorbar(im, cax=cax)
 
-    fig.subplots_adjust(left=0.04,right=0.945,bottom=0.06,top=0.96,hspace=0.1,wspace=0.2)
+    fig.subplots_adjust(left=0.044,right=0.935,bottom=0.055,top=0.965,hspace=0.1,wspace=0.2)
     plt.savefig(plotfile)
     plt.close('all')
 
