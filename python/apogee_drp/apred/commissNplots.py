@@ -942,10 +942,14 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         x = gdata['JMAG'] - gdata['KMAG']
         y = gdata['HMAG']
         values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
-        ret = stats.binned_statistic_2d(x, y, values, statistic=statistic, bins=(nbins,nbins))
-        ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
-        print(ext)
-        im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+        if statistic != 'count':
+            ret = stats.binned_statistic_2d(x, y, values, statistic=statistic, bins=(nbins,nbins))
+            ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+            im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+            #print(ext)
+        else:
+            H, yedges, xedges = np.histogram2d(y, x, bins=20)
+            im = ax.pcolormesh(xedges, yedges, H, cmap=cmap)
 
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="3%", pad="2%")
