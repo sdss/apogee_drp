@@ -949,7 +949,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
             #print(ext)
         else:
             H, yedges, xedges = np.histogram2d(y, x, bins=nbins)
-            im = ax.pcolormesh(xedges, yedges, H, cmap=cmap)
+            im = ax.pcolormesh(xedges, yedges, H, cmap=cmap, vmin=0, vmax=120)
 
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="3%", pad="2%")
