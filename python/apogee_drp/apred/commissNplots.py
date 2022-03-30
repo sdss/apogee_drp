@@ -917,8 +917,8 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
         ax = plt.subplot2grid((1,nmolecules), (0,imol))
         ax.minorticks_on()
-        ax.set_ylim(11.1, 6.3)
-        ax.set_xlim(-0.25, 0.58)
+        ax.set_ylim(11.1, 5)
+        ax.set_xlim(-0.242, 0.5771)
         ax.set_xlabel(r'$J-K$')
         if imol == 0: ax.set_ylabel(r'$H$')
         ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
@@ -930,7 +930,6 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
         x = gdata['JMAG'] - gdata['KMAG']
         y = gdata['HMAG']
-        pdb.set_trace()
         values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
         ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
         ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
