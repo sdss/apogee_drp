@@ -992,6 +992,7 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
     cmaps = ['gnuplot2_r', 'rainbow', 'rainbow', 'rainbow']
     nrows = len(statistics)
 
+    matplotlib.rcParams.update({'font.size':32, 'font.family':'serif'})
     fig = plt.figure(figsize=(32,24))
     for irow in range(nrows):
         print(statistics[irow])
@@ -1062,7 +1063,7 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
                 cax.minorticks_on()
                 cb1 = colorbar(im, cax=cax)
 
-    fig.subplots_adjust(left=0.04,right=0.945,bottom=0.093,top=0.94,hspace=0.1,wspace=0.1)
+    fig.subplots_adjust(left=0.04,right=0.945,bottom=0.06,top=0.96,hspace=0.1,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
