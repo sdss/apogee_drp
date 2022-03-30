@@ -917,6 +917,9 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
     print('making ' + os.path.basename(plotfile))
 
     data = fits.getdata(infile)
+    if statistic == 'count':
+        uname,uind = np.unique(data['APOGEE_ID'], return_index=True)
+        data = data[uind]
 
     fig = plt.figure(figsize=(32,10))
     for imol in range(nmolecules):
