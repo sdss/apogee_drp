@@ -969,12 +969,10 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 ###########################################################################################
 def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40, doall=True):
 
-    if statistic == dln.mad:
-        vmin=[0.01, 0.01, 0.01]
-        vmax=[0.03, 0.03, 0.03]
-    if statistic == 'count':
-        vmin=[0, 0, 0]
-        vmax=[8000, 8000, 8000]
+    xmin = -0.2
+    xmax = 0.5
+    ymin = 6
+    ymax = 11
 
     plotfile = sdir5 + 'tellfitstats_indstars_grid.png'
     if doall: 
@@ -988,43 +986,78 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
         gd, = np.where(data['MJD'] < 59146)
         data = data[gd]
 
-    fig = plt.figure(figsize=(32,10))
-    for imol in range(nmolecules):
-        g, = np.where((data['FITSCALE1'] > 0))# & (data['HMAG'] <=11) & (data['JMAG']-data['KMAG'] < 0.58))
-        gdata = data[g]
+    g, = np.where((data['HMAG'] <= 11) & (data['HMAG'] >= 6) & (data['JMAG']-data['KMAG'] < 0.5))
+    data = data[g]
 
-        ax = plt.subplot2grid((1,nmolecules), (0,imol))
-        ax.minorticks_on()
-        ax.set_ylim(11.1, 5)
-        ax.set_xlim(-0.242, 0.5771)
-        ax.set_xlabel(r'$J-K$')
-        if imol == 0: ax.set_ylabel(r'$H$')
-        ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
-        ax.tick_params(axis='both',which='major',length=axmajlen)
-        ax.tick_params(axis='both',which='minor',length=axminlen)
-        ax.tick_params(axis='both',which='both',width=axwidth)
-        if imol > 0: ax.axes.yaxis.set_ticklabels([])
-        ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+    statistics = ['count', 'median fitscale', 'median scale', 'mad diff']
+    cmaps = ['gnuplot2_r', 'rainbow', 'rainbow', 'rainbow']
+    nrows = len(statistics)
 
-        x = gdata['JMAG'] - gdata['KMAG']
-        y = gdata['HMAG']
-        values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
-        ret = stats.binned_statistic_2d(x, y, values, statistic=statistic, bins=(nbins,nbins))
-        ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
-        im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+    fig = plt.figure(figsize=(32,32))
+    for irow in range(nrows):
+        if statistic[irow] == 'count':
+            vmin = [0, 0, 0]
+            vmax = [150, 150, 150]
+        if statistic[irow][0:6] == 'median':
+            vmin = [0.90, 1.06, 0.35]
+            vmax = [1.10, 1.17, 1.00]
+        if statistic[irow] == 'mad diff':
+            vmin=[0.01, 0.01, 0.01]
+            vmax=[0.03, 0.03, 0.03]
 
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="3%", pad="2%")
-        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.005))
-        cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.001))
-        cax.minorticks_on()
-        cb1 = colorbar(im, cax=cax)
-        if imol == 2:
-            if statistic == dln.mad: ax.text(1.195, 0.5, r'MAD (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-            if statistic == 'count': ax.text(1.195, 0.5, r'$N$ stars',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-            if statistic == 'median': ax.text(1.195, 0.5, r'Median (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+        for imol in range(nmolecules):
+            g, = np.where(data['FITSCALE'+str(imol+1)] > 0)
+            gdata = data[g]
 
-    fig.subplots_adjust(left=0.04,right=0.945,bottom=0.093,top=0.94,hspace=0.08,wspace=0.18)
+            ax = plt.subplot2grid((nrows,nmolecules), (irow,imol))
+            ax.minorticks_on()
+            ax.set_ylim(ymax, ymin)
+            ax.set_xlim(xmin, xmax)
+            ax.set_xlabel(r'$J-K$')
+            if imol == 0: ax.set_ylabel(r'$H$')
+            ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            if irow < nrows-1: ax.axes.xaxis.set_ticklabels([])
+            if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            x = gdata['JMAG'] - gdata['KMAG']
+            y = gdata['HMAG']
+
+            if statistic[irow] == 'count':
+                H, yedges, xedges = np.histogram2d(y, x, bins=nbins)
+                im = ax.pcolormesh(xedges, yedges, H, cmap=cmaps[irow], vmin=vmin[imol], vmax=vmax[imol])
+                if imol == 2: ax.text(1.195, 0.5, r'$N$ stars',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistic[irow] == 'median fitscale':
+                values = gdata['FITSCALE'+str(imol+1)]
+                ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=(nbins,nbins))
+                ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+                im = ax.imshow(ret.statistic, cmap=cmaps[irow], aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+                if imol == 2: : ax.text(1.195, 0.5, r'Median Measured Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistic[irow] == 'median scale':
+                values = gdata['SCALE'+str(imol+1)]
+                ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=(nbins,nbins))
+                ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+                im = ax.imshow(ret.statistic, cmap=cmaps[irow], aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+                if imol == 2: : ax.text(1.195, 0.5, r'Median Polynomial Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistic[irow] == 'mad diff':
+                values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
+                ret = stats.binned_statistic_2d(x, y, values, statistic=statistic, bins=(nbins,nbins))
+                ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+                im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+                if imol == 2: : ax.text(1.195, 0.5, r'MAD Measured $-$ Polynomial',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            if imol == 2:
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="3%", pad="2%")
+                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.005))
+                #cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.001))
+                cax.minorticks_on()
+                cb1 = colorbar(im, cax=cax)
+
+    fig.subplots_adjust(left=0.04,right=0.945,bottom=0.093,top=0.94,hspace=0.05,wspace=0.1)
     plt.savefig(plotfile)
     plt.close('all')
 
