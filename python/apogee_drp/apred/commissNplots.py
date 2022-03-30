@@ -907,7 +907,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         vmax=[0.03, 0.03, 0.03]
     if statistic == 'count':
         vmin=[0, 0, 0]
-        vmax=[8000, 8000, 8000]
+        vmax=[1000, 1000, 1000]
 
     plotfile = sdir5 + 'tellfitstats_indstars_fitscale-scale.png'
     if doall: 
