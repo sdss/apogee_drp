@@ -850,7 +850,6 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
 ###########################################################################################
 def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
                   vmin=[0, 0, 0], vmax=[0.1, 0.035, 0.4], doall=True):
-    data = fits.getdata(infile)
 
     plotfile = sdir5 + 'tellfitstats_indstars.png'
     if doall: 
@@ -858,6 +857,8 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         plotfile = plotfile.replace('.png', '_all.png')
 
     print('making ' + os.path.basename(plotfile))
+
+    data = fits.getdata(infile)
 
     fig = plt.figure(figsize=(32,10))
     for imol in range(nmolecules):
@@ -898,11 +899,16 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
 ###########################################################################################
 def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
-                  vmin=[0, 0, 0], vmax=[0.04, 0.03, 0.03]):
-    data = fits.getdata(infile)
+                  vmin=[0, 0, 0], vmax=[0.04, 0.03, 0.03], doall=True):
 
     plotfile = sdir5 + 'tellfitstats_indstars_fitscale-scale.png'
+    if doall: 
+        infile='tellfitstats_all_stardata.fits'
+        plotfile = plotfile.replace('.png', '_all.png')
+
     print('making ' + os.path.basename(plotfile))
+
+    data = fits.getdata(infile)
 
     fig = plt.figure(figsize=(32,10))
     for imol in range(nmolecules):
