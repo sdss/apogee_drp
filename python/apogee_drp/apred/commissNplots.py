@@ -1041,19 +1041,19 @@ def tellfitstatsgrid(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins
                 ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=(nbins,nbins))
                 ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
                 im = ax.imshow(ret.statistic, cmap=cmaps[irow], aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
-                if imol == 2: ax.text(1.195, 0.5, r'Median Measured Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                if imol == 2: ax.text(1.195, 0.5, r'Median Fit Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
             if statistics[irow] == 'median scale':
                 values = gdata['SCALE'+str(imol+1)]
                 ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=(nbins,nbins))
                 ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
                 im = ax.imshow(ret.statistic, cmap=cmaps[irow], aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
-                if imol == 2: ax.text(1.195, 0.5, r'Median Polynomial Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                if imol == 2: ax.text(1.195, 0.5, r'Median Poly Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
             if statistics[irow] == 'mad diff':
                 values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
                 ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
                 ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
                 im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
-                if imol == 2: ax.text(1.195, 0.5, r'MAD Measured $-$ Polynomial',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                if imol == 2: ax.text(1.195, 0.5, r'MAD Fit $-$ Poly',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="3%", pad="2%")
