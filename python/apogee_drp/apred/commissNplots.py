@@ -135,7 +135,7 @@ def tellspatialnew1(zoom=False, cmap='brg'):
     data = data[gd]
 
     xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
-    pdb.set_trace()
+    expdata = expdata[x_ind]
 
     nrows = 2
     molcols = ['mediumseagreen', 'purple', 'darkorange']
@@ -172,12 +172,12 @@ def tellspatialnew1(zoom=False, cmap='brg'):
             xvals = data['ntell'][:,imol]#-np.nanmin(data['JD'])
             if irow == 0: yvals = data['RMS'+str(imol+1)][:,0] - data['RMS'+str(imol+1)][:,1]
             if irow == 1: yvals = data['RMS'+str(imol+1)][:,0] - data['RMS'+str(imol+1)][:,2]
-            c = data['NTELL'][:,imol]
+            c = expdata['sigeta'][:,imol] + expdata['sigzeta'][:,imol]
 
             #med = np.nanmedian(yvals)
             #ax.axhline(med, color='grey', linestyle='dashed')
             #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
-            sc1 = ax.scatter(xvals, yvals, marker='o', s=3)#, c=c, cmap=cmap, alpha=0.8, vmin=10, vmax=50)#, edgecolors='k'
+            sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap)#, alpha=0.8)#, vmin=10, vmax=50)#, edgecolors='k'
 
             #if ipar == 2:
             #    divider = make_axes_locatable(ax)
