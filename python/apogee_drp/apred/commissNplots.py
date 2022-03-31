@@ -206,7 +206,7 @@ def tellspatialnew2(zoom=False, cmap='brg'):
             ax.set_ylim(-0.2,0.2)
             ax.set_xlim(0,75)
             if irow == 0: ax.axes.xaxis.set_ticklabels([])
-            #if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            if imol > 0: ax.axes.yaxis.set_ticklabels([])
             if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             if irow == 0:
                 if imol == 0: ax.set_ylabel(r'RMS (constant $-$ linear)')
