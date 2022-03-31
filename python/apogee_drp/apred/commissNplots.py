@@ -1040,11 +1040,11 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
             #    vmin = [0.98, 1.085, 0.50]
             #    vmax = [1.08, 1.13, 1.00]
         if statistics[irow] == 'mad diff':
-            vmin=[0.010, 0.010, 0.010]
-            vmax=[0.028, 0.028, 0.028]
-            if ntell == 15: 
-                vmin = [0.008, 0.008, 0.008]
-                vmax = [0.028, 0.028, 0.028]
+            vmin=[0.008, 0.008, 0.008]
+            vmax=[0.030, 0.030, 0.030]
+            #if ntell == 15: 
+            #    vmin = [0.008, 0.008, 0.008]
+            #    vmax = [0.028, 0.028, 0.028]
 
         for imol in range(nmolecules):
             print(imol)
