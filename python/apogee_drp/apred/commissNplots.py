@@ -987,7 +987,7 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
 
     data = fits.getdata(infile)
     if ntell is not None:
-        gd, = np.where(expdata['NTELL'] == ntell)
+        gd, = np.where(np.nanmean(expdata['NFIT'], axis=1) == ntell)
         expnum = expdata['EXPNUM'][gd]
         mask = np.in1d(data['expnum'], expnum)
         gd, = np.where(mask == True)
