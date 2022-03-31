@@ -163,7 +163,65 @@ def tellspatialnew1(zoom=False, cmap='brg'):
             xvals = data['ntell'][:,imol]#-np.nanmin(data['JD'])
             if irow == 0: yvals = data['RMS'+str(imol+1)][:,0] - data['RMS'+str(imol+1)][:,1]
             if irow == 1: yvals = data['RMS'+str(imol+1)][:,0] - data['RMS'+str(imol+1)][:,2]
-            #c = data['NTELL'][:,imol]
+            c = data['NTELL'][:,imol]
+
+            #med = np.nanmedian(yvals)
+            #ax.axhline(med, color='grey', linestyle='dashed')
+            #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            sc1 = ax.scatter(xvals, yvals, marker='o', s=3)#, c=c, cmap=cmap, alpha=0.8, vmin=10, vmax=50)#, edgecolors='k'
+
+            #if ipar == 2:
+            #    divider = make_axes_locatable(ax)
+            #    cax = divider.append_axes("right", size="5%", pad="10%")
+            #    cax.minorticks_on()
+            #    #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+            #    cb1 = colorbar(sc1, cax=cax)
+            #    ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.055,right=0.945,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellspatialnew2(zoom=False, cmap='brg'):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+
+    nrows = 2
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatial2.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,17))
+    for irow in range(nrows):
+        for imol in range(nmolecules):
+            ax = plt.subplot2grid((nrows,nmolecules), (irow,imol))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            #ax.set_ylim(-0.001,0.1)
+            ax.set_xlim(0,75)
+            if irow == 0: ax.axes.xaxis.set_ticklabels([])
+            #if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
+            if irow == 0:
+                if imol == 0: ax.set_ylabel(r'RMS (constant $-$ linear)')
+            if irow == 1:
+                if imol == 0: ax.set_ylabel(r'RMS diff (constant $-$ quadratic)')
+            if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
+            #if imol == 0:
+            #    if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+            #    if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+            #    if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['ntell'][:,imol]#-np.nanmin(data['JD'])
+            if irow == 0: yvals = data['RMSDIFF'+str(imol+1)][:,0] - data['RMSDIFF'+str(imol+1)][:,1]
+            if irow == 1: yvals = data['RMSDIFF'+str(imol+1)][:,0] - data['RMSDIFF'+str(imol+1)][:,2]
+            c = data['NTELL'][:,imol]
 
             #med = np.nanmedian(yvals)
             #ax.axhline(med, color='grey', linestyle='dashed')
