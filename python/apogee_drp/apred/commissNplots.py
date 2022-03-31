@@ -533,7 +533,7 @@ def tellspatial4(zoom=False):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_ylim(-0.1,1.8)
+            ax.set_ylim(0.8,1.2)
             if zoom: ax.set_ylim(-0.05, 0.05)
             if ipar == 0: ax.set_ylabel('Factional RMS (fine grid)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
