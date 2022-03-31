@@ -203,7 +203,7 @@ def tellspatialnew2(zoom=False, cmap='brg'):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            #ax.set_ylim(-0.001,0.1)
+            ax.set_ylim(-0.2,0.2)
             ax.set_xlim(0,75)
             if irow == 0: ax.axes.xaxis.set_ticklabels([])
             #if imol > 0: ax.axes.yaxis.set_ticklabels([])
