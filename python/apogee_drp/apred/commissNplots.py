@@ -989,10 +989,11 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     print('making ' + os.path.basename(plotfile))
 
     data = fits.getdata(infile)
-    ntellmean = np.nanmean(expdata['NFIT'], axis=1) 
+    #ntellmean = np.nanmean(expdata['NFIT'], axis=1) 
     if ntell is not None:
-        gd, = np.where((ntellmean >= 10) & (ntellmean <= 15))
-        gd, = np.where((ntellmean > 15))# & (ntellmean <= 15))
+        #gd, = np.where((ntellmean >= 10) & (ntellmean <= 15))
+        #gd, = np.where((ntellmean > 15))# & (ntellmean <= 15))
+        gd, = np.where(data['NTELL'] == ntell)
         expnum = expdata['EXPNUM'][gd]
         mask = np.in1d(data['expnum'], expnum)
         gd, = np.where(mask == True)
