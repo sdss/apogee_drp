@@ -535,7 +535,7 @@ def tellspatial4(zoom=False):
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_ylim(-0.1,1.8)
             if zoom: ax.set_ylim(-0.05, 0.05)
-            if ipar == 0: ax.set_ylabel('RMS / median (fine grid)')
+            if ipar == 0: ax.set_ylabel('Factional RMS (fine grid)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
             if ipar > 0: ax.axes.yaxis.set_ticklabels([])
