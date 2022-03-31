@@ -282,10 +282,10 @@ def tellspatialnew3(zoom=False, cmap='brg'):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_ylim(-0.001,0.1)
+            #ax.set_ylim(-0.001,0.1)
             ax.set_xlim(0,75)
             if irow == 0: ax.axes.xaxis.set_ticklabels([])
-            if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            #if imol > 0: ax.axes.yaxis.set_ticklabels([])
             if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             if irow == 0:
                 if imol == 0: ax.set_ylabel(r'fit $-$ poly')
@@ -298,8 +298,10 @@ def tellspatialnew3(zoom=False, cmap='brg'):
             #    if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
             xvals = data['ntell'][:,imol]#-np.nanmin(data['JD'])
-            if irow == 0: yvals = data['MEDOBS'+str(imol+1)] - data['MEDFIT'+str(imol+1)][:,1]
-            if irow == 1: yvals = data['MEDOBS'+str(imol+1)] - data['MEDFIT'+str(imol+1)][:,2]
+            #if irow == 0: yvals = data['MEDOBS'+str(imol+1)] - data['MEDFIT'+str(imol+1)][:,1]
+            #if irow == 1: yvals = data['MEDOBS'+str(imol+1)] - data['MEDFIT'+str(imol+1)][:,2]
+            if irow == 0: yvals = data['MEDFIT'+str(imol+1)][:,1]
+            if irow == 1: yvals = data['MEDFIT'+str(imol+1)][:,2]
             c = expdata['sigeta'][:,imol] + expdata['sigzeta'][:,imol]
 
             #med = np.nanmedian(yvals)
