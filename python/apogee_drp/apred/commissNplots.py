@@ -190,7 +190,7 @@ def tellspatialnew1(zoom=False, cmap='brg'):
             #    cb1 = colorbar(sc1, cax=cax)
                 #ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-    fig.subplots_adjust(left=0.055,right=0.96,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
