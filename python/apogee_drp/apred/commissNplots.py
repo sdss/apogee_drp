@@ -125,6 +125,205 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
+def tellspatialnew1(zoom=False, cmap='brg'):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+    expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
+
+    expnum = expdata['EXPNUM']
+    mask = np.in1d(data['expnum'], expnum)
+    gd, = np.where(mask == True)
+    data = data[gd]
+
+    xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
+    expdata = expdata[x_ind]
+
+    nrows = 2
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatial1.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,17))
+    for irow in range(nrows):
+        for imol in range(nmolecules):
+            ax = plt.subplot2grid((nrows,nmolecules), (irow,imol))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_ylim(-0.001,0.1)
+            ax.set_xlim(0,75)
+            if irow == 0: ax.axes.xaxis.set_ticklabels([])
+            if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
+            if irow == 0:
+                if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
+            if irow == 1:
+                if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
+            if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
+            #if imol == 0:
+            #    if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+            #    if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+            #    if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['ntell'][:,imol]#-np.nanmin(data['JD'])
+            if irow == 0: yvals = data['RMS'+str(imol+1)][:,0] - data['RMS'+str(imol+1)][:,1]
+            if irow == 1: yvals = data['RMS'+str(imol+1)][:,0] - data['RMS'+str(imol+1)][:,2]
+            c = expdata['sigeta'][:,imol] + expdata['sigzeta'][:,imol]
+
+            #med = np.nanmedian(yvals)
+            #ax.axhline(med, color='grey', linestyle='dashed')
+            #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol])#, cmap=cmap)#, alpha=0.8)#, vmin=10, vmax=50)#, edgecolors='k'
+
+            if imol == 2:
+                if irow == 0: ax.text(1.03, 0.5, 'constant $-$ linear', transform=ax.transAxes, rotation=-90, ha='left', va='center')
+                if irow == 1: ax.text(1.03, 0.5, 'constant $-$ quadratic', transform=ax.transAxes, rotation=-90, ha='left', va='center')
+
+            #    divider = make_axes_locatable(ax)
+            #    cax = divider.append_axes("right", size="5%", pad="10%")
+            #    cax.minorticks_on()
+            #    #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+            #    cb1 = colorbar(sc1, cax=cax)
+                #ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellspatialnew2(zoom=False, cmap='brg'):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+
+    nrows = 2
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatial2.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,17))
+    for irow in range(nrows):
+        for imol in range(nmolecules):
+            ax = plt.subplot2grid((nrows,nmolecules), (irow,imol))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_ylim(0.0,1.8)
+            ax.set_xlim(0,75)
+            if irow == 0: ax.axes.xaxis.set_ticklabels([])
+            if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
+            if irow == 0:
+                if imol == 0: ax.set_ylabel(r'Poly RMS (constant $-$ linear)')
+            if irow == 1:
+                if imol == 0: ax.set_ylabel(r'Poly RMS (constant $-$ quadratic)')
+            if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
+            #if imol == 0:
+            #    if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+            #    if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+            #    if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['ntell'][:,imol]#-np.nanmin(data['JD'])
+            if irow == 0: yvals = data['MODELRMS'+str(imol+1)][:,1] - data['MODELRMS'+str(imol+1)][:,0]
+            if irow == 1: yvals = data['MODELRMS'+str(imol+1)][:,2] - data['MODELRMS'+str(imol+1)][:,0]
+            c = data['NTELL'][:,imol]
+
+            #med = np.nanmedian(yvals)
+            #ax.axhline(med, color='grey', linestyle='dashed')
+            #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            sc1 = ax.scatter(xvals, yvals, marker='o', s=3)#, c=c, cmap=cmap, alpha=0.8, vmin=10, vmax=50)#, edgecolors='k'
+
+            #if ipar == 2:
+            #    divider = make_axes_locatable(ax)
+            #    cax = divider.append_axes("right", size="5%", pad="10%")
+            #    cax.minorticks_on()
+            #    #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+            #    cb1 = colorbar(sc1, cax=cax)
+            #    ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.055,right=0.945,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellspatialnew3(zoom=False, cmap='brg'):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+    expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
+
+    expnum = expdata['EXPNUM']
+    mask = np.in1d(data['expnum'], expnum)
+    gd, = np.where(mask == True)
+    data = data[gd]
+
+    xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
+    expdata = expdata[x_ind]
+
+    nrows = 2
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatial3.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,17))
+    for irow in range(nrows):
+        for imol in range(nmolecules):
+            ax = plt.subplot2grid((nrows,nmolecules), (irow,imol))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_ylim(-0.2,0.2)
+            ax.set_xlim(0,75)
+            if irow == 0: ax.axes.xaxis.set_ticklabels([])
+            if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
+            if irow == 0:
+                if imol == 0: ax.set_ylabel(r'constant $-$ median linear')
+            if irow == 1:
+                if imol == 0: ax.set_ylabel(r'constant $-$ median quadratic')
+            if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
+            ax.axhline(y=0, linestyle='dashed', color='grey')
+            #if imol == 0:
+            #    if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+            #    if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+            #    if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['ntell'][:,imol]#-np.nanmin(data['JD'])
+            if irow == 0: yvals = data['MEDOBS'+str(imol+1)] - data['MEDFIT'+str(imol+1)][:,1]
+            if irow == 1: yvals = data['MEDOBS'+str(imol+1)] - data['MEDFIT'+str(imol+1)][:,2]
+            c = expdata['sigeta'][:,imol] + expdata['sigzeta'][:,imol]
+
+            #med = np.nanmedian(yvals)
+            #ax.axhline(med, color='grey', linestyle='dashed')
+            #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol])#, cmap=cmap)#, alpha=0.8)#, vmin=10, vmax=50)#, edgecolors='k'
+
+            #if imol == 2:
+            #    if irow == 0: ax.text(1.03, 0.5, 'constant $-$ linear', transform=ax.transAxes, rotation=-90, ha='left', va='center')
+            #    if irow == 1: ax.text(1.03, 0.5, 'constant $-$ quadratic', transform=ax.transAxes, rotation=-90, ha='left', va='center')
+
+            #    divider = make_axes_locatable(ax)
+            #    cax = divider.append_axes("right", size="5%", pad="10%")
+            #    cax.minorticks_on()
+            #    #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+            #    cb1 = colorbar(sc1, cax=cax)
+                #ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.05,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
 def tellspatial(zoom=False):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
 
@@ -147,7 +346,7 @@ def tellspatial(zoom=False):
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_ylim(-0.05,1.1)
             if zoom: ax.set_ylim(-0.01, 0.1)
-            if (ipar == 0) & (imol == 1): ax.set_ylabel('RMS (measured $-$ modeled)')
+            if (ipar == 0) & (imol == 1): ax.set_ylabel('RMS (fit $-$ poly)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
             if ipar > 0: ax.axes.yaxis.set_ticklabels([])
@@ -165,34 +364,61 @@ def tellspatial(zoom=False):
             ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
-            #if imol == 2:
-            #    ii = 0
-            #    for ax in axes:
-            #        ax_divider = make_axes_locatable(ax)
-            #        cax = ax_divider.append_axes("right", size="4%", pad="3%")
-            #        cb1 = colorbar(sc1, cax=cax, orientation="vertical")
-            #        cax.minorticks_on()
-            #        if color is not None:
-            #            if color == 'seeing':
-            #                ax.text(1.18, 0.5, r'Seeing',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-            #            if color == 'secz':
-            #                ax.text(1.18, 0.5, r'sec $z$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-            #        else:
-            #            if plotx == 'MEANH': 
-            #                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-            #                ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-            #                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
-            #                cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
-            #                ax.text(1.18, 0.5, r'$J-K$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-            #            if plotx == 'MEANJK': 
-            #                ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
-            #                ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.05))
-            #                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
-            #                cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-            #                ax.text(1.18, 0.5, r'$H$',ha='left', va='center', rotation=-90, transform=ax.transAxes)
-            #        ii += 1
-
     fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellspatial1(zoom=False, cmap='brg'):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+
+    npars = 3
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatialRMS1.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,17))
+    for imol in range(nmolecules):
+        for ipar in range(npars):
+            ax = plt.subplot2grid((nmolecules, npars), (imol,ipar%3))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_ylim(-0.05,1.1)
+            if zoom: ax.set_ylim(-0.01, 0.1)
+            if (ipar == 0) & (imol == 1): ax.set_ylabel('RMS (measured $-$ fit)')
+            if imol == 2: ax.set_xlabel('Days since time[0]')
+            if imol < 2: ax.axes.xaxis.set_ticklabels([])
+            if ipar > 0: ax.axes.yaxis.set_ticklabels([])
+            if ipar == 2: ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+            if imol == 0:
+                if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['JD']-np.nanmin(data['JD'])
+            yvals = data['RMS'+str(imol+1)][:,ipar]
+            c = data['NTELL'][:,imol]
+
+            med = np.nanmedian(yvals)
+            ax.axhline(med, color='grey', linestyle='dashed')
+            ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap, alpha=0.8, vmin=10, vmax=50)#, edgecolors='k'
+
+            if ipar == 2:
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad="10%")
+                cax.minorticks_on()
+                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+                cb1 = colorbar(sc1, cax=cax)
+                ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.055,right=0.945,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
@@ -280,6 +506,186 @@ def tellspatial3(zoom=False):
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
             ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+
+    fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellspatial4(zoom=False):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+
+    npars = 3
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatialRMS_synth.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,16))
+    for imol in range(nmolecules):
+        for ipar in range(npars):
+            ax = plt.subplot2grid((nmolecules, npars), (imol,ipar%3))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_ylim(0.8,1.2)
+            if zoom: ax.set_ylim(-0.05, 0.05)
+            if ipar == 0: ax.set_ylabel('Factional RMS (fine grid)')
+            if imol == 2: ax.set_xlabel('Days since time[0]')
+            if imol < 2: ax.axes.xaxis.set_ticklabels([])
+            if ipar > 0: ax.axes.yaxis.set_ticklabels([])
+            if ipar == 2: ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+            if imol == 0:
+                if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['JD']-np.nanmin(data['JD'])
+            yvals = data['SYNTHRMS'+str(imol+1)][:,ipar] / data['MEDFIT'+str(imol+1)][:,ipar]
+
+            med = np.nanmedian(yvals)
+            ax.axhline(med, color='grey', linestyle='dashed')
+            #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+
+    fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellspatial5(zoom=False):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+
+    npars = 3
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatialRMS_med.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,16))
+    for imol in range(nmolecules):
+        for ipar in range(npars):
+            ax = plt.subplot2grid((nmolecules, npars), (imol,ipar%3))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_ylim(-0.05,1.1)
+            if zoom: ax.set_ylim(-0.01, 0.1)
+            if (ipar == 0) & (imol == 1): ax.set_ylabel('RMS (measured $-$ modeled) / Median (measured)')
+            if imol == 2: ax.set_xlabel('Days since time[0]')
+            if imol < 2: ax.axes.xaxis.set_ticklabels([])
+            if ipar > 0: ax.axes.yaxis.set_ticklabels([])
+            if ipar == 2: ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+            if imol == 0:
+                if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['JD']-np.nanmin(data['JD'])
+            yvals = data['RMS'+str(imol+1)][:,ipar] / data['MEDOBS'+str(imol+1)]
+
+            med = np.nanmedian(yvals)
+            ax.axhline(med, color='grey', linestyle='dashed')
+            ax.text(0.75, 0.85, 'med y = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+
+    fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellspatial6(zoom=False):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+
+    npars = 3
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatialRMS_sig.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,16))
+    for imol in range(nmolecules):
+        for ipar in range(npars):
+            ax = plt.subplot2grid((nmolecules, npars), (imol,ipar%3))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_ylim(-0.05,1.1)
+            if zoom: ax.set_ylim(-0.01, 0.1)
+            if (ipar == 0) & (imol == 1): ax.set_ylabel('$\sigma$ (synth)')
+            if imol == 2: ax.set_xlabel('Days since time[0]')
+            if imol < 2: ax.axes.xaxis.set_ticklabels([])
+            if ipar > 0: ax.axes.yaxis.set_ticklabels([])
+            if ipar == 2: ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+            if imol == 0:
+                if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['JD']-np.nanmin(data['JD'])
+            yvals = data['SYNTHSIG'+str(imol+1)][:,ipar]# / data['MEDOBS'+str(imol+1)]
+
+            med = np.nanmedian(yvals)
+            ax.axhline(med, color='grey', linestyle='dashed')
+            ax.text(0.75, 0.85, 'med y = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+
+    fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellspatial7(zoom=False):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+
+    npars = 3
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatialRMS_sigmean.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,16))
+    for imol in range(nmolecules):
+        for ipar in range(npars):
+            ax = plt.subplot2grid((nmolecules, npars), (imol,ipar%3))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_ylim(-0.05,1.1)
+            if zoom: ax.set_ylim(-0.01, 0.2)
+            if (ipar == 0) & (imol == 1): ax.set_ylabel('$\sigma$ / Median (synth)')
+            if imol == 2: ax.set_xlabel('Days since time[0]')
+            if imol < 2: ax.axes.xaxis.set_ticklabels([])
+            if ipar > 0: ax.axes.yaxis.set_ticklabels([])
+            if ipar == 2: ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+            if imol == 0:
+                if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['JD']-np.nanmin(data['JD'])
+            yvals = data['SYNTHSIG'+str(imol+1)][:,ipar] / data['MEDFIT'+str(imol+1)][:,ipar]
+
+            med = np.nanmedian(yvals)
+            ax.axhline(med, color='grey', linestyle='dashed')
+            ax.text(0.75, 0.85, 'med y = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
     fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
@@ -642,11 +1048,16 @@ def tellfitstats3(infile='tellfitstats2.fits', plotx='seeing', color=None):
 
 ###########################################################################################
 def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
-                  vmin=[0, 0, 0], vmax=[0.1, 0.035, 0.4]):
-    data = fits.getdata(infile)
+                  vmin=[0, 0, 0], vmax=[0.1, 0.035, 0.4], doall=True):
 
     plotfile = sdir5 + 'tellfitstats_indstars.png'
+    if doall: 
+        infile='tellfitstats_all_stardata.fits'
+        plotfile = plotfile.replace('.png', '_all.png')
+
     print('making ' + os.path.basename(plotfile))
+
+    data = fits.getdata(infile)
 
     fig = plt.figure(figsize=(32,10))
     for imol in range(nmolecules):
@@ -687,10 +1098,227 @@ def tellfitstats4(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 
 ###########################################################################################
 def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
-                  vmin=[0, 0, 0], vmax=[0.04, 0.03, 0.03]):
-    data = fits.getdata(infile)
+                  vmin=[0.01, 0.01, 0.01], vmax=[0.03, 0.03, 0.03], doall=True,
+                  statistic=dln.mad):
+
+    if statistic == dln.mad:
+        vmin=[0.01, 0.01, 0.01]
+        vmax=[0.03, 0.03, 0.03]
+    if statistic == 'count':
+        vmin=[0, 0, 0]
+        vmax=[1000, 1000, 1000]
 
     plotfile = sdir5 + 'tellfitstats_indstars_fitscale-scale.png'
+    if doall: 
+        infile='tellfitstats_all_stardata.fits'
+        plotfile = plotfile.replace('.png', '_all.png')
+
+    print('making ' + os.path.basename(plotfile))
+
+    data = fits.getdata(infile)
+    if statistic == 'count':
+        uname,uind = np.unique(data['APOGEE_ID'], return_index=True)
+        data = data[uind]
+
+    fig = plt.figure(figsize=(32,10))
+    for imol in range(nmolecules):
+        g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <= 11) & (data['HMAG'] >= 6) & (data['JMAG']-data['KMAG'] < 0.5))
+        gdata = data[g]
+
+        ax = plt.subplot2grid((1,nmolecules), (0,imol))
+        ax.minorticks_on()
+        ax.set_ylim(11, 6)
+        ax.set_xlim(-0.2, 0.5)
+        ax.set_xlabel(r'$J-K$')
+        if imol == 0: ax.set_ylabel(r'$H$')
+        ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        if imol > 0: ax.axes.yaxis.set_ticklabels([])
+        ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+        x = gdata['JMAG'] - gdata['KMAG']
+        y = gdata['HMAG']
+        values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
+        if statistic != 'count':
+            ret = stats.binned_statistic_2d(x, y, values, statistic=statistic, bins=(nbins,nbins))
+            ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+            im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+            #print(ext)
+        else:
+            H, yedges, xedges = np.histogram2d(y, x, bins=nbins)
+            im = ax.pcolormesh(xedges, yedges, H, cmap=cmap, vmin=0, vmax=150)
+
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="3%", pad="2%")
+        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.005))
+        cax.yaxis.set_minor_locator(ticker.MultipleLocator(0.001))
+        cax.minorticks_on()
+        cb1 = colorbar(im, cax=cax)
+        if imol == 2:
+            if statistic == dln.mad: ax.text(1.195, 0.5, r'MAD (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistic == 'count': ax.text(1.195, 0.5, r'$N$ stars',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistic == 'median': ax.text(1.195, 0.5, r'Median (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.04,right=0.945,bottom=0.093,top=0.94,hspace=0.08,wspace=0.18)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nbins=40, doall=True,
+                     do4=False, do5=False, ntell=15):
+
+    #infile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats_stardata.fits'
+    #expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
+
+    infile = 'tellfitstats_all_stardata.fits'
+    expdata = fits.getdata('tellfitstats_all.fits')
+
+    xmin = -0.2
+    xmax = 0.5
+    ymin = 6
+    ymax = 11
+
+    plotfile = sdir5 + 'tellfitstats_indstars_grid.png'
+    if ntell == 15: plotfile = sdir5 + 'tellfitstats_indstars_grid15.png'
+    if ntell == 'lt15': plotfile = sdir5 + 'tellfitstats_indstars_gridlt15.png'
+    if ntell == 'gt15': plotfile = sdir5 + 'tellfitstats_indstars_gridgt15.png'
+    #if doall: 
+        #infile='tellfitstats_all_stardata.fits'
+        #plotfile = plotfile.replace('.png', '_all.png')
+
+    print('making ' + os.path.basename(plotfile))
+
+    data = fits.getdata(infile)
+    #ntellmean = np.nanmean(expdata['NFIT'], axis=1) 
+    if ntell is not None:
+        #gd, = np.where((ntellmean >= 10) & (ntellmean <= 15))
+        #gd, = np.where((ntellmean > 15))# & (ntellmean <= 15))
+        if ntell == 15: gd, = np.where(expdata['NTELL'] == 15)
+        if ntell == 'lt15': gd, = np.where(expdata['NTELL'] < 15)
+        if ntell == 'gt15': gd, = np.where(expdata['NTELL'] > 15)
+        expnum = expdata['EXPNUM'][gd]
+        mask = np.in1d(data['expnum'], expnum)
+        gd, = np.where(mask == True)
+        data = data[gd]
+
+    #xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
+    #pdb.set_trace()
+
+    g, = np.where((data['HMAG'] <= ymax) & (data['HMAG'] >= ymin) & (data['JMAG']-data['KMAG'] < xmax))
+    data = data[g]
+
+    statistics = ['count', 'median fitscale', 'median scale', 'mad diff']
+    cmaps = ['gnuplot2_r', 'rainbow', 'rainbow', 'rainbow']
+    nrows = len(statistics)
+
+    matplotlib.rcParams.update({'font.size':32, 'font.family':'serif'})
+    fig = plt.figure(figsize=(32,28))
+    for irow in range(nrows):
+        print(statistics[irow])
+        if statistics[irow] == 'count':
+            vmin = [0, 0, 0]
+            vmax = [150, 150, 150]
+            if doall is False: vmax = [25, 25, 25]
+            if ntell == 15: vmax = [50, 50, 50]
+            if ntell == 'lt15': vmax = [12, 12, 12]
+        if statistics[irow][0:6] == 'median':
+            vmin = [0.98, 1.085, 0.44]
+            vmax = [1.10, 1.155, 0.97]
+            #if doall is False: 
+            #    vmin = [1.03, 1.1085, 0.35]
+            #    vmax = [1.11, 1.130, 0.98]
+            #if ntell == 15: 
+            #    vmin = [0.98, 1.085, 0.50]
+            #    vmax = [1.08, 1.13, 1.00]
+            #if ntell == 'lt15': 
+            #    vmin = [0.98, 1.085, 0.50]
+            #    vmax = [1.08, 1.13, 1.00]
+            #if ntell == 'gt15': 
+            #    vmin = [0.98, 1.085, 0.50]
+            #    vmax = [1.08, 1.13, 1.00]
+        if statistics[irow] == 'mad diff':
+            vmin=[0.008, 0.008, 0.008]
+            vmax=[0.030, 0.030, 0.030]
+            #if ntell == 15: 
+            #    vmin = [0.008, 0.008, 0.008]
+            #    vmax = [0.028, 0.028, 0.028]
+
+        for imol in range(nmolecules):
+            print(imol)
+            #g, = np.where(data['FITSCALE'][:,imol] > 0)
+            g, = np.where(data['FITSCALE'+str(imol+1)] > 0)
+            gdata = data[g]
+
+            if statistics[irow] == 'count':
+                uname,uind = np.unique(gdata['APOGEE_ID'], return_index=True)
+                gdata = gdata[uind]
+
+            ax = plt.subplot2grid((nrows,nmolecules), (irow,imol))
+            ax.minorticks_on()
+            ax.set_ylim(ymax, ymin)
+            ax.set_xlim(xmin, xmax)
+            if irow == nrows-1: ax.set_xlabel(r'$J-K$')
+            if imol == 0: ax.set_ylabel(r'$H$')
+            ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth, labelsize=24)
+            if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            if irow < nrows-1: ax.axes.xaxis.set_ticklabels([])
+            if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            x = gdata['JMAG'] - gdata['KMAG']
+            y = gdata['HMAG']
+
+            if statistics[irow] == 'count':
+                H, yedges, xedges = np.histogram2d(y, x, bins=nbins)
+                im = ax.pcolormesh(xedges, yedges, H, cmap=cmaps[irow], vmin=vmin[imol], vmax=vmax[imol])
+                if imol == 2: ax.text(1.235, 0.5, r'$N$ stars',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistics[irow] == 'median fitscale':
+                #values = gdata['FITSCALE'][:,imol]
+                values = gdata['FITSCALE'+str(imol+1)]
+                ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=(nbins,nbins))
+                ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+                im = ax.imshow(ret.statistic, cmap=cmaps[irow], aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+                if imol == 2: ax.text(1.235, 0.5, r'Median Fit Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistics[irow] == 'median scale':
+                #values = gdata['SCALE'][:,imol]
+                values = gdata['SCALE'+str(imol+1)]
+                ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=(nbins,nbins))
+                ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+                im = ax.imshow(ret.statistic, cmap=cmaps[irow], aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+                if imol == 2: ax.text(1.235, 0.5, r'Median Poly Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if statistics[irow] == 'mad diff':
+                #values = gdata['FITSCALE'][:,imol] - gdata['SCALE'][:,imol]
+                values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
+                ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
+                ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+                im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+                if imol == 2: ax.text(1.235, 0.5, r'MAD Fit $-$ Poly',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="3%", pad="2%")
+            cax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+            cax.tick_params(axis='both',which='major',length=axmajlen)
+            cax.tick_params(axis='both',which='minor',length=axminlen)
+            cax.tick_params(axis='both',which='both',width=axwidth, labelsize=24)
+            cax.minorticks_on()
+            cb1 = colorbar(im, cax=cax)
+
+    fig.subplots_adjust(left=0.044,right=0.925,bottom=0.047,top=0.967,hspace=0.1,wspace=0.2)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+
+
+###########################################################################################
+def tellfitstats6(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
+                  vmin=[-0.02, -0.02, -0.02], vmax=[0.02, 0.02, 0.02]):
+    data = fits.getdata(infile)
+
+    plotfile = sdir5 + 'tellfitstats_indstars_fitscale-scale2.png'
     print('making ' + os.path.basename(plotfile))
 
     fig = plt.figure(figsize=(32,10))
@@ -714,7 +1342,7 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         x = gdata['JMAG'] - gdata['KMAG']
         y = gdata['HMAG']
         values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
-        ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
+        ret = stats.binned_statistic_2d(x, y, values, statistic='mean', bins=(nbins,nbins))
         ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
         im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
 
@@ -724,7 +1352,52 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
         cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
         cb1 = colorbar(im, cax=cax)
         if imol == 2:
-            ax.text(1.19, 0.5, r'MAD (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            ax.text(1.22, 0.5, r'Mean (measured$-$fit)',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.045,right=0.94,bottom=0.093,top=0.94,hspace=0.08,wspace=0.18)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellfitstats7(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40,
+                  vmin=[0.9, 1.1, 0.35], vmax=[1.1, 1.17, 1]):
+    data = fits.getdata(infile)
+
+    plotfile = sdir5 + 'tellfitstats_indstars_meanFitscale.png'
+    print('making ' + os.path.basename(plotfile))
+
+    fig = plt.figure(figsize=(32,10))
+    for imol in range(nmolecules):
+        g, = np.where((data['FITSCALE1'] > 0) & (data['HMAG'] <=11) & (data['JMAG']-data['KMAG'] < 0.58))
+        gdata = data[g]
+
+        ax = plt.subplot2grid((1,nmolecules), (0,imol))
+        ax.minorticks_on()
+        ax.set_ylim(11.2, 6.8)
+        ax.set_xlim(-0.2, 0.53)
+        ax.set_xlabel(r'$J-K$')
+        if imol == 0: ax.set_ylabel(r'$H$')
+        ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        if imol > 0: ax.axes.yaxis.set_ticklabels([])
+        ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+        x = gdata['JMAG'] - gdata['KMAG']
+        y = gdata['HMAG']
+        values = gdata['FITSCALE'+str(imol+1)]# - data['SCALE1']
+        ret = stats.binned_statistic_2d(x, y, values, statistic='mean', bins=(nbins,nbins))
+        ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
+        im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
+
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="3%", pad="2%")
+        cax.minorticks_on()
+        cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+        cb1 = colorbar(im, cax=cax)
+        if imol == 2:
+            ax.text(1.19, 0.5, r'Mean fitscale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
     fig.subplots_adjust(left=0.045,right=0.945,bottom=0.093,top=0.94,hspace=0.08,wspace=0.18)
     plt.savefig(plotfile)
