@@ -203,15 +203,15 @@ def tellspatialnew2(zoom=False, cmap='brg'):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_ylim(-0.001,0.1)
+            ax.set_ylim(-0.2,0.2)
             ax.set_xlim(0,75)
             if irow == 0: ax.axes.xaxis.set_ticklabels([])
             if imol > 0: ax.axes.yaxis.set_ticklabels([])
             if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             if irow == 0:
-                if imol == 0: ax.set_ylabel(r'Poly RMS (constant $-$ linear)')
+                if imol == 0: ax.set_ylabel(r'RMS (constant $-$ linear)')
             if irow == 1:
-                if imol == 0: ax.set_ylabel(r'Poly RMS (constant $-$ quadratic)')
+                if imol == 0: ax.set_ylabel(r'RMS diff (constant $-$ quadratic)')
             if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
             #if imol == 0:
             #    if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
@@ -219,8 +219,8 @@ def tellspatialnew2(zoom=False, cmap='brg'):
             #    if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
             xvals = data['ntell'][:,imol]#-np.nanmin(data['JD'])
-            if irow == 0: yvals = data['MODELRMS'+str(imol+1)][:,0] - data['MODELRMS'+str(imol+1)][:,1]
-            if irow == 1: yvals = data['MODELRMS'+str(imol+1)][:,0] - data['MODELRMS'+str(imol+1)][:,2]
+            if irow == 0: yvals = data['RMSDIFF'+str(imol+1)][:,0] - data['RMSDIFF'+str(imol+1)][:,1]
+            if irow == 1: yvals = data['RMSDIFF'+str(imol+1)][:,0] - data['RMSDIFF'+str(imol+1)][:,2]
             c = data['NTELL'][:,imol]
 
             #med = np.nanmedian(yvals)
@@ -239,6 +239,7 @@ def tellspatialnew2(zoom=False, cmap='brg'):
     fig.subplots_adjust(left=0.055,right=0.945,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
+
 ###########################################################################################
 def tellspatialnew2(zoom=False, cmap='brg'):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
@@ -260,24 +261,24 @@ def tellspatialnew2(zoom=False, cmap='brg'):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_ylim(-0.2,0.2)
+            #ax.set_ylim(-0.2,0.2)
             ax.set_xlim(0,75)
             if irow == 0: ax.axes.xaxis.set_ticklabels([])
-            if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            #if imol > 0: ax.axes.yaxis.set_ticklabels([])
             if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             if irow == 0:
-                if imol == 0: ax.set_ylabel(r'RMS (constant $-$ linear)')
+                if imol == 0: ax.set_ylabel(r'Poly RMS (constant $-$ linear)')
             if irow == 1:
-                if imol == 0: ax.set_ylabel(r'RMS diff (constant $-$ quadratic)')
+                if imol == 0: ax.set_ylabel(r'Poly RMS (constant $-$ quadratic)')
             if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
             #if imol == 0:
             #    if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
             #    if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
             #    if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
-            xvals = data['ll'][:,imol]#-np.nanmin(data['JD'])
-            if irow == 0: yvals = data['RMSDIFF'+str(imol+1)][:,0] - data['RMSDIFF'+str(imol+1)][:,1]
-            if irow == 1: yvals = data['RMSDIFF'+str(imol+1)][:,0] - data['RMSDIFF'+str(imol+1)][:,2]
+            xvals = data['ntell'][:,imol]#-np.nanmin(data['JD'])
+            if irow == 0: yvals = data['MODELRMS'+str(imol+1)][:,0] - data['MODELRMS'+str(imol+1)][:,1]
+            if irow == 1: yvals = data['MODELRMS'+str(imol+1)][:,0] - data['MODELRMS'+str(imol+1)][:,2]
             c = data['NTELL'][:,imol]
 
             #med = np.nanmedian(yvals)
