@@ -1025,8 +1025,8 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
             if ntell == 15: vmax = [50, 50, 50]
             if ntell == 'lt15': vmax = [12, 12, 12]
         if statistics[irow][0:6] == 'median':
-            vmin = [0.98, 1.085, 0.47]
-            vmax = [1.09, 1.14, 0.97]
+            vmin = [0.98, 1.085, 0.44]
+            vmax = [1.10, 1.155, 0.97]
             #if doall is False: 
             #    vmin = [1.03, 1.1085, 0.35]
             #    vmax = [1.11, 1.130, 0.98]
