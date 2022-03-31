@@ -180,8 +180,8 @@ def tellspatialnew1(zoom=False, cmap='brg'):
             sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap)#, alpha=0.8)#, vmin=10, vmax=50)#, edgecolors='k'
 
             if imol == 2:
-                irow == 0: ax.text(0.5,1.03, 'constant $-$ linear', transform=ax.transAxes, rotation=-90)
-                irow == 1: ax.text(0.5,1.03, 'constant $-$ quadratic', transform=ax.transAxes, rotation=-90)
+                if irow == 0: ax.text(0.5,1.03, 'constant $-$ linear', transform=ax.transAxes, rotation=-90)
+                if irow == 1: ax.text(0.5,1.03, 'constant $-$ quadratic', transform=ax.transAxes, rotation=-90)
 
             #    divider = make_axes_locatable(ax)
             #    cax = divider.append_axes("right", size="5%", pad="10%")
