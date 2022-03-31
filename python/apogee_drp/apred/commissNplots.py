@@ -981,7 +981,7 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     ymin = 6
     ymax = 11
 
-    plotfile = sdir5 + 'tellfitstats_indstars_gridgt15.png'
+    plotfile = sdir5 + 'tellfitstats_indstars_grid.png'
     if doall: 
         #infile='tellfitstats_all_stardata.fits'
         plotfile = plotfile.replace('.png', '_all.png')
