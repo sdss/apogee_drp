@@ -982,6 +982,9 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     ymax = 11
 
     plotfile = sdir5 + 'tellfitstats_indstars_grid.png'
+    if ntell == 15: plotfile = sdir5 + 'tellfitstats_indstars_grid15.png'
+    if ntell == 'lt15': plotfile = sdir5 + 'tellfitstats_indstars_gridlt15.png'
+    if ntell == 'gt15': plotfile = sdir5 + 'tellfitstats_indstars_gridgt15.png'
     if doall: 
         #infile='tellfitstats_all_stardata.fits'
         plotfile = plotfile.replace('.png', '_all.png')
@@ -993,7 +996,9 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     if ntell is not None:
         #gd, = np.where((ntellmean >= 10) & (ntellmean <= 15))
         #gd, = np.where((ntellmean > 15))# & (ntellmean <= 15))
-        gd, = np.where(expdata['NTELL'] == ntell)
+        if ntell == 15: gd, = np.where(expdata['NTELL'] == 15)
+        if ntell == 'lt15': gd, = np.where(expdata['NTELL'] < 15)
+        if ntell == 'gt15': gd, = np.where(expdata['NTELL'] > 15)
         expnum = expdata['EXPNUM'][gd]
         mask = np.in1d(data['expnum'], expnum)
         gd, = np.where(mask == True)
