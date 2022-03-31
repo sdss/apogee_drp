@@ -179,13 +179,13 @@ def tellspatialnew1(zoom=False, cmap='brg'):
             #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap)#, alpha=0.8)#, vmin=10, vmax=50)#, edgecolors='k'
 
-            #if ipar == 2:
-            #    divider = make_axes_locatable(ax)
-            #    cax = divider.append_axes("right", size="5%", pad="10%")
-            #    cax.minorticks_on()
-            #    #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
-            #    cb1 = colorbar(sc1, cax=cax)
-            #    ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+            if imol == 2:
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad="10%")
+                cax.minorticks_on()
+                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+                cb1 = colorbar(sc1, cax=cax)
+                #ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
     fig.subplots_adjust(left=0.055,right=0.945,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
