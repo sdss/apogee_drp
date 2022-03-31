@@ -162,7 +162,7 @@ def tellspatialnew1(zoom=False, cmap='brg'):
             if irow == 0:
                 if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
             if irow == 1:
-                if imol == 0: ax.set_ylabel(r'RMS (constant $-$ quadratic)')
+                if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
             if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
             #if imol == 0:
             #    if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
