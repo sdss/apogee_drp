@@ -147,7 +147,9 @@ def tellspatialnew1(zoom=False, cmap='brg'):
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_ylim(-0.001,0.1)
             ax.set_xlim(0,75)
-            ax.set_xlabel(r'$N$ tellurics')
+            if irow == 0: ax.axes.xaxis.set_ticklabels([])
+            if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             if irow == 0:
                 if imol == 0: ax.set_ylabel(r'RMS (constant $-$ linear)')
             if irow == 1:
