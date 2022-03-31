@@ -1027,18 +1027,18 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
         if statistics[irow][0:6] == 'median':
             vmin = [0.98, 1.085, 0.50]
             vmax = [1.08, 1.13, 1.00]
-            if doall is False: 
-                vmin = [1.03, 1.135, 0.35]
-                vmax = [1.11, 1.160, 0.98]
+            #if doall is False: 
+            #    vmin = [1.03, 1.1085, 0.35]
+            #    vmax = [1.11, 1.130, 0.98]
             if ntell == 15: 
-                vmin = [0.97, 1.09, 0.45]
-                vmax = [1.11, 1.145, 0.90]
+                vmin = [0.98, 1.085, 0.50]
+                vmax = [1.08, 1.13, 1.00]
             if ntell == 'lt15': 
-                vmin = [0.97, 1.09, 0.45]
-                vmax = [1.11, 1.145, 0.90]
+                vmin = [0.98, 1.085, 0.50]
+                vmax = [1.08, 1.13, 1.00]
             if ntell == 'gt15': 
-                vmin = [0.97, 1.09, 0.45]
-                vmax = [1.11, 1.145, 0.90]
+                vmin = [0.98, 1.085, 0.50]
+                vmax = [1.08, 1.13, 1.00]
         if statistics[irow] == 'mad diff':
             vmin=[0.010, 0.010, 0.010]
             vmax=[0.028, 0.028, 0.028]
