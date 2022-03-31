@@ -535,7 +535,7 @@ def tellspatial4(zoom=False):
             ax.tick_params(axis='both',which='both',width=axwidth)
             ax.set_ylim(-0.1,1.8)
             if zoom: ax.set_ylim(-0.05, 0.05)
-            if ipar == 0: ax.set_ylabel('RMS (fine grid)')
+            if ipar == 0: ax.set_ylabel('RMS / median (fine grid)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
             if ipar > 0: ax.axes.yaxis.set_ticklabels([])
@@ -546,7 +546,7 @@ def tellspatial4(zoom=False):
                 if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
             xvals = data['JD']-np.nanmin(data['JD'])
-            yvals = data['SYNTHRMS'+str(imol+1)][:,ipar]
+            yvals = data['SYNTHRMS'+str(imol+1)][:,ipar] / data['MEDFIT'+str(imol+1)][:,ipar]
 
             med = np.nanmedian(yvals)
             ax.axhline(med, color='grey', linestyle='dashed')
