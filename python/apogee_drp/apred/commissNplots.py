@@ -1002,7 +1002,7 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     #xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
     #pdb.set_trace()
 
-    g, = np.where((data['HMAG'] <= 11) & (data['HMAG'] >= 6) & (data['JMAG']-data['KMAG'] < 0.5))
+    g, = np.where((data['HMAG'] <= ymax) & (data['HMAG'] >= ymin) & (data['JMAG']-data['KMAG'] < xmax))
     data = data[g]
 
     statistics = ['count', 'median fitscale', 'median scale', 'mad diff']
@@ -1019,7 +1019,7 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
             if doall is False: vmax = [25, 25, 25]
             if ntell == 15: vmax = [50, 50, 50]
         if statistics[irow][0:6] == 'median':
-            vmin = [0.97, 1.085, 0.50]
+            vmin = [0.98, 1.085, 0.50]
             vmax = [1.08, 1.13, 1.00]
             if doall is False: 
                 vmin = [1.03, 1.135, 0.35]
