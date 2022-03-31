@@ -166,7 +166,7 @@ def tellspatialnew1(zoom=False, cmap='brg'):
             #med = np.nanmedian(yvals)
             #ax.axhline(med, color='grey', linestyle='dashed')
             #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
-            sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap, alpha=0.8, vmin=10, vmax=50)#, edgecolors='k'
+            sc1 = ax.scatter(xvals, yvals, marker='o', s=3)#, c=c, cmap=cmap, alpha=0.8, vmin=10, vmax=50)#, edgecolors='k'
 
             #if ipar == 2:
             #    divider = make_axes_locatable(ax)
