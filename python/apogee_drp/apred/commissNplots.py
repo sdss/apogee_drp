@@ -307,9 +307,9 @@ def tellspatialnew3(zoom=False, cmap='brg'):
             #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol])#, cmap=cmap)#, alpha=0.8)#, vmin=10, vmax=50)#, edgecolors='k'
 
-            if imol == 2:
-                if irow == 0: ax.text(1.03, 0.5, 'constant $-$ linear', transform=ax.transAxes, rotation=-90, ha='left', va='center')
-                if irow == 1: ax.text(1.03, 0.5, 'constant $-$ quadratic', transform=ax.transAxes, rotation=-90, ha='left', va='center')
+            #if imol == 2:
+            #    if irow == 0: ax.text(1.03, 0.5, 'constant $-$ linear', transform=ax.transAxes, rotation=-90, ha='left', va='center')
+            #    if irow == 1: ax.text(1.03, 0.5, 'constant $-$ quadratic', transform=ax.transAxes, rotation=-90, ha='left', va='center')
 
             #    divider = make_axes_locatable(ax)
             #    cax = divider.append_axes("right", size="5%", pad="10%")
