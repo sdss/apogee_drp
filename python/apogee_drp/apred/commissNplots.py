@@ -985,9 +985,9 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     if ntell == 15: plotfile = sdir5 + 'tellfitstats_indstars_grid15.png'
     if ntell == 'lt15': plotfile = sdir5 + 'tellfitstats_indstars_gridlt15.png'
     if ntell == 'gt15': plotfile = sdir5 + 'tellfitstats_indstars_gridgt15.png'
-    if doall: 
+    #if doall: 
         #infile='tellfitstats_all_stardata.fits'
-        plotfile = plotfile.replace('.png', '_all.png')
+        #plotfile = plotfile.replace('.png', '_all.png')
 
     print('making ' + os.path.basename(plotfile))
 
