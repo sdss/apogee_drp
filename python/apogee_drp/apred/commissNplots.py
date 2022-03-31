@@ -969,8 +969,9 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 ###########################################################################################
 def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nbins=40, doall=True,
                      do4=False, do5=False, ntell=35):
-    #infile='tellfitstats2_stardata.fits'
-    expdata = fits.getdata('tellfitstats_all.fits')
+
+    infile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats_stardata.fits'
+    expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
 
     xmin = -0.2
     xmax = 0.5
@@ -1029,7 +1030,7 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
 
         for imol in range(nmolecules):
             print(imol)
-            g, = np.where(data['FITSCALE'+str(imol+1)] > 0)
+            g, = np.where(data['FITSCALE'][:,imol] > 0)
             gdata = data[g]
 
             if statistics[irow] == 'count':
@@ -1058,19 +1059,19 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
                 im = ax.pcolormesh(xedges, yedges, H, cmap=cmaps[irow], vmin=vmin[imol], vmax=vmax[imol])
                 if imol == 2: ax.text(1.235, 0.5, r'$N$ stars',ha='left', va='center', rotation=-90, transform=ax.transAxes)
             if statistics[irow] == 'median fitscale':
-                values = gdata['FITSCALE'+str(imol+1)]
+                values = gdata['FITSCALE'][:,imol]
                 ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=(nbins,nbins))
                 ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
                 im = ax.imshow(ret.statistic, cmap=cmaps[irow], aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
                 if imol == 2: ax.text(1.235, 0.5, r'Median Fit Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
             if statistics[irow] == 'median scale':
-                values = gdata['SCALE'+str(imol+1)]
+                values = gdata['SCALE'][:,imol]
                 ret = stats.binned_statistic_2d(x, y, values, statistic='median', bins=(nbins,nbins))
                 ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
                 im = ax.imshow(ret.statistic, cmap=cmaps[irow], aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
                 if imol == 2: ax.text(1.235, 0.5, r'Median Poly Scale',ha='left', va='center', rotation=-90, transform=ax.transAxes)
             if statistics[irow] == 'mad diff':
-                values = gdata['FITSCALE'+str(imol+1)] - gdata['SCALE'+str(imol+1)]
+                values = gdata['FITSCALE'][:,imol] - gdata['SCALE'][:,imol]
                 ret = stats.binned_statistic_2d(x, y, values, statistic=dln.mad, bins=(nbins,nbins))
                 ext = [ret.x_edge[0], ret.x_edge[-1:][0], ret.y_edge[-1:][0], ret.y_edge[0]]
                 im = ax.imshow(ret.statistic, cmap=cmap, aspect='auto', origin='upper', extent=ext, vmin=vmin[imol], vmax=vmax[imol])
