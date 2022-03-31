@@ -973,6 +973,9 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     infile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats_stardata.fits'
     expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
 
+    infile = 'tellfitstats_all_stardata.fits'
+    expdata = fits.getdata('tellfitstats_all.fits')
+
     xmin = -0.2
     xmax = 0.5
     ymin = 6
