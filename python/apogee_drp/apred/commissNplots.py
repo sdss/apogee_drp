@@ -292,6 +292,7 @@ def tellspatialnew3(zoom=False, cmap='brg'):
             if irow == 1:
                 if imol == 0: ax.set_ylabel(r'constant $-$ median quadratic')
             if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
+            ax.axhline(y=0, linestyle='dashed', color='grey')
             #if imol == 0:
             #    if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
             #    if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
