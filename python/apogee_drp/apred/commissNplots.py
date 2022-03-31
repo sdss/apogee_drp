@@ -970,11 +970,11 @@ def tellfitstats5(infile='tellfitstats2_stardata.fits', cmap='rainbow', nbins=40
 def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nbins=40, doall=True,
                      do4=False, do5=False, ntell=15):
 
-    infile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats_stardata.fits'
-    expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
+    #infile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats_stardata.fits'
+    #expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
 
-    #infile = 'tellfitstats_all_stardata.fits'
-    #expdata = fits.getdata('tellfitstats_all.fits')
+    infile = 'tellfitstats_all_stardata.fits'
+    expdata = fits.getdata('tellfitstats_all.fits')
 
     xmin = -0.2
     xmax = 0.5
@@ -1018,7 +1018,7 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
             if doall is False: vmax = [25, 25, 25]
             if ntell == 15: vmax = [50, 50, 50]
         if statistics[irow][0:6] == 'median':
-            vmin = [0.95, 1.085, 0.50]
+            vmin = [0.97, 1.085, 0.50]
             vmax = [1.08, 1.13, 1.00]
             if doall is False: 
                 vmin = [1.03, 1.135, 0.35]
