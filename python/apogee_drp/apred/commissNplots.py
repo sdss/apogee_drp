@@ -277,8 +277,8 @@ def tellspatialnew2(zoom=False, cmap='brg'):
             #    if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
             xvals = data['ntell'][:,imol]#-np.nanmin(data['JD'])
-            if irow == 0: yvals = data['MODELRMS'+str(imol+1)][:,0] - data['MODELRMS'+str(imol+1)][:,1]
-            if irow == 1: yvals = data['MODELRMS'+str(imol+1)][:,0] - data['MODELRMS'+str(imol+1)][:,2]
+            if irow == 0: yvals = data['MODELRMS'+str(imol+1)][:,1] - data['MODELRMS'+str(imol+1)][:,0]
+            if irow == 1: yvals = data['MODELRMS'+str(imol+1)][:,2] - data['MODELRMS'+str(imol+1)][:,0]
             c = data['NTELL'][:,imol]
 
             #med = np.nanmedian(yvals)
