@@ -684,7 +684,7 @@ def check(nums,apred,telescope,verbose=True,logger=None):
     Usage
     -----
     
-    mask = check_dark(40300010,'daily','apo25m')
+    mask = check([40300010,40300011,40300012]'daily','apo25m')
 
     """
 
@@ -732,16 +732,24 @@ def check(nums,apred,telescope,verbose=True,logger=None):
         elif expinfo['exptype'].lower()=='skyflat':
             mask = check_skyflat(num,apred,telescope)
         else:
-            logger.info('exptype: ',expinfo['exptype'],' not known')
+            mask = None
+            logger.info('exptype: '+str(expinfo['exptype'])+' not known')
         if mask is not None:
             out['mask'][i] = mask
             if mask == 0:
                 out['okay'][i] = True
+        else:
+            out['mask'][i] = 1
+            out['okay'][i] = False
         if verbose:
-            bits,bset = bitmask(mask)
-            sbset = ', '.join(bset)
-            lensbset = len(sbset)
-            fmt = '%8d  %13s  %5d  %6s  %-'+str(len(sbset)+2)+'s'
+            if mask is not None:
+                bits,bset = bitmask(mask)
+                sbset = ', '.join(bset)
+                lensbset = len(sbset)
+            else:
+                sbset = ''
+                lensbset = 0
+            fmt = '%8d  %13s  %5d  %6s  %-'+str(lensbset+2)+'s'
             logger.info(fmt % (out['num'][i],out['exptype'][i],out['mask'][i],out['okay'][i],sbset))
 
     return out
