@@ -973,8 +973,8 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     infile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats_stardata.fits'
     expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
 
-    infile = 'tellfitstats_all_stardata.fits'
-    expdata = fits.getdata('tellfitstats_all.fits')
+    #infile = 'tellfitstats_all_stardata.fits'
+    #expdata = fits.getdata('tellfitstats_all.fits')
 
     xmin = -0.2
     xmax = 0.5
@@ -989,8 +989,9 @@ def tellfitstatsgrid(infile='tellfitstats_all_stardata.fits', cmap='rainbow', nb
     print('making ' + os.path.basename(plotfile))
 
     data = fits.getdata(infile)
+    ntellmean = np.nanmean(expdata['NFIT'], axis=1) 
     if ntell is not None:
-        gd, = np.where(np.nanmean(expdata['NFIT'], axis=1) == ntell)
+        gd, = np.where((ntellmean >= 10) & (ntellmean <= 15))
         expnum = expdata['EXPNUM'][gd]
         mask = np.in1d(data['expnum'], expnum)
         gd, = np.where(mask == True)
