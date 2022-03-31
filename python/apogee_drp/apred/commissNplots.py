@@ -127,6 +127,15 @@ nmolecules = len(molecules)
 ###########################################################################################
 def tellspatialnew1(zoom=False, cmap='brg'):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+    expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
+
+    expnum = expdata['EXPNUM']
+    mask = np.in1d(data['expnum'], expnum)
+    gd, = np.where(mask == True)
+    data = data[gd]
+
+    xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
+    pdb.set_trace()
 
     nrows = 2
     molcols = ['mediumseagreen', 'purple', 'darkorange']
