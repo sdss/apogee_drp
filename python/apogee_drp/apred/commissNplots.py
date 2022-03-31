@@ -154,7 +154,7 @@ def tellspatialnew1(zoom=False, cmap='brg'):
                 if imol == 0: ax.set_ylabel(r'RMS (constant $-$ linear)')
             if irow == 1:
                 if imol == 0: ax.set_ylabel(r'RMS (constant $-$ quadratic)')
-            #if ipar == 2: ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+            if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
             #if imol == 0:
             #    if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
             #    if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
