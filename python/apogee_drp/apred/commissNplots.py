@@ -288,7 +288,7 @@ def tellspatialnew3(zoom=False, cmap='brg'):
             if imol > 0: ax.axes.yaxis.set_ticklabels([])
             if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             if irow == 0:
-                if imol == 0: ax.set_ylabel(r'fit $-$ poly)')
+                if imol == 0: ax.set_ylabel(r'fit $-$ poly')
             if irow == 1:
                 if imol == 0: ax.set_ylabel(r'fit $-$ poly')
             if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
