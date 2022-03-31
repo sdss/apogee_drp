@@ -261,10 +261,10 @@ def tellspatialnew2(zoom=False, cmap='brg'):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            #ax.set_ylim(-0.2,0.2)
+            ax.set_ylim(0.0,1.8)
             ax.set_xlim(0,75)
             if irow == 0: ax.axes.xaxis.set_ticklabels([])
-            #if imol > 0: ax.axes.yaxis.set_ticklabels([])
+            if imol > 0: ax.axes.yaxis.set_ticklabels([])
             if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             if irow == 0:
                 if imol == 0: ax.set_ylabel(r'Poly RMS (constant $-$ linear)')
