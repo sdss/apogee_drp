@@ -607,7 +607,7 @@ def tellspatial444(zoom=False, cmap='rainbow'):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
     expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
 
-    #expdata = fits.getdata('tellfitstats_all.fits')
+    expdata = fits.getdata('tellfitstats_all.fits')
 
     expnum = expdata['EXPNUM']
     mask = np.in1d(data['expnum'], expnum)
@@ -644,7 +644,7 @@ def tellspatial444(zoom=False, cmap='rainbow'):
 
         xvals = data['JD']-np.nanmin(data['JD'])
         yvals = data['synthfrac'+str(imol+1)][:,1]# / data['MEDFIT'+str(imol+1)][:,ipar]
-        c = expdata['NFIT'][:,imol]
+        c = expdata['NTELL']#[:,imol]
 
         med = np.nanmedian(yvals)
         #ax.axhline(med, color='grey', linestyle='dashed')
