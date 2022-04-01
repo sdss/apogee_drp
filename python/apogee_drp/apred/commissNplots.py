@@ -627,7 +627,7 @@ def tellspatial444(zoom=False):
         if imol == 1: ax.set_ylabel('(max fitscale $-$ min fitscale) $/$ med fitscale')
         if imol == 2: ax.set_xlabel('Days since time[0]')
         if imol < 2: ax.axes.xaxis.set_ticklabels([])
-        ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+        ax.text(1.01, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
         if imol == 0:
             ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
