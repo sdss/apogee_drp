@@ -538,7 +538,7 @@ def tellspatial4(zoom=False):
             if ipar == 0: ax.set_ylabel('Factional RMS (fine grid)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
-            if ipar > 0: ax.axes.yaxis.set_ticklabels([])
+            #if ipar > 0: ax.axes.yaxis.set_ticklabels([])
             if ipar == 2: ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
             if imol == 0:
                 if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
