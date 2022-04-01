@@ -607,7 +607,7 @@ def tellspatial444(zoom=False, cmap='rainbow'):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
     expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
 
-    expdata = fits.getdata('tellfitstats_all.fits')
+    #expdata = fits.getdata('tellfitstats_all.fits')
 
     expnum = expdata['EXPNUM']
     mask = np.in1d(data['expnum'], expnum)
