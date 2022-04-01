@@ -578,7 +578,7 @@ def tellspatial44(zoom=False):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_ylim(-0.05,0.6)
+            ax.set_ylim(-0.05,0.7)
             #if zoom: ax.set_ylim(-0.05, 0.05)
             if (ipar == 0) & (imol == 1): ax.set_ylabel('(max fitscale $-$ min fitscale) $/$ med fitscale')
             if imol == 2: ax.set_xlabel('Days since time[0]')
