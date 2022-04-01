@@ -644,13 +644,13 @@ def tellspatial444(zoom=False, cmap='rainbow'):
 
         xvals = data['JD']-np.nanmin(data['JD'])
         yvals = data['synthfrac'+str(imol+1)][:,1]# / data['MEDFIT'+str(imol+1)][:,ipar]
-        c = expdata['SN']
+        c = expdata['NFIT'][:,imol]
 
         med = np.nanmedian(yvals)
         #ax.axhline(med, color='grey', linestyle='dashed')
         #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
         #ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
-        sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap, alpha=0.8, vmin=10, vmax=30)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+        sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap, alpha=0.8, vmin=10, vmax=35)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="2%", pad="1%")
