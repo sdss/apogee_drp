@@ -653,11 +653,11 @@ def tellspatial444(zoom=False, cmap='rainbow'):
         sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap, alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
         divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="3%", pad="2%")
+        cax = divider.append_axes("right", size="2%", pad="1%")
         cax.minorticks_on()
         #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
         cb1 = colorbar(sc1, cax=cax)
-        ax.text(1.06, 0.5, r'S/N',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+        ax.text(1.075, 0.5, r'S/N',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
 
     fig.subplots_adjust(left=0.055,right=0.94,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
