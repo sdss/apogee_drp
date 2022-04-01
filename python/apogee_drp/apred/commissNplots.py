@@ -638,7 +638,7 @@ def tellspatial444(zoom=False, cmap='rainbow'):
         if imol == 1: ax.set_ylabel('(max fitscale $-$ min fitscale) $/$ med fitscale')
         if imol == 2: ax.set_xlabel('Days since time[0]')
         if imol < 2: ax.axes.xaxis.set_ticklabels([])
-        ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
+        ax.text(0.97, 0.94, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
         if imol == 0:
             ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
@@ -657,7 +657,7 @@ def tellspatial444(zoom=False, cmap='rainbow'):
         cax.minorticks_on()
         #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
         cb1 = colorbar(sc1, cax=cax)
-        ax.text(1.075, 0.5, r'S/N',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+        ax.text(1.072, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
 
     fig.subplots_adjust(left=0.055,right=0.94,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
