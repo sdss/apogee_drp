@@ -603,8 +603,17 @@ def tellspatial44(zoom=False):
     plt.close('all')
 
 ###########################################################################################
-def tellspatial444(zoom=False):
+def tellspatial444(zoom=False, cmap='rainbow'):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+    expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
+
+    expnum = expdata['EXPNUM']
+    mask = np.in1d(data['expnum'], expnum)
+    gd, = np.where(mask == True)
+    data = data[gd]
+
+    xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
+    expdata = expdata[x_ind]
 
     npars = 3
     molcols = ['mediumseagreen', 'purple', 'darkorange']
@@ -627,19 +636,29 @@ def tellspatial444(zoom=False):
         if imol == 1: ax.set_ylabel('(max fitscale $-$ min fitscale) $/$ med fitscale')
         if imol == 2: ax.set_xlabel('Days since time[0]')
         if imol < 2: ax.axes.xaxis.set_ticklabels([])
-        ax.text(1.01, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+        ax.text(0.97, 0.97, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
         if imol == 0:
             ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
         xvals = data['JD']-np.nanmin(data['JD'])
         yvals = data['synthfrac'+str(imol+1)][:,1]# / data['MEDFIT'+str(imol+1)][:,ipar]
+        c = expdata['SN']
 
         med = np.nanmedian(yvals)
         #ax.axhline(med, color='grey', linestyle='dashed')
         #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
         ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+        ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap, alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
-    fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="3%", pad="2%")
+        cax.minorticks_on()
+        #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+        cb1 = colorbar(sc1, cax=cax)
+        ax.text(1.06, 0.5, r'S/N',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+
+    fig.subplots_adjust(left=0.055,right=0.94,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
