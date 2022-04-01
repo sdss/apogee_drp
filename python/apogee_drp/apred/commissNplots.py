@@ -549,7 +549,7 @@ def tellspatial4(zoom=False):
             yvals = data['synthdifrms'+str(imol+1)][:,ipar]# / data['MEDFIT'+str(imol+1)][:,ipar]
 
             med = np.nanmedian(yvals)
-            ax.axhline(med, color='grey', linestyle='dashed')
+            #ax.axhline(med, color='grey', linestyle='dashed')
             #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
