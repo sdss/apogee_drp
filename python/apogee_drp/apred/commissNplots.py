@@ -892,9 +892,11 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                            ('SCALE',     np.float64, nmolecules),
                            ('FITSCALE',  np.float64, nmolecules),
                            ('RCHISQ',    np.float64, nmolecules),
-                           ('MAG',       np.float64, nmolecules)])
+                           ('MAG',       np.float64, nmolecules),
+                           ('REJ',       np.int32, nmolecules)])
 
-        for i in range(nexp):
+        #for i in range(nexp):
+        for i in range(5):
             sloan4 = False
             print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + str(mjd[i]) + ', exp = ' + str(num[i]))
             cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
@@ -1071,23 +1073,27 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     outstar['BESTMOD'][:,0] = np.full(ntell, bestmod[0])
                     outstar['BESTMOD'][:,1] = np.full(ntell, bestmod[1])
                     outstar['BESTMOD'][:,2] = np.full(ntell, bestmod[2])
-                    pdb.set_trace()
                     outstar['SCALE'][g1,0] =  scale[0, tellfibindex1]
                     outstar['SCALE'][g2,1] =  scale[1, tellfibindex2]
                     outstar['SCALE'][g3,2] =  scale[2, tellfibindex3]
-                    outstar['FITSCALE'][g1,0] =  fscale[0, tellfibindex1]
-                    outstar['FITSCALE'][g2,1] =  fscale[1, tellfibindex2]
-                    outstar['FITSCALE'][g3,2] =  fscale[2, tellfibindex3]
+                    outstar['FITSCALE'][g1,0] =  fscale[g1, 0]
+                    outstar['FITSCALE'][g2,1] =  fscale[g2, 0]
+                    outstar['FITSCALE'][g3,2] =  fscale[g3, 0]
+
+                    rej1, = np.where(outstar['FITSCALE'][:,0] == 0)
+                    rej2, = np.where(outstar['FITSCALE'][:,1] == 0)
+                    rej3, = np.where(outstar['FITSCALE'][:,2] == 0)
+                    if len(rej1) > 0: outstar['REJ'][rej1,0] ==1
+                    if len(rej2) > 0: outstar['REJ'][rej2,0] ==1
+                    if len(rej3) > 0: outstar['REJ'][rej3,0] ==1
+                    #pdb.set_trace()
 
 
-
-
-
-                    outstar['FITSCALE1'] = fitscale[0, tell]
-                    outstar['SCALE2'] =    scale[1, tell]
-                    outstar['FITSCALE2'] = fitscale[1, tell]
-                    outstar['SCALE3'] =    scale[2, tell]
-                    outstar['FITSCALE3'] = fitscale[2, tell]
+                    #outstar['FITSCALE1'] = fitscale[0, tell]
+                    #outstar['SCALE2'] =    scale[1, tell]
+                    #outstar['FITSCALE2'] = fitscale[1, tell]
+                    #outstar['SCALE3'] =    scale[2, tell]
+                    #outstar['FITSCALE3'] = fitscale[2, tell]
 
                     if i == 0:
                         outS = outstar
