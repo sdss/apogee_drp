@@ -1087,9 +1087,9 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     rej1, = np.where(outstar['FITSCALE'][:,0] == 0)
                     rej2, = np.where(outstar['FITSCALE'][:,1] == 0)
                     rej3, = np.where(outstar['FITSCALE'][:,2] == 0)
-                    if len(rej1) > 0: outstar['REJ'][rej1,0] ==1
-                    if len(rej2) > 0: outstar['REJ'][rej2,0] ==1
-                    if len(rej3) > 0: outstar['REJ'][rej3,0] ==1
+                    if len(rej1) > 0: outstar['REJ'][rej1,0] = 1
+                    if len(rej2) > 0: outstar['REJ'][rej2,0] = 1
+                    if len(rej3) > 0: outstar['REJ'][rej3,0] = 1
                     #pdb.set_trace()
 
 
