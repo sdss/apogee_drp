@@ -1032,13 +1032,16 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     out['SIGSCALE'][i,1] = np.std(scale[1,gg2])
                     out['SIGSCALE'][i,2] = np.std(scale[2,gg3])
 
-                    out['MINSCALE'][i,0] = np.nanmin(scale[0,gg1])
-                    out['MINSCALE'][i,1] = np.nanmin(scale[1,gg2])
-                    out['MINSCALE'][i,2] = np.nanmin(scale[2,gg3])
+                    try:
+                        out['MINSCALE'][i,0] = np.nanmin(scale[0,gg1])
+                        out['MINSCALE'][i,1] = np.nanmin(scale[1,gg2])
+                        out['MINSCALE'][i,2] = np.nanmin(scale[2,gg3])
 
-                    out['MAXSCALE'][i,0] = np.nanmax(scale[0,gg1])
-                    out['MAXSCALE'][i,1] = np.nanmax(scale[1,gg2])
-                    out['MAXSCALE'][i,2] = np.nanmax(scale[2,gg3])
+                        out['MAXSCALE'][i,0] = np.nanmax(scale[0,gg1])
+                        out['MAXSCALE'][i,1] = np.nanmax(scale[1,gg2])
+                        out['MAXSCALE'][i,2] = np.nanmax(scale[2,gg3])
+                    except:
+                        nothing = 1
 
                     out['NREJ'][i,0] = int(ntell - len(g1))
                     out['NREJ'][i,1] = int(ntell - len(g2))
