@@ -1036,6 +1036,9 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     out['MAXSCALE'][i,1] = np.nanmax(scale[1,gg2])
                     out['MAXSCALE'][i,2] = np.nanmax(scale[2,gg3])
 
+                    out['NREJ'][i,0] = int(ntell - len(g1))
+                    out['NREJ'][i,1] = int(ntell - len(g2))
+                    out['NREJ'][i,2] = int(ntell - len(g3))
 
                     #out['MAD1'][i] = dln.mad(fitscale[0, tell[gd]])
                     #out['MADRESID1'][i] = dln.mad(fitscale[0, tell[gd]] - scale[0, tell[gd]])
