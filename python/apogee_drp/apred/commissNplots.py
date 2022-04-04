@@ -953,7 +953,7 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     out['SECZ'][i] = allsnrg['SECZ'][i]
                     out['SKY'][i] = np.nanmean(allsnrg['SKY'][i])
                     out['SN'][i] = np.nanmean(allsnrg['SN'][i])
-                    out['NTELL'][i] = ntellx=a.
+                    out['NTELL'][i] = ntell
                     out['NFIT'][i,0] = len(g1); out['NTELL'][i,1] = len(g2); out['NTELL'][i,2] = len(g3)
 
 
