@@ -800,7 +800,7 @@ def tellspatial7(zoom=False):
     plt.close('all')
 
 ###########################################################################################
-def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647, 
+def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647, 
                   remake=False, plot=True, plotx='MEANH', cmap='rainbow',
                   color=None):
 
@@ -918,7 +918,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                 zeta = np.squeeze(tellfit['ZETA'])
 
                 hdr = np.array(fits.getheader(cframe)['HISTORY'])
-                tellind = np.flatnonzero(np.core.defchararray.find(ghdr,'APTELLURIC: Fiber=')!=-1)
+                tellind = np.flatnonzero(np.core.defchararray.find(hdr,'APTELLURIC: Fiber=')!=-1)
                 if len(tellind) > 0:
                     hdr = hdr[tellind]
                     ntell = len(hdr) // 2
@@ -953,7 +953,7 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                     out['SECZ'][i] = allsnrg['SECZ'][i]
                     out['SKY'][i] = np.nanmean(allsnrg['SKY'][i])
                     out['SN'][i] = np.nanmean(allsnrg['SN'][i])
-                    out['NTELL'][i] = ntell
+                    out['NTELL'][i] = ntellx=a.
                     out['NFIT'][i,0] = len(g1); out['NTELL'][i,1] = len(g2); out['NTELL'][i,2] = len(g3)
 
 
