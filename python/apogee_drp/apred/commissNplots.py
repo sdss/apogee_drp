@@ -930,16 +930,20 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     hdr = hdr[tellind]
                     ntell = len(hdr) // 2
 
-                    fscale = np.zeros((ntell,3))
+                    tfitscale = np.zeros((ntell,3))
+                    tscale = np.zeros((ntell,3))
                     tellfib = np.zeros(ntell)
                     for itel in range(ntell):
                         tellfib[itel] = int(hdr[itel+ntell].split('=')[1].split(' Norm')[0])
-                        fscale[itel, 0] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[0])
-                        fscale[itel, 1] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[1])
-                        fscale[itel, 2] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[2])
-                    g1, = np.where(fscale[:,0] > 0)
-                    g2, = np.where(fscale[:,1] > 0)
-                    g3, = np.where(fscale[:,2] > 0)
+                        tfitscale[itel, 0] = float(hdr[itel].split('Norm=')[1].split(', ')[0])
+                        tfitscale[itel, 1] = float(hdr[itel].split('Norm=')[1].split(', ')[1])
+                        tfitscale[itel, 2] = float(hdr[itel].split('Norm=')[1].split(', ')[2])
+                        tscale[itel, 0] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[0])
+                        tscale[itel, 1] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[1])
+                        tscale[itel, 2] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[2])
+                    g1, = np.where(tfitscale[:,0] > 0)
+                    g2, = np.where(tfitscale[:,1] > 0)
+                    g3, = np.where(tfitscale[:,2] > 0)
                     tellfibindex1 = (300 - tellfib[g1]).astype(int)
                     tellfibindex2 = (300 - tellfib[g2]).astype(int)
                     tellfibindex3 = (300 - tellfib[g3]).astype(int)
@@ -984,29 +988,29 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     out['FITMEANJK'][i,2] = np.nanmean(plugmap[magnames[0]][tellfibindex3] - plugmap[magnames[2]][tellfibindex3])
                     out['FITSIGJK'][i,2] = np.nanstd(plugmap[magnames[0]][tellfibindex3] - plugmap[magnames[2]][tellfibindex3])
 
-                    out['MEANFITSCALE'][i,0] = np.nanmean(fscale[g1,0])
-                    out['MEANFITSCALE'][i,1] = np.nanmean(fscale[g2,1])
-                    out['MEANFITSCALE'][i,2] = np.nanmean(fscale[g3,2])
+                    out['MEANFITSCALE'][i,0] = np.nanmean(tfitscale[g1,0])
+                    out['MEANFITSCALE'][i,1] = np.nanmean(tfitscale[g2,1])
+                    out['MEANFITSCALE'][i,2] = np.nanmean(tfitscale[g3,2])
 
-                    out['MEDFITSCALE'][i,0] = np.nanmedian(fscale[g1,0])
-                    out['MEDFITSCALE'][i,1] = np.nanmedian(fscale[g2,1])
-                    out['MEDFITSCALE'][i,2] = np.nanmedian(fscale[g3,2])
+                    out['MEDFITSCALE'][i,0] = np.nanmedian(tfitscale[g1,0])
+                    out['MEDFITSCALE'][i,1] = np.nanmedian(tfitscale[g2,1])
+                    out['MEDFITSCALE'][i,2] = np.nanmedian(tfitscale[g3,2])
 
-                    out['MADFITSCALE'][i,0] = dln.mad(fscale[g1,0])
-                    out['MADFITSCALE'][i,1] = dln.mad(fscale[g2,1])
-                    out['MADFITSCALE'][i,2] = dln.mad(fscale[g3,2])
+                    out['MADFITSCALE'][i,0] = dln.mad(tfitscale[g1,0])
+                    out['MADFITSCALE'][i,1] = dln.mad(tfitscale[g2,1])
+                    out['MADFITSCALE'][i,2] = dln.mad(tfitscale[g3,2])
 
-                    out['SIGFITSCALE'][i,0] = np.std(fscale[g1,0])
-                    out['SIGFITSCALE'][i,1] = np.std(fscale[g2,1])
-                    out['SIGFITSCALE'][i,2] = np.std(fscale[g3,2])
+                    out['SIGFITSCALE'][i,0] = np.std(tfitscale[g1,0])
+                    out['SIGFITSCALE'][i,1] = np.std(tfitscale[g2,1])
+                    out['SIGFITSCALE'][i,2] = np.std(tfitscale[g3,2])
 
-                    out['MINFITSCALE'][i,0] = np.nanmin(fscale[g1,0])
-                    out['MINFITSCALE'][i,1] = np.nanmin(fscale[g2,1])
-                    out['MINFITSCALE'][i,2] = np.nanmin(fscale[g3,2])
+                    out['MINFITSCALE'][i,0] = np.nanmin(tfitscale[g1,0])
+                    out['MINFITSCALE'][i,1] = np.nanmin(tfitscale[g2,1])
+                    out['MINFITSCALE'][i,2] = np.nanmin(tfitscale[g3,2])
 
-                    out['MAXFITSCALE'][i,0] = np.nanmax(fscale[g1,0])
-                    out['MAXFITSCALE'][i,1] = np.nanmax(fscale[g2,1])
-                    out['MAXFITSCALE'][i,2] = np.nanmax(fscale[g3,2])
+                    out['MAXFITSCALE'][i,0] = np.nanmax(tfitscale[g1,0])
+                    out['MAXFITSCALE'][i,1] = np.nanmax(tfitscale[g2,1])
+                    out['MAXFITSCALE'][i,2] = np.nanmax(tfitscale[g3,2])
 
                     gg1, = np.where(scale[0,:] > 0)
                     gg2, = np.where(scale[1,:] > 0)
@@ -1077,12 +1081,12 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     outstar['BESTMOD'][:,0] = np.full(ntell, bestmod[0])
                     outstar['BESTMOD'][:,1] = np.full(ntell, bestmod[1])
                     outstar['BESTMOD'][:,2] = np.full(ntell, bestmod[2])
-                    outstar['SCALE'][g1,0] =  scale[0, tellfibindex1]
-                    outstar['SCALE'][g2,1] =  scale[1, tellfibindex2]
-                    outstar['SCALE'][g3,2] =  scale[2, tellfibindex3]
-                    outstar['FITSCALE'][g1,0] =  fscale[g1, 0]
-                    outstar['FITSCALE'][g2,1] =  fscale[g2, 0]
-                    outstar['FITSCALE'][g3,2] =  fscale[g3, 0]
+                    outstar['SCALE'][g1,0] =  tscale[g1, 0]
+                    outstar['SCALE'][g2,1] =  tscale[g1, 1]
+                    outstar['SCALE'][g3,2] =  tscale[g1, 2]
+                    outstar['FITSCALE'][g1,0] =  tfitscale[g1, 0]
+                    outstar['FITSCALE'][g2,1] =  tfitscale[g2, 0]
+                    outstar['FITSCALE'][g3,2] =  tfitscale[g3, 0]
 
                     rej1, = np.where(outstar['FITSCALE'][:,0] == 0)
                     rej2, = np.where(outstar['FITSCALE'][:,1] == 0)
