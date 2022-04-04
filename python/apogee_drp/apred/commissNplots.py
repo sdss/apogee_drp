@@ -861,7 +861,8 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                        ('MADCHISQ',     np.float64, nmolecules),
                        ('SIGCHISQ',     np.float64, nmolecules),
                        ('SIGETA',       np.float64, nmolecules),
-                       ('SIGZETA',      np.float64, nmolecules)])
+                       ('SIGZETA',      np.float64, nmolecules),
+                       ('NREJ',         np.int32, nmolecules)])
         out = np.zeros(nexp, dtype=dt)
 
         # Structure for individual star level info
