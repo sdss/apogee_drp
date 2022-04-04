@@ -821,30 +821,43 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
         nexp = len(num)
 
         # Structure for exposure level info
-        dt = np.dtype([('EXPNUM',    np.int32),
-                       ('FIELD',     np.str),
-                       ('PLATE',     np.int32),
-                       ('MJD',       np.int32),
-                       ('JD',        np.float64),
-                       ('DATEOBS',   np.str),
-                       ('SEEING',    np.float64),
-                       ('ZERO',      np.float64),
-                       ('MOONDIST',  np.float64),
-                       ('MOONPHASE', np.float64),
-                       ('SECZ',      np.float64),
-                       ('SKY',       np.float64),
-                       ('SN',        np.float64),
-                       ('NTELL',     np.int32),
-                       ('MEANH',     np.float64),
-                       ('SIGH',      np.float64),
-                       ('MEANJK',    np.float64),
-                       ('SIGJK',     np.float64),
-                       ('MAD1',      np.float64),
-                       ('MADRESID1', np.float64),
-                       ('MAD2',      np.float64),
-                       ('MADRESID2', np.float64),
-                       ('MAD3',      np.float64),
-                       ('MADRESID3', np.float64)])
+        dt = np.dtype([('EXPNUM',       np.int32),
+                       ('FIELD',        np.str, 30),
+                       ('PLATE',        np.int32),
+                       ('MJD',          np.int32),
+                       ('JD',           np.float64),
+                       ('DATEOBS',      np.str, 30),
+                       ('SEEING',       np.float64),
+                       ('ZERO',         np.float64),
+                       ('MOONDIST',     np.float64),
+                       ('MOONPHASE',    np.float64),
+                       ('SECZ',         np.float64),
+                       ('SKY',          np.float64),
+                       ('SN',           np.float64),
+                       ('NTELL',        np.int32),
+                       ('NFIT',         np.int32, nmolecules),
+                       ('MEANH',        np.float64, nmolecules),
+                       ('SIGH',         np.float64, nmolecules),
+                       ('MEANJK',       np.float64, nmolecules),
+                       ('SIGJK',        np.float64, nmolecules),
+                       ('MEANFITSCALE', np.float64, nmolecules),
+                       ('MEDFITSCALE',  np.float64, nmolecules),
+                       ('MADFITSCALE',  np.float64, nmolecules),
+                       ('SIGFITSCALE',  np.float64, nmolecules),
+                       ('MINFITSCALE',  np.float64, nmolecules),
+                       ('MAXFITSCALE',  np.float64, nmolecules),
+                       ('MEANSCALE',    np.float64, nmolecules),
+                       ('MEDSCALE',     np.float64, nmolecules),
+                       ('MADSCALE',     np.float64, nmolecules),
+                       ('SIGSCALE',     np.float64, nmolecules),
+                       ('MINSCALE',     np.float64, nmolecules),
+                       ('MAXSCALE',     np.float64, nmolecules),
+                       ('MEANCHISQ',    np.float64, nmolecules),
+                       ('MEDCHISQ',     np.float64, nmolecules),
+                       ('MADCHISQ',     np.float64, nmolecules),
+                       ('SIGCHISQ',     np.float64, nmolecules),
+                       ('SIGETA',       np.float64, nmolecules),
+                       ('SIGZETA',      np.float64, nmolecules)])
         out = np.zeros(nexp, dtype=dt)
 
         # Structure for individual star level info
@@ -869,12 +882,13 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                            ('SECZ',      np.float64),
                            ('SKY',       np.float64),
                            ('SN',        np.float64),
-                           ('SCALE1',    np.float64),
-                           ('FITSCALE1', np.float64),
-                           ('SCALE2',    np.float64),
-                           ('FITSCALE2', np.float64),
-                           ('SCALE3',    np.float64),
-                           ('FITSCALE3', np.float64)])
+                           ('NTELL',     np.int32),
+                           ('NFIT',      np.float64, nmolecules),
+                           ('BESTMOD',   np.float64, nmolecules),
+                           ('SCALE',     np.float64, nmolecules),
+                           ('FITSCALE',  np.float64, nmolecules),
+                           ('RCHISQ',    np.float64, nmolecules),
+                           ('MAG',       np.float64, nmolecules)])
 
         for i in range(nexp):
             sloan4 = False
@@ -891,13 +905,41 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             if os.path.exists(cframe):
                 magnames = ['JMAG', 'HMAG', 'KMAG']
                 if sloan4: magnames = ['J', 'H', 'K']
+
                 tellfit = fits.getdata(cframe,13)
                 plugmap = fits.getdata(cframe,11)
+                bestmod = np.squeeze(tellfit['BESTMOD'])
+                nfit = np.squeeze(tellfit['NFIT'])
                 scale = np.squeeze(tellfit['SCALE'])
                 fitscale = np.squeeze(tellfit['FITSCALE'])
-                tell, = np.where((plugmap['objtype'] == 'HOT_STD') & (np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
-                ntell = len(tell)
-                if ntell > 0:
+                rchisq = np.squeeze(tellfit['RCHISQ'])
+                mag = np.squeeze(tellfit['MAG'])
+                eta = np.squeeze(tellfit['ETA'])
+                zeta = np.squeeze(tellfit['ZETA'])
+
+                hdr = np.array(fits.getheader(cframe)['HISTORY'])
+                tellind = np.flatnonzero(np.core.defchararray.find(ghdr,'APTELLURIC: Fiber=')!=-1)
+                if len(tellind) > 0:
+                    hdr = hdr[tellind]
+                    ntell = len(hdr) // 2
+
+                    fscale = np.zeros((ntell,3))
+                    tellfib = np.zeros(ntell)
+                    for itel in range(ntell):
+                        tellfib[itel] = int(hdr[itel+ntell].split('=')[1].split(' Norm')[0])
+                        fscale[itel, 0] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[0])
+                        fscale[itel, 1] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[1])
+                        fscale[itel, 2] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[2])
+                    g1, = np.where(fscale[:,0] > 0)
+                    g2, = np.where(fscale[:,1] > 0)
+                    g3, = np.where(fscale[:,2] > 0)
+                    tellfibindex = 300 - tellfib
+
+                    pdb.set_trace()
+
+                    #tell, = np.where((plugmap['objtype'] == 'HOT_STD') & (np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
+                    #ntell = len(tell)
+
                     out['EXPNUM'][i] = num[i]
                     out['FIELD'][i] = field[i]
                     out['PLATE'][i] = plate[i]
@@ -912,6 +954,11 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                     out['SKY'][i] = np.nanmean(allsnrg['SKY'][i])
                     out['SN'][i] = np.nanmean(allsnrg['SN'][i])
                     out['NTELL'][i] = ntell
+                    out['NFIT'][i,0] = len(g1); out['NTELL'][i,1] = len(g2); out['NTELL'][i,2] = len(g3)
+
+
+
+
                     out['MEANH'][i] = np.nanmean(plugmap[magnames[1]][tell])
                     out['SIGH'][i] = np.nanstd(plugmap[magnames[1]][tell])
                     out['MEANJK'][i] = np.nanmean(plugmap[magnames[0]][tell] - plugmap[magnames[2]][tell])
