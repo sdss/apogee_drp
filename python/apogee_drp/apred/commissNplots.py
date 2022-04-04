@@ -965,7 +965,7 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     out['MEANJK'][i] = np.nanmean(plugmap[magnames[0]][tellfibindex] - plugmap[magnames[2]][tellfibindex])
                     out['SIGJK'][i] = np.nanstd(plugmap[magnames[0]][tellfibindex] - plugmap[magnames[2]][tellfibindex])
 
-                    out['NFIT'][i,0] = len(g1); out['NTELL'][i,1] = len(g2); out['NTELL'][i,2] = len(g3)
+                    out['NFIT'][i,0] = len(g1); out['NFIT'][i,1] = len(g2); out['NFIT'][i,2] = len(g3)
                     out['FITMEANH'][i,0] = np.nanmean(plugmap[magnames[1]][tellfibindex1])
                     out['FITSIGH'][i,0] = np.nanstd(plugmap[magnames[1]][tellfibindex1])
                     out['FITMEANJK'][i,0] = np.nanmean(plugmap[magnames[0]][tellfibindex1] - plugmap[magnames[2]][tellfibindex1])
