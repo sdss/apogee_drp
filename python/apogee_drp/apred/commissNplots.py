@@ -1009,6 +1009,8 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     gg2, = np.where(scale[1,:] > 0)
                     gg3, = np.where(scale[2,:] > 0)
 
+                    pdb.set_trace()
+
                     out['MEANSCALE'][i,0] = np.nanmean(scale[gg1])
                     out['MEANSCALE'][i,1] = np.nanmean(scale[gg2])
                     out['MEANSCALE'][i,2] = np.nanmean(scale[gg3])
@@ -1042,7 +1044,6 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     #out['MAD3'][i] = dln.mad(fitscale[2, tell])
                     #out['MADRESID3'][i] = dln.mad(fitscale[2, tell[gd]] - scale[2, tell[gd]])
 
-                    pdb.set_trace()
 
                     outstar = np.empty(ntell, dtype=dtstar)
                     outstar['APOGEE_ID'] = plugmap['TMASS_STYLE'][tell]
