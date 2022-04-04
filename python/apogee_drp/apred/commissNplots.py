@@ -888,7 +888,7 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                            ('SN',        np.float64),
                            ('NTELL',     np.int32),
                            ('NFIT',      np.float64, nmolecules),
-                           ('BESTMOD',   np.float64, nmolecules),
+                           ('BESTMOD',   np.int32, nmolecules),
                            ('SCALE',     np.float64, nmolecules),
                            ('FITSCALE',  np.float64, nmolecules),
                            ('RCHISQ',    np.float64, nmolecules),
@@ -1009,7 +1009,6 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     gg2, = np.where(scale[1,:] > 0)
                     gg3, = np.where(scale[2,:] > 0)
 
-
                     out['MEANSCALE'][i,0] = np.nanmean(scale[0,gg1])
                     out['MEANSCALE'][i,1] = np.nanmean(scale[1,gg2])
                     out['MEANSCALE'][i,2] = np.nanmean(scale[2,gg3])
@@ -1034,7 +1033,6 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     out['MAXSCALE'][i,1] = np.nanmax(scale[1,gg2])
                     out['MAXSCALE'][i,2] = np.nanmax(scale[2,gg3])
 
-                    pdb.set_trace()
 
                     #out['MAD1'][i] = dln.mad(fitscale[0, tell[gd]])
                     #out['MADRESID1'][i] = dln.mad(fitscale[0, tell[gd]] - scale[0, tell[gd]])
@@ -1047,14 +1045,14 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
 
 
                     outstar = np.empty(ntell, dtype=dtstar)
-                    outstar['APOGEE_ID'] = plugmap['TMASS_STYLE'][tell]
-                    outstar['RA'] =        plugmap['RA'][tell]
-                    outstar['DEC'] =       plugmap['DEC'][tell]
-                    outstar['ETA'] =       plugmap['ETA'][tell]
-                    outstar['ZETA'] =      plugmap['ZETA'][tell]
-                    outstar['JMAG'] =      plugmap[magnames[0]][tell]
-                    outstar['HMAG'] =      plugmap[magnames[1]][tell]
-                    outstar['KMAG'] =      plugmap[magnames[2]][tell]
+                    outstar['APOGEE_ID'] = plugmap['TMASS_STYLE'][tellfibindex]
+                    outstar['RA'] =        plugmap['RA'][tellfibindex]
+                    outstar['DEC'] =       plugmap['DEC'][tellfibindex]
+                    outstar['ETA'] =       plugmap['ETA'][tellfibindex]
+                    outstar['ZETA'] =      plugmap['ZETA'][tellfibindex]
+                    outstar['JMAG'] =      plugmap[magnames[0]][tellfibindex]
+                    outstar['HMAG'] =      plugmap[magnames[1]][tellfibindex]
+                    outstar['KMAG'] =      plugmap[magnames[2]][tellfibindex]
                     outstar['EXPNUM'] =    np.full(ntell, num[i])
                     outstar['FIELD'] =     np.full(ntell, field[i])
                     outstar['PLATE'] =     np.full(ntell, plate[i])
@@ -1070,10 +1068,21 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     outstar['NFIT'][:,0] = np.full(ntell, len(g1))
                     outstar['NFIT'][:,1] = np.full(ntell, len(g2))
                     outstar['NFIT'][:,2] = np.full(ntell, len(g3))
-                    outstar['BESTMOD'][:,0] = np.full(ntell, len(g1))
-                    outstar['BESTMOD'][:,1] = np.full(ntell, len(g2))
-                    outstar['BESTMOD'][:,2] = np.full(ntell, len(g3))
-                    outstar['SCALE1'] =    scale[0, tell]
+                    outstar['BESTMOD'][:,0] = np.full(ntell, bestmod[0])
+                    outstar['BESTMOD'][:,1] = np.full(ntell, bestmod[1])
+                    outstar['BESTMOD'][:,2] = np.full(ntell, bestmod[2])
+                    outstar['SCALE'][g1,0] =  scale[0, tellfibindex1]
+                    outstar['SCALE'][g2,1] =  scale[1, tellfibindex2]
+                    outstar['SCALE'][g3,2] =  scale[2, tellfibindex3]
+                    outstar['FITSCALE'][g1,0] =  fscale[0, tellfibindex1]
+                    outstar['FITSCALE'][g2,1] =  fscale[1, tellfibindex2]
+                    outstar['FITSCALE'][g3,2] =  fscale[2, tellfibindex3]
+
+                    pdb.set_trace()
+
+
+
+
                     outstar['FITSCALE1'] = fitscale[0, tell]
                     outstar['SCALE2'] =    scale[1, tell]
                     outstar['FITSCALE2'] = fitscale[1, tell]
