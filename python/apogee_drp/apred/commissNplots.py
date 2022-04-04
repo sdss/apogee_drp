@@ -1005,18 +1005,44 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     out['MAXFITSCALE'][i,1] = np.nanmax(fscale[g2])
                     out['MAXFITSCALE'][i,2] = np.nanmax(fscale[g3])
 
-                    pdb.set_trace()
-                    #g1, = np.where(scale > 0)
-                    
+                    gg1, = np.where(scale[0,:] > 0)
+                    gg2, = np.where(scale[1,:] > 0)
+                    gg3, = np.where(scale[2,:] > 0)
 
-                    out['MAD1'][i] = dln.mad(fitscale[0, tell[gd]])
-                    out['MADRESID1'][i] = dln.mad(fitscale[0, tell[gd]] - scale[0, tell[gd]])
-                    gd, = np.where(fitscale[1, tell] > 0)
-                    out['MAD2'][i] = dln.mad(fitscale[1, tell])
-                    out['MADRESID2'][i] = dln.mad(fitscale[1, tell[gd]] - scale[1, tell[gd]])
-                    gd, = np.where(fitscale[2, tell] > 0)
-                    out['MAD3'][i] = dln.mad(fitscale[2, tell])
-                    out['MADRESID3'][i] = dln.mad(fitscale[2, tell[gd]] - scale[2, tell[gd]])
+                    out['MEANSCALE'][i,0] = np.nanmean(scale[gg1])
+                    out['MEANSCALE'][i,1] = np.nanmean(scale[gg2])
+                    out['MEANSCALE'][i,2] = np.nanmean(scale[gg3])
+
+                    out['MEDSCALE'][i,0] = np.nanmedian(scale[gg1])
+                    out['MEDSCALE'][i,1] = np.nanmedian(scale[gg2])
+                    out['MEDSCALE'][i,2] = np.nanmedian(scale[gg3])
+
+                    out['MADSCALE'][i,0] = dln.mad(scale[gg1])
+                    out['MADSCALE'][i,1] = dln.mad(scale[gg2])
+                    out['MADSCALE'][i,2] = dln.mad(scale[gg3])
+
+                    out['SIGSCALE'][i,0] = np.std(scale[gg1])
+                    out['SIGSCALE'][i,1] = np.std(scale[gg2])
+                    out['SIGSCALE'][i,2] = np.std(scale[gg3])
+
+                    out['MINSCALE'][i,0] = np.nanmin(scale[gg1])
+                    out['MINSCALE'][i,1] = np.nanmin(scale[gg2])
+                    out['MINSCALE'][i,2] = np.nanmin(scale[gg3])
+
+                    out['MAXSCALE'][i,0] = np.nanmax(scale[gg1])
+                    out['MAXSCALE'][i,1] = np.nanmax(scale[gg2])
+                    out['MAXSCALE'][i,2] = np.nanmax(scale[gg3])
+
+                    #out['MAD1'][i] = dln.mad(fitscale[0, tell[gd]])
+                    #out['MADRESID1'][i] = dln.mad(fitscale[0, tell[gd]] - scale[0, tell[gd]])
+                    #gd, = np.where(fitscale[1, tell] > 0)
+                    #out['MAD2'][i] = dln.mad(fitscale[1, tell])
+                    #out['MADRESID2'][i] = dln.mad(fitscale[1, tell[gd]] - scale[1, tell[gd]])
+                    #gd, = np.where(fitscale[2, tell] > 0)
+                    #out['MAD3'][i] = dln.mad(fitscale[2, tell])
+                    #out['MADRESID3'][i] = dln.mad(fitscale[2, tell[gd]] - scale[2, tell[gd]])
+
+                    pdb.set_trace()
 
                     outstar = np.empty(ntell, dtype=dtstar)
                     outstar['APOGEE_ID'] = plugmap['TMASS_STYLE'][tell]
@@ -1038,6 +1064,13 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     outstar['MOONDIST'] =  np.full(ntell, allsnrg['MOONDIST'][i])
                     outstar['MOONPHASE'] = np.full(ntell, allsnrg['MOONPHASE'][i])
                     outstar['SECZ'] =      np.full(ntell, allsnrg['SECZ'][i])
+                    outstar['NTELL'] =     np.full(ntell, ntell)
+                    outstar['NFIT'][:,0] = np.full(ntell, len(g1))
+                    outstar['NFIT'][:,1] = np.full(ntell, len(g2))
+                    outstar['NFIT'][:,2] = np.full(ntell, len(g3))
+                    outstar['BESTMOD'][:,0] = np.full(ntell, len(g1))
+                    outstar['BESTMOD'][:,1] = np.full(ntell, len(g2))
+                    outstar['BESTMOD'][:,2] = np.full(ntell, len(g3))
                     outstar['SCALE1'] =    scale[0, tell]
                     outstar['FITSCALE1'] = fitscale[0, tell]
                     outstar['SCALE2'] =    scale[1, tell]
