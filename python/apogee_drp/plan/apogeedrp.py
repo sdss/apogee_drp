@@ -2373,7 +2373,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
 
     # -- Summary statistics --
     # RV status
-    if len(chkrv)>0:
+    if chkrv is not None:
         indrv, = np.where(chkrv['success']==True)
         logger.info('%d/%d RV+visit combination successfully processed' % (len(indrv),len(chkrv)))
     
