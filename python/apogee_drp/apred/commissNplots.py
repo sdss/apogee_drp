@@ -981,59 +981,60 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     out['FITMEANJK'][i,2] = np.nanmean(plugmap[magnames[0]][tellfibindex3] - plugmap[magnames[2]][tellfibindex3])
                     out['FITSIGJK'][i,2] = np.nanstd(plugmap[magnames[0]][tellfibindex3] - plugmap[magnames[2]][tellfibindex3])
 
-                    out['MEANFITSCALE'][i,0] = np.nanmean(fscale[g1])
-                    out['MEANFITSCALE'][i,1] = np.nanmean(fscale[g2])
-                    out['MEANFITSCALE'][i,2] = np.nanmean(fscale[g3])
+                    out['MEANFITSCALE'][i,0] = np.nanmean(fscale[g1,0])
+                    out['MEANFITSCALE'][i,1] = np.nanmean(fscale[g2,1])
+                    out['MEANFITSCALE'][i,2] = np.nanmean(fscale[g3,2])
 
-                    out['MEDFITSCALE'][i,0] = np.nanmedian(fscale[g1])
-                    out['MEDFITSCALE'][i,1] = np.nanmedian(fscale[g2])
-                    out['MEDFITSCALE'][i,2] = np.nanmedian(fscale[g3])
+                    out['MEDFITSCALE'][i,0] = np.nanmedian(fscale[g1,0])
+                    out['MEDFITSCALE'][i,1] = np.nanmedian(fscale[g2,1])
+                    out['MEDFITSCALE'][i,2] = np.nanmedian(fscale[g3,2])
 
-                    out['MADFITSCALE'][i,0] = dln.mad(fscale[g1])
-                    out['MADFITSCALE'][i,1] = dln.mad(fscale[g2])
-                    out['MADFITSCALE'][i,2] = dln.mad(fscale[g3])
+                    out['MADFITSCALE'][i,0] = dln.mad(fscale[g1,0])
+                    out['MADFITSCALE'][i,1] = dln.mad(fscale[g2,1])
+                    out['MADFITSCALE'][i,2] = dln.mad(fscale[g3,2])
 
-                    out['SIGFITSCALE'][i,0] = np.std(fscale[g1])
-                    out['SIGFITSCALE'][i,1] = np.std(fscale[g2])
-                    out['SIGFITSCALE'][i,2] = np.std(fscale[g3])
+                    out['SIGFITSCALE'][i,0] = np.std(fscale[g1,0])
+                    out['SIGFITSCALE'][i,1] = np.std(fscale[g2,1])
+                    out['SIGFITSCALE'][i,2] = np.std(fscale[g3,2])
 
-                    out['MINFITSCALE'][i,0] = np.nanmin(fscale[g1])
-                    out['MINFITSCALE'][i,1] = np.nanmin(fscale[g2])
-                    out['MINFITSCALE'][i,2] = np.nanmin(fscale[g3])
+                    out['MINFITSCALE'][i,0] = np.nanmin(fscale[g1,0])
+                    out['MINFITSCALE'][i,1] = np.nanmin(fscale[g2,1])
+                    out['MINFITSCALE'][i,2] = np.nanmin(fscale[g3,2])
 
-                    out['MAXFITSCALE'][i,0] = np.nanmax(fscale[g1])
-                    out['MAXFITSCALE'][i,1] = np.nanmax(fscale[g2])
-                    out['MAXFITSCALE'][i,2] = np.nanmax(fscale[g3])
+                    out['MAXFITSCALE'][i,0] = np.nanmax(fscale[g1,0])
+                    out['MAXFITSCALE'][i,1] = np.nanmax(fscale[g2,1])
+                    out['MAXFITSCALE'][i,2] = np.nanmax(fscale[g3,2])
 
                     gg1, = np.where(scale[0,:] > 0)
                     gg2, = np.where(scale[1,:] > 0)
                     gg3, = np.where(scale[2,:] > 0)
 
+
+                    out['MEANSCALE'][i,0] = np.nanmean(scale[0,gg1])
+                    out['MEANSCALE'][i,1] = np.nanmean(scale[1,gg2])
+                    out['MEANSCALE'][i,2] = np.nanmean(scale[2,gg3])
+
+                    out['MEDSCALE'][i,0] = np.nanmedian(scale[0,gg1])
+                    out['MEDSCALE'][i,1] = np.nanmedian(scale[1,gg2])
+                    out['MEDSCALE'][i,2] = np.nanmedian(scale[2,gg3])
+
+                    out['MADSCALE'][i,0] = dln.mad(scale[0,gg1])
+                    out['MADSCALE'][i,1] = dln.mad(scale[1,gg2])
+                    out['MADSCALE'][i,2] = dln.mad(scale[2,gg3])
+
+                    out['SIGSCALE'][i,0] = np.std(scale[0,gg1])
+                    out['SIGSCALE'][i,1] = np.std(scale[1,gg2])
+                    out['SIGSCALE'][i,2] = np.std(scale[2,gg3])
+
+                    out['MINSCALE'][i,0] = np.nanmin(scale[0,gg1])
+                    out['MINSCALE'][i,1] = np.nanmin(scale[1,gg2])
+                    out['MINSCALE'][i,2] = np.nanmin(scale[2,gg3])
+
+                    out['MAXSCALE'][i,0] = np.nanmax(scale[0,gg1])
+                    out['MAXSCALE'][i,1] = np.nanmax(scale[1,gg2])
+                    out['MAXSCALE'][i,2] = np.nanmax(scale[2,gg3])
+
                     pdb.set_trace()
-
-                    out['MEANSCALE'][i,0] = np.nanmean(scale[gg1])
-                    out['MEANSCALE'][i,1] = np.nanmean(scale[gg2])
-                    out['MEANSCALE'][i,2] = np.nanmean(scale[gg3])
-
-                    out['MEDSCALE'][i,0] = np.nanmedian(scale[gg1])
-                    out['MEDSCALE'][i,1] = np.nanmedian(scale[gg2])
-                    out['MEDSCALE'][i,2] = np.nanmedian(scale[gg3])
-
-                    out['MADSCALE'][i,0] = dln.mad(scale[gg1])
-                    out['MADSCALE'][i,1] = dln.mad(scale[gg2])
-                    out['MADSCALE'][i,2] = dln.mad(scale[gg3])
-
-                    out['SIGSCALE'][i,0] = np.std(scale[gg1])
-                    out['SIGSCALE'][i,1] = np.std(scale[gg2])
-                    out['SIGSCALE'][i,2] = np.std(scale[gg3])
-
-                    out['MINSCALE'][i,0] = np.nanmin(scale[gg1])
-                    out['MINSCALE'][i,1] = np.nanmin(scale[gg2])
-                    out['MINSCALE'][i,2] = np.nanmin(scale[gg3])
-
-                    out['MAXSCALE'][i,0] = np.nanmax(scale[gg1])
-                    out['MAXSCALE'][i,1] = np.nanmax(scale[gg2])
-                    out['MAXSCALE'][i,2] = np.nanmax(scale[gg3])
 
                     #out['MAD1'][i] = dln.mad(fitscale[0, tell[gd]])
                     #out['MADRESID1'][i] = dln.mad(fitscale[0, tell[gd]] - scale[0, tell[gd]])
