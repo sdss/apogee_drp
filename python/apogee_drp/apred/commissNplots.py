@@ -533,8 +533,8 @@ def tellspatial4(zoom=False):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_ylim(0.8,1.2)
-            if zoom: ax.set_ylim(-0.05, 0.05)
+            ax.set_ylim(-0.05,0.3)
+            #if zoom: ax.set_ylim(-0.05, 0.05)
             if ipar == 0: ax.set_ylabel('Factional RMS (fine grid)')
             if imol == 2: ax.set_xlabel('Days since time[0]')
             if imol < 2: ax.axes.xaxis.set_ticklabels([])
@@ -546,14 +546,121 @@ def tellspatial4(zoom=False):
                 if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
 
             xvals = data['JD']-np.nanmin(data['JD'])
-            yvals = data['SYNTHRMS'+str(imol+1)][:,ipar] / data['MEDFIT'+str(imol+1)][:,ipar]
+            yvals = data['synthdifrms'+str(imol+1)][:,ipar]# / data['MEDFIT'+str(imol+1)][:,ipar]
 
             med = np.nanmedian(yvals)
-            ax.axhline(med, color='grey', linestyle='dashed')
+            #ax.axhline(med, color='grey', linestyle='dashed')
             #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
             ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
 
     fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellspatial44(zoom=False):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+
+    npars = 3
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatial_synth.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(32,16))
+    for imol in range(nmolecules):
+        for ipar in range(npars):
+            ax = plt.subplot2grid((nmolecules, npars), (imol,ipar%3))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.set_ylim(-0.05,0.7)
+            #if zoom: ax.set_ylim(-0.05, 0.05)
+            if (ipar == 0) & (imol == 1): ax.set_ylabel('(max fitscale $-$ min fitscale) $/$ med fitscale')
+            if imol == 2: ax.set_xlabel('Days since time[0]')
+            if imol < 2: ax.axes.xaxis.set_ticklabels([])
+            if ipar > 0: ax.axes.yaxis.set_ticklabels([])
+            if ipar == 2: ax.text(1.02, 0.50, molecules[imol], transform=ax.transAxes, ha='left', va='center', rotation=-90, bbox=bboxpar)
+            if imol == 0:
+                if ipar == 0: ax.text(0.5, 1.02, r'Constant$/$no variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 1: ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+                if ipar == 2: ax.text(0.5, 1.02, r'Quadratic variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+            xvals = data['JD']-np.nanmin(data['JD'])
+            yvals = data['synthfrac'+str(imol+1)][:,ipar]# / data['MEDFIT'+str(imol+1)][:,ipar]
+
+            med = np.nanmedian(yvals)
+            #ax.axhline(med, color='grey', linestyle='dashed')
+            #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+            ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+
+    fig.subplots_adjust(left=0.055,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellspatial444(zoom=False, cmap='rainbow'):
+    data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
+    expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
+
+    expdata = fits.getdata('tellfitstats_all.fits')
+
+    expnum = expdata['EXPNUM']
+    mask = np.in1d(data['expnum'], expnum)
+    gd, = np.where(mask == True)
+    data = data[gd]
+
+    xy,x_ind,y_ind = np.intersect1d(expnum, data['expnum'], return_indices=True)
+    expdata = expdata[x_ind]
+
+    npars = 3
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    plotfile = sdir5 + 'tellspatial_synth2.png'
+    if zoom: plotfile = plotfile.replace('.png', '_zoom.png')
+    print('making ' + os.path.basename(plotfile))
+    fig = plt.figure(figsize=(20,16))
+    for imol in range(nmolecules):
+        ax = plt.subplot2grid((nmolecules, 1), (imol, 0))
+        ax.minorticks_on()
+        #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+        #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        ax.set_ylim(-0.05,0.7)
+        #if zoom: ax.set_ylim(-0.05, 0.05)
+        if imol == 1: ax.set_ylabel('(max fitscale $-$ min fitscale) $/$ med fitscale')
+        if imol == 2: ax.set_xlabel('Days since time[0]')
+        if imol < 2: ax.axes.xaxis.set_ticklabels([])
+        ax.text(0.97, 0.94, molecules[imol], transform=ax.transAxes, ha='right', va='top', bbox=bboxpar)
+        if imol == 0:
+            ax.text(0.5, 1.02, r'Linear variation', transform=ax.transAxes, ha='center', va='bottom', bbox=bboxpar)
+
+        xvals = data['JD']-np.nanmin(data['JD'])
+        yvals = data['synthfrac'+str(imol+1)][:,1]# / data['MEDFIT'+str(imol+1)][:,ipar]
+        c = expdata['NTELL']#[:,imol]
+
+        med = np.nanmedian(yvals)
+        #ax.axhline(med, color='grey', linestyle='dashed')
+        #ax.text(0.75, 0.85, 'med RMS = ' + str("%.3f" % round(med,3)), transform=ax.transAxes, ha='center', va='center', bbox=bboxpar)
+        #ax.scatter(xvals, yvals, marker='o', s=3, c=molcols[imol], alpha=0.8)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+        sc1 = ax.scatter(xvals, yvals, marker='o', s=3, c=c, cmap=cmap, alpha=0.8, vmin=10, vmax=35)#, vmin=vmin, vmax=vmax)#, edgecolors='k'
+
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="2%", pad="1%")
+        cax.minorticks_on()
+        #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+        cb1 = colorbar(sc1, cax=cax)
+        ax.text(1.072, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+
+    fig.subplots_adjust(left=0.055,right=0.94,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
@@ -693,7 +800,7 @@ def tellspatial7(zoom=False):
     plt.close('all')
 
 ###########################################################################################
-def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647, 
+def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647, 
                   remake=False, plot=True, plotx='MEANH', cmap='rainbow',
                   color=None):
 
@@ -714,30 +821,48 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
         nexp = len(num)
 
         # Structure for exposure level info
-        dt = np.dtype([('EXPNUM',    np.int32),
-                       ('FIELD',     np.str),
-                       ('PLATE',     np.int32),
-                       ('MJD',       np.int32),
-                       ('JD',        np.float64),
-                       ('DATEOBS',   np.str),
-                       ('SEEING',    np.float64),
-                       ('ZERO',      np.float64),
-                       ('MOONDIST',  np.float64),
-                       ('MOONPHASE', np.float64),
-                       ('SECZ',      np.float64),
-                       ('SKY',       np.float64),
-                       ('SN',        np.float64),
-                       ('NTELL',     np.int32),
-                       ('MEANH',     np.float64),
-                       ('SIGH',      np.float64),
-                       ('MEANJK',    np.float64),
-                       ('SIGJK',     np.float64),
-                       ('MAD1',      np.float64),
-                       ('MADRESID1', np.float64),
-                       ('MAD2',      np.float64),
-                       ('MADRESID2', np.float64),
-                       ('MAD3',      np.float64),
-                       ('MADRESID3', np.float64)])
+        dt = np.dtype([('EXPNUM',       np.int32),
+                       ('FIELD',        np.str, 30),
+                       ('PLATE',        np.int32),
+                       ('MJD',          np.int32),
+                       ('JD',           np.float64),
+                       ('DATEOBS',      np.str, 30),
+                       ('SEEING',       np.float64),
+                       ('ZERO',         np.float64),
+                       ('MOONDIST',     np.float64),
+                       ('MOONPHASE',    np.float64),
+                       ('SECZ',         np.float64),
+                       ('SKY',          np.float64),
+                       ('SN',           np.float64),
+                       ('NTELL',        np.int32),
+                       ('MEANH',        np.float64),
+                       ('SIGH',         np.float64),
+                       ('MEANJK',       np.float64),
+                       ('SIGJK',        np.float64),
+                       ('NFIT',         np.int32, nmolecules),
+                       ('FITMEANH',     np.float64, nmolecules),
+                       ('FITSIGH',      np.float64, nmolecules),
+                       ('FITMEANJK',    np.float64, nmolecules),
+                       ('FITSIGJK',     np.float64, nmolecules),
+                       ('MEANFITSCALE', np.float64, nmolecules),
+                       ('MEDFITSCALE',  np.float64, nmolecules),
+                       ('MADFITSCALE',  np.float64, nmolecules),
+                       ('SIGFITSCALE',  np.float64, nmolecules),
+                       ('MINFITSCALE',  np.float64, nmolecules),
+                       ('MAXFITSCALE',  np.float64, nmolecules),
+                       ('MEANSCALE',    np.float64, nmolecules),
+                       ('MEDSCALE',     np.float64, nmolecules),
+                       ('MADSCALE',     np.float64, nmolecules),
+                       ('SIGSCALE',     np.float64, nmolecules),
+                       ('MINSCALE',     np.float64, nmolecules),
+                       ('MAXSCALE',     np.float64, nmolecules),
+                       ('MEANCHISQ',    np.float64, nmolecules),
+                       ('MEDCHISQ',     np.float64, nmolecules),
+                       ('MADCHISQ',     np.float64, nmolecules),
+                       ('SIGCHISQ',     np.float64, nmolecules),
+                       ('SIGETA',       np.float64, nmolecules),
+                       ('SIGZETA',      np.float64, nmolecules),
+                       ('NREJ',         np.int32, nmolecules)])
         out = np.zeros(nexp, dtype=dt)
 
         # Structure for individual star level info
@@ -762,14 +887,17 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                            ('SECZ',      np.float64),
                            ('SKY',       np.float64),
                            ('SN',        np.float64),
-                           ('SCALE1',    np.float64),
-                           ('FITSCALE1', np.float64),
-                           ('SCALE2',    np.float64),
-                           ('FITSCALE2', np.float64),
-                           ('SCALE3',    np.float64),
-                           ('FITSCALE3', np.float64)])
+                           ('NTELL',     np.int32),
+                           ('NFIT',      np.float64, nmolecules),
+                           ('BESTMOD',   np.int32, nmolecules),
+                           ('SCALE',     np.float64, nmolecules),
+                           ('FITSCALE',  np.float64, nmolecules),
+                           ('RCHISQ',    np.float64, nmolecules),
+                           ('MAG',       np.float64, nmolecules),
+                           ('REJ',       np.int32, nmolecules)])
 
         for i in range(nexp):
+        #for i in range(5):
             sloan4 = False
             print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + str(mjd[i]) + ', exp = ' + str(num[i]))
             cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
@@ -784,13 +912,47 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
             if os.path.exists(cframe):
                 magnames = ['JMAG', 'HMAG', 'KMAG']
                 if sloan4: magnames = ['J', 'H', 'K']
+
                 tellfit = fits.getdata(cframe,13)
                 plugmap = fits.getdata(cframe,11)
+                bestmod = np.squeeze(tellfit['BESTMOD'])
+                nfit = np.squeeze(tellfit['NFIT'])
                 scale = np.squeeze(tellfit['SCALE'])
                 fitscale = np.squeeze(tellfit['FITSCALE'])
-                tell, = np.where((plugmap['objtype'] == 'HOT_STD') & (np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
-                ntell = len(tell)
-                if ntell > 0:
+                rchisq = np.squeeze(tellfit['RCHISQ'])
+                mag = np.squeeze(tellfit['MAG'])
+                eta = np.squeeze(tellfit['ETA'])
+                zeta = np.squeeze(tellfit['ZETA'])
+
+                hdr = np.array(fits.getheader(cframe)['HISTORY'])
+                tellind = np.flatnonzero(np.core.defchararray.find(hdr,'APTELLURIC: Fiber=')!=-1)
+                if len(tellind) > 0:
+                    hdr = hdr[tellind]
+                    ntell = len(hdr) // 2
+
+                    tfitscale = np.zeros((ntell,3))
+                    tscale = np.zeros((ntell,3))
+                    tellfib = np.zeros(ntell)
+                    for itel in range(ntell):
+                        tellfib[itel] = int(hdr[itel+ntell].split('=')[1].split(' Norm')[0])
+                        tfitscale[itel, 0] = float(hdr[itel].split('Norm=')[1].split(', ')[0])
+                        tfitscale[itel, 1] = float(hdr[itel].split('Norm=')[1].split(', ')[1])
+                        tfitscale[itel, 2] = float(hdr[itel].split('Norm=')[1].split(', ')[2])
+                        tscale[itel, 0] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[0])
+                        tscale[itel, 1] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[1])
+                        tscale[itel, 2] = float(hdr[itel+ntell].split('Norm=')[1].split(', ')[2])
+                    g1, = np.where(tfitscale[:,0] > 0)
+                    g2, = np.where(tfitscale[:,1] > 0)
+                    g3, = np.where(tfitscale[:,2] > 0)
+                    tellfibindex1 = (300 - tellfib[g1]).astype(int)
+                    tellfibindex2 = (300 - tellfib[g2]).astype(int)
+                    tellfibindex3 = (300 - tellfib[g3]).astype(int)
+                    tellfibindex = (300 - tellfib).astype(int)
+                    pmap = plugmap[tellfibindex]
+
+                    #tell, = np.where((plugmap['objtype'] == 'HOT_STD') & (np.isnan(plugmap['HMAG']) == False) & (plugmap['HMAG'] < 15) & (plugmap['HMAG'] > 5))
+                    #ntell = len(tell)
+
                     out['EXPNUM'][i] = num[i]
                     out['FIELD'][i] = field[i]
                     out['PLATE'][i] = plate[i]
@@ -805,29 +967,108 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                     out['SKY'][i] = np.nanmean(allsnrg['SKY'][i])
                     out['SN'][i] = np.nanmean(allsnrg['SN'][i])
                     out['NTELL'][i] = ntell
-                    out['MEANH'][i] = np.nanmean(plugmap[magnames[1]][tell])
-                    out['SIGH'][i] = np.nanstd(plugmap[magnames[1]][tell])
-                    out['MEANJK'][i] = np.nanmean(plugmap[magnames[0]][tell] - plugmap[magnames[2]][tell])
-                    out['SIGJK'][i] = np.nanstd(plugmap[magnames[0]][tell] - plugmap[magnames[2]][tell])
-                    gd, = np.where(fitscale[0, tell] > 0)
-                    out['MAD1'][i] = dln.mad(fitscale[0, tell[gd]])
-                    out['MADRESID1'][i] = dln.mad(fitscale[0, tell[gd]] - scale[0, tell[gd]])
-                    gd, = np.where(fitscale[1, tell] > 0)
-                    out['MAD2'][i] = dln.mad(fitscale[1, tell])
-                    out['MADRESID2'][i] = dln.mad(fitscale[1, tell[gd]] - scale[1, tell[gd]])
-                    gd, = np.where(fitscale[2, tell] > 0)
-                    out['MAD3'][i] = dln.mad(fitscale[2, tell])
-                    out['MADRESID3'][i] = dln.mad(fitscale[2, tell[gd]] - scale[2, tell[gd]])
+                    out['MEANH'][i] = np.nanmean(plugmap[magnames[1]][tellfibindex])
+                    out['SIGH'][i] = np.nanstd(plugmap[magnames[1]][tellfibindex])
+                    out['MEANJK'][i] = np.nanmean(plugmap[magnames[0]][tellfibindex] - plugmap[magnames[2]][tellfibindex])
+                    out['SIGJK'][i] = np.nanstd(plugmap[magnames[0]][tellfibindex] - plugmap[magnames[2]][tellfibindex])
+
+                    out['NFIT'][i,0] = len(g1); out['NFIT'][i,1] = len(g2); out['NFIT'][i,2] = len(g3)
+                    out['FITMEANH'][i,0] = np.nanmean(plugmap[magnames[1]][tellfibindex1])
+                    out['FITSIGH'][i,0] = np.nanstd(plugmap[magnames[1]][tellfibindex1])
+                    out['FITMEANJK'][i,0] = np.nanmean(plugmap[magnames[0]][tellfibindex1] - plugmap[magnames[2]][tellfibindex1])
+                    out['FITSIGJK'][i,0] = np.nanstd(plugmap[magnames[0]][tellfibindex1] - plugmap[magnames[2]][tellfibindex1])
+
+                    out['FITMEANH'][i,1] = np.nanmean(plugmap[magnames[1]][tellfibindex2])
+                    out['FITSIGH'][i,1] = np.nanstd(plugmap[magnames[1]][tellfibindex2])
+                    out['FITMEANJK'][i,1] = np.nanmean(plugmap[magnames[0]][tellfibindex2] - plugmap[magnames[2]][tellfibindex2])
+                    out['FITSIGJK'][i,1] = np.nanstd(plugmap[magnames[0]][tellfibindex2] - plugmap[magnames[2]][tellfibindex2])
+
+                    out['FITMEANH'][i,2] = np.nanmean(plugmap[magnames[1]][tellfibindex3])
+                    out['FITSIGH'][i,2] = np.nanstd(plugmap[magnames[1]][tellfibindex3])
+                    out['FITMEANJK'][i,2] = np.nanmean(plugmap[magnames[0]][tellfibindex3] - plugmap[magnames[2]][tellfibindex3])
+                    out['FITSIGJK'][i,2] = np.nanstd(plugmap[magnames[0]][tellfibindex3] - plugmap[magnames[2]][tellfibindex3])
+
+                    out['MEANFITSCALE'][i,0] = np.nanmean(tfitscale[g1,0])
+                    out['MEANFITSCALE'][i,1] = np.nanmean(tfitscale[g2,1])
+                    out['MEANFITSCALE'][i,2] = np.nanmean(tfitscale[g3,2])
+
+                    out['MEDFITSCALE'][i,0] = np.nanmedian(tfitscale[g1,0])
+                    out['MEDFITSCALE'][i,1] = np.nanmedian(tfitscale[g2,1])
+                    out['MEDFITSCALE'][i,2] = np.nanmedian(tfitscale[g3,2])
+
+                    out['MADFITSCALE'][i,0] = dln.mad(tfitscale[g1,0])
+                    out['MADFITSCALE'][i,1] = dln.mad(tfitscale[g2,1])
+                    out['MADFITSCALE'][i,2] = dln.mad(tfitscale[g3,2])
+
+                    out['SIGFITSCALE'][i,0] = np.std(tfitscale[g1,0])
+                    out['SIGFITSCALE'][i,1] = np.std(tfitscale[g2,1])
+                    out['SIGFITSCALE'][i,2] = np.std(tfitscale[g3,2])
+
+                    try:
+                        out['MINFITSCALE'][i,0] = np.nanmin(tfitscale[g1,0])
+                        out['MINFITSCALE'][i,1] = np.nanmin(tfitscale[g2,1])
+                        out['MINFITSCALE'][i,2] = np.nanmin(tfitscale[g3,2])
+
+                        out['MAXFITSCALE'][i,0] = np.nanmax(tfitscale[g1,0])
+                        out['MAXFITSCALE'][i,1] = np.nanmax(tfitscale[g2,1])
+                        out['MAXFITSCALE'][i,2] = np.nanmax(tfitscale[g3,2])
+                    except:
+                        nothing = 1
+
+                    gg1, = np.where(scale[0,:] > 0)
+                    gg2, = np.where(scale[1,:] > 0)
+                    gg3, = np.where(scale[2,:] > 0)
+
+                    out['MEANSCALE'][i,0] = np.nanmean(scale[0,gg1])
+                    out['MEANSCALE'][i,1] = np.nanmean(scale[1,gg2])
+                    out['MEANSCALE'][i,2] = np.nanmean(scale[2,gg3])
+
+                    out['MEDSCALE'][i,0] = np.nanmedian(scale[0,gg1])
+                    out['MEDSCALE'][i,1] = np.nanmedian(scale[1,gg2])
+                    out['MEDSCALE'][i,2] = np.nanmedian(scale[2,gg3])
+
+                    out['MADSCALE'][i,0] = dln.mad(scale[0,gg1])
+                    out['MADSCALE'][i,1] = dln.mad(scale[1,gg2])
+                    out['MADSCALE'][i,2] = dln.mad(scale[2,gg3])
+
+                    out['SIGSCALE'][i,0] = np.std(scale[0,gg1])
+                    out['SIGSCALE'][i,1] = np.std(scale[1,gg2])
+                    out['SIGSCALE'][i,2] = np.std(scale[2,gg3])
+
+                    try:
+                        out['MINSCALE'][i,0] = np.nanmin(scale[0,gg1])
+                        out['MINSCALE'][i,1] = np.nanmin(scale[1,gg2])
+                        out['MINSCALE'][i,2] = np.nanmin(scale[2,gg3])
+
+                        out['MAXSCALE'][i,0] = np.nanmax(scale[0,gg1])
+                        out['MAXSCALE'][i,1] = np.nanmax(scale[1,gg2])
+                        out['MAXSCALE'][i,2] = np.nanmax(scale[2,gg3])
+                    except:
+                        nothing = 1
+
+                    out['NREJ'][i,0] = int(ntell - len(g1))
+                    out['NREJ'][i,1] = int(ntell - len(g2))
+                    out['NREJ'][i,2] = int(ntell - len(g3))
+
+                    #out['MAD1'][i] = dln.mad(fitscale[0, tell[gd]])
+                    #out['MADRESID1'][i] = dln.mad(fitscale[0, tell[gd]] - scale[0, tell[gd]])
+                    #gd, = np.where(fitscale[1, tell] > 0)
+                    #out['MAD2'][i] = dln.mad(fitscale[1, tell])
+                    #out['MADRESID2'][i] = dln.mad(fitscale[1, tell[gd]] - scale[1, tell[gd]])
+                    #gd, = np.where(fitscale[2, tell] > 0)
+                    #out['MAD3'][i] = dln.mad(fitscale[2, tell])
+                    #out['MADRESID3'][i] = dln.mad(fitscale[2, tell[gd]] - scale[2, tell[gd]])
+
 
                     outstar = np.empty(ntell, dtype=dtstar)
-                    outstar['APOGEE_ID'] = plugmap['TMASS_STYLE'][tell]
-                    outstar['RA'] =        plugmap['RA'][tell]
-                    outstar['DEC'] =       plugmap['DEC'][tell]
-                    outstar['ETA'] =       plugmap['ETA'][tell]
-                    outstar['ZETA'] =      plugmap['ZETA'][tell]
-                    outstar['JMAG'] =      plugmap[magnames[0]][tell]
-                    outstar['HMAG'] =      plugmap[magnames[1]][tell]
-                    outstar['KMAG'] =      plugmap[magnames[2]][tell]
+                    outstar['APOGEE_ID'] = plugmap['TMASS_STYLE'][tellfibindex]
+                    outstar['RA'] =        plugmap['RA'][tellfibindex]
+                    outstar['DEC'] =       plugmap['DEC'][tellfibindex]
+                    outstar['ETA'] =       plugmap['ETA'][tellfibindex]
+                    outstar['ZETA'] =      plugmap['ZETA'][tellfibindex]
+                    outstar['JMAG'] =      plugmap[magnames[0]][tellfibindex]
+                    outstar['HMAG'] =      plugmap[magnames[1]][tellfibindex]
+                    outstar['KMAG'] =      plugmap[magnames[2]][tellfibindex]
                     outstar['EXPNUM'] =    np.full(ntell, num[i])
                     outstar['FIELD'] =     np.full(ntell, field[i])
                     outstar['PLATE'] =     np.full(ntell, plate[i])
@@ -839,12 +1080,34 @@ def tellfitstats1(outfile='tellfitstats2.fits', mjdstart=59146, mjdstop=59647,
                     outstar['MOONDIST'] =  np.full(ntell, allsnrg['MOONDIST'][i])
                     outstar['MOONPHASE'] = np.full(ntell, allsnrg['MOONPHASE'][i])
                     outstar['SECZ'] =      np.full(ntell, allsnrg['SECZ'][i])
-                    outstar['SCALE1'] =    scale[0, tell]
-                    outstar['FITSCALE1'] = fitscale[0, tell]
-                    outstar['SCALE2'] =    scale[1, tell]
-                    outstar['FITSCALE2'] = fitscale[1, tell]
-                    outstar['SCALE3'] =    scale[2, tell]
-                    outstar['FITSCALE3'] = fitscale[2, tell]
+                    outstar['NTELL'] =     np.full(ntell, ntell)
+                    outstar['NFIT'][:,0] = np.full(ntell, len(g1))
+                    outstar['NFIT'][:,1] = np.full(ntell, len(g2))
+                    outstar['NFIT'][:,2] = np.full(ntell, len(g3))
+                    outstar['BESTMOD'][:,0] = np.full(ntell, bestmod[0])
+                    outstar['BESTMOD'][:,1] = np.full(ntell, bestmod[1])
+                    outstar['BESTMOD'][:,2] = np.full(ntell, bestmod[2])
+                    outstar['SCALE'][g1,0] =  tscale[g1, 0]
+                    outstar['SCALE'][g2,1] =  tscale[g1, 1]
+                    outstar['SCALE'][g3,2] =  tscale[g1, 2]
+                    outstar['FITSCALE'][g1,0] =  tfitscale[g1, 0]
+                    outstar['FITSCALE'][g2,1] =  tfitscale[g2, 0]
+                    outstar['FITSCALE'][g3,2] =  tfitscale[g3, 0]
+
+                    rej1, = np.where(outstar['FITSCALE'][:,0] == 0)
+                    rej2, = np.where(outstar['FITSCALE'][:,1] == 0)
+                    rej3, = np.where(outstar['FITSCALE'][:,2] == 0)
+                    if len(rej1) > 0: outstar['REJ'][rej1,0] = 1
+                    if len(rej2) > 0: outstar['REJ'][rej2,1] = 1
+                    if len(rej3) > 0: outstar['REJ'][rej3,2] = 1
+
+                    #pdb.set_trace()
+
+                    #outstar['FITSCALE1'] = fitscale[0, tell]
+                    #outstar['SCALE2'] =    scale[1, tell]
+                    #outstar['FITSCALE2'] = fitscale[1, tell]
+                    #outstar['SCALE3'] =    scale[2, tell]
+                    #outstar['FITSCALE3'] = fitscale[2, tell]
 
                     if i == 0:
                         outS = outstar
