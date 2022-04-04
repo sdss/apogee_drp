@@ -896,8 +896,8 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                            ('MAG',       np.float64, nmolecules),
                            ('REJ',       np.int32, nmolecules)])
 
-        #for i in range(nexp):
-        for i in range(5):
+        for i in range(nexp):
+        #for i in range(5):
             sloan4 = False
             print('(' + str(i+1) + '/' + str(nexp) + '): field = ' + field[i] + ', plate = ' + str(plate[i]) + ', mjd = ' + str(mjd[i]) + ', exp = ' + str(num[i]))
             cframe = load.filename('Cframe', field=field[i], plate=plate[i], mjd=str(mjd[i]), num=num[i], chips=True)
@@ -1090,8 +1090,6 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     if len(rej1) > 0: outstar['REJ'][rej1,0] = 1
                     if len(rej2) > 0: outstar['REJ'][rej2,1] = 1
                     if len(rej3) > 0: outstar['REJ'][rej3,2] = 1
-                    #pdb.set_trace()
-
 
                     #outstar['FITSCALE1'] = fitscale[0, tell]
                     #outstar['SCALE2'] =    scale[1, tell]
