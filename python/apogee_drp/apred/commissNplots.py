@@ -1071,6 +1071,7 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     outstar['BESTMOD'][:,0] = np.full(ntell, bestmod[0])
                     outstar['BESTMOD'][:,1] = np.full(ntell, bestmod[1])
                     outstar['BESTMOD'][:,2] = np.full(ntell, bestmod[2])
+                    pdb.set_trace()
                     outstar['SCALE'][g1,0] =  scale[0, tellfibindex1]
                     outstar['SCALE'][g2,1] =  scale[1, tellfibindex2]
                     outstar['SCALE'][g3,2] =  scale[2, tellfibindex3]
@@ -1078,7 +1079,6 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     outstar['FITSCALE'][g2,1] =  fscale[1, tellfibindex2]
                     outstar['FITSCALE'][g3,2] =  fscale[2, tellfibindex3]
 
-                    pdb.set_trace()
 
 
 
