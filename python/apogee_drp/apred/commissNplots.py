@@ -1004,13 +1004,16 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     out['SIGFITSCALE'][i,1] = np.std(tfitscale[g2,1])
                     out['SIGFITSCALE'][i,2] = np.std(tfitscale[g3,2])
 
-                    out['MINFITSCALE'][i,0] = np.nanmin(tfitscale[g1,0])
-                    out['MINFITSCALE'][i,1] = np.nanmin(tfitscale[g2,1])
-                    out['MINFITSCALE'][i,2] = np.nanmin(tfitscale[g3,2])
+                    try:
+                        out['MINFITSCALE'][i,0] = np.nanmin(tfitscale[g1,0])
+                        out['MINFITSCALE'][i,1] = np.nanmin(tfitscale[g2,1])
+                        out['MINFITSCALE'][i,2] = np.nanmin(tfitscale[g3,2])
 
-                    out['MAXFITSCALE'][i,0] = np.nanmax(tfitscale[g1,0])
-                    out['MAXFITSCALE'][i,1] = np.nanmax(tfitscale[g2,1])
-                    out['MAXFITSCALE'][i,2] = np.nanmax(tfitscale[g3,2])
+                        out['MAXFITSCALE'][i,0] = np.nanmax(tfitscale[g1,0])
+                        out['MAXFITSCALE'][i,1] = np.nanmax(tfitscale[g2,1])
+                        out['MAXFITSCALE'][i,2] = np.nanmax(tfitscale[g3,2])
+                    except:
+                        nothing = 1
 
                     gg1, = np.where(scale[0,:] > 0)
                     gg2, = np.where(scale[1,:] > 0)
