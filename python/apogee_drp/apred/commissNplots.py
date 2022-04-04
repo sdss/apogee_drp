@@ -933,7 +933,7 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     g1, = np.where(fscale[:,0] > 0)
                     g2, = np.where(fscale[:,1] > 0)
                     g3, = np.where(fscale[:,2] > 0)
-                    tellfibindex = 300 - tellfib
+                    tellfibindex = (300 - tellfib).astype(int)
 
                     pdb.set_trace()
 
