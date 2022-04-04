@@ -1091,6 +1091,8 @@ def tellfitstats1(outfile='tellfitstats3.fits', mjdstart=59146, mjdstop=59647,
                     if len(rej2) > 0: outstar['REJ'][rej2,1] = 1
                     if len(rej3) > 0: outstar['REJ'][rej3,2] = 1
 
+                    pdb.set_trace()
+
                     #outstar['FITSCALE1'] = fitscale[0, tell]
                     #outstar['SCALE2'] =    scale[1, tell]
                     #outstar['FITSCALE2'] = fitscale[1, tell]
