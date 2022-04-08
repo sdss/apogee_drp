@@ -1107,7 +1107,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     if linkvers:
         logger.info('Creating calibration product symlinks to version >>'+str(linkvers)+'<<')
         cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','sparse','fiber']:
+        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','sparse','fiber','modelpsf']:
             for obs in ['apogee-n','apogee-s']:
                 if obs=='apogee-n':
                     prefix = 'ap'
@@ -1115,12 +1115,14 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                     prefix = 'as'
                 srcdir = apogee_redux+linkvers+'/cal/'+obs+'/'+d
                 destdir = apogee_redux+apred+'/cal/'+obs+'/'+d
-                if d=='sparse' or d=='fiber':
+                if d=='sparse' or d=='modelpsf' or d=='fiber':
                     srcdir = apogee_redux+linkvers+'/cal/'+obs+'/psf'
                     destdir = apogee_redux+apred+'/cal/'+obs+'/psf'
                 logger.info('Creating symlinks for '+d+' '+obs)
                 os.chdir(destdir)
-                if d=='sparse':
+                if d=='modelpsf':
+                    subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSFModel-*.fits .'],shell=True)
+                elif d=='sparse':
                     subprocess.run(['ln -s '+srcdir+'/'+prefix+'Sparse*.fits .'],shell=True)
                     # Need to link apEPSF files as well
                     sfiles = glob(srcdir+'/'+prefix+'Sparse*.fits')
@@ -1147,43 +1149,45 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
                     
         # Link all of the PSF files in the PSF library
-        for obs in ['apogee-n','apogee-s']:
-            logger.info('Creating symlinks for PSF library files '+obs)
-            sload = apload.ApLoad(apred=linkvers,telescope=load.telescope)
-            dpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+obs+'DomeFlatTrace-all.fits'
-            qpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+obs+'QuartzFlatTrace-all.fits'
-            psfid = []
-            if os.path.exists(dpsflibraryfile):
-                dpsf = Table.read(dpsflibraryfile)
-                psfid = np.array(dpsf['PSFID'])
-            else:
-                logger.info(dpsflibraryfile+' not found')
-            if os.path.exists(qpsflibraryfile):
-                qpsf = Table.read(qpsflibraryfile)
-                if len(psfid)==0:
-                    psfid = np.array(qpsf['PSFID'])
+        psflibrary = False
+        if psflibrary:
+            for obs in ['apogee-n','apogee-s']:
+                logger.info('Creating symlinks for PSF library files '+obs)
+                sload = apload.ApLoad(apred=linkvers,telescope=load.telescope)
+                dpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+obs+'DomeFlatTrace-all.fits'
+                qpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+obs+'QuartzFlatTrace-all.fits'
+                psfid = []
+                if os.path.exists(dpsflibraryfile):
+                    dpsf = Table.read(dpsflibraryfile)
+                    psfid = np.array(dpsf['PSFID'])
                 else:
-                    psfid = np.hstack((psfid,np.array(qpsf['PSFID'])))
-            else:
-                logger.info(qpsflibraryfile+' not found')
-            if len(psfid)==0:
-                continue
-            # Loop over the files and link them
-            psfid = np.unique(psfid)
-            for i in range(len(psfid)):
-                srcfile = sload.filename('PSF',num=psfid[i],chips=True)
-                destfile = load.filename('PSF',num=psfid[i],chips=True)
-                for ch in chips:
-                    srcfile1 = srcfile.replace('PSF-','PSF-'+ch+'-')
-                    destfile1 = destfile.replace('PSF-','PSF-'+ch+'-')
-                    if os.path.exists(srcfile1):
-                        subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
-                        srcfile1 = srcfile.replace('PSF-','EPSF-'+ch+'-')
-                        destfile1 = destfile.replace('PSF-','EPSF-'+ch+'-')
-                        subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
-                        srcfile1 = sload.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
-                        destfile1 = load.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
-                        subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
+                    logger.info(dpsflibraryfile+' not found')
+                if os.path.exists(qpsflibraryfile):
+                    qpsf = Table.read(qpsflibraryfile)
+                    if len(psfid)==0:
+                        psfid = np.array(qpsf['PSFID'])
+                    else:
+                        psfid = np.hstack((psfid,np.array(qpsf['PSFID'])))
+                else:
+                    logger.info(qpsflibraryfile+' not found')
+                if len(psfid)==0:
+                    continue
+                # Loop over the files and link them
+                psfid = np.unique(psfid)
+                for i in range(len(psfid)):
+                    srcfile = sload.filename('PSF',num=psfid[i],chips=True)
+                    destfile = load.filename('PSF',num=psfid[i],chips=True)
+                    for ch in chips:
+                        srcfile1 = srcfile.replace('PSF-','PSF-'+ch+'-')
+                        destfile1 = destfile.replace('PSF-','PSF-'+ch+'-')
+                        if os.path.exists(srcfile1):
+                            subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
+                            srcfile1 = srcfile.replace('PSF-','EPSF-'+ch+'-')
+                            destfile1 = destfile.replace('PSF-','EPSF-'+ch+'-')
+                            subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
+                            srcfile1 = sload.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
+                            destfile1 = load.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
+                            subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
 
         return
 
