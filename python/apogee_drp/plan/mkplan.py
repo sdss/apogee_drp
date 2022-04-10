@@ -819,7 +819,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     chips = ['a','b','c']
 
     # Output file/directory
-    outfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(mjd)+'auto.yaml'
+    outfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+apred+'/'+telescope+'/'+telescope+'_'+str(mjd)+'auto.yaml'
     if os.path.exists(os.path.dirname(outfile))==False:
         os.makedirs(os.path.dirname(outfile))
     # File already exists and clobber not set
