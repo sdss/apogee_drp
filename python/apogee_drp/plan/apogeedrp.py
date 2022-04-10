@@ -2043,15 +2043,17 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
     if os.path.exists(logdir)==False:
         os.makedirs(logdir)
 
+    # Should we parallelise this?  it can take a while to run for many nights
+
     # Loop over MJDs
     planfiles = []
     for m in mjds:
         logger.info(' ')
         logger.info('Making plan files for MJD='+str(m))
         plandicts,planfiles0 = mkplan.make_mjd5_yaml(m,apred,telescope,clobber=clobber,logger=logger)
-        dailyplanfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+telescope+'/'+telescope+'_'+str(m)+'.yaml'
+        mjd5planfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+apred+'/'+telescope+'/'+telescope+'_'+str(m)+'.yaml'
         try:
-            planfiles1 = mkplan.run_mjd5_yaml(dailyplanfile,clobber=clobber,logger=logger)
+            planfiles1 = mkplan.run_mjd5_yaml(mjd5planfile,clobber=clobber,logger=logger)
             nplanfiles1 = len(planfiles1)
         except:
             traceback.print_exc()

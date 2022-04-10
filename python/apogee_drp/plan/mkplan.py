@@ -1105,7 +1105,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
             if waveid:
-                objplan['waveid'] = waveid
+                objplan['waveid'] = str(waveid)
             out.append(objplan)
             planfile = load.filename('Plan',plate=plate,field=expinfo['fieldid'][i],mjd=mjd)
             planfiles.append(planfile)
@@ -1126,7 +1126,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                     skyplan['designid'] = str(expinfo['designid'][i])
                     skyplan['fieldid'] = str(expinfo['fieldid'][i])
                 if waveid:
-                    skyplan['waveid'] = waveid
+                    skyplan['waveid'] = str(waveid)
                 out.append(skyplan)
                 skyplanfile = planfile.replace('.yaml','sky.yaml')
                 planfiles.append(skyplanfile)
@@ -1170,7 +1170,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                    'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':cal, 'fps':fps,
                    'cal':True}
         if waveid:
-            calplan['waveid'] = waveid
+            calplan['waveid'] = str(waveid)
         if fps:
             # Use PSF library during FPS era
             #   quartzflat PSFID is a "backup" 
@@ -1188,7 +1188,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                      'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':extra, 'fps':fps,
                      'extra':True}
         if waveid:
-            extraplan['waveid'] = waveid
+            extraplan['waveid'] = str(waveid)
         if fps:
             # Use PSF library during FPS era
             #   quartzflat PSFID is a "backup" 
