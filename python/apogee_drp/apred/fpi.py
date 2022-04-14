@@ -179,7 +179,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     print('Determine median wavelength per FPI lines')
     print('-----------------------------------------')
     # Load initial guesses
-    fpipeaksfile = reduxdir+'cal/'+instrument+'/fpi/fpi_peaks.fits'
+    fpipeaksfile = os.environ['APOGEE_DRP_DIR']+'/data/arclines/fpi_peaks.fits'
     if os.path.exists(fpipeaksfile):
         fpipeaks = Table.read(fpipeaksfile)
     else:
