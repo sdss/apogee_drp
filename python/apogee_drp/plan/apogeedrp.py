@@ -441,7 +441,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
                       ('num',int),('calfile',(np.str,300)),('success3d',bool),('success2d',bool),('success',bool)])
     chkcal = np.zeros(ncal,dtype=dtype)
 
-    # Loop over the planfiles
+    # Loop over the files
     for i in range(ncal):
         # domeflat, quartzflat
         # arclamp
@@ -512,7 +512,6 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
             # Should really check fpi/apFPILines-EXPNUM8.fits
             base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-'+str(mjd)+'-')
         elif caltype.lower()=='dailywave':
-            # Should really check fpi/apFPILines-EXPNUM8.fits
             base = load.filename('Wave',num=num,chips=True)[0:-13]+str(num)+'.fits'
         else:
             base = load.filename(caltype,num=num,chips=True)
@@ -1952,7 +1951,8 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
                 else:
                     fps = False
                 cmd1 = 'makecal --vers {0} --telescope {1} --unlock'.format(apred,telescope)
-                if clobber: cmd1 += ' --clobber'                
+                if clobber: cmd1 += ' --clobber'
+                calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd1))                
                 if caltype=='psf':    # psfs
                     cmd1 += ' --psf '+str(num1)
                     logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
@@ -1988,6 +1988,9 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
         # Checks the status and updates the database
         if ntorun>0:
             chkcal1 = check_calib(calinfo[torun],logfiles,queue.key,apred,verbose=True,logger=logger)
+            # Summary
+            indcal, = np.where(chkcal1['success']==True)
+            logger.info('%d/%d calibrations successfully processed' % (len(indcal),len(chkcal1)))
             if chkcal is None:
                 chkcal = chkcal1
             else:

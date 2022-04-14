@@ -217,6 +217,9 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         #filename = load.filename('1D',num=num,mjd=load.cmjd(num),chips=True)
         #print(filename)
         frame = load.ap1D(num)
+        if frame==0:
+            print(load.filename('1D',num=num,chips=True)+' NOT FOUND')
+            continue
         out = load.filename('Wave',num=num,chips=True)
         #print(num,frame)
         if frame is not None and frame != 0 :
@@ -224,9 +227,11 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             if frame['a'][0].header['LAMPUNE']:
                 lampfile = 'UNe.vac.apogee'
                 lamptype = 'UNE'
-            if frame['a'][0].header['LAMPTHAR']:
+            elif frame['a'][0].header['LAMPTHAR']:
                 lampfile = 'tharne.lines.vac.apogee'
                 lamptype = 'THARNE'
+            else:
+                
             arclines=ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
             #j=np.where(arclines['USEWAVE'])[0]  # this is now down in findlines()
             #arclines=arclines[j]
@@ -960,7 +965,10 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                             if DEBUG:
                                 traceback.print_exc()
                                 import pdb; pdb.set_trace()
-                            
+                # No outliers
+                else:
+                    # robust linear fit to sigma
+                    sigcoef1,sigabsdev = ladfit.ladfit(linestr['xpix0'][rowind],linestr['sigma'][rowind])                    
                 # Refit lines that are in groups
                 if 'WAVEGROUP' in lines.dtype.names:
                     grplineind, = np.where((lines['CHIPNUM'] == ichip+1) & (lines['USEWAVE']==1) & (lines['WAVEGROUP']>-1))
