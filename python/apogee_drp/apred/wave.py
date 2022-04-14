@@ -230,8 +230,6 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             elif frame['a'][0].header['LAMPTHAR']:
                 lampfile = 'tharne.lines.vac.apogee'
                 lamptype = 'THARNE'
-            else:
-                
             arclines=ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
             #j=np.where(arclines['USEWAVE'])[0]  # this is now down in findlines()
             #arclines=arclines[j]
