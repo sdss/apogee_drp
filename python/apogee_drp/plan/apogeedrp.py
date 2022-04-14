@@ -1958,19 +1958,19 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
                     logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif caltype=='flux':   # flux
                     cmd1 += ' --flux '+str(num1)
-                    if fps: cmd1 += ' --librarypsf'
+                    #if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
                 elif caltype=='arcs':  # arcs
                     cmd1 += ' --wave '+str(num1)
-                    if fps: cmd1 += ' --librarypsf'
+                    #if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
                 elif caltype=='dailywave':  # dailywave
                     cmd1 += ' --dailywave '+str(num1)
-                    if fps: cmd1 += ' --librarypsf'
+                    #if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apDailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
                 elif caltype=='fpi':  # fpi
                     cmd1 += ' --fpi '+str(num1)
-                    if fps: cmd1 += ' --librarypsf'
+                    #if fps: cmd1 += ' --librarypsf'
                     logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
                     if os.path.exists(os.path.dirname(logfile1))==False:
                         os.makedirs(os.path.dirname(logfile1))
