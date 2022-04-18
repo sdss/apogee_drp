@@ -312,7 +312,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         print,' fpi file: ',file, ' already made'
         return
       endif
-      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid,modelpsf=pdfmodel
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid,modelpsf=psfmodel
       ;; Use Model PSF by default
       if not keyword_set(psf) and not keyword_set(librarypsf) then begin
         psfid = 0
