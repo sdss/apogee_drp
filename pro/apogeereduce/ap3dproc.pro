@@ -2526,7 +2526,7 @@ print,'no_checksum: ', no_checksum
   if extension eq 'apz' and keyword_set(cleanuprawfile) and doapunzip eq 1 then begin
     print,'Deleting recently decompressed file ',file
     FILE_DELETE,file,/allow,/quiet
-  end
+  endif
   
   
   ; Number of saturated and CR pixels
@@ -2540,7 +2540,7 @@ print,'no_checksum: ', no_checksum
     print,''
   endif
 
-  file_delete,lockfile
+  file_delete,lockfile,/allow
   
   dt = systime(1)-t0
   if not keyword_set(silent) then print,'dt = ',strtrim(string(dt,format='(F10.1)'),2),' sec'
