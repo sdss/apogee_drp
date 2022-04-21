@@ -184,11 +184,11 @@ end
   readcol,tellstarlist,tellname,tellfib,tellh,telljk,f='a,i,f,f',skipline=1,/silent,count=nstar
   starplugind = intarr(nstar)
   for ii=0,nstar-1 do begin
-    ;gd = where(tellname[ii] eq plugmap.fiberdata.??, ngd)
-    stop
+    gd = where(tellname[ii] eq plugmap.fiberdata.tmass_style, ngd)
     starplugind[ii] = gd
   endfor
 
+    stop
 ;  starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
 ;                     plugmap.fiberdata.holetype eq 'OBJECT' and $
 ;                     plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
