@@ -151,7 +151,6 @@ FOR i=0L,nplanfiles-1 do begin
   ;  if nbd2 gt 0 then print,lsffiles[bd2],' NOT FOUND'
   ;  goto,BOMB
   ;endif
-  stop
 
   ; Do the output directories exist?
   plate_dir=apogee_filename('Plate',mjd=planstr.mjd,plate=planstr.plateid,chip='a',field=planstr.field,/dir)
