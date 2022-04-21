@@ -222,7 +222,6 @@ FOR i=0L,nplanfiles-1 do begin
     info = APFILEINFO(files,/silent)
     okay = (info.exists AND info.sp1dfmt AND info.allchips AND (info.mjd5 eq planstr.mjd) AND $
             ((info.naxis eq 3) OR (info.exten eq 1)))
-    stop
     if min(okay) lt 1 then begin
       bd = where(okay eq 0,nbd)
       stop,'halt: There is a problem with files: ',strjoin((files)(bd),' ')
