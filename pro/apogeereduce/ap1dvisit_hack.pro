@@ -1,6 +1,6 @@
 ;+
 ;
-; AP1DVISIT
+; AP1DVISIT_HACK
 ;
 ; This program processes 1D APOGEE spectra.  It does dither
 ; combination, wavelength calibration and sky correction.
@@ -29,7 +29,7 @@
 ; Modifications J. Holtzman 2011+
 ;-
 
-pro ap1dvisit,planfiles,clobber=clobber,verbose=verbose,stp=stp,newwave=newwave,$
+pro ap1dvisit_hack,planfiles,clobber=clobber,verbose=verbose,stp=stp,newwave=newwave,$
               test=test,mapper_data=mapper_data,halt=halt,dithonly=dithonly,$
               ap1dwavecal=ap1dwavecal,force=force
 
