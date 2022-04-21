@@ -1,4 +1,4 @@
-pro aptelluric,frame,plugmap,outframe,tellstar,nearest=nearest,silent=silent,verbose=verbose,$
+pro aptelluric_hack,frame,plugmap,outframe,tellstar,nearest=nearest,silent=silent,verbose=verbose,$
                starfitopt=starfitopt,specfitopt=specfitopt,error=error,pl=pl,pltelstarfit=pltelstarfit,stp=stp,$
                save=save,plots_dir=plots_dir,preconv=preconv,single=single,visitstr=visitstr,$
                usetelstarfit=usetelstarfit,maxtellstars=maxtellstars,tellzones=tellzones,test=test,$
@@ -6,7 +6,7 @@ pro aptelluric,frame,plugmap,outframe,tellstar,nearest=nearest,silent=silent,ver
 
 ;+
 ;
-; APTELLURIC
+; APTELLURIC_HACK
 ;
 ; This corrects for the telluric absorption of the atmosphere.
 ;
