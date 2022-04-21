@@ -142,8 +142,8 @@ FOR i=0L,nplanfiles-1 do begin
   ;if planstr.waveid lt 1e7 then $
   ;  wavefiles = file_dirname(wavefiles[0])+'/'+dirs.prefix+'Wave-'+chiptag+'-'+strtrim(planstr.waveid,2)+'.fits'
   ;wavetest = FILE_TEST(wavefiles)
-  ;lsffiles = apogee_filename('LSF',chip=chiptag,num=planstr.lsfid)
-  ;lsftest = FILE_TEST(lsffiles)
+  lsffiles = apogee_filename('LSF',chip=chiptag,num=planstr.lsfid)
+  lsftest = FILE_TEST(lsffiles)
   ;if min(wavetest) eq 0 or min(lsftest) eq 0 then begin
   ;  bd1 = where(wavetest eq 0,nbd1)
   ;  if nbd1 gt 0 then print,wavefiles[bd1],' NOT FOUND'
@@ -151,6 +151,7 @@ FOR i=0L,nplanfiles-1 do begin
   ;  if nbd2 gt 0 then print,lsffiles[bd2],' NOT FOUND'
   ;  goto,BOMB
   ;endif
+  stop
 
   ; Do the output directories exist?
   plate_dir=apogee_filename('Plate',mjd=planstr.mjd,plate=planstr.plateid,chip='a',field=planstr.field,/dir)
