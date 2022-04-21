@@ -219,9 +219,10 @@ FOR i=0L,nplanfiles-1 do begin
     rawinfo = APFILEINFO(rawfiles,/silent)        ; this returns useful info even if the files don't exist
     framenum = rawinfo[0].fid8   ; the frame number
     files = apogee_filename('1D',chip=chiptag,num=framenum)
-    files = repstr(files,'.fz','')
-    info = APFILEINFO(files,/silent)
     stop
+    files = repstr(files,'.fz','')
+    stop
+    info = APFILEINFO(files,/silent)
     okay = (info.exists AND info.sp1dfmt AND info.allchips AND (info.mjd5 eq planstr.mjd) AND $
             ((info.naxis eq 3) OR (info.exten eq 1)))
     stop
