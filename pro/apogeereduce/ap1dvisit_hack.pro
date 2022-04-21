@@ -221,8 +221,8 @@ FOR i=0L,nplanfiles-1 do begin
     files = apogee_filename('1D',chip=chiptag,num=framenum)
     stop
     files = repstr(files,'.fz','')
-    stop
     info = APFILEINFO(files,/silent)
+    files = repstr(files,'.fz','')
     okay = (info.exists AND info.sp1dfmt AND info.allchips AND (info.mjd5 eq planstr.mjd) AND $
             ((info.naxis eq 3) OR (info.exten eq 1)))
     stop
