@@ -140,7 +140,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     for ax in axes:
         ax.tick_params(reset=True)
         ax.set_xlim(visitxmin, visitxmax)
-        ax.set_ylim(ymin, ymax)
+        #ax.set_ylim(ymin, ymax)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
         ax.minorticks_on()
         ax.tick_params(axis='both', which='both', direction='in', bottom=True, top=True, left=True, right=True)
