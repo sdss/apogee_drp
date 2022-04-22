@@ -461,12 +461,13 @@ For i=0,nspecies-1 do begin
   err = zz*0+1
   npts = n_elements(xx)
 
-  ; use first order for CH4 and CO2, second order for H2O
-  if i eq 2 then npars = 6 else npars = 3;
-  ; if not enough stars, use first order for everything
-  if ngdfits lt 10 and ngdfits ge 4 then npars=3   ; use linear fit if not enough points
-  ; if just one star, then no surface fit!
-  if keyword_set(single) then npars=1
+  ;; use first order for CH4 and CO2, second order for H2O
+  ;if i eq 2 then npars = 6 else npars = 3;
+  ;; if not enough stars, use first order for everything
+  ;if ngdfits lt 10 and ngdfits ge 4 then npars=3   ; use linear fit if not enough points
+  ;; if just one star, then no surface fit!
+  ;if keyword_set(single) then npars=1
+  npars=1
 
   apgundef,status,dof,chisq,rchisq,yfit
   initpars = dblarr(npars)
