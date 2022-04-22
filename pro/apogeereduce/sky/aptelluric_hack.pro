@@ -602,8 +602,8 @@ status=0
     pos = [0.08,0.07,0.50,0.44]
     plot,xx,zz,ps=1,xtit='Zeta (deg)',ytit='Normalization',tit='Species '+species[i],$
          xr=xr,yr=yr,xs=1,ys=1,position=pos
-    oplot,xx,yfit,ps=4,co=250
-    legend_old,['Data','Model'],textcolor=[co1,250],/top,/left
+    if npars gt 1 then oplot,xx,yfit,ps=4,co=250
+    if npars gt 1 then legend_old,['Data','Model'],textcolor=[co1,250],/top,/left
 
     ; Normalization vs. Eta
     xr = minmax(yy)
@@ -612,8 +612,8 @@ status=0
     pos = [0.58,0.58,0.99,0.95]
     plot,yy,zz,ps=1,xtit='Eta (deg)',ytit='Normalization',tit='Species '+species[i],$
          xr=xr,yr=yr,xs=1,ys=1,position=pos,/noerase
-    oplot,yy,yfit,ps=4,co=250
-    legend_old,['Data','Model'],textcolor=[co1,250],/top,/left
+    if npars gt 1 then oplot,yy,yfit,ps=4,co=250
+    if npars gt 1 then legend_old,['Data','Model'],textcolor=[co1,250],/top,/left
 
     ; Colored points on the sky
     pos = [0.08,0.08,0.50,0.42]
