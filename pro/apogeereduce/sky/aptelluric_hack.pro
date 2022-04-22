@@ -461,13 +461,14 @@ For i=0,nspecies-1 do begin
   err = zz*0+1
   npts = n_elements(xx)
 
-  ;; use first order for CH4 and CO2, second order for H2O
-  ;if i eq 2 then npars = 6 else npars = 3;
-  ;; if not enough stars, use first order for everything
-  ;if ngdfits lt 10 and ngdfits ge 4 then npars=3   ; use linear fit if not enough points
-  ;; if just one star, then no surface fit!
-  ;if keyword_set(single) then npars=1
-  npars=1
+  ; use first order for CH4 and CO2, second order for H2O
+  if i eq 2 then npars = 6 else npars = 3;
+  ; if not enough stars, use first order for everything
+  if ngdfits lt 10 and ngdfits ge 4 then npars=3   ; use linear fit if not enough points
+  ; if just one star, then no surface fit!
+  if keyword_set(single) then npars=1
+
+  npars=3
 
   apgundef,status,dof,chisq,rchisq,yfit
   initpars = dblarr(npars)
@@ -602,8 +603,8 @@ status=0
     pos = [0.08,0.07,0.50,0.44]
     plot,xx,zz,ps=1,xtit='Zeta (deg)',ytit='Normalization',tit='Species '+species[i],$
          xr=xr,yr=yr,xs=1,ys=1,position=pos
-    if npars gt 1 then oplot,xx,yfit,ps=4,co=250
-    if npars gt 1 then legend_old,['Data','Model'],textcolor=[co1,250],/top,/left
+    oplot,xx,yfit,ps=4,co=250
+    legend_old,['Data','Model'],textcolor=[co1,250],/top,/left
 
     ; Normalization vs. Eta
     xr = minmax(yy)
@@ -612,8 +613,8 @@ status=0
     pos = [0.58,0.58,0.99,0.95]
     plot,yy,zz,ps=1,xtit='Eta (deg)',ytit='Normalization',tit='Species '+species[i],$
          xr=xr,yr=yr,xs=1,ys=1,position=pos,/noerase
-    if npars gt 1 then oplot,yy,yfit,ps=4,co=250
-    if npars gt 1 then legend_old,['Data','Model'],textcolor=[co1,250],/top,/left
+    oplot,yy,yfit,ps=4,co=250
+    legend_old,['Data','Model'],textcolor=[co1,250],/top,/left
 
     ; Colored points on the sky
     pos = [0.08,0.08,0.50,0.42]
