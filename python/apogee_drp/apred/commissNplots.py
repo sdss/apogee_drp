@@ -125,6 +125,41 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
+def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
+    outdir = os.environ.get('APOGEE_REDUX')+'caltests1.0/visit/apo25m/plots/'
+    plotfile = outdir+'specplot-'+field+'-'+conf+'-'+mjd+'-'+fiber+'.png'
+    print('making ' + os.path.basename(plotfile))
+    origvis = 'apVisit-daily-apo25m-'+conf+'-'+mjd+'-'+fiber+'.fits'
+    origvis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'/'+conf+'/'+mjd+'/'+origvis
+
+    visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
+    fig = plt.figure(figsize=(28,15))
+    ax1 = plt.subplot2grid((1,2), (0,0))
+    ax2 = plt.subplot2grid((1,2), (0,1))
+    axes = [ax1,ax2]
+    for ax in axes:
+        ax.tick_params(reset=True)
+        ax.set_xlim(visitxmin, visitxmax)
+        ax.set_ylim(ymin, ymax)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
+        ax.minorticks_on()
+        ax.tick_params(axis='both', which='both', direction='in', bottom=True, top=True, left=True, right=True)
+        ax.tick_params(axis='both', which='major', length=axmajlen)
+        ax.tick_params(axis='both', which='minor', length=axminlen)
+        ax.tick_params(axis='both', which='both', width=axwidth)
+    ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
+    ax1.set_ylabel(r'Flux')
+    ax2.set_ylabel(r'Flux$-$Flux90')
+
+    flux = fits.getdata(origvis,1)
+    wave = fits.getdata(origvis,4)
+    pdb.set_trace()
+
+    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
 def tellspatialnew1(zoom=False, cmap='brg'):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
     expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
