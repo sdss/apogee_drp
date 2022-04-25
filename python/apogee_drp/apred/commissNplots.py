@@ -243,7 +243,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         med = np.nanmedian(100*((flux/flux0)-1))
         print(med)
 
-    ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=0.1, fontsize=fsz, edgecolor='k', framealpha=1)
+    ax1.legend(loc='upper right', ncol=2, labelspacing=0.5, handletextpad=0.1, fontsize=fsz, edgecolor='k', framealpha=1)
     ax1.text(0.5, 1.02, field+'-'+conf+'-'+mjd+'-'+fiber, ha='center', va='bottom', transform=ax1.transAxes)
 
     fig.subplots_adjust(left=0.07,right=0.985,bottom=0.045,top=0.97,hspace=0.12,wspace=0.05)
