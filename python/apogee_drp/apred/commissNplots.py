@@ -213,6 +213,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     ax1.axes.xaxis.set_ticklabels([])
     ax2.axes.xaxis.set_ticklabels([])
     ax3.axes.xaxis.set_ticklabels([])
+    ax3.set_ylim(-3,3)
 
     ax4.set_xlabel(r'Wavelength ($\rm \AA$)')
     ax1.set_ylabel(r'Flux + offset')
