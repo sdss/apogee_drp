@@ -242,7 +242,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         ax2.plot(wave, flux, linewidth=0.5, color=colors[i])
         ax3.plot(wave, 100*((flux/flux0)-1), color=colors[i], linewidth=0.5)
         med = np.nanmedian(100*((flux/flux0)-1))
-        print(np.nansum(100*((flux/flux0)-1)))
+        print(np.absolute(np.nansum(100*((flux/flux0)-1))))
 
     ax1.legend(loc='upper right', ncol=2, labelspacing=0.5, handletextpad=0.1, fontsize=fsz, edgecolor='k', framealpha=1)
     ax1.text(0.5, 1.02, field+'-'+conf+'-'+mjd+'-'+fiber, ha='center', va='bottom', transform=ax1.transAxes)
