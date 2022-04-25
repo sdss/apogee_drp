@@ -146,7 +146,7 @@ def persist1(cmap='brg', vrad=400):
         for ichip in range(nchips):
             ax = plt.subplot2grid((nchips,nexp1), (ichip,iexp))
             ax.minorticks_on()
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1000))
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(100))
             ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.yaxis.set_minor_locator(ticker.MultipleLocator(100))
