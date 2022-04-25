@@ -213,7 +213,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
     wave = fits.getdata(origvis,4)
     wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
-    pdb.set_trace()
+    ax1.plot(wave,flux)
 
     fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
