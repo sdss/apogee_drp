@@ -148,7 +148,7 @@ def persist1(cmap='brg', vrad=400):
         for ichip in range(nchips):
             ax = plt.subplot2grid((nchips,nexp1), (ichip,iexp))
             ax.minorticks_on()
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1000))
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(100))
             ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.yaxis.set_minor_locator(ticker.MultipleLocator(100))
@@ -156,11 +156,11 @@ def persist1(cmap='brg', vrad=400):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            ax.axes.xaxis.set_ticklabels([])
             if iexp > 0: ax.axes.yaxis.set_ticklabels([])
             #if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             #if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
-            if ichip == 0: ax.text(0.5, 1.04, str(exp1[iexp])+'$-$'+'\n'+str(exp1[iexp]+1), transform=ax.transAxes, ha='center', va='bottom')
+            if ichip == 0: ax.text(0.5, 1.04, str(exp1[iexp])+'$-$'+str(exp1[iexp]+1), fontsize=14, transform=ax.transAxes, ha='center', va='bottom')
 
             if (iexp == 0) & (ichip == 0): ax.set_ylabel('Blue Pix')
             if (iexp == 0) & (ichip == 1): ax.set_ylabel('Green Pix')
