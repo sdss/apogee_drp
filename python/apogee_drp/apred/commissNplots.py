@@ -168,13 +168,12 @@ def persist1(cmap='brg', vrad=400):
             twod2 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]+1) + '.fits')
 
             im = ax.imshow(twod1-twod2, cmap=cmap, vmin=-vrad, vmax=vrad)
-            if iexp == nexp1: cb = colorbar(im)
-
-            #    divider = make_axes_locatable(ax)
-            #    cax = divider.append_axes("right", size="5%", pad="10%")
-            #    cax.minorticks_on()
-            #    #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
-            #    cb1 = colorbar(sc1, cax=cax)
+            if iexp == nexp1: 
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad="10%")
+                cax.minorticks_on()
+                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+                cb1 = colorbar(im, cax=cax)
                 #ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
     fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
