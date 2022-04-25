@@ -230,6 +230,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     tell0 = np.concatenate([tell[0,:],tell[1,:],tell[2,:]])
     med0 = np.nanmedian(flux0)
     ax1.plot(wave0, flux0, 'k', linewidth=0.5, label='all 90')
+    ax2.plot(wave0, flux0, 'k', linewidth=0.5)
     med = np.empty(5)
     ax4.plot(wave0, tell0, 'k', linewidth=0.75)
     for i in range(5):
