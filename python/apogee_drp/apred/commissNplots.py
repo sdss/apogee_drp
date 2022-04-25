@@ -210,10 +210,10 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     ax2.set_ylabel(r'Flux$-$Flux90')
 
     flux = fits.getdata(origvis,1)
-    flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
+    flux0 = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
     wave = fits.getdata(origvis,4)
-    wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
-    ax1.plot(wave, flux, 'k')
+    wave0 = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
+    ax1.plot(wave0, flux0, 'k')
     for i in range(4):
         vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_0'+str(i+1)+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
         flux = fits.getdata(vis,1)
@@ -221,6 +221,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         wave = fits.getdata(vis,4)
         wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
         ax1.plot(wave, flux)
+        ax2.plot(wave, flux-flux0)
 
 
     fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
