@@ -210,6 +210,10 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         ax.tick_params(axis='both', which='major', length=axmajlen)
         ax.tick_params(axis='both', which='minor', length=axminlen)
         ax.tick_params(axis='both', which='both', width=axwidth)
+    ax1.axes.xaxis.set_ticklabels([])
+    ax2.axes.xaxis.set_ticklabels([])
+    ax3.axes.xaxis.set_ticklabels([])
+
     ax4.set_xlabel(r'Wavelength ($\rm \AA$)')
     ax1.set_ylabel(r'Flux + offset')
     ax2.set_ylabel(r'Flux')
