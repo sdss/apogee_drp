@@ -216,7 +216,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     ax3.set_ylabel(r'% Residual (Flux / Flux90)')
     ax4.set_ylabel(r'Telluric')
 
-    pdb.set_trace()
+    #pdb.set_trace()
     flux = fits.getdata(origvis,1)
     flux0 = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
     wave = fits.getdata(origvis,4)
