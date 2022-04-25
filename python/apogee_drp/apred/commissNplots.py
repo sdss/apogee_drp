@@ -198,7 +198,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     ax1 = plt.subplot2grid((3,1), (0,0))
     ax2 = plt.subplot2grid((3,1), (1,0))
     ax3 = plt.subplot2grid((3,1), (2,0))
-    axes = [ax1,ax2]
+    axes = [ax1,ax2,ax3]
     for ax in axes:
         ax.tick_params(reset=True)
         ax.set_xlim(visitxmin, visitxmax)
