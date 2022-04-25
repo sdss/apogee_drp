@@ -152,7 +152,7 @@ def persist1(cmap='brg', vrad=400):
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            if ichip > 0: ax.axes.xaxis.set_ticklabels([])
+            if ichip > nchips-1: ax.axes.xaxis.set_ticklabels([])
             if iexp > 0: ax.axes.yaxis.set_ticklabels([])
             #if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             #if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
@@ -170,7 +170,7 @@ def persist1(cmap='brg', vrad=400):
             #    cb1 = colorbar(sc1, cax=cax)
                 #ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-    #fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
