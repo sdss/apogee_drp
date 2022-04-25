@@ -140,7 +140,7 @@ def persist1(cmap='brg', vrad=400):
     nrows = 2
     molcols = ['mediumseagreen', 'purple', 'darkorange']
 
-
+    matplotlib.rcParams.update({'font.size':18, 'font.family':'serif'})
     fig = plt.figure(figsize=(32,12))
     for iexp in range(nexp1):
         for ichip in range(nchips):
