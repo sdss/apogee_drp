@@ -187,8 +187,8 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     outdir = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/plots/'
     plotfile = outdir+'specplot-'+field+'-'+conf+'-'+mjd+'-'+fiber+'.png'
     print('making ' + os.path.basename(plotfile))
-    origvis = 'apVisit-daily-apo25m-'+conf+'-'+mjd+'-'+fiber+'.fits'
-    origvis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'/'+conf+'/'+mjd+'/'+origvis
+    origvis0 = 'apVisit-daily-apo25m-'+conf+'-'+mjd+'-'+fiber+'.fits'
+    origvis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'/'+conf+'/'+mjd+'/'+origvis0
 
     visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
     fig = plt.figure(figsize=(28,17))
@@ -215,7 +215,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
     ax1.plot(wave, flux, 'k')
     for i in range(4):
-        vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_0'+str(i+1)+'/'+conf+'/'+mjd+'/'+origvis
+        vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_0'+str(i+1)+'/'+conf+'/'+mjd+'/'+origvis0
         flux = fits.getdata(vis,1)
         flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
         wave = fits.getdata(vis,4)
