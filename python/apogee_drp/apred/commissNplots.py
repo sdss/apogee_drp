@@ -191,7 +191,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     origvis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'/'+conf+'/'+mjd+'/'+origvis
 
     visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
-    fig = plt.figure(figsize=(28,15))
+    fig = plt.figure(figsize=(28,17))
     ax1 = plt.subplot2grid((2,1), (0,0))
     ax2 = plt.subplot2grid((2,1), (1,0))
     axes = [ax1,ax2]
@@ -213,7 +213,15 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
     wave = fits.getdata(origvis,4)
     wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
-    ax1.plot(wave,flux)
+    ax1.plot(wave, flux, 'k')
+    for i in range(5):
+        vis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'_0'+str(i+1)+'/'+conf+'/'+mjd+'/'+origvis
+        flux = fits.getdata(vis,1)
+        flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
+        wave = fits.getdata(vis,4)
+        wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
+        ax1.plot(wave, flux)
+
 
     fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
