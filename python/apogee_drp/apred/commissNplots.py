@@ -207,7 +207,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         ax.tick_params(axis='both', which='both', width=axwidth)
     ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
     ax1.set_ylabel(r'Flux')
-    ax2.set_ylabel(r'Flux$-$Flux90')
+    ax2.set_ylabel(r'% Residual (Flux$-$Flux90)')
 
     flux = fits.getdata(origvis,1)
     flux0 = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
@@ -222,7 +222,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         wave = fits.getdata(vis,4)
         wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
         ax1.plot(wave, flux)
-        ax2.plot(wave, (flux-flux0)/med0)
+        ax2.plot(wave, 100*((flux-flux0)/med0))
 
 
     fig.subplots_adjust(left=0.07,right=0.985,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
