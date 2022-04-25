@@ -191,7 +191,9 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     origvis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'/'+conf+'/'+mjd+'/'+origvis0
 
     colors = ['r','b','orange','violet','seagreen']
-    labels = np.array(['red 15', 'blue 15', 'bright 15', 'faint 15', '"best" 15'])
+    labels = np.array(['red 15', 'bright 15', 'faint 15', '"best" 15', 'blue 15'])
+    labnums = np.array(['01','03','04','05','02'])
+    nruns = len(labels)
 
     visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
     fig = plt.figure(figsize=(28,24))
@@ -231,10 +233,10 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     med0 = np.nanmedian(flux0)
     ax1.plot(wave0, flux0, 'k', linewidth=0.5, label='all 90')
     ax2.plot(wave0, flux0, 'k', linewidth=0.5)
-    med = np.empty(5)
+    med = np.empty(nruns)
     ax4.plot(wave0, tell0, 'k', linewidth=0.75)
-    for i in range(5):
-        vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_0'+str(i+1)+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
+    for i in range(nruns):
+        vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_'+labnums[i]+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
         flux = fits.getdata(vis,1)
         flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
         wave = fits.getdata(vis,4)
