@@ -193,9 +193,10 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     colors = ['r','b','orange','violet','seagreen']
 
     visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
-    fig = plt.figure(figsize=(28,17))
-    ax1 = plt.subplot2grid((2,1), (0,0))
-    ax2 = plt.subplot2grid((2,1), (1,0))
+    fig = plt.figure(figsize=(28,24))
+    ax1 = plt.subplot2grid((3,1), (0,0))
+    ax2 = plt.subplot2grid((3,1), (1,0))
+    ax3 = plt.subplot2grid((3,1), (2,0))
     axes = [ax1,ax2]
     for ax in axes:
         ax.tick_params(reset=True)
@@ -207,9 +208,10 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         ax.tick_params(axis='both', which='major', length=axmajlen)
         ax.tick_params(axis='both', which='minor', length=axminlen)
         ax.tick_params(axis='both', which='both', width=axwidth)
-    ax2.set_xlabel(r'Wavelength ($\rm \AA$)')
-    ax1.set_ylabel(r'Flux')
-    ax2.set_ylabel(r'% Residual (Flux$-$Flux90)')
+    ax3.set_xlabel(r'Wavelength ($\rm \AA$)')
+    ax1.set_ylabel(r'Flux + offset')
+    ax2.set_ylabel(r'Flux')
+    ax3.set_ylabel(r'% Residual (Flux$-$Flux90)')
 
     flux = fits.getdata(origvis,1)
     flux0 = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
@@ -223,8 +225,9 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
         wave = fits.getdata(vis,4)
         wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
-        ax1.plot(wave, flux)
-        ax2.plot(wave, 100*((flux-flux0)/med0), colors[i])
+        ax1.plot(wave, flux+med0*0.05)
+        ax2.plot(wave, flux)
+        ax3.plot(wave, 100*((flux-flux0)/med0), colors[i])
 
 
     fig.subplots_adjust(left=0.07,right=0.985,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
