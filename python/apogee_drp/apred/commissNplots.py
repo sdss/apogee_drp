@@ -220,7 +220,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     wave0 = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
     med0 = np.nanmedian(flux0)
     ax1.plot(wave0, flux0, 'k', linewidth=0.5, label='all 90')
-    for i in range(4):
+    for i in range(5):
         vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_0'+str(i+1)+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
         flux = fits.getdata(vis,1)
         flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
@@ -230,7 +230,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         ax2.plot(wave, flux, linewidth=0.5)
         ax3.plot(wave, 100*((flux-flux0)/med0), colors[i], linewidth=0.5)
 
-    ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, fontsize=fsz, edgecolor='k', framealpha=1)
+    ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=0.1, fontsize=fsz, edgecolor='k', framealpha=1)
 
     fig.subplots_adjust(left=0.07,right=0.985,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
