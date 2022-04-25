@@ -212,7 +212,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     ax3.set_xlabel(r'Wavelength ($\rm \AA$)')
     ax1.set_ylabel(r'Flux + offset')
     ax2.set_ylabel(r'Flux')
-    ax3.set_ylabel(r'% Residual (Flux$-$Flux90)')
+    ax3.set_ylabel(r'% Residual (Flux / Flux90)')
 
     flux = fits.getdata(origvis,1)
     flux0 = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
@@ -230,7 +230,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         ax1.plot(wave, flux+med0*0.075*(i+1), color=colors[i], linewidth=0.5, label=labels[i])
         ax2.plot(wave, flux, linewidth=0.5, color=colors[i])
         ax3.plot(wave, 100*((flux-flux0)/med0), color=colors[i], linewidth=0.5)
-        med = np.nanmedian(100*((flux-flux0)/med0))
+        med = np.nanmedian(100*((flux/flux0)))
         print(med)
 
     ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=0.1, fontsize=fsz, edgecolor='k', framealpha=1)
