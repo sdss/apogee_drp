@@ -190,6 +190,8 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     origvis0 = 'apVisit-daily-apo25m-'+conf+'-'+mjd+'-'+fiber+'.fits'
     origvis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'/'+conf+'/'+mjd+'/'+origvis0
 
+    colors = ['r','b','orange','violet','seagreen']
+
     visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
     fig = plt.figure(figsize=(28,17))
     ax1 = plt.subplot2grid((2,1), (0,0))
@@ -222,7 +224,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         wave = fits.getdata(vis,4)
         wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
         ax1.plot(wave, flux)
-        ax2.plot(wave, 100*((flux-flux0)/med0))
+        ax2.plot(wave, 100*((flux-flux0)/med0), colors[i])
 
 
     fig.subplots_adjust(left=0.07,right=0.985,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
