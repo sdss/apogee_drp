@@ -159,7 +159,6 @@ def persist1(cmap='brg', vrad=400):
             #if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             #if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
             if ichip == 0: ax.text(0.5, 1.04, str(exp1[iexp])+'$-$'+'\n'+str(exp1[iexp]+1), transform=ax.transAxes, ha='center', va='bottom')
-            if iexp == nexp1 -1: cb = colorbar()
 
             if (iexp == 0) & (ichip == 0): ax.set_ylabel('Blue Pix')
             if (iexp == 0) & (ichip == 1): ax.set_ylabel('Green Pix')
@@ -169,6 +168,7 @@ def persist1(cmap='brg', vrad=400):
             twod2 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]+1) + '.fits')
 
             ax.imshow(twod1-twod2, cmap=cmap, vmin=-vrad, vmax=vrad)
+            if iexp == nexp1 -1: ax.colorbar()
 
             #    divider = make_axes_locatable(ax)
             #    cax = divider.append_axes("right", size="5%", pad="10%")
