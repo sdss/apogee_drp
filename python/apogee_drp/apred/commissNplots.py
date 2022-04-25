@@ -141,7 +141,7 @@ def persist1(cmap='brg', vrad=400):
     molcols = ['mediumseagreen', 'purple', 'darkorange']
 
     matplotlib.rcParams.update({'font.size':18, 'font.family':'serif'})
-    fig = plt.figure(figsize=(32,12))
+    fig = plt.figure(figsize=(32,10))
     for iexp in range(nexp1):
         for ichip in range(nchips):
             ax = plt.subplot2grid((nchips,nexp1), (ichip,iexp))
