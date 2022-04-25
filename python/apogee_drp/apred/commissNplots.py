@@ -161,8 +161,8 @@ def persist1(cmap='brg', vrad=400):
             if ichip == 0: ax.text(0.5, 1.02, chps[ichip], transform=ax.transAxes, ha='center', va='bottom')
 
             if (iexp == 0) & (ichip == 0): ax.set_ylabel('Blue Pix')
-            if (iexp == 0) & (ichip == 0): ax.set_ylabel('Green Pix')
-            if (iexp == 0) & (ichip == 0): ax.set_ylabel('Red Pix')
+            if (iexp == 0) & (ichip == 1): ax.set_ylabel('Green Pix')
+            if (iexp == 0) & (ichip == 2): ax.set_ylabel('Red Pix')
 
             twod1 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]) + '.fits')
             twod2 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]+1) + '.fits')
