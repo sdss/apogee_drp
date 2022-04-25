@@ -125,6 +125,56 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
+def persist1(cmap='brg'):
+    mjd = '59648'
+    exp1 = np.array([41240010,41240015,41240017,41240019,41240021,41240023,41240025,
+                     41240047,41240049,41240051,41240053,41240055])
+    nexp1 = len(exp1)
+    chps = np.array(['c','g','r'])
+
+    expdir = specdir5 + 'exposures/apogee-n/' + mjd + '/'
+    plotdir = specdir5 + 'monitor/apogee-n/persist/'
+    plotfile = plotdir + 'persist' + mjd + '.png'
+    print('making ' + os.path.basename(plotfile))
+
+    nrows = 2
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+
+    fig = plt.figure(figsize=(32,14))
+    for iexp in range(nexp1):
+        for ichip in range(nchips):
+            ax = plt.subplot2grid((nchips,nexp1), (ichip,iexp))
+            ax.minorticks_on()
+            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            if ichip > 0: ax.axes.xaxis.set_ticklabels([])
+            if iexp > 0: ax.axes.yaxis.set_ticklabels([])
+            #if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
+            #if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
+            #if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
+
+            twod1 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]) + '.fits')
+            twod2 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]+1) + '.fits')
+
+            ax.imshow(twod1-twod2, cmap=cmap, vmin=-vrad, vmax=vrad)
+
+            #    divider = make_axes_locatable(ax)
+            #    cax = divider.append_axes("right", size="5%", pad="10%")
+            #    cax.minorticks_on()
+            #    #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+            #    cb1 = colorbar(sc1, cax=cax)
+                #ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    #fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
 def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     outdir = os.environ.get('APOGEE_REDUX')+'caltests1.0/visit/apo25m/plots/'
     plotfile = outdir+'specplot-'+field+'-'+conf+'-'+mjd+'-'+fiber+'.png'
@@ -152,7 +202,9 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     ax2.set_ylabel(r'Flux$-$Flux90')
 
     flux = fits.getdata(origvis,1)
+    flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
     wave = fits.getdata(origvis,4)
+    wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
     pdb.set_trace()
 
     fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
