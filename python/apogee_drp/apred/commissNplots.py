@@ -141,18 +141,20 @@ def persist1(cmap='brg', vrad=400):
     molcols = ['mediumseagreen', 'purple', 'darkorange']
 
 
-    fig = plt.figure(figsize=(32,14))
+    fig = plt.figure(figsize=(32,12))
     for iexp in range(nexp1):
         for ichip in range(nchips):
             ax = plt.subplot2grid((nchips,nexp1), (ichip,iexp))
             ax.minorticks_on()
-            #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
-            #ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.05))
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(100))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.yaxis.set_minor_locator(ticker.MultipleLocator(100))
             ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
-            if ichip > nchips-1: ax.axes.xaxis.set_ticklabels([])
+            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
             if iexp > 0: ax.axes.yaxis.set_ticklabels([])
             #if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             #if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
