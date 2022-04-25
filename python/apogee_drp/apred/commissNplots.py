@@ -159,6 +159,7 @@ def persist1(cmap='brg', vrad=400):
             #if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             #if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
             if ichip == 0: ax.text(0.5, 1.04, str(exp1[iexp])+'$-$'+'\n'+str(exp1[iexp]+1), transform=ax.transAxes, ha='center', va='bottom')
+            if iexp == nexp1 -1: ax.colorbar()
 
             if (iexp == 0) & (ichip == 0): ax.set_ylabel('Blue Pix')
             if (iexp == 0) & (ichip == 1): ax.set_ylabel('Green Pix')
