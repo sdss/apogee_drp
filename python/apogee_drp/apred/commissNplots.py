@@ -190,7 +190,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     origvis0 = 'apVisit-daily-apo25m-'+conf+'-'+mjd+'-'+fiber+'.fits'
     origvis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'/'+conf+'/'+mjd+'/'+origvis0
 
-    colors = ['r','b','orange','violet','seagreen']
+    colors = ['r','orange','violet','seagreen','b']
     labels = np.array(['red 15', 'bright 15', 'faint 15', '"best" 15', 'blue 15'])
     labnums = np.array(['01','03','04','05','02'])
     nruns = len(labels)
