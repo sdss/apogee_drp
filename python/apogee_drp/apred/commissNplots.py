@@ -192,8 +192,8 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
 
     visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
     fig = plt.figure(figsize=(28,15))
-    ax1 = plt.subplot2grid((1,2), (0,0))
-    ax2 = plt.subplot2grid((1,2), (0,1))
+    ax1 = plt.subplot2grid((2,1), (0,0))
+    ax2 = plt.subplot2grid((2,1), (1,0))
     axes = [ax1,ax2]
     for ax in axes:
         ax.tick_params(reset=True)
