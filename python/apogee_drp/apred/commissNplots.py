@@ -158,7 +158,7 @@ def persist1(cmap='brg', vrad=400):
             if iexp > 0: ax.axes.yaxis.set_ticklabels([])
             #if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
             #if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
-            #if irow == 0: ax.text(0.5, 1.02, molecules[imol], transform=ax.transAxes, ha='center', va='bottom')
+            if ichip == 0: ax.text(0.5, 1.02, chps[ichip], transform=ax.transAxes, ha='center', va='bottom')
 
             twod1 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]) + '.fits')
             twod2 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]+1) + '.fits')
