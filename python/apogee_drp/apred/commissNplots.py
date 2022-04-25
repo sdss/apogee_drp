@@ -195,10 +195,11 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
 
     visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
     fig = plt.figure(figsize=(28,24))
-    ax1 = plt.subplot2grid((3,1), (0,0))
-    ax2 = plt.subplot2grid((3,1), (1,0))
-    ax3 = plt.subplot2grid((3,1), (2,0))
-    axes = [ax1,ax2,ax3]
+    ax1 = plt.subplot2grid((7,1), (0,0), rowspan=2)
+    ax2 = plt.subplot2grid((7,1), (2,0), rowspan=2)
+    ax3 = plt.subplot2grid((7,1), (4,0))
+    ax4 = plt.subplot2grid((7,1), (6,0))
+    axes = [ax1,ax2,ax3,ax4]
     for ax in axes:
         ax.tick_params(reset=True)
         ax.set_xlim(visitxmin, visitxmax)
@@ -209,19 +210,23 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         ax.tick_params(axis='both', which='major', length=axmajlen)
         ax.tick_params(axis='both', which='minor', length=axminlen)
         ax.tick_params(axis='both', which='both', width=axwidth)
-    ax3.set_xlabel(r'Wavelength ($\rm \AA$)')
+    ax4.set_xlabel(r'Wavelength ($\rm \AA$)')
     ax1.set_ylabel(r'Flux + offset')
     ax2.set_ylabel(r'Flux')
     ax3.set_ylabel(r'% Residual (Flux / Flux90)')
+    ax4.set_ylabel(r'Telluric')
 
     pdb.set_trace()
     flux = fits.getdata(origvis,1)
     flux0 = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
     wave = fits.getdata(origvis,4)
     wave0 = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
+    tell = fits.getdata(origvis,7)
+    tell0 = np.concatenate([tell[0,:],tell[1,:],tell[2,:]])
     med0 = np.nanmedian(flux0)
     ax1.plot(wave0, flux0, 'k', linewidth=0.5, label='all 90')
     med = np.empty(5)
+    ax4.plot(wave0, tell0, 'k', linewidth=0.5)
     for i in range(5):
         vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_0'+str(i+1)+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
         flux = fits.getdata(vis,1)
