@@ -197,7 +197,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     fig = plt.figure(figsize=(28,24))
     ax1 = plt.subplot2grid((7,1), (0,0), rowspan=2)
     ax2 = plt.subplot2grid((7,1), (2,0), rowspan=2)
-    ax3 = plt.subplot2grid((7,1), (4,0))
+    ax3 = plt.subplot2grid((7,1), (4,0), rowspan=2)
     ax4 = plt.subplot2grid((7,1), (6,0))
     axes = [ax1,ax2,ax3,ax4]
     for ax in axes:
@@ -226,7 +226,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     med0 = np.nanmedian(flux0)
     ax1.plot(wave0, flux0, 'k', linewidth=0.5, label='all 90')
     med = np.empty(5)
-    ax4.plot(wave0, tell0, 'k', linewidth=0.5)
+    ax4.plot(wave0, tell0, 'k', linewidth=0.75)
     for i in range(5):
         vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_0'+str(i+1)+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
         flux = fits.getdata(vis,1)
