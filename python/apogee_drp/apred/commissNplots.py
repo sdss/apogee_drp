@@ -168,7 +168,7 @@ def persist1(cmap='brg', vrad=400):
             twod2 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]+1) + '.fits')
 
             im = ax.imshow(twod1-twod2, cmap=cmap, vmin=-vrad, vmax=vrad)
-            if iexp == nexp1 -1: cb = colorbar(im)
+            if iexp == nexp1: cb = colorbar(im)
 
             #    divider = make_axes_locatable(ax)
             #    cax = divider.append_axes("right", size="5%", pad="10%")
