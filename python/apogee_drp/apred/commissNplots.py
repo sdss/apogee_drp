@@ -130,7 +130,7 @@ def persist1(cmap='brg', vrad=400):
     exp1 = np.array([41240010,41240015,41240017,41240019,41240021,41240023,41240025,
                      41240047,41240049,41240051,41240053,41240055])
     nexp1 = len(exp1)
-    chps = np.array(['c','g','r'])
+    chps = np.array(['c','b','a'])
 
     expdir = specdir5 + 'exposures/apogee-n/' + mjd + '/'
     plotdir = specdir5 + 'monitor/apogee-n/persist/'
