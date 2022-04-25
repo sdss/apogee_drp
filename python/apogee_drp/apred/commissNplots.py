@@ -226,9 +226,9 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
         wave = fits.getdata(vis,4)
         wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
-        ax1.plot(wave, flux+med0*0.075*(i+1), linewidth=0.5, label=labels[i])
-        ax2.plot(wave, flux, linewidth=0.5)
-        ax3.plot(wave, 100*((flux-flux0)/med0), colors[i], linewidth=0.5)
+        ax1.plot(wave, flux+med0*0.075*(i+1), color=colors[i], linewidth=0.5, label=labels[i])
+        ax2.plot(wave, flux, linewidth=0.5, color=colors[i])
+        ax3.plot(wave, 100*((flux-flux0)/med0), color=colors[i], linewidth=0.5)
 
     ax1.legend(loc='upper right', labelspacing=0.5, handletextpad=0.1, fontsize=fsz, edgecolor='k', framealpha=1)
 
