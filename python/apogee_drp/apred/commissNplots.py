@@ -224,7 +224,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         ax2.plot(wave, flux-flux0)
 
 
-    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    fig.subplots_adjust(left=0.07,right=0.985,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
