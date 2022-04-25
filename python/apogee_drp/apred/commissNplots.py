@@ -178,7 +178,7 @@ def persist1(cmap='brg', vrad=400):
                 cb1 = colorbar(im, cax=cax)
                 #ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.057,top=0.96,hspace=0.08,wspace=0.05)
+    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.04,top=0.94,hspace=0.08,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
