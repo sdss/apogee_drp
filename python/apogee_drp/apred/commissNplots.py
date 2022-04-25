@@ -184,7 +184,7 @@ def persist1(cmap='brg', vrad=400):
 
 ###########################################################################################
 def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
-    outdir = os.environ.get('APOGEE_REDUX')+'caltests1.0/visit/apo25m/plots/'
+    outdir = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/plots/'
     plotfile = outdir+'specplot-'+field+'-'+conf+'-'+mjd+'-'+fiber+'.png'
     print('making ' + os.path.basename(plotfile))
     origvis = 'apVisit-daily-apo25m-'+conf+'-'+mjd+'-'+fiber+'.fits'
