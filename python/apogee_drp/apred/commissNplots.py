@@ -320,7 +320,8 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
             if i == nrows-1: ax.set_xlabel(r'Wavelength ($\rm \AA$)')
             if j == 0: ax.set_ylabel(labels[i])
             axes.append(ax)
-            
+
+    axes[1].text(0.5, 1.02, field+'-'+conf+'-'+mjd+'-'+fiber, ha='center', va='bottom', transform=axes[1].transAxes)
     axes[0].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
     axes[1].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
     axes[2].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
