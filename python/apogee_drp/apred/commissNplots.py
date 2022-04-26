@@ -221,7 +221,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
 
     ax5.set_xlabel(r'Wavelength ($\rm \AA$)')
 
-    ax1.text(-0.1, 0.5, r'Flux + offset', transform=ax1.transAxes, ha='right', va='center', rotation=90)
+    ax1.text(-0.06, 0.5, r'Flux + offset', transform=ax1.transAxes, ha='right', va='center', rotation=90)
     #ax1.set_ylabel(r'Flux + offset')
     ax2.set_ylabel(r'Flux')
     ax3.set_ylabel(r'% Residual (Flux / Flux90) + offset')
