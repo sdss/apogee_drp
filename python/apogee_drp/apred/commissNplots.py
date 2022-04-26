@@ -265,6 +265,65 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     plt.close('all')
 
 ###########################################################################################
+def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
+    outdir = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/plots/'
+    plotfile = outdir+'specplot1-'+field+'-'+conf+'-'+mjd+'-'+fiber+'.png'
+    print('making ' + os.path.basename(plotfile))
+    origvis0 = 'apVisit-daily-apo25m-'+conf+'-'+mjd+'-'+fiber+'.fits'
+    origvis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'/'+conf+'/'+mjd+'/'+origvis0
+
+    colors = ['r','b','orange','violet','seagreen']
+    labels = np.array(['red 15', 'blue 15', 'bright 15', 'faint 15', '"best" 15'])
+    labnums = np.array(['01','02','03','04','05'])
+    nruns = len(labels)
+
+    xxmin = [15135, 15670, 16953]
+    xxmax = [15270, 15805, 16728]
+
+    labels = ['Flux + offset', 'Flux', '% Residual (Flux / Flux90) + offset', '% Residual (Flux / Flux90)', 'Telluric']
+
+    flux = fits.getdata(origvis,1)
+    flux0 = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
+    wave = fits.getdata(origvis,4)
+    wave0 = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
+    tell = fits.getdata(origvis,7)
+    tell0 = np.concatenate([tell[0,:],tell[1,:],tell[2,:]])
+    med0 = np.nanmedian(flux0)
+
+    fig = plt.figure(figsize=(28,28))
+
+    nrows = 5
+    ncols = 3
+    axes = []
+    rownum = 0
+    for i in range(nrows):
+        for j in range(ncols):
+            rowspan = 2
+            if i == nrows-1: rowspan = 1
+            if i > 0: rownum = rownum+rowspan
+            ax = plt.subplot2grid((9,3), (rownum,j), rowspan=2)
+            ax.set_xlim(visitxmin, visitxmax)
+            if i < nrows-1: ax.axes.xaxis.set_ticklabels([])
+            ax.minorticks_on()
+            ax.tick_params(axis='both', which='both', direction='in', bottom=True, top=True, left=True, right=True)
+            ax.tick_params(axis='both', which='major', length=axmajlen)
+            ax.tick_params(axis='both', which='minor', length=axminlen)
+            ax.tick_params(axis='both', which='both', width=axwidth)
+            if i == 3: ax.set_ylim(-3,3)
+            if i == nrows-1: ax.set_xlabel(r'Wavelength ($\rm \AA$)')
+            if j == 0: ax.set_ylabel(labels[i])
+            axes.append(ax)
+            
+    axes[0].plot(wave0, flux0, 'k', linewidth=0.5, label='all 90')
+    axes[1].plot(wave0, flux0, 'k', linewidth=0.5, label='all 90')
+    axes[2].plot(wave0, flux0, 'k', linewidth=0.5, label='all 90')
+
+
+    fig.subplots_adjust(left=0.065,right=0.99,bottom=0.035,top=0.975,hspace=0.12,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
 def tellspatialnew1(zoom=False, cmap='brg'):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
     expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
