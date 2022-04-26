@@ -254,7 +254,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     ax1.legend(loc='upper right', ncol=2, labelspacing=0.5, handletextpad=0.1, fontsize=fsz, edgecolor='k', framealpha=1)
     ax1.text(0.5, 1.02, field+'-'+conf+'-'+mjd+'-'+fiber, ha='center', va='bottom', transform=ax1.transAxes)
 
-    fig.subplots_adjust(left=0.07,right=0.985,bottom=0.045,top=0.97,hspace=0.12,wspace=0.05)
+    fig.subplots_adjust(left=0.065,right=0.99,bottom=0.035,top=0.975,hspace=0.12,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
 
