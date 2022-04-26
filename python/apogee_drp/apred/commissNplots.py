@@ -277,7 +277,7 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
     labnums = np.array(['01','02','03','04','05'])
     nruns = len(labels)
 
-    xxmin = [15135, 15670, 16953]
+    xxmin = [15135, 15670, 16593]
     xxmax = [15270, 15805, 16728]
 
     labels = ['Flux + offset', 'Flux', '% Residual (Flux / Flux90) + offset', '% Residual (Flux / Flux90)', 'Telluric']
