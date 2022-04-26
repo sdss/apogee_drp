@@ -359,7 +359,7 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
         #print(np.absolute(np.nansum(100*((flux/flux0)-1))))
 
 
-    fig.subplots_adjust(left=0.065,right=0.99,bottom=0.035,top=0.975,hspace=0.12,wspace=0.05)
+    fig.subplots_adjust(left=0.065,right=0.99,bottom=0.035,top=0.975,hspace=0.14,wspace=0.0)
     plt.savefig(plotfile)
     plt.close('all')
 
