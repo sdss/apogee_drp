@@ -301,7 +301,8 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
             rowspan = 2
             if i == nrows-1: rowspan = 1
             if i > 0: rownum = rownum+rowspan
-            pdb.set_trace()
+            print(str(i) + '  ' + str(j) + '  ' + str(rowspan) + '  ' + str(rownum))
+            #pdb.set_trace()
             ax = plt.subplot2grid((9,3), (rownum,j), rowspan=rowspan)
             ax.set_xlim(xxmin[j], xxmax[j])
             if i < nrows-1: ax.axes.xaxis.set_ticklabels([])
