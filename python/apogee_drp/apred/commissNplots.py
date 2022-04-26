@@ -319,6 +319,7 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
             if i == 3: ax.set_ylim(-3,3)
             if i == nrows-1: ax.set_xlabel(r'Wavelength ($\rm \AA$)')
             if j == 0: ax.set_ylabel(labels[i])
+            if j == 0: ax.text(-0.1, 0.5, labels[i], transform=ax.transAxes, ha='right', va='center', rotation=90)
             axes.append(ax)
 
     axes[1].text(0.5, 1.02, field+'-'+conf+'-'+mjd+'-'+fiber, ha='center', va='bottom', transform=axes[1].transAxes)
