@@ -294,7 +294,7 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
 
     nrows = 5
     ncols = 3
-    npanels = int(nrows*nplots)
+    npanels = int(nrows*ncols)
     axes = []
     rownum = 0
     for i in range(nrows):
