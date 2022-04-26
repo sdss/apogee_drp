@@ -332,6 +332,10 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
     axes[npanels-2].plot(wave0, tell0, 'k', linewidth=0.75)
     axes[npanels-1].plot(wave0, tell0, 'k', linewidth=0.75)
 
+    axes[npanels-3].text(0.03, 0.08, 'H2O', transform=axes[npanels-3].transAxes)
+    axes[npanels-2].text(0.03, 0.08, 'CO2', transform=axes[npanels-2].transAxes)
+    axes[npanels-1].text(0.03, 0.08, 'CH4', transform=axes[npanels-1].transAxes)
+
     fig.subplots_adjust(left=0.065,right=0.99,bottom=0.035,top=0.975,hspace=0.12,wspace=0.05)
     plt.savefig(plotfile)
     plt.close('all')
