@@ -316,9 +316,19 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
             ax.tick_params(axis='both', which='both', width=axwidth)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+            if i == 2: ax.set_ylim(-1,9)
             if i == 3: ax.set_ylim(-3,3)
+            if i == 4: ax.set_ylim(0.7, 1.02)
             if i == nrows-1: ax.set_xlabel(r'Wavelength ($\rm \AA$)')
             if j == 0: ax.text(-0.16, 0.5, labels[i], transform=ax.transAxes, ha='right', va='center', rotation=90)
+            if i < 2:
+                yminsec, = np.where((wave0 > xxmin[j]) & (wave0 < xxmax[j]))
+                ymin = np.min(flux0[yminsec]) - np.min(flux0[yminsec])*0.05
+                if i == 0:
+                    ymax = np.min(flux0[yminsec]) + med0*0.075*nruns + (med0*0.075*nruns*0.05)
+                else:
+                    ymax = np.max(flux0[yminsec]) + np.max(flux0[yminsec])*0.05
+                ax.set_ylim(ymin,ymax)
             axes.append(ax)
 
     axes[1].text(0.5, 1.02, field+'-'+conf+'-'+mjd+'-'+fiber, ha='center', va='bottom', transform=axes[1].transAxes)
@@ -336,6 +346,9 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
     axes[npanels-3].text(0.03, 0.08, 'H2O', transform=axes[npanels-3].transAxes)
     axes[npanels-2].text(0.03, 0.08, 'CO2', transform=axes[npanels-2].transAxes)
     axes[npanels-1].text(0.03, 0.08, 'CH4', transform=axes[npanels-1].transAxes)
+
+    yminsec1, = np.where((wave0 > xxmin[0]) & (wave0 < xxmax[0]))
+    ymin1 = np.min(flux0[yminsec1]) - np.min(flux0[yminsec1])*0.05
 
     for i in range(nruns):
         vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_'+labnums[i]+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
