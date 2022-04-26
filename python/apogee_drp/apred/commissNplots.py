@@ -313,6 +313,8 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
             ax.tick_params(axis='both', which='major', length=axmajlen)
             ax.tick_params(axis='both', which='minor', length=axminlen)
             ax.tick_params(axis='both', which='both', width=axwidth)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
             if i == 3: ax.set_ylim(-3,3)
             if i == nrows-1: ax.set_xlabel(r'Wavelength ($\rm \AA$)')
             if j == 0: ax.set_ylabel(labels[i])
