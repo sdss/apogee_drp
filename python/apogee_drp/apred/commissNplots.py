@@ -300,7 +300,7 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
         for j in range(ncols):
             rowspan = 2
             if i == nrows-1: rowspan = 1
-            if i > 0: rownum = rownum+rowspan
+            if (i > 0) & (j == 0): rownum = rownum+rowspan
             print(str(i) + '  ' + str(rowspan) + '  ' + str(rownum) + '  ' + str(j))
             #pdb.set_trace()
             ax = plt.subplot2grid((9,3), (rownum,j), rowspan=rowspan)
