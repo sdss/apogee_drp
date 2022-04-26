@@ -325,7 +325,7 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
                 yminsec, = np.where((wave0 > xxmin[j]) & (wave0 < xxmax[j]))
                 ymin = np.min(flux0[yminsec]) - np.min(flux0[yminsec])*0.05
                 if i == 0:
-                    ymax = np.min(flux0[yminsec]) + (med0*0.1*(nruns+2)) + (med0*0.1*(nruns+2)*0.05)
+                    ymax = np.min(flux0[yminsec]) + (med0*0.1*(nruns+1.5)) + (med0*0.1*(nruns+1.5)*0.05)
                 else:
                     ymax = np.max(flux0[yminsec]) + np.max(flux0[yminsec])*0.05
                 ax.set_ylim(ymin,ymax)
