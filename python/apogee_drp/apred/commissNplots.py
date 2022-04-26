@@ -294,6 +294,7 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
 
     nrows = 5
     ncols = 3
+    npanels = int(nrows*nplots)
     axes = []
     rownum = 0
     for i in range(nrows):
@@ -323,7 +324,13 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
     axes[0].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
     axes[1].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
     axes[2].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
+    axes[3].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
+    axes[4].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
+    axes[5].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
 
+    axes[npanels-3].plot(wave0, tell0, 'k', linewidth=0.75)
+    axes[npanels-2].plot(wave0, tell0, 'k', linewidth=0.75)
+    axes[npanels-1].plot(wave0, tell0, 'k', linewidth=0.75)
 
     fig.subplots_adjust(left=0.065,right=0.99,bottom=0.035,top=0.975,hspace=0.12,wspace=0.05)
     plt.savefig(plotfile)
