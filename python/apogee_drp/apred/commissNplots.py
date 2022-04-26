@@ -318,7 +318,7 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
             if i == 3: ax.set_ylim(-3,3)
             if i == nrows-1: ax.set_xlabel(r'Wavelength ($\rm \AA$)')
-            if j == 0: ax.text(-0.15, 0.5, labels[i], transform=ax.transAxes, ha='right', va='center', rotation=90)
+            if j == 0: ax.text(-0.16, 0.5, labels[i], transform=ax.transAxes, ha='right', va='center', rotation=90)
             axes.append(ax)
 
     axes[1].text(0.5, 1.02, field+'-'+conf+'-'+mjd+'-'+fiber, ha='center', va='bottom', transform=axes[1].transAxes)
@@ -336,6 +336,28 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
     axes[npanels-3].text(0.03, 0.08, 'H2O', transform=axes[npanels-3].transAxes)
     axes[npanels-2].text(0.03, 0.08, 'CO2', transform=axes[npanels-2].transAxes)
     axes[npanels-1].text(0.03, 0.08, 'CH4', transform=axes[npanels-1].transAxes)
+
+    for i in range(nruns):
+        vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_'+labnums[i]+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
+        flux = fits.getdata(vis,1)
+        flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
+        wave = fits.getdata(vis,4)
+        wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
+        for j in range(npanels):
+            if j < 3: 
+                axes[j].plot(wave, flux+med0*0.075*(i+1), color=colors[i], linewidth=0.75, label=labels[i])
+            else:
+                if j < 6: 
+                    axes[j].plot(wave, flux, linewidth=0.75, color=colors[i])
+                else:
+                    if j < 9:
+                        axes[j].plot(wave, (100*((flux/flux0)-1))+(i*2), color=colors[i], linewidth=0.75)
+                    else:
+                        if j < 12:
+                            axes[j].plot(wave, 100*((flux/flux0)-1), color=colors[i], linewidth=0.75)
+        #med = np.nanmedian(100*((flux/flux0)-1))
+        #print(np.absolute(np.nansum(100*((flux/flux0)-1))))
+
 
     fig.subplots_adjust(left=0.065,right=0.99,bottom=0.035,top=0.975,hspace=0.12,wspace=0.05)
     plt.savefig(plotfile)
