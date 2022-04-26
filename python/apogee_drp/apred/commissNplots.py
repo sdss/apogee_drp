@@ -196,12 +196,13 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     nruns = len(labels)
 
     visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
-    fig = plt.figure(figsize=(28,24))
-    ax1 = plt.subplot2grid((7,1), (0,0), rowspan=2)
-    ax2 = plt.subplot2grid((7,1), (2,0), rowspan=2)
-    ax3 = plt.subplot2grid((7,1), (4,0), rowspan=2)
-    ax4 = plt.subplot2grid((7,1), (6,0))
-    axes = [ax1,ax2,ax3,ax4]
+    fig = plt.figure(figsize=(28,28))
+    ax1 = plt.subplot2grid((9,1), (0,0), rowspan=2)
+    ax2 = plt.subplot2grid((9,1), (2,0), rowspan=2)
+    ax3 = plt.subplot2grid((9,1), (4,0), rowspan=2)
+    ax4 = plt.subplot2grid((9,1), (6,0), rowspan=2)
+    ax5 = plt.subplot2grid((9,1), (8,0))
+    axes = [ax1,ax2,ax3,ax4,ax5]
     for ax in axes:
         ax.tick_params(reset=True)
         ax.set_xlim(visitxmin, visitxmax)
@@ -215,13 +216,15 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     ax1.axes.xaxis.set_ticklabels([])
     ax2.axes.xaxis.set_ticklabels([])
     ax3.axes.xaxis.set_ticklabels([])
-    ax3.set_ylim(-3,3)
+    ax4.axes.xaxis.set_ticklabels([])
+    ax4.set_ylim(-3,3)
 
-    ax4.set_xlabel(r'Wavelength ($\rm \AA$)')
+    ax5.set_xlabel(r'Wavelength ($\rm \AA$)')
     ax1.set_ylabel(r'Flux + offset')
     ax2.set_ylabel(r'Flux')
-    ax3.set_ylabel(r'% Residual (Flux / Flux90)')
-    ax4.set_ylabel(r'Telluric')
+    ax3.set_ylabel(r'% Residual (Flux / Flux90) + offset')
+    ax4.set_ylabel(r'% Residual (Flux / Flux90)')
+    ax5.set_ylabel(r'Telluric')
 
     #pdb.set_trace()
     flux = fits.getdata(origvis,1)
@@ -234,7 +237,7 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
     ax1.plot(wave0, flux0, 'k', linewidth=0.5, label='all 90')
     ax2.plot(wave0, flux0, 'k', linewidth=0.5)
     med = np.empty(nruns)
-    ax4.plot(wave0, tell0, 'k', linewidth=0.75)
+    ax5.plot(wave0, tell0, 'k', linewidth=0.75)
     for i in range(nruns):
         vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_'+labnums[i]+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
         flux = fits.getdata(vis,1)
@@ -243,7 +246,8 @@ def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
         wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
         ax1.plot(wave, flux+med0*0.075*(i+1), color=colors[i], linewidth=0.5, label=labels[i])
         ax2.plot(wave, flux, linewidth=0.5, color=colors[i])
-        ax3.plot(wave, 100*((flux/flux0)-1), color=colors[i], linewidth=0.5)
+        ax3.plot(wave, (100*((flux/flux0)-1))+1, color=colors[i], linewidth=0.5)
+        ax4.plot(wave, 100*((flux/flux0)-1), color=colors[i], linewidth=0.5)
         med = np.nanmedian(100*((flux/flux0)-1))
         print(np.absolute(np.nansum(100*((flux/flux0)-1))))
 
