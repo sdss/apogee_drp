@@ -300,7 +300,7 @@ def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
         for j in range(ncols):
             if j == 0:
                 rowspan = 2
-                if i == nrows-1: rowspan = 1
+                if i == nrows: rowspan = 1
                 if i > 0: rownum = rownum+rowspan
             print(str(i) + '  ' + str(rowspan) + '  ' + str(rownum) + '  ' + str(j))
             #pdb.set_trace()
