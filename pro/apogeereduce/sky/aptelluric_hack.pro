@@ -357,7 +357,6 @@ for iter=0,niter-1 do begin
     !p.multi=[0,1,2]
 
     pos=[0.04,0.55,0.99,0.99]
-    tit=
     plot,outstr.x,outstr.spec,/nodata,ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,tit=,co=0,yticklen=0.005,position=pos,charsize=2
     oplot,outstr.x,outstr.spec,co=70
     ;oplot,x[gd],yfit1,co=250,linestyle=2
