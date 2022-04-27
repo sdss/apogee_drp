@@ -353,16 +353,17 @@ for iter=0,niter-1 do begin
     medspec = median(outstr.spec)
     yr = [(medspec-0.5*abs(medspec))<0, medspec*2.5]
     xr = minmax(outstr.x)
+    tmpoutstr=reverse(outstr)
 
     !p.multi=[0,1,2]
 
     pos=[0.05,0.545,0.985,0.99]
-    plot,outstr.x,outstr.spec,/nodata,ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,co=0,yticklen=0.005,position=pos,charsize=1.65
-    oplot,outstr.x,outstr.spec,co=0,thick=5
+    plot,tmpoutstr.x,tmpoutstr.spec,/nodata,ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,co=0,yticklen=0.005,position=pos,charsize=1.65
+    oplot,tmpoutstr.x,tmpoutstr.spec,co=0,thick=5
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
-    oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=1;,linestyle=2
-    oplot,outstr.x,outstr.spec/outstr.telluric,co=70
+    oplot,tmpoutstr.x,tmpoutstr.telluric*outstr.cont,co=250,thick=1;,linestyle=2
+    oplot,tmpoutstr.x,tmpoutstr.spec/tmpoutstr.telluric,co=70
     legendastro,['Original','Telluric','Corrected'],color=[0,250,70],textcolors=[0,250,70],line=[0,0,0],charsize=1.85,thick=[3,1,1],pos=[0.08,0.95],/norm
     txt='Fiber '+strtrim(ifiber,2)+',     normalization = '+strjoin(stringize(outstr.par[0:2],ndec=4),', ')
     xyouts,mean(xr),yr[1]-0.1*range(yr),txt,align=0.5,charsize=2,charthick=4
