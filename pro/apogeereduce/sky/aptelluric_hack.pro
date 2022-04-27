@@ -376,7 +376,7 @@ for iter=0,niter-1 do begin
 
     DEVICE, /CLOSE
     SET_PLOT,'X'
-    SPAWN,'convert '+psfile1+'.ps '+psfile1+'.png'
+    SPAWN,'convert -rotate 270 '+psfile1+'.ps '+psfile1+'.png'
     SPAWN,'rm -f '+psfile1+'.ps'
   endif
 
