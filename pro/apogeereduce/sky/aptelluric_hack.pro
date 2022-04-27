@@ -377,7 +377,7 @@ for iter=0,niter-1 do begin
     !p.multi=[0,0,0]
 
     if keyword_set(save) then ps_close
-
+    ps2jpg,psfile1+'.eps',/eps,chmod='664'o
   endif
 
   ;stop
