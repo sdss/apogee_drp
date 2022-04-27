@@ -363,10 +363,11 @@ for iter=0,niter-1 do begin
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
     oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=1;,linestyle=2
     oplot,outstr.x,outstr.spec/outstr.telluric,co=0
-    legendastro,['Original','Telluric','Corrected'],textcolors=[70,250,0],line=[0,0,0],charsize=1.5,thick=[3,1,1],pos=[0.98,0.02]
+    legendastro,['Original','Telluric','Corrected'],textcolors=[70,250,0],line=[0,0,0],charsize=1.5,thick=[3,1,1],/left_legend
     txt='Fiber '+strtrim(ifiber,2)+',     normalization = '+strjoin(stringize(outstr.par[0:2],ndec=4),', ')
     xyouts,mean(xr),yr[1]-0.1*range(yr),txt,align=0.5,charsize=2,charthick=4
 
+    yr = [(medspec-0.3*abs(medspec))<0, medspec*1.5]
     pos=[0.045,0.07,0.99,0.51]
     plot,outstr.x,outstr.spec,/nodata,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=[3000,5000],yr=yr,co=0,yticklen=0.005,position=pos,charsize=1.5
     oplot,outstr.x,outstr.spec,co=70,thick=3
@@ -374,7 +375,7 @@ for iter=0,niter-1 do begin
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
     oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=1;,linestyle=2
     oplot,outstr.x,outstr.spec/outstr.telluric,co=0
-    legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
+    ;legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
     ;xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
     ;!p.multi=[0,0,0]
     ;DEVICE, /CLOSE
