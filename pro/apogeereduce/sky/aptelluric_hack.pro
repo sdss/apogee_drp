@@ -353,24 +353,24 @@ for iter=0,niter-1 do begin
     endif
 
     medspec = median(outstr.spec)
-    yr = [(medspec-0.5*abs(medspec))<0, medspec*2]
+    yr = [(medspec-0.5*abs(medspec))<0, medspec*2.5]
     xr = minmax(outstr.x)
 
     !p.multi=[0,1,2]
-    plot,outstr.x,outstr.spec,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,tit='Fiber '+strtrim(ifiber,2)
+    plot,outstr.x,outstr.spec,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,tit='Fiber '+strtrim(ifiber,2),co=70
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
     oplot,outstr.x,outstr.telluric*outstr.cont,co=250,linestyle=2
-    oplot,outstr.x,outstr.spec/outstr.telluric,co=150
-    legend_old,['Original','Telluric','Corrected'],textcolor=[co,250,150],/bottom,/left
+    oplot,outstr.x,outstr.spec/outstr.telluric,co=0
+    legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
     xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
 
-    plot,outstr.x,outstr.spec,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=[3000,5000],yr=yr,tit='Fiber '+strtrim(ifiber,2)
+    plot,outstr.x,outstr.spec,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=[3000,5000],yr=yr,tit='Fiber '+strtrim(ifiber,2),co=70
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
     oplot,outstr.x,outstr.telluric*outstr.cont,co=250,linestyle=2
-    oplot,outstr.x,outstr.spec/outstr.telluric,co=150
-    legend_old,['Original','Telluric','Corrected'],textcolor=[co,250,150],/bottom,/left
+    oplot,outstr.x,outstr.spec/outstr.telluric,co=0
+    legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
     xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
     !p.multi=[0,0,0]
 
@@ -674,7 +674,7 @@ if keyword_set(save) then begin
 
   print,'Converting figures'
   for i=0,n_elements(psfiles)-1 do begin
-    ps2png,psfiles[i]+'.eps',/eps,chmod='664'o,/delete
+    ps2jpg,psfiles[i]+'.eps',/eps,chmod='664'o,/delete
 ;    spawn,['convert',psfiles[i]+'.eps',psfiles[i]+'.jpg'],out,errout,/noshell
 ;    spawn,['convert',psfiles[i]+'.eps',psfiles[i]+'.pdf'],out,errout,/noshell
 ;    spawn,['gzip',psfiles[i]+'.eps'],out,errout,/noshell   ; compress the files
