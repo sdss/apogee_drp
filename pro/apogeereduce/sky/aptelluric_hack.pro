@@ -358,7 +358,7 @@ for iter=0,niter-1 do begin
 
     pos=[0.05,0.545,0.985,0.99]
     plot,outstr.x,outstr.spec,/nodata,ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,co=0,yticklen=0.005,position=pos,charsize=1.65
-    oplot,outstr.x,outstr.spec,co=0,thick=6
+    oplot,outstr.x,outstr.spec,co=0,thick=4
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
     oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=2;,linestyle=2
@@ -370,7 +370,7 @@ for iter=0,niter-1 do begin
     yr = [(medspec-0.3*abs(medspec))<0, medspec*1.8]
     pos=[0.05,0.05,0.985,0.495]
     plot,outstr.x,outstr.spec,/nodata,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=[3000,5000],yr=yr,co=0,yticklen=0.005,position=pos,charsize=1.65
-    oplot,outstr.x,outstr.spec,co=0,thick=6
+    oplot,outstr.x,outstr.spec,co=0,thick=4
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
     oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=2;,linestyle=2
