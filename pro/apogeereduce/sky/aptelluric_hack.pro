@@ -344,7 +344,7 @@ for iter=0,niter-1 do begin
     print,psfile1
     ;PUSH,psfiles,psfile1
     SET_PLOT,'PS'  &  !P.FONT=0
-    DEVICE,FILENAME=psfile1+'.ps',/COLOR,XSIZE=20,YSIZE=12,/INCHES,SET_FONT='Times-Roman';,/LANDSCAPE
+    DEVICE,FILENAME=psfile1+'.ps',/COLOR,XSIZE=30,YSIZE=16,/INCHES,SET_FONT='Times-Roman',/LANDSCAPE
     loadct,39,/silent
     co = 0
 
