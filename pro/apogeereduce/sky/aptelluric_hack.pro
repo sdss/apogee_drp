@@ -343,6 +343,7 @@ for iter=0,niter-1 do begin
     if keyword_set(save) then begin
       ;psfile1 = plots_dir+'aptelluric_'+expname+'_hotstarfit_fiber'+strtrim(ifiber,2)
       psfile1 = plots_dir+dirs.prefix+'telluric_'+expname+'_telstarfit_fiber'+strtrim(ifiber,2)
+      print,psfile1
       PUSH,psfiles,psfile1
       ps_open,psfile1,thick=4,/color,/encap
       device,/inches,xsize=42,ysize=7
