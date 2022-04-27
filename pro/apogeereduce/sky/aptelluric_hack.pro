@@ -383,7 +383,6 @@ for iter=0,niter-1 do begin
 
  endfor  ; star loop
 
-  stop
 
  ; for first iteration, determine which model spectrum to adopt for each species
  if iter eq 0 then begin
@@ -404,6 +403,8 @@ for iter=0,niter-1 do begin
  endif
  print,'bestmod: ', bestmod
 endfor   ; iteration
+
+stop
 
 ; Get the "median" normalization values
 gdtelfits = where(telstr.status gt 0,ngdtelfits)
