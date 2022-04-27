@@ -346,13 +346,14 @@ for iter=0,niter-1 do begin
       print,psfile1
       PUSH,psfiles,psfile1
       ps_open,psfile1,thick=4,/color,/encap
-      device,/inches,xsize=42,ysize=7
+      device,/inches,xsize=42,ysize=20
+      DEVICE, DECOMPOSED=0
       loadct,39,/silent
       co = 0
     endif
 
     medspec = median(outstr.spec)
-    yr = [(medspec-0.5*abs(medspec))<0, medspec*1.5]
+    yr = [(medspec-0.5*abs(medspec))<0, medspec*2]
     xr = minmax(outstr.x)
 
     !p.multi=[0,1,2]
@@ -673,7 +674,7 @@ if keyword_set(save) then begin
 
   print,'Converting figures'
   for i=0,n_elements(psfiles)-1 do begin
-    ps2jpg,psfiles[i]+'.eps',/eps,chmod='664'o,/delete
+    ps2png,psfiles[i]+'.eps',/eps,chmod='664'o,/delete
 ;    spawn,['convert',psfiles[i]+'.eps',psfiles[i]+'.jpg'],out,errout,/noshell
 ;    spawn,['convert',psfiles[i]+'.eps',psfiles[i]+'.pdf'],out,errout,/noshell
 ;    spawn,['gzip',psfiles[i]+'.eps'],out,errout,/noshell   ; compress the files
