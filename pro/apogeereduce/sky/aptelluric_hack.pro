@@ -380,8 +380,8 @@ for iter=0,niter-1 do begin
     ;SET_PLOT,'X'
     ps_close
     SPAWN,'convert '+psfile1+'.eps '+psfile1+'.png'
-    ps2jpg,psfile1+'.eps',chmod='664'o,/delete
-    ;SPAWN,'rm -f '+psfile1+'.ps'
+    ;ps2jpg,psfile1+'.eps',chmod='664'o,/delete
+    SPAWN,'rm -f '+psfile1+'.eps'
   endif
 
 
