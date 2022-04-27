@@ -363,7 +363,7 @@ for iter=0,niter-1 do begin
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
     oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=1;,linestyle=2
     oplot,outstr.x,outstr.spec/outstr.telluric,co=0
-    legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
+    legend,['Original','Telluric','Corrected'],textcolors=[70,250,0],line=[0,0,0],charsize=1.5,thick=[3,1,1],pos=[0.98,0.02]
     txt='Fiber '+strtrim(ifiber,2)+',   Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' ')
     xyouts,mean(xr),yr[1]-0.1*range(yr),txt,align=0.5,charsize=2,charthick=4
 
@@ -380,7 +380,7 @@ for iter=0,niter-1 do begin
     ;DEVICE, /CLOSE
     ;SET_PLOT,'X'
     ps_close
-    SPAWN,'convert '+psfile1+'.eps '+psfile1+'.png'
+    SPAWN,'convert -density 300 '+psfile1+'.eps '+psfile1+'.png'
     ;ps2jpg,psfile1+'.eps',chmod='664'o,/delete
     SPAWN,'rm -f '+psfile1+'.eps'
   endif
