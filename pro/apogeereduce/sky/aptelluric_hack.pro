@@ -374,9 +374,9 @@ for iter=0,niter-1 do begin
     legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
     ;xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
     ;!p.multi=[0,0,0]
-
     DEVICE, /CLOSE
     SET_PLOT,'X'
+    ps2jpg,psfile1+'.eps',/eps,chmod='664'o,/delete
     SPAWN,'convert -rotate 270 '+psfile1+'.ps '+psfile1+'.png'
     SPAWN,'rm -f '+psfile1+'.ps'
   endif
