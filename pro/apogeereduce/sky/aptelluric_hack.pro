@@ -356,19 +356,19 @@ for iter=0,niter-1 do begin
 
     !p.multi=[0,1,2]
 
-    pos=[0.045,0.545,0.99,0.99]
+    pos=[0.05,0.545,0.99,0.99]
     plot,outstr.x,outstr.spec,/nodata,ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,co=0,yticklen=0.005,position=pos,charsize=1.65
     oplot,outstr.x,outstr.spec,co=70,thick=3
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
     oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=1;,linestyle=2
     oplot,outstr.x,outstr.spec/outstr.telluric,co=0
-    legendastro,['Original','Telluric','Corrected'],color=[70,250,0],textcolors=[70,250,0],line=[0,0,0],charsize=1.85,thick=[3,1,1],pos=[0.95,0.10],/normal
+    legendastro,['Original','Telluric','Corrected'],color=[70,250,0],textcolors=[70,250,0],line=[0,0,0],charsize=1.85,thick=[3,1,1],pos=[0.12,0.90],/normal
     txt='Fiber '+strtrim(ifiber,2)+',     normalization = '+strjoin(stringize(outstr.par[0:2],ndec=4),', ')
     xyouts,mean(xr),yr[1]-0.1*range(yr),txt,align=0.5,charsize=2,charthick=4
 
     yr = [(medspec-0.3*abs(medspec))<0, medspec*1.5]
-    pos=[0.045,0.05,0.99,0.495]
+    pos=[0.05,0.05,0.99,0.495]
     plot,outstr.x,outstr.spec,/nodata,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=[3000,5000],yr=yr,co=0,yticklen=0.005,position=pos,charsize=1.65
     oplot,outstr.x,outstr.spec,co=70,thick=3
     ;oplot,x[gd],yfit1,co=250,linestyle=2
