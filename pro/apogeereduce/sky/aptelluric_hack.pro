@@ -361,8 +361,8 @@ for iter=0,niter-1 do begin
     oplot,outstr.x,outstr.spec,co=0,thick=6
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
-    oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=1;,linestyle=2
-    oplot,outstr.x,outstr.spec/outstr.telluric,co=70,thick=1
+    oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=2;,linestyle=2
+    oplot,outstr.x,outstr.spec/outstr.telluric,co=70,thick=2
     legendastro,['Original','Telluric','Corrected'],color=[0,250,70],textcolors=[0,250,70],line=[0,0,0],charsize=1.85,thick=[3,1,1],pos=[0.08,0.95],/norm
     txt='Fiber '+strtrim(ifiber,2)+',     normalization = '+strjoin(stringize(outstr.par[0:2],ndec=4),', ')
     xyouts,mean(xr),yr[1]-0.1*range(yr),txt,align=0.5,charsize=2,charthick=4
@@ -373,8 +373,8 @@ for iter=0,niter-1 do begin
     oplot,outstr.x,outstr.spec,co=0,thick=6
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
-    oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=1;,linestyle=2
-    oplot,outstr.x,outstr.spec/outstr.telluric,co=70,thick=1
+    oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=2;,linestyle=2
+    oplot,outstr.x,outstr.spec/outstr.telluric,co=70,thick=2
     ;legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
     ;xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
     ;!p.multi=[0,0,0]
