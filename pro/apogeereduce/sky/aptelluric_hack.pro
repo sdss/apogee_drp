@@ -352,7 +352,7 @@ for iter=0,niter-1 do begin
     yr = [(medspec-0.5*abs(medspec))<0, medspec*2.5]
     xr = minmax(outstr.x)
 
-    !P.POSITION=[0.04,0.55,0.99,0.96]
+    !P.POSITION=[0.05,0.55,0.99,0.98]
     !p.multi=[0,1,2]
     plot,outstr.x,outstr.spec,/nodata,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,tit='Fiber '+strtrim(ifiber,2),co=0,yticklen=0.01
     oplot,outstr.x,outstr.spec,co=70
@@ -363,7 +363,7 @@ for iter=0,niter-1 do begin
     legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
     xyouts,mean(xr),yr[1]-0.1*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
 
-    !P.POSITION=[0.04,0.55,0.99,0.96]
+    !P.POSITION=[0.05,0.08,0.52,0.98]
     plot,outstr.x,outstr.spec,/nodata,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=[3000,5000],yr=yr,co=0,yticklen=0.01
     oplot,outstr.x,outstr.spec,co=70
     ;oplot,x[gd],yfit1,co=250,linestyle=2
@@ -376,7 +376,7 @@ for iter=0,niter-1 do begin
 
     DEVICE, /CLOSE
     SET_PLOT,'X'
-    SPAWN,'convert -rotate 270 '+psfile1+'.ps '+psfile1+'.png'
+    SPAWN,'convert '+psfile1+'.ps '+psfile1+'.png'
     SPAWN,'rm -f '+psfile1+'.ps'
   endif
 
