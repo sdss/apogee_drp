@@ -357,7 +357,7 @@ for iter=0,niter-1 do begin
     xr = minmax(outstr.x)
 
     !p.multi=[0,1,2]
-    plot,outstr.x,outstr.spec,/noplot,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,tit='Fiber '+strtrim(ifiber,2),co=0
+    plot,outstr.x,outstr.spec,/nodata,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,tit='Fiber '+strtrim(ifiber,2),co=0,yticklen=0.5
     oplot,outstr.x,outstr.spec,co=70
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
@@ -366,7 +366,7 @@ for iter=0,niter-1 do begin
     legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
     xyouts,mean(xr),yr[1]-0.1*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
 
-    plot,outstr.x,outstr.spec,/noplot,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=[3000,5000],yr=yr,co=0
+    plot,outstr.x,outstr.spec,/nodata,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=[3000,5000],yr=yr,co=0,yticklen=0.5
     oplot,outstr.x,outstr.spec,co=70
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
