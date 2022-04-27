@@ -376,7 +376,7 @@ for iter=0,niter-1 do begin
     ;!p.multi=[0,0,0]
     DEVICE, /CLOSE
     SET_PLOT,'X'
-    ps2jpg,psfile1+'.eps',/eps,chmod='664'o,/delete
+    ps2jpg,psfile1+'.ps',chmod='664'o,/delete
     SPAWN,'convert -rotate 270 '+psfile1+'.ps '+psfile1+'.png'
     SPAWN,'rm -f '+psfile1+'.ps'
   endif
