@@ -125,6 +125,258 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
+def persist1(cmap='brg', vrad=400):
+    mjd = '59686'
+    #exp1 = np.array([41240010,41240015,41240017,41240019,41240021,41240023,41240025,
+    #                 41240047,41240049,41240051,41240053,41240055])
+    exp1 = np.array([41240015,41240017,41240019,41240021,
+                     41240047,41240049,41240051,41240053,41240055])
+    nexp1 = len(exp1)
+    chps = np.array(['c','b','a'])
+
+    expdir = specdir5 + 'exposures/apogee-n/' + mjd + '/'
+    plotdir = specdir5 + 'monitor/apogee-n/persist/'
+    plotfile = plotdir + 'persist' + mjd + '.png'
+    print('making ' + os.path.basename(plotfile))
+
+    nrows = 2
+    molcols = ['mediumseagreen', 'purple', 'darkorange']
+
+    matplotlib.rcParams.update({'font.size':18, 'font.family':'serif'})
+    fig = plt.figure(figsize=(33,10))
+    for iexp in range(nexp1):
+        for ichip in range(nchips):
+            ax = plt.subplot2grid((nchips,nexp1), (ichip,iexp))
+            ax.minorticks_on()
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(100))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax.yaxis.set_minor_locator(ticker.MultipleLocator(100))
+            ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.axes.xaxis.set_ticklabels([])
+            if iexp > 0: ax.axes.yaxis.set_ticklabels([])
+            #if irow == nrows-1: ax.set_xlabel(r'$N$ tellurics')
+            #if imol == 0: ax.set_ylabel(r'RMS (fit $-$ poly)')
+            if ichip == 0: ax.text(0.5, 1.04, str(exp1[iexp])+'$-$'+str(exp1[iexp]+1), fontsize=14, transform=ax.transAxes, ha='center', va='bottom')
+
+            if (iexp == 0) & (ichip == 0): ax.set_ylabel('Blue Pix')
+            if (iexp == 0) & (ichip == 1): ax.set_ylabel('Green Pix')
+            if (iexp == 0) & (ichip == 2): ax.set_ylabel('Red Pix')
+
+            twod1 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]) + '.fits')
+            twod2 = fits.getdata(expdir + 'ap2D-' + chps[ichip] + '-' + str(exp1[iexp]+1) + '.fits')
+
+            im = ax.imshow(twod1-twod2, cmap=cmap, vmin=-vrad, vmax=vrad)
+            if iexp == nexp1 - 1: 
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad="10%")
+                cax.minorticks_on()
+                #cax.yaxis.set_major_locator(ticker.MultipleLocator(0.01))
+                cb1 = colorbar(im, cax=cax)
+                #ax.text(1.235, 0.5, r'$N$ tellurics',ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+    fig.subplots_adjust(left=0.045,right=0.97,bottom=0.04,top=0.94,hspace=0.08,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellredtests1(field='21200', conf='3922', mjd='59648', fiber='273'):
+    outdir = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/plots/'
+    plotfile = outdir+'specplot-'+field+'-'+conf+'-'+mjd+'-'+fiber+'.png'
+    print('making ' + os.path.basename(plotfile))
+    origvis0 = 'apVisit-daily-apo25m-'+conf+'-'+mjd+'-'+fiber+'.fits'
+    origvis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'/'+conf+'/'+mjd+'/'+origvis0
+
+    colors = ['r','b','orange','violet','seagreen']
+    labels = np.array(['red 15', 'blue 15', 'bright 15', 'faint 15', '"best" 15'])
+    labnums = np.array(['01','02','03','04','05'])
+    nruns = len(labels)
+
+    visitxmin = 15120;   visitxmax = 16960;    visitxspan = visitxmax - visitxmin
+    fig = plt.figure(figsize=(28,28))
+    ax1 = plt.subplot2grid((9,1), (0,0), rowspan=2)
+    ax2 = plt.subplot2grid((9,1), (2,0), rowspan=2)
+    ax3 = plt.subplot2grid((9,1), (4,0), rowspan=2)
+    ax4 = plt.subplot2grid((9,1), (6,0), rowspan=2)
+    ax5 = plt.subplot2grid((9,1), (8,0))
+    axes = [ax1,ax2,ax3,ax4,ax5]
+    for ax in axes:
+        ax.tick_params(reset=True)
+        ax.set_xlim(visitxmin, visitxmax)
+        #ax.set_ylim(ymin, ymax)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
+        ax.minorticks_on()
+        ax.tick_params(axis='both', which='both', direction='in', bottom=True, top=True, left=True, right=True)
+        ax.tick_params(axis='both', which='major', length=axmajlen)
+        ax.tick_params(axis='both', which='minor', length=axminlen)
+        ax.tick_params(axis='both', which='both', width=axwidth)
+    ax1.axes.xaxis.set_ticklabels([])
+    ax2.axes.xaxis.set_ticklabels([])
+    ax3.axes.xaxis.set_ticklabels([])
+    ax4.axes.xaxis.set_ticklabels([])
+    ax4.set_ylim(-3,3)
+
+    ax5.set_xlabel(r'Wavelength ($\rm \AA$)')
+
+    ax1.text(-0.05, 0.5, r'Flux + offset', transform=ax1.transAxes, ha='right', va='center', rotation=90)
+    ax2.text(-0.05, 0.5, r'Flux', transform=ax2.transAxes, ha='right', va='center', rotation=90)
+    ax3.text(-0.05, 0.5, r'% Residual (Flux / Flux90) + offset', transform=ax3.transAxes, ha='right', va='center', rotation=90)
+    ax4.text(-0.05, 0.5, r'% Residual (Flux / Flux90)', transform=ax4.transAxes, ha='right', va='center', rotation=90)
+    ax5.text(-0.05, 0.5, r'Telluric', transform=ax5.transAxes, ha='right', va='center', rotation=90)
+    #ax1.set_ylabel(r'Flux + offset')
+    #ax2.set_ylabel(r'Flux')
+    #ax3.set_ylabel(r'% Residual (Flux / Flux90) + offset')
+    #ax4.set_ylabel(r'% Residual (Flux / Flux90)')
+    #ax5.set_ylabel(r'Telluric')
+
+    #pdb.set_trace()
+    flux = fits.getdata(origvis,1)
+    flux0 = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
+    wave = fits.getdata(origvis,4)
+    wave0 = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
+    tell = fits.getdata(origvis,7)
+    tell0 = np.concatenate([tell[0,:],tell[1,:],tell[2,:]])
+    med0 = np.nanmedian(flux0)
+    ax1.plot(wave0, flux0, 'k', linewidth=0.5, label='all 90')
+    ax2.plot(wave0, flux0, 'k', linewidth=0.5)
+    med = np.empty(nruns)
+    ax5.plot(wave0, tell0, 'k', linewidth=0.75)
+    for i in range(nruns):
+        vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_'+labnums[i]+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
+        flux = fits.getdata(vis,1)
+        flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
+        wave = fits.getdata(vis,4)
+        wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
+        ax1.plot(wave, flux+med0*0.075*(i+1), color=colors[i], linewidth=0.5, label=labels[i])
+        ax2.plot(wave, flux, linewidth=0.5, color=colors[i])
+        ax3.plot(wave, (100*((flux/flux0)-1))+(i*2), color=colors[i], linewidth=0.5)
+        ax4.plot(wave, 100*((flux/flux0)-1), color=colors[i], linewidth=0.5)
+        med = np.nanmedian(100*((flux/flux0)-1))
+        print(np.absolute(np.nansum(100*((flux/flux0)-1))))
+
+    ax1.legend(loc='upper right', ncol=2, labelspacing=0.5, handletextpad=0.1, fontsize=fsz, edgecolor='k', framealpha=1)
+    ax1.text(0.5, 1.02, field+'-'+conf+'-'+mjd+'-'+fiber, ha='center', va='bottom', transform=ax1.transAxes)
+
+    fig.subplots_adjust(left=0.065,right=0.99,bottom=0.035,top=0.975,hspace=0.12,wspace=0.05)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
+def tellredtests2(field='21200', conf='3922', mjd='59648', fiber='273'):
+    outdir = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/plots/'
+    plotfile = outdir+'specplot1-'+field+'-'+conf+'-'+mjd+'-'+fiber+'.png'
+    print('making ' + os.path.basename(plotfile))
+    origvis0 = 'apVisit-daily-apo25m-'+conf+'-'+mjd+'-'+fiber+'.fits'
+    origvis = os.environ.get('APOGEE_REDUX')+'/daily/visit/apo25m/'+field+'/'+conf+'/'+mjd+'/'+origvis0
+
+    colors = ['r','b','orange','violet','seagreen']
+    labels = np.array(['red 15', 'blue 15', 'bright 15', 'faint 15', '"best" 15'])
+    labnums = np.array(['01','02','03','04','05'])
+    nruns = len(labels)
+
+    xxmin = [15135, 15665, 16605]
+    xxmax = [15270, 15810, 16740]
+
+    labels = ['Flux + offset', 'Flux', '% Residual (Flux / Flux90) + offset', '% Residual (Flux / Flux90)', 'Telluric']
+
+    flux = fits.getdata(origvis,1)
+    flux0 = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
+    wave = fits.getdata(origvis,4)
+    wave0 = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
+    tell = fits.getdata(origvis,7)
+    tell0 = np.concatenate([tell[0,:],tell[1,:],tell[2,:]])
+    med0 = np.nanmedian(flux0)
+
+    fig = plt.figure(figsize=(28,28))
+
+    nrows = 5
+    ncols = 3
+    npanels = int(nrows*ncols)
+    axes = []
+    rownum = 0
+    for i in range(nrows):
+        for j in range(ncols):
+            if j == 0:
+                rowspan = 2
+                if i == nrows: rowspan = 1
+                if i > 0: rownum = rownum+rowspan
+            print(str(i) + '  ' + str(rowspan) + '  ' + str(rownum) + '  ' + str(j))
+            #pdb.set_trace()
+            ax = plt.subplot2grid((9,3), (rownum,j), rowspan=rowspan)
+            ax.set_xlim(xxmin[j], xxmax[j])
+            if i < nrows-1: ax.axes.xaxis.set_ticklabels([])
+            if j > 0: ax.axes.yaxis.set_ticklabels([])
+            ax.minorticks_on()
+            ax.tick_params(axis='both', which='both', direction='in', bottom=True, top=True, left=True, right=True)
+            ax.tick_params(axis='both', which='major', length=axmajlen)
+            ax.tick_params(axis='both', which='minor', length=axminlen)
+            ax.tick_params(axis='both', which='both', width=axwidth)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+            if i == 2: ax.set_ylim(-1.3,9.3)
+            if i == 3: ax.set_ylim(-3,3)
+            if i == 4: ax.set_ylim(0.7, 1.02)
+            if i == nrows-1: ax.set_xlabel(r'Wavelength ($\rm \AA$)')
+            if j == 0: ax.text(-0.155, 0.5, labels[i], transform=ax.transAxes, ha='right', va='center', rotation=90)
+            if i < 2:
+                yminsec, = np.where((wave0 > xxmin[j]) & (wave0 < xxmax[j]))
+                ymin = np.min(flux0[yminsec]) - np.min(flux0[yminsec])*0.05
+                if i == 0:
+                    ymax = np.min(flux0[yminsec]) + (med0*0.1*(nruns+1.5)) + (med0*0.1*(nruns+1.5)*0.05)
+                else:
+                    ymax = np.max(flux0[yminsec]) + np.max(flux0[yminsec])*0.05
+                ax.set_ylim(ymin,ymax)
+            axes.append(ax)
+
+    axes[1].text(0.5, 1.02, field+'-'+conf+'-'+mjd+'-'+fiber, ha='center', va='bottom', transform=axes[1].transAxes)
+    axes[0].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
+    axes[1].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
+    axes[2].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
+    axes[3].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
+    axes[4].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
+    axes[5].plot(wave0, flux0, 'k', linewidth=0.75, label='all 90')
+
+    axes[npanels-3].plot(wave0, tell0, 'k', linewidth=0.75)
+    axes[npanels-2].plot(wave0, tell0, 'k', linewidth=0.75)
+    axes[npanels-1].plot(wave0, tell0, 'k', linewidth=0.75)
+
+    axes[npanels-3].text(0.03, 0.08, 'H2O', color='r', transform=axes[npanels-3].transAxes)
+    axes[npanels-2].text(0.03, 0.08, 'CO2', color='r', transform=axes[npanels-2].transAxes)
+    axes[npanels-1].text(0.03, 0.08, 'CH4', color='r', transform=axes[npanels-1].transAxes)
+
+    yminsec1, = np.where((wave0 > xxmin[0]) & (wave0 < xxmax[0]))
+    ymin1 = np.min(flux0[yminsec1]) - np.min(flux0[yminsec1])*0.05
+
+    for i in range(nruns):
+        vis = os.environ.get('APOGEE_REDUX')+'/caltests1.0/visit/apo25m/'+field+'_'+labnums[i]+'/'+conf+'/'+mjd+'/'+origvis0.replace('daily','caltests1.0')
+        flux = fits.getdata(vis,1)
+        flux = np.concatenate([flux[0,:],flux[1,:],flux[2,:]])
+        wave = fits.getdata(vis,4)
+        wave = np.concatenate([wave[0,:],wave[1,:],wave[2,:]])
+        for j in range(npanels):
+            if j < 3: 
+                axes[j].plot(wave, flux+med0*0.075*(i+1), color=colors[i], linewidth=0.75, label=labels[i])
+            else:
+                if j < 6: 
+                    axes[j].plot(wave, flux, linewidth=0.75, color=colors[i])
+                else:
+                    if j < 9:
+                        axes[j].plot(wave, (100*((flux/flux0)-1))+(i*2), color=colors[i], linewidth=0.75)
+                    else:
+                        if j < 12:
+                            axes[j].plot(wave, 100*((flux/flux0)-1), color=colors[i], linewidth=0.75)
+        #med = np.nanmedian(100*((flux/flux0)-1))
+        #print(np.absolute(np.nansum(100*((flux/flux0)-1))))
+
+
+    fig.subplots_adjust(left=0.065,right=0.99,bottom=0.035,top=0.975,hspace=0.14,wspace=0.0)
+    plt.savefig(plotfile)
+    plt.close('all')
+
+###########################################################################################
 def tellspatialnew1(zoom=False, cmap='brg'):
     data = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfit.fits')
     expdata = fits.getdata('/uufs/chpc.utah.edu/common/home/u0955897/projects/com/tellfitstats.fits')
