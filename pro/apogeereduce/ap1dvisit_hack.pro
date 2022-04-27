@@ -173,7 +173,7 @@ FOR i=0L,nplanfiles-1 do begin
   ; Start the plots directory
   plots_dir = plate_dir+'/plots/'
   if file_test(plots_dir,/directory) eq 0 then FILE_MKDIR,plots_dir
-
+  stop
   undefine,visitstr
   undefine,alltellstar
   undefine,allframes
