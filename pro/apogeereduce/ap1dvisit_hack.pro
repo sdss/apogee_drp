@@ -418,7 +418,7 @@ FOR i=0L,nplanfiles-1 do begin
       if tag_exist(planstr,'tellzones') then $
          tellzones=planstr.tellzones else tellzones=0
       APTELLURIC_HACK,frame_skysub,plugmap,frame_telluric,tellstar,starfit=starfit,$
-        single=single,pltelstarfit=1,/pl,usetelstarfit=usetelstarfit,$
+        single=single,pltelstarfit=1,usetelstarfit=usetelstarfit,$
         maxtellstars=maxtellstars,tellzones=tellzones,specfitopt=1,$
         plots_dir=plots_dir,error=telerror,/save,/preconv,visitstr=visitstr,$
         test=test,force=force, tellstarlist=tellstarlist
