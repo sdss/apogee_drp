@@ -343,8 +343,10 @@ for iter=0,niter-1 do begin
     psfile1 = plots_dir+dirs.prefix+'telluric_'+expname+'_telstarfit_fiber'+strtrim(ifiber,2)
     print,psfile1
     ;PUSH,psfiles,psfile1
-    SET_PLOT,'PS'  &  !P.FONT=0
-    DEVICE,FILENAME=psfile1+'.ps',/COLOR,XSIZE=30,YSIZE=16,/INCHES,SET_FONT='Times-Roman',/LANDSCAPE
+    ;SET_PLOT,'PS'
+    !P.FONT=0
+    ps_open,psfile1,thick=4,/color,/encap
+    DEVICE,/COLOR,XSIZE=30,YSIZE=16,/INCHES,SET_FONT='Times-Roman'
     loadct,39,/silent
     co = 0
 
@@ -374,8 +376,9 @@ for iter=0,niter-1 do begin
     legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
     ;xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
     ;!p.multi=[0,0,0]
-    DEVICE, /CLOSE
-    SET_PLOT,'X'
+    ;DEVICE, /CLOSE
+    ;SET_PLOT,'X'
+    ps_close
     SPAWN,'convert -rotate 270 '+psfile1+'.ps '+psfile1+'.png'
     ps2jpg,psfile1+'.ps',chmod='664'o,/delete
     ;SPAWN,'rm -f '+psfile1+'.ps'
