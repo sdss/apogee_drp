@@ -12,6 +12,7 @@ if __name__ == "__main__":
     parser.add_argument('mjd', type=int, nargs=1, help='MJD to run')
     parser.add_argument('apred', type=str, nargs=1, help='APOGEE Reduction version')
     parser.add_argument('observatory', type=str, nargs=1, help='Observatory')
+    parser.add_argument('--num', type=str, nargs=1, help='Exposure Number')
     parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     args = parser.parse_args()
@@ -19,8 +20,9 @@ if __name__ == "__main__":
     mjd = args.mjd[0]
     apred = args.apred[0]
     observatory = args.observatory[0]
+    num = args.num[0]
 
     try:
-        fpi.dailyfpiwave(mjd,observatory=observatory,apred=apred,clobber=args.clobber,verbose=args.verbose)
+        fpi.dailyfpiwave(mjd,observatory=observatory,apred=apred,num=num,clobber=args.clobber,verbose=args.verbose)
     except:
         traceback.print_exc()
