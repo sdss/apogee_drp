@@ -363,7 +363,7 @@ for iter=0,niter-1 do begin
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
     oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=1;,linestyle=2
     oplot,outstr.x,outstr.spec/outstr.telluric,co=0
-    legend,['Original','Telluric','Corrected'],textcolors=[70,250,0],line=[0,0,0],charsize=1.5,thick=[3,1,1],pos=[0.98,0.02]
+    legendastro,['Original','Telluric','Corrected'],textcolors=[70,250,0],line=[0,0,0],charsize=1.5,thick=[3,1,1],pos=[0.98,0.02]
     txt='Fiber '+strtrim(ifiber,2)+',   Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' ')
     xyouts,mean(xr),yr[1]-0.1*range(yr),txt,align=0.5,charsize=2,charthick=4
 
