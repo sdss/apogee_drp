@@ -354,7 +354,7 @@ for iter=0,niter-1 do begin
 
     !p.multi=[0,1,2]
 
-    !P.POSITION=[0.05,0.55,0.99,0.98]
+    !P.POSITION=[0.05,0.55,0.99,0.99]
     plot,outstr.x,outstr.spec,/nodata,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,tit='Fiber '+strtrim(ifiber,2),co=0,yticklen=0.01
     oplot,outstr.x,outstr.spec,co=70
     ;oplot,x[gd],yfit1,co=250,linestyle=2
