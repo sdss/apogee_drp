@@ -77,7 +77,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   MAKECAL,dailywave=mjd,clobber=clobber,unlock=unlock,librarypsf=psflibrary
 
   ;; New Python version! 
-  cmd = ['mkfpi',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--verbose']
+  cmd = ['mkfpi',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--num',sfpiid,'--verbose']
   print,'Running: ',cmd
   spawn,cmd,/noshell
 

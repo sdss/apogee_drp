@@ -80,12 +80,12 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         # Make sure that the FPI exposure has arclamp exposures at the same dither position?
     else:
         # Check that the input NUM is an FPI exposure
-        g, = np.where(expinfo['num']==num)
+        g, = np.where(expinfo['num']==int(num))
         if len(g)==0:
             raise ValueError(str(num)+' not found')
         if expinfo['exptype'][g][0] != 'FPI':
             raise ValueError(str(num)+' is not a FPI exposure')
-        fpi = num
+        fpinum = int(num)
     print('FPI full-frame exposure ',fpinum)
     fpiframe = load.ap1D(fpinum)
 
@@ -195,19 +195,22 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     ind, = np.where(expinfo['exptype']=='FPI')
     print(str(len(ind))+' full-frame FPI exposures')
     for i in range(len(ind)):
-        fpinum = expinfo['num'][ind[i]]       
-        fpiframe = load.ap1D(fpinum)
-        print('%d/%d  %d' % (i+1,len(ind),fpinum))
+        fpinum1 = expinfo['num'][ind[i]]     
+        print('%d/%d  %d' % (i+1,len(ind),fpinum1))
+        if load.exists('1D',num=fpinum1)==False:
+            print(load.filename('1D',num=fpinum1,chips=True)+' NOT FOUND')
+            continue
+        fpiframe = load.ap1D(fpinum1)
         # Check if the file exists already
-        fpiwavefile = reduxdir+'cal/'+instrument+'/wave/apWaveFPI-%5d-%8d.fits' % (mjd5,fpinum)
-        if load.exists('WaveFPI',num=fpinum) and clobber==False:
+        fpiwavefile = reduxdir+'cal/'+instrument+'/wave/apWaveFPI-%5d-%8d.fits' % (mjd5,fpinum1)
+        if load.exists('WaveFPI',num=fpinum1) and clobber==False:
             print(fpiwavefile+' already exists and clobber not set')
             continue
         # 1) Fit peaks to the FPI data
         print('  1) Fit peaks to the FPI data')
-        fpilinesfile = reduxdir+'cal/'+instrument+'/fpi/apFPILines-%8d.fits' % fpinum
+        fpilinesfile = reduxdir+'cal/'+instrument+'/fpi/apFPILines-%8d.fits' % fpinum1
         if os.path.exists(fpilinesfile) and clobber is False:
-            print('  Loading previously measured FPI lines for ',fpinum)
+            print('  Loading previously measured FPI lines for ',fpinum1)
             fpilines = Table.read(fpilinesfile)
         else:
             fpilines = fitlines(fpiframe,verbose=verbose)
@@ -237,7 +240,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         # Save the results
         #-----------------
         print('  Writing new FPI wavelength information to '+fpiwavefile)
-        save_fpiwave(fpiwavefile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines)
+        save_fpiwave(fpiwavefile,mjd5,fpinum1,fpiwcoef,fpiwaves,fpilinestr,fpilines)
         # table of FPI lines data: chip, gauss center, Gaussian parameters, wavelength, flux
         # wavelength coefficients
         # wavelength array??
