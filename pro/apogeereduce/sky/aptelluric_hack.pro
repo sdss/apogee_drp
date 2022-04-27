@@ -340,17 +340,13 @@ for iter=0,niter-1 do begin
     ifiber = 300-starind[i]
 
     co = 255
-    if keyword_set(save) then begin
-      ;psfile1 = plots_dir+'aptelluric_'+expname+'_hotstarfit_fiber'+strtrim(ifiber,2)
-      psfile1 = plots_dir+dirs.prefix+'telluric_'+expname+'_telstarfit_fiber'+strtrim(ifiber,2)
-      print,psfile1
-      PUSH,psfiles,psfile1
-      ps_open,psfile1,thick=4,/color,/encap
-      device,/inches,xsize=42,ysize=20
-      DEVICE, DECOMPOSED=0
-      loadct,39,/silent
-      co = 0
-    endif
+    psfile1 = plots_dir+dirs.prefix+'telluric_'+expname+'_telstarfit_fiber'+strtrim(ifiber,2)
+    print,psfile1
+    ;PUSH,psfiles,psfile1
+    SET_PLOT,'PS'  &  !P.FONT=0
+    DEVICE,FILENAME=psfile1+'.ps',/COLOR,XSIZE=20,YSIZE=12,/INCHES,SET_FONT='Times-Roman',/LANDSCAPE
+    loadct,39,/silent
+    co = 0
 
     medspec = median(outstr.spec)
     yr = [(medspec-0.5*abs(medspec))<0, medspec*2.5]
@@ -376,11 +372,13 @@ for iter=0,niter-1 do begin
     ;xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
     !p.multi=[0,0,0]
 
-    if keyword_set(save) then ps_close
-    ps2jpg,psfile1+'.eps',/eps,chmod='664'o
+    DEVICE, /CLOSE
+    SET_PLOT,'X'
+    SPAWN,'convert -rotate 270 '+psfile1+'.ps '+psfile1+'.png'
+    SPAWN,'rm -f '+psfile1+'.ps'
   endif
 
-  ;stop
+  stop
 
  endfor  ; star loop
 
