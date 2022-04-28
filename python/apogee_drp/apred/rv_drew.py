@@ -11,9 +11,9 @@ import esutil
 import pickle
 import yaml
 from astropy.io import fits
-from ..utils import apload, applot, bitmask, spectra, norm, yanny, plan
-from ..utils.apspec import ApSpec
-from ..database import apogeedb
+from apogee_drp.utils import apload, applot, bitmask, spectra, norm, yanny, plan
+from apogee_drp.utils.apspec import ApSpec
+from apogee_drp.database import apogeedb
 from holtztools import plots, html, match, struct
 from dlnpyutils import utils as dln
 from scipy import interpolate
