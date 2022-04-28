@@ -188,7 +188,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         startab['starflag'] = starflag
         startab['andflag'] = andflag
         # Load star summary information into database
-        dbingest(startab,None)
+        #dbingest(startab,None)
         return
     logger.info('%d visit(s) passed QA cuts' % len(gd))
     
@@ -371,7 +371,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         gdrv = []
 
     # Load information into the database
-    dbingest(startab,starvisits)
+    #dbingest(startab,starvisits)
 
     # Do the visit combination and write out apStar file
     if len(gdrv)>0:
@@ -381,8 +381,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         logger.info('No good visits for '+star)
 
     # Run QA code to make final plot and HTML page
-    qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
-    qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
+    #qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
+    #qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
 
     return
 
@@ -990,35 +990,37 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         outdir = os.path.dirname(outfile)
         try: os.makedirs(os.path.dirname(outfile))
         except: pass
-        logger.info('Writing apStar file to '+outfile)
 
         ### Drew modifications ###
         outfile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/varsearch' + os.path.basename(outfilenover)
+        ###
+        logger.info('Writing apStar file to '+outfile)
+
         apstar.write(outfile)
         apstar.filename = outfile
         mwm_root = os.environ['MWM_ROOT']
         apstar.uri = outfile[len(mwm_root)+1:]
         # Create symlink no file with no version
-        if os.path.exists(outfilenover) or os.path.islink(outfilenover): os.remove(outfilenover)
-        os.symlink(os.path.basename(outfile),outfilenover)  # relative path
+        #if os.path.exists(outfilenover) or os.path.islink(outfilenover): os.remove(outfilenover)
+        #os.symlink(os.path.basename(outfile),outfilenover)  # relative path
         
 
         # Plot
-        gd, = np.where((apstar.bitmask[0,:] & (pixelmask.badval()|pixelmask.getval('SIG_SKYLINE'))) == 0)
-        fig,ax = plots.multi(1,3,hspace=0.001,figsize=(48,6))
-        med = np.nanmedian(apstar.flux[0,:])
-        plots.plotl(ax[0],norm.apStarWave(),apstar.flux[0,:],color='k',yr=[0,2*med])
-        ax[0].plot(norm.apStarWave()[gd],apstar.flux[0,gd],color='g')
-        ax[0].set_ylabel('Flux')
-        try:
-            ax[1].plot(norm.apStarWave()[gd],apstar.cont[gd],color='g')
-            ax[1].set_ylabel('Normalized')
-            ax[1].plot(norm.apStarWave(),apstar.template,color='r')
-        except: pass
-        plots.plotl(ax[2],norm.apStarWave(),apstar.flux[0,:]/apstar.err[0,:],yt='S/N')
-        for i in range(3) : ax[i].set_xlim(15100,17000)
-        ax[0].set_xlabel('Wavelength')
-        fig.savefig(outdir+'/plots/'+outbase+'.png')
+        #gd, = np.where((apstar.bitmask[0,:] & (pixelmask.badval()|pixelmask.getval('SIG_SKYLINE'))) == 0)
+        #fig,ax = plots.multi(1,3,hspace=0.001,figsize=(48,6))
+        #med = np.nanmedian(apstar.flux[0,:])
+        #plots.plotl(ax[0],norm.apStarWave(),apstar.flux[0,:],color='k',yr=[0,2*med])
+        #ax[0].plot(norm.apStarWave()[gd],apstar.flux[0,gd],color='g')
+        #ax[0].set_ylabel('Flux')
+        #try:
+        #    ax[1].plot(norm.apStarWave()[gd],apstar.cont[gd],color='g')
+        #    ax[1].set_ylabel('Normalized')
+        #    ax[1].plot(norm.apStarWave(),apstar.template,color='r')
+        #except: pass
+        #plots.plotl(ax[2],norm.apStarWave(),apstar.flux[0,:]/apstar.err[0,:],yt='S/N')
+        #for i in range(3) : ax[i].set_xlim(15100,17000)
+        #ax[0].set_xlabel('Wavelength')
+        #fig.savefig(outdir+'/plots/'+outbase+'.png')
 
     # Plot
     if plot: 
