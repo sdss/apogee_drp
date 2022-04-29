@@ -153,7 +153,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Copy data from visit
     if sdss4:
         tocopy = ['ra','dec','glon','glat','jmag','jerr','hmag','herr','kmag','kerr','src_h','targflags']
-        tocopy1 = ['RA','DEC','GLON','GLAT','J','J_ERR','H','H_ERR','K','K_ERR','SRC_H','targflags']
+        tocopy1 = ['RA','DEC','GLON','GLAT','J','J_ERR','H','H_ERR','K','K_ERR','SRC_H','TARGFLAGS']
         for ii in range(len(tocopy)): startab[tocopy[ii]] = allvisits[tocopy1[ii]][0]
     else:
         tocopy = ['ra','dec','glon','glat','jmag','jerr','hmag','herr','kmag','kerr','src_h','catalogid',
