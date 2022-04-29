@@ -160,8 +160,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             try:
                 startab[c] = allvisits[c.upper()][0]
             except:
-                blabla=c
-                pdb.set_trace()
+                c = c[0].replace('mag','').upper()
+                startab[c] = allvisits[c]
     startab['targ_pmra'] = allvisits['PMRA'][0]
     startab['targ_pmdec'] = allvisits['PMDEC'][0]
     startab['targ_pm_src'] = allvisits['PM_SRC'][0]
