@@ -492,7 +492,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
                                      fiber=allvisit['FIBERID'][i],field=allvisit['FIELD'][i])
         if sdss4:
             visitfile = visitfile.replace('current-apo25m','current')
-            visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/current/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/dr17/')
+            visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/')
 
         spec = doppler.read(visitfile,badval=badval)
 
