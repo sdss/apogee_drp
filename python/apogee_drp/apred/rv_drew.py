@@ -81,11 +81,13 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else:
         allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"' and mjd<="+str(mjd))
     db.close()
+    sdss4 = False
     if len(allvisits) == 0:
         allv = fits.getdata('/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits')
         gd, = np.where(star == allv['apogee_id'])
         if len(gd) < 1: pdb.set_trace()
         allvisits = allv[gd]
+        sdss4 = True
 
     #pdb.set_trace()
     # Sometimes "field" has leading spaces
@@ -153,17 +155,14 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
               'gaiadr2_pmdec','gaiadr2_pmdec_error','gaiadr2_gmag','gaiadr2_gerr','gaiadr2_bpmag',
               'gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr','sdssv_apogee_target0','firstcarton',
               'targflags']
+    if sdss4:
+        # Copy data from visit
+        tocopy = ['RA','DEC','GLON','GLAT','J','J_ERR','H','H_ERR','K','K_ERR','SRC_H',
+                  'targflags']
+
     for c in tocopy:
-        try:
-            startab[c] = allvisits[c][0]
-        except:
-            try:
-                startab[c] = allvisits[c.upper()][0]
-            except:
-                c = c[0].replace('mag','').upper()
-                blabla = c
-                pdb.set_trace()
-                startab[c] = allvisits[c]
+        startab[c] = allvisits[c][0]
+    
     startab['targ_pmra'] = allvisits['PMRA'][0]
     startab['targ_pmdec'] = allvisits['PMDEC'][0]
     startab['targ_pm_src'] = allvisits['PM_SRC'][0]
