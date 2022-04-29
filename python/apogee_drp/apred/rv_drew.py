@@ -237,7 +237,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Run Doppler with dorv() on the good visits
     try:
         dopsumstr,dopvisitstr,gaussout = dorv(starvisits,starver,clobber=clobber,verbose=verbose,tweak=tweak,
-                                              plot=plot,windows=windows,apstar_vers=apstar_vers,logger=logger)
+                                              plot=plot,windows=windows,apstar_vers=apstar_vers,logger=logger,
+                                              apred=apred,sdss4=sdss4)
         logger.info('Doppler completed successfully for {:s}'.format(star))
     except:
         logger.info('Doppler failed for {:s}'.format(star))
@@ -406,7 +407,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
 
 
 def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbose=False,tweak=False,
-         plot=False,windows=None,apstar_vers='stars',logger=None):
+         plot=False,windows=None,apstar_vers='stars',logger=None,sdss4=False):
     """ Do the Doppler rv jointfit from list of files
     """
 
@@ -418,13 +419,13 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     else:
         suffix = '_out'
     if obj is None:
-        obj = str(allvisit['apogee_id'][0])
+        obj = str(allvisit['APOGEE_ID'][0])
     if type(obj) is not str:
         obj = obj.decode('UTF-8')
     if apred is None:
         apred = str(allvisit['apred_vers'][0])
     if telescope is None:
-        telescope = str(allvisit['telescope'][0])
+        telescope = str(allvisit['TELESCOPE'][0])
     load = apload.ApLoad(apred=apred,telescope=telescope)
     outfile = load.filename('Star',obj=obj)
     outdir = os.path.dirname(outfile)
@@ -432,20 +433,20 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     outbase += '-'+starver  # add star version
     if os.path.exists(outdir)==False:
         os.makedirs(outdir)
-    if apstar_vers != 'stars':
-        outdir = outdir.replace('/stars/','/'+apstar_vers+'/')
+    #if apstar_vers != 'stars':
+    #    outdir = outdir.replace('/stars/','/'+apstar_vers+'/')
 
-    if os.path.exists(outdir+'/'+outbase+suffix+'_doppler.pkl') and not clobber:
-        logger.info(obj+' already done')
-        fp = open(outdir+'/'+outbase+suffix+'_doppler.pkl','rb')
-        try: 
-            out = pickle.load(fp)
-            sumstr,finalstr,bmodel,specmlist,gout = out
-            fp.close()
-            return sumstr,finalstr,gout
-        except: 
-            logger.warning('error loading: '+outbase+suffix+'_doppler.pkl')
-            #pass
+    #if os.path.exists(outdir+'/'+outbase+suffix+'_doppler.pkl') and not clobber:
+    #    logger.info(obj+' already done')
+    #    fp = open(outdir+'/'+outbase+suffix+'_doppler.pkl','rb')
+    #    try: 
+    #        out = pickle.load(fp)
+    #        sumstr,finalstr,bmodel,specmlist,gout = out
+    #        fp.close()
+    #        return sumstr,finalstr,gout
+    #    except: 
+    #        logger.warning('error loading: '+outbase+suffix+'_doppler.pkl')
+    #        #pass
 
     speclist = []
     pixelmask = bitmask.PixelBitMask()
@@ -455,7 +456,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     #    barycentric correction only, use that to get an estimate of systemic
     #    velocity, then do RV determination restricting RVs to within 50 km/s
     #    of estimate. This seems to help significant for faint visits
-    lowsnr_visits, = np.where(allvisit['snr']<10)
+    lowsnr_visits, = np.where(allvisit['SNR']<10)
     if (len(lowsnr_visits) > 1) & (len(lowsnr_visits)/len(allvisit) > 0.1) :
         try :
             apstar_bc = visitcomb(allvisit,starver,bconly=True,load=load,write=False,dorvfit=False,apstar_vers=apstar_vers) 
