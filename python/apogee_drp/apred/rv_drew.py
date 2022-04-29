@@ -841,7 +841,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         if visit['SURVEY'] == 'apogee' :
             apogee_target1 |= visit['APOGEE_TARGET1']
             apogee_target2 |= visit['APOGEE_TARGET2']
-            apogee_target3 |= visit['APOGEE_TARGET3']
+            #apogee_target3 |= visit['APOGEE_TARGET3']
         elif visit['SURVEY'].find('apogee2') >=0  :
             apogee2_target1 |= visit['APOGEE2_TARGET1']
             apogee2_target2 |= visit['APOGEE2_TARGET2'] 
