@@ -491,9 +491,9 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
             visitfile = load.allfile('Visit',plate=int(allvisit['PLATE'][i]),mjd=allvisit['MJD'][i],
                                      fiber=allvisit['FIBERID'][i],field=allvisit['FIELD'][i])
         if sdss4:
-            pdb.set_trace()
-            visitfile = visitfile.replace('daily-apo25m','dr17')
-            visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/dr17/')
+            #pdb.set_trace()
+            visitfile = visitfile.replace('-apo25m','')
+            visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/')
 
         spec = doppler.read(visitfile,badval=badval)
 
