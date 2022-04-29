@@ -154,7 +154,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
               'gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr','sdssv_apogee_target0','firstcarton',
               'targflags']
     for c in tocopy:
-        startab[c] = allvisits[c][0]
+        try:
+            startab[c] = allvisits[c][0]
+        except:
+            startab[c] = allvisit[c.upper()][0]
     startab['targ_pmra'] = allvisits['PMRA'][0]
     startab['targ_pmdec'] = allvisits['PMDEC'][0]
     startab['targ_pm_src'] = allvisits['PM_SRC'][0]
