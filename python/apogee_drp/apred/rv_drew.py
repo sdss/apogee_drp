@@ -749,7 +749,15 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             apvisit = load.apVisit1m(visit['PLATE'],visit['MJD'],visit['APOGEE_ID'],load=True)
         else:
             apvisit = load.apVisit(int(visit['PLATE']),visit['MJD'],visit['FIBERID'],load=True)
-        #if sdss4:
+        if sdss4:
+            visitfile = load.allfile('Visit',plate=int(allvisit['PLATE'][i]),mjd=allvisit['MJD'][i],
+                                     fiber=allvisit['FIBERID'][i],field=allvisit['FIELD'][i])
+        #pdb.set_trace()
+        #visitfile = visitfile.replace('-apo25m','')
+        #visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/')
+
+
+
         pdb.set_trace()
         #    apvisit = load.apVisit(int(visit['PLATE']),visit['MJD'],visit['FIBERID'],load=True)
         #    visitfile = visitfile.replace('-apo25m','')
