@@ -80,8 +80,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"'")
     else:
         allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"' and mjd<="+str(mjd))
-    #import pdb; pdb.set_trace()
     db.close()
+    pdb.set_trace()
     # Sometimes "field" has leading spaces
     allvisits['field'] = np.char.array(allvisits['field']).strip()
     nallvisits = len(allvisits)
