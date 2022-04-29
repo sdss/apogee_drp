@@ -102,7 +102,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Get the star version number
     #  this is the largest MJD5 in the FULL list of visits
     if mjd is None:
-        starver = str(np.max(allvisits['mjd'].astype(int)))
+        starver = str(np.max(allvisits['MJD'].astype(int)))
     else:
         # If MJD is input then use that for STARVER
         starver = str(mjd)
