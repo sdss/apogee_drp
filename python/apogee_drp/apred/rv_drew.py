@@ -75,12 +75,19 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     logger.info('Running Doppler and performing visit combination for %s and telescope=%s' % (star,telescope))
 
     # Get the visit files for this star and telescope
-    db = apogeedb.DBSession()
-    if mjd is None:
-        allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"'")
-    else:
-        allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"' and mjd<="+str(mjd))
-    db.close()
+    try:
+        db = apogeedb.DBSession()
+        if mjd is None:
+            allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"'")
+        else:
+            allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"' and mjd<="+str(mjd))
+        db.close()
+    except:
+        allv = fits.getdata('/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits')
+        gd, = np.where(star == allv['apogee_id'])
+        if len(gd) < 1: pdb.set_trace()
+        allvisits = allv[gd]
+
     pdb.set_trace()
     # Sometimes "field" has leading spaces
     allvisits['field'] = np.char.array(allvisits['field']).strip()
