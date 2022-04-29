@@ -752,17 +752,15 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         if sdss4:
             visitfile = load.allfile('Visit',plate=int(visit['PLATE']),mjd=visit['MJD'],
                                      fiber=visit['FIBERID'],field=visit['FIELD'])
+            visitfile = visitfile.replace('-apo25m','')
+            visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/')
+            hdulist = fits.open(visitfile)
+            apvisit = ApSpec(hdulist[1].data,header=hdulist[0].header,
+                             err=hdulist[2].data,bitmask=hdulist[3].data,wave=hdulist[4].data,
+                             sky=hdulist[5].data,skyerr=hdulist[5].data,
+                             telluric=hdulist[7].data,telerr=hdulist[8].data)
+
         #pdb.set_trace()
-        #visitfile = visitfile.replace('-apo25m','')
-        #visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/')
-
-
-
-        pdb.set_trace()
-        #    apvisit = load.apVisit(int(visit['PLATE']),visit['MJD'],visit['FIBERID'],load=True)
-        #    visitfile = visitfile.replace('-apo25m','')
-        #    visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/')
-
 
         pixelmask = bitmask.PixelBitMask()
 
