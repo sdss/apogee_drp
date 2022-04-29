@@ -431,8 +431,8 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     outdir = os.path.dirname(outfile)
     outbase = os.path.splitext(os.path.basename(outfile))[0]
     outbase += '-'+starver  # add star version
-    if os.path.exists(outdir)==False:
-        os.makedirs(outdir)
+    #if os.path.exists(outdir)==False:
+    #    os.makedirs(outdir)
     #if apstar_vers != 'stars':
     #    outdir = outdir.replace('/stars/','/'+apstar_vers+'/')
 
@@ -490,6 +490,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
         else :
             visitfile = load.allfile('Visit',plate=int(allvisit['PLATE'][i]),mjd=allvisit['MJD'][i],
                                      fiber=allvisit['FIBERID'][i],field=allvisit['FIELD'][i])
+            pdb.set_trace()
         spec = doppler.read(visitfile,badval=badval)
 
         if windows is not None :
