@@ -216,7 +216,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Add STARVER                                                                                                                                             
     starvisits['starver'] = starver
     # Flag all visits as RV_FAIL to start with, will remove if they worked okay
-    starvisits['STARFLAG'] |= starmask.getval('RV_FAIL')
+    starvisits['starflag'] |= starmask.getval('RV_FAIL')
     # Initialize visit RV tags
     for col in ['vtype','vrel','vrelerr','vheliobary','bc','chisq','rv_teff','rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr']:
         if col == 'vtype':
