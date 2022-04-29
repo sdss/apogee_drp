@@ -367,10 +367,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             startab['rv_feherr'] = dopsumstr['feherr']
             # Update meanfib/sigfig only using visits with good RVs
             if ngdrv > 1:
-                meanfib = (starvisits['fiberid'][gdrv]*starvisits['SNR'][gdrv]).sum()/starvisits['SNR'][gdrv].sum()
-                sigfib = starvisits['fiberid'][gdrv].std(ddof=1)
+                meanfib = (starvisits['FIBERID'][gdrv]*starvisits['SNR'][gdrv]).sum()/starvisits['SNR'][gdrv].sum()
+                sigfib = starvisits['FIBERID'][gdrv].std(ddof=1)
             else:
-                meanfib = starvisits['fiberid'][gdrv][0]
+                meanfib = starvisits['FIBERID'][gdrv][0]
                 sigfib = 0.0
             startab['meanfib'] = meanfib
             startab['sigfib'] = sigfib
@@ -395,7 +395,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Do the visit combination and write out apStar file
     if len(gdrv)>0:
         apstar = visitcomb(starvisits[visits[gdrv]],starver,load=load,
-                           apstar_vers=apstar_vers,apred=apred,nres=nres,logger=logger)
+                           apstar_vers=apstar_vers,apred=apred,nres=nres,logger=logger,sdss4=sdss4)
     else:
         logger.info('No good visits for '+star)
 
