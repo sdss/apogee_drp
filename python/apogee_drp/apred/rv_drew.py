@@ -149,19 +149,19 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['mjdend'] = np.max(allvisits['MJD'].astype(int))    
     startab['healpix'] = apload.obj2healpix(star)
     startab['nvisits'] = nallvisits
+
     # Copy data from visit
-    tocopy = ['ra','dec','glon','glat','jmag','jerr','hmag','herr','kmag','kerr','src_h','catalogid',
-              'gaiadr2_sourceid','gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error',
-              'gaiadr2_pmdec','gaiadr2_pmdec_error','gaiadr2_gmag','gaiadr2_gerr','gaiadr2_bpmag',
-              'gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr','sdssv_apogee_target0','firstcarton',
-              'targflags']
     if sdss4:
-        # Copy data from visit
         tocopy = ['ra','dec','glon','glat','jmag','jerr','hmag','herr','kmag','kerr','src_h','targflags']
         tocopy1 = ['RA','DEC','GLON','GLAT','J','J_ERR','H','H_ERR','K','K_ERR','SRC_H','targflags']
-
-    for c,c1 in tocopy:
-        startab[c] = allvisits[c1][0]
+        for ii in range(len(tocopy)): startab[tocopy[ii]] = allvisits[tocopy1[ii]][0]
+    else:
+        tocopy = ['ra','dec','glon','glat','jmag','jerr','hmag','herr','kmag','kerr','src_h','catalogid',
+                  'gaiadr2_sourceid','gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error',
+                  'gaiadr2_pmdec','gaiadr2_pmdec_error','gaiadr2_gmag','gaiadr2_gerr','gaiadr2_bpmag',
+                  'gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr','sdssv_apogee_target0','firstcarton',
+                  'targflags']
+        for c in tocopy: startab[c] = allvisits[c][0]
     
     startab['targ_pmra'] = allvisits['PMRA'][0]
     startab['targ_pmdec'] = allvisits['PMDEC'][0]
