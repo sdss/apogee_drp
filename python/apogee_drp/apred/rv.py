@@ -280,8 +280,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         # Flag visits with suspect RVs
         if starvisits['rv_teff'][vind] < 6000:
             bd_diff = 10
+            if starvisits['rv_logg'][vind] > 3.8: bd_diff = 20
         else:
-            bd_diff = 50.
+            bd_diff = 50
         if (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > bd_diff) :
             starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
         elif (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > 0) :
