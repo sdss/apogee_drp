@@ -993,7 +993,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         except: pass
 
         ### Drew modifications ###
-        outfile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/varsearch' + os.path.basename(outfilenover)
+        outfile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/varsearch/' + os.path.basename(outfilenover)
         ###
         logger.info('Writing apStar file to '+outfile)
 
