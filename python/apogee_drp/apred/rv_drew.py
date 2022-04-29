@@ -385,8 +385,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         logger.info('No good visits for '+star)
 
     # Run QA code to make final plot and HTML page
-    #qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
-    #qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
+    qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
+    qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
 
     return
 
