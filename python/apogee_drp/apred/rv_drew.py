@@ -286,7 +286,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         else:
             starvisits['n_components'][vind] = g['N_components']
         if starvisits['n_components'][vind] > 1 :
-            starvisits['starflag'][vind] |= starmask.getval('MULTIPLE_SUSPECT')
+            starvisits['STARFLAG'][vind] |= starmask.getval('MULTIPLE_SUSPECT')
             n = len(g['best_fit_parameters'])//3
             gd, = np.where(np.array(g['best_fit_parameters'])[0:n] > 0)
             rv_comp = np.array(g['best_fit_parameters'])[2*n+gd]
