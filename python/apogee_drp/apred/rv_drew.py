@@ -971,13 +971,13 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             apstar.cont = out[3][0].flux
             apstar.template = out[2][0].flux
         except ValueError as err:
-            logger.error('Exception raised in visitcomb RV for: ', apstar.header['FIELD'],apstar.header['OBJID'])
+            logger.error('Exception raised in visitcomb RV for: ', apstar.header.get['FIELD'],apstar.header['OBJID'])
             logger.error("ValueError: {0}".format(err))
         except RuntimeError as err:
-            logger.error('Exception raised in visitcomb RV for: ', apstar.header['FIELD'],apstar.header['OBJID'])
+            logger.error('Exception raised in visitcomb RV for: ', apstar.header.get['FIELD'],apstar.header['OBJID'])
             logger.error("Runtime error: {0}".format(err))
         except: 
-            logger.error('Exception raised in visitcomb RV fit for: ',apstar.header['FIELD'],apstar.header['OBJID'])
+            logger.error('Exception raised in visitcomb RV fit for: ',apstar.header.get['FIELD'],apstar.header['OBJID'])
 
     # Write the spectrum to file
     if write:
