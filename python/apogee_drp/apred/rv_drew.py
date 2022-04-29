@@ -143,8 +143,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['starver'] = starver
     startab['apred_vers'] = apred
     startab['v_apred'] = gitvers
-    startab['mjdbeg'] = np.min(allvisits['mjd'].astype(int))
-    startab['mjdend'] = np.max(allvisits['mjd'].astype(int))    
+    startab['mjdbeg'] = np.min(allvisits['MJD'].astype(int))
+    startab['mjdend'] = np.max(allvisits['MJD'].astype(int))    
     startab['healpix'] = apload.obj2healpix(star)
     startab['nvisits'] = nallvisits
     # Copy data from visit
@@ -155,9 +155,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
               'targflags']
     for c in tocopy:
         startab[c] = allvisits[c][0]
-    startab['targ_pmra'] = allvisits['pmra'][0]
-    startab['targ_pmdec'] = allvisits['pmdec'][0]
-    startab['targ_pm_src'] = allvisits['pm_src'][0]
+    startab['targ_pmra'] = allvisits['PMRA'][0]
+    startab['targ_pmdec'] = allvisits['PMDEC'][0]
+    startab['targ_pm_src'] = allvisits['PM_SRC'][0]
     # Initialize some parameters in case RV fails
     startab['ngoodvisits'] = 0
     startab['ngoodrvs'] = 0
@@ -171,17 +171,17 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['rv_ccpfwhm'] = np.nan
     startab['rv_autofwhm'] = np.nan
     startab['n_components'] = -1
-    if len(allvisits) > 0: meanfib=(allvisits['fiberid']*allvisits['snr']).sum()/allvisits['snr'].sum()
+    if len(allvisits) > 0: meanfib=(allvisits['FIBERID']*allvisits['SNR']).sum()/allvisits['SNR'].sum()
     else: meanfib = 999999.
-    if len(allvisits) > 1: sigfib=allvisits['fiberid'].std(ddof=1)
+    if len(allvisits) > 1: sigfib=allvisits['FIBERID'].std(ddof=1)
     else: sigfib = 0.
     startab['meanfib'] = meanfib
     startab['sigfib'] = sigfib
     starmask = bitmask.StarBitMask()
     
     # Select good visit spectra
-    gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
-                   (allvisits['snr'] > snmin) )
+    gd, = np.where(((allvisits['STARFLAG'] & starmask.badval()) == 0) &
+                   (allvisits['SNR'] > snmin) )
     # No good visits, but still write to star table
     if len(gd)==0:
         logger.info('No visits passed QA cuts')
