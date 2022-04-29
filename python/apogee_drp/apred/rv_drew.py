@@ -349,7 +349,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             startab['ngoodrvs'] = ngdrv
             try: startab['n_components'] = starvisits['n_components'][gdrv].max()
             except: pass
-            startab['vheliobary'] = (starvisits['vheliobary'][gdrv]*starvisits['snr'][gdrv]).sum() / starvisits['snr'][gdrv].sum()
+            startab['vheliobary'] = (starvisits['vheliobary'][gdrv]*starvisits['SNR'][gdrv]).sum() / starvisits['SNR'][gdrv].sum()
             if ngdrv>1:
                 startab['vscatter'] = starvisits['vheliobary'][gdrv].std(ddof=1)
                 startab['verr'] = startab['vscatter'][0]/np.sqrt(ngdrv)
@@ -367,7 +367,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             startab['rv_feherr'] = dopsumstr['feherr']
             # Update meanfib/sigfig only using visits with good RVs
             if ngdrv > 1:
-                meanfib = (starvisits['fiberid'][gdrv]*starvisits['snr'][gdrv]).sum()/starvisits['snr'][gdrv].sum()
+                meanfib = (starvisits['fiberid'][gdrv]*starvisits['SNR'][gdrv]).sum()/starvisits['SNR'][gdrv].sum()
                 sigfib = starvisits['fiberid'][gdrv].std(ddof=1)
             else:
                 meanfib = starvisits['fiberid'][gdrv][0]
