@@ -285,6 +285,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             bd_diff = 50.
         if (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > bd_diff) :
             starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
+            import pdb; pdb.set_trace()
         elif (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > 0) :
             starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
 
