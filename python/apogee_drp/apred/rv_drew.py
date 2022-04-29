@@ -97,7 +97,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     logger.info('%d visit file(s) found' % nallvisits)
     allvisits = Table(allvisits)
     # Change datatype of STARFLAG to 64-bit
-    allvisits['starflag'] = allvisits['starflag'].astype(np.uint64)
+    allvisits['STARFLAG'] = allvisits['STARFLAG'].astype(np.uint64)
 
     # Get the star version number
     #  this is the largest MJD5 in the FULL list of visits
