@@ -87,9 +87,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         if len(gd) < 1: pdb.set_trace()
         allvisits = allv[gd]
 
-    pdb.set_trace()
+    #pdb.set_trace()
     # Sometimes "field" has leading spaces
-    allvisits['field'] = np.char.array(allvisits['field']).strip()
+    allvisits['FIELD'] = np.char.array(allvisits['FIELD']).strip()
     nallvisits = len(allvisits)
     if nallvisits==0:
         logger.info('No visit files found')
