@@ -392,8 +392,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         logger.info('No good visits for '+star)
 
     # Run QA code to make final plot and HTML page
-    qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
-    qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
+    #qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
+    #qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
 
     return
 
@@ -610,7 +610,7 @@ def gauss_decomp(out,phase='one',alpha1=0.5,alpha2=1.5,thresh=[4,4],plot=None,fi
                 if pars[0] > 0 : color='k'
                 else : color='r'
                 ax[i].text(0.1,0.8-j*0.1,'{:8.1f}{:8.1f}{:8.1f}'.format(*pars),transform=ax[i].transAxes,color=color)
-            fig.savefig(plot+'_ccf.png')
+            #fig.savefig(plot+'_ccf.png')
     del g
     return gout
 
@@ -654,11 +654,11 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
         axc[i].plot(spec.wave,spec.flux*spec.cont,color='k')
         axc[i].plot(spec.wave,spec.cont,color='g')
         axc[i].text(0.1,0.1,'{:d}'.format(spec.head['MJD5']),transform=axc[i].transAxes)
-    fig.savefig(outdir+'/'+obj+'_spec.png')
+    #fig.savefig(outdir+'/'+obj+'_spec.png')
     plt.close()
-    fig2.savefig(outdir+'/'+obj+'_spec2.png')
+    #fig2.savefig(outdir+'/'+obj+'_spec2.png')
     plt.close()
-    figc.savefig(outdir+'/'+obj+'_cont.png')
+    #figc.savefig(outdir+'/'+obj+'_cont.png')
     plt.close()
 
     # Plot cross correlation functions with final model
@@ -684,7 +684,7 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
                 if pars[0] > 0 : color='k'
                 else : color='r'
                 ax[i].text(0.1,0.8-j*0.1,'{:8.1f}{:8.1f}{:8.1f}'.format(*pars),transform=ax[i].transAxes,color=color)
-    fig.savefig(outdir+'/'+obj+'_ccf.png')
+    #fig.savefig(outdir+'/'+obj+'_ccf.png')
     plt.close()
 
 
@@ -1003,7 +1003,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         except: pass
 
         ### Drew modifications ###
-        #outfile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/varsearch/' + os.path.basename(outfilenover)
+        outfile = '/uufs/chpc.utah.edu/common/home/u0955897/projects/varsearch/' + os.path.basename(outfilenover)
         ###
         logger.info('Writing apStar file to '+outfile)
 
