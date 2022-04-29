@@ -347,7 +347,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         ngdrv = len(gdrv)
         if ngdrv>0:
             startab['ngoodrvs'] = ngdrv
-            try: startab['n_components'] = starvisits['n_components'][gdrv].max()
+            try: startab['n_components'] = starvisits['N_COMPONENTS'][gdrv].max()
             except: pass
             startab['vheliobary'] = (starvisits['vheliobary'][gdrv]*starvisits['SNR'][gdrv]).sum() / starvisits['SNR'][gdrv].sum()
             if ngdrv>1:
@@ -394,7 +394,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
 
     # Do the visit combination and write out apStar file
     if len(gdrv)>0:
-        apstar = visitcomb(starvisits[visits[gdrv]],starver,load=load,
+        apstar = visitcomb(starvisits[visits[gdrv]],starver,apred=apred,telescope=telescope,
                            apstar_vers=apstar_vers,apred=apred,nres=nres,logger=logger,sdss4=sdss4)
     else:
         logger.info('No good visits for '+star)
@@ -461,7 +461,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     if sdss4: hmagkey = 'H'
     if (len(lowsnr_visits) > 1) & (len(lowsnr_visits)/len(allvisit) > 0.1) :
         try :
-            apstar_bc = visitcomb(allvisit,starver,bconly=True,load=load,write=False,dorvfit=False,apstar_vers=apstar_vers,sdss4=sdss4) 
+            apstar_bc = visitcomb(allvisit,starver,bconly=True,write=False,dorvfit=False,apstar_vers=apstar_vers,sdss4=sdss4,apred=apred,telescope=telescope) 
             apstar_bc.setmask(badval)
             spec = doppler.Spec1D(apstar_bc.flux[0,:],err=apstar_bc.err[0,:],bitmask=apstar_bc.bitmask[0,:],
                                   mask=apstar_bc.mask[0,:],wave=apstar_bc.wave,lsfpars=np.array([0]),
@@ -749,6 +749,13 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             apvisit = load.apVisit1m(visit['PLATE'],visit['MJD'],visit['APOGEE_ID'],load=True)
         else:
             apvisit = load.apVisit(int(visit['PLATE']),visit['MJD'],visit['FIBERID'],load=True)
+        #if sdss4:
+        pdb.set_trace()
+        #    apvisit = load.apVisit(int(visit['PLATE']),visit['MJD'],visit['FIBERID'],load=True)
+        #    visitfile = visitfile.replace('-apo25m','')
+        #    visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/')
+
+
         pixelmask = bitmask.PixelBitMask()
 
         # Rest-frame wavelengths transformed to this visit spectra
