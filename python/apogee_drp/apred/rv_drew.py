@@ -395,7 +395,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Do the visit combination and write out apStar file
     if len(gdrv)>0:
         apstar = visitcomb(starvisits[visits[gdrv]],starver,apred=apred,telescope=telescope,
-                           apstar_vers=apstar_vers,apred=apred,nres=nres,logger=logger,sdss4=sdss4)
+                           apstar_vers=apstar_vers,nres=nres,logger=logger,sdss4=sdss4)
     else:
         logger.info('No good visits for '+star)
 
