@@ -702,7 +702,7 @@ from apogee_drp.apred import wave
 from apogee_drp.apred import sincint
 
 def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.5],bconly=False,
-              plot=False,write=True,dorvfit=True,apstar_vers='stars',logger=None,sdss4=sdss4):
+              plot=False,write=True,dorvfit=True,apstar_vers='stars',logger=None,sdss4=False):
     """ Combine multiple visits with individual RVs to rest frame sum
     """
 
