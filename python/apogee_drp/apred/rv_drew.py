@@ -252,13 +252,13 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         # Match by filename components in case there was an error reading in doppler
         name = os.path.basename(v['filename'])
         if telescope == 'apo1m':
-            vind, = np.where( np.char.strip(starvisits['file']).astype(str) == os.path.basename(v['filename'].strip()) )
+            vind, = np.where( np.char.strip(starvisits['FILE']).astype(str) == os.path.basename(v['filename'].strip()) )
             if len(vind) == 0:
                 # special case for incremental release...yuck
-                vind, = np.where( np.char.strip(starvisits['file']).astype(str) == 
+                vind, = np.where( np.char.strip(starvisits['FILE']).astype(str) == 
                                    os.path.basename(v['filename'].strip()).replace('-r13-','-r12-') )
         else:
-            vind, = np.where( starvisits['file']==name )
+            vind, = np.where( starvisits['FILE']==name )
         if len(vind) > 0:
             vind = vind[0]
         else:
