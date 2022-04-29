@@ -282,10 +282,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         starvisits['rv_feh'][vind] = v['feh']
         starvisits['rv_feherr'][vind] = v['feherr']
         if g is None:
-            starvisits['n_components'][vind] = 0
+            starvisits['N_COMPONENTS'][vind] = 0
         else:
-            starvisits['n_components'][vind] = g['N_components']
-        if starvisits['n_components'][vind] > 1 :
+            starvisits['N_COMPONENTS'][vind] = g['N_components']
+        if starvisits['N_COMPONENTS'][vind] > 1 :
             starvisits['STARFLAG'][vind] |= starmask.getval('MULTIPLE_SUSPECT')
             n = len(g['best_fit_parameters'])//3
             gd, = np.where(np.array(g['best_fit_parameters'])[0:n] > 0)
@@ -301,14 +301,14 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             bd_diff = 50
         print(np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]))
         if (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > bd_diff) :
-            starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
+            starvisits['STARFLAG'][vind] |= starmask.getval('RV_REJECT')
         elif (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > 0) :
-            starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
+            starvisits['STARFLAG'][vind] |= starmask.getval('RV_SUSPECT')
     #import pdb; pdb.set_trace()
 
     # Set STARFLAGS for the visits (successful and failed ones)
     for i in range(len(starvisits)):
-        starvisits['starflags'][i] = starmask.getname(starvisits['starflag'][i])
+        starvisits['STARFLAGS'][i] = starmask.getname(starvisits['STARFLAG'][i])
 
 
     # Compute final star-level values
