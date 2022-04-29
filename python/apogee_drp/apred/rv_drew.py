@@ -490,7 +490,10 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
         else :
             visitfile = load.allfile('Visit',plate=int(allvisit['PLATE'][i]),mjd=allvisit['MJD'][i],
                                      fiber=allvisit['FIBERID'][i],field=allvisit['FIELD'][i])
-            pdb.set_trace()
+        if sdss4:
+            visitfile = visitfile.replace('current-apo25m','current')
+            visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/current/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/dr17/')
+
         spec = doppler.read(visitfile,badval=badval)
 
         if windows is not None :
