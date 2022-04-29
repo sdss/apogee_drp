@@ -970,7 +970,9 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             out = doppler.rv.jointfit([spec],verbose=False,plot=False,tweak=False,maxvel=[-50,50],logger=logger)
             apstar.cont = out[3][0].flux
             apstar.template = out[2][0].flux
+            import pdb; pdb.set_trace()
         except ValueError as err:
+            import pdb; pdb.set_trace()
             logger.error('Exception raised in visitcomb RV for: ', apstar.header['FIELD'],apstar.header['OBJID'])
             logger.error("ValueError: {0}".format(err))
         except RuntimeError as err:
