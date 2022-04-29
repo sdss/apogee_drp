@@ -196,8 +196,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         # Add starflag and andflag
         starflag,andflag = np.uint64(0),np.uint64(0)
         for v in allvisits:
-            starflag |= v['starflag'] # bitwise OR
-            andflag &= v['starflag']  # bitwise AND
+            starflag |= v['STARFLAG'] # bitwise OR
+            andflag &= v['STARFLAG']  # bitwise AND
         starflag |= starmask.getval('RV_FAIL')
         andflag |= starmask.getval('RV_FAIL')
         startab['starflag'] = starflag
@@ -325,8 +325,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     starflag = startab['starflag']
     andflag = startab['andflag']
     for v in starvisits:
-        starflag |= v['starflag']
-        andflag &= v['starflag']
+        starflag |= v['STARFLAG']
+        andflag &= v['STARFLAG']
     startab['starflags'] = starmask.getname(startab['starflag'])
     startab['andflags'] = starmask.getname(startab['andflag'])
 
