@@ -319,7 +319,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     #startab['targflags'] = (bitmask.targflags(apogee_target1,apogee_target2,0,0,survey='apogee')+
     #                        bitmask.targflags(apogee2_target1,apogee2_target2,apogee2_target3,apogee2_target4,survey='apogee2')+
     #                        bitmask.targflags(sdssv_apogee_target0,survey='sdss5'))
-    startab['targflags'] = bitmask.targflags(starvisits['sdssv_apogee_target0'][0],0,0,0,survey='sdss5')
+    if sdss4 is False: startab['targflags'] = bitmask.targflags(starvisits['sdssv_apogee_target0'][0],0,0,0,survey='sdss5')
 
     # Make final STARFLAG and ANDFLAG
     starflag = startab['starflag']
@@ -332,10 +332,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
 
     # Initialize meanfib/sigfib using all good visits
     if len(starvisits) > 1:
-        meanfib = (starvisits['fiberid']*starvisits['snr']).sum()/starvisits['snr'].sum()
-        sigfib = starvisits['fiberid'].std(ddof=1)
+        meanfib = (starvisits['FIBERID']*starvisits['SNR']).sum()/starvisits['SNR'].sum()
+        sigfib = starvisits['FIBERID'].std(ddof=1)
     else:
-        meanfib = starvisits['fiberid'][0]
+        meanfib = starvisits['FIBERID'][0]
         sigfib = 0.0
     startab['meanfib'] = meanfib
     startab['sigfib'] = sigfib
@@ -343,7 +343,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Average Doppler values for this star
     if len(visits)>0:
         visits = np.array(visits)
-        gdrv, = np.where((starvisits['starflag'][visits] & starmask.getval('RV_REJECT')) == 0)
+        gdrv, = np.where((starvisits['STARFLAG'][visits] & starmask.getval('RV_REJECT')) == 0)
         ngdrv = len(gdrv)
         if ngdrv>0:
             startab['ngoodrvs'] = ngdrv
