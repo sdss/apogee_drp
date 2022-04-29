@@ -281,14 +281,15 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         # Flag visits with suspect RVs
         if starvisits['rv_teff'][vind] < 6000:
             bd_diff = 10
+            if starvisits['rv_logg'][vind] > 3.8: bd_diff = 20
         else:
-            bd_diff = 50.
+            bd_diff = 50
         print(np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]))
         if (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > bd_diff) :
             starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
         elif (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > 0) :
             starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
 
     # Set STARFLAGS for the visits (successful and failed ones)
     for i in range(len(starvisits)):
@@ -329,7 +330,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         visits = np.array(visits)
         gdrv, = np.where((starvisits['starflag'][visits] & starmask.getval('RV_REJECT')) == 0)
         ngdrv = len(gdrv)
-        import pdb; pdb.set_trace()
         if ngdrv>0:
             startab['ngoodrvs'] = ngdrv
             try: startab['n_components'] = starvisits['n_components'][gdrv].max()
