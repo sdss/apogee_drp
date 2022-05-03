@@ -919,9 +919,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            snbin = 5
-            magmin = '8.8'
-            magmax = '9.2'
+            snbin = 10
+            magmin = '10.8'
+            magmax = '11.2'
 
             medesnrG = np.nanmedian(allsnr['ESNBINS'][:,snbin,1])
             medesnrG = np.nanstd(allsnr['ESNBINS'][:,snbin,1])
