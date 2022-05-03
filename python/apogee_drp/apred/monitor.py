@@ -919,9 +919,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            snbin = 9
-            magmin = '10.4'
-            magmax = '10.8'
+            snbin = 8
+            magmin = '10.0'
+            magmax = '10.4'
 
             medesnrG = np.nanmedian(allsnr['ESNBINS'][:,snbin,1])
             medesnrG = np.nanstd(allsnr['ESNBINS'][:,snbin,1])
@@ -963,6 +963,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 plate, = np.where(xvals < 59500)
                 fpsi, = np.where(xvals > 59500)
+                print('  snbin = ' + str(snbin))
                 print('  S/N Plate (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[plate]),3)))
                 print('  S/N FPS (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
                 print('  Ratio (' + chip + '): ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]) / np.nanmedian(yvals[plate]),3)))
