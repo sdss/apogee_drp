@@ -960,11 +960,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 xvals = allsnrg['JD']
                 yvals = (allsnrg['MEDSNBINS'][:, snbin, 2-ichip]) / (allsnrg['EXPTIME'] / 60)
 
+
                 plate, = np.where(xvals < 59500)
                 fpsi, = np.where(xvals > 59500)
-                print('  S/N Plate:  ' + str("%.3f" % round(np.nanmedian(yvals[plate]),3)))
-                print('  S/N FPS:  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
-                print('  Ratio: ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]) / np.nanmedian(yvals[plate]),3)))
+                print('  S/N Plate (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[plate]),3)))
+                print('  S/N FPS (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
+                print('  Ratio (' + chip + '): ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]) / np.nanmedian(yvals[plate]),3)))
 
                 #pdb.set_trace()
                 #if ichip == 0: pdb.set_trace()
