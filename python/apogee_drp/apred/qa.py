@@ -1402,35 +1402,22 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         hmagarr = plSum2['HMAG'][notsky]
 
         x = plSum2['HMAG'][notsky]
-        y1 = np.nanmean(plSum2['SN'][notsky,:,0],axis=1)
-        y2 = np.nanmean(plSum2['SN'][notsky,:,1],axis=1)
-        y3 = np.nanmean(plSum2['SN'][notsky,:,2],axis=1)
-
-        pdb.set_trace()
-
-        ax2.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
-        if ntelluric>0:
-            x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,ii,1]
-            ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
-            ax2.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
-            ymin = np.min([yminsci,ymintel])
-            ymax = np.max([ymaxsci,ymaxtel])
+        if n_exposures == 1:
+            tmp = np.squeeze(plSum2['SN'][notsky])
+            snrvals = np.nanmean(tmp, axis=1)
         else:
-            ymin = yminsci
-            ymax = ymaxsci
-        if np.isfinite(ymin)==False:
-            ymin = 1.0
-        if np.isfinite(ymax)==False:
-            ymax = 200.0
-        yspan=ymax-ymin
-        ax2.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
+            tmp1 = np.nanmean(plSum2['SN'][notsky,:,0],axis=1)
+            tmp2 = np.nanmean(plSum2['SN'][notsky,:,1],axis=1)
+            tmp3 = np.nanmean(plSum2['SN'][notsky,:,2],axis=1)
+            snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
 
-        # overplot the target S/N line
-        sntarget = 100 * np.sqrt(plSum1['EXPTIME'][ii] / (3.0 * 3600))
+        # target S/N line
+        sntarget = 100 * np.sqrt(np.nansum(plSum1['EXPTIME']) / (3.0 * 3600))
         sntargetmag = 12.2
         x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
-        ax2.plot(x, y, color='k',linewidth=1.5)
+        sndif = snrvals - y
 
+        sc = ax2.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=sndif, cmap='brg', edgecolors='k')
 
         fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
