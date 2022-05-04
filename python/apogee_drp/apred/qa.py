@@ -1425,9 +1425,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 gd, = np.where(tmp == np.nanmin(tmp))
                 sndif[ii] = yarrnew[gd]
 
-            pdb.set_trace()
+            #pdb.set_trace()
 
-            sc = ax2.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=sndif, cmap='brg', edgecolors='k')
+            sc = ax2.scatter(plSum2['Zeta'][notsky], plSum2['Eta'][notsky], marker='o', s=150, c=sndif, cmap='brg', edgecolors='k')
 
         fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
