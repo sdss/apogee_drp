@@ -1415,6 +1415,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         sntarget = 100 * np.sqrt(np.nansum(plSum1['EXPTIME']) / (3.0 * 3600))
         sntargetmag = 12.2
         x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
+
+        pdb.set_trace()
         sndif = snrvals - y
 
         sc = ax2.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=sndif, cmap='brg', edgecolors='k')
