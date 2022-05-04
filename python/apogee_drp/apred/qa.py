@@ -1286,7 +1286,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             yarrnew = theta[1] + theta[0] * xarrnew
             diff = np.zeros(ngd)
             for q in range(ngd):
-                tmp = np.absolute(Vsum['SNR'][gd][q] - yarrnew
+                tmp = np.abs(Vsum['SNR'][gd][q] - yarrnew)
                 gd, = np.where(tmp == np.nanmin(tmp))
                 diff[q] = tmp[gd][0]
             pdb.set_trace()
