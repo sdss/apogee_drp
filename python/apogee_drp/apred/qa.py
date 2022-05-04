@@ -1460,7 +1460,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 pp, = np.where(hmdif == np.nanmin(hmdif))
                 diff[q] = snrvals[q] - 10**yarrnew[pp][0]
 
-            pdb.set_trace()
+            #pdb.set_trace()
             x = plSum2['Zeta'][notsky][gd]
             y = plSum2['Eta'][notsky][gd]
             sc = ax2.scatter(x, y, marker='o', s=100, c=diff, cmap='seismic', edgecolors='k', vmin=-50, vmax=50)
