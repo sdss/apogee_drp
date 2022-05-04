@@ -1284,7 +1284,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             gd, = np.where((hmagarr > 0) & (hmagarr < 11) & (np.isnan(Vsum['SNR']) == False))
             ngd = len(gd)
             theta = np.polyfit(hmagarr[gd], np.log10(Vsum['SNR'][gd]), 1)
-            xarrnew = np.linspace(np.nanmin(hmagarr[gd]), np.nanmax(hmagarr), 5000)
+            xarrnew = np.linspace(np.nanmin(5, 15, 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
             diff = np.zeros(ngd)
             for q in range(ngd):
@@ -1294,15 +1294,11 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 diff[q] = Vsum['SNR'][gd][q] - 10**yarrnew[pp][0]
             pp, = np.where(diff > -np.nanstd(diff))
             theta = np.polyfit(hmagarr[gd][pp], np.log10(Vsum['SNR'][gd][pp]), 1)
-            xarrnew = np.linspace(np.nanmin(hmagarr[gd]), np.nanmax(hmagarr), 5000)
+            xarrnew = np.linspace(5, 15, 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
             #yarrnew = theta[2] + theta[1] * pow(xarrnew, 1) + theta[0] * pow(xarrnew, 2)
 
-            #pdb.set_trace()
-
             ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
-
-            #pdb.set_trace()
 
             ax.set_xlim(xmin,xmax)
             ax.set_ylim(1,1200)
@@ -1425,7 +1421,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         ax2.tick_params(axis='both',which='both',width=axwidth)
         ax2.set_xlabel(r'Zeta (deg.)')
 
-        notsky, = np.where((plSum2['HMAG'] > 0) & (plSum2['HMAG'] < 30))
+        notsky, = np.where((plSum2['HMAG'] > 0) & (plSum2['HMAG'] < 11))
         if len(notsky) > 0:
             hmagarr = plSum2['HMAG'][notsky]
             snarr = plSum2['SN'][notsky]
@@ -1439,31 +1435,29 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
                 #snrvals = snarr[:,0,1]
 
-            # target S/N line
-            #sntarget = 100 * np.sqrt(plSum1['EXPTIME'][0] / (3.0 * 3600))
-            #sntargetmag = 12.2
-            #xpts = [sntargetmag - 10, sntargetmag + 2.5];    ypts = [sntarget * 100, sntarget / np.sqrt(10)]
-            #coefficients = np.polyfit(xpts, ypts, 1)
-            #polynomial = np.poly1d(coefficients)
-            #xarrnew = np.linspace(min(xpts), max(xpts), 5000)
-            #yarrnew = polynomial(xarrnew)
-            #sndif = np.zeros(len(notsky))
-            #for ii in range(len(notsky)):
-            #    tmp = np.abs(hmagarr[ii] - xarrnew)
-            #    gd, = np.where(tmp == np.nanmin(tmp))
-            #    sndif[ii] = snrvals[ii] - yarrnew[gd][0]
+            theta = np.polyfit(hmagarr, np.log10(snrvals), 1)
+            xarrnew = np.linspace(np.nanmin(5, 15, 5000)
+            yarrnew = theta[1] + theta[0] * xarrnew
+            diff = np.zeros(len(notsky))
+            for q in range(len(notsky)):
+                hmdif = np.absolute(hmagarr[q] - xarrnew)
+                pp, = np.where(hmdif == np.nanmin(hmdif))
+                diff[q] = snrvals[q] - 10**yarrnew[pp][0]
+            pp, = np.where(diff > -np.nanstd(diff))
+            theta = np.polyfit(hmagarr[pp], np.log10(snrvals[pp]), 1)
+            xarrnew = np.linspace(5, 15, 5000)
+            yarrnew = theta[1] + theta[0] * xarrnew
+            #yarrnew = theta[2] + theta[1] * pow(xarrnew, 1) + theta[0] * pow(xarrnew, 2)
 
-            coefficients = np.polyfit(hmagarr, snrvals, 1)
-            xarrnew = np.linspace(np.nanmin(hmagarr), np.nanmax(hmagarr), 5000)
-            polynomial = np.poly1d(coefficients)
-            yarrnew = polynomial(xarrnew)
-            sndif = np.zeros(len(notsky))
-            for ii in range(len(notsky)):
-                tmp = np.abs(hmagarr[ii] - xarrnew)
-                gd, = np.where(tmp == np.nanmin(tmp))
-                sndif[ii] = snrvals[ii] - yarrnew[gd][0]
+            #ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
 
-            sc = ax2.scatter(plSum2['Zeta'][notsky], plSum2['Eta'][notsky], marker='o', s=100, c=sndif, cmap='seismic', edgecolors='k')
+            diff = np.zeros(len(notsky))
+            for q in range(len(notsky)):
+                hmdif = np.absolute(hmagarr[q] - xarrnew)
+                pp, = np.where(hmdif == np.nanmin(hmdif))
+                diff[q] = snrvals[q] - 10**yarrnew[pp][0]
+
+            sc = ax2.scatter(plSum2['Zeta'][notsky], plSum2['Eta'][notsky], marker='o', s=100, c=diff, cmap='seismic', edgecolors='k')
 
             ax1_divider = make_axes_locatable(ax2)
             cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
