@@ -1281,6 +1281,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
+            gd, = np.where((hmagarr > 0) & (hmagarr < 11) & (np.isnan(Vsum['SNR']) == False))
             theta = np.polyfit(hmagarr[gd], np.log10(Vsum['SNR'][gd]), 1)
             xarrnew = np.linspace(np.nanmin(hmagarr[gd]), np.nanmax(hmagarr[gd]), 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
