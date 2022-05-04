@@ -1410,8 +1410,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 #tmp2 = np.nanmean(snarr[:,:,1],axis=1)
                 #tmp3 = np.nanmean(snarr[:,:,2],axis=1)
                 #snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
-                snrvals = tmp1
-
+                snrvals = snarr[:,0,1]
+            pdb.set_trace()
             # target S/N line
             sntarget = 100 * np.sqrt(plSum1['EXPTIME'][0] / (3.0 * 3600))
             sntargetmag = 12.2
