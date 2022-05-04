@@ -1406,13 +1406,14 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 tmp = np.squeeze(snarr)
                 snrvals = np.nanmean(tmp, axis=1)
             else:
-                tmp1 = np.nanmean(snarr[:,:,0],axis=1)
-                tmp2 = np.nanmean(snarr[:,:,1],axis=1)
-                tmp3 = np.nanmean(snarr[:,:,2],axis=1)
-                snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
+                tmp1 = np.nanmean(snarr[:,0,1],axis=1)
+                #tmp2 = np.nanmean(snarr[:,:,1],axis=1)
+                #tmp3 = np.nanmean(snarr[:,:,2],axis=1)
+                #snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
+                snrvals = tmp1
 
             # target S/N line
-            sntarget = 100 * np.sqrt(np.nansum(plSum1['EXPTIME']) / (3.0 * 3600))
+            sntarget = 100 * np.sqrt(plSum1['EXPTIME'][0] / (3.0 * 3600))
             sntargetmag = 12.2
             xpts = [sntargetmag - 10, sntargetmag + 2.5];    ypts = [sntarget * 100, sntarget / np.sqrt(10)]
             coefficients = np.polyfit(xpts, ypts, 1)
