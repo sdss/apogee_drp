@@ -1412,7 +1412,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
 
             # target S/N line
-            sntarget = 100 * np.sqrt(np.nansum(plSum1['EXPTIME']) / (3.0 * 3600))
+            sntarget = 100 * np.sqrt(plSum1['EXPTIME'] / (3.0 * 3600))
             sntargetmag = 12.2
             xpts = [sntargetmag - 10, sntargetmag + 2.5];    ypts = [sntarget * 100, sntarget / np.sqrt(10)]
             coefficients = np.polyfit(xpts, ypts, 1)
