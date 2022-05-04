@@ -1399,27 +1399,35 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         ax2.set_xlabel(r'Zeta (deg.)')
 
         notsky, = np.where((plSum2['HMAG'] > 0) & (plSum2['HMAG'] < 30))
-        hmagarr = plSum2['HMAG'][notsky]
+        if len(notsky) > 0:
+            hmagarr = plSum2['HMAG'][notsky]
+            snarr = plSum2['SN'][notsky]
+            if n_exposures == 1:
+                tmp = np.squeeze(sn)
+                snrvals = np.nanmean(tmp, axis=1)
+            else:
+                tmp1 = np.nanmean(sn[:,:,0],axis=1)
+                tmp2 = np.nanmean(sn[:,:,1],axis=1)
+                tmp3 = np.nanmean(sn[:,:,2],axis=1)
+                snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
 
-        x = plSum2['HMAG'][notsky]
-        if n_exposures == 1:
-            tmp = np.squeeze(plSum2['SN'][notsky])
-            snrvals = np.nanmean(tmp, axis=1)
-        else:
-            tmp1 = np.nanmean(plSum2['SN'][notsky,:,0],axis=1)
-            tmp2 = np.nanmean(plSum2['SN'][notsky,:,1],axis=1)
-            tmp3 = np.nanmean(plSum2['SN'][notsky,:,2],axis=1)
-            snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
+            # target S/N line
+            sntarget = 100 * np.sqrt(np.nansum(plSum1['EXPTIME']) / (3.0 * 3600))
+            sntargetmag = 12.2
+            xpts = [sntargetmag - 10, sntargetmag + 2.5];    ypts = [sntarget * 100, sntarget / np.sqrt(10)]
+            coefficients = np.polyfit(xpts, ypts, 1)
+            polynomial = np.poly1d(coefficients)
+            xarrnew = np.linspace(min(xpts), max(xpts), 5000)
+            yarrnew = polynomial(xarrnew)
+            sndif = np.zeros(len(notsky))
+            for ii in range(len(notsky)):
+                tmp = np.abs(hmagarr[ii] - xarrnew)
+                gd, = np.where(tmp == np.nanmin(tmp))
+                sndif[ii] = yarrnew[gd]
 
-        # target S/N line
-        sntarget = 100 * np.sqrt(np.nansum(plSum1['EXPTIME']) / (3.0 * 3600))
-        sntargetmag = 12.2
-        x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
+            pdb.set_trace()
 
-        pdb.set_trace()
-        sndif = snrvals - y
-
-        sc = ax2.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=sndif, cmap='brg', edgecolors='k')
+            sc = ax2.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=sndif, cmap='brg', edgecolors='k')
 
         fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
