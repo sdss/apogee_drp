@@ -1308,6 +1308,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
                                     (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
 
+            telluric, = np.where((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD'))
+
             x = hmagarr[science];  y = Vsum['SNR'][science]
             scicol = 'r'
             telcol = 'dodgerblue'
