@@ -1286,9 +1286,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             yarrnew = theta[1] + theta[0] * xarrnew
             diff = np.zeros(ngd)
             for q in range(ngd):
-                tmp = np.abs(Vsum['SNR'][gd][q] - yarrnew)
-                gd, = np.where(tmp == np.nanmin(tmp))
-                diff[q] = tmp[gd][0]
+                tmp = np.absolute(Vsum['SNR'][gd][q] - yarrnew)
+                pp, = np.where(tmp == np.nanmin(tmp))
+                diff[q] = tmp[pp][0]
             pdb.set_trace()
 
             ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
