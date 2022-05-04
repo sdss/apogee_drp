@@ -1309,10 +1309,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
                                     (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
             else:
-                #telluric, = np.where(bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1))
-                #science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
-                #                    (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
-                science, = np.where((Vsum['OBJTYPE'][gd] != 'SPECTROPHOTO_STD') & (Vsum['OBJTYPE'][gd] != 'HOT_STD') & (Vsum['OBJTYPE'][gd] != 'SKY'))
+                telluric, = np.where(bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1))
+                science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
+                                    (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
+
+            if fps:
+#            science, = np.where((Vsum['OBJTYPE'][gd] != 'SPECTROPHOTO_STD') & (Vsum['OBJTYPE'][gd] != 'HOT_STD') & (Vsum['OBJTYPE'][gd] != 'SKY'))
                 telluric, = np.where((Vsum['OBJTYPE'][gd] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][gd] == 'HOT_STD'))
 
             x = hmagarr[science];  y = Vsum['SNR'][science]
