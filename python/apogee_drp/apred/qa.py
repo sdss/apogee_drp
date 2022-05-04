@@ -1284,11 +1284,11 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             xarrnew = np.linspace(np.nanmin(hmagarr[gd]), np.nanmax(hmagarr[gd]), 5000)
             polynomial = np.poly1d(coefficients)
             yarrnew = polynomial(xarrnew)
-            ax.plot(xarrnew, yarrnew, color='grey', linestyle='dashed')
 
             ax.set_xlim(xmin,xmax)
             ax.set_ylim(1,1200)
             ax.set_yscale('log')
+            ax.plot(xarrnew, yarrnew, color='grey', linestyle='dashed')
 
             if 'apogee' in survey.lower():
                 telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
