@@ -1265,7 +1265,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 hmagarr = Vsum['HMAG']
             else:
                 hmagarr = Vsum['H']
-            gd, = np.where((hmagarr > 0) & (hmagarr < 20))
+            gd, = np.where((hmagarr > 0) & (hmagarr < 20) & (np.isnan(Vsum['SNR']) == False))
             try:
                 minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd])
             except:
@@ -1280,7 +1280,6 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
-            pdb.set_trace()
             coefficients = np.polyfit(hmagarr[gd], Vsum['SNR'][gd], 1)
             xarrnew = np.linspace(np.nanmin(hmagarr[gd]), np.nanmax(hmagarr[gd]), 5000)
             polynomial = np.poly1d(coefficients)
