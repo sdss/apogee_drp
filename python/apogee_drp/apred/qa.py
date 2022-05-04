@@ -1286,7 +1286,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             yarrnew = theta[1] + theta[0] * xarrnew
             diff = np.zeros(ngd)
             for q in range(ngd):
-                hmdif = np.absolute(hmagarr[gd][q] - xarrnew[gd])
+                hmdif = np.absolute(hmagarr[gd][q] - xarrnew)
                 #tmp = np.absolute(Vsum['SNR'][gd][q] - 10**yarrnew)
                 pp, = np.where(hmdif == np.nanmin(hmdif))
                 diff[q] = Vsum['SNR'][gd][q] - 10**yarrnew[pp][0]
