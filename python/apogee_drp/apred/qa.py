@@ -1280,12 +1280,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
-            theta = np.polyfit(hmagarr[gd], Vsum['SNR'][gd], 1)
+            theta = np.polyfit(hmagarr[gd], np.log10(Vsum['SNR'][gd]), 1)
             xarrnew = np.linspace(np.nanmin(hmagarr[gd]), np.nanmax(hmagarr[gd]), 5000)
             #polynomial = np.poly1d(coefficients)
             #yarrnew = polynomial(xarrnew)
             yarrnew = theta[1] + theta[0] * xarrnew
-            ax.plot(xarrnew, np.log(yarrnew), color='grey', linestyle='dashed')
+            ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
 
             #pdb.set_trace()
 
