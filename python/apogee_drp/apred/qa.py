@@ -1304,18 +1304,17 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.set_ylim(1,1200)
             ax.set_yscale('log')
 
-            if 'apogee' in survey.lower():
-                telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
-                science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
-                                    (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
-            else:
-                telluric, = np.where(bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1))
-                science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
-                                    (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
+            #if 'apogee' in survey.lower():
+            #    telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
+            #    science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
+            #                        (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
+            #else:
+            #    telluric, = np.where(bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1))
+            #    science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
+            #                        (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
 
-            if fps:
-#            science, = np.where((Vsum['OBJTYPE'][gd] != 'SPECTROPHOTO_STD') & (Vsum['OBJTYPE'][gd] != 'HOT_STD') & (Vsum['OBJTYPE'][gd] != 'SKY'))
-                telluric, = np.where((Vsum['OBJTYPE'][gd] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][gd] == 'HOT_STD'))
+            science, = np.where((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR'))
+            telluric, = np.where((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD'))
 
             x = hmagarr[science];  y = Vsum['SNR'][science]
             scicol = 'r'
@@ -1494,7 +1493,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     flux = load.apFlux(fluxid)
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
-    fiblabs = np.array(['SKY', 'HOT_STD', 'STAR'])
+    fiblabs = np.array(['OBJECT', 'HOT_STD', 'STAR'])
+    if fps: fiblabs = np.array(['SKY', 'HOT_STD', 'STAR'])
 
     pdb.set_trace()
     plotfile = fluxfile.replace('.fits', '.png').replace('Flux', 'FibLoc')
