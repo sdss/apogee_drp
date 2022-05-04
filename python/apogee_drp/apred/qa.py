@@ -1282,7 +1282,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
             theta = np.polyfit(hmagarr[gd], Vsum['SNR'][gd], 1)
             xarrnew = np.linspace(np.nanmin(hmagarr[gd]), np.nanmax(hmagarr[gd]), 5000)
-            polynomial = np.poly1d(coefficients)
+            #polynomial = np.poly1d(coefficients)
             #yarrnew = polynomial(xarrnew)
             yarrnew = theta[1] + theta[0] * xarrnew
             ax.plot(xarrnew, yarrnew, color='grey', linestyle='dashed')
