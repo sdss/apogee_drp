@@ -1421,7 +1421,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         ax2.tick_params(axis='both',which='both',width=axwidth)
         ax2.set_xlabel(r'Zeta (deg.)')
 
-        notsky, = np.where((plSum2['HMAG'] > 0) & (plSum2['HMAG'] < 11))
+        notsky, = np.where((plSum2['HMAG'] > 5) & (plSum2['HMAG'] < 15) & (np.isnan(plSum2['HMAG']) == False))
         if len(notsky) > 0:
             hmagarr = plSum2['HMAG'][notsky]
             snarr = plSum2['SN'][notsky]
@@ -1440,25 +1440,33 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             hmagarr = hmagarr[gd]
             snrvals = snrvals[gd]
 
-            theta = np.polyfit(hmagarr, np.log10(snrvals), 1)
+            gd1, = np.where(hmagarr < 11.5)
+            hmag1 = hmagarr[gd1]
+            sn1 = snrvals[gd1]
+            ngd1 = len(gd1)
+
+            theta = np.polyfit(hmag1, np.log10(sn1), 1)
             xarrnew = np.linspace(5, 15, 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
-            diff = np.zeros(ngd)
-            for q in range(ngd):
-                hmdif = np.absolute(hmagarr[q] - xarrnew)
+            diff = np.zeros(ngd1)
+            for q in range(ngd1):
+                hmdif = np.absolute(hmag1[q] - xarrnew)
                 pp, = np.where(hmdif == np.nanmin(hmdif))
-                diff[q] = snrvals[q] - 10**yarrnew[pp][0]
-            pp, = np.where(diff > -np.nanstd(diff))
-            theta = np.polyfit(hmagarr[pp], np.log10(snrvals[pp]), 1)
+                diff[q] = sn1[q] - 10**yarrnew[pp][0]
+            gd2, = np.where(diff > -np.nanstd(diff))
+            ngd2 = len(gd2)
+            hmag2 = hmag1[gd2]
+            sn2 = sn1[gd2]
+            theta = np.polyfit(hmag2, np.log10(sn2), 1)
             xarrnew = np.linspace(5, 15, 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
-            diff = np.zeros(len(pp))
-            for q in range(len(pp)):
-                hmdif = np.absolute(hmagarr[pp][q] - xarrnew)
+            diff = np.zeros(ngd2)
+            for q in range(ngd2):
+                hmdif = np.absolute(hmag2[q] - xarrnew)
                 pp1, = np.where(hmdif == np.nanmin(hmdif))
-                diff[q] = snrvals[pp][q] - 10**yarrnew[pp1][0]
-            pp2, = np.where(diff > -np.nanstd(diff))
-            theta = np.polyfit(hmagarr[pp][pp2], np.log10(snrvals[pp][pp2]), 1)
+                diff[q] = sn2[q] - 10**yarrnew[pp1][0]
+            gd3, = np.where(diff > -np.nanstd(diff))
+            theta = np.polyfit(hmag2[gd3], np.log10(sn2[gd3]), 1)
             xarrnew = np.linspace(5, 15, 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
             diff = np.zeros(ngd)
