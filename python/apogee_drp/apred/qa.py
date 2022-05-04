@@ -1403,12 +1403,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             hmagarr = plSum2['HMAG'][notsky]
             snarr = plSum2['SN'][notsky]
             if n_exposures == 1:
-                tmp = np.squeeze(sn)
+                tmp = np.squeeze(snarr)
                 snrvals = np.nanmean(tmp, axis=1)
             else:
-                tmp1 = np.nanmean(sn[:,:,0],axis=1)
-                tmp2 = np.nanmean(sn[:,:,1],axis=1)
-                tmp3 = np.nanmean(sn[:,:,2],axis=1)
+                tmp1 = np.nanmean(snarr[:,:,0],axis=1)
+                tmp2 = np.nanmean(snarr[:,:,1],axis=1)
+                tmp3 = np.nanmean(snarr[:,:,2],axis=1)
                 snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
 
             # target S/N line
