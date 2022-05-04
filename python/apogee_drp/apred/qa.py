@@ -1287,7 +1287,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             yarrnew = theta[1] + theta[0] * xarrnew
             ax.plot(xarrnew, np.log(yarrnew), color='grey', linestyle='dashed')
 
-            pdb.set_trace()
+            #pdb.set_trace()
 
             ax.set_xlim(xmin,xmax)
             ax.set_ylim(1,1200)
