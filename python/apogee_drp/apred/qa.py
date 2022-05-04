@@ -1406,16 +1406,13 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 tmp = np.squeeze(snarr)
                 snrvals = np.nanmean(tmp, axis=1)
             else:
-                tmp1 = np.nanmean(snarr[:,0,:],axis=1)
-                #pdb.set_trace()
-                snrvals = tmp1
-                #tmp2 = np.nanmean(snarr[:,0,1],axis=1)
-                #tmp3 = np.nanmean(snarr[:,0,2],axis=1)
-                #snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
-
+                tmp1 = np.nanmean(snarr[:,0,0],axis=1)
+                tmp2 = np.nanmean(snarr[:,0,1],axis=1)
+                tmp3 = np.nanmean(snarr[:,0,2],axis=1)
+                snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
 
             # target S/N line
-            sntarget = 100 * np.sqrt(plSum1['EXPTIME'][0] / (3.0 * 3600))
+            sntarget = 100 * np.sqrt(np.nansum(plSum1['EXPTIME']) / (3.0 * 3600))
             sntargetmag = 12.2
             xpts = [sntargetmag - 10, sntargetmag + 2.5];    ypts = [sntarget * 100, sntarget / np.sqrt(10)]
             coefficients = np.polyfit(xpts, ypts, 1)
@@ -1426,7 +1423,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             for ii in range(len(notsky)):
                 tmp = np.abs(hmagarr[ii] - xarrnew)
                 gd, = np.where(tmp == np.nanmin(tmp))
-                sndif[ii] = yarrnew[gd]
+                sndif[ii] = snrvals[ii] - yarrnew[gd][0]
 
             sc = ax2.scatter(plSum2['Zeta'][notsky], plSum2['Eta'][notsky], marker='o', s=100, c=sndif, cmap='seismic', edgecolors='k')
 
