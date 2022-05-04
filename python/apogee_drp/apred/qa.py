@@ -1280,6 +1280,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
+            pdb.set_trace()
             coefficients = np.polyfit(hmagarr[gd], Vsum['SNR'][gd], 1)
             xarrnew = np.linspace(np.nanmin(hmagarr[gd]), np.nanmax(hmagarr[gd]), 5000)
             polynomial = np.poly1d(coefficients)
