@@ -1435,6 +1435,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
                 #snrvals = snarr[:,0,1]
 
+            pdb.set_trace()
             theta = np.polyfit(hmagarr, np.log10(snrvals), 1)
             xarrnew = np.linspace(5, 15, 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
