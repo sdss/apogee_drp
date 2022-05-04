@@ -1290,7 +1290,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 #tmp = np.absolute(Vsum['SNR'][gd][q] - 10**yarrnew)
                 pp, = np.where(hmdif == np.nanmin(hmdif))
                 diff[q] = Vsum['SNR'][gd][q] - 10**yarrnew[pp][0]
-            pp, = np.where(np.absolute(diff) < 2*np.nanstd(diff))
+            pp, = np.where(diff < np.nanstd(diff))
             theta = np.polyfit(hmagarr[gd][pp], np.log10(Vsum['SNR'][gd][pp]), 2)
             xarrnew = np.linspace(np.nanmin(hmagarr[gd]), np.nanmax(hmagarr[gd]), 5000)
             #yarrnew = theta[1] + theta[0] * xarrnew
