@@ -1406,9 +1406,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 tmp = np.squeeze(snarr)
                 snrvals = np.nanmean(tmp, axis=1)
             else:
-                tmp1 = np.nanmean(snarr[:,0,0],axis=1)
-                tmp2 = np.nanmean(snarr[:,0,1],axis=1)
-                tmp3 = np.nanmean(snarr[:,0,2],axis=1)
+                tmp1 = np.nanmean(snarr[:,:,0],axis=1)
+                tmp2 = np.nanmean(snarr[:,:,1],axis=1)
+                tmp3 = np.nanmean(snarr[:,:,2],axis=1)
                 snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
 
             # target S/N line
