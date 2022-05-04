@@ -1313,8 +1313,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
                                     (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
 
-            science, = np.where((Vsum['OBJTYPE'][gd] != 'SPECTROPHOTO_STD') & (Vsum['OBJTYPE'][gd] != 'HOT_STD') & (Vsum['OBJTYPE'][gd] != 'SKY'))
-            telluric, = np.where((Vsum['OBJTYPE'][gd] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][gd] == 'HOT_STD'))
+            #science, = np.where((Vsum['OBJTYPE'][gd] != 'SPECTROPHOTO_STD') & (Vsum['OBJTYPE'][gd] != 'HOT_STD') & (Vsum['OBJTYPE'][gd] != 'SKY'))
+            #telluric, = np.where((Vsum['OBJTYPE'][gd] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][gd] == 'HOT_STD'))
 
             x = hmagarr[science];  y = Vsum['SNR'][science]
             scicol = 'r'
