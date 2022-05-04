@@ -1279,7 +1279,13 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 minSNR = 0;  maxSNR = 500
             spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
-            
+
+            coefficients = np.polyfit(hmagarr[gd], Vsum['SNR'][gd], 1)
+            xarrnew = np.linspace(np.nanmin(hmagarr[gd]), np.nanmax(hmagarr[gd]), 5000)
+            polynomial = np.poly1d(coefficients)
+            yarrnew = polynomial(xarrnew)
+            ax.plot(xarrnew, yarrnew, color='grey', linestyle='dashed')
+
             ax.set_xlim(xmin,xmax)
             ax.set_ylim(1,1200)
             ax.set_yscale('log')
@@ -1443,7 +1449,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             cb = colorbar(sc, cax=cax1, orientation="horizontal")
             cax1.xaxis.set_ticks_position("top")
             #cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax2.text(0.5, 1.13, r'S/N $-$ S/N target', ha='center', transform=ax2.transAxes)
+            ax2.text(0.5, 1.13, r'S/N $-$ S/N line fit', ha='center', transform=ax2.transAxes)
 
         fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
