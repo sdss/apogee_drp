@@ -1436,14 +1436,15 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 #snrvals = snarr[:,0,1]
 
             gd, = np.where(snrvals > 0)
+            ngd = len(gd)
             hmagarr = hmagarr[gd]
             snrvals = snrvals[gd]
 
             theta = np.polyfit(hmagarr, np.log10(snrvals), 1)
             xarrnew = np.linspace(5, 15, 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
-            diff = np.zeros(len(notsky))
-            for q in range(len(notsky)):
+            diff = np.zeros(ngd)
+            for q in range(ngd):
                 hmdif = np.absolute(hmagarr[q] - xarrnew)
                 pp, = np.where(hmdif == np.nanmin(hmdif))
                 diff[q] = snrvals[q] - 10**yarrnew[pp][0]
@@ -1453,8 +1454,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             yarrnew = theta[1] + theta[0] * xarrnew
             #yarrnew = theta[2] + theta[1] * pow(xarrnew, 1) + theta[0] * pow(xarrnew, 2)
 
-            diff = np.zeros(len(notsky))
-            for q in range(len(notsky)):
+            diff = np.zeros(ngd)
+            for q in range(ngd):
                 hmdif = np.absolute(hmagarr[q] - xarrnew)
                 pp, = np.where(hmdif == np.nanmin(hmdif))
                 diff[q] = snrvals[q] - 10**yarrnew[pp][0]
