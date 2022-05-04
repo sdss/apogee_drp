@@ -1461,7 +1461,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 diff[q] = snrvals[q] - 10**yarrnew[pp][0]
 
             pdb.set_trace()
-            sc = ax2.scatter(plSum2['Zeta'][notsky][gd], plSum2['Eta'][notsky][gd], marker='o', s=100, c=diff, cmap='seismic', edgecolors='k')
+            x = plSum2['Zeta'][notsky][gd]
+            y = plSum2['Eta'][notsky][gd]
+            sc = ax2.scatter(x, y, marker='o', s=100, c=diff, cmap='seismic', edgecolors='k', vmin=-50, vmax=50)
 
             ax1_divider = make_axes_locatable(ax2)
             cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
@@ -1470,7 +1472,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
             ax2.text(0.5, 1.13, r'S/N $-$ S/N line fit', ha='center', transform=ax2.transAxes)
 
-        fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
+        fig.subplots_adjust(left=0.035,right=0.99,bottom=0.095,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
         
