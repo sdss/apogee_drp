@@ -1329,13 +1329,13 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(33,10))
+        fig=plt.figure(figsize=(33,8))
         plotrad = 1.6
 
         for ichip in range(nchips):
             chip = chips[ichip]
 
-            ax = plt.subplot2grid((1,nchips+1), (0,ichip))
+            ax = plt.subplot2grid((1,nchips+2), (0,ichip))
             ax.set_xlim(-plotrad, plotrad)
             ax.set_ylim(-plotrad, plotrad)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
@@ -1363,7 +1363,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             cax.minorticks_on()
             ax.text(0.5, 1.13, r'Dome Flat Throughput',ha='center', transform=ax.transAxes)
 
-        ax1 = plt.subplot2grid((1,nchips+1), (0,nchips))
+        ax1 = plt.subplot2grid((1,nchips+2), (0,nchips))
         ax1.set_xlim(-1.6,1.6)
         ax1.set_ylim(-1.6,1.6)
         ax1.axes.yaxis.set_ticklabels([])
@@ -1384,6 +1384,53 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         cax1.xaxis.set_ticks_position("top")
         cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.text(0.5, 1.13, r'MTP #', ha='center', transform=ax1.transAxes)
+
+        ax2 = plt.subplot2grid((1,nchips+2), (0,nchips+1))
+        ax2.set_xlim(-1.6,1.6)
+        ax2.set_ylim(-1.6,1.6)
+        ax2.axes.yaxis.set_ticklabels([])
+        ax2.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax2.yaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax2.minorticks_on()
+        ax2.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax2.tick_params(axis='both',which='major',length=axmajlen)
+        ax2.tick_params(axis='both',which='minor',length=axminlen)
+        ax2.tick_params(axis='both',which='both',width=axwidth)
+        ax2.set_xlabel(r'Zeta (deg.)')
+
+        notsky, = np.where((plSum2['HMAG'] > 0) & (plSum2['HMAG'] < 30))
+        hmagarr = plSum2['HMAG'][notsky]
+
+        x = plSum2['HMAG'][notsky]
+        y1 = np.nanmean(plSum2['SN'][notsky,:,0],axis=1)
+        y2 = np.nanmean(plSum2['SN'][notsky,:,1],axis=1)
+        y3 = np.nanmean(plSum2['SN'][notsky,:,2],axis=1)
+
+        pdb.set_trace()
+
+        ax2.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
+        if ntelluric>0:
+            x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,ii,1]
+            ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
+            ax2.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
+            ymin = np.min([yminsci,ymintel])
+            ymax = np.max([ymaxsci,ymaxtel])
+        else:
+            ymin = yminsci
+            ymax = ymaxsci
+        if np.isfinite(ymin)==False:
+            ymin = 1.0
+        if np.isfinite(ymax)==False:
+            ymax = 200.0
+        yspan=ymax-ymin
+        ax2.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
+
+        # overplot the target S/N line
+        sntarget = 100 * np.sqrt(plSum1['EXPTIME'][ii] / (3.0 * 3600))
+        sntargetmag = 12.2
+        x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
+        ax2.plot(x, y, color='k',linewidth=1.5)
+
 
         fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
@@ -1882,7 +1929,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     db = apogeedb.DBSession()
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
     vcatl = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
-    #pdb.set_trace()
+    db.close()
 
     # Loop over the fibers
     for j in range(300):
