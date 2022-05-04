@@ -1285,7 +1285,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #polynomial = np.poly1d(coefficients)
             #yarrnew = polynomial(xarrnew)
             yarrnew = theta[1] + theta[0] * xarrnew
-            ax.plot(xarrnew, yarrnew, color='grey', linestyle='dashed')
+            ax.plot(xarrnew, np.log(yarrnew), color='grey', linestyle='dashed')
 
             pdb.set_trace()
 
