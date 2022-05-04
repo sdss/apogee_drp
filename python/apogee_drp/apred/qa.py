@@ -1407,7 +1407,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 snrvals = np.nanmean(tmp, axis=1)
             else:
                 tmp1 = np.nanmean(snarr[:,0,:],axis=1)
-                pdb.set_trace()
+                #pdb.set_trace()
+                snrvals = tmp1
                 #tmp2 = np.nanmean(snarr[:,0,1],axis=1)
                 #tmp3 = np.nanmean(snarr[:,0,2],axis=1)
                 #snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
