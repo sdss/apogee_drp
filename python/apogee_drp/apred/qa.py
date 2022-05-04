@@ -1452,8 +1452,15 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             theta = np.polyfit(hmagarr[pp], np.log10(snrvals[pp]), 1)
             xarrnew = np.linspace(5, 15, 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
-            #yarrnew = theta[2] + theta[1] * pow(xarrnew, 1) + theta[0] * pow(xarrnew, 2)
-
+            diff = np.zeros(len(pp))
+            for q in range(len(pp)):
+                hmdif = np.absolute(hmagarr[pp][q] - xarrnew)
+                pp1, = np.where(hmdif == np.nanmin(hmdif))
+                diff[q] = snrvals[pp][q] - 10**yarrnew[pp1][0]
+            pp2, = np.where(diff > -np.nanstd(diff))
+            theta = np.polyfit(hmagarr[pp][pp2], np.log10(snrvals[pp][pp2]), 1)
+            xarrnew = np.linspace(5, 15, 5000)
+            yarrnew = theta[1] + theta[0] * xarrnew
             diff = np.zeros(ngd)
             for q in range(ngd):
                 hmdif = np.absolute(hmagarr[q] - xarrnew)
@@ -1463,7 +1470,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #pdb.set_trace()
             x = plSum2['Zeta'][notsky][gd]
             y = plSum2['Eta'][notsky][gd]
-            sc = ax2.scatter(x, y, marker='o', s=100, c=diff, cmap='seismic', edgecolors='k', vmin=-50, vmax=50)
+            sc = ax2.scatter(x, y, marker='o', s=100, c=diff, cmap='seismic', edgecolors='k', vmin=-100, vmax=20)
 
             ax1_divider = make_axes_locatable(ax2)
             cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
