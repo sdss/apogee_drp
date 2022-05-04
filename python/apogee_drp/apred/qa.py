@@ -1435,7 +1435,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
                 #snrvals = snarr[:,0,1]
 
-            pdb.set_trace()
+            gd, = np.where(snrvals > 0)
+            hmagarr = hmagarr[gd]
+            snrvals = snrvals[gd]
+
             theta = np.polyfit(hmagarr, np.log10(snrvals), 1)
             xarrnew = np.linspace(5, 15, 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
@@ -1449,8 +1452,6 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             xarrnew = np.linspace(5, 15, 5000)
             yarrnew = theta[1] + theta[0] * xarrnew
             #yarrnew = theta[2] + theta[1] * pow(xarrnew, 1) + theta[0] * pow(xarrnew, 2)
-
-            #ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
 
             diff = np.zeros(len(notsky))
             for q in range(len(notsky)):
