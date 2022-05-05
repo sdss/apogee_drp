@@ -1295,7 +1295,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     theta = np.polyfit(hmag1, np.log10(sn1), 1)
                     xarrnew = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
                     polynomial = np.poly1d(theta)
-                    yarrnew = polynomial(xarrnew)
+                    yarrnew = polynomial(hmag1)
                     yarrnew = theta[1] + theta[0] * xarrnew
                     diff = np.zeros(ngd1)
                     for q in range(ngd1):
@@ -1308,7 +1308,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     sn2 = sn1[gd2]
                     theta = np.polyfit(hmag2, np.log10(sn2), 1)
                     polynomial = np.poly1d(theta)
-                    yarrnew = polynomial(xarrnew)
+                    yarrnew = polynomial(hmag2)
                     #yarrnew = theta[1] + theta[0] * xarrnew
                     diff = np.zeros(ngd2)
                     for q in range(ngd2):
@@ -1316,13 +1316,16 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                         pp1, = np.where(hmdif == np.nanmin(hmdif))
                         diff[q] = sn2[q] - 10**yarrnew[pp1][0]
                     gd3, = np.where(diff > -np.nanstd(diff))
-                    theta = np.polyfit(hmag2[gd3], np.log10(sn2[gd3]), 1)
+                    ngd3 = len(gd3)
+                    hmag3 = hmag2[gd3]
+                    sn3 = sn2[gd3]
+                    theta = np.polyfit(hmag3, np.log10(sn3), 1)
                     polynomial = np.poly1d(theta)
-                    yarrnew = polynomial(xarrnew)
+                    yarrnew = polynomial(hmag3)
                     #yarrnew = theta[1] + theta[0] * xarrnew
                     #pdb.set_trace()
 
-                ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
+                ax.plot(hmag3, 10**yarrnew, color='grey', linestyle='dashed')
             except:
                 pass
 
