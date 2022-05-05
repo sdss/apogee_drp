@@ -1282,19 +1282,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
             try:
-                notsky, = np.where((plSum2['HMAG'] > 5) & (plSum2['HMAG'] < 15) & (np.isnan(plSum2['HMAG']) == False))
+                notsky, = np.where((Vsum['HMAG'] > 5) & (plSum2[Vsum['HMAG']'HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False))
                 if i == 0:
-                    hmagarr = plSum2['HMAG'][notsky]
-                    snarr = plSum2['SN'][notsky]
-                    if n_exposures == 1:
-                        tmp = np.squeeze(snarr)
-                        snrvals = np.nanmean(tmp, axis=1)
-                    else:
-                        tmp1 = np.nanmean(snarr[:,:,1],axis=1)
-                        tmp2 = np.nanmean(snarr[:,:,1],axis=1)
-                        tmp3 = np.nanmean(snarr[:,:,2],axis=1)
-                        snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
-                        #snrvals = snarr[:,0,1]
+                    hmagarr = Vsum['HMAG'][notsky]
+                    snrvals = Vsum['SN'][notsky]
 
                     gd, = np.where(snrvals > 0)
                     ngd = len(gd)
