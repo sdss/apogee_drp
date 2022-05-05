@@ -151,14 +151,14 @@ def getTputScatter(niter=3, sigclip=-1):
             polynomial1 = np.poly1d(np.polyfit(hm1, np.log10(sn1), 1))
             yarrnew1 = polynomial1(hm1)
             diff1 = np.log10(sn1) - yarrnew1
-            gd1, = np.where(diff1 > -sigclip*np.nanstd(diff1))
+            gd1, = np.where(diff1 > sigclip*np.nanstd(diff1))
             # Second pass at fitting line to S/N as function of Hmag
             hm2 = hm1[gd1]
             sn2 = sn1[gd1]
             polynomial2 = np.poly1d(np.polyfit(hm2, np.log10(sn2), 1))
             yarrnew2 = polynomial2(hm2)
             diff2 = np.log10(sn2) - yarrnew2
-            gd2, = np.where(diff2 > -sigclip*np.nanstd(diff2))
+            gd2, = np.where(diff2 > sigclip*np.nanstd(diff2))
             # Final pass at fitting line to S/N as function of Hmag
             hm3 = hm2[gd2]
             sn3 = sn2[gd2]
