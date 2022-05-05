@@ -1466,10 +1466,18 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
             telluric, = np.where((Vsum['OBJTYPE'][notsky] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][notsky] == 'HOT_STD'))
             if len(telluric) > 0:
-                sc = ax2.scatter(zeta[telluric], eta[telluric], marker='o', s=100, c=ratio[telluric], cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75)
+                x = zeta[telluric]
+                y = eta[telluric]
+                c = ratio[telluric]
+                l = 'telluric'
+                sc = ax2.scatter(x, y, marker='o', s=100, c=c, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75, label=l)
             science, = np.where((Vsum['OBJTYPE'][notsky] == 'OBJECT') | (Vsum['OBJTYPE'][notsky] == 'STAR'))
             if len(science) > 0:
-                sc = ax2.scatter(zeta[science], eta[science], marker='*', s=250, c=ratio[science], cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75)
+                x = zeta[science]
+                y = eta[science]
+                c = ratio[science]
+                l = 'science'
+                sc = ax2.scatter(x, y, marker='*', s=250, c=c, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75, label=l)
 
             ax1_divider = make_axes_locatable(ax2)
             cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
@@ -1477,6 +1485,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             cax1.xaxis.set_ticks_position("top")
             #cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
             ax2.text(0.5, 1.13, r'obs SNR $/$ fit SNR', ha='center', transform=ax2.transAxes)
+            ax2.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
         fig.subplots_adjust(left=0.03,right=0.99,bottom=0.098,top=0.90,hspace=0.09,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
