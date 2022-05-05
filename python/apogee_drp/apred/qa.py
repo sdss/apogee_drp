@@ -1323,7 +1323,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 sn3 = sn2[gd3]
                 theta = np.polyfit(hmag3, np.log10(sn3), 1)
                 polynomial = np.poly1d(theta)
-                yarrnew = polynomial(hmag3)
+                yarrnew = polynomial(xarrnew)
                 #yarrnew = theta[1] + theta[0] * xarrnew
                 #pdb.set_trace()
 
