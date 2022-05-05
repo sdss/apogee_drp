@@ -142,6 +142,8 @@ def getTputScatter(niter=3, sigclip=-1):
     tputSigma = np.zeros(ng)
     tputMad = np.zeros(ng)
 
+    pdb.set_trace()
+
     for iexp in range(5):
         g, = np.where((snAll[iexp] > 0) & (hmagAll > 5) & (hmagAll < 15))
         if len(g) > 10:
