@@ -1283,7 +1283,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
             notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
-                               (Vsum['ON_TARGET']) & (Vsum['OBJTYPE'] != 'none'))
+                               (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
             if len(notsky) > 10:
                 if i == 0:
                     # First pass at fitting line to S/N as function of Hmag
@@ -1432,7 +1432,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
         notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
                            (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
-                           (Vsum['ON_TARGET']) & (Vsum['OBJTYPE'] != 'none'))
+                           (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
         if len(notsky) > 10:
             # First pass at fitting line to S/N as function of Hmag
             hmag1 = Vsum['HMAG'][notsky]
@@ -1460,7 +1460,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 pp, = np.where(hmdif == np.nanmin(hmdif))
                 diff[q] = sn1[q] - 10**yarrnew3[pp][0]
 
-            notsky, = np.where((plSum2['ASSIGNED']) & (plSum2['ON_TARGET']) & (plSum2['OBJTYPE'] != 'SKY'))
+            notsky, = np.where((plSum2['ASSIGNED']) & (plSum2['ON_TARGET']) & (plSum2['VALID']) & (plSum2['OBJTYPE'] != 'SKY'))
             x = plSum2['Zeta'][notsky][::-1]
             y = plSum2['Eta'][notsky][::-1]
             sc = ax2.scatter(x, y, marker='o', s=100, c=diff, cmap='hot', edgecolors='k', vmin=-50, vmax=0)
