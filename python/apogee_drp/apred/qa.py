@@ -1455,15 +1455,20 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
             yarrnew3 = polynomial3(xarrnew3)
             diff = np.zeros(len(notsky))
+            eta = np.zeros(len(notsky))
+            zeta = np.zeros(len(notsky))
             for q in range(len(notsky)):
                 hmdif = np.absolute(hmag1[q] - xarrnew3)
                 pp, = np.where(hmdif == np.nanmin(hmdif))
                 diff[q] = sn1[q] - 10**yarrnew3[pp][0]
+                g, = np.where(Vsum['APOGEE_ID'][notsky][q] == plSum2['TMASS_STYLE'])
+                eta[q] = plSum2['ETA'][g][0]
+                zeta[q] = plSum2['ZETA'][g][0]
 
-            notsky, = np.where((plSum2['ASSIGNED']) & (plSum2['ON_TARGET']) & (plSum2['VALID']) & (plSum2['OBJTYPE'] != 'SKY'))
-            x = plSum2['Zeta'][notsky][::-1]
-            y = plSum2['Eta'][notsky][::-1]
-            sc = ax2.scatter(x, y, marker='o', s=100, c=diff, cmap='hot', edgecolors='k', vmin=-50, vmax=0)
+            #notsky, = np.where((plSum2['ASSIGNED']) & (plSum2['ON_TARGET']) & (plSum2['VALID']) & (plSum2['OBJTYPE'] != 'SKY'))
+            #x = plSum2['Zeta'][notsky][::-1]
+            #y = plSum2['Eta'][notsky][::-1]
+            sc = ax2.scatter(eta, zeta, marker='o', s=100, c=diff, cmap='hot', edgecolors='k', vmin=-50, vmax=0)
 
             ax1_divider = make_axes_locatable(ax2)
             cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
