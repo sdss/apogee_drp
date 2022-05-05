@@ -142,14 +142,12 @@ def getTputScatter(niter=3, sigclip=-1):
     tputSigma = np.zeros(ng)
     tputMad = np.zeros(ng)
 
-    pdb.set_trace()
-
     for iexp in range(5):
-        g, = np.where((snAll[iexp] > 0) & (hmagAll > 5) & (hmagAll < 15))
+        g, = np.where((snAll[iexp] > 0) & (hmagAll[iexp] > 5) & (hmagAll[iexp] < 15))
         if len(g) > 10:
             # First pass at fitting line to S/N as function of Hmag
-            hm1 = hmagAll[g]
-            sn1 = snAll[g]
+            hm1 = hmagAll[iexp][g]
+            sn1 = snAll[iexp][g]
             polynomial1 = np.poly1d(np.polyfit(hm1, np.log10(sn1), 1))
             yarrnew1 = polynomial1(hm1)
             diff1 = np.log10(sn1) - yarrnew1
