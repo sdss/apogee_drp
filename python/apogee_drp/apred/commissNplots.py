@@ -188,6 +188,7 @@ def getTputScatter(niter=3, sigclip=-1):
             p4 = str("%.3f" % round(maddiff,3))
             p5 = str("%.3f" % round(seeingAll[iexp],3))
             p6 = str("%.3f" % round(seczAll[iexp],3))
+            pdb.set_trace()
             p7 = str("%.3f" % round(skyAll[iexp],3))
             p8 = str("%.3f" % round(zeroAll[iexp],3))
             print(p0+Z+p1+Z+p2+Z+p3+Z+p4+Z+p5+Z+p6+Z+p7+Z+p8)
