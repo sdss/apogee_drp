@@ -1351,7 +1351,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             science, = np.where((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR'))
             telluric, = np.where((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD'))
 
-            x = hmagarr[science];  y = Vsum['SNR'][science]
+            x = Vsum['HMAG'][science];  y = Vsum['SNR'][science]
             scicol = 'r'
             telcol = 'dodgerblue'
             if i == 1:
