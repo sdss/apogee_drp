@@ -126,6 +126,8 @@ nmolecules = len(molecules)
 
 ###########################################################################################
 def getTputScatter(niter=3, sigclip=-1):
+    Z = '  '
+
     g, = np.where((allsnr['MJD'] > 56600) & (allsnr['MJD'] < 56750))
     ng = len(g)
     a = allsnr[g]
@@ -144,7 +146,7 @@ def getTputScatter(niter=3, sigclip=-1):
     tputSigma = np.zeros(ng)
     tputMad = np.zeros(ng)
 
-    for iexp in range(ng):
+    for iexp in range(500):
         g, = np.where((snAll[iexp] > 0) & (hmagAll[iexp] > 5) & (hmagAll[iexp] < 15))
         if len(g) > 10:
             # First pass at fitting line to S/N as function of Hmag
@@ -179,7 +181,16 @@ def getTputScatter(niter=3, sigclip=-1):
             madratio = dln.mad(ratio)
             sigdiff = dln.mad(diff)
             maddiff = dln.mad(diff)
-            print(a['sumfile'][iexp]+'  '+str("%.3f" % round(sigratio,3))+'  '+str("%.3f" % round(madratio,3))+'  '+str("%.3f" % round(sigdiff,3))+'  '+str("%.3f" % round(maddiff,3)))
+            p0 = a['sumfile'][iexp]
+            p1 = str("%.3f" % round(sigratio,3))
+            p2 = str("%.3f" % round(madratio,3))
+            p3 = str("%.3f" % round(sigdiff,3))
+            p4 = str("%.3f" % round(maddiff,3))
+            p5 = str("%.3f" % round(seeingAll[iexp],3))
+            p6 = str("%.3f" % round(seczAll[iexp],3))
+            p7 = str("%.3f" % round(skyAll[iexp],3))
+            p8 = str("%.3f" % round(zeroAll[iexp],3))
+            print(p0+Z+p1+Z+p2+Z+p3+Z+p4+Z+p5+Z+p6+Z+p7+Z+p8)
 
     pdb.set_trace()
 
