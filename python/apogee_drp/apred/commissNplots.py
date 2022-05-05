@@ -200,9 +200,9 @@ def getTputScatter(niter=3, sigclip=-1):
             p7 = str("%.3f" % round(np.nanmean(zeroAll[iexp]),3))
             print(p0+Z+p1+Z+p3+Z+p4+Z+p5+Z+p6+Z+p7)
 
-            zero[iexp] = zeroAll[iexp]
+            zero[iexp] = np.nanmean(zeroAll[iexp])
             seeing[iexp] = seeingAll[iexp]
-            secz[iexp] = seeingAll[iexp]
+            secz[iexp] = seczAll[iexp]
             sigR[iexp] = sigratio
             madR[iexp] = madratio
 
