@@ -127,8 +127,64 @@ nmolecules = len(molecules)
 ###########################################################################################
 def getTputScatter(niter=3, sigclip=-1):
     g, = np.where((allsnr['MJD'] > 56600) & (allsnr['MJD'] < 56700))
-    allsnrg = allsnr[g]
+    ng = len(g)
+    a = allsnr[g]
+    hmagAll = a['HMAG']
+    snAll = np.nanmean(a['SNFIBER'], axis=2)
+    seczAll = a['SECZ']
+    seeingAll = a['SEEING']
+    mphaseAll = a['MOONPHASE']
+    mdistAll = a['MOONDIST']
+    exptAll = a['EXPTIME']
+    skyAll = a['SKY']
+    zeroAll = a['SKY']
+
+    tputSigma = np.zeros(ng)
+    tputMad = np.zeros(ng)
+
+    for iexp in range(5):
+        g, = np.where((snAll[iexp] > 0) & (hmagAll > 5) & (hmagAll < 15))
+        if len(g) > 10:
+            # First pass at fitting line to S/N as function of Hmag
+            hm1 = hmagAll[g]
+            sn1 = snAll[g]
+            polynomial1 = np.poly1d(np.polyfit(hm1, np.log10(sn1), 1))
+            yarrnew1 = polynomial1(hm1)
+            diff1 = np.log10(sn1) - yarrnew1
+            gd1, = np.where(diff1 > -sigclip*np.nanstd(diff1))
+            # Second pass at fitting line to S/N as function of Hmag
+            hm2 = hm1[gd1]
+            sn2 = sn1[gd1]
+            polynomial2 = np.poly1d(np.polyfit(hm2, np.log10(sn2), 1))
+            yarrnew2 = polynomial2(hm2)
+            diff2 = np.log10(sn2) - yarrnew2
+            gd2, = np.where(diff2 > -sigclip*np.nanstd(diff2))
+            # Final pass at fitting line to S/N as function of Hmag
+            hm3 = hm2[gd2]
+            sn3 = sn2[gd2]
+            polynomial3 = np.poly1d(np.polyfit(hm3, np.log10(sn3), 1))
+            xarrnew3 = np.linspace(np.nanmin(hm1), np.nanmax(hm1), 5000)
+            yarrnew3 = polynomial3(xarrnew3)
+            ratio = np.zeros(len(g))
+            diff = np.zeros(len(g))
+            for q in range(len(g)):
+                hmdif = np.absolute(hm1[q] - xarrnew3)
+                pp, = np.where(hmdif == np.nanmin(hmdif))
+                ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
+                diff[q] = sn1[q] - 10**yarrnew3[pp][0]
+
+            sigratio = np.nanstd(ratio)
+            madratio = dln.mad(ratio)
+            sigdiff = dln.mad(diff)
+            maddiff = dln.mad(diff)
+            print(a['sumfile'][iexp]+'  '+str("%.3f" % round(sigratio,3))+'  '+str("%.3f" % round(madratio,3))+'  '+str("%.3f" % round(sigdiff,3))+'  '+str("%.3f" % round(maddiff,3)))
+
     pdb.set_trace()
+
+    t1 = Column(name='TPUT_SIGMA', data=tputSigma)
+    table = Table(allsnrg)
+    table.add_column(t1)
+    table.write('tmp.fits', format='fits', overwrite='True')
 
 ###########################################################################################
 def persist1(cmap='brg', vrad=400):
