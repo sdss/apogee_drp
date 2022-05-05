@@ -1453,13 +1453,13 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
             xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
             yarrnew3 = polynomial3(xarrnew3)
-            diff = np.zeros(len(notsky))
+            ratio = np.zeros(len(notsky))
             eta = np.zeros(len(notsky))
             zeta = np.zeros(len(notsky))
             for q in range(len(notsky)):
                 hmdif = np.absolute(hmag1[q] - xarrnew3)
                 pp, = np.where(hmdif == np.nanmin(hmdif))
-                diff[q] = sn1[q] - 10**yarrnew3[pp][0]
+                ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
                 g, = np.where(Vsum['APOGEE_ID'][notsky][q] == plSum2['TMASS_STYLE'])
                 eta[q] = plSum2['ETA'][g][0]
                 zeta[q] = plSum2['ZETA'][g][0]
@@ -1467,14 +1467,14 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #notsky, = np.where((plSum2['ASSIGNED']) & (plSum2['ON_TARGET']) & (plSum2['VALID']) & (plSum2['OBJTYPE'] != 'SKY'))
             #x = plSum2['Zeta'][notsky][::-1]
             #y = plSum2['Eta'][notsky][::-1]
-            sc = ax2.scatter(zeta, eta, marker='o', s=100, c=diff, cmap='CMRmap', edgecolors='k', vmin=-50, vmax=0)
+            sc = ax2.scatter(zeta, eta, marker='o', s=100, c=diff, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1)
 
             ax1_divider = make_axes_locatable(ax2)
             cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
             cb = colorbar(sc, cax=cax1, orientation="horizontal")
             cax1.xaxis.set_ticks_position("top")
             #cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax2.text(0.5, 1.13, r'S/N $-$ S/N line fit', ha='center', transform=ax2.transAxes)
+            ax2.text(0.5, 1.13, r'obs SNR $/$ fit SNR', ha='center', transform=ax2.transAxes)
 
         fig.subplots_adjust(left=0.035,right=0.99,bottom=0.095,top=0.90,hspace=0.09,wspace=0.04)
         plt.savefig(plotsdir+plotfile)
