@@ -1527,8 +1527,16 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             if itype != 0: ax.axes.yaxis.set_ticklabels([])
 
             try:
-                if fps: gd, = np.where((platesum2['objtype'] == fiblabs[itype]) & (platesum2['assigned']))
-                else: gd, = np.where(platesum2['objtype'] == fiblabs[itype])
+                if fps: 
+                    gd, = np.where((platesum2['HMAG'] > 5) & (platesum2['HMAG'] < 15) & (np.isnan(platesum2['HMAG']) == False) & 
+                                   (platesum2['ASSIGNED']) & (platesum2['ON_TARGET']) & (platesum2['VALID']) & 
+                                   (platesum2['OBJTYPE'] == fiblabs[itype]))
+                    if itype == 2:
+                        gd, = np.where((platesum2['ASSIGNED']) & (platesum2['ON_TARGET']) & (platesum2['VALID']) & 
+                                       (platesum2['OBJTYPE'] == fiblabs[itype]))
+
+                else: 
+                    gd, = np.where(platesum2['objtype'] == fiblabs[itype])
                 if len(gd) > 0:
                     x = platesum2['Zeta'][gd]
                     y = platesum2['Eta'][gd]
