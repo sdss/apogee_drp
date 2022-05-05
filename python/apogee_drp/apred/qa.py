@@ -1284,27 +1284,26 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #try:
             notsky, = np.where((Vsum['HMAG'] > 6) & (Vsum['HMAG'] < 13) & (np.isnan(Vsum['HMAG']) == False) & (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0))
             if i == 0:
-                # First pass at fitting line to S/N as function of Hmag
                 xarrnew = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
-
+                # First pass at fitting line to S/N as function of Hmag
                 hmag1 = Vsum['HMAG'][notsky]
                 sn1 = Vsum['SNR'][notsky]
                 polynomial1 = np.poly1d(np.polyfit(hmag1, np.log10(sn1), 1))
                 yarrnew1 = polynomial1(hmag1)
                 diff1 = np.log10(sn1) - yarrnew1
                 gd1, = np.where(diff1 > -np.nanstd(diff1))
+                # Second pass at fitting line to S/N as function of Hmag
                 hmag2 = hmag1[gd1]
                 sn2 = sn1[gd1]
                 polynomial2 = np.poly1d(np.polyfit(hmag2, np.log10(sn2), 1))
                 yarrnew2 = polynomial2(hmag2)
                 diff2 = np.log10(sn2) - yarrnew2
                 gd2, = np.where(diff2 > -np.nanstd(diff2))
+                # Final pass at fitting line to S/N as function of Hmag
                 hmag3 = hmag2[gd2]
                 sn3 = sn2[gd2]
                 polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
                 yarrnew3 = polynomial3(xarrnew)
-                #yarrnew = theta[1] + theta[0] * xarrnew
-                #pdb.set_trace()
 
             ax.plot(xarrnew, 10**yarrnew3, color='grey', linestyle='dashed')
             #except:
