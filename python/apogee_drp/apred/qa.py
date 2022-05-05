@@ -1293,7 +1293,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     ngd1 = len(hmag1)#gd1)
 
                     theta = np.polyfit(hmag1, np.log10(sn1), 1)
-                    xarrnew = np.linspace(6, 13, 5000)
+                    xarrnew = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
                     yarrnew = theta[1] + theta[0] * xarrnew
                     diff = np.zeros(ngd1)
                     for q in range(ngd1):
