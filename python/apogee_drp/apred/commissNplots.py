@@ -125,10 +125,10 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
-def getTputScatter(niter=3, sigclip=-1):
+def getTputScatter(mjd1=59671, mjd2=59702, niter=3, sigclip=-1):
     Z = '  '
 
-    g, = np.where((allsnr['MJD'] > 56600) & (allsnr['MJD'] < 56750))
+    g, = np.where((allsnr['MJD'] > mjd1) & (allsnr['MJD'] < mjd2))
     ng = len(g)
     a = allsnr[g]
     order = np.argsort(a['MJD'])
@@ -147,7 +147,7 @@ def getTputScatter(niter=3, sigclip=-1):
     tputMad = np.zeros(ng)
 
     num = ng
-    num = 500
+    #num = 500
     out = np.empty(num).astype(str)
     zero = np.empty(num)
     seeing = np.empty(num)
