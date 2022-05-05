@@ -1483,14 +1483,14 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     eta[q] = plSum2['ETA'][g][0]
                     zeta[q] = plSum2['ZETA'][g][0]
 
-            telluric, = np.where((eta > 0) & ((Vsum['OBJTYPE'][notsky] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][notsky] == 'HOT_STD')))
+            telluric, = np.where((eta > -900) & ((Vsum['OBJTYPE'][notsky] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][notsky] == 'HOT_STD')))
             if len(telluric) > 0:
                 x = zeta[telluric]
                 y = eta[telluric]
                 c = ratio[telluric]
                 l = 'telluric'
                 sc = ax2.scatter(x, y, marker='o', s=100, c=c, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75, label=l)
-            science, = np.where((eta > 0) & ((Vsum['OBJTYPE'][notsky] == 'OBJECT') | (Vsum['OBJTYPE'][notsky] == 'STAR')))
+            science, = np.where((eta > -900) & ((Vsum['OBJTYPE'][notsky] == 'OBJECT') | (Vsum['OBJTYPE'][notsky] == 'STAR')))
             if len(science) > 0:
                 x = zeta[science]
                 y = eta[science]
