@@ -126,8 +126,8 @@ nmolecules = len(molecules)
 
 ###########################################################################################
 def getTputScatter(niter=3, sigclip=-1):
-    g, = np.where((allsci['MJD'] > 56600) & (allsci['MJD'] < 56700))
-    allscig = allsci[g]
+    g, = np.where((allsnr['MJD'] > 56600) & (allsnr['MJD'] < 56700))
+    allsnrg = allsnr[g]
     pdb.set_trace()
 
 ###########################################################################################
