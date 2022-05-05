@@ -1283,6 +1283,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
             try:
                 notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & (np.isnan(Vsum['SNR']) == False))
+                pdb.set_trace()
                 if i == 0:
                     hmagarr = Vsum['HMAG'][notsky]
                     snrvals = Vsum['SN'][notsky]
