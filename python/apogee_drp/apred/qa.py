@@ -1300,12 +1300,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 #yarrnew = theta[2] + theta[1] * pow(xarrnew, 1) + theta[0] * pow(xarrnew, 2)
 
                 ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
-
-                ax.set_xlim(xmin,xmax)
-                ax.set_ylim(1,1200)
-                ax.set_yscale('log')
             except:
                 pass
+
+            ax.set_xlim(xmin,xmax)
+            ax.set_ylim(1,1200)
+            ax.set_yscale('log')
 
             #if 'apogee' in survey.lower():
             #    telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
