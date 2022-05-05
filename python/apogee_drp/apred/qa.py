@@ -1472,24 +1472,25 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
             yarrnew3 = polynomial3(xarrnew3)
             ratio = np.zeros(len(notsky))
-            eta = np.zeros(len(notsky))
-            zeta = np.zeros(len(notsky))
+            eta = np.full(len(notsky), -999.9)
+            zeta = np.full(len(notsky), -999.9)
             for q in range(len(notsky)):
                 hmdif = np.absolute(hmag1[q] - xarrnew3)
                 pp, = np.where(hmdif == np.nanmin(hmdif))
                 ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
                 g, = np.where(Vsum['APOGEE_ID'][notsky][q] == plSum2['TMASS_STYLE'])
-                eta[q] = plSum2['ETA'][g][0]
-                zeta[q] = plSum2['ZETA'][g][0]
+                if len(g) > 0:
+                    eta[q] = plSum2['ETA'][g][0]
+                    zeta[q] = plSum2['ZETA'][g][0]
 
-            telluric, = np.where((Vsum['OBJTYPE'][notsky] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][notsky] == 'HOT_STD'))
+            telluric, = np.where((eta > 0) & ((Vsum['OBJTYPE'][notsky] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][notsky] == 'HOT_STD')))
             if len(telluric) > 0:
                 x = zeta[telluric]
                 y = eta[telluric]
                 c = ratio[telluric]
                 l = 'telluric'
                 sc = ax2.scatter(x, y, marker='o', s=100, c=c, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75, label=l)
-            science, = np.where((Vsum['OBJTYPE'][notsky] == 'OBJECT') | (Vsum['OBJTYPE'][notsky] == 'STAR'))
+            science, = np.where((eta > 0) & ((Vsum['OBJTYPE'][notsky] == 'OBJECT') | (Vsum['OBJTYPE'][notsky] == 'STAR')))
             if len(science) > 0:
                 x = zeta[science]
                 y = eta[science]
