@@ -1282,7 +1282,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
             try:
-                notsky, = np.where((Vsum['HMAG'] > 5) & (plSum2[Vsum['HMAG']'HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False))
+                notsky, = np.where((Vsum['HMAG'] > 5) & (plSum2[Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & (np.isnan(Vsum['SNR']) == False))
                 if i == 0:
                     hmagarr = Vsum['HMAG'][notsky]
                     snrvals = Vsum['SN'][notsky]
