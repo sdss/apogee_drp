@@ -1281,28 +1281,31 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
-            gd, = np.where((hmagarr > 0) & (hmagarr < 11) & (np.isnan(Vsum['SNR']) == False))
-            ngd = len(gd)
-            theta = np.polyfit(hmagarr[gd], np.log10(Vsum['SNR'][gd]), 1)
-            xarrnew = np.linspace(5, 15, 5000)
-            yarrnew = theta[1] + theta[0] * xarrnew
-            diff = np.zeros(ngd)
-            for q in range(ngd):
-                hmdif = np.absolute(hmagarr[gd][q] - xarrnew)
-                #tmp = np.absolute(Vsum['SNR'][gd][q] - 10**yarrnew)
-                pp, = np.where(hmdif == np.nanmin(hmdif))
-                diff[q] = Vsum['SNR'][gd][q] - 10**yarrnew[pp][0]
-            pp, = np.where(diff > -np.nanstd(diff))
-            theta = np.polyfit(hmagarr[gd][pp], np.log10(Vsum['SNR'][gd][pp]), 1)
-            xarrnew = np.linspace(5, 15, 5000)
-            yarrnew = theta[1] + theta[0] * xarrnew
-            #yarrnew = theta[2] + theta[1] * pow(xarrnew, 1) + theta[0] * pow(xarrnew, 2)
+            try:
+                gd, = np.where((hmagarr > 0) & (hmagarr < 11) & (np.isnan(Vsum['SNR']) == False))
+                ngd = len(gd)
+                theta = np.polyfit(hmagarr[gd], np.log10(Vsum['SNR'][gd]), 1)
+                xarrnew = np.linspace(5, 15, 5000)
+                yarrnew = theta[1] + theta[0] * xarrnew
+                diff = np.zeros(ngd)
+                for q in range(ngd):
+                    hmdif = np.absolute(hmagarr[gd][q] - xarrnew)
+                    #tmp = np.absolute(Vsum['SNR'][gd][q] - 10**yarrnew)
+                    pp, = np.where(hmdif == np.nanmin(hmdif))
+                    diff[q] = Vsum['SNR'][gd][q] - 10**yarrnew[pp][0]
+                pp, = np.where(diff > -np.nanstd(diff))
+                theta = np.polyfit(hmagarr[gd][pp], np.log10(Vsum['SNR'][gd][pp]), 1)
+                xarrnew = np.linspace(5, 15, 5000)
+                yarrnew = theta[1] + theta[0] * xarrnew
+                #yarrnew = theta[2] + theta[1] * pow(xarrnew, 1) + theta[0] * pow(xarrnew, 2)
 
-            ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
+                ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
 
-            ax.set_xlim(xmin,xmax)
-            ax.set_ylim(1,1200)
-            ax.set_yscale('log')
+                ax.set_xlim(xmin,xmax)
+                ax.set_ylim(1,1200)
+                ax.set_yscale('log')
+            except:
+                pass
 
             #if 'apogee' in survey.lower():
             #    telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
