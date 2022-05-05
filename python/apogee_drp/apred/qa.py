@@ -1466,10 +1466,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
             telluric, = np.where((Vsum['OBJTYPE'][notsky] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][notsky] == 'HOT_STD'))
             if len(telluric) > 0:
-                sc = ax2.scatter(zeta[telluric], eta[telluric], marker='o', s=100, c=ratio[telluric], cmap='CMRmap', edgecolors='k', vmin=0, vmax=1)
+                sc = ax2.scatter(zeta[telluric], eta[telluric], marker='o', s=100, c=ratio[telluric], cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75)
             science, = np.where((Vsum['OBJTYPE'][notsky] == 'OBJECT') | (Vsum['OBJTYPE'][notsky] == 'STAR'))
             if len(science) > 0:
-                sc = ax2.scatter(zeta[science], eta[science], marker='*', s=200, c=ratio[science], cmap='CMRmap', edgecolors='k', vmin=0, vmax=1)
+                sc = ax2.scatter(zeta[science], eta[science], marker='*', s=250, c=ratio[science], cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75)
 
             ax1_divider = make_axes_locatable(ax2)
             cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
