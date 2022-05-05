@@ -1360,7 +1360,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(33,8))
+        fig=plt.figure(figsize=(35,8))
         plotrad = 1.6
 
         for ichip in range(nchips):
@@ -1476,7 +1476,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
             ax2.text(0.5, 1.13, r'obs SNR $/$ fit SNR', ha='center', transform=ax2.transAxes)
 
-        fig.subplots_adjust(left=0.035,right=0.99,bottom=0.095,top=0.90,hspace=0.09,wspace=0.04)
+        fig.subplots_adjust(left=0.035,right=0.99,bottom=0.095,top=0.90,hspace=0.09,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
         
