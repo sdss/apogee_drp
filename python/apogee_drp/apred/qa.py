@@ -1428,6 +1428,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         ax2.tick_params(axis='both',which='both',width=axwidth)
         ax2.set_xlabel(r'Zeta (deg.)')
 
+        pdb.set_trace()
         notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0))
         if len(notsky) > 10:
             # First pass at fitting line to S/N as function of Hmag
