@@ -125,6 +125,12 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
+def getTputScatter(niter=3, sigclip=-1):
+    gd, = np.where((allsci['MJD'] > 56600) & (allsci['MJD'] < 56700))
+    allscig = allsci[g]
+    pdb.set_trace()
+
+###########################################################################################
 def persist1(cmap='brg', vrad=400):
     mjd = '59686'
     #exp1 = np.array([41240010,41240015,41240017,41240019,41240021,41240023,41240025,
