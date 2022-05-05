@@ -130,6 +130,7 @@ def getTputScatter(mjd1=59600, mjd2=59702, niter=3, sigclip=-1):
 
     g, = np.where((allsnr['MJD'] > mjd1) & (allsnr['MJD'] < mjd2))
     ng = len(g)
+    print(ng)
     a = allsnr[g]
     order = np.argsort(a['MJD'])
     a = a[order]
