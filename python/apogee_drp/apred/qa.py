@@ -1327,7 +1327,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 #yarrnew = theta[1] + theta[0] * xarrnew
                 #pdb.set_trace()
 
-            ax.plot(hmag3, 10**yarrnew, color='grey', linestyle='dashed')
+            ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
             #except:
             #3    pass
 
