@@ -1282,22 +1282,54 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
             try:
-                gd, = np.where((hmagarr > 0) & (hmagarr < 11) & (np.isnan(Vsum['SNR']) == False))
-                ngd = len(gd)
-                theta = np.polyfit(hmagarr[gd], np.log10(Vsum['SNR'][gd]), 1)
-                xarrnew = np.linspace(5, 15, 5000)
-                yarrnew = theta[1] + theta[0] * xarrnew
-                diff = np.zeros(ngd)
-                for q in range(ngd):
-                    hmdif = np.absolute(hmagarr[gd][q] - xarrnew)
-                    #tmp = np.absolute(Vsum['SNR'][gd][q] - 10**yarrnew)
-                    pp, = np.where(hmdif == np.nanmin(hmdif))
-                    diff[q] = Vsum['SNR'][gd][q] - 10**yarrnew[pp][0]
-                pp, = np.where(diff > -np.nanstd(diff))
-                theta = np.polyfit(hmagarr[gd][pp], np.log10(Vsum['SNR'][gd][pp]), 1)
-                xarrnew = np.linspace(5, 15, 5000)
-                yarrnew = theta[1] + theta[0] * xarrnew
-                #yarrnew = theta[2] + theta[1] * pow(xarrnew, 1) + theta[0] * pow(xarrnew, 2)
+                notsky, = np.where((plSum2['HMAG'] > 5) & (plSum2['HMAG'] < 15) & (np.isnan(plSum2['HMAG']) == False))
+                if i == 0:
+                    hmagarr = plSum2['HMAG'][notsky]
+                    snarr = plSum2['SN'][notsky]
+                    if n_exposures == 1:
+                        tmp = np.squeeze(snarr)
+                        snrvals = np.nanmean(tmp, axis=1)
+                    else:
+                        tmp1 = np.nanmean(snarr[:,:,1],axis=1)
+                        tmp2 = np.nanmean(snarr[:,:,1],axis=1)
+                        tmp3 = np.nanmean(snarr[:,:,2],axis=1)
+                        snrvals = np.nanmean([tmp1,tmp2,tmp3], axis=0)
+                        #snrvals = snarr[:,0,1]
+
+                    gd, = np.where(snrvals > 0)
+                    ngd = len(gd)
+                    hmagarr = hmagarr[gd]
+                    snrvals = snrvals[gd]
+
+                    gd1, = np.where(hmagarr < 11.5)
+                    hmag1 = hmagarr[gd1]
+                    sn1 = snrvals[gd1]
+                    ngd1 = len(gd1)
+
+                    theta = np.polyfit(hmag1, np.log10(sn1), 1)
+                    xarrnew = np.linspace(5, 15, 5000)
+                    yarrnew = theta[1] + theta[0] * xarrnew
+                    diff = np.zeros(ngd1)
+                    for q in range(ngd1):
+                        hmdif = np.absolute(hmag1[q] - xarrnew)
+                        pp, = np.where(hmdif == np.nanmin(hmdif))
+                        diff[q] = sn1[q] - 10**yarrnew[pp][0]
+                    gd2, = np.where(diff > -np.nanstd(diff))
+                    ngd2 = len(gd2)
+                    hmag2 = hmag1[gd2]
+                    sn2 = sn1[gd2]
+                    theta = np.polyfit(hmag2, np.log10(sn2), 1)
+                    xarrnew = np.linspace(5, 15, 5000)
+                    yarrnew = theta[1] + theta[0] * xarrnew
+                    diff = np.zeros(ngd2)
+                    for q in range(ngd2):
+                        hmdif = np.absolute(hmag2[q] - xarrnew)
+                        pp1, = np.where(hmdif == np.nanmin(hmdif))
+                        diff[q] = sn2[q] - 10**yarrnew[pp1][0]
+                    gd3, = np.where(diff > -np.nanstd(diff))
+                    theta = np.polyfit(hmag2[gd3], np.log10(sn2[gd3]), 1)
+                    xarrnew = np.linspace(5, 15, 5000)
+                    yarrnew = theta[1] + theta[0] * xarrnew
 
                 ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
             except:
