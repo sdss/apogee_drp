@@ -125,7 +125,7 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
-def getTputScatter(mjd1=59671, mjd2=59702, niter=3, sigclip=-1):
+def getTputScatter(mjd1=59600, mjd2=59702, niter=3, sigclip=-1):
     Z = '  '
 
     g, = np.where((allsnr['MJD'] > mjd1) & (allsnr['MJD'] < mjd2))
