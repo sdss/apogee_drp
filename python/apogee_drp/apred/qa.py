@@ -1289,7 +1289,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 #gd1, = np.where(hmagarr < 11.5)
                 hmag1 = hmagarr#[gd1]
                 sn1 = snrvals#[gd1]
-                ngd1 = len(gd1)
+                ngd1 = len(hmag1)#gd1)
 
                 theta = np.polyfit(hmag1, np.log10(sn1), 1)
                 xarrnew = np.linspace(5, 15, 5000)
