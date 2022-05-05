@@ -1294,6 +1294,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
                     theta = np.polyfit(hmag1, np.log10(sn1), 1)
                     xarrnew = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
+                    polynomial = np.poly1d(theta)
+                    yarrnew = polynomial(xarrnew)
                     yarrnew = theta[1] + theta[0] * xarrnew
                     diff = np.zeros(ngd1)
                     for q in range(ngd1):
@@ -1305,7 +1307,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     hmag2 = hmag1[gd2]
                     sn2 = sn1[gd2]
                     theta = np.polyfit(hmag2, np.log10(sn2), 1)
-                    yarrnew = theta[1] + theta[0] * xarrnew
+                    polynomial = np.poly1d(theta)
+                    yarrnew = polynomial(xarrnew)
+                    #yarrnew = theta[1] + theta[0] * xarrnew
                     diff = np.zeros(ngd2)
                     for q in range(ngd2):
                         hmdif = np.absolute(hmag2[q] - xarrnew)
@@ -1313,7 +1317,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                         diff[q] = sn2[q] - 10**yarrnew[pp1][0]
                     gd3, = np.where(diff > -np.nanstd(diff))
                     theta = np.polyfit(hmag2[gd3], np.log10(sn2[gd3]), 1)
-                    yarrnew = theta[1] + theta[0] * xarrnew
+                    polynomial = np.poly1d(theta)
+                    yarrnew = polynomial(xarrnew)
+                    #yarrnew = theta[1] + theta[0] * xarrnew
                     #pdb.set_trace()
 
                 ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
