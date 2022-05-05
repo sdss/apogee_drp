@@ -1464,10 +1464,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 eta[q] = plSum2['ETA'][g][0]
                 zeta[q] = plSum2['ZETA'][g][0]
 
-            #notsky, = np.where((plSum2['ASSIGNED']) & (plSum2['ON_TARGET']) & (plSum2['VALID']) & (plSum2['OBJTYPE'] != 'SKY'))
-            #x = plSum2['Zeta'][notsky][::-1]
-            #y = plSum2['Eta'][notsky][::-1]
-            sc = ax2.scatter(zeta, eta, marker='o', s=100, c=ratio, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1)
+            telluric, = np.where((Vsum['OBJTYPE'][notsky] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][notsky] == 'HOT_STD'))
+            if len(telluric) > 0:
+                sc = ax2.scatter(zeta[telluric], eta[telluric], marker='o', s=100, c=ratio[telluric], cmap='CMRmap', edgecolors='k', vmin=0, vmax=1)
+            science, = np.where((Vsum['OBJTYPE'][notsky] == 'OBJECT') | (Vsum['OBJTYPE'][notsky] == 'STAR'))
+            if len(science) > 0:
+                sc = ax2.scatter(zeta[science], eta[science], marker='o', s=100, c=ratio[science], cmap='CMRmap', edgecolors='k', vmin=0, vmax=1)
 
             ax1_divider = make_axes_locatable(ax2)
             cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
