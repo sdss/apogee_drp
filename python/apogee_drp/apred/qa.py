@@ -1358,7 +1358,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 scicol = block[science] + 0.5
                 telcol = block[telluric] + 0.5
             psci = ax.scatter(x, y, marker='*', s=400, edgecolors='white', alpha=0.8, c=scicol, cmap='tab10', vmin=0.5, vmax=10.5, label='Science')
-            x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
+            x = Vsum['HMAG'][telluric];  y = Vsum['SNR'][telluric]
             ptel = ax.scatter(x, y, marker='o', s=150, edgecolors='white', alpha=0.8, c=telcol, cmap='tab10', vmin=0.5, vmax=10.5, label='Telluric')
 
             if i == 1:
