@@ -1281,43 +1281,44 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
-            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0))
-            if i == 0:
-                hmagarr = Vsum['HMAG'][notsky]
-                snrvals = Vsum['SNR'][notsky]
+            try:
+                notsky, = np.where((Vsum['HMAG'] > 6) & (Vsum['HMAG'] < 13) & (np.isnan(Vsum['HMAG']) == False) & (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0))
+                if i == 0:
+                    hmagarr = Vsum['HMAG'][notsky]
+                    snrvals = Vsum['SNR'][notsky]
 
-                #gd1, = np.where(hmagarr < 11.5)
-                hmag1 = hmagarr#[gd1]
-                sn1 = snrvals#[gd1]
-                ngd1 = len(hmag1)#gd1)
+                    #gd1, = np.where(hmagarr < 11.5)
+                    hmag1 = hmagarr#[gd1]
+                    sn1 = snrvals#[gd1]
+                    ngd1 = len(hmag1)#gd1)
 
-                theta = np.polyfit(hmag1, np.log10(sn1), 1)
-                xarrnew = np.linspace(5, 15, 5000)
-                yarrnew = theta[1] + theta[0] * xarrnew
-                diff = np.zeros(ngd1)
-                for q in range(ngd1):
-                    hmdif = np.absolute(hmag1[q] - xarrnew)
-                    pp, = np.where(hmdif == np.nanmin(hmdif))
-                    diff[q] = sn1[q] - 10**yarrnew[pp][0]
-                gd2, = np.where(diff > -np.nanstd(diff))
-                ngd2 = len(gd2)
-                hmag2 = hmag1[gd2]
-                sn2 = sn1[gd2]
-                theta = np.polyfit(hmag2, np.log10(sn2), 1)
-                yarrnew = theta[1] + theta[0] * xarrnew
-                diff = np.zeros(ngd2)
-                for q in range(ngd2):
-                    hmdif = np.absolute(hmag2[q] - xarrnew)
-                    pp1, = np.where(hmdif == np.nanmin(hmdif))
-                    diff[q] = sn2[q] - 10**yarrnew[pp1][0]
-                gd3, = np.where(diff > -np.nanstd(diff))
-                theta = np.polyfit(hmag2[gd3], np.log10(sn2[gd3]), 1)
-                yarrnew = theta[1] + theta[0] * xarrnew
-                pdb.set_trace()
+                    theta = np.polyfit(hmag1, np.log10(sn1), 1)
+                    xarrnew = np.linspace(6, 13, 5000)
+                    yarrnew = theta[1] + theta[0] * xarrnew
+                    diff = np.zeros(ngd1)
+                    for q in range(ngd1):
+                        hmdif = np.absolute(hmag1[q] - xarrnew)
+                        pp, = np.where(hmdif == np.nanmin(hmdif))
+                        diff[q] = sn1[q] - 10**yarrnew[pp][0]
+                    gd2, = np.where(diff > -np.nanstd(diff))
+                    ngd2 = len(gd2)
+                    hmag2 = hmag1[gd2]
+                    sn2 = sn1[gd2]
+                    theta = np.polyfit(hmag2, np.log10(sn2), 1)
+                    yarrnew = theta[1] + theta[0] * xarrnew
+                    diff = np.zeros(ngd2)
+                    for q in range(ngd2):
+                        hmdif = np.absolute(hmag2[q] - xarrnew)
+                        pp1, = np.where(hmdif == np.nanmin(hmdif))
+                        diff[q] = sn2[q] - 10**yarrnew[pp1][0]
+                    gd3, = np.where(diff > -np.nanstd(diff))
+                    theta = np.polyfit(hmag2[gd3], np.log10(sn2[gd3]), 1)
+                    yarrnew = theta[1] + theta[0] * xarrnew
+                    #pdb.set_trace()
 
-            ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
-            #except:
-            #    pass
+                ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
+            except:
+                pass
 
             ax.set_xlim(xmin,xmax)
             ax.set_ylim(1,1200)
