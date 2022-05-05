@@ -1282,16 +1282,11 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
             try:
-                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & (np.isnan(Vsum['SNR']) == False))
+                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0))
                 pdb.set_trace()
                 if i == 0:
                     hmagarr = Vsum['HMAG'][notsky]
                     snrvals = Vsum['SN'][notsky]
-
-                    gd, = np.where(snrvals > 0)
-                    ngd = len(gd)
-                    hmagarr = hmagarr[gd]
-                    snrvals = snrvals[gd]
 
                     gd1, = np.where(hmagarr < 11.5)
                     hmag1 = hmagarr[gd1]
@@ -1322,6 +1317,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     theta = np.polyfit(hmag2[gd3], np.log10(sn2[gd3]), 1)
                     xarrnew = np.linspace(5, 15, 5000)
                     yarrnew = theta[1] + theta[0] * xarrnew
+                    pdb.set_trace()
 
                 ax.plot(xarrnew, 10**yarrnew, color='grey', linestyle='dashed')
             except:
