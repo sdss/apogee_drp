@@ -1296,12 +1296,13 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 xarrnew = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
                 polynomial = np.poly1d(theta)
                 yarrnew = polynomial(hmag1)
-                yarrnew = theta[1] + theta[0] * xarrnew
-                diff = np.zeros(ngd1)
-                for q in range(ngd1):
-                    hmdif = np.absolute(hmag1[q] - xarrnew)
-                    pp, = np.where(hmdif == np.nanmin(hmdif))
-                    diff[q] = sn1[q] - 10**yarrnew[pp][0]
+                #yarrnew = theta[1] + theta[0] * xarrnew
+                diff = np.log10(sn1) - yarrnew
+                #diff = np.zeros(ngd1)
+                #for q in range(ngd1):
+                #    hmdif = np.absolute(hmag1[q] - xarrnew)
+                #    pp, = np.where(hmdif == np.nanmin(hmdif))
+                #    diff[q] = sn1[q] - 10**yarrnew[pp][0]
                 gd2, = np.where(diff > -np.nanstd(diff))
                 ngd2 = len(gd2)
                 hmag2 = hmag1[gd2]
@@ -1310,11 +1311,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 polynomial = np.poly1d(theta)
                 yarrnew = polynomial(hmag2)
                 #yarrnew = theta[1] + theta[0] * xarrnew
-                diff = np.zeros(ngd2)
-                for q in range(ngd2):
-                    hmdif = np.absolute(hmag2[q] - xarrnew)
-                    pp1, = np.where(hmdif == np.nanmin(hmdif))
-                    diff[q] = sn2[q] - 10**yarrnew[pp1][0]
+                diff = np.log10(sn2) - yarrnew
+                #diff = np.zeros(ngd2)
+                #for q in range(ngd2):
+                #    hmdif = np.absolute(hmag2[q] - xarrnew)
+                #    pp1, = np.where(hmdif == np.nanmin(hmdif))
+                #    diff[q] = sn2[q] - 10**yarrnew[pp1][0]
                 gd3, = np.where(diff > -np.nanstd(diff))
                 ngd3 = len(gd3)
                 hmag3 = hmag2[gd3]
