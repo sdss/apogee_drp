@@ -1300,6 +1300,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     pp, = np.where(hmdif == np.nanmin(hmdif))
                     diff[q] = sn1[q] - 10**yarrnew[pp][0]
                 gd2, = np.where(diff > -np.nanstd(diff))
+                pdb.set_trace()
                 ngd2 = len(gd2)
                 hmag2 = hmag1[gd2]
                 sn2 = sn1[gd2]
@@ -1312,6 +1313,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     pp1, = np.where(hmdif == np.nanmin(hmdif))
                     diff[q] = sn2[q] - 10**yarrnew[pp1][0]
                 gd3, = np.where(diff > -np.nanstd(diff))
+                pdb.set_trace()
                 theta = np.polyfit(hmag2[gd3], np.log10(sn2[gd3]), 1)
                 xarrnew = np.linspace(5, 15, 5000)
                 yarrnew = theta[1] + theta[0] * xarrnew
