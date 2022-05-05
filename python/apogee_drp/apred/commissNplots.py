@@ -146,7 +146,15 @@ def getTputScatter(niter=3, sigclip=-1):
     tputSigma = np.zeros(ng)
     tputMad = np.zeros(ng)
 
-    for iexp in range(500):
+    num = ng
+    num = 500
+    out = np.empty(num).astype(str)
+    zero = np.empty(num)
+    seeing = np.empty(num)
+    secz = np.empty(num)
+    sigR = np.empty(num)
+    madR = np.empty(num)
+    for iexp in range(num):
         g, = np.where((snAll[iexp] > 0) & (hmagAll[iexp] > 5) & (hmagAll[iexp] < 15))
         if len(g) > 10:
             # First pass at fitting line to S/N as function of Hmag
@@ -188,10 +196,17 @@ def getTputScatter(niter=3, sigclip=-1):
             p4 = str("%.3f" % round(maddiff,3))
             p5 = str("%.3f" % round(seeingAll[iexp],3))
             p6 = str("%.3f" % round(seczAll[iexp],3))
-            p7 = str("%.3f" % round(np.nanmean(skyAll[iexp]),3))
-            p8 = str("%.3f" % round(np.nanmean(zeroAll[iexp]),3))
-            print(p0+Z+p1+Z+p2+Z+p3+Z+p4+Z+p5+Z+p6+Z+p7+Z+p8)
+            #p7 = str("%.3f" % round(np.nanmean(skyAll[iexp]),3))
+            p7 = str("%.3f" % round(np.nanmean(zeroAll[iexp]),3))
+            print(p0+Z+p1+Z+p3+Z+p4+Z+p5+Z+p6+Z+p7)
 
+            zero[iexp] = zeroAll[iexp]
+            seeing[iexp] = seeingAll[iexp]
+            secz[iexp] = seeingAll[iexp]
+            sigR[iexp] = sigratio
+            madR[iexp] = madratio
+
+    return sigR,madR,seeing,secz,zero
     pdb.set_trace()
 
     t1 = Column(name='TPUT_SIGMA', data=tputSigma)
