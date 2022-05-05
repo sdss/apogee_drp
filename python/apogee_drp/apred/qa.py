@@ -1531,7 +1531,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     gd, = np.where((platesum2['HMAG'] > 5) & (platesum2['HMAG'] < 15) & (np.isnan(platesum2['HMAG']) == False) & 
                                    (platesum2['ASSIGNED']) & (platesum2['ON_TARGET']) & (platesum2['VALID']) & 
                                    (platesum2['OBJTYPE'] == fiblabs[itype]))
-                    if itype == 2:
+                    if itype == 0:
                         gd, = np.where(platesum2['OBJTYPE'] == fiblabs[itype])
 
                 else: 
