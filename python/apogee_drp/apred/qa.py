@@ -1281,9 +1281,14 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
-            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
-                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
-                               (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
+            if fps:
+                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                                   (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                                   (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
+            else:
+                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                                   (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
+
             if len(notsky) > 10:
                 if i == 0:
                     # First pass at fitting line to S/N as function of Hmag
@@ -1429,9 +1434,14 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         ax2.tick_params(axis='both',which='both',width=axwidth)
         ax2.set_xlabel(r'Zeta (deg.)')
 
-        notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
-                           (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
-                           (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
+        if fps:
+            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                               (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
+        else:
+            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
+
         if len(notsky) > 10:
             # First pass at fitting line to S/N as function of Hmag
             hmag1 = Vsum['HMAG'][notsky]
