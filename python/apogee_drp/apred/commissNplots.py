@@ -126,7 +126,7 @@ nmolecules = len(molecules)
 
 ###########################################################################################
 def getTputScatter(niter=3, sigclip=-1):
-    g, = np.where((allsnr['MJD'] > 56600) & (allsnr['MJD'] < 56700))
+    g, = np.where((allsnr['MJD'] > 56600) & (allsnr['MJD'] < 56750))
     ng = len(g)
     a = allsnr[g]
     hmagAll = a['HMAG']
