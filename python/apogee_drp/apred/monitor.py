@@ -128,7 +128,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allv5 = fits.getdata(allv5path)
 
         #gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])) & ((allv5['mjd'] < 59558) | (allv5['mjd'] >= 59595)))
-        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr['MJD'])))
+        gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])))
         allv5 = allv5[gd]
         vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
         uvis,uind = np.unique(vis, return_index=True)
@@ -142,7 +142,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #if len(badcheck) > 0: continue
             plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
             plsum = plsum.replace(' ', '')
-            p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
+            p, = np.where(os.path.basename(plsum) == allsnr4['SUMFILE'])
             if (len(p) < 1) & (os.path.exists(plsum)):
                 data1 = fits.getdata(plsum,1)
                 data2 = fits.getdata(plsum,2)
@@ -160,7 +160,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         count += 1
 
         if count > 0:
-            out = vstack([Table(allsnr), Table(outstr)])
+            out = vstack([Table(allsnr4), Table(outstr)])
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
@@ -2320,6 +2320,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     outstr['HMAG'][0][fiberid-1] = data2['HMAG']
     outstr['FIBERID'][0][fiberid-1] = data2['FIBERID']
     outstr['SNFIBER'][iexp, fiberid-1] =   data2['SN'][:, :, iexp]
+    pdb.set_trace()
     jj=0
     for magbin in magbins:
         g, = np.where((data2['HMAG'] >= magbin-magrad) & (data2['HMAG'] < magbin+magrad) & (np.isnan(data2['HMAG']) == False))
