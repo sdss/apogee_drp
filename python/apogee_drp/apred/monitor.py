@@ -2319,6 +2319,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
     outstr['SNRATIO'] =   data1['SNRATIO'][iexp]
     outstr['HMAG'][0][fiberid-1] = data2['HMAG']
     outstr['FIBERID'][0][fiberid-1] = data2['FIBERID']
+    pdb.set_trace()
     outstr['SNFIBER'][iexp, fiberid-1] =   data2['SN'][:, iexp, :]
     jj=0
     for magbin in magbins:
