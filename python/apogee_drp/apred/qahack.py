@@ -185,11 +185,11 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     html.write(txt1 + txt2 +'\n')
 
     for i in range(n_exposures):
-        gd, = np.where(ims[i] == tab1['IM'])
+        gd, = np.where(int(ims[i]) == tab1['IM'])
         if len(gd) >= 1:
             html.write('<TR>\n')
             html.write('<TD align="right">'+str(i+1)+'\n')
-            html.write('<TD align="right">'+str(int(round(ims[i])))+'\n')
+            html.write('<TD align="right">'+ims[i]+'\n')
             html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][gd][0])))+'\n')
             try:
                 html.write('<TD align="right">'+str(int(round(tab1['CART'][gd][0])))+'\n')
@@ -227,7 +227,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
         else:
             html.write('<TR bgcolor=red>\n')
             html.write('<TD align="right">'+str(i+1)+'\n')
-            html.write('<TD align="right">'+str(int(round(ims[i])))+'\n')
+            html.write('<TD align="right">'+ims[i]+'\n')
             html.write('<TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD>\n')
 
     #Msecz = str("%.3f" % round(np.nanmean(tab1['SECZ']),3))
@@ -299,13 +299,12 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     #html.write('<TH>SPATIAL SKY TELLURIC H2O\n')
 
     for i in range(n_exposures):
-        cim = str(int(round(ims[i])))
-        gd, = np.where(ims[i] == tab1['IM'])
+        gd, = np.where(int(ims[i]) == tab1['IM'])
         if len(gd) >= 1:
-            oneDfile = 'ap1D-' + cim
+            oneDfile = 'ap1D-' + ims[i]
             #oneDfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
             #html.write('<TR><TD bgcolor="'+thcolor+'"><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
-            html.write('<TR><TD bgcolor="'+thcolor+'">'+cim+'\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">'+ims[i]+'\n')
             html.write('<TD><TABLE BORDER=1><TD><TD bgcolor="'+thcolor+'">RED<TD bgcolor="'+thcolor+'">GREEN<TD bgcolor="'+thcolor+'">BLUE\n')
             html.write('<TR><TD bgcolor="'+thcolor+'">Z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][gd][0],2))+'\n')
             html.write('<TR><TD bgcolor="'+thcolor+'">ZNORM<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][gd][0],2))+'\n')
@@ -328,7 +327,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             #html.write('<TD> <a href=plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg WIDTH=250></a>\n')
             #html.write('<TD> <a href=plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg target="_blank"> <IMG SRC=plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg WIDTH=250></a>\n')
         else:
-            html.write('<TR><TD bgcolor="'+thcolor+'">'+cim+'\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">'+ims[i]+'\n')
             html.write('<TD><TD><TD><TD><TD><TD><TD><TD>\n')
     html.write('</table><HR>\n')
     
