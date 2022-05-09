@@ -77,14 +77,14 @@ plotdir = htmldir + 'plots/'
 def apqaALL(allv=None, mjdstart=57824, mjdstop=57878, observatory='apo', apred='daily', makeobshtml=True, makeobsplots=True):
 
     if allv is None: allv = fits.getdata(allvpathUtah)
-    g, = np.where((allv['MJD'] >= mjdstart) & (allv['MJD'] <= mjdstop))
-    pdb.set_trace()
+    g, = np.where((allv['MJD'] >= mjdstart) & (allv['MJD'] <= mjdstop) & (allv['TELESCOPE'] == 'apo25m'))
     mjdplate = np.array(allv['MJD'][g]).astype(str) + '-' + np.array(allv['PLATE'][g])
     umjdplate,uind = np.unique(mjdplate, return_index=True)
     uallv = allv[uind]
     nplate = len(umjdplate)
     nplatestr = str(nplate)
     print('Running on ' + nplatestr + ' visits')
+    pdb.set_trace()
     for i in range(nplate):
         plate = uallv['PLATE'][i]
         mjd = str(uallv['MJD'][i])
