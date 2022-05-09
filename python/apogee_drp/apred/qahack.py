@@ -696,11 +696,13 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
 
             # overplot the target S/N line
             cframepath = gvispath + 'apCframe-a-' + ims[ii] + '.fits'
-            hdr = fits.getheader(cframepath)
-            sntarget = 100 * np.sqrt(hdr['EXPTIME'] / (3.0 * 3600))
-            sntargetmag = 12.2
-            x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
-            ax3.plot(x, y, color='k',linewidth=1.5)
+            try:
+                hdr = fits.getheader(cframepath)
+                sntarget = 100 * np.sqrt(hdr['EXPTIME'] / (3.0 * 3600))
+                sntargetmag = 12.2
+                x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
+                ax3.plot(x, y, color='k',linewidth=1.5)
+            except: pass
 
             fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.99,hspace=0.2,wspace=0.0)
             plt.savefig(plotdir+plotfile)
