@@ -422,12 +422,11 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
         else:
             pdb.set_trace()
             science, = np.where((Vsum['H'] > 0) & (Vsum['H'] < 16) & (np.isnan(Vsum['H']) == False) & 
-                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & 
-                                ((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR')))
+                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0))
 
-            telluric, = np.where((Vsum['H'] > 0) & (Vsum['H'] < 16) & (np.isnan(Vsum['H']) == False) & 
-                                 (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) &
-                                 ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
+            #telluric, = np.where((Vsum['H'] > 0) & (Vsum['H'] < 16) & (np.isnan(Vsum['H']) == False) & 
+            #                     (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) &
+            #                     ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
 
         x = Vsum['H'][science];  y = Vsum['SNR'][science]
         scicol = 'r'
@@ -436,8 +435,8 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             scicol = block[science] + 0.5
             telcol = block[telluric] + 0.5
         psci = ax.scatter(x, y, marker='*', s=400, edgecolors='white', alpha=0.8, c=scicol, cmap='tab10', vmin=0.5, vmax=10.5, label='Science')
-        x = Vsum['H'][telluric];  y = Vsum['SNR'][telluric]
-        ptel = ax.scatter(x, y, marker='o', s=150, edgecolors='white', alpha=0.8, c=telcol, cmap='tab10', vmin=0.5, vmax=10.5, label='Telluric')
+        #x = Vsum['H'][telluric];  y = Vsum['SNR'][telluric]
+        #ptel = ax.scatter(x, y, marker='o', s=150, edgecolors='white', alpha=0.8, c=telcol, cmap='tab10', vmin=0.5, vmax=10.5, label='Telluric')
 
         if i == 1:
             ax_divider = make_axes_locatable(ax)
@@ -447,7 +446,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             cax.yaxis.set_major_locator(ticker.MultipleLocator(1))
             ax.text(1.09, 0.5, r'MTP #', ha='right', va='center', rotation=-90, transform=ax.transAxes)
 
-        ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+        #ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
         fig.subplots_adjust(left=0.06,right=0.945,bottom=0.09,top=0.975,hspace=0.2,wspace=0.0)
         plt.savefig(plotdir+plotfile)
