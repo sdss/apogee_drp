@@ -114,7 +114,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
-    n_exposures = len(ims)
+    #n_exposures = len(ims)
 
     prefix = 'ap'
 
