@@ -153,11 +153,12 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
     #num = 500
     out = np.empty(num).astype(str)
     zero = np.empty(num)
-    seeing = np.empty(num)
+    seeing = np.full(num, -999.999)
     secz = np.empty(num)
     sigR = np.empty(num)
     sigD = np.empty(num)
     madR = np.empty(num)
+    nbad = np.empty(num)
     for iexp in range(num):
         g, = np.where((snAll[iexp] > 0) & (hmagAll[iexp] > 5) & (hmagAll[iexp] < 15))
         if len(g) > 10:
@@ -190,10 +191,13 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
                 diff[q] = sn1[q] - 10**yarrnew3[pp][0]
 
             sigratio = np.nanstd(ratio)
-            pdb.set_trace()
+            bad, = np.where(ratio < 1-sigratio)
+            nbad[iexp] = len(bad)
             madratio = dln.mad(ratio)
             sigdiff = dln.mad(diff)
             maddiff = dln.mad(diff)
+            p000 = str(plateAll[iexp])
+            p00 = str(a['MJD'][iexp])
             p0 = a['sumfile'][iexp]
             p1 = str("%.3f" % round(sigratio,3))
             #p2 = str("%.3f" % round(madratio,3))
@@ -203,7 +207,8 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
             p6 = str("%.3f" % round(seczAll[iexp],3))
             #p7 = str("%.3f" % round(np.nanmean(skyAll[iexp]),3))
             p7 = str("%.3f" % round(np.nanmean(zeroAll[iexp]),3))
-            print(p0+Z+p1+Z+p3+Z+p4+Z+p5+Z+p6+Z+p7)
+            p8 = str(int(round(nbad[iexp]))).rjust(3)
+            print(p000+Z+p00+Z+p0+Z+p1+Z+p3+Z+p4+Z+p5+Z+p6+Z+p7+Z+p8)
 
             zero[iexp] = np.nanmean(zeroAll[iexp])
             seeing[iexp] = seeingAll[iexp]
@@ -212,7 +217,9 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
             sigD[iexp] = sigdiff
             madR[iexp] = madratio
 
-    return sigR,sigD,madR,seeing,secz,zero
+    g, = np.where((seeing > 0.2) & (seeing < 5))
+
+    return sigR[g],sigD[g],madR[g],seeing[g],secz[g],zero[g]
     pdb.set_trace()
 
     t1 = Column(name='TPUT_SIGMA', data=tputSigma)
