@@ -232,29 +232,6 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             html.write('<TD align="right">'+ims[i]+'\n')
             html.write('<TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD><TD>\n')
 
-    #Msecz = str("%.3f" % round(np.nanmean(tab1['SECZ']),3))
-    #Mseeing = str("%.3f" % round(np.nanmean(tab1['SEEING']),3))
-    #Mfwhm = str("%.3f" % round(tab3['FWHM'][0],3))
-    #Mgdrms = str("%.3f" % round(tab3['GDRMS'][0],3))
-    #Mzero = str("%.3f" % round(tab3['ZERO'][0],3))
-    #Mzerorms = str("%.3f" % round(tab3['ZERORMS'][0],3))
-    #Mmoonphase = str("%.3f" % round(tab3['MOONPHASE'][0],3))
-    #Mmoondist = str("%.3f" % round(tab3['MOONDIST'][0],3))
-    ##q = tab3['SKY'][0]
-    ##sky = str("%.2f" % round(q[0],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[2],2))
-    #q = tab3['SN'][0]
-    #sn = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
-    #q = tab3['SNC'][0]
-    #snc = str("%.2f" % round(q[2],2))+', '+str("%.2f" % round(q[1],2))+', '+str("%.2f" % round(q[0],2))
-    #html.write('<TR><TD><B>VISIT<TD><TD><TD><TD align="right"><B>'+Msecz+'<TD><TD><TD align="right"><B>'+Mseeing)
-    #html.write('<TD align="right"><B>'+Mfwhm+'<TD align="right"><B>'+Mgdrms+'<TD><TD><TD><TD align="right"><B>'+Mzero)
-
-    ##html.write('<TD align="center">['+sky+']')
-    #html.write('<TD align="right"><B>'+Mzerorms+'<TD>')
-    #html.write('<TD align="center"><B>['+sn+']')
-    #html.write('<TD align="center"><B>['+snc+']')
-    #html.write('<TD align="right"><B>'+Mmoonphase+'<TD align="right"><B>'+Mmoondist+'</b>\n')
-
     html.write('</TABLE>\n')
     html.write('<HR>\n')
 
@@ -276,16 +253,6 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                     html.write('<TD>'+str("%.2f" % round(pairstr['SN'][ipair][j],2))+'\n')
             html.write('</TABLE>\n')
         html.write('<HR>\n')
-
-#    else:
-#        # Table of combination parameters.
-#        html.write('<H3>Combination Parameters (undithered):</H3>\n')
-#        html.write('<BR><TABLE BORDER=2 CLASS="sortable">\n')
-#        for iframe in range(len(shiftstr)):
-#            html.write('<TR><TD>'+str(shiftstr['FRAMENUM'][iframe])+'\n')
-#            html.write('<TD>'+str("%.3f" % round(shiftstr['SHIFT'][iframe],3))+'\n')
-#            html.write('<TD>'+str("%.3f" % round(shiftstr['SN'][iframe],3))+'\n')
-#    html.write('</TABLE>\n')
 
     # Table of exposure plots.
     html.write('<H3>Individual Exposure QA Plots:</H3>\n')
@@ -337,32 +304,13 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     html.write('</BODY></HTML>\n')
     html.close()
 
-    print("----> makeObsHTML: Done with plate "+plate+", MJD "+mjd+"\n")
-
-###################################################################################################
-''' MAKEOBSPLOTS: plots for the plate QA page '''
-def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, instrument=None,
-                   apred=None, flat=None, fluxid=None, survey=None, clobber=None): 
-
-    print("----> makeObsPlots: Running plate "+plate+", MJD "+mjd)
 
     if int(mjd)>59556:
         fps = True
     else:
         fps = False
 
-    n_exposures = len(ims)
-    chips = np.array(['a','b','c'])
-    chiplab = np.array(['blue','green','red'])
-    nchips = len(chips)
-
-    # Make plot and html directories if they don't already exist.
-    platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
-    plotsdir = platedir+'/plots/'
-    if len(glob.glob(plotsdir)) == 0: subprocess.call(['mkdir',plotsdir])
-
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
-    #plt.ioff()
     matplotlib.use('agg')
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
@@ -373,16 +321,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     axminlen=3.5
     cmap = 'RdBu'
 
-    # Check for existence of plateSum file
-    platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps) 
-    if os.path.exists(platesum) == False:
-        err1 = "----> makeObsPlots: PROBLEM!!! " + os.path.basename(platesum) + " does not exist. Halting execution.\n"
-        err2 = "----> makeObsPlots: You need to run MAKEPLATESUM first to make the file."
-        sys.exit(err1 + err2)
-
     # Read the plateSum file
-    plSum1 = fits.getdata(platesum,1)
-    platesum2 = fits.getdata(platesum,2)
+    plSum1 = fits.getdata(plsumpath,1)
+    platesum2 = fits.getdata(plsumpath,2)
     fibord = np.argsort(platesum2['FIBERID'])
     plSum2 = platesum2[fibord]
     nfiber = len(plSum2['HMAG'])
@@ -390,9 +331,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     #----------------------------------------------------------------------------------------------
     # PLOTS 1-2: HMAG versus S/N for the exposure-combined apVisit, second version colored by fiber block
     #----------------------------------------------------------------------------------------------
-    Vsum = load.apVisitSum(int(plate), mjd)
-    Vsumfile = Vsum.filename()
-    Vsum = Vsum[1].data
+    Vsumfile = vispath + field + '/apVisitSum-' + plate + '-' + mjd + '.fits'
+    Vsum = fits.getdata(Vsumfile,1) 
     block = np.floor((Vsum['FIBERID'] - 1) / 30) #[::-1]
 
     for i in range(2):
