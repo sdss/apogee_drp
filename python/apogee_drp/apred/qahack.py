@@ -420,6 +420,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                                  (Vsum['ON_TARGET']) & (Vsum['VALID']) & 
                                  ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
         else:
+            pdb.set_trace()
             science, = np.where((Vsum['H'] > 0) & (Vsum['H'] < 16) & (np.isnan(Vsum['H']) == False) & 
                                 (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & 
                                 ((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR')))
