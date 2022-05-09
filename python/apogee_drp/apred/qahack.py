@@ -80,8 +80,9 @@ def apqaALL(allv=None, mjdstart=57824, mjdstop=57878, observatory='apo', apred='
     if allv is None: allv = fits.getdata(allvpathUtah)
     g, = np.where((allv['MJD'] >= mjdstart) & (allv['MJD'] <= mjdstop) & (allv['TELESCOPE'] == 'apo25m'))
     #pdb.set_trace()
-    ujd,uind = np.unique(allv['JD'][g], return_index=True)
-    uallv = allv[uind]
+    gallv = allv[g]
+    ujd,uind = np.unique(gallv['JD'], return_index=True)
+    uallv = gallv[uind]
     nplate = len(ujd)
     nplatestr = str(nplate)
     print('Running on ' + nplatestr + ' visits')
