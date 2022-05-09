@@ -165,11 +165,6 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     html.write('<A HREF="'+'plots/'+fluxfile+'" target="_blank"><IMG SRC=plots/'+fluxfile+' WIDTH=1200></A>')
     html.write('<HR>\n')
 
-    # Fiber location plots.
-    html.write('<H3>Fiber Positions:</H3>\n')
-    html.write('<A HREF="'+'plots/'+fluxfile.replace('Flux','FibLoc')+'" target="_blank"><IMG SRC=plots/'+fluxfile.replace('Flux','FibLoc')+' WIDTH=900></A>')
-    html.write('<HR>\n')
-
     # Table of individual exposures.
     if pairstr is not None:
         html.write('<H3>Individual Exposures:</H3>\n')
@@ -454,264 +449,153 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     #----------------------------------------------------------------------------------------------
     # PLOTS 3-6: flat field flux and fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
-    fluxfile = 'apFlux-' + fluxid + '.fits'
+    fluxfile = 'apFlux-a-' + fluxid + '.fits'
     gfluxpath = fluxpath + fluxfile
-    pdb.set_trace()
-    flux = load.apFlux(fluxid)
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
 
     plotfile = fluxfile.replace('.fits', '.png')
-    if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
-        print("----> makeObsPlots: Making "+plotfile)
+    print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(35,8))
-        plotrad = 1.6
+    fig=plt.figure(figsize=(35,8))
+    plotrad = 1.6
 
-        for ichip in range(nchips):
-            chip = chips[ichip]
+    for ichip in range(nchips):
+        chip = chips[ichip]
 
-            ax = plt.subplot2grid((1,nchips+2), (0,ichip))
-            ax.set_xlim(-plotrad, plotrad)
-            ax.set_ylim(-plotrad, plotrad)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_xlabel(r'Zeta (deg.)')
-            if ichip == 0: ax.set_ylabel(r'Eta (deg.)')
-            if ichip != 0: ax.axes.yaxis.set_ticklabels([])
+        ax = plt.subplot2grid((1,nchips+2), (0,ichip))
+        ax.set_xlim(-plotrad, plotrad)
+        ax.set_ylim(-plotrad, plotrad)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        ax.set_xlabel(r'Zeta (deg.)')
+        if ichip == 0: ax.set_ylabel(r'Eta (deg.)')
+        if ichip != 0: ax.axes.yaxis.set_ticklabels([])
 
-            med = np.nanmedian(flux[chip][1].data, axis=1)
-            tput = med[ypos] / np.nanmax(med[ypos])
-            gd, = np.where((ypos > 60) & (ypos < 90))
-            sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=tput, edgecolors='k', cmap='afmhot', alpha=1, vmin=0.01, vmax=0.99)
+        if ichip == 0: flux = fits.getdata(gfluxpath)
+        if ichip == 1: flux = fits.getdata(gfluxpath.replace('-a-','-b-'))
+        if ichip == 2: flux = fits.getdata(gfluxpath.replace('-a-','-c-'))
+        med = np.nanmedian(flux, axis=1)
+        tput = med[ypos] / np.nanmax(med[ypos])
+        gd, = np.where((ypos > 60) & (ypos < 90))
+        sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=tput, edgecolors='k', cmap='afmhot', alpha=1, vmin=0.01, vmax=0.99)
 
-            ax.text(0.03, 0.97, chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color=chiplab[ichip])
+        ax.text(0.03, 0.97, chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color=chiplab[ichip])
 
-            ax_divider = make_axes_locatable(ax)
-            cax = ax_divider.append_axes("top", size="4%", pad="1%")
-            cb = colorbar(sc, cax=cax, orientation="horizontal")
-            cax.xaxis.set_ticks_position("top")
-            cax.minorticks_on()
-            ax.text(0.5, 1.13, r'Dome Flat Throughput',ha='center', transform=ax.transAxes)
+        ax_divider = make_axes_locatable(ax)
+        cax = ax_divider.append_axes("top", size="4%", pad="1%")
+        cb = colorbar(sc, cax=cax, orientation="horizontal")
+        cax.xaxis.set_ticks_position("top")
+        cax.minorticks_on()
+        ax.text(0.5, 1.13, r'Dome Flat Throughput',ha='center', transform=ax.transAxes)
 
-        ax1 = plt.subplot2grid((1,nchips+2), (0,nchips))
-        ax1.set_xlim(-1.6,1.6)
-        ax1.set_ylim(-1.6,1.6)
-        ax1.axes.yaxis.set_ticklabels([])
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
-        ax1.yaxis.set_major_locator(ticker.MultipleLocator(1))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Zeta (deg.)')
+    ax1 = plt.subplot2grid((1,nchips+2), (0,nchips))
+    ax1.set_xlim(-1.6,1.6)
+    ax1.set_ylim(-1.6,1.6)
+    ax1.axes.yaxis.set_ticklabels([])
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax1.yaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax1.minorticks_on()
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlabel(r'Zeta (deg.)')
 
-        sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=block+0.5, edgecolors='white', cmap='tab10', alpha=0.9, vmin=0.5, vmax=10.5)
+    sc = ax1.scatter(plSum2['Zeta'], plSum2['Eta'], marker='o', s=150, c=block+0.5, edgecolors='white', cmap='tab10', alpha=0.9, vmin=0.5, vmax=10.5)
 
-        ax1_divider = make_axes_locatable(ax1)
+    ax1_divider = make_axes_locatable(ax1)
+    cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+    cb = colorbar(sc, cax=cax1, orientation="horizontal")
+    cax1.xaxis.set_ticks_position("top")
+    cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax1.text(0.5, 1.13, r'MTP #', ha='center', transform=ax1.transAxes)
+
+    ax2 = plt.subplot2grid((1,nchips+2), (0,nchips+1))
+    ax2.set_xlim(-1.6,1.6)
+    ax2.set_ylim(-1.6,1.6)
+    ax2.axes.yaxis.set_ticklabels([])
+    ax2.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax2.yaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax2.minorticks_on()
+    ax2.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax2.tick_params(axis='both',which='major',length=axmajlen)
+    ax2.tick_params(axis='both',which='minor',length=axminlen)
+    ax2.tick_params(axis='both',which='both',width=axwidth)
+    ax2.set_xlabel(r'Zeta (deg.)')
+
+    if fps:
+        notsky, = np.where((Vsum['H'] > 5) & (Vsum['H'] < 15) & (np.isnan(Vsum['H']) == False) & 
+                           (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                           (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
+    else:
+        notsky, = np.where((Vsum['H'] > 5) & (Vsum['H'] < 15) & (np.isnan(Vsum['H']) == False) & 
+                           (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0))# & (Vsum['OBJTYPE'] != 'none'))
+
+    if len(notsky) > 10:
+        # First pass at fitting line to S/N as function of H
+        H1 = Vsum['H'][notsky]
+        sn1 = Vsum['SNR'][notsky]
+        polynomial1 = np.poly1d(np.polyfit(H1, np.log10(sn1), 1))
+        yarrnew1 = polynomial1(H1)
+        diff1 = np.log10(sn1) - yarrnew1
+        gd1, = np.where(diff1 > -np.nanstd(diff1))
+        # Second pass at fitting line to S/N as function of H
+        H2 = H1[gd1]
+        sn2 = sn1[gd1]
+        polynomial2 = np.poly1d(np.polyfit(H2, np.log10(sn2), 1))
+        yarrnew2 = polynomial2(H2)
+        diff2 = np.log10(sn2) - yarrnew2
+        gd2, = np.where(diff2 > -np.nanstd(diff2))
+        # Final pass at fitting line to S/N as function of H
+        H3 = H2[gd2]
+        sn3 = sn2[gd2]
+        polynomial3 = np.poly1d(np.polyfit(H3, np.log10(sn3), 1))
+        xarrnew3 = np.linspace(np.nanmin(H1), np.nanmax(H1), 5000)
+        yarrnew3 = polynomial3(xarrnew3)
+        ratio = np.zeros(len(notsky))
+        eta = np.full(len(notsky), -999.9)
+        zeta = np.full(len(notsky), -999.9)
+        for q in range(len(notsky)):
+            hmdif = np.absolute(H1[q] - xarrnew3)
+            pp, = np.where(hmdif == np.nanmin(hmdif))
+            ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
+            g, = np.where(Vsum['APOGEE_ID'][notsky][q] == plSum2['TMASS_STYLE'])
+            if len(g) > 0:
+                eta[q] = plSum2['ETA'][g][0]
+                zeta[q] = plSum2['ZETA'][g][0]
+
+        #telluric, = np.where((eta > -900) & ((Vsum['OBJTYPE'][notsky] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][notsky] == 'HOT_STD')))
+        #if len(telluric) > 0:
+        #    x = zeta[telluric]
+        #    y = eta[telluric]
+        #    c = ratio[telluric]
+        #    l = 'telluric'
+        #    sc = ax2.scatter(x, y, marker='o', s=100, c=c, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75, label=l)
+        science, = np.where((eta > -900))# & ((Vsum['OBJTYPE'][notsky] == 'OBJECT') | (Vsum['OBJTYPE'][notsky] == 'STAR')))
+        if len(science) > 0:
+            x = zeta[science]
+            y = eta[science]
+            c = ratio[science]
+            l = 'science'
+            sc = ax2.scatter(x, y, marker='*', s=250, c=c, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75, label=l)
+
+        ax1_divider = make_axes_locatable(ax2)
         cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
         cb = colorbar(sc, cax=cax1, orientation="horizontal")
         cax1.xaxis.set_ticks_position("top")
-        cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
-        ax1.text(0.5, 1.13, r'MTP #', ha='center', transform=ax1.transAxes)
+        #cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax2.text(0.5, 1.13, r'obs SNR $/$ fit SNR', ha='center', transform=ax2.transAxes)
+        #ax2.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
-        ax2 = plt.subplot2grid((1,nchips+2), (0,nchips+1))
-        ax2.set_xlim(-1.6,1.6)
-        ax2.set_ylim(-1.6,1.6)
-        ax2.axes.yaxis.set_ticklabels([])
-        ax2.xaxis.set_major_locator(ticker.MultipleLocator(1))
-        ax2.yaxis.set_major_locator(ticker.MultipleLocator(1))
-        ax2.minorticks_on()
-        ax2.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax2.tick_params(axis='both',which='major',length=axmajlen)
-        ax2.tick_params(axis='both',which='minor',length=axminlen)
-        ax2.tick_params(axis='both',which='both',width=axwidth)
-        ax2.set_xlabel(r'Zeta (deg.)')
-
-        if fps:
-            notsky, = np.where((Vsum['H'] > 5) & (Vsum['H'] < 15) & (np.isnan(Vsum['H']) == False) & 
-                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
-                               (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
-        else:
-            notsky, = np.where((Vsum['H'] > 5) & (Vsum['H'] < 15) & (np.isnan(Vsum['H']) == False) & 
-                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
-
-        if len(notsky) > 10:
-            # First pass at fitting line to S/N as function of H
-            H1 = Vsum['H'][notsky]
-            sn1 = Vsum['SNR'][notsky]
-            polynomial1 = np.poly1d(np.polyfit(H1, np.log10(sn1), 1))
-            yarrnew1 = polynomial1(H1)
-            diff1 = np.log10(sn1) - yarrnew1
-            gd1, = np.where(diff1 > -np.nanstd(diff1))
-            # Second pass at fitting line to S/N as function of H
-            H2 = H1[gd1]
-            sn2 = sn1[gd1]
-            polynomial2 = np.poly1d(np.polyfit(H2, np.log10(sn2), 1))
-            yarrnew2 = polynomial2(H2)
-            diff2 = np.log10(sn2) - yarrnew2
-            gd2, = np.where(diff2 > -np.nanstd(diff2))
-            # Final pass at fitting line to S/N as function of H
-            H3 = H2[gd2]
-            sn3 = sn2[gd2]
-            polynomial3 = np.poly1d(np.polyfit(H3, np.log10(sn3), 1))
-            xarrnew3 = np.linspace(np.nanmin(H1), np.nanmax(H1), 5000)
-            yarrnew3 = polynomial3(xarrnew3)
-            ratio = np.zeros(len(notsky))
-            eta = np.full(len(notsky), -999.9)
-            zeta = np.full(len(notsky), -999.9)
-            for q in range(len(notsky)):
-                hmdif = np.absolute(H1[q] - xarrnew3)
-                pp, = np.where(hmdif == np.nanmin(hmdif))
-                ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
-                g, = np.where(Vsum['APOGEE_ID'][notsky][q] == plSum2['TMASS_STYLE'])
-                if len(g) > 0:
-                    eta[q] = plSum2['ETA'][g][0]
-                    zeta[q] = plSum2['ZETA'][g][0]
-
-            telluric, = np.where((eta > -900) & ((Vsum['OBJTYPE'][notsky] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][notsky] == 'HOT_STD')))
-            if len(telluric) > 0:
-                x = zeta[telluric]
-                y = eta[telluric]
-                c = ratio[telluric]
-                l = 'telluric'
-                sc = ax2.scatter(x, y, marker='o', s=100, c=c, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75, label=l)
-            science, = np.where((eta > -900) & ((Vsum['OBJTYPE'][notsky] == 'OBJECT') | (Vsum['OBJTYPE'][notsky] == 'STAR')))
-            if len(science) > 0:
-                x = zeta[science]
-                y = eta[science]
-                c = ratio[science]
-                l = 'science'
-                sc = ax2.scatter(x, y, marker='*', s=250, c=c, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75, label=l)
-
-            ax1_divider = make_axes_locatable(ax2)
-            cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-            cb = colorbar(sc, cax=cax1, orientation="horizontal")
-            cax1.xaxis.set_ticks_position("top")
-            #cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax2.text(0.5, 1.13, r'obs SNR $/$ fit SNR', ha='center', transform=ax2.transAxes)
-            ax2.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
-
-        fig.subplots_adjust(left=0.03,right=0.99,bottom=0.098,top=0.90,hspace=0.09,wspace=0.07)
-        plt.savefig(plotdir+plotfile)
-        plt.close('all')
-        
-    oldplotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
-    if os.path.exists(plotdir + oldplotfile): os.remove(plotdir + oldplotfile)
-
-    #----------------------------------------------------------------------------------------------
-    # PLOTS 7: sky, telluric, science fiber positions, colored by H
-    #----------------------------------------------------------------------------------------------
-    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
-    flux = load.apFlux(fluxid)
-    ypos = 300 - platesum2['FIBERID']
-    block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
-    fiblabs = np.array(['SKY', 'HOT_STD', 'OBJECT'])
-    if fps: fiblabs = np.array(['SKY', 'HOT_STD', 'STAR'])
-
-    plotfile = fluxfile.replace('.fits', '.png').replace('Flux', 'FibLoc')
-    if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
-        print("----> makeObsPlots: Making "+plotfile)
-
-        fig=plt.figure(figsize=(25,10))
-        plotrad = 1.6
-
-        for itype in range(3):
-            ax = plt.subplot2grid((1, 3), (0,itype))
-            ax.set_xlim(-plotrad, plotrad)
-            ax.set_ylim(-plotrad, plotrad)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            ax.set_xlabel(r'Zeta (deg.)')
-            if itype == 0: ax.set_ylabel(r'Eta (deg.)')
-            if itype != 0: ax.axes.yaxis.set_ticklabels([])
-
-            try:
-                if fps: 
-                    gd, = np.where((platesum2['H'] > 5) & (platesum2['H'] < 15) & (np.isnan(platesum2['H']) == False) & 
-                                   (platesum2['ASSIGNED']) & (platesum2['ON_TARGET']) & (platesum2['VALID']) & 
-                                   (platesum2['OBJTYPE'] == fiblabs[itype]))
-                    if itype == 0:
-                        gd, = np.where(platesum2['OBJTYPE'] == fiblabs[itype])
-
-                else: 
-                    gd, = np.where(platesum2['objtype'] == fiblabs[itype])
-                if len(gd) > 0:
-                    x = platesum2['Zeta'][gd]
-                    y = platesum2['Eta'][gd]
-                    c = platesum2['H'][gd]
-                    sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1)
-                    ax_divider = make_axes_locatable(ax)
-                    cax = ax_divider.append_axes("top", size="4%", pad="1%")
-                    if (len(gd) > 1) & (fiblabs[itype] != 'SKY'): 
-                        cb = colorbar(sc, cax=cax, orientation="horizontal")
-                        ax.text(0.5, 1.13, r'$H$ (mag)',ha='center', transform=ax.transAxes)
-                    cax.xaxis.set_ticks_position("top")
-                    cax.minorticks_on()
-                else:
-                    sc = ax.scatter([-100,-100], [-100,-100], marker='o', s=100, edgecolors='k', cmap='afmhot', alpha=1)
-                    ax_divider = make_axes_locatable(ax)
-                    cax = ax_divider.append_axes("top", size="4%", pad="1%")
-                    cax.xaxis.set_ticks_position("top")
-                    cax.axes.yaxis.set_ticklabels([])
-                    cax.minorticks_on()
-            except:
-                nothing = 5
-
-            txt = fiblabs[itype].replace('HOT_STD', 'TELLURIC').replace('STAR', 'SCIENCE').lower() + ' (' + str(len(gd)) + ')'
-            ax.text(0.03, 0.97, txt, transform=ax.transAxes, ha='left', va='top', color='k')
-
-        fig.subplots_adjust(left=0.045,right=0.985,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
-        plt.savefig(plotdir+plotfile)
-        plt.close('all')
-        
-    #----------------------------------------------------------------------------------------------
-    # PLOT 7: guider rms plot
-    #----------------------------------------------------------------------------------------------
-    expdir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+'exposures/'+instrument+'/'
-    gcamfile = expdir+mjd+'/gcam-'+mjd+'.fits'
-    if os.path.exists(gcamfile):
-        gcam = fits.getdata(gcamfile)
-
-        dateobs = plSum1['DATEOBS'][0]
-        tt = Time(dateobs)
-        mjdstart = tt.mjd
-        exptime = np.sum(plSum1['EXPTIME'])
-        mjdend = mjdstart + (exptime/(24*60*60))
-        jcam, = np.where((gcam['mjd'] > mjdstart) & (gcam['mjd'] < mjdend))
-
-        plotfile = 'guider-'+plate+'-'+mjd+'.png'
-        if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
-            print("----> makeObsPlots: Making "+plotfile)
-
-            fig=plt.figure(figsize=(10,10))
-            ax1 = plt.subplot2grid((1,1), (0,0))
-            ax1.tick_params(reset=True)
-            ax1.minorticks_on()
-            ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax1.tick_params(axis='both',which='major',length=axmajlen)
-            ax1.tick_params(axis='both',which='minor',length=axminlen)
-            ax1.tick_params(axis='both',which='both',width=axwidth)
-            ax1.set_xlabel(r'Minutes since visit start')
-            ax1.set_ylabel(r'Guider RMS')
-
-            x = (gcam['mjd'][jcam] - np.min(gcam['mjd'][jcam]))*60*24
-            ax1.plot(x, gcam['gdrms'][jcam], color='k')
-
-            fig.subplots_adjust(left=0.125,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
-            plt.savefig(plotdir+plotfile)
-            plt.close('all')
+    fig.subplots_adjust(left=0.03,right=0.99,bottom=0.098,top=0.90,hspace=0.09,wspace=0.07)
+    plt.savefig(plotdir+plotfile)
+    plt.close('all')
 
     # Loop over the exposures to make other plots.
     for i in range(n_exposures):
