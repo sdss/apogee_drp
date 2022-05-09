@@ -118,9 +118,10 @@ def makeplotpage():
     html.write('<TR>\n')
     html.write('<TH>File<TH>Plot\n')
     for i in range(npfiles):
+        tmp = os.path.basename(pfiles[i])
         html.write('<TR>\n')
-        html.write('<TD align="center">'+os.path.basename(pfiles[i])+'\n')
-        html.write('<TD align="center"><A HREF="'+pfiles[i]+'" target="_blank"><IMG SRC='+pfiles[i]+' WIDTH=1200></A>\n')
+        html.write('<TD align="center">'+tmp+'\n')
+        html.write('<TD align="center"><A HREF="plots/'+tmp+'" target="_blank"><IMG SRC=plots/'+tmp+' WIDTH=1200></A>\n')
 
     html.write('</table><HR>\n')
     html.write('<BR><BR>\n')
