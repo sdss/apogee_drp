@@ -256,8 +256,6 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     html.write('<b>Note:</b> in the Spatial mag deviation plots, color gives deviation of observed mag from expected 2MASS mag using the median zeropoint.</p>\n')
     html.write('<TR bgcolor="'+thcolor+'"><TH>FRAME <TH>ZEROPOINTS <TH>MAG PLOTS (GREEN CHIP)\n')
     html.write('<TH>SPATIAL MAG DEVIATION\n')
-    html.write('<TH>SPATIAL SKY 16325 &#8491; EMISSION DEVIATION\n')
-    html.write('<TH>SPATIAL SKY CONTINUUM EMISSION\n')
     #html.write('<TH>SPATIAL SKY TELLURIC CH4\n')
     #html.write('<TH>SPATIAL SKY TELLURIC CO2\n')
     #html.write('<TH>SPATIAL SKY TELLURIC H2O\n')
@@ -284,8 +282,6 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
 
             html.write('<TD><A HREF=plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=plots/'+oneDfile+'_magplots.png WIDTH=210></A>\n')
             html.write('<TD><A HREF=plots/'+oneDfile+'_spatialresid.png target="_blank"><IMG SRC=plots/'+oneDfile+'_spatialresid.png WIDTH=250></A>\n')
-            html.write('<TD><A HREF='+'plots/'+oneDfile+'_skyemission.png target="_blank"><IMG SRC=plots/'+oneDfile+'_skyemission.png WIDTH=250>\n')
-            html.write('<TD><A HREF='+'plots/'+oneDfile+'_skycontinuum.png target="_blank"><IMG SRC=plots/'+oneDfile+'_skycontinuum.png WIDTH=250>\n')
             
             #html.write('<TD> <a href=plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg target="_blank"> <IMG SRC=plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg WIDTH=250></a>\n')
             #html.write('<TD> <a href=plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg WIDTH=250></a>\n')
@@ -770,144 +766,6 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             plt.savefig(plotdir+plotfile)
             plt.close('all')
 
-            #------------------------------------------------------------------------------------------
-            # PLOT 10: spatial sky line emission
-            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
-            #------------------------------------------------------------------------------------------
-            plotfile = 'ap1D-'+str(plSum1['IM'][gd][0])+'_skyemission.png'
-            print("----> makeObsPlots: Making "+plotfile)
-
-            #d = load.apPlate(int(plate), mjd) 
-            d = load.ap1D(ims[i])
-            rows = 300 - platesum2['FIBERID']
-
-            fibersky, = np.where(platesum2['OBJTYPE'] == 'SKY')
-            nsky = len(fibersky)
-            if nsky>0:
-                sky = rows[fibersky]
-            else:
-                sky = []
-
-            fibertelluric, = np.where((platesum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (platesum2['OBJTYPE'] == 'HOT_STD'))
-            ntelluric = len(fibertelluric)
-            if ntelluric>0:
-                telluric = rows[fibertelluric]
-            else:
-                telluric = []
-
-            fiberobj, = np.where((platesum2['OBJTYPE'] == 'STAR_BHB') | (platesum2['OBJTYPE'] == 'STAR') |
-                                 (platesum2['OBJTYPE'] == 'EXTOBJ') | (platesum2['OBJTYPE'] == 'OBJECT'))
-            nobj = len(fiberobj)
-            obj = rows[fiberobj]
-
-            # Define skylines structure which we will use to get crude sky levels in lines.
-            dt = np.dtype([('W1',   np.float64),
-                           ('W2',   np.float64),
-                           ('C1',   np.float64),
-                           ('C2',   np.float64),
-                           ('C3',   np.float64),
-                           ('C4',   np.float64),
-                           ('FLUX', np.float64, (nfiber)),
-                           ('TYPE', np.int32)])
-
-            skylines = np.zeros(2,dtype=dt)
-            nskylines=len(skylines)
-
-            skylines['W1']   = 16230.0, 15990.0
-            skylines['W2']   = 16240.0, 16028.0
-            skylines['C1']   = 16215.0, 15980.0
-            skylines['C2']   = 16225.0, 15990.0
-            skylines['C3']   = 16245.0, 0.0
-            skylines['C4']   = 16255.0, 0.0
-            skylines['TYPE'] = 1, 0
-
-            try:
-                for iline in range(nskylines):
-                    skylines['FLUX'][iline] = getflux(d=d, skyline=skylines[iline], rows=rows)
-
-                medsky = np.nanmedian(skylines['FLUX'][0][fibersky])
-
-                fig=plt.figure(figsize=(14,15))
-                ax1 = plt.subplot2grid((1,1), (0,0))
-                ax1.set_xlim(-1.6,1.6)
-                ax1.set_ylim(-1.6,1.6)
-                ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-                ax1.minorticks_on()
-                ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax1.tick_params(axis='both',which='major',length=axmajlen)
-                ax1.tick_params(axis='both',which='minor',length=axminlen)
-                ax1.tick_params(axis='both',which='both',width=axwidth)
-                ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
-
-                xx = platesum2['ZETA'][fiberobj]
-                yy = platesum2['ETA'][fiberobj]
-                cc = skylines['FLUX'][0][fiberobj] / medsky
-                ax1.scatter(xx, yy, marker='*', s=400, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Science')
-
-                if ntelluric>0:
-                    xx = platesum2['ZETA'][fibertelluric]
-                    yy = platesum2['ETA'][fibertelluric]
-                    cc = skylines['FLUX'][0][fibertelluric] / medsky
-                    ax1.scatter(xx, yy, marker='o', s=215, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Telluric')
-
-                if nsky>0:
-                    xx = platesum2['ZETA'][fibersky]
-                    yy = platesum2['ETA'][fibersky]
-                    cc = skylines['FLUX'][0][fibersky] / medsky
-                    sc = ax1.scatter(xx, yy, marker='s', s=230, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=0.9, vmax=1.1, label='Sky')
-
-                ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
-
-                ax1_divider = make_axes_locatable(ax1)
-                cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-                cb = colorbar(sc, cax=cax1, orientation="horizontal")
-                cax1.xaxis.set_ticks_position("top")
-                cax1.minorticks_on()
-                ax1.text(0.5, 1.12, r'Sky emission deviation',ha='center', transform=ax1.transAxes)
-            except:
-                nothing = 5
-
-            fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
-            plt.savefig(plotdir+plotfile)
-            plt.close('all')
-
-            #------------------------------------------------------------------------------------------
-            # PLOT 11: spatial continuum emission
-            # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
-            #------------------------------------------------------------------------------------------
-            plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_skycontinuum.png'
-            if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
-                print("----> makeObsPlots: Making "+plotfile)
-
-                fig=plt.figure(figsize=(14,15))
-                ax1 = plt.subplot2grid((1,1), (0,0))
-                ax1.set_xlim(-1.6,1.6)
-                ax1.set_ylim(-1.6,1.6)
-                ax1.xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-                ax1.minorticks_on()
-                ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax1.tick_params(axis='both',which='major',length=axmajlen)
-                ax1.tick_params(axis='both',which='minor',length=axminlen)
-                ax1.tick_params(axis='both',which='both',width=axwidth)
-                ax1.set_xlabel(r'Zeta (deg.)');  ax1.set_ylabel(r'Eta (deg.)')
-
-                skyzero=14.75 + 2.5 * np.log10(plSum1['NREADS'][ii])
-                xx = platesum2['ZETA'][fibersky]
-                yy = platesum2['ETA'][fibersky]
-                cc = platesum2['obsmag'][fibersky, ii, 1] + skyzero - plSum1['ZERO'][ii]
-                sc = ax1.scatter(xx, yy, marker='s', s=270, c=cc, edgecolors='k', cmap=cmap, alpha=1, vmin=13, vmax=15)
-
-                ax1_divider = make_axes_locatable(ax1)
-                cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
-                cb = colorbar(sc, cax=cax1, orientation="horizontal")
-                cax1.xaxis.set_ticks_position("top")
-                cax1.minorticks_on()
-                ax1.text(0.5, 1.12, r'Sky continuum (mag.)',ha='center', transform=ax1.transAxes)
-
-                fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
-                plt.savefig(plotdir+plotfile)
-                plt.close('all')
-
 
             #----------------------------------------------------------------------------------------------
             # PLOT 7: make plot of sky levels for this plate
@@ -934,7 +792,7 @@ def getflux(d=None, skyline=None, rows=None):
     nnrows = len(rows)
 
     try:
-        ### NOTE:pretty sure that [2047,150] subscript won't work, but 150,2057 will. Hoping for the best.
+        ### NOTE:pretty sure that f[2047,150] subscript won't work, but 150,2057 will. Hoping for the best.
         if skyline['W1'] > d['a'][4].data[150,2047]:
             ichip = 0
         else:
