@@ -190,7 +190,9 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             html.write('<TR>\n')
             html.write('<TD align="right">'+str(i+1)+'\n')
             html.write('<TD align="right">'+ims[i]+'\n')
-            html.write('<TD align="right">'+str(int(round(tab1['EXPTIME'][gd][0])))+'\n')
+            cframepath = gvispath + 'apCframe-a-' + ims[i] + '.fits'
+            hdr = fits.getheader(cframepath)
+            html.write('<TD align="right">'+str(int(round(hdr['EXPTIME'])))+'\n')
             try:
                 html.write('<TD align="right">'+str(int(round(tab1['CART'][gd][0])))+'\n')
             except:
