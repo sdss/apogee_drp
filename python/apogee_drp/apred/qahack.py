@@ -454,7 +454,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
 
-    plotfile = fluxfile.replace('.fits', '.png')
+    plotfile = fluxfile.replace('.fits', '.png').replace('-a-','-')
     print("----> makeObsPlots: Making "+plotfile)
 
     fig=plt.figure(figsize=(35,8))
