@@ -79,27 +79,26 @@ def apqaALL(allv=None, mjdstart=57824, mjdstop=57878, observatory='apo', apred='
     if allv is None: allv = fits.getdata(allvpathUtah)
     g, = np.where((allv['MJD'] >= mjdstart) & (allv['MJD'] <= mjdstop) & (allv['TELESCOPE'] == 'apo25m'))
     pdb.set_trace()
-    mjdplate = np.array(allv['MJD'][g]).astype(str) + '-' + np.array(allv['PLATE'][g])
-    umjdplate,uind = np.unique(mjdplate, return_index=True)
+    ujd,uind = np.unique(allv['JD'][g], return_index=True)
     uallv = allv[uind]
-    nplate = len(umjdplate)
+    nplate = len(ujd)
     nplatestr = str(nplate)
     print('Running on ' + nplatestr + ' visits')
     for i in range(nplate):
-        plate = uallv['PLATE'][i]
+        plate = uallv['PLATE'][i].strip()
         mjd = str(uallv['MJD'][i])
         field = uallv['FIELD'][i]
         plsumpath = vispath + field + '/' + plate + '/' + mjd + '/apPlateSum-' + plate + '-' + mjd + '.fits'
         if os.path.exists(plsumpath) == False: pdb.set_trace()
         x = makeObsHTML(plate=plate, mjd=mjd, field=field)
 
-def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
-                   fluxid=None, telescope=None):
-        x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
-                    makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
-                    makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
-                    makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
-                    makemonitor=makemonitor, clobber=clobber)
+#def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, field=None,
+#                   fluxid=None, telescope=None):
+#        x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
+#                    makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
+#                    makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
+#                    makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
+#                    makemonitor=makemonitor, clobber=clobber)
 
 ###################################################################################################
 ''' MAKEOBSHTML: mkhtmlplate translation '''
