@@ -645,19 +645,19 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
 
             # PLOTS 8a: observed mag vs H mag
             pdb.set_trace()
-            x = plSum2['H'][science];    y = plSum2['obsmag'][science,ii,1]-plSum1['ZERO'][ii]
+            x = plSum2['H'][science];    y = plSum2['obsmag'][science,1,ii]-plSum1['ZERO'][ii]
             ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
             if ntelluric>0:
-                x = plSum2['H'][telluric];   y = plSum2['obsmag'][telluric,ii,1]-plSum1['ZERO'][ii]
+                x = plSum2['H'][telluric];   y = plSum2['obsmag'][telluric,1,ii]-plSum1['ZERO'][ii]
                 ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue', label='Telluric')
             ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
             # PLOTS 8b: observed mag - fit mag vs H mag
-            x = plSum2['H'][science];    y = x - plSum2['obsmag'][science,ii,1]
+            x = plSum2['H'][science];    y = x - plSum2['obsmag'][science,1,ii]
             yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
             ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
             if ntelluric>0:
-                x = plSum2['H'][telluric];   y = x - plSum2['obsmag'][telluric,ii,1]
+                x = plSum2['H'][telluric];   y = x - plSum2['obsmag'][telluric,1,ii]
                 ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
                 ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue')
                 ymin = np.min([yminsci,ymintel])
@@ -676,11 +676,11 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             #    ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
             #    x = plSum2['H'][telluric];   y = plSum2['SN'][telluric,i,ichip]
             #    ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
-            x = plSum2['H'][science];   y = plSum2['SN'][science,ii,1]
+            x = plSum2['H'][science];   y = plSum2['SN'][science,1,ii]
             yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
             ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
             if ntelluric>0:
-                x = plSum2['H'][telluric];   y = plSum2['SN'][telluric,ii,1]
+                x = plSum2['H'][telluric];   y = plSum2['SN'][telluric,1,ii]
                 ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
                 ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
                 ymin = np.min([yminsci,ymintel])
@@ -731,20 +731,20 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             try:
                 ass, = np.where(plSum2['ASSIGNED'][science])
                 x = plSum2['ZETA'][science][ass];    y = plSum2['ETA'][science][ass]
-                c = plSum2['H'][science][ass] - plSum2['obsmag'][science[ass],ii,1]
+                c = plSum2['H'][science][ass] - plSum2['obsmag'][science[ass],1,ii]
             except:
                 x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
-                c = plSum2['H'][science] - plSum2['obsmag'][science,ii,1]
+                c = plSum2['H'][science] - plSum2['obsmag'][science,1,ii]
             psci = ax1.scatter(x, y, marker='*', s=400, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
             if ntelluric>0:
                 try:
                     ass, = np.where(plSum2['ASSIGNED'][telluric])
                     x = plSum2['ZETA'][telluric][ass];    y = plSum2['ETA'][telluric][ass]
-                    c = plSum2['H'][telluric][ass] - plSum2['obsmag'][telluric[ass],ii,1]
+                    c = plSum2['H'][telluric][ass] - plSum2['obsmag'][telluric[ass],1,ii]
                 except:
                     x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
-                    c = plSum2['H'][telluric] - plSum2['obsmag'][telluric,ii,1]
+                    c = plSum2['H'][telluric] - plSum2['obsmag'][telluric,1,ii]
                 ptel = ax1.scatter(x, y, marker='o', s=215, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
             #try:
