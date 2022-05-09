@@ -378,7 +378,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                                (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
         else:
             notsky, = np.where((Vsum['H'] > 5) & (Vsum['H'] < 15) & (np.isnan(Vsum['H']) == False) & 
-                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
+                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0))# & (Vsum['OBJTYPE'] != 'none'))
 
         if len(notsky) > 10:
             if i == 0:
