@@ -338,120 +338,119 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     for i in range(2):
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
         if i == 1: plotfile = plotfile.replace('SNR','SNRblocks')
-        if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
-            print("----> makeObsPlots: Making "+plotfile)
+        print("----> makeObsPlots: Making "+plotfile)
 
-            fig=plt.figure(figsize=(19,10))
-            ax = plt.subplot2grid((1,1), (0,0))
-            ax.tick_params(reset=True)
-            ax.minorticks_on()
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-            ax.set_xlabel(r'$H$ mag.')
-            ax.set_ylabel(r'apVisit S/N')
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
+        fig=plt.figure(figsize=(19,10))
+        ax = plt.subplot2grid((1,1), (0,0))
+        ax.tick_params(reset=True)
+        ax.minorticks_on()
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax.set_xlabel(r'$H$ mag.')
+        ax.set_ylabel(r'apVisit S/N')
+        ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
 
-            if 'HMAG' in Vsum.columns.names:
-                hmagarr = Vsum['HMAG']
-            else:
-                hmagarr = Vsum['H']
-            gd, = np.where((hmagarr > 0) & (hmagarr < 20) & (np.isnan(Vsum['SNR']) == False))
-            ngd = len(gd)
-            try:
-                minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd])
-            except:
-                minH = 6;  maxH = 14
-            spanH = maxH - minH
-            xmin = minH - spanH * 0.05;     xmax = maxH + spanH * 0.05
+        if 'HMAG' in Vsum.columns.names:
+            hmagarr = Vsum['HMAG']
+        else:
+            hmagarr = Vsum['H']
+        gd, = np.where((hmagarr > 0) & (hmagarr < 20) & (np.isnan(Vsum['SNR']) == False))
+        ngd = len(gd)
+        try:
+            minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd])
+        except:
+            minH = 6;  maxH = 14
+        spanH = maxH - minH
+        xmin = minH - spanH * 0.05;     xmax = maxH + spanH * 0.05
 
-            try:
-                minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR'])
-            except:
-                minSNR = 0;  maxSNR = 500
-            spanSNR = maxSNR - minSNR
-            ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
+        try:
+            minSNR = np.nanmin(Vsum['SNR']); maxSNR = np.nanmax(Vsum['SNR'])
+        except:
+            minSNR = 0;  maxSNR = 500
+        spanSNR = maxSNR - minSNR
+        ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
-            if fps:
-                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
-                                   (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
-                                   (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
-            else:
-                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
-                                   (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
+        if fps:
+            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                               (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
+        else:
+            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
 
-            if len(notsky) > 10:
-                if i == 0:
-                    # First pass at fitting line to S/N as function of Hmag
-                    hmag1 = Vsum['HMAG'][notsky]
-                    sn1 = Vsum['SNR'][notsky]
-                    polynomial1 = np.poly1d(np.polyfit(hmag1, np.log10(sn1), 1))
-                    yarrnew1 = polynomial1(hmag1)
-                    diff1 = np.log10(sn1) - yarrnew1
-                    gd1, = np.where(diff1 > -np.nanstd(diff1))
-                    # Second pass at fitting line to S/N as function of Hmag
-                    hmag2 = hmag1[gd1]
-                    sn2 = sn1[gd1]
-                    polynomial2 = np.poly1d(np.polyfit(hmag2, np.log10(sn2), 1))
-                    yarrnew2 = polynomial2(hmag2)
-                    diff2 = np.log10(sn2) - yarrnew2
-                    gd2, = np.where(diff2 > -np.nanstd(diff2))
-                    # Final pass at fitting line to S/N as function of Hmag
-                    hmag3 = hmag2[gd2]
-                    sn3 = sn2[gd2]
-                    polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
-                    xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
-                    yarrnew3 = polynomial3(xarrnew3)
+        if len(notsky) > 10:
+            if i == 0:
+                # First pass at fitting line to S/N as function of Hmag
+                hmag1 = Vsum['HMAG'][notsky]
+                sn1 = Vsum['SNR'][notsky]
+                polynomial1 = np.poly1d(np.polyfit(hmag1, np.log10(sn1), 1))
+                yarrnew1 = polynomial1(hmag1)
+                diff1 = np.log10(sn1) - yarrnew1
+                gd1, = np.where(diff1 > -np.nanstd(diff1))
+                # Second pass at fitting line to S/N as function of Hmag
+                hmag2 = hmag1[gd1]
+                sn2 = sn1[gd1]
+                polynomial2 = np.poly1d(np.polyfit(hmag2, np.log10(sn2), 1))
+                yarrnew2 = polynomial2(hmag2)
+                diff2 = np.log10(sn2) - yarrnew2
+                gd2, = np.where(diff2 > -np.nanstd(diff2))
+                # Final pass at fitting line to S/N as function of Hmag
+                hmag3 = hmag2[gd2]
+                sn3 = sn2[gd2]
+                polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
+                xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
+                yarrnew3 = polynomial3(xarrnew3)
 
-                ax.plot(xarrnew3, 10**yarrnew3, color='grey', linestyle='dashed')
+            ax.plot(xarrnew3, 10**yarrnew3, color='grey', linestyle='dashed')
 
-            ax.set_xlim(xmin,xmax)
-            ax.set_ylim(1,1200)
-            ax.set_yscale('log')
+        ax.set_xlim(xmin,xmax)
+        ax.set_ylim(1,1200)
+        ax.set_yscale('log')
 
-            if fps:
-                science, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
-                                    (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
-                                    (Vsum['ON_TARGET']) & (Vsum['VALID']) & 
-                                    ((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR')))
+        if fps:
+            science, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                                (Vsum['ON_TARGET']) & (Vsum['VALID']) & 
+                                ((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR')))
 
-                telluric, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
-                                     (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
-                                     (Vsum['ON_TARGET']) & (Vsum['VALID']) & 
-                                     ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
-            else:
-                science, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
-                                    (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & 
-                                    ((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR')))
+            telluric, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+                                 (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                                 (Vsum['ON_TARGET']) & (Vsum['VALID']) & 
+                                 ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
+        else:
+            science, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & 
+                                ((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR')))
 
-                telluric, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
-                                     (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) &
-                                     ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
+            telluric, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+                                 (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) &
+                                 ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
 
-            x = Vsum['HMAG'][science];  y = Vsum['SNR'][science]
-            scicol = 'r'
-            telcol = 'dodgerblue'
-            if i == 1:
-                scicol = block[science] + 0.5
-                telcol = block[telluric] + 0.5
-            psci = ax.scatter(x, y, marker='*', s=400, edgecolors='white', alpha=0.8, c=scicol, cmap='tab10', vmin=0.5, vmax=10.5, label='Science')
-            x = Vsum['HMAG'][telluric];  y = Vsum['SNR'][telluric]
-            ptel = ax.scatter(x, y, marker='o', s=150, edgecolors='white', alpha=0.8, c=telcol, cmap='tab10', vmin=0.5, vmax=10.5, label='Telluric')
+        x = Vsum['HMAG'][science];  y = Vsum['SNR'][science]
+        scicol = 'r'
+        telcol = 'dodgerblue'
+        if i == 1:
+            scicol = block[science] + 0.5
+            telcol = block[telluric] + 0.5
+        psci = ax.scatter(x, y, marker='*', s=400, edgecolors='white', alpha=0.8, c=scicol, cmap='tab10', vmin=0.5, vmax=10.5, label='Science')
+        x = Vsum['HMAG'][telluric];  y = Vsum['SNR'][telluric]
+        ptel = ax.scatter(x, y, marker='o', s=150, edgecolors='white', alpha=0.8, c=telcol, cmap='tab10', vmin=0.5, vmax=10.5, label='Telluric')
 
-            if i == 1:
-                ax_divider = make_axes_locatable(ax)
-                cax = ax_divider.append_axes("right", size="2%", pad="1%")
-                cb = colorbar(ptel, cax=cax, orientation="vertical")
-                #cax.xaxis.set_ticks_position("right")
-                cax.yaxis.set_major_locator(ticker.MultipleLocator(1))
-                ax.text(1.09, 0.5, r'MTP #', ha='right', va='center', rotation=-90, transform=ax.transAxes)
+        if i == 1:
+            ax_divider = make_axes_locatable(ax)
+            cax = ax_divider.append_axes("right", size="2%", pad="1%")
+            cb = colorbar(ptel, cax=cax, orientation="vertical")
+            #cax.xaxis.set_ticks_position("right")
+            cax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax.text(1.09, 0.5, r'MTP #', ha='right', va='center', rotation=-90, transform=ax.transAxes)
 
-            ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
+        ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
-            fig.subplots_adjust(left=0.06,right=0.945,bottom=0.09,top=0.975,hspace=0.2,wspace=0.0)
-            plt.savefig(plotdir+plotfile)
-            plt.close('all')
+        fig.subplots_adjust(left=0.06,right=0.945,bottom=0.09,top=0.975,hspace=0.2,wspace=0.0)
+        plt.savefig(plotdir+plotfile)
+        plt.close('all')
 
     #----------------------------------------------------------------------------------------------
     # PLOTS 3-6: flat field flux and fiber blocks... previously done by plotflux.pro
