@@ -338,7 +338,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     for i in range(2):
         plotfile = os.path.basename(Vsumfile).replace('Sum','SNR').replace('.fits','.png')
         if i == 1: plotfile = plotfile.replace('SNR','SNRblocks')
-        if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+        if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
             print("----> makeObsPlots: Making "+plotfile)
 
             fig=plt.figure(figsize=(19,10))
@@ -450,7 +450,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
             fig.subplots_adjust(left=0.06,right=0.945,bottom=0.09,top=0.975,hspace=0.2,wspace=0.0)
-            plt.savefig(plotsdir+plotfile)
+            plt.savefig(plotdir+plotfile)
             plt.close('all')
 
     #----------------------------------------------------------------------------------------------
@@ -462,7 +462,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
 
     plotfile = fluxfile.replace('.fits', '.png')
-    if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+    if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
         fig=plt.figure(figsize=(35,8))
@@ -599,11 +599,11 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             ax2.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
         fig.subplots_adjust(left=0.03,right=0.99,bottom=0.098,top=0.90,hspace=0.09,wspace=0.07)
-        plt.savefig(plotsdir+plotfile)
+        plt.savefig(plotdir+plotfile)
         plt.close('all')
         
     oldplotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
-    if os.path.exists(plotsdir + oldplotfile): os.remove(plotsdir + oldplotfile)
+    if os.path.exists(plotdir + oldplotfile): os.remove(plotdir + oldplotfile)
 
     #----------------------------------------------------------------------------------------------
     # PLOTS 7: sky, telluric, science fiber positions, colored by Hmag
@@ -616,7 +616,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     if fps: fiblabs = np.array(['SKY', 'HOT_STD', 'STAR'])
 
     plotfile = fluxfile.replace('.fits', '.png').replace('Flux', 'FibLoc')
-    if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+    if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
         fig=plt.figure(figsize=(25,10))
@@ -673,7 +673,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             ax.text(0.03, 0.97, txt, transform=ax.transAxes, ha='left', va='top', color='k')
 
         fig.subplots_adjust(left=0.045,right=0.985,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
-        plt.savefig(plotsdir+plotfile)
+        plt.savefig(plotdir+plotfile)
         plt.close('all')
         
     #----------------------------------------------------------------------------------------------
@@ -692,7 +692,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
         jcam, = np.where((gcam['mjd'] > mjdstart) & (gcam['mjd'] < mjdend))
 
         plotfile = 'guider-'+plate+'-'+mjd+'.png'
-        if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+        if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
             print("----> makeObsPlots: Making "+plotfile)
 
             fig=plt.figure(figsize=(10,10))
@@ -710,7 +710,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             ax1.plot(x, gcam['gdrms'][jcam], color='k')
 
             fig.subplots_adjust(left=0.125,right=0.98,bottom=0.08,top=0.98,hspace=0.2,wspace=0.0)
-            plt.savefig(plotsdir+plotfile)
+            plt.savefig(plotdir+plotfile)
             plt.close('all')
 
     # Loop over the exposures to make other plots.
@@ -722,7 +722,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             # PLOTS 8: 3 panel mag/SNR plots for each exposure
             #----------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_magplots.png'
-            if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+            if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsPlots: Making "+plotfile)
 
                 telluric, = np.where((plSum2['OBJTYPE'] == 'SPECTROPHOTO_STD') | (plSum2['OBJTYPE'] == 'HOT_STD'))
@@ -822,14 +822,14 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                 ax3.plot(x, y, color='k',linewidth=1.5)
 
                 fig.subplots_adjust(left=0.14,right=0.978,bottom=0.08,top=0.99,hspace=0.2,wspace=0.0)
-                plt.savefig(plotsdir+plotfile)
+                plt.savefig(plotdir+plotfile)
                 plt.close('all')
 
             #------------------------------------------------------------------------------------------
             # PLOT 9: spatial residuals for each exposure
             #----------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_spatialresid.png'
-            if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+            if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsPlots: Making "+plotfile)
 
                 fig=plt.figure(figsize=(14,15))
@@ -883,7 +883,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                 ax1.text(0.5, 1.12, r'$H$ + 2.5*log(m - zero)',ha='center', transform=ax1.transAxes)
 
                 fig.subplots_adjust(left=0.11,right=0.97,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
-                plt.savefig(plotsdir+plotfile)
+                plt.savefig(plotdir+plotfile)
                 plt.close('all')
 
             #------------------------------------------------------------------------------------------
@@ -891,7 +891,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
             #------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][gd][0])+'_skyemission.png'
-            if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+            if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsPlots: Making "+plotfile)
 
                 #d = load.apPlate(int(plate), mjd) 
@@ -985,7 +985,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                     nothing = 5
 
                 fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
-                plt.savefig(plotsdir+plotfile)
+                plt.savefig(plotdir+plotfile)
                 plt.close('all')
 
             #------------------------------------------------------------------------------------------
@@ -993,7 +993,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
             #------------------------------------------------------------------------------------------
             plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_skycontinuum.png'
-            if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+            if (os.path.exists(plotdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsPlots: Making "+plotfile)
 
                 fig=plt.figure(figsize=(14,15))
@@ -1022,7 +1022,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                 ax1.text(0.5, 1.12, r'Sky continuum (mag.)',ha='center', transform=ax1.transAxes)
 
                 fig.subplots_adjust(left=0.11,right=0.970,bottom=0.07,top=0.91,hspace=0.2,wspace=0.0)
-                plt.savefig(plotsdir+plotfile)
+                plt.savefig(plotdir+plotfile)
                 plt.close('all')
 
 
