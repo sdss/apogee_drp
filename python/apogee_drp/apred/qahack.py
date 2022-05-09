@@ -440,7 +440,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
         if i == 1:
             ax_divider = make_axes_locatable(ax)
             cax = ax_divider.append_axes("right", size="2%", pad="1%")
-            cb = colorbar(ptel, cax=cax, orientation="vertical")
+            cb = colorbar(psci, cax=cax, orientation="vertical")
             #cax.xaxis.set_ticks_position("right")
             cax.yaxis.set_major_locator(ticker.MultipleLocator(1))
             ax.text(1.09, 0.5, r'MTP #', ha='right', va='center', rotation=-90, transform=ax.transAxes)
