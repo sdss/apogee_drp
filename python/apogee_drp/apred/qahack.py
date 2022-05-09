@@ -103,6 +103,35 @@ def apqaALL(allv=None, mjdstart=57824, mjdstop=57878, observatory='apo', apred='
 #                    makemonitor=makemonitor, clobber=clobber)
 
 ###################################################################################################
+''' MAKEPLOTPAGE: mkhtmlplate translation '''
+def makeplotpage():
+    pfiles = glob.glob(plotdir + 'apVisitSNR-*png')
+    pfiles.sort()
+    pfiles = np.array(pfiles)
+    npfiles = len(pfiles)
+    outfile = htmldir + 'plots.html'
+    html = open(outfile, 'w')
+
+    html.write('<HTML><HEAD><title>SNR plots</title></head><BODY>\n')
+
+    html.write('<TABLE BORDER=2>\n')
+    html.write('<TR>\n')
+    html.write('<TH>File<TH>Plot\n')
+    for i in range(npfiles):
+        html.write('<TR>\n')
+        html.write('<TD align="center">'+os.path.basename(pfiles[i])+'\n')
+        html.write('<TD align="center"><A HREF="'+pfiles[i]+'" target="_blank"><IMG SRC='+pfiles[i]+' WIDTH=1200></A>\n')
+
+    html.write('<A HREF="'+'plots/'+fluxfile+'" target="_blank"><IMG SRC=plots/'+fluxfile+' WIDTH=1200></A>')
+    html.write('<HR>\n')
+    html.write('</table><HR>\n')
+    
+    html.write('<BR><BR>\n')
+    html.write('</BODY></HTML>\n')
+    html.close()
+
+
+###################################################################################################
 ''' MAKEOBSHTML: mkhtmlplate translation '''
 def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m'):
 
