@@ -136,6 +136,7 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
     order = np.argsort(a['MJD'])
     a = a[order]
     hmagAll = a['HMAG']
+    plateAll = a['PLATE']
     snAll = np.nanmean(a['SNFIBER'], axis=2)
     seczAll = a['SECZ']
     seeingAll = a['SEEING']
