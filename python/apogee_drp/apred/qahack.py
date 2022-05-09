@@ -128,8 +128,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     plans = yanny.yanny(planpath)
     fluxid = plans['fluxid'].zfill(8)
     gd, = np.where(np.array(plans['APEXP']['flavor']) == 'object')
-    pdb.set_trace()
-    ims = np.array(plans['APEXP']['name'][gd])
+    ims = np.array(plans['APEXP']['name'])[gd]
     n_exposures = len(ims)
 
     # Read the plateSum file
