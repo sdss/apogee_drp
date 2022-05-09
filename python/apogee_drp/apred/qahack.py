@@ -121,7 +121,7 @@ def makeplotpage():
         tmp = os.path.basename(pfiles[i])
         html.write('<TR>\n')
         html.write('<TD align="center">'+tmp+'\n')
-        html.write('<TD align="center"><A HREF="plots/'+tmp+'" target="_blank"><IMG SRC=plots/'+tmp+' WIDTH=1200></A>\n')
+        html.write('<TD align="center"><A HREF="plots/'+tmp+'" target="_blank"><IMG SRC=plots/'+tmp+' WIDTH=500></A>\n')
 
     html.write('</table><HR>\n')
     html.write('<BR><BR>\n')
