@@ -188,6 +188,7 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
                 diff[q] = sn1[q] - 10**yarrnew3[pp][0]
 
             sigratio = np.nanstd(ratio)
+            pdb.set_trace()
             madratio = dln.mad(ratio)
             sigdiff = dln.mad(diff)
             maddiff = dln.mad(diff)
