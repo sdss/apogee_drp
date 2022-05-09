@@ -132,9 +132,9 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     n_exposures = len(ims)
 
     # Read the plateSum file
-    tab1 = fits.getdata(platesum,1)
-    tab2 = fits.getdata(platesum,2)
-    tab3 = fits.getdata(platesum,3)
+    tab1 = fits.getdata(plsumpath,1)
+    tab2 = fits.getdata(plsumpath,2)
+    tab3 = fits.getdata(plsumpath,3)
 
     shiftstr = fits.getdata(platepath, 13)
     pairstr = fits.getdata(platepath, 14)
