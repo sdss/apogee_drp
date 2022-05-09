@@ -125,7 +125,7 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
-def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
+def getTputScatter(mjd1=59650, mjd2=59704, niter=3, sigclip=-1):
     Z = '  '
 
     g1, = np.where((allsnr['MJD'] > mjd1) & (allsnr['MJD'] < mjd2))
@@ -161,7 +161,7 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
     nbad = np.empty(num)
     for iexp in range(num):
         g, = np.where((snAll[iexp] > 0) & (hmagAll[iexp] > 5) & (hmagAll[iexp] < 15))
-        if len(g) > 10:
+        if len(g) > 200:
             # First pass at fitting line to S/N as function of Hmag
             hm1 = hmagAll[iexp][g]
             sn1 = snAll[iexp][g]
