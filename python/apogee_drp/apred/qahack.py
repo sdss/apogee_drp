@@ -454,7 +454,9 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     #----------------------------------------------------------------------------------------------
     # PLOTS 3-6: flat field flux and fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
-    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    fluxfile = 'apFlux-' + fluxid + '.fits'
+    gfluxpath = fluxpath + fluxfile
+    pdb.set_trace()
     flux = load.apFlux(fluxid)
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
