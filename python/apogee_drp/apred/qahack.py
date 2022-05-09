@@ -644,7 +644,6 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             ax3.text(-0.15,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
 
             # PLOTS 8a: observed mag vs H mag
-            pdb.set_trace()
             x = plSum2['H'][science];    y = plSum2['obsmag'][science,1,ii]-plSum1['ZERO'][ii]
             ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
             if ntelluric>0:
