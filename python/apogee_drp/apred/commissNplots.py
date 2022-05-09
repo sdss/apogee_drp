@@ -209,7 +209,7 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
             sigD[iexp] = sigdiff
             madR[iexp] = madratio
 
-    return sigR,madR,seeing,secz,zero
+    return sigR,sigD,madR,seeing,secz,zero
     pdb.set_trace()
 
     t1 = Column(name='TPUT_SIGMA', data=tputSigma)
