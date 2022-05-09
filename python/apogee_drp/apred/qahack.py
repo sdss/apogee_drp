@@ -599,7 +599,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
 
     # Loop over the exposures to make other plots.
     for i in range(n_exposures):
-        gd, = np.where(ims[i] == plSum1['IM'])
+        gd, = np.where(int(ims[i]) == plSum1['IM'])
         if len(gd) >= 1:
             ii = gd[0]
             #------------------------------------------------------------------------------------------
