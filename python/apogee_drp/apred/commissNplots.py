@@ -129,6 +129,7 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
     Z = '  '
 
     g1, = np.where((allsnr['MJD'] > mjd1) & (allsnr['MJD'] < mjd2))
+    if mjd1 > 59550: g1, = np.where((allsnr['MJD'] > mjd1) & (allsnr['MJD'] < mjd2) & (allsnr['EXPTIME'] == 457))
     ng = len(g1)
     print(ng)
     a = allsnr[g1]
