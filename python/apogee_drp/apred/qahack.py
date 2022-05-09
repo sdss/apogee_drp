@@ -151,7 +151,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     html.write('<HR>\n')
 
     # SNR plots
-    html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
+    html.write('<H3>apVisit H versus S/N: </H3>\n')
     snrplot1 = 'apVisitSNR-'+plate+'-'+mjd+'.png'
     snrplot2 = 'apVisitSNRblocks-'+plate+'-'+mjd+'.png'
     html.write('<A HREF=plots/'+snrplot1+' target="_blank"><IMG SRC=plots/'+snrplot1+' WIDTH=600></A>')
@@ -326,10 +326,10 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     platesum2 = fits.getdata(plsumpath,2)
     fibord = np.argsort(platesum2['FIBERID'])
     plSum2 = platesum2[fibord]
-    nfiber = len(plSum2['HMAG'])
+    nfiber = len(plSum2['H'])
 
     #----------------------------------------------------------------------------------------------
-    # PLOTS 1-2: HMAG versus S/N for the exposure-combined apVisit, second version colored by fiber block
+    # PLOTS 1-2: H versus S/N for the exposure-combined apVisit, second version colored by fiber block
     #----------------------------------------------------------------------------------------------
     Vsumfile = vispath + field + '/apVisitSum-' + plate + '-' + mjd + '.fits'
     Vsum = fits.getdata(Vsumfile,1) 
@@ -352,14 +352,14 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
         ax.tick_params(axis='both',which='minor',length=axminlen)
         ax.tick_params(axis='both',which='both',width=axwidth)
 
-        if 'HMAG' in Vsum.columns.names:
-            hmagarr = Vsum['HMAG']
+        if 'H' in Vsum.columns.names:
+            Harr = Vsum['H']
         else:
-            hmagarr = Vsum['H']
-        gd, = np.where((hmagarr > 0) & (hmagarr < 20) & (np.isnan(Vsum['SNR']) == False))
+            Harr = Vsum['H']
+        gd, = np.where((Harr > 0) & (Harr < 20) & (np.isnan(Vsum['SNR']) == False))
         ngd = len(gd)
         try:
-            minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd])
+            minH = np.nanmin(Harr[gd]);  maxH = np.nanmax(Harr[gd])
         except:
             minH = 6;  maxH = 14
         spanH = maxH - minH
@@ -373,34 +373,34 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
         ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
         if fps:
-            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+            notsky, = np.where((Vsum['H'] > 5) & (Vsum['H'] < 15) & (np.isnan(Vsum['H']) == False) & 
                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
                                (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
         else:
-            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+            notsky, = np.where((Vsum['H'] > 5) & (Vsum['H'] < 15) & (np.isnan(Vsum['H']) == False) & 
                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
 
         if len(notsky) > 10:
             if i == 0:
-                # First pass at fitting line to S/N as function of Hmag
-                hmag1 = Vsum['HMAG'][notsky]
+                # First pass at fitting line to S/N as function of H
+                H1 = Vsum['H'][notsky]
                 sn1 = Vsum['SNR'][notsky]
-                polynomial1 = np.poly1d(np.polyfit(hmag1, np.log10(sn1), 1))
-                yarrnew1 = polynomial1(hmag1)
+                polynomial1 = np.poly1d(np.polyfit(H1, np.log10(sn1), 1))
+                yarrnew1 = polynomial1(H1)
                 diff1 = np.log10(sn1) - yarrnew1
                 gd1, = np.where(diff1 > -np.nanstd(diff1))
-                # Second pass at fitting line to S/N as function of Hmag
-                hmag2 = hmag1[gd1]
+                # Second pass at fitting line to S/N as function of H
+                H2 = H1[gd1]
                 sn2 = sn1[gd1]
-                polynomial2 = np.poly1d(np.polyfit(hmag2, np.log10(sn2), 1))
-                yarrnew2 = polynomial2(hmag2)
+                polynomial2 = np.poly1d(np.polyfit(H2, np.log10(sn2), 1))
+                yarrnew2 = polynomial2(H2)
                 diff2 = np.log10(sn2) - yarrnew2
                 gd2, = np.where(diff2 > -np.nanstd(diff2))
-                # Final pass at fitting line to S/N as function of Hmag
-                hmag3 = hmag2[gd2]
+                # Final pass at fitting line to S/N as function of H
+                H3 = H2[gd2]
                 sn3 = sn2[gd2]
-                polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
-                xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
+                polynomial3 = np.poly1d(np.polyfit(H3, np.log10(sn3), 1))
+                xarrnew3 = np.linspace(np.nanmin(H1), np.nanmax(H1), 5000)
                 yarrnew3 = polynomial3(xarrnew3)
 
             ax.plot(xarrnew3, 10**yarrnew3, color='grey', linestyle='dashed')
@@ -410,32 +410,32 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
         ax.set_yscale('log')
 
         if fps:
-            science, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+            science, = np.where((Vsum['H'] > 0) & (Vsum['H'] < 16) & (np.isnan(Vsum['H']) == False) & 
                                 (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
                                 (Vsum['ON_TARGET']) & (Vsum['VALID']) & 
                                 ((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR')))
 
-            telluric, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+            telluric, = np.where((Vsum['H'] > 0) & (Vsum['H'] < 16) & (np.isnan(Vsum['H']) == False) & 
                                  (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
                                  (Vsum['ON_TARGET']) & (Vsum['VALID']) & 
                                  ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
         else:
-            science, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+            science, = np.where((Vsum['H'] > 0) & (Vsum['H'] < 16) & (np.isnan(Vsum['H']) == False) & 
                                 (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & 
                                 ((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR')))
 
-            telluric, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+            telluric, = np.where((Vsum['H'] > 0) & (Vsum['H'] < 16) & (np.isnan(Vsum['H']) == False) & 
                                  (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) &
                                  ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
 
-        x = Vsum['HMAG'][science];  y = Vsum['SNR'][science]
+        x = Vsum['H'][science];  y = Vsum['SNR'][science]
         scicol = 'r'
         telcol = 'dodgerblue'
         if i == 1:
             scicol = block[science] + 0.5
             telcol = block[telluric] + 0.5
         psci = ax.scatter(x, y, marker='*', s=400, edgecolors='white', alpha=0.8, c=scicol, cmap='tab10', vmin=0.5, vmax=10.5, label='Science')
-        x = Vsum['HMAG'][telluric];  y = Vsum['SNR'][telluric]
+        x = Vsum['H'][telluric];  y = Vsum['SNR'][telluric]
         ptel = ax.scatter(x, y, marker='o', s=150, edgecolors='white', alpha=0.8, c=telcol, cmap='tab10', vmin=0.5, vmax=10.5, label='Telluric')
 
         if i == 1:
@@ -534,39 +534,39 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
         ax2.set_xlabel(r'Zeta (deg.)')
 
         if fps:
-            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+            notsky, = np.where((Vsum['H'] > 5) & (Vsum['H'] < 15) & (np.isnan(Vsum['H']) == False) & 
                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
                                (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
         else:
-            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+            notsky, = np.where((Vsum['H'] > 5) & (Vsum['H'] < 15) & (np.isnan(Vsum['H']) == False) & 
                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
 
         if len(notsky) > 10:
-            # First pass at fitting line to S/N as function of Hmag
-            hmag1 = Vsum['HMAG'][notsky]
+            # First pass at fitting line to S/N as function of H
+            H1 = Vsum['H'][notsky]
             sn1 = Vsum['SNR'][notsky]
-            polynomial1 = np.poly1d(np.polyfit(hmag1, np.log10(sn1), 1))
-            yarrnew1 = polynomial1(hmag1)
+            polynomial1 = np.poly1d(np.polyfit(H1, np.log10(sn1), 1))
+            yarrnew1 = polynomial1(H1)
             diff1 = np.log10(sn1) - yarrnew1
             gd1, = np.where(diff1 > -np.nanstd(diff1))
-            # Second pass at fitting line to S/N as function of Hmag
-            hmag2 = hmag1[gd1]
+            # Second pass at fitting line to S/N as function of H
+            H2 = H1[gd1]
             sn2 = sn1[gd1]
-            polynomial2 = np.poly1d(np.polyfit(hmag2, np.log10(sn2), 1))
-            yarrnew2 = polynomial2(hmag2)
+            polynomial2 = np.poly1d(np.polyfit(H2, np.log10(sn2), 1))
+            yarrnew2 = polynomial2(H2)
             diff2 = np.log10(sn2) - yarrnew2
             gd2, = np.where(diff2 > -np.nanstd(diff2))
-            # Final pass at fitting line to S/N as function of Hmag
-            hmag3 = hmag2[gd2]
+            # Final pass at fitting line to S/N as function of H
+            H3 = H2[gd2]
             sn3 = sn2[gd2]
-            polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
-            xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
+            polynomial3 = np.poly1d(np.polyfit(H3, np.log10(sn3), 1))
+            xarrnew3 = np.linspace(np.nanmin(H1), np.nanmax(H1), 5000)
             yarrnew3 = polynomial3(xarrnew3)
             ratio = np.zeros(len(notsky))
             eta = np.full(len(notsky), -999.9)
             zeta = np.full(len(notsky), -999.9)
             for q in range(len(notsky)):
-                hmdif = np.absolute(hmag1[q] - xarrnew3)
+                hmdif = np.absolute(H1[q] - xarrnew3)
                 pp, = np.where(hmdif == np.nanmin(hmdif))
                 ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
                 g, = np.where(Vsum['APOGEE_ID'][notsky][q] == plSum2['TMASS_STYLE'])
@@ -605,7 +605,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     if os.path.exists(plotdir + oldplotfile): os.remove(plotdir + oldplotfile)
 
     #----------------------------------------------------------------------------------------------
-    # PLOTS 7: sky, telluric, science fiber positions, colored by Hmag
+    # PLOTS 7: sky, telluric, science fiber positions, colored by H
     #----------------------------------------------------------------------------------------------
     fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
     flux = load.apFlux(fluxid)
@@ -638,7 +638,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
 
             try:
                 if fps: 
-                    gd, = np.where((platesum2['HMAG'] > 5) & (platesum2['HMAG'] < 15) & (np.isnan(platesum2['HMAG']) == False) & 
+                    gd, = np.where((platesum2['H'] > 5) & (platesum2['H'] < 15) & (np.isnan(platesum2['H']) == False) & 
                                    (platesum2['ASSIGNED']) & (platesum2['ON_TARGET']) & (platesum2['VALID']) & 
                                    (platesum2['OBJTYPE'] == fiblabs[itype]))
                     if itype == 0:
@@ -649,7 +649,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                 if len(gd) > 0:
                     x = platesum2['Zeta'][gd]
                     y = platesum2['Eta'][gd]
-                    c = platesum2['HMAG'][gd]
+                    c = platesum2['H'][gd]
                     sc = ax.scatter(x, y, marker='o', s=100, c=c, edgecolors='k', cmap='afmhot', alpha=1)
                     ax_divider = make_axes_locatable(ax)
                     cax = ax_divider.append_axes("top", size="4%", pad="1%")
@@ -731,10 +731,10 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                 sky, = np.where(plSum2['OBJTYPE'] == 'SKY')
                 nsky = len(sky)
 
-                notsky, = np.where((plSum2['HMAG'] > 0) & (plSum2['HMAG'] < 30))
-                hmagarr = plSum2['HMAG'][notsky]
+                notsky, = np.where((plSum2['H'] > 0) & (plSum2['H'] < 30))
+                Harr = plSum2['H'][notsky]
                 try:
-                    minH = np.nanmin(hmagarr);  maxH = np.nanmax(hmagarr)
+                    minH = np.nanmin(Harr);  maxH = np.nanmax(Harr)
                 except:
                     minH = 6;  maxH = 14
                 xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
@@ -764,19 +764,19 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                 ax3.text(-0.15,0.50,r'S/N',transform=ax3.transAxes,rotation=90,ha='left',va='center')
 
                 # PLOTS 8a: observed mag vs H mag
-                x = plSum2['HMAG'][science];    y = plSum2['obsmag'][science,ii,1]-plSum1['ZERO'][ii]
+                x = plSum2['H'][science];    y = plSum2['obsmag'][science,ii,1]-plSum1['ZERO'][ii]
                 ax1.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r', label='Science')
                 if ntelluric>0:
-                    x = plSum2['HMAG'][telluric];   y = plSum2['obsmag'][telluric,ii,1]-plSum1['ZERO'][ii]
+                    x = plSum2['H'][telluric];   y = plSum2['obsmag'][telluric,ii,1]-plSum1['ZERO'][ii]
                     ax1.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue', label='Telluric')
                 ax1.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey')
 
                 # PLOTS 8b: observed mag - fit mag vs H mag
-                x = plSum2['HMAG'][science];    y = x - plSum2['obsmag'][science,ii,1]
+                x = plSum2['H'][science];    y = x - plSum2['obsmag'][science,ii,1]
                 yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
                 ax2.scatter(x, y, marker='*', s=180, edgecolors='k', alpha=alpha, c='r')
                 if ntelluric>0:
-                    x = plSum2['HMAG'][telluric];   y = x - plSum2['obsmag'][telluric,ii,1]
+                    x = plSum2['H'][telluric];   y = x - plSum2['obsmag'][telluric,ii,1]
                     ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
                     ax2.scatter(x, y, marker='o', s=60, edgecolors='k', alpha=alpha, c='dodgerblue')
                     ymin = np.min([yminsci,ymintel])
@@ -791,15 +791,15 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                 # PLOTS 8c: S/N as calculated from ap1D frame
                 #c = ['r','g','b']
                 #for ichip in range(nchips):
-                #    x = plSum2['HMAG'][science];   y = plSum2['SN'][science,i,ichip]
+                #    x = plSum2['H'][science];   y = plSum2['SN'][science,i,ichip]
                 #    ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
-                #    x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,i,ichip]
+                #    x = plSum2['H'][telluric];   y = plSum2['SN'][telluric,i,ichip]
                 #    ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc=c[ichip], linestyle='')
-                x = plSum2['HMAG'][science];   y = plSum2['SN'][science,ii,1]
+                x = plSum2['H'][science];   y = plSum2['SN'][science,ii,1]
                 yminsci = np.nanmin(y); ymaxsci = np.nanmax(y)
                 ax3.semilogy(x, y, marker='*', ms=15, mec='k', alpha=alpha, mfc='r', linestyle='')
                 if ntelluric>0:
-                    x = plSum2['HMAG'][telluric];   y = plSum2['SN'][telluric,ii,1]
+                    x = plSum2['H'][telluric];   y = plSum2['SN'][telluric,ii,1]
                     ymintel = np.nanmin(y); ymaxtel = np.nanmax(y)
                     ax3.semilogy(x, y, marker='o', ms=9, mec='k', alpha=alpha, mfc='dodgerblue', linestyle='')
                     ymin = np.min([yminsci,ymintel])
@@ -849,25 +849,25 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                 try:
                     ass, = np.where(plSum2['ASSIGNED'][science])
                     x = plSum2['ZETA'][science][ass];    y = plSum2['ETA'][science][ass]
-                    c = plSum2['HMAG'][science][ass] - plSum2['obsmag'][science[ass],ii,1]
+                    c = plSum2['H'][science][ass] - plSum2['obsmag'][science[ass],ii,1]
                 except:
                     x = plSum2['ZETA'][science];    y = plSum2['ETA'][science]
-                    c = plSum2['HMAG'][science] - plSum2['obsmag'][science,ii,1]
+                    c = plSum2['H'][science] - plSum2['obsmag'][science,ii,1]
                 psci = ax1.scatter(x, y, marker='*', s=400, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Science')
 
                 if ntelluric>0:
                     try:
                         ass, = np.where(plSum2['ASSIGNED'][telluric])
                         x = plSum2['ZETA'][telluric][ass];    y = plSum2['ETA'][telluric][ass]
-                        c = plSum2['HMAG'][telluric][ass] - plSum2['obsmag'][telluric[ass],ii,1]
+                        c = plSum2['H'][telluric][ass] - plSum2['obsmag'][telluric[ass],ii,1]
                     except:
                         x = plSum2['ZETA'][telluric];    y = plSum2['ETA'][telluric]
-                        c = plSum2['HMAG'][telluric] - plSum2['obsmag'][telluric,ii,1]
+                        c = plSum2['H'][telluric] - plSum2['obsmag'][telluric,ii,1]
                     ptel = ax1.scatter(x, y, marker='o', s=215, c=c, edgecolors='k', cmap=cmap, alpha=1, vmin=-0.5, vmax=0.5, label='Telluric')
 
                 #try:
                 #    x = plSum2['ZETA'][sky];    y = plSum2['ETA'][sky]
-                #    c = plSum2['HMAG'][sky] - plSum2['obsmag'][sky,i,1]
+                #    c = plSum2['H'][sky] - plSum2['obsmag'][sky,i,1]
                 #    psky = ax1.scatter(x, y, marker='s', s=140, c='white', edgecolors='k', alpha=1, label='Sky')
                 #except:
                 #    print("----> makeObsPlots: Problem!!! Sky fiber subscripting error when trying to make spatial mag. plots.")
