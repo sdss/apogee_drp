@@ -699,7 +699,9 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             ax3.set_ylim(ymin-(yspan*0.05),ymax+(yspan*0.05))
 
             # overplot the target S/N line
-            sntarget = 100 * np.sqrt(plSum1['EXPTIME'][ii] / (3.0 * 3600))
+            cframepath = gvispath + 'apCframe-a-' + ims[ii] + '.fits'
+            hdr = fits.getheader(cframepath)
+            sntarget = 100 * np.sqrt(hdr['EXPTIME'] / (3.0 * 3600))
             sntargetmag = 12.2
             x = [sntargetmag - 10, sntargetmag + 2.5];    y = [sntarget * 100, sntarget / np.sqrt(10)]
             ax3.plot(x, y, color='k',linewidth=1.5)
