@@ -420,7 +420,6 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
                                  (Vsum['ON_TARGET']) & (Vsum['VALID']) & 
                                  ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
         else:
-            pdb.set_trace()
             science, = np.where((Vsum['H'] > 0) & (Vsum['H'] < 16) & (np.isnan(Vsum['H']) == False) & 
                                 (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0))
 
@@ -433,7 +432,7 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
         telcol = 'dodgerblue'
         if i == 1:
             scicol = block[science] + 0.5
-            telcol = block[telluric] + 0.5
+            #telcol = block[telluric] + 0.5
         psci = ax.scatter(x, y, marker='*', s=400, edgecolors='white', alpha=0.8, c=scicol, cmap='tab10', vmin=0.5, vmax=10.5, label='Science')
         #x = Vsum['H'][telluric];  y = Vsum['SNR'][telluric]
         #ptel = ax.scatter(x, y, marker='o', s=150, edgecolors='white', alpha=0.8, c=telcol, cmap='tab10', vmin=0.5, vmax=10.5, label='Telluric')
