@@ -76,7 +76,7 @@ plotdir = htmldir + 'plots/'
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
 def apqaALL(allv=None, mjdstart=57824, mjdstop=57878, observatory='apo', apred='daily', makeobshtml=True, makeobsplots=True):
 
-    if allv is None: allv = fits.getdata(allvpathUtah
+    if allv is None: allv = fits.getdata(allvpathUtah)
     g, = np.where((allv['MJD'] >= mjdstart) & (allv['MJD'] <= mjdstop))
     mjdplate = np.array(allv['MJD'][g]).astype(str) + '-' + np.array(allv['PLATE'][g])
     umjdplate,uind = np.unique(mjdplate, return_index=True)
