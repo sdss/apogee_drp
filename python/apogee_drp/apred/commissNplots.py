@@ -144,8 +144,6 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
     skyAll = a['SKY']
     zeroAll = a['SKY']
 
-    pdb.set_trace()
-
     tputSigma = np.zeros(ng)
     tputMad = np.zeros(ng)
 
@@ -156,6 +154,7 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
     seeing = np.empty(num)
     secz = np.empty(num)
     sigR = np.empty(num)
+    sigD = np.empty(num)
     madR = np.empty(num)
     for iexp in range(num):
         g, = np.where((snAll[iexp] > 0) & (hmagAll[iexp] > 5) & (hmagAll[iexp] < 15))
@@ -194,7 +193,7 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
             maddiff = dln.mad(diff)
             p0 = a['sumfile'][iexp]
             p1 = str("%.3f" % round(sigratio,3))
-            p2 = str("%.3f" % round(madratio,3))
+            #p2 = str("%.3f" % round(madratio,3))
             p3 = str("%.3f" % round(sigdiff,3))
             p4 = str("%.3f" % round(maddiff,3))
             p5 = str("%.3f" % round(seeingAll[iexp],3))
@@ -207,6 +206,7 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
             seeing[iexp] = seeingAll[iexp]
             secz[iexp] = seczAll[iexp]
             sigR[iexp] = sigratio
+            sigD[iexp] = sigdiff
             madR[iexp] = madratio
 
     return sigR,madR,seeing,secz,zero
