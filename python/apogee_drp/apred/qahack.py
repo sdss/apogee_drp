@@ -64,7 +64,7 @@ exppath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/redu
 allvpathUtah = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
 htmldir = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/users/u0955897/qa/'
 plotdir = htmldir + 'plots/'
-
+chiplab = np.array(['blue','green','red'])
 #------------------------------------------------------------------------------------------------------------------------
 # APQA
 #
