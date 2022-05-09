@@ -60,6 +60,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 
 vispath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/redux/dr17/visit/apo25m/'
 fluxpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/redux/dr17/cal/flux/'
+exppath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/redux/dr17/exposures/apogee-n'
 allvpathUtah = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
 htmldir = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/users/u0955897/qa/'
 plotdir = htmldir + 'plots/'
@@ -121,14 +122,21 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     # Check for existence of plateSum file
     gvispath = vispath + field + '/' + plate + '/' + mjd + '/'
     plsumpath = gvispath + 'apPlateSum-' + plate + '-' + mjd + '.fits'
+    platepath = gvispath + 'apPlate-a-' + plate + '-' + mjd + '.fits'
     planpath = gvispath + 'apPlan-' + plate + '-' + mjd + '.par'
     plans = yanny.yanny(planpath)
-    pdb.set_trace()
+    fluxid = plans['fluxid'].zfill(8)
+    gd, = np.where(plans['APEXP']['flavor'] == 'object')
+    ims = np.array(plans['APEXP']['name'][gd])
+    n_exposures = len(ims)
 
     # Read the plateSum file
     tab1 = fits.getdata(platesum,1)
     tab2 = fits.getdata(platesum,2)
     tab3 = fits.getdata(platesum,3)
+
+    shiftstr = fits.getdata(platepath, 13)
+    pairstr = fits.getdata(platepath, 14)
 
     # Make the html directory if it doesn't already exist
     qafile = htmldir + 'apQA-' + plate + '-' + mjd + '.html'
@@ -141,13 +149,6 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     html.write('</FONT><BR>MJD: <FONT COLOR="green">' + mjd + '</FONT></H1>\n')
     html.write('<HR>\n')
 
-
-    platefile = load.apPlate(int(plate), mjd)
-    shiftstr = platefile['a'][13].data
-    pairstr = platefile['a'][14].data
-#;    shiftstr = mrdfits(platefile,13)
-#;    pairstr = mrdfits(platefile,14,status=status)
-
     # SNR plots
     html.write('<H3>apVisit Hmag versus S/N: </H3>\n')
     snrplot1 = 'apVisitSNR-'+plate+'-'+mjd+'.png'
@@ -157,15 +158,15 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     html.write('<HR>\n')
 
     #fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
-    #fluxfile = 
+    fluxfile = 'apFlux-' + fluxid + '.png'
     html.write('<H3>Fiber Throughput:</H3>\n')
     html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
-    html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
+    html.write('<A HREF="'+'plots/'+fluxfile+'" target="_blank"><IMG SRC=plots/'+fluxfile+' WIDTH=1200></A>')
     html.write('<HR>\n')
 
     # Fiber location plots.
     html.write('<H3>Fiber Positions:</H3>\n')
-    html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','FibLoc')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','FibLoc')+' WIDTH=900></A>')
+    html.write('<A HREF="'+'plots/'+fluxfile.replace('Flux','FibLoc')+'" target="_blank"><IMG SRC=plots/'+fluxfile.replace('Flux','FibLoc')+' WIDTH=900></A>')
     html.write('<HR>\n')
 
     # Table of individual exposures.
@@ -292,16 +293,18 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
     html.write('<TH>SPATIAL MAG DEVIATION\n')
     html.write('<TH>SPATIAL SKY 16325 &#8491; EMISSION DEVIATION\n')
     html.write('<TH>SPATIAL SKY CONTINUUM EMISSION\n')
-    html.write('<TH>SPATIAL SKY TELLURIC CH4\n')
-    html.write('<TH>SPATIAL SKY TELLURIC CO2\n')
-    html.write('<TH>SPATIAL SKY TELLURIC H2O\n')
+    #html.write('<TH>SPATIAL SKY TELLURIC CH4\n')
+    #html.write('<TH>SPATIAL SKY TELLURIC CO2\n')
+    #html.write('<TH>SPATIAL SKY TELLURIC H2O\n')
 
     for i in range(n_exposures):
+        cim = str(int(round(ims[i])))
         gd, = np.where(ims[i] == tab1['IM'])
         if len(gd) >= 1:
-            oneDfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
+            oneDfile = 'ap1D-' + cim
+            #oneDfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
             #html.write('<TR><TD bgcolor="'+thcolor+'"><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
-            html.write('<TR><TD bgcolor="'+thcolor+'">'+str(int(round(ims[i])))+'\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">'+cim+'\n')
             html.write('<TD><TABLE BORDER=1><TD><TD bgcolor="'+thcolor+'">RED<TD bgcolor="'+thcolor+'">GREEN<TD bgcolor="'+thcolor+'">BLUE\n')
             html.write('<TR><TD bgcolor="'+thcolor+'">Z<TD><TD>'+str("%.2f" % round(tab1['ZERO'][gd][0],2))+'\n')
             html.write('<TR><TD bgcolor="'+thcolor+'">ZNORM<TD><TD>'+str("%.2f" % round(tab1['ZERONORM'][gd][0],2))+'\n')
@@ -315,22 +318,18 @@ def makeObsHTML(plate=None, mjd=None, field=None, fluxid=None, telescope='apo25m
             html.write('<TR><TD bgcolor="'+thcolor+'">SN(E/C)<TD>'+str(np.round(tab1['SNRATIO'][gd][0],2))+'\n')
             html.write('</TABLE>\n')
 
-            html.write('<TD><A HREF=../plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_magplots.png WIDTH=210></A>\n')
-            html.write('<TD><A HREF=../plots/'+oneDfile+'_spatialresid.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_spatialresid.png WIDTH=250></A>\n')
-            html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skyemission.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skyemission.png WIDTH=250>\n')
-            html.write('<TD><A HREF='+'../plots/'+oneDfile+'_skycontinuum.png target="_blank"><IMG SRC=../plots/'+oneDfile+'_skycontinuum.png WIDTH=250>\n')
-            cim = str(ims[i])
-            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg WIDTH=250></a>\n')
-            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg WIDTH=250></a>\n')
-            html.write('<TD> <a href=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg target="_blank"> <IMG SRC=../plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg WIDTH=250></a>\n')
+            html.write('<TD><A HREF=plots/'+oneDfile+'_magplots.png target="_blank"><IMG SRC=plots/'+oneDfile+'_magplots.png WIDTH=210></A>\n')
+            html.write('<TD><A HREF=plots/'+oneDfile+'_spatialresid.png target="_blank"><IMG SRC=plots/'+oneDfile+'_spatialresid.png WIDTH=250></A>\n')
+            html.write('<TD><A HREF='+'plots/'+oneDfile+'_skyemission.png target="_blank"><IMG SRC=plots/'+oneDfile+'_skyemission.png WIDTH=250>\n')
+            html.write('<TD><A HREF='+'plots/'+oneDfile+'_skycontinuum.png target="_blank"><IMG SRC=plots/'+oneDfile+'_skycontinuum.png WIDTH=250>\n')
+            
+            #html.write('<TD> <a href=plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg target="_blank"> <IMG SRC=plots/'+prefix+'telluric_'+cim+'_skyfit_CH4.jpg WIDTH=250></a>\n')
+            #html.write('<TD> <a href=plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg target="_blank"> <IMG SRC=plots/'+prefix+'telluric_'+cim+'_skyfit_CO2.jpg WIDTH=250></a>\n')
+            #html.write('<TD> <a href=plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg target="_blank"> <IMG SRC=plots/'+prefix+'telluric_'+cim+'_skyfit_H2O.jpg WIDTH=250></a>\n')
         else:
-            html.write('<TR><TD bgcolor="'+thcolor+'">'+str(int(round(ims[i])))+'\n')
+            html.write('<TR><TD bgcolor="'+thcolor+'">'+cim+'\n')
             html.write('<TD><TD><TD><TD><TD><TD><TD><TD>\n')
     html.write('</table><HR>\n')
-    
-    gfile = 'guider-'+plate+'-'+mjd+'.png'
-    html.write('<H3>Guider RMS: </H3>\n')
-    html.write('<A HREF='+'../plots/'+gfile+'><IMG SRC=../plots/'+gfile+' WIDTH=390 target="_blank"></A>\n')
     
     html.write('<BR><BR>\n')
     html.write('</BODY></HTML>\n')
