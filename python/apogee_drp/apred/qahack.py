@@ -78,6 +78,7 @@ def apqaALL(allv=None, mjdstart=57824, mjdstop=57878, observatory='apo', apred='
 
     if allv is None: allv = fits.getdata(allvpathUtah)
     g, = np.where((allv['MJD'] >= mjdstart) & (allv['MJD'] <= mjdstop))
+    pdb.set_trace()
     mjdplate = np.array(allv['MJD'][g]).astype(str) + '-' + np.array(allv['PLATE'][g])
     umjdplate,uind = np.unique(mjdplate, return_index=True)
     uallv = allv[uind]
