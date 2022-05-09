@@ -219,7 +219,7 @@ def getTputScatter(mjd1=59650, mjd2=59702, niter=3, sigclip=-1):
 
     g, = np.where((seeing > 0.2) & (seeing < 5))
 
-    return sigR[g],sigD[g],madR[g],seeing[g],secz[g],zero[g]
+    return sigR[g],sigD[g],madR[g],seeing[g],secz[g],zero[g],nbad[g]
     pdb.set_trace()
 
     t1 = Column(name='TPUT_SIGMA', data=tputSigma)
