@@ -122,10 +122,7 @@ def makeplotpage():
         html.write('<TD align="center">'+os.path.basename(pfiles[i])+'\n')
         html.write('<TD align="center"><A HREF="'+pfiles[i]+'" target="_blank"><IMG SRC='+pfiles[i]+' WIDTH=1200></A>\n')
 
-    html.write('<A HREF="'+'plots/'+fluxfile+'" target="_blank"><IMG SRC=plots/'+fluxfile+' WIDTH=1200></A>')
-    html.write('<HR>\n')
     html.write('</table><HR>\n')
-    
     html.write('<BR><BR>\n')
     html.write('</BODY></HTML>\n')
     html.close()
