@@ -112,13 +112,14 @@ def makeplotpage():
     outfile = htmldir + 'plots.html'
     html = open(outfile, 'w')
 
-    html.write('<HTML><HEAD><title>SNR plots</title></head><BODY>\n')
+    html.write('<HTML><HEAD><script src="../sorttable.js"></script><title>SNR plots</title></head><BODY>\n')
 
-    html.write('<TABLE BORDER=2>\n')
+    html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR>\n')
     html.write('<TH>File<TH>Plot\n')
     for i in range(npfiles):
         tmp = os.path.basename(pfiles[i])
+        pdb.set_trace()
         html.write('<TR>\n')
         html.write('<TD align="center">'+tmp+'\n')
         html.write('<TD align="center"><A HREF="plots/'+tmp+'" target="_blank"><IMG SRC=plots/'+tmp+' WIDTH=500></A>\n')
