@@ -65,6 +65,9 @@ allvpathUtah = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro
 htmldir = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/users/u0955897/qa/'
 plotdir = htmldir + 'plots/'
 chiplab = np.array(['blue','green','red'])
+specdir5 = os.environ.get('APOGEE_REDUX') + '/daily/'
+allsnr = fits.getdata(specdir5 + 'monitor/apogee-nSNR.fits')
+
 #------------------------------------------------------------------------------------------------------------------------
 # APQA
 #
@@ -116,14 +119,29 @@ def makeplotpage():
 
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR>\n')
-    html.write('<TH>File<TH>Plot\n')
+    html.write('<TH>FIELD<TH>PLATE<TH>MJD<TH>SEEING<TH>SECZ<TH>MDIST<TH>MPHASE<TH>PLOT\n')
     for i in range(npfiles):
         tmp = os.path.basename(pfiles[i])
         plate = tmp.split('-')[1]
         mjd = tmp.split('-')[2].split('.')[0]
-        pdb.set_trace()
+        g, = np.where((int(plate) == allsnr['PLATE']) & (int(mjd) == allsnr['MJD']))
+        field = allsnr['FIELD'][g][0]
+        seeing1 = np.nanmin(allsnr['SEEING'][g])
+        seeing2 = np.nanmax(allsnr['SEEING'][g])
+        secz1 = np.nanmin(allsnr['SECZ'][g])
+        secz2 = np.nanmax(allsnr['SECZ'][g])
+        seeing = str("%.3f" % round(np.nanmean(allsnr['SEEING'][g]),3))
+        secz = str("%.3f" % round(np.nanmean(allsnr['SECZ'][g]),3))
+        mdist = str("%.3f" % round(np.nanmean(allsnr['MOONDIST'][g]),3))
+        mphase = str("%.3f" % round(np.nanmean(allsnr['MOONPHASE'][g]),3))
         html.write('<TR>\n')
-        html.write('<TD align="center">'+tmp+'\n')
+        html.write('<TD align="center">'+field+'\n')
+        html.write('<TD align="center">'+plate+'\n')
+        html.write('<TD align="center">'+mjd+'\n')
+        html.write('<TD align="center">'+seeing+'\n')
+        html.write('<TD align="center">'+secz+'\n')
+        html.write('<TD align="center">'+mdist+'\n')
+        html.write('<TD align="center">'+mphase+'\n')
         html.write('<TD align="center"><A HREF="plots/'+tmp+'" target="_blank"><IMG SRC=plots/'+tmp+' WIDTH=500></A>\n')
 
     html.write('</table><HR>\n')
