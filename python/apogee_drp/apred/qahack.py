@@ -119,6 +119,8 @@ def makeplotpage():
     html.write('<TH>File<TH>Plot\n')
     for i in range(npfiles):
         tmp = os.path.basename(pfiles[i])
+        plate = tmp.split('-')[1]
+        mjd = tmp.split('-')[2].split('.')[0]
         pdb.set_trace()
         html.write('<TR>\n')
         html.write('<TD align="center">'+tmp+'\n')
