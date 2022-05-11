@@ -144,7 +144,7 @@ def getTputScatter(mjd1=59650, mjd2=59704, niter=3, sigclip=-1):
     mdistAll = a['MOONDIST']
     exptAll = a['EXPTIME']
     skyAll = a['SKY']
-    zeroAll = a['SKY']
+    zeroAll = a['ZERO']
 
     tputSigma = np.zeros(ng)
     tputMad = np.zeros(ng)
@@ -159,6 +159,7 @@ def getTputScatter(mjd1=59650, mjd2=59704, niter=3, sigclip=-1):
     sigD = np.empty(num)
     madR = np.empty(num)
     nbad = np.empty(num)
+    sn9 = np.empty(num)
     for iexp in range(num):
         g, = np.where((snAll[iexp] > 0) & (hmagAll[iexp] > 5) & (hmagAll[iexp] < 15))
         if len(g) > 200:
@@ -190,6 +191,10 @@ def getTputScatter(mjd1=59650, mjd2=59704, niter=3, sigclip=-1):
                 ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
                 diff[q] = sn1[q] - 10**yarrnew3[pp][0]
 
+            diff9 = np.absolute(9 - xarrnew3)
+            pp9, = np.where(diff9 == np.nanmin(diff9))
+            sn9[iexp] = yarrnew3[pp9][0]
+
             sigratio = np.nanstd(ratio)
             bad, = np.where(ratio < 1-sigratio)
             nbad[iexp] = len(bad)
@@ -219,7 +224,7 @@ def getTputScatter(mjd1=59650, mjd2=59704, niter=3, sigclip=-1):
 
     g, = np.where((seeing > 0.2) & (seeing < 5))
 
-    return sigR[g],sigD[g],madR[g],seeing[g],secz[g],zero[g],nbad[g]
+    return sigR[g],sigD[g],madR[g],seeing[g],secz[g],zero[g],nbad[g],sn9[g]
     pdb.set_trace()
 
     t1 = Column(name='TPUT_SIGMA', data=tputSigma)
