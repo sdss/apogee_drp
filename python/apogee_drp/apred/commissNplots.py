@@ -162,7 +162,7 @@ def getTputScatter(mjd1=59650, mjd2=59709, niter=3, sigclip=-1):
     sn9 = np.empty(num)
     for iexp in range(num):
         g, = np.where((snAll[iexp] > 0) & (hmagAll[iexp] > 5) & (hmagAll[iexp] < 15))
-        if len(g) > 200:
+        if len(g) > 150:
             # First pass at fitting line to S/N as function of Hmag
             hm1 = hmagAll[iexp][g]
             sn1 = snAll[iexp][g]
