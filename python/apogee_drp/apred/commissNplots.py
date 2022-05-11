@@ -125,7 +125,7 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
-def getTputScatter(mjd1=59650, mjd2=59704, niter=3, sigclip=-1):
+def getTputScatter(mjd1=59650, mjd2=59709, niter=3, sigclip=-1):
     Z = '  '
 
     g1, = np.where((allsnr['MJD'] > mjd1) & (allsnr['MJD'] < mjd2))
@@ -193,7 +193,7 @@ def getTputScatter(mjd1=59650, mjd2=59704, niter=3, sigclip=-1):
 
             diff9 = np.absolute(9 - xarrnew3)
             pp9, = np.where(diff9 == np.nanmin(diff9))
-            sn9[iexp] = yarrnew3[pp9][0]
+            sn9[iexp] = 10**yarrnew3[pp9][0]
 
             sigratio = np.nanstd(ratio)
             bad, = np.where(ratio < 1-sigratio)
