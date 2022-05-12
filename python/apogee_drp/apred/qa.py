@@ -122,6 +122,7 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
     ndirs = len(mjdDirs)
     allmjd = np.empty(ndirs).astype(str)
     for i in range(ndirs): allmjd[i] = mjdDirs[i].split('/')[-1]
+    pdb.set_trace()
     gd, = np.where(allmjd != 'plots')
     umjd = np.unique(allmjd[gd])
     gd, = np.where(umjd == mjdstart)
