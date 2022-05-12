@@ -2204,7 +2204,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if tput < 0.4: bcolor = '#FF3333'
                     if tput < 0.3: bcolor = '#FF0000'
                     tput = str(int(round(tput*100))) + '%'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>Dflat<BR>Tput</B><BR>' + tput + '\n')
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>Dflat<BR>Tput</B><BR><BR>' + tput + '\n')
                 else:
                     vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
 
