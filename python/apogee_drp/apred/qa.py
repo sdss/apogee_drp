@@ -2167,11 +2167,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 else:
                     vishtml.write('<BR>apStar file??\n')
                     vishtml.write('<BR>Star Summary Page??\n')
-                vishtml.write('<TD align ="center"><B>H</B><BR><BR>' + str("%.3f" % round(hmag,3)))
+                vishtml.write('<TD align ="center"><B>H</B><BR><BR><BR>' + str("%.3f" % round(hmag,3)))
                 if (jmag > 0) & (kmag > 0) & (jmag < 90) & (kmag < 90):
-                    vishtml.write('<TD align ="center"><B>J-K</B><BR><BR>' + str("%.3f" % round(jmag-kmag,3)))
+                    vishtml.write('<TD align ="center"><B>J-K</B><BR><BR><BR>' + str("%.3f" % round(jmag-kmag,3)))
                 else:
-                    vishtml.write('<TD align ="center"><B>J-K</B><BR><BR><FONT COLOR="red">99.999</FONT>')
+                    vishtml.write('<TD align ="center"><B>J-K</B><BR><BR><BR><FONT COLOR="red">99.999</FONT>')
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
                     vishtml.write('<TD align="center"><B>TYPE</B><BR><BR><BR>TEL')
                 else:
