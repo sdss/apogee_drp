@@ -2265,7 +2265,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
             tmp1 = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/plots/'
             tmp2 = tmp1 + os.path.basename(visitplotfile)
-            print(tmp2)
             if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS') & (os.path.exists(tmp2)):
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
             else:
