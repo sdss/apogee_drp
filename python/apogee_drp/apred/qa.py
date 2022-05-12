@@ -2198,7 +2198,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
                 else: 
-                    vishtml.write('<TD align ="center" BGCOLOR="Gray"><B>REL<BR>S/N</B><BR><BR><FONT COLOR="red">-1%</FONT>')
+                    vishtml.write('<TD align ="center" BGCOLOR="Gray"><B>REL<BR>S/N</B><BR><BR>-1%')
                 # Throughput column
                 tput = throughput[j]
                 if np.isnan(tput) == False:
@@ -2214,11 +2214,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 else:
                     vishtml.write('<TD align ="center" BGCOLOR="grey"><B>DFLAT<BR>TPUT</B><BR><BR>-1%\n')
 
-                vishtml.write('<TD align ="center"><B>VHELIO</B><BR><BR><BR><FONT COLOR="' + vcol + '">' + str("%.1f" % round(vhelio,1)) + '</FONT>')
-                vishtml.write('<TD align ="center"><B>NCOMP</B><BR><BR><BR><FONT COLOR="' + vcol + '">' + str(ncomp) + '</FONT>')
-                vishtml.write('<TD align ="center"><B>TEFF</B><BR><BR><BR><FONT COLOR="' + vcol + '">' + str(int(round(rvteff))) + '</FONT>')
-                vishtml.write('<TD align ="center"><B>LOGG</B><BR><BR><BR><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvlogg,3)) + '</FONT>')
-                vishtml.write('<TD align ="center"><B>[FE/H]</B><BR><BR><BR><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
+                vishtml.write('<TD align ="center"><B>VHELIO</B><BR><BR><BR>' + str("%.1f" % round(vhelio,1)))
+                vishtml.write('<TD align ="center"><B>NCOMP</B><BR><BR><BR>' + str(ncomp))
+                vishtml.write('<TD align ="center"><B>TEFF</B><BR><BR><BR>' + str(int(round(rvteff))))
+                vishtml.write('<TD align ="center"><B>LOGG</B><BR><BR><BR>' + str("%.3f" % round(rvlogg,3)))
+                vishtml.write('<TD align ="center"><B>[FE/H]</B><BR><BR><BR>' + str("%.3f" % round(rvfeh,3)))
             else:
                 snr = '-9.9'
                 relsnr = '-1%'
@@ -2230,14 +2230,14 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     bgcolor = 'grey'
                     fcolor = 'Black'
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + cfiber + '<BR>(' + cblock + ')</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">99.999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">99.999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + snr + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + relsnr + '</FONT>')
+                vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
+                vishtml.write('<TD align="center">' + objtype)
+                vishtml.write('<TD align="center">99.999')
+                vishtml.write('<TD align="center">99.999')
+                vishtml.write('<TD align="center">' + objtype)
+                vishtml.write('<TD align="center">' + objtype)
+                vishtml.write('<TD align="center">' + snr)
+                vishtml.write('<TD align="center">' + relsnr)
                 # Throughput column
                 tput = throughput[j]
                 if np.isnan(tput) == False:
