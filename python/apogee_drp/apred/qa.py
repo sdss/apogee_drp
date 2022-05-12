@@ -2068,14 +2068,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
         snroutfile = platesum.replace('apPlateSum', 'relSNR').replace('.fits', '.dat')
         ascii.write(sdata, snroutfile, overwrite=True)
 
-    # DB query for this visit
-    db = apogeedb.DBSession()
-    vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
-    db.close()
-    gd, = np.where(vcat['assigned'] == 1)
-    ngd = len(gd)
-    vcat = vcat[gd]     
-
     # Loop over the fibers
     for j in range(ngd):
         jdata = data[j]
