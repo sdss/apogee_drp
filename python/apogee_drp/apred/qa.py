@@ -2099,20 +2099,24 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 #if np.isnan(rvlogg): rvlogg = -9.999
                 #rvfeh = jvcatl['rv_feh']
                 #if np.isnan(rvfeh): rvfeh = -9.999
-                try:
+                apStarRelPath = None
+                starHTMLrelPath = None
+                if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
                     apstarfile = load.filename('Star', obj=objid)
-                except:
-                    pdb.set_trace()
-                if os.path.exists(apstarfile):
-                    apstarheader = fits.getheader(apstarfile)
-                    vhelio = apstarheader['VHBARY']
-                    ncomp = apstarheader['N_COMP']
-                    rvteff = apstarheader['RV_TEFF']
-                    rvlogg = apstarheader['RV_LOGG']
-                    rvfeh = apstarheader['RV_FEH']
-                    if np.isnan(rvteff): rvteff = -9999
-                    if np.isnan(rvlogg): rvlogg = -9.999
-                    if np.isnan(rvfeh): rvfeh = -9.999
+                    if os.path.exists(apstarfile):
+                        apstarheader = fits.getheader(apstarfile)
+                        vhelio = apstarheader['VHBARY']
+                        ncomp = apstarheader['N_COMP']
+                        rvteff = apstarheader['RV_TEFF']
+                        rvlogg = apstarheader['RV_LOGG']
+                        rvfeh = apstarheader['RV_FEH']
+                        if np.isnan(rvteff): rvteff = -9999
+                        if np.isnan(rvlogg): rvlogg = -9.999
+                        if np.isnan(rvfeh): rvfeh = -9.999
+                        tmp = apstarfile.split(apred + '/')
+                        apStarRelPath = '../../../../../' + tmp[1]
+                        starHTMLrelPath = '../../../../../' + os.path.dirname(tmp[1]) + '/html/'
+
 
                 starflags = jvcat['starflags'].replace(',','<BR>')
                 firstcarton = jvcat['firstcarton']
@@ -2133,12 +2137,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
                 simbadlink = txt1 + txt2
 
-                apStarRelPath = None
-                starHTMLrelPath = None
-                if os.path.exists(apstarfile):
-                    tmp = apstarfile.split(apred + '/')
-                    apStarRelPath = '../../../../../' + tmp[1]
-                    starHTMLrelPath = '../../../../../' + os.path.dirname(tmp[1]) + '/html/'
+                #apStarRelPath = None
+                #starHTMLrelPath = None
+                #if os.path.exists(apstarfile):
+                #    tmp = apstarfile.split(apred + '/')
+                #    apStarRelPath = '../../../../../' + tmp[1]
+                #    starHTMLrelPath = '../../../../../' + os.path.dirname(tmp[1]) + '/html/'
                     #starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
                     #starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
                     #starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
