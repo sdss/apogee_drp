@@ -2186,17 +2186,20 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if np.absolute(vhelio) > 400: vcol = 'red'
                 vishtml.write('<TD align ="center"><B>OBS<BR>S/N</B><BR><BR>' + str("%.1f" % round(snr,1)))
                 # Relative S/N (ratio of obs S/N over linear fit S/N)
-                g, = np.where(objid == apID)
-                if len(g) > 0:
-                    iratio = ratio[g][0] 
-                    bcolor1 = 'white'
-                    if iratio < 0.7: bcolor1 = '#FFFF66'
-                    if iratio < 0.6: bcolor1 = '#FF9933'
-                    if iratio < 0.5: bcolor1 = '#FF6633'
-                    if iratio < 0.4: bcolor1 = '#FF3333'
-                    if iratio < 0.3: bcolor1 = '#FF0000'
-                    if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
+                if len(notsky) > 10:
+                    g, = np.where(objid == apID)
+                    if len(g) > 0:
+                        iratio = ratio[g][0] 
+                        bcolor1 = 'white'
+                        if iratio < 0.7: bcolor1 = '#FFFF66'
+                        if iratio < 0.6: bcolor1 = '#FF9933'
+                        if iratio < 0.5: bcolor1 = '#FF6633'
+                        if iratio < 0.4: bcolor1 = '#FF3333'
+                        if iratio < 0.3: bcolor1 = '#FF0000'
+                        if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
+                        vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
+                    else: 
+                        vishtml.write('<TD align ="center" BGCOLOR="Gray"><B>REL<BR>S/N</B><BR><BR>-1%')
                 else: 
                     vishtml.write('<TD align ="center" BGCOLOR="Gray"><B>REL<BR>S/N</B><BR><BR>-1%')
                 # Throughput column
