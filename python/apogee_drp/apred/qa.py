@@ -2006,7 +2006,55 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<P>Click the column headers to sort.</p>\n')
     vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
-    vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
+    vishtml.write('<TH>S/N <TH>Rel.<BR>S/N<TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
+
+    # Make text file giving ratio of observed S/N over linear fit S/N
+    Vsum = load.apVisitSum(int(plate), mjd)
+    Vsum = Vsum[1].data
+    if fps:
+        notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                           (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                           (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
+    else:
+        notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                           (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
+    if len(notsky) > 10:
+        # First pass at fitting line to S/N as function of Hmag
+        hmag1 = Vsum['HMAG'][notsky]
+        sn1 = Vsum['SNR'][notsky]
+        apID = Vsum['APOGEE_ID'][notsky]
+        polynomial1 = np.poly1d(np.polyfit(hmag1, np.log10(sn1), 1))
+        yarrnew1 = polynomial1(hmag1)
+        diff1 = np.log10(sn1) - yarrnew1
+        gd1, = np.where(diff1 > -np.nanstd(diff1))
+        # Second pass at fitting line to S/N as function of Hmag
+        hmag2 = hmag1[gd1]
+        sn2 = sn1[gd1]
+        polynomial2 = np.poly1d(np.polyfit(hmag2, np.log10(sn2), 1))
+        yarrnew2 = polynomial2(hmag2)
+        diff2 = np.log10(sn2) - yarrnew2
+        gd2, = np.where(diff2 > -np.nanstd(diff2))
+        # Final pass at fitting line to S/N as function of Hmag
+        hmag3 = hmag2[gd2]
+        sn3 = sn2[gd2]
+        polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
+        xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
+        yarrnew3 = polynomial3(xarrnew3)
+        ratio = np.zeros(len(notsky))
+        eta = np.full(len(notsky), -999.9)
+        for q in range(len(notsky)):
+            hmdif = np.absolute(hmag1[q] - xarrnew3)
+            pp, = np.where(hmdif == np.nanmin(hmdif))
+            ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
+            eta[q] = plSum2['ETA'][g][0]
+        g, = np.where(eta > -900)
+        if len(g) > 0:
+            apID = apID[g]
+            ratio = ratio[g]
+        sdata = Table()
+        data['apogee_id'] = apID
+        data['relSNR'] = ratio
+        ascii.write(data, 'relSNR-' + plate + '-' + mjd + '.dat', overwrite=True)
 
     # DB query for this visit
     db = apogeedb.DBSession()
@@ -2116,6 +2164,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vcol = 'black'
                 if np.absolute(vhelio) > 400: vcol = 'red'
                 vishtml.write('<TD align ="center">' + str("%.1f" % round(snr,1)))
+                g, = np.where(objid == apID)
+                if len(g) > 0: vishtml.write('<TD align ="center">' + str(int(round(ratio[g][0]))) + '%')
+                else: vishtml.write('<TD align ="center">-1%')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.1f" % round(vhelio,1)) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(ncomp) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(int(round(rvteff))) + '</FONT>')
