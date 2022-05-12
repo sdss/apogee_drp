@@ -2186,25 +2186,25 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 if len(g) > 0:
                     iratio = ratio[g][0] 
                     bcolor = 'white'
-                    if iratio < 0.7: bcolor = '#FFFF66'
-                    if iratio < 0.6: bcolor = '#FF9933'
-                    if iratio < 0.5: bcolor = '#FF6633'
-                    if iratio < 0.4: bcolor = '#FF3333'
-                    if iratio < 0.3: bcolor = '#FF0000'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
+                    if iratio < 0.7: bcolor1 = '#FFFF66'
+                    if iratio < 0.6: bcolor1 = '#FF9933'
+                    if iratio < 0.5: bcolor1 = '#FF6633'
+                    if iratio < 0.4: bcolor1 = '#FF3333'
+                    if iratio < 0.3: bcolor1 = '#FF0000'
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
                 else: 
                     vishtml.write('<TD align ="center" BGCOLOR="grey"><B>REL<BR>S/N</B><BR><BR><FONT COLOR="red">-1%</FONT>')
                 # Throughput column
                 tput = throughput[j]
                 if np.isnan(tput) == False:
                     bcolor = 'white'
-                    if tput < 0.7: bcolor = '#FFFF66'
-                    if tput < 0.6: bcolor = '#FF9933'
-                    if tput < 0.5: bcolor = '#FF6633'
-                    if tput < 0.4: bcolor = '#FF3333'
-                    if tput < 0.3: bcolor = '#FF0000'
+                    if tput < 0.7: bcolor1 = '#FFFF66'
+                    if tput < 0.6: bcolor1 = '#FF9933'
+                    if tput < 0.5: bcolor1 = '#FF6633'
+                    if tput < 0.4: bcolor1 = '#FF3333'
+                    if tput < 0.3: bcolor1 = '#FF0000'
                     tput = str(int(round(tput*100))) + '%'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>DFLAT<BR>TPUT</B><BR><BR>' + tput + '\n')
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>DFLAT<BR>TPUT</B><BR><BR>' + tput + '\n')
                 else:
                     vishtml.write('<TD align ="center" BGCOLOR="grey"><FONT COLOR="red"><B>DFLAT<BR>TPUT</B><BR><BR>-1%</FONT>\n')
 
