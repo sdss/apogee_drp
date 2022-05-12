@@ -2214,11 +2214,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 else:
                     vishtml.write('<TD align ="center" BGCOLOR="grey"><B>DFLAT<BR>TPUT</B><BR><BR>-1%\n')
 
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>VHELIO</B><BR><BR><BR>' + str("%.1f" % round(vhelio,1)) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>NCOMP</B><BR><BR><BR>' + str(ncomp) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>TEFF</B><BR><BR><BR>' + str(int(round(rvteff))) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>LOGG</B><BR><BR><BR>' + str("%.3f" % round(rvlogg,3)) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>[FE/H]</B><BR><BR><BR>' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
+                vishtml.write('<TD align ="center"><B>VHELIO</B><BR><BR><BR><FONT COLOR="' + vcol + '">' + str("%.1f" % round(vhelio,1)) + '</FONT>')
+                vishtml.write('<TD align ="center"><B>NCOMP</B><BR><BR><BR><FONT COLOR="' + vcol + '">' + str(ncomp) + '</FONT>')
+                vishtml.write('<TD align ="center"><B>TEFF</B><BR><BR><BR><FONT COLOR="' + vcol + '">' + str(int(round(rvteff))) + '</FONT>')
+                vishtml.write('<TD align ="center"><B>LOGG</B><BR><BR><BR><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvlogg,3)) + '</FONT>')
+                vishtml.write('<TD align ="center"><B>[FE/H]</B><BR><BR><BR><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
             else:
                 snr = '-9.9'
                 relsnr = '-1%'
