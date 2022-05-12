@@ -2059,7 +2059,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # DB query for this visit
     db = apogeedb.DBSession()
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
-    vcatl = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
+    #vcatl = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
     db.close()
 
     # Loop over the fibers
@@ -2081,23 +2081,35 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             else:
                 # DB query to get star and visit info
                 vcatind, = np.where(fiber == vcat['fiberid'])
-                vcatlind, = np.where(fiber == vcatl['fiberid'])
+                #vcatlind, = np.where(fiber == vcatl['fiberid'])
                 if (len(vcatind) < 1) | (len(vcatlind) < 1): pdb.set_trace()
                 jvcat = vcat[vcatind][0]
-                jvcatl = vcatl[vcatlind][0]
+                #jvcatl = vcatl[vcatlind][0]
                 jmag = jvcat['jmag']
                 hmag = jvcat['hmag']
                 kmag = jvcat['kmag']
                 snr = jvcat['snr']
                 if snr < 0: snr = 0
-                vhelio = jvcatl['vheliobary']
-                ncomp = jvcatl['n_components']
-                rvteff = jvcatl['rv_teff']
-                if np.isnan(rvteff): rvteff = -9999
-                rvlogg = jvcatl['rv_logg']
-                if np.isnan(rvlogg): rvlogg = -9.999
-                rvfeh = jvcatl['rv_feh']
-                if np.isnan(rvfeh): rvfeh = -9.999
+                #vhelio = jvcatl['vheliobary']
+                #ncomp = jvcatl['n_components']
+                #rvteff = jvcatl['rv_teff']
+                #if np.isnan(rvteff): rvteff = -9999
+                #rvlogg = jvcatl['rv_logg']
+                #if np.isnan(rvlogg): rvlogg = -9.999
+                #rvfeh = jvcatl['rv_feh']
+                #if np.isnan(rvfeh): rvfeh = -9.999
+                apstarfile = load.filename('Star', obj=objid)
+                if os.path.exists(apstarfile):
+                    apstarheader = fits.getheader(apstarfile)
+                    vhelio = apstarheader['VHBARY']
+                    ncomp = apstarheader['N_COMP']
+                    rvteff = apstarheader['RV_TEFF']
+                    rvlogg = apstarheader['RV_LOGG']
+                    rvfeh = apstarheader['RV_FEH']
+                    if np.isnan(rvteff): rvteff = -9999
+                    if np.isnan(rvlogg): rvlogg = -9.999
+                    if np.isnan(rvfeh): rvfeh = -9.999
+
                 starflags = jvcat['starflags'].replace(',','<BR>')
                 firstcarton = jvcat['firstcarton']
                 visitfile = jvcat['file']
@@ -2119,13 +2131,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
                 apStarRelPath = None
                 starHTMLrelPath = None
-                if (objid != '') & (objid != '2M') & (objid != '2MNone'):
-                    # Get paths to apStar file and star html
-                    healpix = apload.obj2healpix(objid)
-                    healpixgroup = str(healpix // 1000)
-                    healpix = str(healpix)
+                if os.path.exists(apstarfile):
+                    tmp = apstarfile.split(apred)
+                    apStarRelPath = '../../../../..' + tmp[1]
+                    starHTMLrelPath = '../../../../..' + os.path.dirname(tmp[1]) + '/html/'
+                    pdb.set_trace()
 
-                    # Find the associated healpix html directories
                     starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
                     starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
                     starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
