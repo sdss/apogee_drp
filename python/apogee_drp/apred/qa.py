@@ -2194,7 +2194,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if iratio < 0.5: bcolor1 = '#FF6633'
                     if iratio < 0.4: bcolor1 = '#FF3333'
                     if iratio < 0.3: bcolor1 = '#FF0000'
-                    if assigned == 0: bcolor1 = 'grey'
+                    if assigned == 0: bcolor1 = 'Gray'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
                 else: 
                     vishtml.write('<TD align ="center" BGCOLOR="Gray"><B>REL<BR>S/N</B><BR><BR><FONT COLOR="red">-1%</FONT>')
@@ -2236,7 +2236,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + snr + '</FONT>')
-                vishtml.write('<TD align="center" BGCOLOR="grey"><FONT COLOR="' + fcolor + ' ">' + relsnr + '</FONT>')
+                vishtml.write('<TD align="center" BGCOLOR="Gray"><FONT COLOR="' + fcolor + ' ">' + relsnr + '</FONT>')
                 # Throughput column
                 tput = throughput[j]
                 if np.isnan(tput) == False:
@@ -2250,7 +2250,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     tput = str(int(round(tput*100))) + '%'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
                 else:
-                    vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
+                    vishtml.write('<TD align ="center" BGCOLOR="Gray">-1%\n')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-999.9</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">0</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9999</FONT>')
