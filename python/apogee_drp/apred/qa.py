@@ -2135,7 +2135,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 if os.path.exists(apstarfile):
                     tmp = apstarfile.split(apred + '/')
                     apStarRelPath = '../../../../../' + tmp[1]
-                    starHTMLrelPath = '../../../../..' + os.path.dirname(tmp[1]) + '/html/'
+                    starHTMLrelPath = '../../../../../' + os.path.dirname(tmp[1]) + '/html/'
                     pdb.set_trace()
 
                     starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
