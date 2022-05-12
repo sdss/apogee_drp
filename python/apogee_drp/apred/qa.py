@@ -2167,9 +2167,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 else:
                     vishtml.write('<BR>apStar file??\n')
                     vishtml.write('<BR>Star Summary Page??\n')
-                vishtml.write('<TD align ="center"><B>H</B><BR>' + str("%.3f" % round(hmag,3)))
+                vishtml.write('<TD align ="center"><B>H</B><BR><BR>' + str("%.3f" % round(hmag,3)))
                 if (jmag > 0) & (kmag > 0) & (jmag < 90) & (kmag < 90):
-                    vishtml.write('<TD align ="center"><B>J-K</B><BR>' + str("%.3f" % round(jmag-kmag,3)))
+                    vishtml.write('<TD align ="center"><B>J-K</B><BR><BR>' + str("%.3f" % round(jmag-kmag,3)))
                 else:
                     vishtml.write('<TD align ="center"><FONT COLOR="red">99.999</FONT>')
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
@@ -2180,7 +2180,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<BR><BR>' + starflags)
                 vcol = 'black'
                 if np.absolute(vhelio) > 400: vcol = 'red'
-                vishtml.write('<TD align ="center"><B>Obs.<BR>S/N</B><BR>' + str("%.1f" % round(snr,1)))
+                vishtml.write('<TD align ="center"><B>Obs.<BR>S/N</B><BR><BR>' + str("%.1f" % round(snr,1)))
                 # Relative S/N (ratio of obs S/N over linear fit S/N)
                 g, = np.where(objid == apID)
                 if len(g) > 0:
@@ -2191,7 +2191,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if iratio < 0.5: bcolor = '#FF6633'
                     if iratio < 0.4: bcolor = '#FF3333'
                     if iratio < 0.3: bcolor = '#FF0000'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>Rel.<BR>S/N</B><BR>' + str(int(round(ratio[g][0]*100))) + '%')
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>Rel.<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
                 else: 
                     vishtml.write('<TD align ="center" BGCOLOR="grey">-1%')
                 # Throughput column
