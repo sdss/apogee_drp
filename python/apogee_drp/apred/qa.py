@@ -2235,12 +2235,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD align="center">' + objtype)
-                vishtml.write('<TD align="center">99.999')
-                vishtml.write('<TD align="center">99.999')
-                vishtml.write('<TD align="center">' + objtype)
-                vishtml.write('<TD align="center">' + objtype)
-                vishtml.write('<TD align="center">' + snr)
-                vishtml.write('<TD align="center">' + relsnr)
+                vishtml.write('<TD align="center"><B>H</B><BR><BR><BR>99.999')
+                vishtml.write('<TD align="center"><B>J-K</B><BR><BR><BR>99.999')
+                vishtml.write('<TD align="center"><B>TYPE</B><BR><BR><BR>' + objtype)
+                vishtml.write('<TD align="center"><B>FLAGS</B><BR><BR><BR>' + objtype)
+                vishtml.write('<TD align="center"><B>OBS<BR>S/N</B><BR><BR>' + snr)
+                vishtml.write('<TD align="center"><B>REL<BR>S/N</B><BR><BR>' + relsnr)
                 # Throughput column
                 tput = throughput[j]
                 if np.isnan(tput) == False:
@@ -2253,14 +2253,14 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
 
                     tput = str(int(round(tput*100))) + '%'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>DFLAT<BR>TPUT</B><BR><BR>' + tput + '\n')
                 else:
-                    vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
-                vishtml.write('<TD align="center">-999.9')
-                vishtml.write('<TD align="center">0')
-                vishtml.write('<TD align="center">-9999')
-                vishtml.write('<TD align="center">-9.999')
-                vishtml.write('<TD align="center">-9.999')
+                    vishtml.write('<TD align ="center" BGCOLOR="grey"><B>DFLAT<BR>TPUT</B><BR><BR>-1%\n')
+                vishtml.write('<TD align="center"><B>VHELIO</B><BR><BR><BR>-999.9')
+                vishtml.write('<TD align="center"><B>NCOMP</B><BR><BR><BR>-1')
+                vishtml.write('<TD align="center"><B>TEFF</B><BR><BR><BR>-9999')
+                vishtml.write('<TD align="center"><B>LOGG</B><BR><BR><BR>-9.999')
+                vishtml.write('<TD align="center"><B>[FE/H]</B><BR><BR><BR>-9.999')
 
             if firstcarton != 'UNASSIGNED!!!':
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
