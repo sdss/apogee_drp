@@ -2254,8 +2254,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 else:
                     vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
                 vishtml.write('<TD align="center">-999.9')
-                vishtml.write('<TD align="center">0>')
-                vishtml.write('<TD align="center">-9999>')
+                vishtml.write('<TD align="center">0')
+                vishtml.write('<TD align="center">-9999')
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
 
