@@ -2079,6 +2079,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 bgcolor = '#D6EAF8'
                 firstcarton = 'SKY'
             else:
+                assigned = 1
                 # DB query to get star and visit info
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 #vcatlind, = np.where(fiber == vcatl['fiberid'])
@@ -2118,6 +2119,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                         starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
                 else:
                     objid = 'None'
+                    assigned = 0
 
                 starflags = jvcat['starflags'].replace(',','<BR>')
                 firstcarton = jvcat['firstcarton']
@@ -2192,6 +2194,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if iratio < 0.5: bcolor1 = '#FF6633'
                     if iratio < 0.4: bcolor1 = '#FF3333'
                     if iratio < 0.3: bcolor1 = '#FF0000'
+                    if assigned == 0: bcolor1 = 'grey'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
                 else: 
                     vishtml.write('<TD align ="center" BGCOLOR="grey"><B>REL<BR>S/N</B><BR><BR><FONT COLOR="red">-1%</FONT>')
