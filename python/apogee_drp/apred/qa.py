@@ -2180,7 +2180,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<BR><BR>' + starflags)
                 vcol = 'black'
                 if np.absolute(vhelio) > 400: vcol = 'red'
-                vishtml.write('<TD align ="center"><B>Obs.<BR>S/N</B><BR><BR>' + str("%.1f" % round(snr,1)))
+                vishtml.write('<TD align ="center"><B>OBS<BR>S/N</B><BR><BR>' + str("%.1f" % round(snr,1)))
                 # Relative S/N (ratio of obs S/N over linear fit S/N)
                 g, = np.where(objid == apID)
                 if len(g) > 0:
@@ -2191,7 +2191,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if iratio < 0.5: bcolor = '#FF6633'
                     if iratio < 0.4: bcolor = '#FF3333'
                     if iratio < 0.3: bcolor = '#FF0000'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>Rel.<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
                 else: 
                     vishtml.write('<TD align ="center" BGCOLOR="grey">-1%')
                 # Throughput column
@@ -2204,15 +2204,15 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if tput < 0.4: bcolor = '#FF3333'
                     if tput < 0.3: bcolor = '#FF0000'
                     tput = str(int(round(tput*100))) + '%'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>Dflat<BR>Tput</B><BR><BR>' + tput + '\n')
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>DFLAT<BR>TPUT</B><BR><BR>' + tput + '\n')
                 else:
                     vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
 
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>Vhelio</B><BR><BR>' + str("%.1f" % round(vhelio,1)) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>Ncomp</B><BR><BR>' + str(ncomp) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>Teff</B><BR><BR>' + str(int(round(rvteff))) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>log(g)</B><BR><BR>' + str("%.3f" % round(rvlogg,3)) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>[Fe/H]</B><BR><BR>' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>VHELIO</B><BR><BR>' + str("%.1f" % round(vhelio,1)) + '</FONT>')
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>NCOMP</B><BR><BR>' + str(ncomp) + '</FONT>')
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>TEFF</B><BR><BR>' + str(int(round(rvteff))) + '</FONT>')
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>LOGG</B><BR><BR>' + str("%.3f" % round(rvlogg,3)) + '</FONT>')
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>[FE/H]</B><BR><BR>' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
             else:
                 snr = '-9.9'
                 relsnr = '-1%'
