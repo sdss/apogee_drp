@@ -2082,7 +2082,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 # DB query to get star and visit info
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 #vcatlind, = np.where(fiber == vcatl['fiberid'])
-                if (len(vcatind) < 1) | (len(vcatlind) < 1): pdb.set_trace()
+                #if (len(vcatind) < 1) | (len(vcatlind) < 1): pdb.set_trace()
+                if len(vcatind) < 1): pdb.set_trace()
                 jvcat = vcat[vcatind][0]
                 #jvcatl = vcatl[vcatlind][0]
                 jmag = jvcat['jmag']
