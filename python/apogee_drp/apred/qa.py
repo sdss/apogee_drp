@@ -2053,7 +2053,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
         sdata['apogee_id'] = apID
         sdata['relSNR'] = ratio
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
-        snroutfile = platesum.replace('apPlateSum', 'relSNR')
+        snroutfile = platesum.replace('apPlateSum', 'relSNR').replace('.fits', '.dat')
         ascii.write(sdata, snroutfile, overwrite=True)
 
     pdb.set_trace()
