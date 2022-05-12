@@ -2040,21 +2040,20 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
         polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
         xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
         yarrnew3 = polynomial3(xarrnew3)
-        ratio = np.zeros(len(notsky))
-        eta = np.full(len(notsky), -999.9)
+        ratio = np.empty(len(notsky))
         for q in range(len(notsky)):
             hmdif = np.absolute(hmag1[q] - xarrnew3)
             pp, = np.where(hmdif == np.nanmin(hmdif))
             ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
             eta[q] = plSum2['ETA'][g][0]
-        g, = np.where(eta > -900)
+        g, = np.where(ratio > 0)
         if len(g) > 0:
             apID = apID[g]
             ratio = ratio[g]
         sdata = Table()
-        data['apogee_id'] = apID
-        data['relSNR'] = ratio
-        ascii.write(data, 'relSNR-' + plate + '-' + mjd + '.dat', overwrite=True)
+        sdata['apogee_id'] = apID
+        sdata['relSNR'] = ratio
+        ascii.write(sdata, 'relSNR-' + plate + '-' + mjd + '.dat', overwrite=True)
 
     # DB query for this visit
     db = apogeedb.DBSession()
