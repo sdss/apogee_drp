@@ -2171,7 +2171,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 if (jmag > 0) & (kmag > 0) & (jmag < 90) & (kmag < 90):
                     vishtml.write('<TD align ="center"><B>J-K</B><BR><BR>' + str("%.3f" % round(jmag-kmag,3)))
                 else:
-                    vishtml.write('<TD align ="center"><FONT COLOR="red"><B>J-K</B><BR><BR>99.999</FONT>')
+                    vishtml.write('<TD align ="center"><B>J-K</B><BR><BR><FONT COLOR="red">99.999</FONT>')
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
                     vishtml.write('<TD align="center"><B>TYPE</B><BR><BR><BR>TEL')
                 else:
@@ -2193,7 +2193,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if iratio < 0.3: bcolor = '#FF0000'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
                 else: 
-                    vishtml.write('<TD align ="center" BGCOLOR="grey"><FONT COLOR="red"><B>REL<BR>S/N</B><BR><BR>-1%</FONT>')
+                    vishtml.write('<TD align ="center" BGCOLOR="grey"><B>REL<BR>S/N</B><BR><BR><FONT COLOR="red">-1%</FONT>')
                 # Throughput column
                 tput = throughput[j]
                 if np.isnan(tput) == False:
