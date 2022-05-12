@@ -2006,7 +2006,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<P>Click the column headers to sort.</p>\n')
     vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>Hmag <TH>Raw<BR>J - K <TH>Targ<BR>Type <TH>Target & Data Flags')
-    vishtml.write('<TH>Obs.<BR>S/N S/N <TH>Rel.<BR>S/N <TH>Dflat<BR>Tput  <TH>Vhelio<BR>(km/s) <TH>Ncomp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H]<TH>apVisit Plot\n')
+    vishtml.write('<TH>Obs.<BR>S/N <TH>Rel.<BR>S/N <TH>Dflat<BR>Tput  <TH>Vhelio<BR>(km/s) <TH>Ncomp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H]<TH>apVisit Plot\n')
 
     # Make text file giving ratio of observed S/N over linear fit S/N
     Vsum = load.apVisitSum(int(plate), mjd)
