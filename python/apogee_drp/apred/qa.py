@@ -2136,18 +2136,16 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     tmp = apstarfile.split(apred + '/')
                     apStarRelPath = '../../../../../' + tmp[1]
                     starHTMLrelPath = '../../../../../' + os.path.dirname(tmp[1]) + '/html/'
-                    pdb.set_trace()
-
-                    starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-                    starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                    starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
-                    apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
-                    if len(apStarCheck) > 0:
-                        # Find the newest apStar file
-                        apStarCheck.sort()
-                        apStarCheck = np.array(apStarCheck)
-                        apStarNewest = os.path.basename(apStarCheck[-1])
-                        apStarRelPath = '../' + starRelPath + apStarNewest
+                    #starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+                    #starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                    #starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
+                    #apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                    #if len(apStarCheck) > 0:
+                    #    # Find the newest apStar file
+                    #    apStarCheck.sort()
+                    #    apStarCheck = np.array(apStarCheck)
+                    #    apStarNewest = os.path.basename(apStarCheck[-1])
+                    #    apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
             if objtype != 'SKY':
