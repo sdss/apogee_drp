@@ -127,15 +127,17 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
     pdb.set_trace()
     gd, = np.where(umjd == mjdstart)
     umjd = umjd[gd[0]:]
+    umjd = umjd[::-1]
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
 
     for ii in range(nmjd):
-        x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
-                    makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
-                    makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
-                    makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
-                    makemonitor=makemonitor, clobber=clobber)
+        if umjd[ii][0:1] != 'a':
+            x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
+                        makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
+                        makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
+                        makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
+                        makemonitor=makemonitor, clobber=clobber)
 
 ###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
