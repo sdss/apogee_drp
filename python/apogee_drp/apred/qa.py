@@ -2056,7 +2056,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
         snroutfile = platesum.replace('apPlateSum', 'relSNR').replace('.fits', '.dat')
         ascii.write(sdata, snroutfile, overwrite=True)
 
-    pdb.set_trace()
     # DB query for this visit
     db = apogeedb.DBSession()
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
