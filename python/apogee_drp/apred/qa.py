@@ -2081,7 +2081,13 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             # Establish html table row background color and spectrum plot color
             bgcolor = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): bgcolor = '#D2B4DE'
-            vhelio = None
+            vhelio = -999.9
+            ncomp = -1
+            rvteff = -9999.9
+            rvlogg = -9.999
+            rvfeh = -9.999
+            apStarRelPath = None
+            starHTMLrelPath = None
             if objtype == 'SKY': 
                 bgcolor = '#D6EAF8'
                 firstcarton = 'SKY'
@@ -2097,8 +2103,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 kmag = jvcat['kmag']
                 snr = jvcat['snr']
                 if snr < 0: snr = -1
-                apStarRelPath = None
-                starHTMLrelPath = None
                 if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
                     apstarfile = load.filename('Star', obj=objid)
                     if os.path.exists(apstarfile):
@@ -2114,12 +2118,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                         tmp = apstarfile.split(apred + '/')
                         apStarRelPath = '../../../../../../' + tmp[1]
                         starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
-                    else:
-                        vhelio = -999.9
-                        ncomp = -1
-                        rvteff = -9999.9
-                        rvlogg = -9.999
-                        rvfeh = -9.999
                 else:
                     objid = 'None'
                     assigned = 0
