@@ -1997,10 +1997,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     db = apogeedb.DBSession()
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
     db.close()
-    gd, = np.where(vcat['assigned'] == 1)
-    ngd = len(gd)
-    vcat = vcat[gd]
-    stars, = np.where(vcat['objtype'] != 'SKY')
+    stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
@@ -2069,7 +2066,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
         ascii.write(sdata, snroutfile, overwrite=True)
 
     # Loop over the fibers
-    for j in range(ngd):
+    for j in range(300):
         jdata = data[j]
         fiber = jdata['FIBERID']
         if fiber > 0:
