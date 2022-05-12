@@ -2099,7 +2099,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 #if np.isnan(rvlogg): rvlogg = -9.999
                 #rvfeh = jvcatl['rv_feh']
                 #if np.isnan(rvfeh): rvfeh = -9.999
-                apstarfile = load.filename('Star', obj=objid)
+                try:
+                    apstarfile = load.filename('Star', obj=objid)
+                except:
+                    pdb.set_trace()
                 if os.path.exists(apstarfile):
                     apstarheader = fits.getheader(apstarfile)
                     vhelio = apstarheader['VHBARY']
