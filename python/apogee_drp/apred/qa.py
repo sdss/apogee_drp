@@ -2080,26 +2080,15 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 firstcarton = 'SKY'
             else:
                 assigned = 1
-                # DB query to get star and visit info
                 vcatind, = np.where(fiber == vcat['fiberid'])
-                #vcatlind, = np.where(fiber == vcatl['fiberid'])
-                #if (len(vcatind) < 1) | (len(vcatlind) < 1): pdb.set_trace()
                 if len(vcatind) < 1: pdb.set_trace()
                 jvcat = vcat[vcatind][0]
-                #jvcatl = vcatl[vcatlind][0]
+                if jvcat['assigned'] == 0: continue
                 jmag = jvcat['jmag']
                 hmag = jvcat['hmag']
                 kmag = jvcat['kmag']
                 snr = jvcat['snr']
                 if snr < 0: snr = 0
-                #vhelio = jvcatl['vheliobary']
-                #ncomp = jvcatl['n_components']
-                #rvteff = jvcatl['rv_teff']
-                #if np.isnan(rvteff): rvteff = -9999
-                #rvlogg = jvcatl['rv_logg']
-                #if np.isnan(rvlogg): rvlogg = -9.999
-                #rvfeh = jvcatl['rv_feh']
-                #if np.isnan(rvfeh): rvfeh = -9.999
                 apStarRelPath = None
                 starHTMLrelPath = None
                 if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
@@ -2247,6 +2236,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if tput < 0.4: bcolor = '#FF3333'
                     if tput < 0.3: bcolor = '#FF0000'
                     if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
+
                     tput = str(int(round(tput*100))) + '%'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
                 else:
