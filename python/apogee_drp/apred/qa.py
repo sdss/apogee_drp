@@ -1993,16 +1993,28 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
     throughput = medflux / np.nanmax(medflux)
 
+    # DB query for this visit
+    db = apogeedb.DBSession()
+    vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
+    db.close()
+    gd, = np.where(vcat['assigned'] == 1)
+    ngd = len(gd)
+    vcat = vcat[gd]
+    stars, = np.where(vcat['objtype'] != 'SKY')
+
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
     vishtml.write('<HTML>\n')
     vishtml.write('<HEAD><script src="../../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
     vishtml.write('<BODY>\n')
 
-    vishtml.write('<H1>' + htmlfile + '</H1><HR>\n')
-    vishtml.write('<P><B>Note:</B> the "Dome Flat Throughput" column gives the median dome flat flux in each ')
+    vishtml.write('<H1>' + htmlfile + '</H1>\n')
+    vishtml.write('<H3># of assigned science + telluric targets: ' + str(len(stars)) + '</H3><HR>\n')
+    vishtml.write('<P><B>Note:</B> the "Dflat Tput" column gives the median dome flat flux in each ')
     vishtml.write('fiber divided by the maximum median dome flat flux across all fibers. ')
-    vishtml.write('<BR>Low numbers are generally bad, and that column is color-coded accordingly.</P>\n')
+    vishtml.write('<P><B>Note:</B> the "Rel S/N" column gives the ratio of the observed S/N ')
+    vishtml.write('over the linear fit to high S/N fibers. ')
+    vishtml.write('<BR>Low numbers in the aforementioned columns are generally bad, and the columns are color-coded accordingly.</P>\n')
     vishtml.write('<P>Click the column headers to sort.</p>\n')
     vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>Hmag <TH>Raw<BR>J - K <TH>Targ<BR>Type <TH>Target & Data Flags')
@@ -2059,11 +2071,13 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # DB query for this visit
     db = apogeedb.DBSession()
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
-    #vcatl = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
     db.close()
+    gd, = np.where(vcat['assigned'] == 1)
+    ngd = len(gd)
+    vcat = vcat[gd]     
 
     # Loop over the fibers
-    for j in range(300):
+    for j in range(ngd):
         jdata = data[j]
         fiber = jdata['FIBERID']
         if fiber > 0:
