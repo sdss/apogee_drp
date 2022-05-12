@@ -2006,7 +2006,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<BODY>\n')
 
     vishtml.write('<H1>' + htmlfile + '</H1>\n')
-    vishtml.write('<H3># of assigned science + telluric targets: ' + str(len(stars)) + '</H3><HR>\n')
+    vishtml.write('<H3>' + str(len(stars)) + ' stars observed</H3><HR>\n')
     vishtml.write('<P><B>Note:</B> the "Dflat Tput" column gives the median dome flat flux in each ')
     vishtml.write('fiber divided by the maximum median dome flat flux across all fibers. ')
     vishtml.write('<P><B>Note:</B> the "Rel S/N" column gives the ratio of the observed S/N ')
