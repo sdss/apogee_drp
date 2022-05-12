@@ -2115,7 +2115,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                         if np.isnan(rvfeh): rvfeh = -9.999
                         tmp = apstarfile.split(apred + '/')
                         apStarRelPath = '../../../../../../' + tmp[1]
-                        starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/'
+                        starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
 
 
                 starflags = jvcat['starflags'].replace(',','<BR>')
