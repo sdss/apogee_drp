@@ -1973,10 +1973,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # Make html directory if it doesn't already exist.
     htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
     if os.path.exists(htmldir) == False: os.makedirs(htmldir)
+    plotdir = htmldir.replace('html','plots')
 
     # Get the HTML file name... apPlate-plate-mjd
     htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)).replace('.fits','')
-    
+
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
@@ -2263,8 +2264,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
 
-            tmp1 = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/plots/'
-            tmp2 = tmp1 + os.path.basename(visitplotfile)
+            tmp2 = plotdir + os.path.basename(visitplotfile)
             if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS') & (os.path.exists(tmp2)):
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
             else:
