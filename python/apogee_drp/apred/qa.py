@@ -2011,7 +2011,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('fiber divided by the maximum median dome flat flux across all fibers. ')
     vishtml.write('<P><B>Note:</B> the "Rel S/N" column gives the ratio of the observed S/N ')
     vishtml.write('over the linear fit to high S/N fibers. ')
-    vishtml.write('<BR>Low numbers in the aforementioned columns are generally bad, and the columns are color-coded accordingly.</P>\n')
+    vishtml.write('<P>Low numbers in the aforementioned columns are generally bad, and the columns are color-coded accordingly.</P>\n')
     vishtml.write('<P>Click the column headers to sort.</p>\n')
     vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>Hmag <TH>Raw<BR>J - K <TH>Targ<BR>Type <TH>Target & Data Flags')
