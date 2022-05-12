@@ -2253,11 +2253,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
                 else:
                     vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-999.9</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">0</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9.999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9.999</FONT>')
+                vishtml.write('<TD align="center">-999.9')
+                vishtml.write('<TD align="center">0>')
+                vishtml.write('<TD align="center">-9999>')
+                vishtml.write('<TD align="center">-9.999')
+                vishtml.write('<TD align="center">-9.999')
 
             if firstcarton != 'UNASSIGNED!!!':
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
