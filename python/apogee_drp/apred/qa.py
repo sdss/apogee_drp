@@ -2045,7 +2045,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             hmdif = np.absolute(hmag1[q] - xarrnew3)
             pp, = np.where(hmdif == np.nanmin(hmdif))
             ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
-            eta[q] = plSum2['ETA'][g][0]
         g, = np.where(ratio > 0)
         if len(g) > 0:
             apID = apID[g]
@@ -2055,6 +2054,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
         sdata['relSNR'] = ratio
         ascii.write(sdata, 'relSNR-' + plate + '-' + mjd + '.dat', overwrite=True)
 
+    pdb.set_trace()
     # DB query for this visit
     db = apogeedb.DBSession()
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
