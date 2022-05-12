@@ -2093,7 +2093,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 hmag = jvcat['hmag']
                 kmag = jvcat['kmag']
                 snr = jvcat['snr']
-                if snr < 0: snr = 0
+                if snr < 0: snr = -1
                 apStarRelPath = None
                 starHTMLrelPath = None
                 if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
@@ -2111,6 +2111,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                         tmp = apstarfile.split(apred + '/')
                         apStarRelPath = '../../../../../../' + tmp[1]
                         starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
+                    else:
+                        vhelio = -999.9
+                        ncomp = -1
+                        rvteff = -9999.9
+                        rvlogg = -9.999
+                        rvfeh = -9.999
                 else:
                     objid = 'None'
                     assigned = 0
@@ -2176,7 +2182,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center"><B>FLAGS</B><BR><BR>' + firstcarton)
                 vishtml.write('<BR><BR>' + starflags)
                 vcol = 'black'
-                if np.absolute(vhelio) > 400: vcol = 'red'
+                if vhelio is not None:
+                    if np.absolute(vhelio) > 400: vcol = 'red'
                 vishtml.write('<TD align ="center"><B>OBS<BR>S/N</B><BR><BR>' + str("%.1f" % round(snr,1)))
                 # Relative S/N (ratio of obs S/N over linear fit S/N)
                 g, = np.where(objid == apID)
