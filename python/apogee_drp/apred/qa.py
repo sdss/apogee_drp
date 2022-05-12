@@ -2166,8 +2166,17 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 if np.absolute(vhelio) > 400: vcol = 'red'
                 vishtml.write('<TD align ="center">' + str("%.1f" % round(snr,1)))
                 g, = np.where(objid == apID)
-                if len(g) > 0: vishtml.write('<TD align ="center">' + str(int(round(ratio[g][0]))) + '%')
-                else: vishtml.write('<TD align ="center">-1%')
+                if len(g) > 0:
+                    iratio = ratio[g][0] 
+                    bcolor = 'white'
+                    if iratio < 0.7: bcolor = '#FFFF66'
+                    if iratio < 0.6: bcolor = '#FF9933'
+                    if iratio < 0.5: bcolor = '#FF6633'
+                    if iratio < 0.4: bcolor = '#FF3333'
+                    if iratio < 0.3: bcolor = '#FF0000'
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + str(int(round(ratio[g][0]))) + '%')
+                else: 
+                    vishtml.write('<TD align ="center" BGCOLOR="white">-1%')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.1f" % round(vhelio,1)) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(ncomp) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(int(round(rvteff))) + '</FONT>')
