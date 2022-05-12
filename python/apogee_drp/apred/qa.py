@@ -2210,7 +2210,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.1f" % round(vhelio,1)) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(ncomp) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(int(round(rvteff))) + '</FONT>')
+                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">Teff<BR>' + str(int(round(rvteff))) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvlogg,3)) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
             else:
