@@ -2207,9 +2207,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if tput < 0.5: bcolor1 = '#FF6633'
                     if tput < 0.4: bcolor1 = '#FF3333'
                     if tput < 0.3: bcolor1 = '#FF0000'
-                    if len(g) > 0:
-                        if ratio[g][0] < 0: bcolor1 = 'grey'
-                        unassigned = 1
+                    if firstcarton == 'UNASSIGNED!!!': bcolor1 = 'grey'
                     tput = str(int(round(tput*100))) + '%'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>DFLAT<BR>TPUT</B><BR><BR>' + tput + '\n')
                 else:
@@ -2248,7 +2246,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if tput < 0.5: bcolor = '#FF6633'
                     if tput < 0.4: bcolor = '#FF3333'
                     if tput < 0.3: bcolor = '#FF0000'
-                    if unassigned: bcolor = 'grey'
+                    if firstcarton == 'UNASSIGNED!!!': bcolor = 'grey'
                     tput = str(int(round(tput*100))) + '%'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
                 else:
