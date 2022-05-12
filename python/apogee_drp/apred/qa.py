@@ -2127,10 +2127,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
                 # Handle case of unassigned or off target fibers 
                 if (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
-                    bgcolor = 'Silver'
+                    bgcolor = 'grey'
                     firstcarton = 'OFF TARGET!!!'
                     if jvcat['assigned'] == 0:
-                        bgcolor = 'Gray'
+                        bgcolor = 'grey'
                         firstcarton = 'UNASSIGNED!!!'
 
                 # Create SIMBAD link
@@ -2194,7 +2194,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if iratio < 0.5: bcolor1 = '#FF6633'
                     if iratio < 0.4: bcolor1 = '#FF3333'
                     if iratio < 0.3: bcolor1 = '#FF0000'
-                    if assigned == 0: bcolor1 = 'Gray'
+                    if assigned == 0: bcolor1 = 'grey'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
                 else: 
                     vishtml.write('<TD align ="center" BGCOLOR="Gray"><B>REL<BR>S/N</B><BR><BR><FONT COLOR="red">-1%</FONT>')
@@ -2207,11 +2207,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if tput < 0.5: bcolor1 = '#FF6633'
                     if tput < 0.4: bcolor1 = '#FF3333'
                     if tput < 0.3: bcolor1 = '#FF0000'
-                    if firstcarton == 'UNASSIGNED!!!': bcolor1 = 'Gray'
+                    if firstcarton == 'UNASSIGNED!!!': bcolor1 = 'grey'
                     tput = str(int(round(tput*100))) + '%'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>DFLAT<BR>TPUT</B><BR><BR>' + tput + '\n')
                 else:
-                    vishtml.write('<TD align ="center" BGCOLOR="Gray"><FONT COLOR="red"><B>DFLAT<BR>TPUT</B><BR><BR>-1%</FONT>\n')
+                    vishtml.write('<TD align ="center" BGCOLOR="grey"><FONT COLOR="red"><B>DFLAT<BR>TPUT</B><BR><BR>-1%</FONT>\n')
 
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>VHELIO</B><BR><BR><BR>' + str("%.1f" % round(vhelio,1)) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '"><B>NCOMP</B><BR><BR><BR>' + str(ncomp) + '</FONT>')
@@ -2226,7 +2226,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     objtype = 'BLANK'
                     snr = '-99.9'
                     relsnr = '-1%'
-                    bgcolor = 'Gray'
+                    bgcolor = 'grey'
                     fcolor = 'Black'
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + cfiber + '<BR>(' + cblock + ')</FONT>')
@@ -2236,7 +2236,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + snr + '</FONT>')
-                vishtml.write('<TD align="center" BGCOLOR="Gray"><FONT COLOR="' + fcolor + ' ">' + relsnr + '</FONT>')
+                vishtml.write('<TD align="center" BGCOLOR="grey"><FONT COLOR="' + fcolor + ' ">' + relsnr + '</FONT>')
                 # Throughput column
                 tput = throughput[j]
                 if np.isnan(tput) == False:
@@ -2246,11 +2246,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if tput < 0.5: bcolor = '#FF6633'
                     if tput < 0.4: bcolor = '#FF3333'
                     if tput < 0.3: bcolor = '#FF0000'
-                    if firstcarton == 'UNASSIGNED!!!': bcolor = 'Gray'
+                    if firstcarton == 'UNASSIGNED!!!': bcolor = 'grey'
                     tput = str(int(round(tput*100))) + '%'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
                 else:
-                    vishtml.write('<TD align ="center" BGCOLOR="Gray">-1%\n')
+                    vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-999.9</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">0</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9999</FONT>')
