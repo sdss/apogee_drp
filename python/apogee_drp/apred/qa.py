@@ -2170,21 +2170,21 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 else:
                     vishtml.write('<BR>apStar file??\n')
                     vishtml.write('<BR>Star Summary Page??\n')
-                vishtml.write('<TD align ="center"><B>H</B><BR><BR><BR>' + str("%.3f" % round(hmag,3)))
+                vishtml.write('<TD align ="center">' + str("%.3f" % round(hmag,3)))
                 if (jmag > 0) & (kmag > 0) & (jmag < 90) & (kmag < 90):
-                    vishtml.write('<TD align ="center"><B>J-K</B><BR><BR><BR>' + str("%.3f" % round(jmag-kmag,3)))
+                    vishtml.write('<TD align ="center">' + str("%.3f" % round(jmag-kmag,3)))
                 else:
-                    vishtml.write('<TD align ="center"><B>J-K</B><BR><BR><BR><FONT COLOR="red">99.999</FONT>')
+                    vishtml.write('<TD align ="center">><FONT COLOR="red">99.999</FONT>')
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
-                    vishtml.write('<TD align="center"><B>TYPE</B><BR><BR><BR>TEL')
+                    vishtml.write('<TD align="center">TEL')
                 else:
-                    vishtml.write('<TD align="center"><B>TYPE</B><BR><BR><BR>SCI')
-                vishtml.write('<TD align="center"><B>FLAGS</B><BR><BR>' + firstcarton)
+                    vishtml.write('<TD align="center">SCI')
+                vishtml.write('<TD align="center">' + firstcarton)
                 vishtml.write('<BR><BR>' + starflags)
                 vcol = 'black'
                 if vhelio is not None:
                     if np.absolute(vhelio) > 400: vcol = 'red'
-                vishtml.write('<TD align ="center"><B>OBS<BR>S/N</B><BR><BR>' + str("%.1f" % round(snr,1)))
+                vishtml.write('<TD align ="center">' + str("%.1f" % round(snr,1)))
                 # Relative S/N (ratio of obs S/N over linear fit S/N)
                 if len(notsky) > 10:
                     g, = np.where(objid == apID)
@@ -2197,11 +2197,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                         if iratio < 0.4: bcolor1 = '#FF3333'
                         if iratio < 0.3: bcolor1 = '#FF0000'
                         if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
-                        vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>REL<BR>S/N</B><BR><BR>' + str(int(round(ratio[g][0]*100))) + '%')
+                        vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '>' + str(int(round(ratio[g][0]*100))) + '%')
                     else: 
-                        vishtml.write('<TD align ="center" BGCOLOR="Gray"><B>REL<BR>S/N</B><BR><BR>-1%')
+                        vishtml.write('<TD align ="center" BGCOLOR="Gray">-1%')
                 else: 
-                    vishtml.write('<TD align ="center" BGCOLOR="Gray"><B>REL<BR>S/N</B><BR><BR>-1%')
+                    vishtml.write('<TD align ="center" BGCOLOR="Gray">-1%')
                 # Throughput column
                 tput = throughput[j]
                 if np.isnan(tput) == False:
@@ -2213,15 +2213,15 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if tput < 0.3: bcolor1 = '#FF0000'
                     if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
                     tput = str(int(round(tput*100))) + '%'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '><B>DFLAT<BR>TPUT</B><BR><BR>' + tput + '\n')
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '>' + tput + '\n')
                 else:
-                    vishtml.write('<TD align ="center" BGCOLOR="grey"><B>DFLAT<BR>TPUT</B><BR><BR>-1%\n')
+                    vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
 
-                vishtml.write('<TD align ="center"><B>VHELIO</B><BR><BR><BR>' + str("%.1f" % round(vhelio,1)))
-                vishtml.write('<TD align ="center"><B>NCOMP</B><BR><BR><BR>' + str(ncomp))
-                vishtml.write('<TD align ="center"><B>TEFF</B><BR><BR><BR>' + str(int(round(rvteff))))
-                vishtml.write('<TD align ="center"><B>LOGG</B><BR><BR><BR>' + str("%.3f" % round(rvlogg,3)))
-                vishtml.write('<TD align ="center"><B>[FE/H]</B><BR><BR><BR>' + str("%.3f" % round(rvfeh,3)))
+                vishtml.write('<TD align ="center">' + str("%.1f" % round(vhelio,1)))
+                vishtml.write('<TD align ="center">' + str(ncomp))
+                vishtml.write('<TD align ="center">' + str(int(round(rvteff))))
+                vishtml.write('<TD align ="center">' + str("%.3f" % round(rvlogg,3)))
+                vishtml.write('<TD align ="center">' + str("%.3f" % round(rvfeh,3)))
             else:
                 snr = '-9.9'
                 relsnr = '-1%'
@@ -2235,12 +2235,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD align="center">' + objtype)
-                vishtml.write('<TD align="center"><B>H</B><BR><BR><BR>99.999')
-                vishtml.write('<TD align="center"><B>J-K</B><BR><BR><BR>99.999')
-                vishtml.write('<TD align="center"><B>TYPE</B><BR><BR><BR>' + objtype)
-                vishtml.write('<TD align="center"><B>FLAGS</B><BR><BR><BR>' + objtype)
-                vishtml.write('<TD align="center"><B>OBS<BR>S/N</B><BR><BR>' + snr)
-                vishtml.write('<TD align="center"><B>REL<BR>S/N</B><BR><BR>' + relsnr)
+                vishtml.write('<TD align="center">99.999')
+                vishtml.write('<TD align="center">99.999')
+                vishtml.write('<TD align="center">' + objtype)
+                vishtml.write('<TD align="center">' + objtype)
+                vishtml.write('<TD align="center">' + snr)
+                vishtml.write('<TD align="center">' + relsnr)
                 # Throughput column
                 tput = throughput[j]
                 if np.isnan(tput) == False:
@@ -2253,14 +2253,14 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
 
                     tput = str(int(round(tput*100))) + '%'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '><B>DFLAT<BR>TPUT</B><BR><BR>' + tput + '\n')
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
                 else:
-                    vishtml.write('<TD align ="center" BGCOLOR="grey"><B>DFLAT<BR>TPUT</B><BR><BR>-1%\n')
-                vishtml.write('<TD align="center"><B>VHELIO</B><BR><BR><BR>-999.9')
-                vishtml.write('<TD align="center"><B>NCOMP</B><BR><BR><BR>-1')
-                vishtml.write('<TD align="center"><B>TEFF</B><BR><BR><BR>-9999')
-                vishtml.write('<TD align="center"><B>LOGG</B><BR><BR><BR>-9.999')
-                vishtml.write('<TD align="center"><B>[FE/H]</B><BR><BR><BR>-9.999')
+                    vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
+                vishtml.write('<TD align="center">-999.9')
+                vishtml.write('<TD align="center">-1')
+                vishtml.write('<TD align="center">-9999')
+                vishtml.write('<TD align="center">-9.999')
+                vishtml.write('<TD align="center">-9.999')
 
             if firstcarton != 'UNASSIGNED!!!':
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
