@@ -2006,7 +2006,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<P>Click the column headers to sort.</p>\n')
     vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
-    vishtml.write('<TH>S/N <TH>Rel.<BR>S/N<TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
+    vishtml.write('<TH>S/N <TH>Rel.<BR>S/N <TH>Dflat<BR>Tput  <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H]<TH>apVisit Plot\n')
 
     # Make text file giving ratio of observed S/N over linear fit S/N
     Vsum = load.apVisitSum(int(plate), mjd)
@@ -2181,6 +2181,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vcol = 'black'
                 if np.absolute(vhelio) > 400: vcol = 'red'
                 vishtml.write('<TD align ="center">' + str("%.1f" % round(snr,1)))
+                # Relative S/N (ratio of obs S/N over linear fit S/N)
                 g, = np.where(objid == apID)
                 if len(g) > 0:
                     iratio = ratio[g][0] 
@@ -2192,7 +2193,21 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if iratio < 0.3: bcolor = '#FF0000'
                     vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + str(int(round(ratio[g][0]*100))) + '%')
                 else: 
-                    vishtml.write('<TD align ="center" BGCOLOR="white">-1%')
+                    vishtml.write('<TD align ="center" BGCOLOR="grey">-1%')
+                # Throughput column
+                tput = throughput[j]
+                if np.isnan(tput) == False:
+                    bcolor = 'white'
+                    if tput < 0.7: bcolor = '#FFFF66'
+                    if tput < 0.6: bcolor = '#FF9933'
+                    if tput < 0.5: bcolor = '#FF6633'
+                    if tput < 0.4: bcolor = '#FF3333'
+                    if tput < 0.3: bcolor = '#FF0000'
+                    tput = str(int(round(tput*100))) + '%'
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
+                else:
+                    vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
+
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.1f" % round(vhelio,1)) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(ncomp) + '</FONT>')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(int(round(rvteff))) + '</FONT>')
@@ -2216,26 +2231,25 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + snr + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + relsnr + '</FONT>')
+                vishtml.write('<TD align="center" BGCOLOR="grey"><FONT COLOR="' + fcolor + ' ">' + relsnr + '</FONT>')
+                # Throughput column
+                tput = throughput[j]
+                if np.isnan(tput) == False:
+                    bcolor = 'white'
+                    if tput < 0.7: bcolor = '#FFFF66'
+                    if tput < 0.6: bcolor = '#FF9933'
+                    if tput < 0.5: bcolor = '#FF6633'
+                    if tput < 0.4: bcolor = '#FF3333'
+                    if tput < 0.3: bcolor = '#FF0000'
+                    tput = str(int(round(tput*100))) + '%'
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
+                else:
+                    vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-999.9</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">0</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9999</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9.999</FONT>')
                 vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9.999</FONT>')
-
-            # Throughput column
-            tput = throughput[j]
-            if np.isnan(tput) == False:
-                bcolor = 'white'
-                if tput < 0.7: bcolor = '#FFFF66'
-                if tput < 0.6: bcolor = '#FF9933'
-                if tput < 0.5: bcolor = '#FF6633'
-                if tput < 0.4: bcolor = '#FF3333'
-                if tput < 0.3: bcolor = '#FF0000'
-                tput = str("%.3f" % round(tput,3))
-                vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
-            else:
-                vishtml.write('<TD align ="center BGCOLOR="white">----\n')
 
             if firstcarton != 'UNASSIGNED!!!':
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
