@@ -2116,7 +2116,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                         tmp = apstarfile.split(apred + '/')
                         apStarRelPath = '../../../../../../' + tmp[1]
                         starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
-
+                else:
+                    objid = 'None'
 
                 starflags = jvcat['starflags'].replace(',','<BR>')
                 firstcarton = jvcat['firstcarton']
@@ -2158,7 +2159,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             if objtype != 'SKY':
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
-                vishtml.write('<TD>' + objid + '\n')
+                vishtml.write('<TD><B>APOGEE ID</B><BR><BR>' + objid + '\n')
                 vishtml.write('<BR>' + simbadlink + '\n')
                 vishtml.write('<BR><A HREF=../' + visitfile + '>apVisit file</A>\n')
                 if apStarRelPath is not None:
@@ -2176,7 +2177,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     vishtml.write('<TD align="center"><B>TYPE</B><BR><BR><BR>TEL')
                 else:
                     vishtml.write('<TD align="center"><B>TYPE</B><BR><BR><BR>SCI')
-                vishtml.write('<TD align="center">' + firstcarton)
+                vishtml.write('<TD align="center"><B>FLAGS</B><BR><BR><BR>' + firstcarton)
                 vishtml.write('<BR><BR>' + starflags)
                 vcol = 'black'
                 if np.absolute(vhelio) > 400: vcol = 'red'
