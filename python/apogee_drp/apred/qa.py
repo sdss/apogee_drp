@@ -2185,7 +2185,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 g, = np.where(objid == apID)
                 if len(g) > 0:
                     iratio = ratio[g][0] 
-                    bcolor = 'white'
+                    bcolor1 = 'white'
                     if iratio < 0.7: bcolor1 = '#FFFF66'
                     if iratio < 0.6: bcolor1 = '#FF9933'
                     if iratio < 0.5: bcolor1 = '#FF6633'
@@ -2197,7 +2197,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 # Throughput column
                 tput = throughput[j]
                 if np.isnan(tput) == False:
-                    bcolor = 'white'
+                    bcolor1 = 'white'
                     if tput < 0.7: bcolor1 = '#FFFF66'
                     if tput < 0.6: bcolor1 = '#FF9933'
                     if tput < 0.5: bcolor1 = '#FF6633'
