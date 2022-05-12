@@ -2190,7 +2190,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if iratio < 0.5: bcolor = '#FF6633'
                     if iratio < 0.4: bcolor = '#FF3333'
                     if iratio < 0.3: bcolor = '#FF0000'
-                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + str(int(round(ratio[g][0]))) + '%')
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + str(int(round(ratio[g][0]*100))) + '%')
                 else: 
                     vishtml.write('<TD align ="center" BGCOLOR="white">-1%')
                 vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.1f" % round(vhelio,1)) + '</FONT>')
