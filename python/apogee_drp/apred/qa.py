@@ -2083,6 +2083,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             if objtype == 'SKY': 
                 bgcolor = '#D6EAF8'
                 firstcarton = 'SKY'
+                starflags = 'None'
             else:
                 assigned = 1
                 vcatind, = np.where(fiber == vcat['fiberid'])
@@ -2262,7 +2263,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
 
-            if firstcarton != 'UNASSIGNED!!!':
+            if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS'):
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
             else:
                 vishtml.write('<TD align="center">')
