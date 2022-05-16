@@ -419,7 +419,7 @@ FOR i=0L,nplanfiles-1 do begin
          tellzones=planstr.tellzones else tellzones=0
       APTELLURIC_HACK,frame_skysub,plugmap,frame_telluric,tellstar,starfit=starfit,$
         single=single,pltelstarfit=1,usetelstarfit=usetelstarfit,$
-        maxtellstars=maxtellstars,tellzones=tellzones,specfitopt=1,$
+        maxtellstars=maxtellstars,tellzones=tellzones,specfitopt=1,starfitopt=2,$
         plots_dir=plots_dir,error=telerror,/save,/preconv,visitstr=visitstr,$
         test=test,force=force, tellstarlist=tellstarlist
       tellstar.im=planstr.apexp[j].name

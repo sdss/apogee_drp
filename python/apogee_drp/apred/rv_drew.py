@@ -877,7 +877,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     # Pixel-by-pixel weighted average
     cont = np.median(stack.cont,axis=0)
     apstar.flux[0,:] = np.nansum(stack.flux/stack.err**2,axis=0)/np.nansum(1./stack.err**2,axis=0) * cont
-    apstar.err[0,:] =  np.sqrt(1./np.sum(1./stack.err**2,axis=0)) * cont
+    apstar.err[0,:] =  np.sqrt(1./np.nansum(1./stack.err**2,axis=0)) * cont
     apstar.bitmask[0,:] = np.bitwise_and.reduce(stack.bitmask,0)
     apstar.cont[0,:] = cont
 
@@ -888,7 +888,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         bd = np.where((stack.bitmask&pixelmask.getval('SIG_SKYLINE')) > 0)[0]
         if len(bd) > 0 : newerr[bd[0],bd[1]] *= np.sqrt(100)
         apstar.flux[1,:] = np.nansum(stack.flux/newerr**2,axis=0)/np.nansum(1./newerr**2,axis=0) * cont
-        apstar.err[1,:] =  np.sqrt(1./np.sum(1./newerr**2,axis=0)) * cont
+        apstar.err[1,:] =  np.sqrt(1./np.nansum(1./newerr**2,axis=0)) * cont
 
         # Individual visits
         apstar.flux[2:,:] = stack.flux * stack.cont
