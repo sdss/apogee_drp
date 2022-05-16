@@ -420,7 +420,7 @@ FOR i=0L,nplanfiles-1 do begin
       APTELLURIC_HACK,frame_skysub,plugmap,frame_telluric,tellstar,starfit=starfit,$
         single=single,pltelstarfit=1,usetelstarfit=usetelstarfit,$
         maxtellstars=maxtellstars,tellzones=tellzones,specfitopt=1,$
-        plots_dir=plots_dir,error=telerror,/save,visitstr=visitstr,$;/preconv,$
+        plots_dir=plots_dir,error=telerror,/save,visitstr=visitstr,/preconv,$
         test=test,force=force, tellstarlist=tellstarlist
       tellstar.im=planstr.apexp[j].name
       ADD_TAG,frame_telluric,'TELLSTAR',tellstar,frame_telluric
