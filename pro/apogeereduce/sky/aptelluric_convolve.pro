@@ -53,6 +53,7 @@ outfile=cal_dir+'telluric/'+dirs.prefix+'Telluric-'+chips+'-'+waveid+'-'+lsfid+'
 
 ; wait if another process is already working on this frame
 lockfile=cal_dir+'telluric/'+dirs.prefix+'Telluric-'+waveid+'-'+lsfid+'.lock'
+stop
 while file_test(lockfile) do apwait,lockfile,10
 
 ; does convolved telluric file already exist? If not, make it!
