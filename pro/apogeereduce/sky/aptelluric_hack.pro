@@ -187,7 +187,6 @@ end
   ;  gd = where(tellname[ii] eq plugmap.fiberdata.tmass_style, ngd)
   ;  starplugind[ii] = gd
   ;endfor
-  stop
   starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
                      plugmap.fiberdata.holetype eq 'OBJECT' and $
                      plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
