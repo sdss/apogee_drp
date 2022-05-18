@@ -2264,7 +2264,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center">-9.999')
 
             tmp2 = plotdir + os.path.basename(visitplotfile)
-            if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS') & (os.path.exists(tmp2)):
+            if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS'):# & (os.path.exists(tmp2)):
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
             else:
                 vishtml.write('<TD align="center">')
@@ -3375,7 +3375,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#eaeded"><TH>(1)<BR>Date <TH>(2)<BR>Observer Log <TH>(3)<BR>Exposure Log <TH>(4)<BR>Raw Data <TH>(5)<BR>Night QA')
-        html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Plots of Spectra <TH>(8)<BR>Summary Files <TH>(9)<BR>Moon<BR>Phase\n')
+        html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Spectra Plots <TH>(8)Nsky, Ntel, Nsci <TH>(9)<BR>Summary Files <TH>(10)<BR>Moon<BR>Phase\n')
         for i in range(nmjd):
             fps = False
             if mjd[i] > 59556: fps = True
@@ -3466,6 +3466,25 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     # Check for failed plates
                     plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
                     if os.path.exists(plateQAfile):
+                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
+                        if j < nplatesall:
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A><BR>\n')
+                        else:
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>\n')
+                    else:
+                        if j < nplatesall:
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT><BR>\n')
+                        else:
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
+
+                # Column 8: Number of skies, telluric, and science targets.
+                html.write('<TD align="left">')
+                for j in range(nplatesall):
+                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                    # Check for failed plates
+                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                    if os.path.exists(plateQAfile):
                         note = ''
                         if fps:
                             plsumfile = load.filename('PlateSum', plate=int(plate), mjd=cmjd, fps=fps)
@@ -3481,14 +3500,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                                 #if len(assignedFib) < 1: note = ' (ZERO assigned)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
-                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>'+note+'<BR>\n')
+                            html.write('('+str(j+1).rjust(2)+') '+note+'<BR>\n')
                         else:
-                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>'+note+'\n')
+                            html.write('('+str(j+1).rjust(2)+') '+note+'\n')
                     else:
                         if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT><BR>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT><BR>\n')
                         else:
-                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT>\n')
+
 
                 # Column 7: Combined files for this night
                 #html.write('<TD>\n')
@@ -3499,7 +3519,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 # Column 9: Dome flats observed for this night
                 #html.write('<TD>\n')
 
-                # Column 7: Summary files
+                # Column 9: Summary files
                 visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
                 starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
                 if nplates >= 1: 
@@ -3508,7 +3528,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 else:
                     html.write('<TD>\n')
 
-                # Column 8: Mean moon phase
+                # Column 10: Mean moon phase
                 bgcolor = '#000000'
                 txtcolor = '#FFFFFF'
                 meanmoonphase = moon_illumination(tt)
