@@ -749,15 +749,14 @@ for i=0,nfibers-1 do begin
     if nj gt 0 then begin
       print,izeta,ieta,normpar
       print,telstr[j].zeta,telstr[j].eta,telstr[j].par
-      normpar=telstr[j].par
+      ;normpar=telstr[j].par
+      normpar = = [0.78675, 1.095675, 0.814075]
     endif
   endif
   tellstar.mag[i,*]=plugmap.fiberdata[iplugind].mag
   tellstar.zeta[i]=izeta
   tellstar.eta[i]=ieta
-  ;stop
-  ;tellstar.scale[i,*] =normpar
-  tellstar.scale[i,*] = [0.78675, 1.095675, 0.814075]
+  tellstar.scale[i,*] =normpar
 
   ; Get convolved model spectrum
   ;-----------------------------
