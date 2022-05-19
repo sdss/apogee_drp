@@ -311,12 +311,12 @@ for iter=0,niter-1 do begin
   if keyword_set(preconv) then begin
     ; first iteration will try all models, second iteration contrained to a single "best" model
     if iter eq 0 then $
-    APTELLURIC_SPECFIT,frame,starind[i],telmodelstr,outstr,specfitopt=2,$
+    APTELLURIC_SPECFIT_HACK,frame,starind[i],telmodelstr,outstr,specfitopt=2,$
        convolved_telluric=convolved_telluric,template=template  else $
-    APTELLURIC_SPECFIT,frame,starind[i],telmodelstr,outstr,specfitopt=specfitopt,$
+    APTELLURIC_SPECFIT_HACK,frame,starind[i],telmodelstr,outstr,specfitopt=specfitopt,$
        convolved_telluric=convolved_telluric,template=template,bestmod=bestmod,test=test
   endif else $
-    APTELLURIC_SPECFIT,frame,starind[i],telmodelstr,outstr,specfitopt=specfitopt,template=template
+    APTELLURIC_SPECFIT_HACK,frame,starind[i],telmodelstr,outstr,specfitopt=specfitopt,template=template
 
   itelstr = telstr[i]
   STRUCT_ASSIGN,outstr,itelstr,/nozero
