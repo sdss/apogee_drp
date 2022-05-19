@@ -33,6 +33,9 @@ pro aptelluric_specfit_hack,frame,starind,telmodelstr,outstr,specfitopt=specfito
 ; Modified by Holtz. April 2015
 ;-
 
+; DREW TEMPORARY MODIFICATION
+bestmod = [2,1,1]
+
 ; Not enough inputs
 if n_elements(frame) eq 0 or n_elements(starind) eq 0 then begin
   print,'Syntax - aptelluric_specfit,frame,starind,telmodelstr,telstr,specfitopt=specfitopt,pl=pl,stp=stp'
