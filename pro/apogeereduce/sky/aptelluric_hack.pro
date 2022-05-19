@@ -750,7 +750,7 @@ for i=0,nfibers-1 do begin
       print,izeta,ieta,normpar
       print,telstr[j].zeta,telstr[j].eta,telstr[j].par
       ;normpar=telstr[j].par
-      normpar = = [0.78675, 1.095675, 0.814075]
+      normpar = [0.78675, 1.095675, 0.814075]
     endif
   endif
   tellstar.mag[i,*]=plugmap.fiberdata[iplugind].mag
