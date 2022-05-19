@@ -1,4 +1,4 @@
-pro aptelluric_specfit_hack,frame,starind,telmodelstr,outstr,specfitopt=specfitopt,pl=pl,stp=stp,$
+pro aptelluric_specfit,frame,starind,telmodelstr,outstr,specfitopt=specfitopt,pl=pl,stp=stp,$
                        convolved_telluric=convolved_telluric,template=template,bestmod=bestmod,test=test
 ;+
 ;
@@ -231,8 +231,7 @@ CASE specfitopt of
   ; Plug the data into the structure
   outstr.specfitopt = 1
   outstr.fiber = starind
-  ;outstr.par = par[0:2]
-
+  outstr.par = par[0:2]
   outstr.cont_coef = par[3:*]
   outstr.status = status
   outstr.rchisq = rchisq
@@ -341,7 +340,6 @@ End  ; chi-squared fitting method
     Endfor ; species loop
 
     par1 = [telnormstr.scale,1.0,0.0]
-
     tmspec=reform(mspec[*,*,0])*0
     for j=0,2 do tmspec[*,j]=mspec[*,j,telnormstr[j].best]
     telnorm1 = fit_telluric(x,par1,mspec=tmspec)
@@ -449,7 +447,7 @@ if keyword_set(pl) then begin
   oplot,x,telnorm*smspec,co=250,linestyle=2
   oplot,x,spec/telnorm,co=150
   legend_old,['Original','Telluric','Corrected'],textcolor=[co,250,150],/bottom,/left
-  xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
+  xyouts,mean(xr),yr[1]-0.05*range(yr),'N ormalization='+strjoin(stringize(par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
 
   ;if keyword_set(save) then ps_close
 
