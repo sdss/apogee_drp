@@ -189,8 +189,8 @@ end
   endfor
   print,starplugind
   ;starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
-                     plugmap.fiberdata.holetype eq 'OBJECT' and $
-                     plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
+  ;                   plugmap.fiberdata.holetype eq 'OBJECT' and $
+  ;                   plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
 end
 ; All stars
 2: begin
