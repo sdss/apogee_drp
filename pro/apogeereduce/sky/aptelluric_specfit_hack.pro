@@ -1,4 +1,4 @@
-pro aptelluric_specfit,frame,starind,telmodelstr,outstr,specfitopt=specfitopt,pl=pl,stp=stp,$
+pro aptelluric_specfit_hack,frame,starind,telmodelstr,outstr,specfitopt=specfitopt,pl=pl,stp=stp,$
                        convolved_telluric=convolved_telluric,template=template,bestmod=bestmod,test=test
 ;+
 ;
