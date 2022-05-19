@@ -756,7 +756,8 @@ for i=0,nfibers-1 do begin
   tellstar.zeta[i]=izeta
   tellstar.eta[i]=ieta
   stop
-  tellstar.scale[i,*] =normpar
+  ;tellstar.scale[i,*] =normpar
+  tellstar.scale[i,*] = [0.78675, 1.095675, 0.814075]
 
   ; Get convolved model spectrum
   ;-----------------------------
