@@ -755,6 +755,7 @@ for i=0,nfibers-1 do begin
   tellstar.mag[i,*]=plugmap.fiberdata[iplugind].mag
   tellstar.zeta[i]=izeta
   tellstar.eta[i]=ieta
+  stop
   tellstar.scale[i,*] =normpar
 
   ; Get convolved model spectrum
