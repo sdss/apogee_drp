@@ -33,9 +33,6 @@ pro aptelluric_specfit_hack,frame,starind,telmodelstr,outstr,specfitopt=specfito
 ; Modified by Holtz. April 2015
 ;-
 
-; DREW TEMPORARY MODIFICATION
-bestmod = [2,1,1]
-
 ; Not enough inputs
 if n_elements(frame) eq 0 or n_elements(starind) eq 0 then begin
   print,'Syntax - aptelluric_specfit,frame,starind,telmodelstr,telstr,specfitopt=specfitopt,pl=pl,stp=stp'
@@ -191,9 +188,6 @@ CASE specfitopt of
                    parinfo=parinfo,status=status,perror=perror1,dof=dof1,bestnorm=chisq,/quiet)
     rchisq = chisq/dof1
 
-    ; DREW TEMPORARY MODIFICATION
-    par[0:2] = [0.78675, 1.095675, 0.814075]
-
     ; Current fit
     telnorm = fit_telluric(x,[par[0:2],1.0,0.0],mspec=bestmspec)
 
@@ -238,9 +232,6 @@ CASE specfitopt of
   outstr.specfitopt = 1
   outstr.fiber = starind
   ;outstr.par = par[0:2]
-
-  ; DREW TEMPORARY MODIFICATION
-  outstr.par = [0.78675, 1.095675, 0.814075]
 
   outstr.cont_coef = par[3:*]
   outstr.status = status
@@ -351,9 +342,6 @@ End  ; chi-squared fitting method
 
     par1 = [telnormstr.scale,1.0,0.0]
 
-    ; DREW TEMPORARY MODIFICATION
-    par1[0:2] = [0.78675, 1.095675, 0.814075]
-
     tmspec=reform(mspec[*,*,0])*0
     for j=0,2 do tmspec[*,j]=mspec[*,j,telnormstr[j].best]
     telnorm1 = fit_telluric(x,par1,mspec=tmspec)
@@ -403,8 +391,6 @@ End  ; chi-squared fitting method
   outstr.specfitopt = 2
   outstr.fiber = starind
   outstr.par = par[0:2]
-  ; DREW TEMPORARY MODIFICATION
-  outstr.par = [0.78675, 1.095675, 0.814075]
   outstr.cont_coef = par[3:*]
   outstr.status = 1
   outstr.bestmod = telnormstr.best

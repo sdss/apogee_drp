@@ -181,14 +181,14 @@ CASE starfitopt of
 end
 ; Hot stars
 1: begin
-  ;readcol,tellstarlist,tellname,tellfib,tellh,telljk,f='a,i,f,f',skipline=1,/silent,count=nstar
-  ;starplugind = intarr(nstar)
-  ;for ii=0,nstar-1 do begin
-  ;  gd = where(tellname[ii] eq plugmap.fiberdata.tmass_style, ngd)
-  ;  starplugind[ii] = gd
-  ;endfor
-  ;print,starplugind
-  starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
+  readcol,tellstarlist,tellname,tellfib,tellh,telljk,f='a,i,f,f',skipline=1,/silent,count=nstar
+  starplugind = intarr(nstar)
+  for ii=0,nstar-1 do begin
+    gd = where(tellname[ii] eq plugmap.fiberdata.tmass_style, ngd)
+    starplugind[ii] = gd
+  endfor
+  print,starplugind
+  ;starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
                      plugmap.fiberdata.holetype eq 'OBJECT' and $
                      plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
 end
@@ -365,8 +365,10 @@ for iter=0,niter-1 do begin
     oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=2;,linestyle=2
     oplot,outstr.x,outstr.spec/outstr.telluric,co=70,thick=2
     legendastro,['Original','Telluric','Corrected'],color=[0,250,70],textcolors=[0,250,70],line=[0,0,0],charsize=1.85,thick=[3,1,1],pos=[0.08,0.95],/norm
-    txt='Fiber '+strtrim(ifiber,2)+',     normalization = '+strjoin(stringize(outstr.par[0:2],ndec=4),', ')
-    xyouts,mean(xr),yr[1]-0.1*range(yr),txt,align=0.5,charsize=2,charthick=4
+    txt1='Fiber '+strtrim(ifiber,2)+',     normalization = '+strjoin(stringize(outstr.par[0:2],ndec=4),', ')
+    txt2='best models = '+strjoin(stringize(outstr.bestmod),', ')
+    xyouts,mean(xr),yr[1]-0.1*range(yr),txt1,align=0.5,charsize=2,charthick=4
+    xyouts,mean(xr),yr[1]-0.15*range(yr),txt1,align=0.5,charsize=2,charthick=4
 
     yr = [(medspec-0.3*abs(medspec))<0, medspec*1.8]
     pos=[0.05,0.05,0.985,0.495]
