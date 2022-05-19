@@ -368,7 +368,7 @@ for iter=0,niter-1 do begin
     txt1='Fiber '+strtrim(ifiber,2)+',     normalization = '+strjoin(stringize(outstr.par[0:2],ndec=4),', ')
     txt2='best models = '+strjoin(stringize(outstr.bestmod),', ')
     xyouts,mean(xr),yr[1]-0.1*range(yr),txt1,align=0.5,charsize=2,charthick=4
-    xyouts,mean(xr),yr[1]-0.15*range(yr),txt1,align=0.5,charsize=2,charthick=4
+    xyouts,mean(xr),yr[1]-0.15*range(yr),txt2,align=0.5,charsize=2,charthick=4
 
     yr = [(medspec-0.3*abs(medspec))<0, medspec*1.8]
     pos=[0.05,0.05,0.985,0.495]
