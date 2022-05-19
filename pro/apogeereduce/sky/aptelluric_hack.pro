@@ -755,7 +755,7 @@ for i=0,nfibers-1 do begin
   tellstar.mag[i,*]=plugmap.fiberdata[iplugind].mag
   tellstar.zeta[i]=izeta
   tellstar.eta[i]=ieta
-  stop
+  ;stop
   ;tellstar.scale[i,*] =normpar
   tellstar.scale[i,*] = [0.78675, 1.095675, 0.814075]
 
