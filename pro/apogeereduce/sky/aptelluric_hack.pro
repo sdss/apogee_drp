@@ -742,8 +742,9 @@ for i=0,nfibers-1 do begin
   ieta = plugmap.fiberdata[iplugind].eta
 
   ; Get the normalizations for this position
-  normpar = fltarr(3)
-  for k=0,2 do normpar[k] = FUNC_POLY2D(izeta,ieta,speciesfitstr[k].pars)
+  ;normpar = fltarr(3)
+  ;for k=0,2 do normpar[k] = FUNC_POLY2D(izeta,ieta,speciesfitstr[k].pars)
+  normpar = [0.78675, 1.095675, 0.814075]
   if keyword_set(usetelstarfit) then begin
     j=where(300-starfiberid eq i,nj)
     if nj gt 0 then begin
