@@ -181,16 +181,16 @@ CASE starfitopt of
 end
 ; Hot stars
 1: begin
-  readcol,tellstarlist,tellname,tellfib,tellh,telljk,f='a,i,f,f',skipline=1,/silent,count=nstar
-  starplugind = intarr(nstar)
-  for ii=0,nstar-1 do begin
-    gd = where(tellname[ii] eq plugmap.fiberdata.tmass_style, ngd)
-    starplugind[ii] = gd
-  endfor
-  print,starplugind
-  ;starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
-  ;                   plugmap.fiberdata.holetype eq 'OBJECT' and $
-  ;                   plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
+  ;readcol,tellstarlist,tellname,tellfib,tellh,telljk,f='a,i,f,f',skipline=1,/silent,count=nstar
+  ;starplugind = intarr(nstar)
+  ;for ii=0,nstar-1 do begin
+  ;  gd = where(tellname[ii] eq plugmap.fiberdata.tmass_style, ngd)
+  ;  starplugind[ii] = gd
+  ;endfor
+  ;print,starplugind
+  starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
+                     plugmap.fiberdata.holetype eq 'OBJECT' and $
+                     plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
 end
 ; All stars
 2: begin
