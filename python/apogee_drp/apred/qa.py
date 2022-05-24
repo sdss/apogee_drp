@@ -2004,7 +2004,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     nstars = len(stars)
 
     # FITS table structure.
-    dt = np.dtype([('APOGEE_ID', np.str, 30)
+    dt = np.dtype([('APOGEE_ID', np.str, 30),
                    ('GMAG',      np.float64),
                    ('BPMAG',     np.float64),
                    ('RPMAG',     np.float64),
