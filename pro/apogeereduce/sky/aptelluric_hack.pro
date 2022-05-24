@@ -200,7 +200,15 @@ end
 end
 ; Best available stars
 3: begin
-  ;starplugind = where(
+  ii = 0
+  jkcol = plugmap.fiberdata.jmag - plugmap.fiberdata.kmag
+  while nstar lt 15 do begin
+      starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
+                          plugmap.fiberdata.holetype eq 'OBJECT' and $
+                         (plugmap.fiberdata.objtype eq 'HOT_STD' or plugmap.fiberdata.objtype eq 'STAR') and $
+                          plugmap.fiberdata.hmag lt 11 and jkcol lt ii*0.05,nstar)
+      ii = ii + 1
+  endwhile
   stop
 end
 else: begin
