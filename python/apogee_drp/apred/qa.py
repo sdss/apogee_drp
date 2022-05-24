@@ -2001,6 +2001,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
     db.close()
     stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
+    pdb.set_trace()
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
