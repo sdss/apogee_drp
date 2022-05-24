@@ -2015,8 +2015,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                    ('JMAG_ERR',  np.float64),
                    ('HMAG',      np.float64),
                    ('HMAG_ERR',  np.float64),
-                   ('KMAG',      np.float64),
-                   ('KMAG_ERR',  np.float64)])
+                   ('KSMAG',     np.float64),
+                   ('KSMAG_ERR', np.float64)])
     colorteffarr = np.zeros(nustars,dtype=dt)
     #colorteffarr['APOGEE_ID'] = ustars
     colorteffarr['GMAG'] = vcat['gaiadr2_gmag'][stars][uind]
@@ -2029,8 +2029,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     colorteffarr['JMAG_ERR'] = vcat['jerr'][stars][uind]
     colorteffarr['HMAG'] = vcat['kmag'][stars][uind]
     colorteffarr['HMAG_ERR'] = vcat['kerr'][stars][uind]
-    colorteffarr['KMAG'] = vcat['hmag'][stars][uind]
-    colorteffarr['KMAG_ERR'] = vcat['herr'][stars][uind]
+    colorteffarr['KSMAG'] = vcat['hmag'][stars][uind]
+    colorteffarr['KSMAG_ERR'] = vcat['herr'][stars][uind]
     tab = Table(colorteffarr)
     teff,av = colorteff.solve(tab)
     pdb.set_trace()
