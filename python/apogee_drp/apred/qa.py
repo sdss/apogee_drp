@@ -2035,6 +2035,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     teff = np.zeros(nustars)
     av = np.zeros(nustars)
     for i in range(nustars):
+        pdb.set_trace()
         tab = Table(colorteffarr[i])
         teff[i],av[i] = colorteff.solve(tab)
     pdb.set_trace()
