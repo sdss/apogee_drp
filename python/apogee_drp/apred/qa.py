@@ -2016,7 +2016,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                    ('JMAG_ERR',  np.float64),
                    ('HMAG',      np.float64),
                    ('HMAG_ERR',  np.float64),
-                   ('KMAG',      np.float64)
+                   ('KMAG',      np.float64),
                    ('KMAG_ERR',  np.float64)])
     colorteffarr = np.zeros(nustars,dtype=dt)
     colorteffarr['APOGEE_ID'] = ustars
