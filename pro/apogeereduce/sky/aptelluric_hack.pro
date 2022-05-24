@@ -197,6 +197,7 @@ end
   starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
                      plugmap.fiberdata.holetype eq 'OBJECT' and $
                      (plugmap.fiberdata.objtype eq 'HOT_STD' or plugmap.fiberdata.objtype eq 'STAR'),nstar)
+end
 ; Best available stars
 3: begin
   ;starplugind = where(
