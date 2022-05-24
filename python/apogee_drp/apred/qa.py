@@ -2006,16 +2006,16 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
     # FITS table structure.
     dt = np.dtype([('GMAG',      np.float64),
-                   ('GMAG_ERR',  np.float64),
                    ('BPMAG',     np.float64),
-                   ('BPMAG_ERR', np.float64),
                    ('RPMAG',     np.float64),
-                   ('RPMAG_ERR', np.float64),
                    ('JMAG',      np.float64),
-                   ('JMAG_ERR',  np.float64),
                    ('HMAG',      np.float64),
-                   ('HMAG_ERR',  np.float64),
                    ('KSMAG',     np.float64),
+                   ('GMAG_ERR',  np.float64),
+                   ('BPMAG_ERR', np.float64),
+                   ('RPMAG_ERR', np.float64),
+                   ('JMAG_ERR',  np.float64),
+                   ('HMAG_ERR',  np.float64),
                    ('KSMAG_ERR', np.float64)])
     colorteffarr = np.zeros(nustars,dtype=dt)
     #colorteffarr['APOGEE_ID'] = ustars
