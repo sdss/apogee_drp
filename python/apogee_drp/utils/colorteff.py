@@ -30,8 +30,10 @@ from scipy.interpolate import BSpline
 
 def loadfiles():
 
+    codedir = os.environ['APOGEE_DRP_DIR']
+    
     # Load the color-teff information
-    filename = '/Users/nidever/sdss5/mwm/apogee/colorteff/colorteff_gaiaedr3_2mass.fits'
+    filename = codedir+'/data/colorteff/colorteff_gaiaedr3_2mass.fits'
     hdu = fits.open(filename)
     young = {}
     for i in np.arange(1,6):
@@ -44,7 +46,8 @@ def loadfiles():
         spl = BSpline(data['t'],data['c'],nord)
         young[band] = spl
         young['XMIN'] = xmin
-        young['XMAX'] = xmax        
+        young['XMAX'] = xmax
+        young['TYPE'] = 'young'
     old = {}
     for i in np.arange(6,11):
         head = hdu[i].header
@@ -57,7 +60,8 @@ def loadfiles():
         old[band] = spl
         old['XMIN'] = xmin
         old['XMAX'] = xmax        
-
+        old['TYPE'] = 'old'
+        
     return young,old
 
 def bestslope(x,y,sigma=None,axis=None):
@@ -165,6 +169,7 @@ def solve(tab):
     bands = ['GMAG','BPMAG','RPMAG','JMAG','HMAG','KSMAG']
     
     # Extinction from Parsec CMD website, A(lambda)/A(V)
+    # Cardelli+1989 extinction curve
     alav = {}
     alav['GMAG'] = 0.83627
     alav['BPMAG'] = 1.08337
@@ -196,16 +201,45 @@ def solve(tab):
 
     # Now find the best Teff and extinction for the input star
     # X is 5000.0/Teff(K), Y is BAND-GMAG
+
+    # --- Try OLD, MORE EVOLVED BSpline colors ---
     
     # Make grid of color points at various temperatures
-    xgrid = np.linspace(old['XMIN'],old['XMAX'],50)
-    colgrid = np.zeros((ncolors,50),float)
+    oldxgrid = np.linspace(old['XMIN'],old['XMAX'],50)
+    oldcolgrid = np.zeros((ncolors,50),float)
     for i,b in enumerate(['BPMAG','RPMAG','JMAG','HMAG','KSMAG']):
-        colgrid[i,:] = old[b](xgrid)
-
+        oldcolgrid[i,:] = old[b](oldxgrid)
     # Find the best model color and extinction
-    minind,chisq,av = bestmodelcolor(obscolor,colgrid,redav,obscolorerr=obscolorerr)
+    oldminind,oldchisq,oldav = bestmodelcolor(obscolor,oldcolgrid,redav,obscolorerr=obscolorerr)
+
+    # --- Try YOUNG, MAIN-SEQUENCE BSpline colors ---
     
+    # Make grid of color points at various temperatures
+    yngxgrid = np.linspace(young['XMIN'],young['XMAX'],50)
+    yngcolgrid = np.zeros((ncolors,50),float)
+    for i,b in enumerate(['BPMAG','RPMAG','JMAG','HMAG','KSMAG']):
+        yngcolgrid[i,:] = young[b](yngxgrid)
+    # Find the best model color and extinction
+    yngminind,yngchisq,yngav = bestmodelcolor(obscolor,yngcolgrid,redav,obscolorerr=obscolorerr)
+
+    # Which group is better
+    if np.min(oldchisq) <= np.min(yngchisq):
+        xgrid = oldxgrid
+        minind = oldminind
+        bspl = old
+        btype = 'old'
+    else:
+        xgrid = yngxgrid
+        minind = yngminind
+        bspl = young
+        btype = 'young'
+
+    # YOUNG ONLY!
+    xgrid = yngxgrid
+    minind = yngminind
+    bspl = young
+    btype = 'young'
+        
     # Finer grid around that point
     if minind<2:
         minx = xgrid[0]
@@ -219,7 +253,7 @@ def solve(tab):
     ngrid2 = len(xgrid2)
     colgrid2 = np.zeros((ncolors,ngrid2),float)
     for i,b in enumerate(['BPMAG','RPMAG','JMAG','HMAG','KSMAG']):
-        colgrid2[i,:] = old[b](xgrid2)
+        colgrid2[i,:] = bspl[b](xgrid2)
 
     # Find the best model color and extinction
     minind2,chisq2,av2 = bestmodelcolor(obscolor,colgrid2,redav,obscolorerr=obscolorerr)
@@ -229,5 +263,5 @@ def solve(tab):
     bestav = av2[minind2]
     bestteff = 5000.0/bestx
     
-    return bestteff,bestav
+    return bestteff,bestav,btype
  
