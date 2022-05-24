@@ -2,7 +2,7 @@ pro aptelluric_hack,frame,plugmap,outframe,tellstar,nearest=nearest,silent=silen
                starfitopt=starfitopt,specfitopt=specfitopt,error=error,pl=pl,pltelstarfit=pltelstarfit,stp=stp,$
                save=save,plots_dir=plots_dir,preconv=preconv,single=single,visitstr=visitstr,$
                usetelstarfit=usetelstarfit,maxtellstars=maxtellstars,tellzones=tellzones,test=test,$
-               force=force, tellstarlist=tellstarlist
+               force=force,tellstarlist=tellstarlist
 
 ;+
 ;
@@ -197,6 +197,10 @@ end
   starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
                      plugmap.fiberdata.holetype eq 'OBJECT' and $
                      (plugmap.fiberdata.objtype eq 'HOT_STD' or plugmap.fiberdata.objtype eq 'STAR'),nstar)
+; Best available stars
+3: begin
+  ;starplugind = where(
+  stop
 end
 else: begin
   print,'STARFITOPT=',starfitopt,' is not a supported option'
