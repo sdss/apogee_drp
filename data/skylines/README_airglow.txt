@@ -307,3 +307,21 @@ runing skycal, but looking at output wavelengths. See wave.getskywaves
 airglow.txt taken from previous version, with some lines adjusted using skywaves. Found that many lines were 
 needed to get reasonable LSF -- just a few isolated lines gave a poor fit
 
+
+May 2022
+--------
+
+DLN added some old prominent airglow lines back into airglow.txt (but not used for wavelength or LSF).
+Most of these were copied from airglow_dr14.txt.
+  51    3  1189.798  15431.6852  16426.947   0  0.0000    OH    0    0    1
+  52    3  1187.002  15432.6058  15995.818   0  0.0000    OH    0    0    1
+  68    3   858.660  15539.7046   8152.650   0  0.0000    OH    0    0    1
+  69    3   854.798  15540.9521   7930.474   0  0.0000    OH    0    0    1
+  94    3   571.983  15631.5221   9603.476   0  0.0000    OH    0    0    1
+  99    3   497.9620  15655.1826  23071.6090   1   0.2400   OH     0     0     3
+ 225    2  1122.849  16128.6361  33446.824   1  0.6300    OH    0    0    3
+ 251    2   744.800  16234.7403  15867.570   0  0.0000    OH    0    0    1
+ 252    2   740.849  16235.8335  15910.715   0  0.0000    OH    0    0    1
+ 2850   2   53.0     16414.6800   100.00     0  0.0000    OH    0    0    0    New line
+ 323    1  1094.282  16708.4362   6063.906   0  0.0000    OH    0    0    1
+ 324    1  1090.843  16709.2514   6103.601   0  0.0000    OH    0    0    1
