@@ -2037,7 +2037,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     for i in range(nustars):
         #pdb.set_trace()
         #tab = Table(colorteffarr[i])
-        teff[i],av[i] = colorteff.solve(tab[i])
+        tmp = colorteff.solve(tab[i])
+        teff[i] = tmp[0]
+        av[i] = tmp[0]
     pdb.set_trace()
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
