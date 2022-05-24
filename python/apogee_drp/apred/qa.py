@@ -2058,7 +2058,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>Hmag <TH>Raw<BR>J - K <TH>Targ<BR>Type <TH>Target & Data Flags')
     vishtml.write('<TH>Obs.<BR>S/N <TH>Rel.<BR>S/N <TH>Dflat<BR>Tput  <TH>Vhelio<BR>(km/s) <TH>Ncomp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g)')
-    vishtml.write('<TH>RV<BR>[Fe/H]<TH>apVisit Plot <TH>Phot.<BR>Teff <TH>J-K_0\n')
+    vishtml.write('<TH>RV<BR>[Fe/H] <TH>Phot.<BR>Teff <TH>J-K_0 <TH>apVisit Plot\n')
 
     # Make text file giving ratio of observed S/N over linear fit S/N
     Vsum = load.apVisitSum(int(plate), mjd)
@@ -2149,7 +2149,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     gg, = np.where(objid == ustars)
                     if len(gg) > 0:
                         photteff = teff[gg][0]
-                        jk0 = av[gg][0]
+                        jk0 = jmag - kmag - 0.17*av[gg][0]
                     apstarfile = load.filename('Star', obj=objid)
                     if os.path.exists(apstarfile):
                         apstarheader = fits.getheader(apstarfile)
