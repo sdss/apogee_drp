@@ -17,7 +17,7 @@ from numpy.lib.recfunctions import append_fields, merge_arrays
 from astroplan import moon_illumination
 from astropy.coordinates import SkyCoord, get_moon
 from astropy import units as astropyUnits
-from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
+from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit,colorteff
 from apogee_drp.apred import wave,monitor
 from apogee_drp.database import apogeedb
 from dlnpyutils import utils as dln
@@ -2021,6 +2021,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     colorteffarr['HMAG'] = vcat['kmag'][uind]
     colorteffarr['KMAG'] = vcat['hmag'][uind]
     tab = Table(colorteffarr)
+    teff,av = colorteff.solve(tab)
     pdb.set_trace()
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
