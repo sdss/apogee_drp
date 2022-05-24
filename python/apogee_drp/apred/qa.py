@@ -2007,21 +2007,32 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # FITS table structure.
     dt = np.dtype([('APOGEE_ID', np.str, 30),
                    ('GMAG',      np.float64),
+                   ('GMAG_ERR',  np.float64),
                    ('BPMAG',     np.float64),
+                   ('BPMAG_ERR', np.float64),
                    ('RPMAG',     np.float64),
+                   ('RPMAG_ERR', np.float64),
                    ('JMAG',      np.float64),
+                   ('JMAG_ERR',  np.float64),
                    ('HMAG',      np.float64),
-                   ('KMAG',      np.float64)])
+                   ('HMAG_ERR',  np.float64),
+                   ('KMAG',      np.float64)
+                   ('KMAG_ERR',  np.float64)])
     colorteffarr = np.zeros(nustars,dtype=dt)
     colorteffarr['APOGEE_ID'] = ustars
     colorteffarr['GMAG'] = vcat['gaiadr2_gmag'][stars][uind]
+    colorteffarr['GMAG_ERR'] = vcat['gaiadr2_gerr'][stars][uind]
     colorteffarr['BPMAG'] = vcat['gaiadr2_bpmag'][stars][uind]
+    colorteffarr['BPMAG_ERR'] = vcat['gaiadr2_bperr'][stars][uind]
     colorteffarr['RPMAG'] = vcat['gaiadr2_rpmag'][stars][uind]
+    colorteffarr['RPMAG_ERR'] = vcat['gaiadr2_rperr'][stars][uind]
     colorteffarr['JMAG'] = vcat['jmag'][stars][uind]
+    colorteffarr['JMAG_ERR'] = vcat['jerr'][stars][uind]
     colorteffarr['HMAG'] = vcat['kmag'][stars][uind]
+    colorteffarr['HMAG_ERR'] = vcat['kerr'][stars][uind]
     colorteffarr['KMAG'] = vcat['hmag'][stars][uind]
+    colorteffarr['KMAG_ERR'] = vcat['herr'][stars][uind]
     tab = Table(colorteffarr)
-    pdb.set_trace()
     teff,av = colorteff.solve(tab)
     pdb.set_trace()
 
