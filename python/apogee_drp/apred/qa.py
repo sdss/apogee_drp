@@ -2001,6 +2001,25 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
     db.close()
     stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
+    nstars = len(stars)
+
+    # FITS table structure.
+    dt = np.dtype([('APOGEE_ID', np.str, 30)
+                   ('GMAG',      np.float64),
+                   ('BPMAG',     np.float64),
+                   ('RPMAG',     np.float64),
+                   ('JMAG',      np.float64),
+                   ('HMAG',      np.float64),
+                   ('KMAG',      np.float64)])
+    colorteffarr = np.zeros(nstars,dtype=dt)
+    colorteffarr['APOGEE_ID'] = vcat['apogee_id'][stars]
+    colorteffarr['GMAG'] = vcat['gaiadr2_gmag'][stars]
+    colorteffarr['BPMAG'] = vcat['gaiadr2_bpmag'][stars]
+    colorteffarr['RPMAG'] = vcat['gaiadr2_rpmag'][stars]
+    colorteffarr['JMAG'] = vcat['jmag'][stars]
+    colorteffarr['HMAG'] = vcat['kmag'][stars]
+    colorteffarr['KMAG'] = vcat['hmag'][stars]
+    tab = Table(colorteffarr)
     pdb.set_trace()
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
