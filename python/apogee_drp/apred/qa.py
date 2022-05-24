@@ -2001,7 +2001,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
     db.close()
     stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
-    nstars = len(stars)
+    ustars,uind = np.unique(vcat['apogee_id'][stars], return_index=True)
+    nustars = len(ustars)
 
     # FITS table structure.
     dt = np.dtype([('APOGEE_ID', np.str, 30),
@@ -2011,14 +2012,14 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                    ('JMAG',      np.float64),
                    ('HMAG',      np.float64),
                    ('KMAG',      np.float64)])
-    colorteffarr = np.zeros(nstars,dtype=dt)
-    colorteffarr['APOGEE_ID'] = vcat['apogee_id'][stars]
-    colorteffarr['GMAG'] = vcat['gaiadr2_gmag'][stars]
-    colorteffarr['BPMAG'] = vcat['gaiadr2_bpmag'][stars]
-    colorteffarr['RPMAG'] = vcat['gaiadr2_rpmag'][stars]
-    colorteffarr['JMAG'] = vcat['jmag'][stars]
-    colorteffarr['HMAG'] = vcat['kmag'][stars]
-    colorteffarr['KMAG'] = vcat['hmag'][stars]
+    colorteffarr = np.zeros(nustars,dtype=dt)
+    colorteffarr['APOGEE_ID'] = ustars
+    colorteffarr['GMAG'] = vcat['gaiadr2_gmag'][uind]
+    colorteffarr['BPMAG'] = vcat['gaiadr2_bpmag'][uind]
+    colorteffarr['RPMAG'] = vcat['gaiadr2_rpmag'][uind]
+    colorteffarr['JMAG'] = vcat['jmag'][uind]
+    colorteffarr['HMAG'] = vcat['kmag'][uind]
+    colorteffarr['KMAG'] = vcat['hmag'][uind]
     tab = Table(colorteffarr)
     pdb.set_trace()
 
