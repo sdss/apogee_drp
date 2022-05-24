@@ -184,8 +184,6 @@ def solve(tab):
     # Observed magnitudes/colors
     obsmag = np.zeros(len(bands),float)
     for i,b in enumerate(bands):
-        print(i,b)
-        import pdb; pdb.set_trace()
         obsmag[i] = tab[b]
     obsmagerr = np.zeros(len(bands),float)
     for i,b in enumerate(bands):
