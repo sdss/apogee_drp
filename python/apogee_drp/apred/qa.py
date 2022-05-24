@@ -17,7 +17,7 @@ from numpy.lib.recfunctions import append_fields, merge_arrays
 from astroplan import moon_illumination
 from astropy.coordinates import SkyCoord, get_moon
 from astropy import units as astropyUnits
-from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
+from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit,colorteff
 from apogee_drp.apred import wave,monitor
 from apogee_drp.database import apogeedb
 from dlnpyutils import utils as dln
@@ -2001,6 +2001,45 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
     db.close()
     stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
+    ustars,uind = np.unique(vcat['apogee_id'][stars], return_index=True)
+    nustars = len(ustars)
+
+    # FITS table structure.
+    dt = np.dtype([('GMAG',      np.float64),
+                   ('BPMAG',     np.float64),
+                   ('RPMAG',     np.float64),
+                   ('JMAG',      np.float64),
+                   ('HMAG',      np.float64),
+                   ('KSMAG',     np.float64),
+                   ('GMAG_ERR',  np.float64),
+                   ('BPMAG_ERR', np.float64),
+                   ('RPMAG_ERR', np.float64),
+                   ('JMAG_ERR',  np.float64),
+                   ('HMAG_ERR',  np.float64),
+                   ('KSMAG_ERR', np.float64)])
+    colorteffarr = np.zeros(nustars,dtype=dt)
+    #colorteffarr['APOGEE_ID'] = ustars
+    colorteffarr['GMAG'] = vcat['gaiadr2_gmag'][stars][uind]
+    colorteffarr['GMAG_ERR'] = vcat['gaiadr2_gerr'][stars][uind]
+    colorteffarr['BPMAG'] = vcat['gaiadr2_bpmag'][stars][uind]
+    colorteffarr['BPMAG_ERR'] = vcat['gaiadr2_bperr'][stars][uind]
+    colorteffarr['RPMAG'] = vcat['gaiadr2_rpmag'][stars][uind]
+    colorteffarr['RPMAG_ERR'] = vcat['gaiadr2_rperr'][stars][uind]
+    colorteffarr['JMAG'] = vcat['jmag'][stars][uind]
+    colorteffarr['JMAG_ERR'] = vcat['jerr'][stars][uind]
+    colorteffarr['HMAG'] = vcat['kmag'][stars][uind]
+    colorteffarr['HMAG_ERR'] = vcat['kerr'][stars][uind]
+    colorteffarr['KSMAG'] = vcat['hmag'][stars][uind]
+    colorteffarr['KSMAG_ERR'] = vcat['herr'][stars][uind]
+    tab = Table(colorteffarr)
+    teff = np.zeros(nustars)
+    av = np.zeros(nustars)
+    for i in range(nustars):
+        #pdb.set_trace()
+        #tab = Table(colorteffarr[i])
+        tmp = colorteff.solve(tab[i])
+        teff[i] = tmp[0]
+        av[i] = tmp[1]
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
@@ -2018,7 +2057,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<P>Click the column headers to sort.</p>\n')
     vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>Hmag <TH>Raw<BR>J - K <TH>Targ<BR>Type <TH>Target & Data Flags')
-    vishtml.write('<TH>Obs.<BR>S/N <TH>Rel.<BR>S/N <TH>Dflat<BR>Tput  <TH>Vhelio<BR>(km/s) <TH>Ncomp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H]<TH>apVisit Plot\n')
+    vishtml.write('<TH>Obs.<BR>S/N <TH>Rel.<BR>S/N <TH>Dflat<BR>Tput  <TH>Vhelio<BR>(km/s) <TH>Ncomp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g)'
+    vishtml.write('<TH>RV<BR>[Fe/H]<TH>apVisit Plot <TH>Phot.<BR>Teff <TH>J-K_0\n')
 
     # Make text file giving ratio of observed S/N over linear fit S/N
     Vsum = load.apVisitSum(int(plate), mjd)
@@ -2086,6 +2126,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             rvteff = -9999.9
             rvlogg = -9.999
             rvfeh = -9.999
+            photteff = -9999.9
+            jk0 = -9.999
             apStarRelPath = None
             starHTMLrelPath = None
             if objtype == 'SKY': 
@@ -2104,6 +2146,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 snr = jvcat['snr']
                 if snr < 0: snr = -1
                 if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
+                    gg, = np.where(objid == ustars)
+                    if len(gg) > 0:
+                        photteff = teff[gg][0]
+                        jk0 = av[gg][0]
                     apstarfile = load.filename('Star', obj=objid)
                     if os.path.exists(apstarfile):
                         apstarheader = fits.getheader(apstarfile)
@@ -2223,6 +2269,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align ="center">' + str(int(round(rvteff))))
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(rvlogg,3)))
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(rvfeh,3)))
+                vishtml.write('<TD align ="center">' + str(int(round(photteff))))
+                vishtml.write('<TD align ="center">' + str("%.3f" % round(jk0,3)))
             else:
                 snr = '-9.9'
                 relsnr = '-1%'
@@ -2260,6 +2308,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center">-999.9')
                 vishtml.write('<TD align="center">-1')
                 vishtml.write('<TD align="center">-9999')
+                vishtml.write('<TD align="center">-9.999')
+                vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
 
