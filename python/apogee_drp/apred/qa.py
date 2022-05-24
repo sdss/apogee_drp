@@ -2032,6 +2032,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     colorteffarr['KSMAG'] = vcat['hmag'][stars][uind]
     colorteffarr['KSMAG_ERR'] = vcat['herr'][stars][uind]
     tab = Table(colorteffarr)
+    pdb.set_trace()
     teff,av = colorteff.solve(tab)
     pdb.set_trace()
 
