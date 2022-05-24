@@ -2032,8 +2032,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     colorteffarr['KSMAG'] = vcat['hmag'][stars][uind]
     colorteffarr['KSMAG_ERR'] = vcat['herr'][stars][uind]
     tab = Table(colorteffarr)
-    pdb.set_trace()
-    teff,av = colorteff.solve(tab)
+    teff = np.zeros(nustars)
+    av = np.zeros(nustars)
+    for i in range(nustars):
+        teff[i],av[i] = colorteff.solve(tab[i])
     pdb.set_trace()
 
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
