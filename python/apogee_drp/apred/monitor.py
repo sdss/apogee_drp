@@ -923,9 +923,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             magmin = '10.8'
             magmax = '11.2'
 
-            medesnrG = np.nanmedian(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1])
-            medesnrG = np.nanstd(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1])
-            limesnrG = medesnrG + 2*medesnrG
+            plateobs, = np.where(allsnr['MJD'] < 59500)
+            fpsobs, = np.where((allsnr['MJD'] > 59500) & (allsnr['PLATE'] > 100000) & (allsnr['PLATE'] < 110000))
+
+            pdb.set_trace()
+            #allsnr1 = np.concatenate(
+
+            medsnrG = np.nanmedian(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1], axis=1)
+            medesnrG = np.nanstd(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1], axis=1)
+            sigsnrG = np.nanstd(medsnrG)
+            limesnrG = medsnrG + 2*medesnrG
             pdb.set_trace()
             gd, = np.where((allsnr['NSNBINS'][:, snbins[0]:snbins[1]] > 5) & (allsnr['SNBINS'][:, snbins[0]:snbins[1], 1] > 0) & (allsnr['ESNBINS'][:, snbins[0]:snbins[1], 1] < limesnrG))
             allsnrg = allsnr[gd]
