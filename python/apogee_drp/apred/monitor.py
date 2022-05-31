@@ -920,8 +920,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             snbins = [5,10]
-            magmin = '10.8'
-            magmax = '11.2'
+            magmin = '9'
+            magmax = '11'
 
             plateobs, = np.where(allsnr['MJD'] < 59500)
             allsnrplate = allsnr[plateobs]
@@ -971,6 +971,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 xvals = allsnrg['JD']
                 yvals = np.nanmedian(allsnrg['MEDSNBINS'][:, snbins[0]:snbins[1], 2-ichip], axis=1) / np.sqrt((allsnrg['EXPTIME'] / 60))
                 #yvals = np.nanmedian(allsnrg['MEDSNBINS'][:, snbins[0]:snbins[1], 2-ichip], axis=1)**2 / (allsnrg['EXPTIME'] / 60)
+                g, = np.where(yvals > 0)
+                xvals = xvals[g]
+                yvals = yvals[g]
 
                 plate, = np.where(xvals < 59500)
                 fpsi, = np.where(xvals > 59500)
