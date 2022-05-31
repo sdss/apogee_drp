@@ -926,6 +926,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             medesnrG = np.nanmedian(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1])
             medesnrG = np.nanstd(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1])
             limesnrG = medesnrG + 2*medesnrG
+            pdb.set_trace()
             gd, = np.where((allsnr['NSNBINS'][:, snbins[0]:snbins[1]] > 5) & (allsnr['SNBINS'][:, snbins[0]:snbins[1], 1] > 0) & (allsnr['ESNBINS'][:, snbins[0]:snbins[1], 1] < limesnrG))
             allsnrg = allsnr[gd]
             ngd = len(allsnrg)
