@@ -930,16 +930,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             part2, = np.where((fpsfield > 100000) & (fpsfield < 110000))
             allsnrfps = allsnr[part1][part2]
 
-            pdb.set_trace()
-            #allsnr1 = np.concatenate(
+            allsnrg = vstack([Table(allsnrplate), Table(allsnrfps)])
 
-            medsnrG = np.nanmedian(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1], axis=1)
-            medesnrG = np.nanstd(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1], axis=1)
-            sigsnrG = np.nanstd(medsnrG)
-            limesnrG = medsnrG + 2*medesnrG
-            pdb.set_trace()
-            gd, = np.where((allsnr['NSNBINS'][:, snbins[0]:snbins[1]] > 5) & (allsnr['SNBINS'][:, snbins[0]:snbins[1], 1] > 0) & (allsnr['ESNBINS'][:, snbins[0]:snbins[1], 1] < limesnrG))
-            allsnrg = allsnr[gd]
+            #medsnrG = np.nanmedian(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1], axis=1)
+            #medesnrG = np.nanstd(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1], axis=1)
+            #sigsnrG = np.nanstd(medsnrG)
+            #limesnrG = medsnrG + 2*medesnrG
+            #pdb.set_trace()
+            #gd, = np.where((allsnrgd['NSNBINS'][:, snbins[0]:snbins[1]] > 5) & (allsnr['SNBINS'][:, snbins[0]:snbins[1], 1] > 0) & (allsnr['ESNBINS'][:, snbins[0]:snbins[1], 1] < limesnrG))
+            #allsnrg = allsnr[gd]
             ngd = len(allsnrg)
 
             ymin = -0.5
@@ -970,7 +969,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
 
                 xvals = allsnrg['JD']
-                yvals = (allsnrg['MEDSNBINS'][:, snbins[0]:snbins[1], 2-ichip]) / np.sqrt((allsnrg['EXPTIME'] / 60))
+                yvals = np.nanmedian(allsnrg['MEDSNBINS'][:, snbins[0]:snbins[1], 2-ichip], axis=1) / np.sqrt((allsnrg['EXPTIME'] / 60))
 
 
                 plate, = np.where(xvals < 59500)
