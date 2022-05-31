@@ -915,7 +915,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         ###########################################################################################
         # snhistory.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory.png'
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory.pdf'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
