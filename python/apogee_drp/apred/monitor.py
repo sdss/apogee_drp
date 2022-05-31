@@ -931,6 +931,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allsnrfps = allsnr[part1][part2]
 
             allsnrg = vstack([Table(allsnrplate), Table(allsnrfps)])
+            g, = np.where(np.nanmedian(allsnrg['NSNBINS'][:,snbins[0]:snbins[1]], axis=1) > 5)
+            allsnrg = allsnrg[g]
+
 
             #medsnrG = np.nanmedian(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1], axis=1)
             #medesnrG = np.nanstd(allsnr['ESNBINS'][:,snbins[0]:snbins[1],1], axis=1)
