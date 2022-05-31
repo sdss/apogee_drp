@@ -425,7 +425,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/sciobs.png target="_blank"><IMG SRC=' + instrument + '/sciobs.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=scisnr></a> S/N history for H=10.8-11.2 stars</h3>\n')
+    html.write('<h3> <a name=scisnr></a> S/N history for H=10.6-11.0 stars</h3>\n')
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=1100></A>\n')
     html.write('<HR>\n')
 
@@ -915,7 +915,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         ###########################################################################################
         # snhistory.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory.pdf'
+        plotfile = specdir5 + 'monitor/' + instrument + '/snhistory.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
