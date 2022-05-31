@@ -924,7 +924,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             magmax = '11.2'
 
             plateobs, = np.where(allsnr['MJD'] < 59500)
-            fpsobs, = np.where((allsnr['MJD'] > 59500) & (allsnr['PLATE'] > 100000) & (allsnr['PLATE'] < 110000))
+            allsnrplate = allsnr[plateobs]
+            part1, = np.where(allsnr['MJD'] > 59500)
+            fpsfield = np.array(allsnr['FIELD'][part1]).astype(int)
+            part2, = np.where((fpsfield > 100000) & (fpsfield < 110000))
+            allsnrfps = allsnr[part1][part2]
 
             pdb.set_trace()
             #allsnr1 = np.concatenate(
