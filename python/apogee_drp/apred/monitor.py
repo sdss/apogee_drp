@@ -974,6 +974,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 g, = np.where(yvals > 0)
                 xvals = xvals[g]
                 yvals = yvals[g]
+                scolors = allsnrg['MOONPHASE'][g]
 
                 plate, = np.where(xvals < 59500)
                 fpsi, = np.where(xvals > 59500)
@@ -984,7 +985,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 #pdb.set_trace()
                 #if ichip == 0: pdb.set_trace()
-                scolors = allsnrg['MOONPHASE']
+
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
 
                 if ichip == 0: ylims = ax.get_ylim()
