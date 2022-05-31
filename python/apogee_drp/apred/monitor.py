@@ -954,7 +954,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 chip = chips[ichip]
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin, xmax)
-                #ax.set_ylim(ymin, ymax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
@@ -990,6 +989,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #if ichip == 0: pdb.set_trace()
 
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+                ylims = ax.get_ylim()
+                yspan = ylims[1] - ylims[0]
+                ax.set_ylim(ylims[0], ylims[1]+yspan*0.10)
 
                 if ichip == 0: ylims = ax.get_ylim()
                 for iyear in range(nyears):
