@@ -919,9 +919,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            snbins = [8,9]
-            magmin = '10.2'
-            magmax = '10.6'
+            snbins = [4,5]
+            magmin = '8.6'
+            magmax = '9.0'
 
             plateobs, = np.where(allsnr['MJD'] < 59500)
             allsnrplate = allsnr[plateobs]
