@@ -982,24 +982,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 print('  S/N FPS (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
                 print('  Ratio (' + chip + '): ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]) / np.nanmedian(yvals[plate]),3)))
 
-                #pdb.set_trace()
-                #if ichip == 0: pdb.set_trace()
-
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
                 ylims = ax.get_ylim()
                 ymin = ylims[0]
                 ymax = ylims[1]
                 yspan = ymax - ymin
-                ax.set_ylim(ymin, ymax+yspan*0.10)
+                ymax = ymax+yspan*0.10
+                yspan = ymax - ymin
+                ax.set_ylim(ymin, ymax)
 
                 ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
                 ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
                 ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
 
-                if ichip == 0: ylims = ax.get_ylim()
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 ax_divider = make_axes_locatable(ax)
                 cax = ax_divider.append_axes("right", size="2%", pad="1%")
