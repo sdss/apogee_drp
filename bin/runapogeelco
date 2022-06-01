@@ -1,4 +1,5 @@
 #!/bin/csh
 module purge
 module load mwm/daily
+
 runapogee lco
