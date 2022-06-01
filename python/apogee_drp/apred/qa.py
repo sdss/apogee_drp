@@ -17,7 +17,7 @@ from numpy.lib.recfunctions import append_fields, merge_arrays
 from astroplan import moon_illumination
 from astropy.coordinates import SkyCoord, get_moon
 from astropy import units as astropyUnits
-from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit
+from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit,colorteff
 from apogee_drp.apred import wave,monitor
 from apogee_drp.database import apogeedb
 from dlnpyutils import utils as dln
@@ -126,15 +126,17 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
     umjd = np.unique(allmjd[gd])
     gd, = np.where(umjd == mjdstart)
     umjd = umjd[gd[0]:]
+    umjd = umjd[::-1]
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
 
     for ii in range(nmjd):
-        x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
-                    makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
-                    makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
-                    makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
-                    makemonitor=makemonitor, clobber=clobber)
+        if umjd[ii][0:1] != 'a':
+            x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
+                        makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
+                        makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
+                        makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
+                        makemonitor=makemonitor, clobber=clobber)
 
 ###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
@@ -1265,7 +1267,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 hmagarr = Vsum['HMAG']
             else:
                 hmagarr = Vsum['H']
-            gd, = np.where((hmagarr > 0) & (hmagarr < 20))
+            gd, = np.where((hmagarr > 0) & (hmagarr < 20) & (np.isnan(Vsum['SNR']) == False))
+            ngd = len(gd)
             try:
                 minH = np.nanmin(hmagarr[gd]);  maxH = np.nanmax(hmagarr[gd])
             except:
@@ -1279,28 +1282,71 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                 minSNR = 0;  maxSNR = 500
             spanSNR = maxSNR - minSNR
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
-            
+
+            if fps:
+                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                                   (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                                   (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
+            else:
+                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                                   (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
+
+            if len(notsky) > 10:
+                if i == 0:
+                    # First pass at fitting line to S/N as function of Hmag
+                    hmag1 = Vsum['HMAG'][notsky]
+                    sn1 = Vsum['SNR'][notsky]
+                    polynomial1 = np.poly1d(np.polyfit(hmag1, np.log10(sn1), 1))
+                    yarrnew1 = polynomial1(hmag1)
+                    diff1 = np.log10(sn1) - yarrnew1
+                    gd1, = np.where(diff1 > -np.nanstd(diff1))
+                    # Second pass at fitting line to S/N as function of Hmag
+                    hmag2 = hmag1[gd1]
+                    sn2 = sn1[gd1]
+                    polynomial2 = np.poly1d(np.polyfit(hmag2, np.log10(sn2), 1))
+                    yarrnew2 = polynomial2(hmag2)
+                    diff2 = np.log10(sn2) - yarrnew2
+                    gd2, = np.where(diff2 > -np.nanstd(diff2))
+                    # Final pass at fitting line to S/N as function of Hmag
+                    hmag3 = hmag2[gd2]
+                    sn3 = sn2[gd2]
+                    polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
+                    xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
+                    yarrnew3 = polynomial3(xarrnew3)
+
+                ax.plot(xarrnew3, 10**yarrnew3, color='grey', linestyle='dashed')
+
             ax.set_xlim(xmin,xmax)
             ax.set_ylim(1,1200)
             ax.set_yscale('log')
 
-            if 'apogee' in survey.lower():
-                telluric, = np.where(bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9))
-                science, = np.where((bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],4) == 0) & 
-                                    (bitmask.is_bit_set(Vsum['APOGEE_TARGET2'],9) == 0))
-            else:
-                telluric, = np.where(bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1))
-                science, = np.where((bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],0) == 0) & 
-                                    (bitmask.is_bit_set(Vsum['SDSSV_APOGEE_TARGET0'],1) == 0))
+            if fps:
+                science, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+                                    (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                                    (Vsum['ON_TARGET']) & (Vsum['VALID']) & 
+                                    ((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR')))
 
-            x = hmagarr[science];  y = Vsum['SNR'][science]
+                telluric, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+                                     (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                                     (Vsum['ON_TARGET']) & (Vsum['VALID']) & 
+                                     ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
+            else:
+                science, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+                                    (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & 
+                                    ((Vsum['OBJTYPE'] == 'OBJECT') | (Vsum['OBJTYPE'] == 'STAR')))
+
+                telluric, = np.where((Vsum['HMAG'] > 0) & (Vsum['HMAG'] < 16) & (np.isnan(Vsum['HMAG']) == False) & 
+                                     (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) &
+                                     ((Vsum['OBJTYPE'] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'] == 'HOT_STD')))
+
+            x = Vsum['HMAG'][science];  y = Vsum['SNR'][science]
             scicol = 'r'
             telcol = 'dodgerblue'
             if i == 1:
                 scicol = block[science] + 0.5
                 telcol = block[telluric] + 0.5
             psci = ax.scatter(x, y, marker='*', s=400, edgecolors='white', alpha=0.8, c=scicol, cmap='tab10', vmin=0.5, vmax=10.5, label='Science')
-            x = hmagarr[telluric];  y = Vsum['SNR'][telluric]
+            x = Vsum['HMAG'][telluric];  y = Vsum['SNR'][telluric]
             ptel = ax.scatter(x, y, marker='o', s=150, edgecolors='white', alpha=0.8, c=telcol, cmap='tab10', vmin=0.5, vmax=10.5, label='Telluric')
 
             if i == 1:
@@ -1329,13 +1375,13 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(33,10))
+        fig=plt.figure(figsize=(35,8))
         plotrad = 1.6
 
         for ichip in range(nchips):
             chip = chips[ichip]
 
-            ax = plt.subplot2grid((1,nchips+1), (0,ichip))
+            ax = plt.subplot2grid((1,nchips+2), (0,ichip))
             ax.set_xlim(-plotrad, plotrad)
             ax.set_ylim(-plotrad, plotrad)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
@@ -1363,7 +1409,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             cax.minorticks_on()
             ax.text(0.5, 1.13, r'Dome Flat Throughput',ha='center', transform=ax.transAxes)
 
-        ax1 = plt.subplot2grid((1,nchips+1), (0,nchips))
+        ax1 = plt.subplot2grid((1,nchips+2), (0,nchips))
         ax1.set_xlim(-1.6,1.6)
         ax1.set_ylim(-1.6,1.6)
         ax1.axes.yaxis.set_ticklabels([])
@@ -1385,7 +1431,84 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
         ax1.text(0.5, 1.13, r'MTP #', ha='center', transform=ax1.transAxes)
 
-        fig.subplots_adjust(left=0.035,right=0.99,bottom=0.09,top=0.90,hspace=0.09,wspace=0.04)
+        ax2 = plt.subplot2grid((1,nchips+2), (0,nchips+1))
+        ax2.set_xlim(-1.6,1.6)
+        ax2.set_ylim(-1.6,1.6)
+        ax2.axes.yaxis.set_ticklabels([])
+        ax2.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax2.yaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax2.minorticks_on()
+        ax2.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+        ax2.tick_params(axis='both',which='major',length=axmajlen)
+        ax2.tick_params(axis='both',which='minor',length=axminlen)
+        ax2.tick_params(axis='both',which='both',width=axwidth)
+        ax2.set_xlabel(r'Zeta (deg.)')
+
+        if fps:
+            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                               (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
+        else:
+            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                               (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
+
+        if len(notsky) > 10:
+            # First pass at fitting line to S/N as function of Hmag
+            hmag1 = Vsum['HMAG'][notsky]
+            sn1 = Vsum['SNR'][notsky]
+            polynomial1 = np.poly1d(np.polyfit(hmag1, np.log10(sn1), 1))
+            yarrnew1 = polynomial1(hmag1)
+            diff1 = np.log10(sn1) - yarrnew1
+            gd1, = np.where(diff1 > -np.nanstd(diff1))
+            # Second pass at fitting line to S/N as function of Hmag
+            hmag2 = hmag1[gd1]
+            sn2 = sn1[gd1]
+            polynomial2 = np.poly1d(np.polyfit(hmag2, np.log10(sn2), 1))
+            yarrnew2 = polynomial2(hmag2)
+            diff2 = np.log10(sn2) - yarrnew2
+            gd2, = np.where(diff2 > -np.nanstd(diff2))
+            # Final pass at fitting line to S/N as function of Hmag
+            hmag3 = hmag2[gd2]
+            sn3 = sn2[gd2]
+            polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
+            xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
+            yarrnew3 = polynomial3(xarrnew3)
+            ratio = np.zeros(len(notsky))
+            eta = np.full(len(notsky), -999.9)
+            zeta = np.full(len(notsky), -999.9)
+            for q in range(len(notsky)):
+                hmdif = np.absolute(hmag1[q] - xarrnew3)
+                pp, = np.where(hmdif == np.nanmin(hmdif))
+                ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
+                g, = np.where(Vsum['APOGEE_ID'][notsky][q] == plSum2['TMASS_STYLE'])
+                if len(g) > 0:
+                    eta[q] = plSum2['ETA'][g][0]
+                    zeta[q] = plSum2['ZETA'][g][0]
+
+            telluric, = np.where((eta > -900) & ((Vsum['OBJTYPE'][notsky] == 'SPECTROPHOTO_STD') | (Vsum['OBJTYPE'][notsky] == 'HOT_STD')))
+            if len(telluric) > 0:
+                x = zeta[telluric]
+                y = eta[telluric]
+                c = ratio[telluric]
+                l = 'telluric'
+                sc = ax2.scatter(x, y, marker='o', s=100, c=c, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75, label=l)
+            science, = np.where((eta > -900) & ((Vsum['OBJTYPE'][notsky] == 'OBJECT') | (Vsum['OBJTYPE'][notsky] == 'STAR')))
+            if len(science) > 0:
+                x = zeta[science]
+                y = eta[science]
+                c = ratio[science]
+                l = 'science'
+                sc = ax2.scatter(x, y, marker='*', s=250, c=c, cmap='CMRmap', edgecolors='k', vmin=0, vmax=1, linewidth=0.75, label=l)
+
+            ax1_divider = make_axes_locatable(ax2)
+            cax1 = ax1_divider.append_axes("top", size="4%", pad="1%")
+            cb = colorbar(sc, cax=cax1, orientation="horizontal")
+            cax1.xaxis.set_ticks_position("top")
+            #cax1.xaxis.set_major_locator(ticker.MultipleLocator(1))
+            ax2.text(0.5, 1.13, r'obs SNR $/$ fit SNR', ha='center', transform=ax2.transAxes)
+            ax2.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
+
+        fig.subplots_adjust(left=0.03,right=0.99,bottom=0.098,top=0.90,hspace=0.09,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
         
@@ -1399,7 +1522,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     flux = load.apFlux(fluxid)
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
-    fiblabs = np.array(['SKY', 'HOT_STD', 'STAR'])
+    fiblabs = np.array(['SKY', 'HOT_STD', 'OBJECT'])
+    if fps: fiblabs = np.array(['SKY', 'HOT_STD', 'STAR'])
 
     plotfile = fluxfile.replace('.fits', '.png').replace('Flux', 'FibLoc')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
@@ -1424,7 +1548,15 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             if itype != 0: ax.axes.yaxis.set_ticklabels([])
 
             try:
-                gd, = np.where((platesum2['objtype'] == fiblabs[itype]) & (platesum2['assigned']))
+                if fps: 
+                    gd, = np.where((platesum2['HMAG'] > 5) & (platesum2['HMAG'] < 15) & (np.isnan(platesum2['HMAG']) == False) & 
+                                   (platesum2['ASSIGNED']) & (platesum2['ON_TARGET']) & (platesum2['VALID']) & 
+                                   (platesum2['OBJTYPE'] == fiblabs[itype]))
+                    if itype == 0:
+                        gd, = np.where(platesum2['OBJTYPE'] == fiblabs[itype])
+
+                else: 
+                    gd, = np.where(platesum2['objtype'] == fiblabs[itype])
                 if len(gd) > 0:
                     x = platesum2['Zeta'][gd]
                     y = platesum2['Eta'][gd]
@@ -1841,10 +1973,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # Make html directory if it doesn't already exist.
     htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
     if os.path.exists(htmldir) == False: os.makedirs(htmldir)
+    plotdir = htmldir.replace('html','plots')
 
     # Get the HTML file name... apPlate-plate-mjd
     htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)).replace('.fits','')
-    
+
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
@@ -1863,26 +1996,117 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
     throughput = medflux / np.nanmax(medflux)
 
+    # DB query for this visit
+    db = apogeedb.DBSession()
+    vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
+    db.close()
+    stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
+    ustars,uind = np.unique(vcat['apogee_id'][stars], return_index=True)
+    nustars = len(ustars)
+
+    # FITS table structure.
+    dt = np.dtype([('GMAG',      np.float64),
+                   ('BPMAG',     np.float64),
+                   ('RPMAG',     np.float64),
+                   ('JMAG',      np.float64),
+                   ('HMAG',      np.float64),
+                   ('KSMAG',     np.float64),
+                   ('GMAG_ERR',  np.float64),
+                   ('BPMAG_ERR', np.float64),
+                   ('RPMAG_ERR', np.float64),
+                   ('JMAG_ERR',  np.float64),
+                   ('HMAG_ERR',  np.float64),
+                   ('KSMAG_ERR', np.float64)])
+    colorteffarr = np.zeros(nustars,dtype=dt)
+    #colorteffarr['APOGEE_ID'] = ustars
+    colorteffarr['GMAG'] = vcat['gaiadr2_gmag'][stars][uind]
+    colorteffarr['GMAG_ERR'] = vcat['gaiadr2_gerr'][stars][uind]
+    colorteffarr['BPMAG'] = vcat['gaiadr2_bpmag'][stars][uind]
+    colorteffarr['BPMAG_ERR'] = vcat['gaiadr2_bperr'][stars][uind]
+    colorteffarr['RPMAG'] = vcat['gaiadr2_rpmag'][stars][uind]
+    colorteffarr['RPMAG_ERR'] = vcat['gaiadr2_rperr'][stars][uind]
+    colorteffarr['JMAG'] = vcat['jmag'][stars][uind]
+    colorteffarr['JMAG_ERR'] = vcat['jerr'][stars][uind]
+    colorteffarr['HMAG'] = vcat['kmag'][stars][uind]
+    colorteffarr['HMAG_ERR'] = vcat['kerr'][stars][uind]
+    colorteffarr['KSMAG'] = vcat['hmag'][stars][uind]
+    colorteffarr['KSMAG_ERR'] = vcat['herr'][stars][uind]
+    tab = Table(colorteffarr)
+    teff = np.zeros(nustars)
+    av = np.zeros(nustars)
+    for i in range(nustars):
+        #pdb.set_trace()
+        #tab = Table(colorteffarr[i])
+        tmp = colorteff.solve(tab[i])
+        teff[i] = tmp[0]
+        av[i] = tmp[1]
+
     # For each star, create the exposure entry on the web page and set up the plot of the spectrum.
     vishtml = open(htmldir + htmlfile + '.html', 'w')
     vishtml.write('<HTML>\n')
     vishtml.write('<HEAD><script src="../../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
     vishtml.write('<BODY>\n')
 
-    vishtml.write('<H1>' + htmlfile + '</H1><HR>\n')
-    vishtml.write('<P><B>Note:</B> the "Dome Flat Throughput" column gives the median dome flat flux in each ')
+    vishtml.write('<H1>' + htmlfile + '</H1>\n')
+    vishtml.write('<H3>' + str(len(stars)) + ' stars observed</H3><HR>\n')
+    vishtml.write('<P><B>Note:</B> the "Dflat Tput" column gives the median dome flat flux in each ')
     vishtml.write('fiber divided by the maximum median dome flat flux across all fibers. ')
-    vishtml.write('<BR>Low numbers are generally bad, and that column is color-coded accordingly.</P>\n')
+    vishtml.write('<P><B>Note:</B> the "Rel S/N" column gives the ratio of the observed S/N ')
+    vishtml.write('over the linear fit to high S/N fibers. ')
+    vishtml.write('<P>Low numbers in the aforementioned columns are generally bad, and the columns are color-coded accordingly.</P>\n')
     vishtml.write('<P>Click the column headers to sort.</p>\n')
     vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-    vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
-    vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
+    vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>Hmag <TH>Raw<BR>J - K <TH>Targ<BR>Type <TH>Target & Data Flags')
+    vishtml.write('<TH>Obs.<BR>S/N <TH>Rel.<BR>S/N <TH>Dflat<BR>Tput  <TH>Vhelio<BR>(km/s) <TH>Ncomp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g)')
+    vishtml.write('<TH>RV<BR>[Fe/H] <TH>Phot.<BR>Teff <TH>J-K_0 <TH>apVisit Plot\n')
 
-    # DB query for this visit
-    db = apogeedb.DBSession()
-    vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
-    vcatl = db.query('visit_latest', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
-    #pdb.set_trace()
+    # Make text file giving ratio of observed S/N over linear fit S/N
+    Vsum = load.apVisitSum(int(plate), mjd)
+    Vsum = Vsum[1].data
+    if fps:
+        notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                           (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
+                           (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
+    else:
+        notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                           (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
+    if len(notsky) > 10:
+        # First pass at fitting line to S/N as function of Hmag
+        hmag1 = Vsum['HMAG'][notsky]
+        sn1 = Vsum['SNR'][notsky]
+        apID = Vsum['APOGEE_ID'][notsky]
+        polynomial1 = np.poly1d(np.polyfit(hmag1, np.log10(sn1), 1))
+        yarrnew1 = polynomial1(hmag1)
+        diff1 = np.log10(sn1) - yarrnew1
+        gd1, = np.where(diff1 > -np.nanstd(diff1))
+        # Second pass at fitting line to S/N as function of Hmag
+        hmag2 = hmag1[gd1]
+        sn2 = sn1[gd1]
+        polynomial2 = np.poly1d(np.polyfit(hmag2, np.log10(sn2), 1))
+        yarrnew2 = polynomial2(hmag2)
+        diff2 = np.log10(sn2) - yarrnew2
+        gd2, = np.where(diff2 > -np.nanstd(diff2))
+        # Final pass at fitting line to S/N as function of Hmag
+        hmag3 = hmag2[gd2]
+        sn3 = sn2[gd2]
+        polynomial3 = np.poly1d(np.polyfit(hmag3, np.log10(sn3), 1))
+        xarrnew3 = np.linspace(np.nanmin(hmag1), np.nanmax(hmag1), 5000)
+        yarrnew3 = polynomial3(xarrnew3)
+        ratio = np.empty(len(notsky))
+        for q in range(len(notsky)):
+            hmdif = np.absolute(hmag1[q] - xarrnew3)
+            pp, = np.where(hmdif == np.nanmin(hmdif))
+            ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
+        g, = np.where(ratio > 0)
+        if len(g) > 0:
+            apID = apID[g]
+            ratio = ratio[g]
+        sdata = Table()
+        sdata['apogee_id'] = apID
+        sdata['relSNR'] = ratio
+        platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
+        snroutfile = platesum.replace('apPlateSum', 'relSNR').replace('.fits', '.dat')
+        ascii.write(sdata, snroutfile, overwrite=True)
 
     # Loop over the fibers
     for j in range(300):
@@ -1897,39 +2121,63 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             # Establish html table row background color and spectrum plot color
             bgcolor = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): bgcolor = '#D2B4DE'
+            vhelio = -999.9
+            ncomp = -1
+            rvteff = -9999.9
+            rvlogg = -9.999
+            rvfeh = -9.999
+            photteff = -9999.9
+            jk0 = -9.999
+            apStarRelPath = None
+            starHTMLrelPath = None
             if objtype == 'SKY': 
                 bgcolor = '#D6EAF8'
                 firstcarton = 'SKY'
+                starflags = 'None'
             else:
-                # DB query to get star and visit info
+                assigned = 1
                 vcatind, = np.where(fiber == vcat['fiberid'])
-                vcatlind, = np.where(fiber == vcatl['fiberid'])
-                if (len(vcatind) < 1) | (len(vcatlind) < 1): pdb.set_trace()
+                if len(vcatind) < 1: pdb.set_trace()
                 jvcat = vcat[vcatind][0]
-                jvcatl = vcatl[vcatlind][0]
+                if jvcat['assigned'] == 0: continue
                 jmag = jvcat['jmag']
                 hmag = jvcat['hmag']
                 kmag = jvcat['kmag']
                 snr = jvcat['snr']
-                if snr < 0: snr = 0
-                vhelio = jvcatl['vheliobary']
-                ncomp = jvcatl['n_components']
-                rvteff = jvcatl['rv_teff']
-                if np.isnan(rvteff): rvteff = -9999
-                rvlogg = jvcatl['rv_logg']
-                if np.isnan(rvlogg): rvlogg = -9.999
-                rvfeh = jvcatl['rv_feh']
-                if np.isnan(rvfeh): rvfeh = -9.999
+                if snr < 0: snr = -1
+                if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
+                    gg, = np.where(objid == ustars)
+                    if len(gg) > 0:
+                        photteff = teff[gg][0]
+                        jk0 = jmag - kmag - 0.17*av[gg][0]
+                    apstarfile = load.filename('Star', obj=objid)
+                    if os.path.exists(apstarfile):
+                        apstarheader = fits.getheader(apstarfile)
+                        vhelio = apstarheader['VHBARY']
+                        ncomp = apstarheader['N_COMP']
+                        rvteff = apstarheader['RV_TEFF']
+                        rvlogg = apstarheader['RV_LOGG']
+                        rvfeh = apstarheader['RV_FEH']
+                        if np.isnan(rvteff): rvteff = -9999
+                        if np.isnan(rvlogg): rvlogg = -9.999
+                        if np.isnan(rvfeh): rvfeh = -9.999
+                        tmp = apstarfile.split(apred + '/')
+                        apStarRelPath = '../../../../../../' + tmp[1]
+                        starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
+                else:
+                    objid = 'None'
+                    assigned = 0
+
                 starflags = jvcat['starflags'].replace(',','<BR>')
                 firstcarton = jvcat['firstcarton']
                 visitfile = jvcat['file']
 
                 # Handle case of unassigned or off target fibers 
                 if (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
-                    bgcolor = 'Silver'
+                    bgcolor = 'grey'
                     firstcarton = 'OFF TARGET!!!'
                     if jvcat['assigned'] == 0:
-                        bgcolor = 'Gray'
+                        bgcolor = 'grey'
                         firstcarton = 'UNASSIGNED!!!'
 
                 # Create SIMBAD link
@@ -1939,25 +2187,22 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
                 simbadlink = txt1 + txt2
 
-                apStarRelPath = None
-                starHTMLrelPath = None
-                if (objid != '') & (objid != '2M') & (objid != '2MNone'):
-                    # Get paths to apStar file and star html
-                    healpix = apload.obj2healpix(objid)
-                    healpixgroup = str(healpix // 1000)
-                    healpix = str(healpix)
-
-                    # Find the associated healpix html directories
-                    starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-                    starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                    starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
-                    apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
-                    if len(apStarCheck) > 0:
-                        # Find the newest apStar file
-                        apStarCheck.sort()
-                        apStarCheck = np.array(apStarCheck)
-                        apStarNewest = os.path.basename(apStarCheck[-1])
-                        apStarRelPath = '../' + starRelPath + apStarNewest
+                #apStarRelPath = None
+                #starHTMLrelPath = None
+                #if os.path.exists(apstarfile):
+                #    tmp = apstarfile.split(apred + '/')
+                #    apStarRelPath = '../../../../../' + tmp[1]
+                #    starHTMLrelPath = '../../../../../' + os.path.dirname(tmp[1]) + '/html/'
+                    #starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+                    #starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+                    #starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
+                    #apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                    #if len(apStarCheck) > 0:
+                    #    # Find the newest apStar file
+                    #    apStarCheck.sort()
+                    #    apStarCheck = np.array(apStarCheck)
+                    #    apStarNewest = os.path.basename(apStarCheck[-1])
+                    #    apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
             if objtype != 'SKY':
@@ -1976,7 +2221,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 if (jmag > 0) & (kmag > 0) & (jmag < 90) & (kmag < 90):
                     vishtml.write('<TD align ="center">' + str("%.3f" % round(jmag-kmag,3)))
                 else:
-                    vishtml.write('<TD align ="center"><FONT COLOR="red">99.999</FONT>')
+                    vishtml.write('<TD align ="center">><FONT COLOR="red">99.999</FONT>')
                 if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'):
                     vishtml.write('<TD align="center">TEL')
                 else:
@@ -1984,50 +2229,92 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center">' + firstcarton)
                 vishtml.write('<BR><BR>' + starflags)
                 vcol = 'black'
-                if np.absolute(vhelio) > 400: vcol = 'red'
+                if vhelio is not None:
+                    if np.absolute(vhelio) > 400: vcol = 'red'
                 vishtml.write('<TD align ="center">' + str("%.1f" % round(snr,1)))
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.1f" % round(vhelio,1)) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(ncomp) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str(int(round(rvteff))) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvlogg,3)) + '</FONT>')
-                vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + str("%.3f" % round(rvfeh,3)) + '</FONT>')
+                # Relative S/N (ratio of obs S/N over linear fit S/N)
+                if len(notsky) > 10:
+                    g, = np.where(objid == apID)
+                    if len(g) > 0:
+                        iratio = ratio[g][0] 
+                        bcolor1 = 'white'
+                        if iratio < 0.7: bcolor1 = '#FFFF66'
+                        if iratio < 0.6: bcolor1 = '#FF9933'
+                        if iratio < 0.5: bcolor1 = '#FF6633'
+                        if iratio < 0.4: bcolor1 = '#FF3333'
+                        if iratio < 0.3: bcolor1 = '#FF0000'
+                        if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
+                        vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '>' + str(int(round(ratio[g][0]*100))) + '%')
+                    else: 
+                        vishtml.write('<TD align ="center" BGCOLOR="Gray">-1%')
+                else: 
+                    vishtml.write('<TD align ="center" BGCOLOR="Gray">-1%')
+                # Throughput column
+                tput = throughput[j]
+                if np.isnan(tput) == False:
+                    bcolor1 = 'white'
+                    if tput < 0.7: bcolor1 = '#FFFF66'
+                    if tput < 0.6: bcolor1 = '#FF9933'
+                    if tput < 0.5: bcolor1 = '#FF6633'
+                    if tput < 0.4: bcolor1 = '#FF3333'
+                    if tput < 0.3: bcolor1 = '#FF0000'
+                    if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
+                    tput = str(int(round(tput*100))) + '%'
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor1 + '>' + tput + '\n')
+                else:
+                    vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
+
+                vishtml.write('<TD align ="center">' + str("%.1f" % round(vhelio,1)))
+                vishtml.write('<TD align ="center">' + str(ncomp))
+                vishtml.write('<TD align ="center">' + str(int(round(rvteff))))
+                vishtml.write('<TD align ="center">' + str("%.3f" % round(rvlogg,3)))
+                vishtml.write('<TD align ="center">' + str("%.3f" % round(rvfeh,3)))
+                vishtml.write('<TD align ="center">' + str(int(round(photteff))))
+                vishtml.write('<TD align ="center">' + str("%.3f" % round(jk0,3)))
             else:
                 snr = '-9.9'
+                relsnr = '-1%'
                 fcolor = 'red'
                 if objtype != 'SKY': 
                     objtype = 'BLANK'
                     snr = '-99.9'
-                    bgcolor = 'Gray'
+                    relsnr = '-1%'
+                    bgcolor = 'grey'
                     fcolor = 'Black'
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + cfiber + '<BR>(' + cblock + ')</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">99.999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">99.999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + objtype + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">' + snr + '</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-999.9</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">0</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9.999</FONT>')
-                vishtml.write('<TD align="center"><FONT COLOR="' + fcolor + ' ">-9.999</FONT>')
+                vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
+                vishtml.write('<TD align="center">' + objtype)
+                vishtml.write('<TD align="center">99.999')
+                vishtml.write('<TD align="center">99.999')
+                vishtml.write('<TD align="center">' + objtype)
+                vishtml.write('<TD align="center">' + objtype)
+                vishtml.write('<TD align="center">' + snr)
+                vishtml.write('<TD align="center">' + relsnr)
+                # Throughput column
+                tput = throughput[j]
+                if np.isnan(tput) == False:
+                    bcolor = 'white'
+                    if tput < 0.7: bcolor = '#FFFF66'
+                    if tput < 0.6: bcolor = '#FF9933'
+                    if tput < 0.5: bcolor = '#FF6633'
+                    if tput < 0.4: bcolor = '#FF3333'
+                    if tput < 0.3: bcolor = '#FF0000'
+                    if (firstcarton == 'UNASSIGNED!!!') | (firstcarton == 'OFF TARGET!!!'): bcolor1 = 'grey'
 
-            # Throughput column
-            tput = throughput[j]
-            if np.isnan(tput) == False:
-                bcolor = 'white'
-                if tput < 0.7: bcolor = '#FFFF66'
-                if tput < 0.6: bcolor = '#FF9933'
-                if tput < 0.5: bcolor = '#FF6633'
-                if tput < 0.4: bcolor = '#FF3333'
-                if tput < 0.3: bcolor = '#FF0000'
-                tput = str("%.3f" % round(tput,3))
-                vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
-            else:
-                vishtml.write('<TD align ="center BGCOLOR="white">----\n')
+                    tput = str(int(round(tput*100))) + '%'
+                    vishtml.write('<TD align ="center" BGCOLOR=' + bcolor + '>' + tput + '\n')
+                else:
+                    vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
+                vishtml.write('<TD align="center">-999.9')
+                vishtml.write('<TD align="center">-1')
+                vishtml.write('<TD align="center">-9999')
+                vishtml.write('<TD align="center">-9.999')
+                vishtml.write('<TD align="center">-9.999')
+                vishtml.write('<TD align="center">-9.999')
+                vishtml.write('<TD align="center">-9.999')
 
-            if firstcarton != 'UNASSIGNED!!!':
+            tmp2 = plotdir + os.path.basename(visitplotfile)
+            if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS'):# & (os.path.exists(tmp2)):
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
             else:
                 vishtml.write('<TD align="center">')
@@ -3138,7 +3425,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         # Create web page with entry for each MJD
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#eaeded"><TH>(1)<BR>Date <TH>(2)<BR>Observer Log <TH>(3)<BR>Exposure Log <TH>(4)<BR>Raw Data <TH>(5)<BR>Night QA')
-        html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Plots of Spectra <TH>(8)<BR>Summary Files <TH>(9)<BR>Moon<BR>Phase\n')
+        html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Spectra Plots <TH>(8)Nsky, Ntel, Nsci <TH>(9)<BR>Summary Files <TH>(10)<BR>Moon<BR>Phase\n')
         for i in range(nmjd):
             fps = False
             if mjd[i] > 59556: fps = True
@@ -3229,6 +3516,25 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     # Check for failed plates
                     plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
                     if os.path.exists(plateQAfile):
+                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
+                        if j < nplatesall:
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A><BR>\n')
+                        else:
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>\n')
+                    else:
+                        if j < nplatesall:
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT><BR>\n')
+                        else:
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
+
+                # Column 8: Number of skies, telluric, and science targets.
+                html.write('<TD align="left">')
+                for j in range(nplatesall):
+                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                    # Check for failed plates
+                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                    if os.path.exists(plateQAfile):
                         note = ''
                         if fps:
                             plsumfile = load.filename('PlateSum', plate=int(plate), mjd=cmjd, fps=fps)
@@ -3244,14 +3550,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                                 #if len(assignedFib) < 1: note = ' (ZERO assigned)'
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
-                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>'+note+'<BR>\n')
+                            html.write('('+str(j+1).rjust(2)+') '+note+'<BR>\n')
                         else:
-                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>'+note+'\n')
+                            html.write('('+str(j+1).rjust(2)+') '+note+'\n')
                     else:
                         if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT><BR>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT><BR>\n')
                         else:
-                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT>\n')
+
 
                 # Column 7: Combined files for this night
                 #html.write('<TD>\n')
@@ -3262,7 +3569,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 # Column 9: Dome flats observed for this night
                 #html.write('<TD>\n')
 
-                # Column 7: Summary files
+                # Column 9: Summary files
                 visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
                 starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
                 if nplates >= 1: 
@@ -3271,7 +3578,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 else:
                     html.write('<TD>\n')
 
-                # Column 8: Mean moon phase
+                # Column 10: Mean moon phase
                 bgcolor = '#000000'
                 txtcolor = '#FFFFFF'
                 meanmoonphase = moon_illumination(tt)

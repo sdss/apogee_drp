@@ -2,7 +2,7 @@ pro aptelluric_hack,frame,plugmap,outframe,tellstar,nearest=nearest,silent=silen
                starfitopt=starfitopt,specfitopt=specfitopt,error=error,pl=pl,pltelstarfit=pltelstarfit,stp=stp,$
                save=save,plots_dir=plots_dir,preconv=preconv,single=single,visitstr=visitstr,$
                usetelstarfit=usetelstarfit,maxtellstars=maxtellstars,tellzones=tellzones,test=test,$
-               force=force, tellstarlist=tellstarlist
+               force=force,tellstarlist=tellstarlist
 
 ;+
 ;
@@ -187,15 +187,29 @@ end
     gd = where(tellname[ii] eq plugmap.fiberdata.tmass_style, ngd)
     starplugind[ii] = gd
   endfor
-;  starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
-;                     plugmap.fiberdata.holetype eq 'OBJECT' and $
-;                     plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
+  print,starplugind
+  ;starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
+  ;                   plugmap.fiberdata.holetype eq 'OBJECT' and $
+  ;                   plugmap.fiberdata.objtype eq 'HOT_STD',nstar)
 end
 ; All stars
 2: begin
   starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
                      plugmap.fiberdata.holetype eq 'OBJECT' and $
                      (plugmap.fiberdata.objtype eq 'HOT_STD' or plugmap.fiberdata.objtype eq 'STAR'),nstar)
+end
+; Best available stars
+3: begin
+  ii = 0
+  jkcol = plugmap.fiberdata.jmag - plugmap.fiberdata.kmag
+  while nstar lt 15 do begin
+      starplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
+                          plugmap.fiberdata.holetype eq 'OBJECT' and $
+                         (plugmap.fiberdata.objtype eq 'HOT_STD' or plugmap.fiberdata.objtype eq 'STAR') and $
+                          plugmap.fiberdata.hmag lt 11 and jkcol lt ii*0.05,nstar)
+      ii = ii + 1
+  endwhile
+  stop
 end
 else: begin
   print,'STARFITOPT=',starfitopt,' is not a supported option'
@@ -340,45 +354,57 @@ for iter=0,niter-1 do begin
     ifiber = 300-starind[i]
 
     co = 255
-    if keyword_set(save) then begin
-      ;psfile1 = plots_dir+'aptelluric_'+expname+'_hotstarfit_fiber'+strtrim(ifiber,2)
-      psfile1 = plots_dir+dirs.prefix+'telluric_'+expname+'_telstarfit_fiber'+strtrim(ifiber,2)
-      PUSH,psfiles,psfile1
-      ps_open,psfile1,thick=4,/color,/encap
-      device,/inches,xsize=42,ysize=7
-      loadct,39,/silent
-      co = 0
-    endif
+    psfile1 = plots_dir+dirs.prefix+'telluric_'+expname+'_telstarfit_fiber'+strtrim(ifiber,2)
+    print,psfile1
+    ;PUSH,psfiles,psfile1
+    ;SET_PLOT,'PS'
+    !P.FONT=0
+    ps_open,psfile1,thick=4,/color,/encap
+    DEVICE,/COLOR,XSIZE=30,YSIZE=16,/INCHES,SET_FONT='Times-Roman'
+    loadct,39,/silent
+    co = 0
 
     medspec = median(outstr.spec)
-    yr = [(medspec-0.5*abs(medspec))<0, medspec*1.5]
+    yr = [(medspec-0.5*abs(medspec))<0, medspec*2.5]
     xr = minmax(outstr.x)
 
     !p.multi=[0,1,2]
-    plot,outstr.x,outstr.spec,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,tit='Fiber '+strtrim(ifiber,2)
+
+    pos=[0.05,0.545,0.985,0.99]
+    plot,outstr.x,outstr.spec,/nodata,ytit='Counts',xs=1,ys=1,xr=xr,yr=yr,co=0,yticklen=0.005,position=pos,charsize=1.65
+    oplot,outstr.x,outstr.spec,co=0,thick=4
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
-    oplot,outstr.x,outstr.telluric*outstr.cont,co=250,linestyle=2
-    oplot,outstr.x,outstr.spec/outstr.telluric,co=150
-    legend_old,['Original','Telluric','Corrected'],textcolor=[co,250,150],/bottom,/left
-    xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
+    oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=2;,linestyle=2
+    oplot,outstr.x,outstr.spec/outstr.telluric,co=70,thick=2
+    legendastro,['Original','Telluric','Corrected'],color=[0,250,70],textcolors=[0,250,70],line=[0,0,0],charsize=1.85,thick=[3,1,1],pos=[0.08,0.95],/norm
+    txt1='Fiber '+strtrim(ifiber,2)+',     normalization = '+strjoin(stringize(outstr.par[0:2],ndec=4),', ')
+    txt2='best models = '+strjoin(stringize(outstr.bestmod),', ')
+    xyouts,mean(xr),yr[1]-0.1*range(yr),txt1,align=0.5,charsize=2,charthick=4
+    xyouts,mean(xr),yr[1]-0.15*range(yr),txt2,align=0.5,charsize=2,charthick=4
 
-    plot,outstr.x,outstr.spec,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=[3000,5000],yr=yr,tit='Fiber '+strtrim(ifiber,2)
+    yr = [(medspec-0.3*abs(medspec))<0, medspec*1.8]
+    pos=[0.05,0.05,0.985,0.495]
+    plot,outstr.x,outstr.spec,/nodata,xtit='Pixels',ytit='Counts',xs=1,ys=1,xr=[3000,5000],yr=yr,co=0,yticklen=0.005,position=pos,charsize=1.65
+    oplot,outstr.x,outstr.spec,co=0,thick=4
     ;oplot,x[gd],yfit1,co=250,linestyle=2
     ;oplot,x,yfit1*smspec,co=250,linestyle=2
-    oplot,outstr.x,outstr.telluric*outstr.cont,co=250,linestyle=2
-    oplot,outstr.x,outstr.spec/outstr.telluric,co=150
-    legend_old,['Original','Telluric','Corrected'],textcolor=[co,250,150],/bottom,/left
-    xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
-    !p.multi=[0,0,0]
-
-    if keyword_set(save) then ps_close
-
+    oplot,outstr.x,outstr.telluric*outstr.cont,co=250,thick=2;,linestyle=2
+    oplot,outstr.x,outstr.spec/outstr.telluric,co=70,thick=2
+    ;legend_old,['Original','Telluric','Corrected'],textcolor=[0,250,70],/bottom,/left
+    ;xyouts,mean(xr),yr[1]-0.05*range(yr),'Normalization='+strjoin(stringize(outstr.par[0:2],ndec=4),' '),align=0.5,charsize=1.5,charthick=4
+    ;!p.multi=[0,0,0]
+    ;DEVICE, /CLOSE
+    ;SET_PLOT,'X'
+    ps_close
+    SPAWN,'convert -density 300 '+psfile1+'.eps '+psfile1+'.png'
+    ;ps2jpg,psfile1+'.eps',chmod='664'o,/delete
+    SPAWN,'rm -f '+psfile1+'.eps'
   endif
 
-  ;stop
 
  endfor  ; star loop
+
 
  ; for first iteration, determine which model spectrum to adopt for each species
  if iter eq 0 then begin

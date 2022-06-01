@@ -125,6 +125,114 @@ molecules = np.array(['CH4', 'CO2', 'H2O'])
 nmolecules = len(molecules)
 
 ###########################################################################################
+def getTputScatter(mjd1=59650, mjd2=59709, niter=3, sigclip=-1):
+    Z = '  '
+
+    g1, = np.where((allsnr['MJD'] > mjd1) & (allsnr['MJD'] < mjd2))
+    if mjd1 > 59550: g1, = np.where((allsnr['MJD'] > mjd1) & (allsnr['MJD'] < mjd2) & (allsnr['EXPTIME'] == 457))
+    ng = len(g1)
+    print(ng)
+    a = allsnr[g1]
+    order = np.argsort(a['MJD'])
+    a = a[order]
+    hmagAll = a['HMAG']
+    plateAll = a['PLATE']
+    snAll = np.nanmean(a['SNFIBER'], axis=2)
+    seczAll = a['SECZ']
+    seeingAll = a['SEEING']
+    mphaseAll = a['MOONPHASE']
+    mdistAll = a['MOONDIST']
+    exptAll = a['EXPTIME']
+    skyAll = a['SKY']
+    zeroAll = a['ZERO']
+
+    tputSigma = np.zeros(ng)
+    tputMad = np.zeros(ng)
+
+    num = ng
+    #num = 500
+    out = np.empty(num).astype(str)
+    zero = np.empty(num)
+    seeing = np.full(num, -999.999)
+    secz = np.empty(num)
+    sigR = np.empty(num)
+    sigD = np.empty(num)
+    madR = np.empty(num)
+    nbad = np.empty(num)
+    sn9 = np.empty(num)
+    for iexp in range(num):
+        g, = np.where((snAll[iexp] > 0) & (hmagAll[iexp] > 5) & (hmagAll[iexp] < 15))
+        if len(g) > 150:
+            # First pass at fitting line to S/N as function of Hmag
+            hm1 = hmagAll[iexp][g]
+            sn1 = snAll[iexp][g]
+            polynomial1 = np.poly1d(np.polyfit(hm1, np.log10(sn1), 1))
+            yarrnew1 = polynomial1(hm1)
+            diff1 = np.log10(sn1) - yarrnew1
+            gd1, = np.where(diff1 > sigclip*np.nanstd(diff1))
+            # Second pass at fitting line to S/N as function of Hmag
+            hm2 = hm1[gd1]
+            sn2 = sn1[gd1]
+            polynomial2 = np.poly1d(np.polyfit(hm2, np.log10(sn2), 1))
+            yarrnew2 = polynomial2(hm2)
+            diff2 = np.log10(sn2) - yarrnew2
+            gd2, = np.where(diff2 > sigclip*np.nanstd(diff2))
+            # Final pass at fitting line to S/N as function of Hmag
+            hm3 = hm2[gd2]
+            sn3 = sn2[gd2]
+            polynomial3 = np.poly1d(np.polyfit(hm3, np.log10(sn3), 1))
+            xarrnew3 = np.linspace(np.nanmin(hm1), np.nanmax(hm1), 5000)
+            yarrnew3 = polynomial3(xarrnew3)
+            ratio = np.zeros(len(g))
+            diff = np.zeros(len(g))
+            for q in range(len(g)):
+                hmdif = np.absolute(hm1[q] - xarrnew3)
+                pp, = np.where(hmdif == np.nanmin(hmdif))
+                ratio[q] = sn1[q] / 10**yarrnew3[pp][0]
+                diff[q] = sn1[q] - 10**yarrnew3[pp][0]
+
+            diff9 = np.absolute(9 - xarrnew3)
+            pp9, = np.where(diff9 == np.nanmin(diff9))
+            sn9[iexp] = 10**yarrnew3[pp9][0]
+
+            sigratio = np.nanstd(ratio)
+            bad, = np.where(ratio < 1-sigratio)
+            nbad[iexp] = len(bad)
+            madratio = dln.mad(ratio)
+            sigdiff = dln.mad(diff)
+            maddiff = dln.mad(diff)
+            p000 = str(plateAll[iexp])
+            p00 = str(a['MJD'][iexp])
+            p0 = a['sumfile'][iexp]
+            p1 = str("%.3f" % round(sigratio,3))
+            #p2 = str("%.3f" % round(madratio,3))
+            p3 = str("%.3f" % round(sigdiff,3))
+            p4 = str("%.3f" % round(maddiff,3))
+            p5 = str("%.3f" % round(seeingAll[iexp],3))
+            p6 = str("%.3f" % round(seczAll[iexp],3))
+            #p7 = str("%.3f" % round(np.nanmean(skyAll[iexp]),3))
+            p7 = str("%.3f" % round(np.nanmean(zeroAll[iexp]),3))
+            p8 = str(int(round(nbad[iexp]))).rjust(3)
+            print(p000+Z+p00+Z+p0+Z+p1+Z+p3+Z+p4+Z+p5+Z+p6+Z+p7+Z+p8)
+
+            zero[iexp] = np.nanmean(zeroAll[iexp])
+            seeing[iexp] = seeingAll[iexp]
+            secz[iexp] = seczAll[iexp]
+            sigR[iexp] = sigratio
+            sigD[iexp] = sigdiff
+            madR[iexp] = madratio
+
+    g, = np.where((seeing > 0.2) & (seeing < 5))
+
+    return sigR[g],sigD[g],madR[g],seeing[g],secz[g],zero[g],nbad[g],sn9[g]
+    pdb.set_trace()
+
+    t1 = Column(name='TPUT_SIGMA', data=tputSigma)
+    table = Table(allsnrg)
+    table.add_column(t1)
+    table.write('tmp.fits', format='fits', overwrite='True')
+
+###########################################################################################
 def persist1(cmap='brg', vrad=400):
     mjd = '59686'
     #exp1 = np.array([41240010,41240015,41240017,41240019,41240021,41240023,41240025,
