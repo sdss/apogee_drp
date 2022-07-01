@@ -984,11 +984,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 xx = [np.min(xvals[plate]),np.max(xvals[plate])]
                 yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
-                pl1 = ax.plot(xx, yy, c='r', label='plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate]),3))+')')
+                pl1 = ax.plot(xx, yy, c='r', linewidth=2, label='plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate]),3))+')')
 
                 xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
                 yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
-                pl2 = ax.plot(xx, yy, c='b', label='FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi]),3))+')')
+                pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi]),3))+')')
 
                 ax.legend(loc='upper center', labelspacing=0.5, handletextpad=0.2, markerscale=1, 
                           fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.3)
