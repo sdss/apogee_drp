@@ -962,7 +962,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 if ichip == 1: ax.text(-0.035, 0.5, r'S/N$^{2}$ per minute ($' + magmin + r' < H < ' + magmax + r'$)', transform=ax.transAxes, rotation=90, ha='right', va='center')
-                pdb.set_trace()
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=59555, color='teal', linewidth=2)
@@ -995,7 +994,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc='upper center', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
 
-                ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
                 ylims = ax.get_ylim()
                 ymin = ylims[0]
                 ymax = ylims[1]
