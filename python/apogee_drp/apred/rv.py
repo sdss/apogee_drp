@@ -737,7 +737,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
             # Get a smoothed, filtered spectrum to use as replacement for bad values
             cont = gaussian_filter(median_filter(apvisit.flux[chip,:],[501],mode='reflect'),100)
-            errcont = gaussian_filter(median_filter(apvisit.flux[chip,:],[501],mode='reflect'),100)
+            errcont = gaussian_filter(median_filter(apvisit.err[chip,:],[501],mode='reflect'),100)
             bd, = np.where(apvisit.bitmask[chip,:]&pixelmask.badval())
             if len(bd) > 0: 
                 apvisit.flux[chip,bd] = cont[bd] 
