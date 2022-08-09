@@ -80,7 +80,7 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
     out = open(outdir + 'apogeeSNR-FPS.dat', 'w')
-    out.write('EXPOSURE           SNR_G\n')
+    out.write('EXPOSURE      SNR_G\n')
 
     mdir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/monitor/'
     expdata = fits.getdata(mdir + 'apogee-nSci.fits')
@@ -125,8 +125,11 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
                     snr_fid = 10**np.polyval(coefall,11)
                 else:
                     snr_fid = np.mean(snr)
+
+                ssnr = str("%.3f" % round(snr_fid,3)).rjust(8)
+                print('('+str(i+1).zfill(4)+'/'+str(nexp)+'): ' + os.path.basename(platesumfile) + '  ' + ssnr)
                 
-                out.write(str(int(round(exp[i]))) + '   ' + str("%.3f" % round(snr_fid,3)).rjust(7) + '\n')
+                out.write(str(int(round(exp[i]))) + '    ' + ssnr + '\n')
                 #p1 = str(int(round(x[0])))
                 #p2 = str("%.3f" % round(x[1],3)).rjust(10)
                 #p3 = str("%.3f" % round(x[2],3)).rjust(10)
