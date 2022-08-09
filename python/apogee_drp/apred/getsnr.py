@@ -88,7 +88,7 @@ def apqaALL(mjdstart='59560', observatory='apo', apred='daily'):
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
 
-    out = open(outdir + 'apogeeSNR-FPS.dat')
+    out = open(outdir + 'apogeeSNR-FPS.dat', 'w')
     out.write('EXPOSURE           SNR_B      SNR_G     SNR_R\n')
     for ii in range(nmjd):
         if umjd[ii][0:1] != 'a':
