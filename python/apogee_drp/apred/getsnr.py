@@ -87,7 +87,7 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
     g, = np.where(expdata['MJD'] >= mjdstart)
     expdata = expdata[g]
     order = np.argsort(expdata['MJD'])
-    expdata = expdata[order]
+    expdata = expdata[order][::-1]
     exp = expdata['IM']
     plate = expdata['PLATE']
     mjd = expdata['MJD']
