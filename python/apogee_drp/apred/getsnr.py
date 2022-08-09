@@ -586,31 +586,9 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             else: 
                 medsky[ichip] = 99.999
 
-        # Get guider info.
-        if onem is None:
-            dateobs = dhdr['DATE-OBS']
-            exptime = dhdr['EXPTIME']
-            tt = Time(dateobs)
-            mjdstart = tt.mjd
-            mjdend = mjdstart + (exptime/86400.)
-            mjd0 = min([mjd0,mjdstart])
-            mjd1 = max([mjd1,mjdend])
-            nj = 0
-            if os.path.exists(gcamfile):
-                gcam = fits.getdata(gcamfile)
-                jcam, = np.where((gcam['MJD'] > mjdstart) & (gcam['MJD'] < mjdend))
-                nj = len(jcam)
-            if nj > 1: 
-                fwhm = np.median(gcam['FWHM_MEDIAN'][jcam]) 
-                gdrms = np.median(gcam['GDRMS'][jcam])
-            else:
-                fwhm = -1.
-                gdrms = -1.
-                if i == 0: print("----> makePlateSum: Problem! No matching mjd range in gcam.")
-        else:
-            fwhm = -1
-            gdrms = -1
-            exptime=-9.999
+        fwhm = -1
+        gdrms = -1
+        exptime=-9.999
 
         secz = 0
         seeing = 0
