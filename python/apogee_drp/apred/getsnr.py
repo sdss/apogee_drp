@@ -80,7 +80,7 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
     out = open(outdir + 'apogeeSNR-FPS.dat', 'w')
-    out.write('EXPOSURE           SNR_B      SNR_G     SNR_R\n')
+    out.write('EXPOSURE           SNR_G\n')
 
     mdir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/monitor/'
     expdata = fits.getdata(mdir + 'apogee-nSci.fits')
@@ -92,7 +92,7 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
     plate = expdata['PLATE']
     mjd = expdata['MJD']
     nexp = len(expdata)
-    for i in range(nexp):
+    for i in range(10):
         platesumfile = load.filename('PlateSum', plate=plate[i], mjd=str(mjd[i]), fps=fps)
         if os.path.exists(platesumfile) is False:
             return
@@ -106,28 +106,28 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
                 fiber = fits.getdata(platesumfile,2)
                 hmag = fiber['hmag']
                 pdb.set_trace()
-                snr = fiber[:, g, 1]
+                snr = np.squeeze(fiber['sn'][:, g[0], 1])
 
                 # Linear fit to log(snr) vs. Hmag for ALL objects
-                gdall, = np.where((fiber['hmag'] > 4) & (fiber['hmag'] < 20) & (fiber['sn'] > 0))
-                if len(gdall)>2:
-                    coefall = np.polyfit(fiber[gdall]['hmag'],np.log10(fiber[gdall]['sn']),1)
+                gdall, = np.where((hmag > 4) & (hmag < 20) & (snr > 0))
+                if len(gdall) > 2:
+                    coefall = np.polyfit(hmag[gdall],np.log10(snr[gdall]),1)
                 else:
-                    coefall = np.zeros(2,float)+np.nan
+                    coefall = np.zeros(2,float) + np.nan
                 # Linear fit to log(S/N) vs. H for 10<H<11.5
-                gd, = np.where((fiber['hmag']>=10.0) & (fiber['hmag']<=11.5) & (fiber['sn'] > 0))
-                if len(gd)>2:
-                    coef = np.polyfit(fiber[gd]['hmag'],np.log10(fiber[gd]['sn']),1)
+                gd, = np.where((hmag >= 10.0) & (hmag <= 11.5) & (snr > 0))
+                if len(gd) > 2:
+                    coef = np.polyfit(hmag[gd],np.log10(snr[gd]),1)
                 else:
-                    coef = np.zeros(2,float)+np.nan
-                if len(gd)>2:
-                    snr_fid = 10**np.polyval(coef,hfid)
-                elif len(gdall)>2:
-                    snr_fid = 10**np.polyval(coefall,hfid)
+                    coef = np.zeros(2,float) + np.nan
+                if len(gd) > 2:
+                    snr_fid = 10**np.polyval(coef,11)
+                elif len(gdall) > 2:
+                    snr_fid = 10**np.polyval(coefall,11)
                 else:
-                    snr_fid = np.mean(fiber['sn'])
+                    snr_fid = np.mean(snr)
                 
-
+                out.write(str(int(round(exp[i]))) + '   ' + str("%.3f" % round(snr_fid,3)).rjust(7)
                 #p1 = str(int(round(x[0])))
                 #p2 = str("%.3f" % round(x[1],3)).rjust(10)
                 #p3 = str("%.3f" % round(x[2],3)).rjust(10)
