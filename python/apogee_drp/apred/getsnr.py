@@ -84,8 +84,8 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
     expdata = fits.getdata(mdir + 'apogee-nSci.fits')
     g, = np.where(expdata['MJD'] >= mjdstart)
     expdata = expdata[g]
-    order,ind = np.argsort(expdata['MJD'], return_index=True)
-    expdata = expdata[ind]
+    order = np.argsort(expdata['MJD'])
+    expdata = expdata[order]
     exp = expdata['IM']
     nexp = len(expdata)
     for i in range(nexp):
