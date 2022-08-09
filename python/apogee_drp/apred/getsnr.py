@@ -96,7 +96,7 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
         if os.path.exists(platesumfile) is False:
             return
         else:
-            print('('str(i+1).zfill(4)+'/'+str(nexp)+'): ' + os.path.basename(platesumfile))
+            print('('+str(i+1).zfill(4)+'/'+str(nexp)+'): ' + os.path.basename(platesumfile))
             data = fits.getdata(platesumfile)
             g, = np.where(exp[i] == data['IM'])
             if len(g) < 1:
