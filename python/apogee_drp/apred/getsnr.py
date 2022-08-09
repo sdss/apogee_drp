@@ -88,12 +88,15 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
     order = np.argsort(expdata['MJD'])
     expdata = expdata[order]
     exp = expdata['IM']
+    plate = expdata['PLATE']
+    mjd = expdata['MJD']
     nexp = len(expdata)
     for i in range(nexp):
-        platesumfile = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
+        platesumfile = load.filename('PlateSum', plate=plate[i], mjd=str(mjd[i]), fps=fps)
         if os.path.exists(platesumfile) is False:
             return
         else:
+            print('('str(i+1).zfill(4)+'/'+str(nexp)+'): ' + os.path.basename(platesumfile))
             data = fits.getdata(platesumfile)
             g, = np.where(exp[i] == data['IM'])
             if len(g) < 1:
