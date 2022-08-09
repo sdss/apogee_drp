@@ -105,9 +105,9 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
             else:
                 fiber = fits.getdata(platesumfile,2)
                 hmag = fiber['hmag']
+                pdb.set_trace()
                 snr = fiber[:, g, 1]
 
-                pdb.set_trace()
                 # Linear fit to log(snr) vs. Hmag for ALL objects
                 gdall, = np.where((fiber['hmag'] > 4) & (fiber['hmag'] < 20) & (fiber['sn'] > 0))
                 if len(gdall)>2:
