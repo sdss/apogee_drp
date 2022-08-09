@@ -126,7 +126,7 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
                 else:
                     snr_fid = np.mean(snr)
                 
-                out.write(str(int(round(exp[i]))) + '   ' + str("%.3f" % round(snr_fid,3)).rjust(7)
+                out.write(str(int(round(exp[i]))) + '   ' + str("%.3f" % round(snr_fid,3)).rjust(7) + '\n')
                 #p1 = str(int(round(x[0])))
                 #p2 = str("%.3f" % round(x[1],3)).rjust(10)
                 #p3 = str("%.3f" % round(x[2],3)).rjust(10)
