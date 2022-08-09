@@ -92,7 +92,7 @@ def apqaALL(mjdstart='59560', observatory='apo', apred='daily'):
     out.write('EXPOSURE           SNR_B      SNR_G     SNR_R\n')
     for ii in range(nmjd):
         if umjd[ii][0:1] != 'a':
-            x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum)
+            x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred)
             p1 = str(int(round(x[0])))
             p2 = str("%.3f" % round(x[1],3)).rjust(10)
             p3 = str("%.3f" % round(x[2],3)).rjust(10)
