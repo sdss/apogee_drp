@@ -69,6 +69,7 @@ sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js
 outdir = '/uufs/chpc.utah.edu/common/home/u0955897/projects/snr/'
 observatory='apo'
 apred='daily'
+fps=True
 
 ###################################################################################################
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
