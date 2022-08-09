@@ -262,16 +262,14 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              instrument=instrument, ims=ims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
                              apred=apred, onem=None, starfiber=None, starnames=None, 
-                             starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
-                             clobber=clobber)
+                             starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid)
 
             tmpims = np.array([0,ims[0]])
             qcheck = makePlateSum(load=load, plate=plate, mjd=mjd, telescope=telescope, field=field,
                              instrument=instrument, ims=tmpims, imsReduced=imsReduced,
                              plugmap=plugmap, survey=survey, mapper_data=mapper_data, 
                              apred=apred, onem=None, starfiber=None, starnames=None, 
-                             starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
-                             clobber=clobber)
+                             starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid)
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("Done with APQA for plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
