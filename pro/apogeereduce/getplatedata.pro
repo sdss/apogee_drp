@@ -571,7 +571,15 @@ for i=0,299 do begin
               tmp = strtrim(p[match].tmass_id,2)
             endelse
             len = strlen(tmp)
-            objname = strmid(tmp,len-16)
+            objname = tmp
+            if len ne 16 then begin
+              ;; use +/- sign to figure out what characters to use  
+              posind = strpos(tmp,'+')
+              negind = strpos(tmp,'-')
+              signind = posind
+              if posind eq -1 then signind = negind
+              objname = strmid(tmp,signind-8)  ;; keep any extra characters at the end
+            endif
             if strpos(tmp,'A') eq 0 then begin
               objname = 'AP'+objname
             endif else begin

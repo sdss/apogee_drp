@@ -536,7 +536,17 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 tmp = ph['targetids'][match][0].astype(str)
                             else:
                                 tmp = ph['tmass_id'][match][0].astype(str)
-                            objname = tmp[-16:]
+                            objname = tmp
+                            if len(tmp) != 16:
+                                # use +/- sign to figure out what characters to use
+                                posind = tmp.find('+')
+                                negind = tmp.find('-')
+                                signind = posind
+                                if posind == -1: signind = negind
+                                if signdind != -1:
+                                    objname = tmp[signind-8:]  # keep any extra characters at the end
+                                else:
+                                    objname = tmp[-16:]   # not sure what else to do
                             # sometimes objname can be "None", try to fix with catalogdb info below
                             if tmp.find('A')==0:
                                 objname = 'AP'+objname
