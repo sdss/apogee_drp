@@ -578,7 +578,11 @@ for i=0,299 do begin
               negind = strpos(tmp,'-')
               signind = posind
               if posind eq -1 then signind = negind
-              objname = strmid(tmp,signind-8)  ;; keep any extra characters at the end
+              if signind ne -1 then begin
+                objname = strmid(tmp,signind-8,16)  ;; trim any extra characters
+              endif else begin
+                objname = strmid(tmp,strlen(tmp)-16)   ;; not sure what else to do
+              endelse
             endif
             if strpos(tmp,'A') eq 0 then begin
               objname = 'AP'+objname

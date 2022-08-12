@@ -543,8 +543,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 negind = tmp.find('-')
                                 signind = posind
                                 if posind == -1: signind = negind
-                                if signdind != -1:
-                                    objname = tmp[signind-8:]  # keep any extra characters at the end
+                                if signind != -1:
+                                    objname = tmp[signind-8:16]  # trim extra characters
                                 else:
                                     objname = tmp[-16:]   # not sure what else to do
                             # sometimes objname can be "None", try to fix with catalogdb info below
