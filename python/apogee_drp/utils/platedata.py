@@ -286,7 +286,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         ph['tmass_k'] = ph['kmag']
         # get 2MASS IDs and other info from catalogdb
         gdid, = np.where( (plugmap['fiberdata']['catalogid']>0) & (plugmap['fiberdata']['spectrographId']==2) &
-                          (plugmap['fiberdata']['objtype']!='SKY'))
+                          (plugmap['fiberdata']['objType']!='SKY'))
         if len(gdid)>0:
             catinfo = catalogdb.getdata(catid=plugmap['fiberdata']['catalogid'][gdid])
             if len(catinfo)>0:
