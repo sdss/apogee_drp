@@ -230,11 +230,13 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             elif frame['a'][0].header['LAMPTHAR']:
                 lampfile = 'tharne.lines.vac.apogee'
                 lamptype = 'THARNE'
-            arclines=ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
+            else:
+                raise ValueError('This is NOT a UNe or THARNE exposure')
+            arclines = ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
             #j=np.where(arclines['USEWAVE'])[0]  # this is now down in findlines()
             #arclines=arclines[j]
             # find lines or use previous found lines
-            linesfile=out.replace('Wave','Lines')
+            linesfile = out.replace('Wave','Lines')
             if os.path.exists(linesfile) and not clobber :
                 print('Reading existing Lines data',num)
                 flinestr = fits.open(linesfile)[1].data
@@ -1358,7 +1360,12 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
     if waveid > 0 :
         #use wavelength solution from specified wavecal
         print('loading waveid: ', waveid)
-        waveframe = load.apWave(waveid)
+        if int(waveid) < 100000:
+            reduxdir = os.environ['APOGEE_REDUX']+'/'+vers+'/'
+            wavefile = reduxdir+'cal/'+load.instrument+'/wave/apWave-%5d.fits' % waveid
+            waveframe = load._readchip(wavefile,'apWave')
+        else:
+            waveframe = load.apWave(waveid)
         npoly = waveframe['a'][0].header['NPOLY']
         allpars = waveframe['a'][3].data
         if len(waveframe['a']) == 6 : allpars,waves=refine(waveframe['a'][3].data)
@@ -1455,18 +1462,22 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
 
         if waveid > 0 :
             # Adjust wavelength solution based on skyline fit
-            newpars=copy.copy(allpars)
+            newpars = copy.copy(allpars)
             for ichip in range(3) :
                 newpars[npoly+ichip,:] -= (w[0]*np.arange(300) + w[ichip+1])
             allhdu = save_apWave(newpars,npoly=npoly)
 
             # Rewrite out 1D file with adjusted wavelength information
-            outname=load.filename('1D',num=int(name),mjd=load.cmjd(int(name)),chips=True)
+            outname = load.filename('1D',num=int(name),mjd=load.cmjd(int(name)),chips=True)
             for ichip,chip in enumerate(chips) :
+                if int(waveid) < 100000:
+                    chipwavefile = reduxdir+'cal/'+load.instrument+'/wave/apWave-%s-%5d.fits' % (chip,waveid)
+                else:
+                    chipwavefile = load.allfile('Wave',num=waveid,chips=True)
                 hdu = fits.HDUList()
                 frame[chip][0].header['HISTORY'] = 'Added wavelengths from SKYCAL, waveid: {:08d}'.format(waveid)
                 frame[chip][0].header['HISTORY'] = 'Wavelength shift parameters {:12.5e} {:8.3f} {:8.3f} {:8.3f}'.format(w[0],w[1],w[2],w[3])
-                frame[chip][0].header['WAVEFILE'] = load.allfile('Wave',num=waveid,chips=True)
+                frame[chip][0].header['WAVEFILE'] = chipwavefile
                 frame[chip][0].header['WAVEHDU'] = 5
 
                 hdu.append(frame[chip][0])    # 0-header only
@@ -1475,6 +1486,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
                 hdu.append(frame[chip][3])    # 3-mask
                 hdu.append(allhdu[ichip][2])  # 4-chipwave [300,2048]
                 hdu.append(allhdu[ichip][1])  # 5-chippars [14,300]
+                print('Updating ',outname.replace('1D-','1D-'+chip+'-'))
                 hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
 
         # Plots
