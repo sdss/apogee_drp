@@ -69,13 +69,14 @@ def load(plugfile,verbose=False,fixfiberid=None):
         # Add objType
         fiberdata = dln.addcatcols(fiberdata,np.dtype([('objType',np.str,20)]))
         fiberdata['objType'] = 'OBJECT'   # default
+        category = np.char.array(fiberdata['category'].astype(str)).upper()
         skyind, = np.where( (fiberdata['fiberId']>=0) & (fiberdata['spectrographId']==2) &
-                            (fiberdata['category'].astype(str)=='SKY'))
+                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
                             #(bmask.is_bit_set(fiberdata['sdssv_apogee_target0'],0)==1))    # SKY
         if len(skyind)>0:
             fiberdata['objType'][skyind] = 'SKY'
         tellind, = np.where( (fiberdata['fiberId']>=0) & (fiberdata['spectrographId']==2) &
-                             (fiberdata['category'].astype(str)=='HOT_STD'))
+                             ((category=='STANDARD_APOGEE') | (category=='HOT_STD')))
                              #(bmask.is_bit_set(fiberdata['sdssv_apogee_target0'],1)==1))    # HOT_STD/telluric
         if len(tellind)>0:
             fiberdata['objType'][tellind] = 'HOT_STD'

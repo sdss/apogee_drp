@@ -111,7 +111,7 @@ if errout[0] ne '' or n_elements(errout) gt 1 then begin
 endif
 
 ;; Load the catalog
-if file_test(tempfile) eq 1 then catalogstr = MRDFITS(tempfile,1,/silent)
+if file_test(tempfile) eq 1 then catalogstr = MRDFITS(tempfile,1,/silent) else undefine,catalogstr
 FILE_DELETE,[tbase,tbase+'.fits',tbase+'.py'],/allow
 
 return,catalogstr

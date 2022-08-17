@@ -306,7 +306,8 @@ if keyword_set(fps) then begin
   add_tag,p,'tmass_k',0.0,p
   p.tmass_k = p.kmag
   ;; get 2MASS IDs and other info from catalogdb
-  gdid = where(plugmap.fiberdata.catalogid gt 0 and plugmap.fiberdata.spectrographid eq 2,ngdid)
+  gdid = where(plugmap.fiberdata.catalogid gt 0 and plugmap.fiberdata.spectrographid eq 2 and $
+               plugmap.fiberdata.objtype ne 'SKY',ngdid)
   if ngdid gt 0 then begin
     catinfo = get_catalogdb_data(id=plugmap.fiberdata[gdid].catalogid)
     match,p.catalogid,catinfo.catalogid,ind1,ind2,/sort,coun=nmatch

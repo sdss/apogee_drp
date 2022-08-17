@@ -213,11 +213,12 @@ if keyword_set(fps) then begin
   add_tag,fiberdata,'objtype','',fiberdata
   fiberdata.objtype = 'OBJECT'   ;; default
   skyind = where( (fiberdata.fiberid ge 0) and (fiberdata.spectrographid eq 2) and $
-                  (fiberdata.category eq 'SKY'),nskyind)
+                  (strupcase(fiberdata.category) eq 'SKY' or strupcase(fiberdata.category) eq 'SKY_APOGEE' or $
+                   strupcase(fiberdata.category) eq 'SKY_BOSS'),nskyind)
                   ;;(bmask.is_bit_set(fiberdata['sdssv_apogee_target0'],0)==1))    ;; SKY
   if nskyind gt 0 then fiberdata[skyind].objtype = 'SKY'
   tellind = where( (fiberdata.fiberid ge 0) and (fiberdata.spectrographid eq 2) and $
-                   (fiberdata.category eq 'HOT_STD'),ntellind)
+                   (strupcase(fiberdata.category) eq 'STANDARD_APOGEE' or strupcase(fiberdata.category) eq 'HOT_STD'),ntellind)
                    ;;(bmask.is_bit_set(fiberdata['sdssv_apogee_target0'],1)==1))    ;; HOT_STD/telluric
   if ntellind gt 0 then fiberdata[tellind].objtype = 'HOT_STD'
   ;; Plug fixed fiberdata back in
