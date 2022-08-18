@@ -208,7 +208,6 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     """
     Get all exposure for the MJDs.
 
-
     Parameters
     ----------
     load : ApLoad object
@@ -248,6 +247,7 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     # Get information for all of the exposures
     expinfo = None
     for m in mjds:
+        # info.expinfo() deals with FPI and other exposures properly
         expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
         expinfo1 = Table(expinfo1)
         # Get data from database
@@ -256,8 +256,13 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
             vals,ind1,ind2 = np.intersect1d(expinfo1['num'],dbexpinfo['num'],return_indices=True)
         else:
             ind1 = []
-        # Load new exposures into database
-        if len(ind1) != len(expinfo1):
+        # Check that the exptypes are the same
+        if len(ind1)>0:
+            mismatch = np.sum(expinfo1['exptype'][ind1] != dbexpinfo['exptype'][ind2])
+        else:
+            mismatch = 0
+        # Load new exposures or mismatches into database
+        if len(ind1) != len(expinfo1) or mismatch>0:
             db.ingest('exposure',expinfo1)  # insert into database
             expinfo1 = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))            
             expinfo1 = Table(expinfo1)
@@ -2594,7 +2599,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
 
 
 def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=None, 
-                  planfiles=None,chkapred=None,chkrv=None,logfile=None,slurmpars=None,
+                  planfiles=None,chkexp=None,chkvisit=None,chkrv=None,logfile=None,slurmpars=None,
                   clobber=None,debug=False):   
     """ Send a summary email."""
 
@@ -2644,9 +2649,13 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
         message += 'Plan: %d plan files successfully made<br> \n' % len(planfiles)
 
     # APRED step
-    if 'apred' in steps and chkapred is not None:
-        ind, = np.where(chkapred['success']==True)
-        message += 'APRED: %d/%d visits successfully processed<br> \n' % (len(ind),len(chkapred))
+    if 'apred' in steps:
+        if chkexp is not None:
+            indexp, = np.where(chkexp['success']==True)
+            message += 'APRED: %d/%d exposures successfully processed<br> \n' % (len(indexp),len(chkexp))
+        if chkvisit is not None:
+            indvisit, = np.where(chkvisit['success']==True)
+            message += 'APRED: %d/%d visits successfully processed<br> \n' % (len(indvisit),len(chkvisit))
 
     # RV step
     if 'rv' in steps and chkrv is not None:
@@ -2859,7 +2868,7 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
         rootLogger.info('7) Running APRED')
         rootLogger.info('================')
         rootLogger.info('')
-        chkapred = runapred(load,mjds,**kws)
+        chkexp,chkvisit = runapred(load,mjds,**kws)
         
     # 7) Run "rv" on all unique stars
     #--------------------------------
@@ -2932,6 +2941,6 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
 
     # Summary email
     summary_email(observatory,apred,mjd,steps,chkmaster=chkmaster,chk3d=chk3d,chkcal=chkcal,
-                  planfiles=planfiles,chkapred=chkapred,chkrv=chkrv,logfile=logfile,slurmpars=slurmpars,
-                  clobber=clobber,debug=debug)
+                  planfiles=planfiles,chkexp=chkexp,chkvisit=chkvisit,chkrv=chkrv,logfile=logfile,
+                  slurmpars=slurmpars,clobber=clobber,debug=debug)
 
