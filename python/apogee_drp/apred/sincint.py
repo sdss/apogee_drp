@@ -38,6 +38,9 @@ def sincint(x, nres, speclist) :
         u2 = np.pi*xkernel
         sinc = np.exp(-(u1**2)) * np.sin(u2) / u2
         sinc /= (nres/2.)
+        
+        # the value at x = 0 is defined to be the limiting value
+        sinc[u2 == 0] = 1
 
         lobe = np.arange(ksize) - nhalf + ix[i]
         vals = np.zeros(ksize)
