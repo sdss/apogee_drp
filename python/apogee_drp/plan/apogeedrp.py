@@ -208,6 +208,7 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     """
     Get all exposure for the MJDs.
 
+
     Parameters
     ----------
     load : ApLoad object
@@ -247,7 +248,6 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     # Get information for all of the exposures
     expinfo = None
     for m in mjds:
-        # info.expinfo() deals with FPI and other exposures properly
         expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
         expinfo1 = Table(expinfo1)
         # Get data from database
@@ -256,13 +256,8 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
             vals,ind1,ind2 = np.intersect1d(expinfo1['num'],dbexpinfo['num'],return_indices=True)
         else:
             ind1 = []
-        # Check that the exptypes are the same
-        if len(ind1)>0:
-            mismatch = np.sum(expinfo1['exptype'][ind1] != dbexpinfo['exptype'][ind2])
-        else:
-            mismatch = 0
-        # Load new exposures or mismatches into database
-        if len(ind1) != len(expinfo1) or mismatch>0:
+        # Load new exposures into database
+        if len(ind1) != len(expinfo1):
             db.ingest('exposure',expinfo1)  # insert into database
             expinfo1 = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))            
             expinfo1 = Table(expinfo1)
@@ -1350,7 +1345,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkflat', **slurmpars1)
-    docal = np.zeros(len(flatdict),bool)    
     for i in range(len(flatdict)):
         name = flatdict['name'][i]
         if np.sum((mjds >= flatdict['mjd1'][i]) & (mjds <= flatdict['mjd2'][i])) > 0:
@@ -1398,7 +1392,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkbpm', **slurmpars)
-    docal = np.zeros(len(bpmdict),bool)
     for i in range(len(bpmdict)):
         name = bpmdict['name'][i]
         if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
@@ -1443,7 +1436,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklittrow', **slurmpars)
-    docal = np.zeros(len(littdict),bool)
     for i in range(len(littdict)):
         name = littdict['name'][i]
         if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
@@ -1487,7 +1479,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkresponse', **slurmpars)
-    docal = np.zeros(len(responsedict),bool)
     for i in range(len(responsedict)):
         name = responsedict['name'][i]
         if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
@@ -1531,7 +1522,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mksparse', **slurmpars)
-    docal = np.zeros(len(sparsedict),bool)
     for i in range(len(sparsedict)):
         name = sparsedict['name'][i]
         if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
@@ -1575,7 +1565,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkmodelpsf', **slurmpars)
-    docal = np.zeros(len(modelpsfdict),bool)
     for i in range(len(modelpsfdict)):
         name = modelpsfdict['name'][i]
         if np.sum((mjds >= modelpsfdict['mjd1'][i]) & (mjds <= modelpsfdict['mjd2'][i])) > 0:
@@ -1662,7 +1651,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklsf', **slurmpars)
-    docal = np.zeros(len(lsfdict),bool)
     for i in range(len(lsfdict)):
         name = lsfdict['name'][i]
         if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:
@@ -2606,7 +2594,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
 
 
 def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=None, 
-                  planfiles=None,chkexp=None,chkvisit=None,chkrv=None,logfile=None,slurmpars=None,
+                  planfiles=None,chkapred=None,chkrv=None,logfile=None,slurmpars=None,
                   clobber=None,debug=False):   
     """ Send a summary email."""
 
@@ -2656,13 +2644,9 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
         message += 'Plan: %d plan files successfully made<br> \n' % len(planfiles)
 
     # APRED step
-    if 'apred' in steps:
-        if chkexp is not None:
-            indexp, = np.where(chkexp['success']==True)
-            message += 'APRED: %d/%d exposures successfully processed<br> \n' % (len(indexp),len(chkexp))
-        if chkvisit is not None:
-            indvisit, = np.where(chkvisit['success']==True)
-            message += 'APRED: %d/%d visits successfully processed<br> \n' % (len(indvisit),len(chkvisit))
+    if 'apred' in steps and chkapred is not None:
+        ind, = np.where(chkapred['success']==True)
+        message += 'APRED: %d/%d visits successfully processed<br> \n' % (len(ind),len(chkapred))
 
     # RV step
     if 'rv' in steps and chkrv is not None:
