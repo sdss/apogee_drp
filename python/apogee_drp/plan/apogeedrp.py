@@ -1350,6 +1350,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkflat', **slurmpars1)
+    docal = np.zeros(len(flatdict),bool)    
     for i in range(len(flatdict)):
         name = flatdict['name'][i]
         if np.sum((mjds >= flatdict['mjd1'][i]) & (mjds <= flatdict['mjd2'][i])) > 0:
@@ -1397,6 +1398,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkbpm', **slurmpars)
+    docal = np.zeros(len(bpmdict),bool)
     for i in range(len(bpmdict)):
         name = bpmdict['name'][i]
         if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
@@ -1441,6 +1443,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklittrow', **slurmpars)
+    docal = np.zeros(len(littdict),bool)
     for i in range(len(littdict)):
         name = littdict['name'][i]
         if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
@@ -1484,6 +1487,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkresponse', **slurmpars)
+    docal = np.zeros(len(responsedict),bool)
     for i in range(len(responsedict)):
         name = responsedict['name'][i]
         if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
@@ -1527,6 +1531,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mksparse', **slurmpars)
+    docal = np.zeros(len(sparsedict),bool)
     for i in range(len(sparsedict)):
         name = sparsedict['name'][i]
         if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
@@ -1570,6 +1575,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkmodelpsf', **slurmpars)
+    docal = np.zeros(len(modelpsfdict),bool)
     for i in range(len(modelpsfdict)):
         name = modelpsfdict['name'][i]
         if np.sum((mjds >= modelpsfdict['mjd1'][i]) & (mjds <= modelpsfdict['mjd2'][i])) > 0:
@@ -1656,6 +1662,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklsf', **slurmpars)
+    docal = np.zeros(len(lsfdict),bool)
     for i in range(len(lsfdict)):
         name = lsfdict['name'][i]
         if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:
