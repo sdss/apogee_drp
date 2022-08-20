@@ -831,7 +831,7 @@ class ApLoad:
         elif root=='R' or root=='2D' or root=='1D':
             if mjd is None:
                 mjd = self.cmjd(num)
-            if 'lco' in self.telescope: sdssroot = 'as'+root
+            if root=='R' and 'lco' in self.telescope: sdssroot = 'as'+root
             elif 'apo1m' in self.telescope: sdssroot = 'ap'+root+'-1m'
             else : sdssroot = 'ap'+root
         elif (self.telescope == 'apo1m' and 
