@@ -219,15 +219,18 @@ def getcal(calfile,mjd):
     # Loop over the calibration types and get the ones we need
     caldict = OrderedDict()
     for caltype in allcaldict.keys():
-       val = parsecaldict(allcaldict[caltype],mjd)
-       if (caltype=='fixfiber') or (caltype=='badfiber'):
-          val = getnums(val)  # expand list
-       if type(val) is np.ndarray:
-          if len(val)==1: val=val[0]
-       if type(val) is list:
-          if len(val)==1: val=val[0]
-       caldict[caltype] = val
-
+       if allcaldict[caltype] is not None:
+          val = parsecaldict(allcaldict[caltype],mjd)
+          if (caltype=='fixfiber') or (caltype=='badfiber'):
+             val = getnums(val)  # expand list
+          if type(val) is np.ndarray:
+             if len(val)==1: val=val[0]
+          if type(val) is list:
+             if len(val)==1: val=val[0]
+          caldict[caltype] = val
+       else:
+          caldict[caltype] = None
+          
     return caldict
 
 

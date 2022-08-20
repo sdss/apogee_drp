@@ -619,7 +619,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         out['platetype'] = 'normal'
 
     sdss_path = path.Path()
-    rawfile = sdss_path.full('apR',num=im1,chip='a',mjd=mjd)
+    rawfile = sdss_path.full(load.prefix+'R',num=im1,chip='a',mjd=mjd)
     if os.path.exists(rawfile)==False:
         raise ValueError('Cannot find file '+rawfile)
     head = fits.getheader(rawfile,1)
@@ -634,7 +634,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     if ap3d==False and ap2d==False:
         logger.info(str(plugid))
         if plugid is None:
-            rawfile = sdss_path.full('apR',num=ims[0],chip='a',mjd=mjd)
+            rawfile = sdss_path.full(load.prefix+'R',num=ims[0],chip='a',mjd=mjd)
             #rawfile = load.filename('R',chip='a',num=ims[0])
             if os.path.exists(rawfile)==True:
                 head = fits.getheader(rawfile,1)
@@ -753,7 +753,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
                 name = 'none'
         if ap3d:
             flavor = 'object'
-            rawfile = sdss_path.full('apR',num=im1,chip='a',mjd=mjd)
+            rawfile = sdss_path.full(load.prefix+'R',num=im1,chip='a',mjd=mjd)
             if os.path.exists(rawfile)==False:
                 print(rawfile,' NOT FOUND')
             head = fits.getheader(rawfile,1)

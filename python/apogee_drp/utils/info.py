@@ -64,6 +64,8 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
         if observatory not in ['apo','lco']:
             raise ValueError('observatory must be apo or lco')
         datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
+        telescope = observatory+'25m'
+        load = apload.ApLoad(apred='daily',telescope=telescope)
         if type(expnum) is not list and type(expnum) is not np.ndarray:
             expnum = [expnum]
         nfiles = len(expnum)

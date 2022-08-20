@@ -118,6 +118,10 @@ FOR i=0L,nplanfiles-1 do begin
 
   ; apLittrow file : littrow ghost pixel mask
   if tag_exist(planstr,'littrowid') eq 0 then add_tag,planstr,'littrowid',0,planstr
+  if strlowcase(strtrim(planstr.littrowid,2)) eq 'none' then begin
+     planstr = remove_tag(planstr,'littrowid')
+     add_tag,planstr,'littrowid',0,planstr
+  endif
   if planstr.littrowid ne 0 then begin
     makecal,littrow=planstr.littrowid
     littrowfiles = apogee_filename('Littrow',num=planstr.littrowid,chip='b')
@@ -130,6 +134,10 @@ FOR i=0L,nplanfiles-1 do begin
 
   ; apPersist file : persistence pixel mask
   if tag_exist(planstr,'persistid') eq 0 then add_tag,planstr,'persistid',0,planstr
+  if strlowcase(strtrim(planstr.persistid,2)) eq 'none' then begin
+     planstr = remove_tag(planstr,'persistid')
+     add_tag,planstr,'persistid',0,planstr
+  endif
   if planstr.persistid ne 0 then begin
     makecal,persist=planstr.persistid
     persistfiles = apogee_filename('Persist',num=planstr.persistid,chip=chiptag)
@@ -142,6 +150,10 @@ FOR i=0L,nplanfiles-1 do begin
 
   ; apPersistModel file : persistence model parameters
   if tag_exist(planstr,'persistmodelid') eq 0 then add_tag,planstr,'persistmodelid',0,planstr
+  if strlowcase(strtrim(planstr.persistmodelid,2)) eq 'none' then begin
+     planstr = remove_tag(planstr,'persistmodelid')
+     add_tag,planstr,'persistmodelid',0,planstr
+  endif
   if planstr.persistmodelid ne 0 then begin
     ;makecal,modelpersist=persistmodelid
     ; The apPersistModel calibration files are created separately

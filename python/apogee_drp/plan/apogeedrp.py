@@ -942,7 +942,8 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     if os.path.exists(os.path.dirname(allstarfile))==False:
         os.makedirs(os.path.dirname(allstarfile))
     allstar = Table(allstar)
-    del allstar['nres']    # temporary kludge, nres is causing write problems
+    if 'nres' in allstar.colnames:
+        del allstar['nres']    # temporary kludge, nres is causing write problems
     allstar.write(allstarfile,overwrite=True)
 
     # allVisit
