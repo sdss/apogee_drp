@@ -727,9 +727,9 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             out['psflibrary'] = 1
         # Use Model PSF for extraction
         if psflibrary is None or modelpsf:
-            if str(modelpsf).isnumeric():
+            if modelpsf is not None and str(modelpsf).isnumeric():
                 out['modelpsf'] = int(modelpsf)
-            else:
+            elif caldata['modelpsf'] is not None:
                 out['modelpsf'] = int(caldata['modelpsf'])  # use from library
         # Flux calibration file
         if fluxid is not None:
@@ -737,9 +737,9 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         # Get Flux calibration file
         else:
             fluxfile = load.filename('Flux',num=0,mjd=mjd,chips=True)
-            fluxfile = psffile.replace('Flux-','PSF-b-')
+            fluxfile = fluxfile.replace('Flux-','Flux-b-')
             base = ('%8d' % im1)[0:4]
-            fluxfiles = glob(psffile.replace('-00000000','-'+base+'????'))    
+            fluxfiles = glob(fluxfile.replace('-00000000','-'+base+'????'))    
             if len(fluxfiles)==0:
                 raise ValueError('No Flux files for MJD='+str(mjd))
             fluxnum = [os.path.basename(f)[8:16] for f in fluxfiles] 
@@ -904,6 +904,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         exist = [os.path.exists(pf) for pf in psffiles]
         if np.sum(np.array(exist))==3:
             psfdome_exist[j] = True
+    import pdb; pdb.set_trace()
     gddome, = np.where(psfdome_exist == True)
     if len(gddome)>0:
         psfdome = list(np.array(dome)[gddome])
