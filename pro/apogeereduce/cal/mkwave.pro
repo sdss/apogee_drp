@@ -73,7 +73,6 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   expinfo.arctype = strtrim(expinfo.arctype,2)
   gdarc = where(expinfo.arctype eq 'UNE' or expinfo.arctype eq 'THAR',ngdarc)
 
-
   ;; Process the frames
   if keyword_set(psfid) then begin
     cmjd = getcmjd(psfid)
@@ -90,7 +89,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   for i=0,n_elements(waveid)-1 do cmd=[cmd,string(waveid[i])]
   spawn,cmd,/noshell
 
-  ;; Check that the calibrateion file was successfully created
+  ;; Check that the calibration file was successfully created
   outfile = wavedir+repstr(file,'apWave-','apWave-a-')
   if file_test(outfile) then begin
     openw,lock,/get_lun,wavedir+file+'.dat'

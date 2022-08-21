@@ -171,7 +171,8 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
 
     start = time.time()
 
-    load = apload.ApLoad(apred=vers,instrument=inst)
+    telescope = {'apogee-n':'apo25m','apogee-s':'lco25m'}[inst]
+    load = apload.ApLoad(apred=vers,instrument=inst,telescope=telescope)
 
     nums = np.array(nums)
     if name is None : name = nums[0]
@@ -218,6 +219,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         #print(filename)
         frame = load.ap1D(num)
         if frame==0:
+            import pdb; pdb.set_trace()
             print(load.filename('1D',num=num,chips=True)+' NOT FOUND')
             continue
         out = load.filename('Wave',num=num,chips=True)

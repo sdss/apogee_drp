@@ -1082,17 +1082,19 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             if load.exists('Sparse',num=planstr['sparseid']):
                 print(load.filename('Sparse',num=planstr['sparseid'])+' already made')
             else:
-                sout = subprocess.run(['makecal','--sparse',str(planstr['sparseid'])],shell=False)
+                sout = subprocess.run(['makecal','--sparse',str(planstr['sparseid']),
+                                       '--telescope',str(planstr['telescope'])],shell=False)
         if planstr['fiberid'] != 0: 
             if load.exists('ETrace',num=planstr['fiberid']):
                 print(load.filename('ETrace',num=planstr['fiberid'],chips=True)+' already made')
             else:
-                sout = subprocess.run(['makecal','--fiber',str(planstr['fiberid'])],shell=False)
+                sout = subprocess.run(['makecal','--fiber',str(planstr['fiberid']),
+                                       '--telescope',str(planstr['telescope'])],shell=False)
         if 'psfid' in planstr.keys():
             if load.exists('PSF',num=planstr['psfid']):
                 print(load.filename('PSF',num=planstr['psfid'],chips=True)+' already made')
             else:
-                cmd = ['makecal','--psf',str(planstr['psfid'])]
+                cmd = ['makecal','--psf',str(planstr['psfid']),'--telescope',str(planstr['telescope'])]
                 if calclobber:
                     cmd += ['--clobber']
                 sout = subprocess.run(cmd,shell=False)
@@ -1103,13 +1105,13 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             if np.sum(tracetest) != 3:
                 bd1, = np.where(np.array(tracetest)==False)
                 nbd1 = len(bd1)
-                if nbd1>0: 
-                    print('halt: ',tracefiles[bd1],' not found')
+                if nbd1>0:
+                    print('halt: '+','.join(np.array(tracefiles)[bd1])+' not found')
                     import pdb; pdb.set_trace()
                 for ichip in range(2+1): 
                     p = fits.getdata(tracefiles[ichip],1)
                     if len(p) != 300: 
-                        print( 'halt: tracefile ', tracefiles[ichip],' does not have 300 traces')
+                        print( 'halt: tracefile '+','.join(np.array(tracefiles)[ichip])+' does not have 300 traces')
  
         # apWave files : wavelength calibration
         waveid = int(planstr['waveid'])
@@ -1125,12 +1127,14 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 if np.sum(exists)==3:
                     print(wfile+' already made')
                 else:
-                    sout = subprocess.run(['makecal','--dailywave',str(waveid)],shell=False)
+                    sout = subprocess.run(['makecal','--dailywave',str(waveid),
+                                           '--telescope',str(planstr['telescope'])],shell=False)
             else:
                 if load.exists('Wave',num=planstr['waveid']):
                     print(load.filename('Wave',num=planstr['waveid'],chips=True)+' already made')
                 else:
-                    sout = subprocess.run(['makecal','--multiwave',str(waveid)],shell=False)
+                    sout = subprocess.run(['makecal','--multiwave',str(waveid),
+                                           '--telescope',str(planstr['telescope'])],shell=False)
 
         # FPI calibration file
         if 'fpi' in planstr.keys():
@@ -1144,7 +1148,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 print(load.filename('Flux',num=planstr['fluxid'],chips=True)+' already made')
             else:
                 #makecal,flux=planstr.fluxid,psf=planstr.psfid,clobber=calclobber 
-                cmd = ['makecal','--flux',str(planstr['fluxid']),'--psf',str(planstr['psfid'])]
+                cmd = ['makecal','--flux',str(planstr['fluxid']),'--psf',str(planstr['psfid']),
+                       '--telescope',str(planstr['telescope'])]
                 if calclobber:
                     cmd += ['--clobber']
                 sout = subprocess.run(cmd,shell=False)
@@ -1170,7 +1175,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             if load.exists('Response',num=planstr['responseid']):
                 print(load.filename('Response',num=planstr['responseid'])+' exists already')
             else:
-                sout = subprocess.run(['makecal','--response',str(planstr['responseid'])],shell=False)
+                sout = subprocess.run(['makecal','--response',str(planstr['responseid']),
+                                       '--telescope',str(planstr['telescope'])],shell=False)
             responsefiles = load.filename('Response',num=planstr['responseid'],chips=True) 
             responsefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
             responsefile = os.path.dirname(responsefiles[0])+'/%8d' % planstr['responseid']
@@ -1187,7 +1193,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             if load.exists('PSFModel',num=planstr['modelpsf']):
                 print(load.filename('PSFModel',num=planstr['modelpsf'],chips=True)+' exists already')
             else:
-                sout = subprocess.run(['makecal','--modelpsf',str(planstr['responseid'])],shell=False)
+                sout = subprocess.run(['makecal','--modelpsf',str(planstr['responseid']),
+                                       '--telescope',str(planstr['telescope'])],shell=False)
             print('Using Model PSF: '+str(modelpsf))
             modelpsffiles = load.filename('PSFModel',num=planstr['modelpsf'],chips=True)
             modelpsffiles = [modelpsffiles.replace('PSFModel-','PSFModel-'+ch+'-') for ch in chiptag]

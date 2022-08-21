@@ -575,8 +575,11 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     else:
         out['fpi'] = 0
     if fps:
+        if configid is None: configid=0
         out['configid'] = configid
+        if designid is None: designid=0
         out['designid'] = designid
+        if fieldid is None: fieldid=0
         out['fieldid'] = fieldid
     out['mjd'] = mjd
     out['planfile'] = os.path.basename(planfile)
@@ -691,6 +694,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         calnames += ['sparse','fiber','badfiber','fixfiber','response','wave','lsf']
     for c in calnames:
         val = caldata[c]
+        if val is None: val=0
         if str(val).isdigit(): val=int(val)
         out[c+'id'] = val
 
@@ -711,7 +715,10 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             psffiles = glob(psffile.replace('-00000000','-'+base+'????'))
             if len(psffiles)==0:
                 raise ValueError('No PSF files for MJD='+str(mjd))
-            psfnum = [os.path.basename(p)[8:16] for p in psffiles] 
+            psfnum = [os.path.basename(p)[8:16] for p in psffiles]
+            # Make sure all of the necessary files exist
+            psfexists = [load.exists('PSF',num=num) for num in psfnum]
+            psfnum = np.array(psfnum)[psfexists]
             si = np.argsort(np.abs(np.array(psfnum).astype(int)-int(im1)))
             psfid = np.array(psfnum)[si][0]
             out['psfid'] = str(psfid)
