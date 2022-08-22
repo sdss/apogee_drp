@@ -1373,7 +1373,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     darkdict = allcaldict['dark']
     logger.info('')
     logger.info('-------------------------------')
-    logger.info('Making master darks in parallel')
+    logger.info('Making master Darks in parallel')
     logger.info('===============================')
     # Give each job LOTS of memory
     slurmpars1 = slurmpars.copy()
@@ -1440,7 +1440,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     flatdict = allcaldict['flat']
     logger.info('')
     logger.info('-------------------------------')
-    logger.info('Making master flats in parallel')
+    logger.info('Making master Flats in parallel')
     logger.info('===============================')
     logger.info('Slurm settings: '+str(slurmpars1))
     queue = pbsqueue(verbose=True)
@@ -1607,7 +1607,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     responsedict = allcaldict['response']
     logger.info('')
     logger.info('-----------------------------------')
-    logger.info('Making master responses in parallel')
+    logger.info('Making master Responses in parallel')
     logger.info('===================================')
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
