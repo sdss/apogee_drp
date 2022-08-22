@@ -49,6 +49,7 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
     print,' littrow file: ',litdir+file,' already made'
     return
   endif
+  allfiles = litdir+file
   file_delete,allfiles,/allow  ;; delete any existing files to start fresh
   ;; Open .lock file
   openw,lock,/get_lun,lockfile
