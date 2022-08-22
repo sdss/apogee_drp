@@ -318,7 +318,7 @@ def getplanfiles(load,mjds,exist=False,logger=None):
     
     # Get plan files from the database
     db = apogeedb.DBSession()
-    plans = db.query('plan',where="mjd>='%s' and mjd<='%s'" % (mjdstart,mjdstop))
+    plans = db.query('plan',where="mjd>='%s' and mjd<='%s' and telescope='%s'" % (mjdstart,mjdstop,load.telescope))
     db.close()
     # No plan files for these MJDs
     if len(plans)==0:
