@@ -2698,7 +2698,10 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     planfiles = getplanfiles(load,mjds,logger=logger)
     # Only want apPlan files
     if len(planfiles)>0:
-        planfiles = [p for p in planfiles if os.path.basename(p).startswith('apPlan')]
+        if load.instrument=='apogee-n':
+            planfiles = [p for p in planfiles if os.path.basename(p).startswith('apPlan')]
+        else:
+            planfiles = [p for p in planfiles if os.path.basename(p).startswith('asPlan')]
     if len(planfiles)==0:
         logger.info('No plan files')
         return
