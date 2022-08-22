@@ -2964,7 +2964,7 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
     kws = {'slurmpars':slurmpars, 'clobber':clobber, 'logger':rootLogger}
 
     # Defaults for check tables
-    chkmaster,chk3d,chkcal,planfiles,chkapred,chkrv = None,None,None,None,None,None
+    chkmaster,chk3d,chkcal,planfiles,chkexp,chkvisit,chkrv = None,None,None,None,None,None,None
 
     # 1) Setup the directory structure
     #----------------------------------
