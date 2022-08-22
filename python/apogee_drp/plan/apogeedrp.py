@@ -2321,33 +2321,35 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
         dorun[i] = True
         if clobber is not True:
             # apPlan
-            if pfbase.startswith('apPlan'):
+            if pfbase.startswith(load.predix+'Plan'):
                 # apPlan-3370-59623.yaml
                 config1,mjd1 = pfbase.split('.')[0].split('-')[1:3]
                 # check for apVisitSum file
                 outfile = load.filename('VisitSum',plate=config1,mjd=mjd1,chips=True)
                 outexists = os.path.exists(outfile)
             # apCalPlan
-            elif pfbase.startswith('apCalPlan'):
+            elif pfbase.startswith(load.prefix+'CalPlan'):
                 # apCalPlan-apogee-n-59640.yaml
                 # It will take too long to load all of the plan files and check all of
                 #  the output files.  Default is to redo them.
                 outexists = False
                 outfile = pf+' output files '
             # apDarkPlan
-            elif pfbase.startswith('apDarkPlan'):
+            elif pfbase.startswith(load.prefix+'DarkPlan'):
                 # apDarkPlan-apogee-n-59640.yaml
                 # It will take too long to load all of the plan files and check all of
                 #  the output files.  Default is to redo them.
                 outexists = False
                 outfile = pf+' output files '
             # apExtraPlan
-            elif pfbase.startswith('apExtraPlan'):
+            elif pfbase.startswith(load.prefix+'ExtraPlan'):
                 # apExtraPlan-apogee-n-59629.yaml
                 # It will take too long to load all of the plan files and check all of
                 #  the output files.  Default is to redo them.
                 outexists = False
                 outfile = pf+' output files '
+            else:
+                outexists = False
             if outexists:
                 logger.info(str(i+1)+' '+os.path.basename(outfile)+' already exists and clobber==False')
                 dorun[i] = False
@@ -2698,10 +2700,11 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     planfiles = getplanfiles(load,mjds,logger=logger)
     # Only want apPlan files
     if len(planfiles)>0:
-        if load.instrument=='apogee-n':
-            planfiles = [p for p in planfiles if os.path.basename(p).startswith('apPlan')]
-        else:
-            planfiles = [p for p in planfiles if os.path.basename(p).startswith('asPlan')]
+        planfiles = [p for p in planfiles if os.path.basename(p).startswith(load.prefix+'Plan')]        
+        #if load.instrument=='apogee-n':
+        #    planfiles = [p for p in planfiles if os.path.basename(p).startswith('apPlan')]
+        #else:
+        #    planfiles = [p for p in planfiles if os.path.basename(p).startswith('asPlan')]
     if len(planfiles)==0:
         logger.info('No plan files')
         return
