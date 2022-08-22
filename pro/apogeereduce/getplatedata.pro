@@ -233,7 +233,7 @@ if keyword_set(mapa) then plugdir=datadir+cmjd+'/' else begin
 endelse
 if keyword_set(fps) then begin
   observatory = 'apo'
-  configgrp = string(plate/100,format='(I04)')+'XX'
+  configgrp = string(plate/100,format='(I0)')+'XX'
   plugdir = getenv('SDSSCORE_DIR')+'/'+observatory+'/summary_files/'+configgrp+'/'
   plugfile = 'confSummary-'+strtrim(plate,2)+'.par'
 endif
