@@ -362,9 +362,7 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
     
     if verbose==True:
         logger.info('')
-        logger.info('--------------------------------')
-        logger.info('Checking Master Calibration runs')
-        logger.info('================================')
+        logger.info('--- Checking Master Calibration runs ---')
 
     # Exposure-level processing: ap3d, ap2d, calibration file
     dtype = np.dtype([('logfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),
