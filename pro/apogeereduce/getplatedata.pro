@@ -108,6 +108,7 @@ function getplatedata,plate,cmjd,plugid=plugid,asdaf=asdaf,mapa=mapa,obj1m=obj1m
 
 dirs = getdir(apodir,datadir=datadir)
 if n_elements(mapper_data) eq 0 then mapper_data=dirs.mapperdir
+observatory = strmid(dirs.telescope,0,3)
 
 mjd = 0L
 reads,cmjd,mjd
@@ -232,7 +233,6 @@ if keyword_set(mapa) then plugdir=datadir+cmjd+'/' else begin
   plugdir = mapper_data+'/'+plugmjd+'/'
 endelse
 if keyword_set(fps) then begin
-  observatory = 'apo'
   configgrp = string(plate/100,format='(I0)')+'XX'
   plugdir = getenv('SDSSCORE_DIR')+'/'+observatory+'/summary_files/'+configgrp+'/'
   plugfile = 'confSummary-'+strtrim(plate,2)+'.par'

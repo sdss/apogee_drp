@@ -576,11 +576,11 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         out['fpi'] = 0
     if fps:
         if configid is None: configid=0
-        out['configid'] = configid
+        out['configid'] = int(configid)
         if designid is None: designid=0
-        out['designid'] = designid
+        out['designid'] = int(designid)
         if fieldid is None: fieldid=0
-        out['fieldid'] = fieldid
+        out['fieldid'] = int(fieldid)
     out['mjd'] = mjd
     out['planfile'] = os.path.basename(planfile)
     if ap3d==False and ap2d==False:
@@ -670,7 +670,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
                 if fps==False:
                     field,survey,program = apload.apfield(plate,plug['locationid'])
                     out['survey'] = survey
-                    out['field'] = field
+                    out['field'] = int(field)
                 else:
                     out['survey'] = 'SDSS-V'
                     out['field'] = plug['field']
@@ -740,13 +740,15 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             fluxfile = fluxfile.replace('Flux-','Flux-b-')
             base = ('%8d' % im1)[0:4]
             fluxfiles = glob(fluxfile.replace('-00000000','-'+base+'????'))    
-            if len(fluxfiles)==0:
-                raise ValueError('No Flux files for MJD='+str(mjd))
-            fluxnum = [os.path.basename(f)[8:16] for f in fluxfiles] 
-            si = np.argsort(np.abs(np.array(fluxnum).astype(int)-int(im1)))
-            fluxid = np.array(fluxnum)[si][0]
-            out['fluxid'] = str(fluxid)
-
+            if len(fluxfiles)>0:
+                fluxnum = [os.path.basename(f)[8:16] for f in fluxfiles] 
+                si = np.argsort(np.abs(np.array(fluxnum).astype(int)-int(im1)))
+                fluxid = np.array(fluxnum)[si][0]
+                out['fluxid'] = str(fluxid)
+            else:
+                logger.info('No Flux files for MJD='+str(mjd))
+                out['fluxid'] = 0
+                
     # object frames
     aplist = []
     for i in range(len(ims)):
@@ -904,7 +906,6 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         exist = [os.path.exists(pf) for pf in psffiles]
         if np.sum(np.array(exist))==3:
             psfdome_exist[j] = True
-    import pdb; pdb.set_trace()
     gddome, = np.where(psfdome_exist == True)
     if len(gddome)>0:
         psfdome = list(np.array(dome)[gddome])
@@ -943,7 +944,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     else:
         flux = []
         fluxpluggroup = []
-        logger.info('No quartz apPSF files exist')
+        logger.info('No apFlux files exist')
 
     if len(psfdome)==0 and len(psfquartz)==0:
         logger.info('No apPSF files for this night exist.  They will be created as needed')

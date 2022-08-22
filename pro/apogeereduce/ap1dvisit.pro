@@ -111,15 +111,17 @@ FOR i=0L,nplanfiles-1 do begin
   if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
     if (strtrim(badfiberid,2) eq 'null' or strtrim(strlowcase(badfiberid),2) eq 'none') then undefine,badfiberid  ;; null/none  
   if planstr.platetype eq 'single' then begin
-    plugfile=getenv('APOGEEREDUCE_DIR')+'/data/plPlugMapA-0001.par' 
-    plugmap=getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),obj1m=planstr.apexp[0].singlename,starfiber=planstr.apexp[0].single,fixfiberid=fixfiberid)
+    plugfile = getenv('APOGEEREDUCE_DIR')+'/data/plPlugMapA-0001.par' 
+    plugmap = getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),obj1m=planstr.apexp[0].singlename,$
+                           starfiber=planstr.apexp[0].single,fixfiberid=fixfiberid)
   endif else if planstr.platetype eq 'twilight' then begin
-    plugmap=getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),/twilight)
+    plugmap = getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),/twilight)
   endif else if planstr.platetype eq 'cal' then begin
     print,'no plugmap for cal frames'
   endif else begin
     plugfile = planstr.plugmap
-    plugmap = getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),plugid=planstr.plugmap,fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data)
+    plugmap = getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),plugid=planstr.plugmap,$
+                           fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data)
   endelse
   if keyword_set(stp) then stop
 
