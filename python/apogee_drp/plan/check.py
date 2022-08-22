@@ -206,7 +206,8 @@ def check_object(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] != '':
+    # gang state not working for LCO FPS commissioning
+    if expinfo['gangstate'] != '' and telescope != 'lco25m':
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
@@ -224,7 +225,7 @@ def check_object(num,apred,telescope):
         peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
         avgpeakflux = np.nanmean(peakflux)
         # Check skyline flux
-        if avgpeakflux/expinfo['nread']<200:
+        if avgpeakflux/expinfo['nread']<100:  # DLN 08/22/2022, changed from 200->100
             mask |= 2**4
         #print('object',med/expinfo['nread'])
 
