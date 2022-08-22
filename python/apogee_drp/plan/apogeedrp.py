@@ -346,7 +346,7 @@ def getplanfiles(load,mjds,exist=False,logger=None):
     return planfiles
 
 
-def check_mastercals(names,caltype,logfiles,pbskey,apred,verbose=False,logger=None):
+def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False,logger=None):
     """ Check that the master calibration files ran okay and load into database."""
 
     if logger is None:
@@ -367,27 +367,24 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,verbose=False,logger=No
         logger.info('================================')
 
     # Exposure-level processing: ap3d, ap2d, calibration file
-    ncal = np.array(expinfo).size
     dtype = np.dtype([('logfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),
                       ('instrument',(str,20)),('telescope',(str,10)),('caltype',(str,30)),
                       ('pbskey',(str,50)),('checktime',(str,100)),
                       ('name',int),('calfile',(str,300)),('success',bool)])
     chkmaster = np.zeros(nnames,dtype=dtype)
-
+    chkmaster['telescope'] = telescope
+    if telescope[0:3]=='apo':
+        chkmaster['instrument'] = 'apogee-n'
+    else:
+        chkmaster['instrument'] = 'apogee-s'        
+    
     # Loop over the files
     for i in range(nnames):
         lgfile = logfiles[i]
         name = names[i]
-        mjd = int(expinfo['mjd'][i])
         chkmaster['logfile'][i] = lgfile
         chkmaster['name'][i] = name
         chkmaster['apred_vers'][i] = apred
-        if expinfo['observatory'][i]=='apo':
-            chkmaster['instrument'][i] = 'apogee-n'
-            chkmaster['telescope'][i] = 'apo25m'
-        else:
-            chkmaster['instrument'][i] = 'apogee-s'
-            chkmaster['telescope'] = 'lco25m'
         chkmaster['caltype'][i] = caltype[i]
         chkmaster['pbskey'][i] = pbskey
         chkmaster['checktime'][i] = str(datetime.now())
@@ -415,7 +412,7 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,verbose=False,logger=No
 
         if verbose:
             logger.info('')
-            logger.info('%d/%d' % (i+1,ncal))
+            logger.info('%d/%d' % (i+1,nnames))
             logger.info('Master calibration type: %s' % chkmaster['caltype'][i])
             logger.info('Master calibration file: %s' % chkmaster['calfile'][i])
             logger.info('log/errfile: '+os.path.basename(lgfile)+', '+os.path.basename(lgfile).replace('.log','.err'))
