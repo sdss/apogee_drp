@@ -106,9 +106,9 @@ def dbload_plans(planfiles):
     gitvers = plan.getgitvers()
 
     # Loop over the planfiles
-    dtype = np.dtype([('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),('telescope',(np.str,10)),
-                      ('instrument',(np.str,20)),('mjd',int),('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),
-                      ('fieldid',(np.str,20)),('fps',bool),('platetype',(np.str,20))])
+    dtype = np.dtype([('planfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),('telescope',(str,10)),
+                      ('instrument',(str,20)),('mjd',int),('plate',int),('configid',(str,20)),('designid',(str,20)),
+                      ('fieldid',(str,20)),('fps',bool),('platetype',(str,20))])
     plantab = np.zeros(nplans,dtype=dtype)
     for i,planfile in enumerate(planfiles):
         planstr = plan.load(planfile)
@@ -346,6 +346,89 @@ def getplanfiles(load,mjds,exist=False,logger=None):
     return planfiles
 
 
+def check_mastercals(names,caltype,logfiles,pbskey,apred,verbose=False,logger=None):
+    """ Check that the master calibration files ran okay and load into database."""
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    chkmaster = None
+
+    if type(names) is str:
+        names = [names]
+    nnames = len(names)
+    if type(caltype) is str:
+        caltype = nnames*[caltype]
+    
+    if verbose==True:
+        logger.info('')
+        logger.info('--------------------------------')
+        logger.info('Checking Master Calibration runs')
+        logger.info('================================')
+
+    # Exposure-level processing: ap3d, ap2d, calibration file
+    ncal = np.array(expinfo).size
+    dtype = np.dtype([('logfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),
+                      ('instrument',(str,20)),('telescope',(str,10)),('caltype',(str,30)),
+                      ('pbskey',(str,50)),('checktime',(str,100)),
+                      ('name',int),('calfile',(str,300)),('success',bool)])
+    chkmaster = np.zeros(nnames,dtype=dtype)
+
+    # Loop over the files
+    for i in range(nnames):
+        lgfile = logfiles[i]
+        name = names[i]
+        mjd = int(expinfo['mjd'][i])
+        chkmaster['logfile'][i] = lgfile
+        chkmaster['name'][i] = name
+        chkmaster['apred_vers'][i] = apred
+        if expinfo['observatory'][i]=='apo':
+            chkmaster['instrument'][i] = 'apogee-n'
+            chkmaster['telescope'][i] = 'apo25m'
+        else:
+            chkmaster['instrument'][i] = 'apogee-s'
+            chkmaster['telescope'] = 'lco25m'
+        chkmaster['caltype'][i] = caltype[i]
+        chkmaster['pbskey'][i] = pbskey
+        chkmaster['checktime'][i] = str(datetime.now())
+        chkmaster['success'][i] = False
+        load = apload.ApLoad(apred=apred,telescope=chkmaster['telescope'][i])
+        # Final calibration file
+        #-----------------------
+        base = load.filename(caltype[i],num=name,chips=True)
+        chkmaster['calfile'][i] = base
+        # Sparse, only one file, not chip tag
+        if caltype[i]=='Sparse':
+            chfiles = [base]
+        # Littrow, only detector b
+        elif caltype[i]=='Littrow':
+            chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-b-')]
+        else:
+            chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-'+ch+'-') for ch in ['a','b','c']]
+        exists = [os.path.exists(chf) for chf in chfiles]
+        if exists[0]==True:  # get V_APRED (git version) from file
+            chead = fits.getheader(chfiles[0])
+            chkmaster['v_apred'][i] = chead.get('V_APRED')
+        # Overall success
+        if load.exists(caltype[i],num=name):
+            chkmaster['success'][i] = True
+
+        if verbose:
+            logger.info('')
+            logger.info('%d/%d' % (i+1,ncal))
+            logger.info('Master calibration type: %s' % chkmaster['caltype'][i])
+            logger.info('Master calibration file: %s' % chkmaster['calfile'][i])
+            logger.info('log/errfile: '+os.path.basename(lgfile)+', '+os.path.basename(lgfile).replace('.log','.err'))
+            logger.info('Master calibration success: %s ' % chkmaster['success'][i])
+
+    # Load everything into the database
+    db = apogeedb.DBSession()
+    db.ingest('mastercal_status',chkmaster)
+    db.close()
+
+    return chkmaster
+
+
 def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=None):
     """ Check that ap3d ran okay and load into database."""
 
@@ -370,10 +453,10 @@ def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=Non
     # Loop over the stars
     nexp = len(expinfo)
 
-    dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
-                      ('instrument',(np.str,20)),('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),
-                      ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
-                      ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
+    dtype = np.dtype([('exposure_pk',int),('planfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),
+                      ('instrument',(str,20)),('telescope',(str,10)),('platetype',(str,50)),('mjd',int),
+                      ('plate',int),('configid',(str,20)),('designid',(str,20)),('fieldid',(str,20)),
+                      ('proctype',(str,30)),('pbskey',(str,50)),('checktime',(str,100)),
                       ('num',int),('success',bool)])
     chk3d = np.zeros(nexp,dtype=dtype)
     chk3d['apred_vers'] = apred
@@ -434,11 +517,11 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
 
     # Exposure-level processing: ap3d, ap2d, calibration file
     ncal = np.array(expinfo).size
-    dtype = np.dtype([('logfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
-                      ('instrument',(np.str,20)),('telescope',(np.str,10)),('mjd',int),('caltype',(np.str,30)),
-                      ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
-                      ('pbskey',(np.str,50)),('checktime',(np.str,100)),
-                      ('num',int),('calfile',(np.str,300)),('success3d',bool),('success2d',bool),('success',bool)])
+    dtype = np.dtype([('logfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),
+                      ('instrument',(str,20)),('telescope',(str,10)),('mjd',int),('caltype',(str,30)),
+                      ('plate',int),('configid',(str,20)),('designid',(str,20)),('fieldid',(str,20)),
+                      ('pbskey',(str,50)),('checktime',(str,100)),
+                      ('num',int),('calfile',(str,300)),('success3d',bool),('success2d',bool),('success',bool)])
     chkcal = np.zeros(ncal,dtype=dtype)
 
     # Loop over the files
@@ -585,10 +668,10 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             fiberdata = None
 
         # Exposure-level processing: ap3d, ap2d, apcframe
-        dtype = np.dtype([('exposure_pk',int),('planfile',(np.str,300)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
-                          ('instrument',(np.str,20)),('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),
-                          ('plate',int),('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
-                          ('proctype',(np.str,30)),('pbskey',(np.str,50)),('checktime',(np.str,100)),
+        dtype = np.dtype([('exposure_pk',int),('planfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),
+                          ('instrument',(str,20)),('telescope',(str,10)),('platetype',(str,50)),('mjd',int),
+                          ('plate',int),('configid',(str,20)),('designid',(str,20)),('fieldid',(str,20)),
+                          ('proctype',(str,30)),('pbskey',(str,50)),('checktime',(str,100)),
                           ('num',int),('success',bool)])
         chkexp1 = np.zeros(nexp*3,dtype=dtype)
         chkexp1['planfile'] = pfile
@@ -663,11 +746,11 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
 
         # Plan summary and ap1dvisit
         #---------------------------
-        dtypeap = np.dtype([('planfile',(np.str,300)),('logfile',(np.str,300)),('errfile',(np.str,300)),
-                            ('apred_vers',(np.str,20)),('v_apred',(np.str,50)),('instrument',(np.str,20)),
-                            ('telescope',(np.str,10)),('platetype',(np.str,50)),('mjd',int),('plate',int),
-                            ('configid',(np.str,20)),('designid',(np.str,20)),('fieldid',(np.str,20)),
-                            ('nobj',int),('pbskey',(np.str,50)),('checktime',(np.str,100)),('ap3d_success',bool),
+        dtypeap = np.dtype([('planfile',(str,300)),('logfile',(str,300)),('errfile',(str,300)),
+                            ('apred_vers',(str,20)),('v_apred',(str,50)),('instrument',(str,20)),
+                            ('telescope',(str,10)),('platetype',(str,50)),('mjd',int),('plate',int),
+                            ('configid',(str,20)),('designid',(str,20)),('fieldid',(str,20)),
+                            ('nobj',int),('pbskey',(str,50)),('checktime',(str,100)),('ap3d_success',bool),
                             ('ap3d_nexp_success',int),('ap2d_success',bool),('ap2d_nexp_success',int),
                             ('apcframe_success',bool),('apcframe_nexp_success',int),('applate_success',bool),
                             ('apvisit_success',bool),('apvisit_nobj_success',int),
@@ -815,9 +898,9 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
 
     # Loop over the stars
     nstars = len(visits)
-    dtype = np.dtype([('apogee_id',(np.str,50)),('apred_vers',(np.str,20)),('v_apred',(np.str,50)),
-                      ('telescope',(np.str,10)),('healpix',int),('nvisits',int),('pbskey',(np.str,50)),
-                      ('file',(np.str,300)),('checktime',(np.str,100)),('success',bool)])
+    dtype = np.dtype([('apogee_id',(str,50)),('apred_vers',(str,20)),('v_apred',(str,50)),
+                      ('telescope',(str,10)),('healpix',int),('nvisits',int),('pbskey',(str,50)),
+                      ('file',(str,300)),('checktime',(str,100)),('success',bool)])
     chkrv = np.zeros(nstars,dtype=dtype)
     chkrv['apred_vers'] = apred_vers
     chkrv['telescope'] = telescope
@@ -1231,6 +1314,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
 
     # Maybe have an option to copy/symlink them from a previous apred version
 
+    chkmaster = None
 
     # Make Detector and Linearity 
     #----------------------------
@@ -1243,6 +1327,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     queue = pbsqueue(verbose=True)
     queue.create(label='mkdet', **slurmpars)
     docal = np.zeros(len(detdict),bool)
+    donames = []
+    logfiles = []
     for i in range(len(detdict)):
         name = detdict['name'][i]
         if np.sum((mjds >= detdict['mjd1'][i]) & (mjds <= detdict['mjd2'][i])) > 0:
@@ -1261,8 +1347,10 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
             if clobber is not True:
                 if load.exists('Detector',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[k] = False
+                    docal[i] = False
             if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)
                 logger.info('Detector file %d : %s' % (i+1,name))
                 logger.info('Command : '+cmd1)
                 logger.info('Logfile : '+logfile1)
@@ -1271,6 +1359,12 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This should check if the  ran okay and puts the status in the database
+        chkmaster1 = check_mastercals(donames,'Detector',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)        
+        if chkmaster is None:
+            chkmaster = chkmaster1
+        else:
+            chkmaster = np.hstack((chkmaster,chkmaster1))
     else:
         logger.info('No master Detector calibration files need to be run')
     del queue    
@@ -1295,6 +1389,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     queue = pbsqueue(verbose=True)
     queue.create(label='mkdark', **slurmpars1)
     docal = np.zeros(len(darkdict),bool)
+    donames = []
+    logfiles = []
     for i in range(len(darkdict)):
         name = darkdict['name'][i]
         if np.sum((mjds >= darkdict['mjd1'][i]) & (mjds <= darkdict['mjd2'][i])) > 0:
@@ -1313,8 +1409,10 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
             if clobber is not True:
                 if load.exists('Dark',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[k] = False
+                    docal[i] = False
             if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)                
                 logger.info('Dark file %d : %s' % (i+1,name))
                 logger.info('Command : '+cmd1)
                 logger.info('Logfile : '+logfile1)
@@ -1323,6 +1421,12 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This should check if the  ran okay and puts the status in the database
+        chkmaster1 = check_mastercals(donames,'Dark',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+        if chkmaster is None:
+            chkmaster = chkmaster1
+        else:
+            chkmaster = np.hstack((chkmaster,chkmaster1))
     else:
         logger.info('No master Dark calibration files need to be run')
     del queue    
@@ -1346,6 +1450,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars1))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkflat', **slurmpars1)
+    docal = np.zeros(len(flatdict),bool)
+    donames = []
+    logfiles = []
     for i in range(len(flatdict)):
         name = flatdict['name'][i]
         if np.sum((mjds >= flatdict['mjd1'][i]) & (mjds <= flatdict['mjd2'][i])) > 0:
@@ -1366,6 +1473,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)                
                 logger.info('Flat file %d : %s' % (i+1,name))
                 logger.info('Command : '+cmd1)
                 logger.info('Logfile : '+logfile1)
@@ -1374,6 +1483,12 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This should check if the  ran okay and puts the status in the database
+        chkmaster1 = check_mastercals(donames,'Flat',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+        if chkmaster is None:
+            chkmaster = chkmaster1
+        else:
+            chkmaster = np.hstack((chkmaster,chkmaster1))
     else:
         logger.info('No master Flat calibration files need to be run')
     del queue    
@@ -1393,6 +1508,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkbpm', **slurmpars)
+    docal = np.zeros(len(bpmdict),bool)
+    donames = []
+    logfiles = []
     for i in range(len(bpmdict)):
         name = bpmdict['name'][i]
         if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
@@ -1413,6 +1531,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)                
                 logger.info('BPM file %d : %s' % (i+1,name))
                 logger.info('Command : '+cmd1)
                 logger.info('Logfile : '+logfile1)
@@ -1421,6 +1541,12 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This should check if the  ran okay and puts the status in the database
+        chkmaster1 = check_mastercals(donames,'BPM',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+        if chkmaster is None:
+            chkmaster = chkmaster1
+        else:
+            chkmaster = np.hstack((chkmaster,chkmaster1))
     else:
         logger.info('No master BPM calibration files need to be run')
     del queue    
@@ -1437,6 +1563,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklittrow', **slurmpars)
+    docal = np.zeros(len(littdict),bool)
+    donames = []
+    logfiles = []
     for i in range(len(littdict)):
         name = littdict['name'][i]
         if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
@@ -1457,6 +1586,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)                
                 logger.info('Littrow file %d : %s' % (i+1,name))
                 logger.info('Command : '+cmd1)
                 logger.info('Logfile : '+logfile1)
@@ -1465,6 +1596,12 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This should check if the  ran okay and puts the status in the database
+        chkmaster1 = check_mastercals(donames,'Littrow',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+        if chkmaster is None:
+            chkmaster = chkmaster1
+        else:
+            chkmaster = np.hstack((chkmaster,chkmaster1))
     else:
         logger.info('No master Littrow calibration files need to be run')
     del queue    
@@ -1480,6 +1617,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mkresponse', **slurmpars)
+    docal = np.zeros(len(responsedict),bool)
+    donames = []
+    logfiles = []
     for i in range(len(responsedict)):
         name = responsedict['name'][i]
         if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
@@ -1498,8 +1638,10 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
             if clobber is not True:
                 if load.exists('Response',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[k] = False
+                    docal[i] = False
             if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)
                 logger.info('Response file %d : %s' % (i+1,name))
                 logger.info('Command : '+cmd1)
                 logger.info('Logfile : '+logfile1)
@@ -1508,6 +1650,12 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This should check if the  ran okay and puts the status in the database
+        chkmaster1 = check_mastercals(donames,'Response',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+        if chkmaster is None:
+            chkmaster = chkmaster1
+        else:
+            chkmaster = np.hstack((chkmaster,chkmaster1))
     else:
         logger.info('No master Response calibration files need to be run')
     del queue    
@@ -1523,6 +1671,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mksparse', **slurmpars)
+    docal = np.zeros(len(sparsedict),bool)
+    donames = []
+    logfiles = []
     for i in range(len(sparsedict)):
         name = sparsedict['name'][i]
         if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
@@ -1543,6 +1694,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)                
                 logger.info('Sparse file %d : %s' % (i+1,name))
                 logger.info('Command : '+cmd1)
                 logger.info('Logfile : '+logfile1)
@@ -1551,6 +1704,12 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This should check if the  ran okay and puts the status in the database
+        chkmaster1 = check_mastercals(donames,'Sparse',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+        if chkmaster is None:
+            chkmaster = chkmaster1
+        else:
+            chkmaster = np.hstack((chkmaster,chkmaster1))
     else:
         logger.info('No master Sparse calibration files need to be run')
     del queue    
@@ -1561,16 +1720,19 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     modelpsfdict = allcaldict['modelpsf']
     logger.info('')
     logger.info('------------------------------------')
-    logger.info('Making master Model PSFs in parallel')
+    logger.info('Making master PSF Models in parallel')
     logger.info('====================================')
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
-    queue.create(label='mkmodelpsf', **slurmpars)
+    queue.create(label='mkpsfmodel', **slurmpars)
+    docal = np.zeros(len(modelpsfdict),bool)    
+    donames = []
+    logfiles = []
     for i in range(len(modelpsfdict)):
         name = modelpsfdict['name'][i]
         if np.sum((mjds >= modelpsfdict['mjd1'][i]) & (mjds <= modelpsfdict['mjd2'][i])) > 0:
-            outfile = load.filename('Modelpsf',num=name,chips=True)
-            logfile1 = os.path.dirname(outfile)+'/mkmodelpsf-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            outfile = load.filename('PSFModel',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mkmpsfodel-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
@@ -1586,7 +1748,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
-                logger.info('Modelpsf file %d : %s' % (i+1,name))
+                donames.append(name)
+                logfiles.append(logfile1)                
+                logger.info('PSFModel file %d : %s' % (i+1,name))
                 logger.info('Command : '+cmd1)
                 logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
@@ -1594,8 +1758,14 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This should check if the  ran okay and puts the status in the database
+        chkmaster1 = check_mastercals(donames,'PSFModel',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+        if chkmaster is None:
+            chkmaster = chkmaster1
+        else:
+            chkmaster = np.hstack((chkmaster,chkmaster1))
     else:
-        logger.info('No master Model PSF calibration files need to be run')
+        logger.info('No master PSF Mode calibration files need to be run')
     del queue    
 
 
@@ -1652,6 +1822,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     logger.info('Slurm settings: '+str(slurmpars))
     queue = pbsqueue(verbose=True)
     queue.create(label='mklsf', **slurmpars)
+    docal = np.zeros(len(lsfdict),bool)
+    donames = []
+    logfiles = []
     for i in range(len(lsfdict)):
         name = lsfdict['name'][i]
         if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:
@@ -1672,6 +1845,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)
                 logger.info('LSF file %d : %s' % (i+1,name))
                 logger.info('Command : '+cmd1)
                 logger.info('Logfile : '+logfile1)
@@ -1680,15 +1855,18 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        # This should check if the  ran okay and puts the status in the database
+        chkmaster1 = check_mastercals(donames,'LSF',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)
+        if chkmaster is None:
+            chkmaster = chkmaster1
+        else:
+            chkmaster = np.hstack((chkmaster,chkmaster1))        
     else:
         logger.info('No master LSF calibration files need to be run')
     del queue    
 
-
-    ## UPDATE THE DATABASE!!!
-
-    # Need to check if the master calibration files actually got made
-
+    return chkmaster
+    
     
 def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
     """
@@ -1891,7 +2069,7 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
                 calinfo = expinfo[ind]
         elif caltype=='dailywave':
             ncal = len(mjds)
-            calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',np.str,20),('observatory',np.str,3),
+            calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',(str,20)),('observatory',(str,3)),
                                                     ('configid',int),('designid',int),('fieldid',int)]))
             calinfo['num'] = mjds
             calinfo['mjd'] = mjds
@@ -2073,8 +2251,8 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
             dln.writelines(logdir+str(m)+'.plans','')   # write blank file
 
         # Start entry in daily_status table
-        #daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
-        #                                    ('nexposures',int),('begtime',(np.str,50)),('success',bool)]))
+        #daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(str,10)),('nplanfiles',int),
+        #                                    ('nexposures',int),('begtime',(str,50)),('success',bool)]))
         #daycat['mjd'] = m
         #daycat['telescope'] = telescope
         #daycat['nplanfiles'] = len(planfiles1)
@@ -2904,8 +3082,8 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
 
 
     # Update daily_status table
-    #daycat = np.zeros(1,dtype=np.dtype([('pk',int),('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),
-    #                                    ('nexposures',int),('begtime',(np.str,50)),('endtime',(np.str,50)),('success',bool)]))
+    #daycat = np.zeros(1,dtype=np.dtype([('pk',int),('mjd',int),('telescope',(str,10)),('nplanfiles',int),
+    #                                    ('nexposures',int),('begtime',(str,50)),('endtime',(str,50)),('success',bool)]))
     #daycat['mjd'] = mjd5
     #daycat['telescope'] = telescope
     #daycat['nplanfiles'] = len(planfiles)
