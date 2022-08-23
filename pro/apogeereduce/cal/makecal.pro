@@ -18,7 +18,7 @@
 ;  lsf=lsfid     Make the lsf with name=lsfid 
 ;  fpi=fpiid     Make the FPI with name=fpiid
 ;  /librarypsf   Use PSF library to get PSF cal for images.
-;  =dailwavy     Daily wavelength solution ID.
+;  =dailywave    Daily wavelength solution ID.
 ;  =modelpsf     Model PSF ID.
 ;
 ; OUTPUT:
