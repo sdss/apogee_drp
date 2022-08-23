@@ -78,7 +78,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
     allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
     #snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
-    allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
+    #allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
     dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
     qtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
@@ -164,7 +164,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             out.write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        #return
+        return
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
