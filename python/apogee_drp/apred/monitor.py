@@ -988,6 +988,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 plate, = np.where(xvals < 59500)
                 fpsi, = np.where(xvals > 59500)
+                pdb.set_trace()
                 print('  snbins = ' + str(snbins[0]) + ':' + str(snbins[1]))
                 print('  S/N Plate (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[plate]),3)))
                 print('  S/N FPS (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
