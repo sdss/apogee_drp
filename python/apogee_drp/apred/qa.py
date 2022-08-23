@@ -3007,23 +3007,25 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     uExposures = np.unique(exposures)
     nuExposures = len(uExposures)
 
-    # Find the observing log file
-    reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
-    dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
-    if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
-    if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
-    reports.sort()
-    reportfile = reports[0]
-    reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
-    #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
-
     html = open(htmlfile, 'w')
     html.write('<HTML><BODY>')
     html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><TITLE>Nightly QA for MJD '+mjd+'</TITLE></HEAD>\n')
     html.write('<H1>Nightly QA for MJD '+mjd+'</H1>\n')
 
-    if telescope == 'apo25m': html.write(' <a href="'+reportLink+'"> <H3>APO 2.5m Observing report </H3></a>\n')
-    if telescope == 'lco25m': html.write(' <a href="'+reportLink+'"> <H3>LCO 2.5m Observing report </H3></a>\n')
+    # Find the observing log file
+    reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
+    if os.path.exists(reportsDir):
+        dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
+        if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
+        if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
+        reports.sort()
+        reportfile = reports[0]
+        reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
+        #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+        html.write(' <a href="'+reportLink+'"> <H3>' + telescope.upper().replace('25M',' 2.5m') + ' Observing report </H3></a>\n')
+    else:
+        print('----> makeNightQA: No observing report found for ' + mjd + '!!!')
+        html.write(telescope.upper().replace('25M',' 2.5m') + ' Observing report (missing?)</H3>\n')
 
     # Look for missing raw frames (assuming contiguous sequence)
     html.write('<H2>Raw frames:</H2> ' + str(firstExposure) + ' to ' + str(lastExposure))
