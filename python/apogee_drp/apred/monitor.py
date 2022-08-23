@@ -70,17 +70,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
     allsci4 =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
-    allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
+    #allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
 
     # Read in the master summary files
     allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
     alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
     allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
     allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
-    #snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
-    allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
-    dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
-    qtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
+    allsnrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
+    if os.path.exists(allsnrfile): allsnr = fits.getdata(allsnrfile)
+    else: print(instrument + 'SNR.fits not found')
+    dtracefile = specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits'
+    if os.path.exists(dtracefile): dtrace = fits.getdata(dtracefile)
+    else: print(instrument + 'DomeFlatTrace-all.fits not found')
+    qtracefile = specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits'
+    if os.path.exists(qtracefile): qtrace = fits.getdata(qtracefile)
+    else: print(instrument + 'QuartzFlatTrace-all.fits not found')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
 
     #badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
@@ -89,36 +94,41 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
-#        outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
-#        print("----> monitor: Making " + os.path.basename(outfile))
 
-#        if allv4 is None:
-#            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
-#            allv4 = fits.getdata(allv4path)
+        if os.path.exists(allsnrfile) is False:
+            outfile4 = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
+            print("----> monitor: Making " + os.path.basename(outfile4))
 
-#        gd, = np.where(allv4['TELESCOPE'] == telescope)
-#        allv4 = allv4[gd]
-#        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
-#        uvis,uind = np.unique(vis, return_index=True)
-#        uallv4 = allv4[uind]
-#        nvis = len(uvis)
-#        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
+            if allv4 is None:
+                allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
+                allv4 = fits.getdata(allv4path)
 
-#        for i in range(nvis):
-#            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
-#            plsum = plsum.replace(' ', '')
-#            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
-#            if os.path.exists(plsum):
-#                if i == 0:
-#                    outstr = getSnrStruct(plsum)
-#                else:
-#                    newstr = getSnrStruct(plsum)
-#                    outstr = np.concatenate([outstr, newstr])
+            gd, = np.where(allv4['TELESCOPE'] == telescope)
+            allv4 = allv4[gd]
+            vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
+            uvis,uind = np.unique(vis, return_index=True)
+            uallv4 = allv4[uind]
+            nvis = len(uvis)
+            print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
-#        Table(outstr).write(outfile, overwrite=True)
-#        print("----> monitor: Finished making " + os.path.basename(outfile))
+            for i in range(nvis):
+                plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
+                if instrument == 'apogee-s': plsum = plsum.replace('apPlate', 'asPlate')
+                plsum = plsum.replace(' ', '')
+                print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
+                if os.path.exists(plsum):
+                    if i == 0:
+                        outstr = getSnrStruct(instrument=instrument, plsum=plsum)
+                    else:
+                        newstr = getSnrStruct(instrument=instrument, plsum=plsum)
+                        outstr = np.concatenate([outstr, newstr])
+                else:
+                    pdb.set_trace()
 
-#        return
+            Table(outstr).write(outfile4, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile4))
+
+        #return
 
         outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
@@ -129,42 +139,43 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         #gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])) & ((allv5['mjd'] < 59558) | (allv5['mjd'] >= 59595)))
         gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr['MJD'])))
-        allv5 = allv5[gd]
-        vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
-        uvis,uind = np.unique(vis, return_index=True)
-        uallv5 = allv5[uind]
-        nvis = len(uvis)
-        print('----> monitor: adding data for ' + str(nvis) + '  visits.')
+        if len(gd) > 0:
+            allv5 = allv5[gd]
+            vis = allv5['field'] + '/' + allv5['plate'] + '/' + np.array(allv5['mjd']).astype(str) + '/'
+            uvis,uind = np.unique(vis, return_index=True)
+            uallv5 = allv5[uind]
+            nvis = len(uvis)
+            print('----> monitor: adding data for ' + str(nvis) + '  visits.')
 
-        count = 0
-        for i in range(nvis):
-            #badcheck, = np.where((int(uallv5['plate'][i]) == badComObs['CONFIG']) & (uallv5['mjd'][i] == badComObs['MJD']))
-            #if len(badcheck) > 0: continue
-            plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
-            plsum = plsum.replace(' ', '')
-            p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
-            if (len(p) < 1) & (os.path.exists(plsum)):
-                data1 = fits.getdata(plsum,1)
-                data2 = fits.getdata(plsum,2)
-                nexp = len(data1['IM'])
-                totexptime = np.sum(data1['EXPTIME'])
-                if (nexp > 1) & (totexptime > 900):
-                    print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
-                    field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
-                    for iexp in range(nexp):
-                        if count == 0:
-                            outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
-                        else:
-                            newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
-                            if newstr is not None: outstr = np.concatenate([outstr, newstr])
-                        count += 1
+            count = 0
+            for i in range(nvis):
+                #badcheck, = np.where((int(uallv5['plate'][i]) == badComObs['CONFIG']) & (uallv5['mjd'][i] == badComObs['MJD']))
+                #if len(badcheck) > 0: continue
+                plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
+                plsum = plsum.replace(' ', '')
+                p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
+                if (len(p) < 1) & (os.path.exists(plsum)):
+                    data1 = fits.getdata(plsum,1)
+                    data2 = fits.getdata(plsum,2)
+                    nexp = len(data1['IM'])
+                    totexptime = np.sum(data1['EXPTIME'])
+                    if (nexp > 1) & (totexptime > 900):
+                        print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
+                        field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
+                        for iexp in range(nexp):
+                            if count == 0:
+                                outstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
+                            else:
+                                newstr = getSnrStruct2(data1, data2, iexp, field, os.path.basename(plsum))
+                                if newstr is not None: outstr = np.concatenate([outstr, newstr])
+                            count += 1
 
-        if count > 0:
-            out = vstack([Table(allsnr), Table(outstr)])
-            out.write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
-
-        #return
+            if count > 0:
+                out = vstack([Table(allsnr), Table(outstr)])
+                out.write(outfile, overwrite=True)
+                print("----> monitor: Finished making " + os.path.basename(outfile))
+        else:
+            print('No SDSS-V visits found!')
 
         ###########################################################################################
         # MAKE MASTER apPlateSum FILE
@@ -979,19 +990,21 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 fpsi, = np.where(xvals > 59500)
                 print('  snbins = ' + str(snbins[0]) + ':' + str(snbins[1]))
                 print('  S/N Plate (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[plate]),3)))
-                print('  S/N FPS (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
-                print('  Ratio (' + chip + '): ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]) / np.nanmedian(yvals[plate]),3)))
+                if len(fpsi) > 0: print('  S/N FPS (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
+                if len(fpsi) > 0: print('  Ratio (' + chip + '): ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]) / np.nanmedian(yvals[plate]),3)))
 
                 xx = [np.min(xvals[plate]),np.max(xvals[plate])]
                 yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
+                pdb.set_trace()
                 pl1 = ax.plot(xx, yy, c='r', linewidth=2, label='plate median ('+str(int(round(np.nanmedian(yvals[plate]))))+')')
 
-                xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
-                yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
-                pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
+                if len(fpsi) > 0: 
+                    xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
+                    yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
+                    pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
 
-                ax.legend(loc='upper center', labelspacing=0.5, handletextpad=0.2, markerscale=1, 
-                          fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.3)
+                    ax.legend(loc='upper center', labelspacing=0.5, handletextpad=0.2, markerscale=1, 
+                              fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.3)
 
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
                 ylims = ax.get_ylim()
@@ -2115,7 +2128,7 @@ def getSciStruct(data=None):
     return outstr
 
 ''' GETSNRSTRUCT: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
-def getSnrStruct(plsum=None):
+def getSnrStruct(instrument=None, plsum=None):
     #magbins = np.array([7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5])
     magrad = 0.2
     magmin = 7.0
@@ -2189,6 +2202,7 @@ def getSnrStruct(plsum=None):
             outstr['EXPTIME'][iexp] =   data1['EXPTIME'][iexp]
         else:
             snfile = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
+            if instrument == 'apogee-s': snfile = plsum.replace('asPlateSum', 'sn').replace('.fits', '.dat')
             if os.path.exists(snfile):
                 snfile = ascii.read(snfile)
                 g, = np.where(data1['IM'][iexp] == snfile['col1'])
