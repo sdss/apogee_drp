@@ -95,7 +95,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
 
-        if os.path.exists(allsnrfile) is false:
+        if os.path.exists(allsnrfile) is False:
             outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
             print("----> monitor: Making " + os.path.basename(outfile))
 
