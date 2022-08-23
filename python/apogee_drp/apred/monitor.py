@@ -988,22 +988,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 plate, = np.where(xvals < 59500)
                 fpsi, = np.where(xvals > 59500)
-                pdb.set_trace()
                 print('  snbins = ' + str(snbins[0]) + ':' + str(snbins[1]))
                 print('  S/N Plate (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[plate]),3)))
-                print('  S/N FPS (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
-                print('  Ratio (' + chip + '): ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]) / np.nanmedian(yvals[plate]),3)))
+                if len(fpsi) > 0: print('  S/N FPS (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
+                if len(fpsi) > 0: print('  Ratio (' + chip + '): ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]) / np.nanmedian(yvals[plate]),3)))
 
                 xx = [np.min(xvals[plate]),np.max(xvals[plate])]
                 yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
                 pl1 = ax.plot(xx, yy, c='r', linewidth=2, label='plate median ('+str(int(round(np.nanmedian(yvals[plate]))))+')')
 
-                xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
-                yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
-                pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
+                if len(fpsi) > 0: 
+                    xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
+                    yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
+                    pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
 
-                ax.legend(loc='upper center', labelspacing=0.5, handletextpad=0.2, markerscale=1, 
-                          fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.3)
+                    ax.legend(loc='upper center', labelspacing=0.5, handletextpad=0.2, markerscale=1, 
+                              fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.3)
 
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
                 ylims = ax.get_ylim()
