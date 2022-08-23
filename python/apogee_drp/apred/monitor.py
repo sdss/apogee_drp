@@ -94,37 +94,39 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
-        
-        outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
-        print("----> monitor: Making " + os.path.basename(outfile))
 
-        if allv4 is None:
-            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
-            allv4 = fits.getdata(allv4path)
+        if os.path.exists(allsnrfile) is false:
+            outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
 
-        gd, = np.where(allv4['TELESCOPE'] == telescope)
-        allv4 = allv4[gd]
-        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
-        uvis,uind = np.unique(vis, return_index=True)
-        uallv4 = allv4[uind]
-        nvis = len(uvis)
-        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
+            if allv4 is None:
+                allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
+                allv4 = fits.getdata(allv4path)
 
-        for i in range(nvis):
-            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
-            plsum = plsum.replace(' ', '')
-            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
-            if os.path.exists(plsum):
-                if i == 0:
-                    outstr = getSnrStruct(plsum)
+            gd, = np.where(allv4['TELESCOPE'] == telescope)
+            allv4 = allv4[gd]
+            vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
+            uvis,uind = np.unique(vis, return_index=True)
+            uallv4 = allv4[uind]
+            nvis = len(uvis)
+            print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
+
+            for i in range(nvis):
+                plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
+                if instrument == 'apogee-s': plsum = plsum.replace('apPlate', 'asPlate')
+                plsum = plsum.replace(' ', '')
+                print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
+                if os.path.exists(plsum):
+                    if i == 0:
+                        outstr = getSnrStruct(plsum)
+                    else:
+                        newstr = getSnrStruct(plsum)
+                        outstr = np.concatenate([outstr, newstr])
                 else:
-                    newstr = getSnrStruct(plsum)
-                    outstr = np.concatenate([outstr, newstr])
-            else:
-                pdb.set_trace()
+                    pdb.set_trace()
 
-        Table(outstr).write(outfile, overwrite=True)
-        print("----> monitor: Finished making " + os.path.basename(outfile))
+            Table(outstr).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
 
         return
 
