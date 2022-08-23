@@ -94,6 +94,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
+        
         outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
 
@@ -119,6 +120,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 else:
                     newstr = getSnrStruct(plsum)
                     outstr = np.concatenate([outstr, newstr])
+            else:
+                pdb.set_trace()
 
         Table(outstr).write(outfile, overwrite=True)
         print("----> monitor: Finished making " + os.path.basename(outfile))
