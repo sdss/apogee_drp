@@ -2321,7 +2321,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
         dorun[i] = True
         if clobber is not True:
             # apPlan
-            if pfbase.startswith(load.predix+'Plan'):
+            if pfbase.startswith(load.prefix+'Plan'):
                 # apPlan-3370-59623.yaml
                 config1,mjd1 = pfbase.split('.')[0].split('-')[1:3]
                 # check for apVisitSum file
