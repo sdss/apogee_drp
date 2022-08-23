@@ -1739,7 +1739,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                if load.exists('Modelpsf',num=name):
+                if load.exists('PSFModel',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
