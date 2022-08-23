@@ -2772,9 +2772,9 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     #  always runs on all MJDs
     monitor.monitor()
 
-
+    
 def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=None, 
-                  planfiles=None,chkapred=None,chkrv=None,logfile=None,slurmpars=None,
+                  planfiles=None,chkexp=None,chkvisit=None,chkrv=None,logfile=None,slurmpars=None,
                   clobber=None,debug=False):   
     """ Send a summary email."""
 
