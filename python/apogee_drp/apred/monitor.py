@@ -77,10 +77,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
     allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
     allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
-    #snrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
-    #allsnr = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR.fits')
-    dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits')
-    qtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
+    allsnrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
+    if os.path.exists(allsnrfile): allsnr = fits.getdata(allsnrfile)
+    else: print(instrument + 'SNR.fits not found')
+    dtracefile = specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits'
+    if os.path.exists(dtracefile): dtrace = fits.getdata(dtracefile)
+    else: print(instrument + 'DomeFlatTrace-all.fits not found')
+    qtracefile = specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits'
+    if os.path.exists(qtracefile): qtrace = fits.getdata(qtracefile)
+    else: print(instrument + 'QuartzFlatTrace-all.fits not found')
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
 
     #badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
@@ -89,36 +94,36 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
-#        outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
-#        print("----> monitor: Making " + os.path.basename(outfile))
+        outfile = specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits'
+        print("----> monitor: Making " + os.path.basename(outfile))
 
-#        if allv4 is None:
-#            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
-#            allv4 = fits.getdata(allv4path)
+        if allv4 is None:
+            allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
+            allv4 = fits.getdata(allv4path)
 
-#        gd, = np.where(allv4['TELESCOPE'] == telescope)
-#        allv4 = allv4[gd]
-#        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
-#        uvis,uind = np.unique(vis, return_index=True)
-#        uallv4 = allv4[uind]
-#        nvis = len(uvis)
-#        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
+        gd, = np.where(allv4['TELESCOPE'] == telescope)
+        allv4 = allv4[gd]
+        vis = allv4['FIELD'] + '/' + allv4['PLATE'] + '/' + np.array(allv4['MJD']).astype(str) + '/'
+        uvis,uind = np.unique(vis, return_index=True)
+        uallv4 = allv4[uind]
+        nvis = len(uvis)
+        print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
-#        for i in range(nvis):
-#            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
-#            plsum = plsum.replace(' ', '')
-#            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
-#            if os.path.exists(plsum):
-#                if i == 0:
-#                    outstr = getSnrStruct(plsum)
-#                else:
-#                    newstr = getSnrStruct(plsum)
-#                    outstr = np.concatenate([outstr, newstr])
+        for i in range(nvis):
+            plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
+            plsum = plsum.replace(' ', '')
+            print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
+            if os.path.exists(plsum):
+                if i == 0:
+                    outstr = getSnrStruct(plsum)
+                else:
+                    newstr = getSnrStruct(plsum)
+                    outstr = np.concatenate([outstr, newstr])
 
-#        Table(outstr).write(outfile, overwrite=True)
-#        print("----> monitor: Finished making " + os.path.basename(outfile))
+        Table(outstr).write(outfile, overwrite=True)
+        print("----> monitor: Finished making " + os.path.basename(outfile))
 
-#        return
+        return
 
         outfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
         print("----> monitor: Making " + os.path.basename(outfile))
