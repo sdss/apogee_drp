@@ -118,9 +118,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
                 if os.path.exists(plsum):
                     if i == 0:
-                        outstr = getSnrStruct(plsum)
+                        outstr = getSnrStruct(instrument=instrument, plsum=plsum)
                     else:
-                        newstr = getSnrStruct(plsum)
+                        newstr = getSnrStruct(instrument=instrument, plsum=plsum)
                         outstr = np.concatenate([outstr, newstr])
                 else:
                     pdb.set_trace()
@@ -2128,7 +2128,7 @@ def getSciStruct(data=None):
     return outstr
 
 ''' GETSNRSTRUCT: tabule SDSS-IV and SDSS-V S/N data, exposure-by-exposure and fiber-by-fiber '''
-def getSnrStruct(plsum=None):
+def getSnrStruct(instrument=None, plsum=None):
     #magbins = np.array([7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13,13.5])
     magrad = 0.2
     magmin = 7.0
@@ -2202,6 +2202,7 @@ def getSnrStruct(plsum=None):
             outstr['EXPTIME'][iexp] =   data1['EXPTIME'][iexp]
         else:
             snfile = plsum.replace('apPlateSum', 'sn').replace('.fits', '.dat')
+            if instrument == 'apogee-s': snfile = plsum.replace('asPlateSum', 'sn').replace('.fits', '.dat')
             if os.path.exists(snfile):
                 snfile = ascii.read(snfile)
                 g, = np.where(data1['IM'][iexp] == snfile['col1'])
