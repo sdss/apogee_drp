@@ -1282,60 +1282,61 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         ###########################################################################################
         # qfwhm.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/qfwhm.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
+        if os.path.exists(qtracefile):
+            plotfile = specdir5 + 'monitor/' + instrument + '/qfwhm.png'
+            if (os.path.exists(plotfile) == False) | (clobber == True):
+                print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(30,14))
-            ymax = 3.0
-            if instrument == 'apogee-s': 
+                fig = plt.figure(figsize=(30,14))
                 ymax = 3.0
-            ymin = 0.8
-            yspan = ymax - ymin
+                if instrument == 'apogee-s': 
+                    ymax = 3.0
+                ymin = 0.8
+                yspan = ymax - ymin
 
-            gd, = np.where(qtrace['MJD'] > 50000)
-            qtz = qtrace[gd]
-            qmjd = qtz['MJD']
-            qfwhm = qtz['GAUSS_SIGMA']*2.355
+                gd, = np.where(qtrace['MJD'] > 50000)
+                qtz = qtrace[gd]
+                qmjd = qtz['MJD']
+                qfwhm = qtz['GAUSS_SIGMA']*2.355
 
-            for ichip in range(nchips):
-                chip = chips[ichip]
+                for ichip in range(nchips):
+                    chip = chips[ichip]
 
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'FWHM (pixels)')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='teal', linewidth=2)
-                ax.axvline(x=59555, color='teal', linewidth=2)
-                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-                ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-                ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
-                ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+                    ax = plt.subplot2grid((nchips,1), (ichip,0))
+                    ax.set_xlim(xmin, xmax)
+                    ax.set_ylim(ymin, ymax)
+                    ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                    ax.minorticks_on()
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                    ax.tick_params(axis='both',which='major',length=axmajlen)
+                    ax.tick_params(axis='both',which='minor',length=axminlen)
+                    ax.tick_params(axis='both',which='both',width=axwidth)
+                    if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                    ax.set_ylabel(r'FWHM (pixels)')
+                    if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                    ax.axvline(x=59146, color='teal', linewidth=2)
+                    ax.axvline(x=59555, color='teal', linewidth=2)
+                    ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                    ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                    ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                    ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
 
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                    for iyear in range(nyears):
+                        ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                        if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-                for ifib in range(nplotfibs):
-                    yvals = qfwhm[:, ichip, ifib]
-                    ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='fib ' + str(fibers[ifib]))
+                    for ifib in range(nplotfibs):
+                        yvals = qfwhm[:, ichip, ifib]
+                        ax.scatter(qmjd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                                   label='fib ' + str(fibers[ifib]))
 
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+                    if ichip == 0: 
+                        ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                                  fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
 
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
+                fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+                plt.savefig(plotfile)
+                plt.close('all')
 
         ###########################################################################################
         # tharflux.png
