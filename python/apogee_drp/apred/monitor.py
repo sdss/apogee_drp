@@ -127,6 +127,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             Table(outstr).write(outfile4, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile4))
+            allsnr = fits.getdata(outfile4)
 
         #return
 
