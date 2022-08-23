@@ -70,7 +70,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
     allsci4 =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
-    allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
+    #allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
 
     # Read in the master summary files
     allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
