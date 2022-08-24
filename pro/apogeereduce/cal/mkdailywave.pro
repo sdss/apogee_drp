@@ -40,7 +40,7 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
   wavedir = apogee_filename('Wave',num=0,chip='a',/dir)
   file = dirs.prefix+'Wave-'+name
   lockfile = wavedir+file+'.lock'
-
+  
   ;; If another process is alreadying make this file, wait!
   if not keyword_set(unlock) then begin
     while file_test(lockfile) do begin
@@ -67,7 +67,9 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
   free_lun,lock
 
   ;; Get the arclamps that we need for the daily cal
-  expinfo = dbquery("select * from apogee_drp.exposure where mjd>="+strtrim(long(mjd)-10,2)+" and mjd<="+strtrim(long(mjd)+10,2)+" and exptype='ARCLAMP'")
+  expinfo = dbquery("select * from apogee_drp.exposure where mjd>="+strtrim(long(mjd)-10,2)+$
+                    " and mjd<="+strtrim(long(mjd)+10,2)+" and exptype='ARCLAMP' and "+$
+                    "observatory='"+strmid(dirs.telescope,0,3)+"'")
   expinfo.arctype = strtrim(expinfo.arctype,2)
   gdarc = where(expinfo.arctype eq 'UNE' or expinfo.arctype eq 'THAR',ngdarc)
   if ngdarc eq 0 then begin
@@ -96,7 +98,7 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
   arcinfo = arcinfo[keep]
   waveid = long(arcinfo.num)
   print,strtrim(n_elements(arcinfo),2),' arclamps'
-
+  
   ;; Process the frames and find lines
   print,''
   print,'***** Processing the frames and finding the lines *****'
