@@ -219,7 +219,6 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         #print(filename)
         frame = load.ap1D(num)
         if frame==0:
-            import pdb; pdb.set_trace()
             print(load.filename('1D',num=num,chips=True)+' NOT FOUND')
             continue
         out = load.filename('Wave',num=num,chips=True)

@@ -718,6 +718,8 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             psfnum = [os.path.basename(p)[8:16] for p in psffiles]
             # Make sure all of the necessary files exist
             psfexists = [load.exists('PSF',num=num) for num in psfnum]
+            if np.sum(psfexists)==0:
+                raise ValueError('No PSF files for MJD='+str(mjd)+' that exist')
             psfnum = np.array(psfnum)[psfexists]
             si = np.argsort(np.abs(np.array(psfnum).astype(int)-int(im1)))
             psfid = np.array(psfnum)[si][0]
