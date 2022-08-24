@@ -75,17 +75,6 @@ ploc = findpeak(ps,level=max([thresh*high,5000.]))
 ntrace = n_elements(ploc)
 print,'Found ',strtrim(ntrace,2),' traces'
 
-;; Refine the peaks
-plocpeak = ploc*0.0
-for i=0,ntrace-1 do begin
-  ;; Do a 3-point quadratic fit to get center a bit better than peak
-  nfit = 3
-  fit = poly_fit(-nfit/2+indgen(nfit),ps[ploc[i]-nfit/2:ploc[i]+nfit/2],2)
-  pcen = ploc[i]-fit[1]/(2*fit[2])
-  if pcen lt ploc[i]-nfit/2 or pcen gt ploc[i]+nfit/2 then pcen=ploc[i]
-  plocpeak[i] = pcen
-endfor
-
 ;; Determine which fiber each trace corresponds to
 if fiberid gt 0 then begin
   file = apogee_filename('ETrace',chip=chip[ichip],num=fiberid)
