@@ -75,43 +75,103 @@ ploc = findpeak(ps,level=max([thresh*high,5000.]))
 ntrace = n_elements(ploc)
 print,'Found ',strtrim(ntrace,2),' traces'
 
+;; Refine the peaks
+plocpeak = ploc*0.0
+for i=0,ntrace-1 do begin
+  ;; Do a 3-point quadratic fit to get center a bit better than peak
+  nfit = 3
+  fit = poly_fit(-nfit/2+indgen(nfit),ps[ploc[i]-nfit/2:ploc[i]+nfit/2],2)
+  pcen = ploc[i]-fit[1]/(2*fit[2])
+  if pcen lt ploc[i]-nfit/2 or pcen gt ploc[i]+nfit/2 then pcen=ploc[i]
+  plocpeak[i] = pcen
+endfor
+
 ;; Determine which fiber each trace corresponds to
 if fiberid gt 0 then begin
   file = apogee_filename('ETrace',chip=chip[ichip],num=fiberid)
   ref = mrdfits(file)
   fibers = ref[1000,*]
-  fiber = intarr(ntrace)
+  fiber = intarr(ntrace)-1
   dmin = fltarr(n_elements(fiber))
+  offset = fltarr(n_elements(fiber))  
   nmatched = 0
   pmid = []
+  ;; Loop over traces and find the best matching fiber
   for i=0,n_elements(fiber)-1 do begin
     ;; Do a 3-point quadratic fit to get center a bit better than peak
     nfit = 3
     fit = poly_fit(-nfit/2+indgen(nfit),ps[ploc[i]-nfit/2:ploc[i]+nfit/2],2)
     pcen = ploc[i]-fit[1]/(2*fit[2])
-    if pcen lt ploc[i]-nfit/2 or pcen gt ploc[i]+nfit/2 then pcen=ploc[i]
+    if pcen lt ploc[i]-nfit/2 or pcen gt ploc[i]+nfit/2 then pcen=ploc[i]     
     dist = abs(pcen-fibers)
-    dmin[nmatched] = min(dist,imin)
-    if dmin[nmatched] lt 2 then begin
-      fiber[nmatched] = imin 
-      pmid=[pmid,ploc[i]*1.]
+    mindist = min(dist,imin)
+    dmin[i] = mindist               ;; absolute distance
+    offset[i] = pcen-fibers[imin]   ;; distance with sign +/-
+    ;;dmin[nmatched] = min(dist,imin)
+    ;;if dmin[nmatched] lt 2 then begin
+    ;;  fiber[nmatched] = imin 
+    ;;  pmid=[pmid,ploc[i]*1.]
+    if mindist lt 2 then begin
+      fiber[i] = imin
+      pmid=[pmid,ploc[i]*1.]       
       nmatched += 1
     endif else begin
       ;; If can't find a match, call this trace bad, but move on
       print,'not halted: cant find corresponding fiber for trace', i, ploc[i]
     endelse
   endfor
-  if nmatched lt ntrace then begin
-    ntrace = nmatched
-    dmin = dmin[0:nmatched-1]
-    fiber = fiber[0:nmatched-1]
+
+  ;; Some traces didn't find a matching fiber
+  ;;  trim to the ones that did have matches
+  bad = where(fiber lt 0,nbad,comp=good,ncomp=ngood)
+  if nbad gt 0 then begin
+    ntrace = ngood
+    fiber = fiber[good]
+    dmin = dmin[good]
+    offset = offset[good]
+    ploc = ploc[good]
   endif
+  
+  ;;if nmatched lt ntrace then begin
+  ;;  ntrace = nmatched
+  ;;  dmin = dmin[0:nmatched-1]
+  ;;  fiber = fiber[0:nmatched-1]
+  ;;endif
 endif else begin
   fiber = indgen(ntrace)
   dmin = fltarr(n_elements(fiber))
   pmid = ploc
 endelse
 print,'Mean distance: ',MEAN(dmin)
+
+;; Deal with duplicates
+if ntrace gt 300 then begin
+  fiberindex = create_index(fiber)
+  bad = where(fiberindex.num gt 1,nbad)
+  for i=0,nbad-1 do begin
+    ;; Multiple traces are matched with the same fiber
+    ind = fiberindex.index[fiberindex.lo[bad[i]]:fiberindex.hi[bad[i]]]
+    ;; Pick the one with the closer match
+    offset1 = offset[ind]-mean(offset)
+    flux1 = ps[ploc[ind]]
+    ;; Mark the rest as bad
+    bad1 = (sort(abs(offset1)))[1:*]  
+    fiber[ind[bad1]] = -1
+    dmin[ind[bad1]] = -1
+    offset[ind[bad1]] = -1
+    pmid[ind[bad1]] = -1
+  endfor
+  ;; Remove the "bad" traces with no matches
+  torem = where(fiber lt 0,ntorem,comp=tokeep,ncomp=ntokeep)
+  if ntorem gt 0 then begin
+    fiber = fiber[tokeep]
+    dmin = dmin[tokeep]
+    offset = offset[tokeep]
+    pmid = pmid[tokeep]
+  endif
+  ntrace = ntokeep
+endif
+
 if ntrace gt 300 then begin
   print, 'halted: chip ', ichip,' has ',ntrace, ' traces!'
   stop

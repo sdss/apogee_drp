@@ -64,7 +64,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
     ntrace = intarr(3)
     for ichip=0,2 do begin
       ;apmkpsf_epsf,red[*,*,ichip],caldir,outid,ichip,dmax=dmax,sparseid=sparseid,scat=2,average=average
-
+       
       if keyword_set(filter) then begin
         ; for sparse, we really don't want to have bad pixels, so try to replace them here, even with a
         ; broader filter than we want to use in EPSF construction
