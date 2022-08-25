@@ -441,18 +441,14 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
         hdr = fits.getheader(twodFiles[0])
         outstr['EXPTIME'][i] =  hdr['EXPTIME']
         outstr['NREAD'][i] =    hdr['NREAD']
-        try:
-            outstr['ROTPOS'][i] = hdr['ROTPOS']
-        except:
-            outstr['ROTPOS'][i] = -9999.999
-        try:
-            doutstr['SEEING'][i] =   hdr['SEEING']
-        except:
-            outstr['SEEING'][i] = -9999.999
+        try: outstr['ROTPOS'][i] = hdr['ROTPOS']
+        except: outstr['ROTPOS'][i] = -9999.999
+        try: doutstr['SEEING'][i] =   hdr['SEEING']
+        except: outstr['SEEING'][i] = -9999.999
         try: outstr['AZ'][i] =       hdr['AZ']
-        except: pass
+        except: outstr['AZ'][i] = -9999.999
         try: outstr['ALT'][i] =      hdr['ALT']
-        except: pass
+        except: outstr['ALT'][i] = -9999.999
         outstr['IPA'][i] =      hdr['IPA']
         outstr['FOCUS'][i] =    hdr['FOCUS']
         outstr['DITHPIX'][i] =  hdr['DITHPIX']
