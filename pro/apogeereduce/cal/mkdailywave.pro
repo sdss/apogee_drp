@@ -123,10 +123,10 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;; New Python version! 
   cmd = ['apdailywavecal','--apred',dirs.apred]
   if keyword_set(clobber) then cmd=[cmd,'--clobber']
-  cmd = [cmd,'--observatory',strmid(dirs.instrument,0,3),'--verbose']
+  cmd = [cmd,'--observatory',strmid(dirs.telescope,0,3),'--verbose']
   cmd = [cmd,name]
   spawn,cmd,/noshell
-
+  
   ;; Check that the calibration file was successfully created
   outfile = wavedir+repstr(file,'apWave-','apWave-a-')
   if file_test(outfile) then begin

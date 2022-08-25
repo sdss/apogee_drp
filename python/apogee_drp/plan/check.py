@@ -276,7 +276,8 @@ def check_domeflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] != '':
+    # gang state not working for LCO FPS commissioning
+    if expinfo['gangstate'] != '' and telescope != 'lco25m':    
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
