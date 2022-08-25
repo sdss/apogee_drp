@@ -51,7 +51,8 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     reduxdir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
-    load = apload.ApLoad(apred=apred,instrument=instrument)
+    telescope = observatory+'25m'
+    load = apload.ApLoad(apred=apred,telescope=telescope)
 
     # Make daily wavelength solution if it doesn't exist
     wfile = reduxdir+'cal/'+instrument+'/wave/'+load.prefix+'Wave-%s.fits' % str(mjd5)
@@ -592,7 +593,7 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
     reduxdir = os.environ['APOGEE_REDUX']+'/'+vers+'/'
     observatory = {'apo25m':'apo', 'apo1m':'apo', 'lco25m':'lco'}[telescope]
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
-    load = apload.ApLoad(apred=vers,instrument=instrument)
+    load = apload.ApLoad(apred=vers,instrument=instrument,telescope=telescope)
     mjd = int(load.cmjd(fpiid))
         
     # Load the wavelength array/solution

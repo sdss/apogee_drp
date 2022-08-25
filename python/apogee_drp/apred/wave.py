@@ -86,7 +86,8 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
     reduxdir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
-    load = apload.ApLoad(apred=apred,instrument=instrument)
+    telescope = observatory+'25m'
+    load = apload.ApLoad(apred=apred,telescope=telescope)
     
     # Step 1: Find the arclamp frames for the last week
     #--------------------------------------------------
@@ -619,8 +620,9 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
   wfit=[]
   grid=[]
   yt=[]
+  telescope = {'apogee-n':'apo25m','apogee-s':'lco25m'}[inst]
   for num in nums :
-    load=apload.ApLoad(apred=apred,instrument=inst)
+    load=apload.ApLoad(apred=apred,telescope=telescope,instrument=inst)
     wave=load.apWave(num)
     outname=load.filename('Wave',num=num,chips=True)
     allpars=wave['a'][6].data
@@ -1304,11 +1306,11 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
         fps = True
     else:
         fps = False
-    observatory = 'lco'
-    if 'apo' in inst: observatory='apo'
+    telescope = {'apogee-n':'apo25m','apogee-s':'lco25m'}[inst]
+    observatory = telescope[0:3]
 
     # set up file reader
-    load = apload.ApLoad(apred=vers,instrument=inst,verbose=False)
+    load = apload.ApLoad(apred=vers,telescope=telescope,instrument=inst,verbose=False)
 
     # open output line data?
     if out is not None : f=open(out,'a') 
@@ -1890,7 +1892,9 @@ def ditherplots(planfile,vers=None,inst=None) :
     if vers is None : vers = p['apred_vers'].strip("'") if p.get('apred_vers') else 'current'
 
     # set up file reader
-    load=apload.ApLoad(apred=vers,instrument=inst,verbose=False)
+    telescope = {'apogee-n':'apo25m','apogee-s':'lco25m'}[inst]
+    observatory = telescope[0:3]
+    load = apload.ApLoad(apred=vers,telescope=telescope,instrument=inst,verbose=False)
 
     grid = []
     for frame in p['APEXP']['name'] :
