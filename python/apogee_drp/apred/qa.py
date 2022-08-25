@@ -3416,7 +3416,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         mjd = mjd[gd]
         nmjd = len(mjd)
 
-        pdb.set_trace()
         # Open the mjd file html
         mjdfile = qadir + mjdfilebase
         print("----> makeMasterQApages: Creating "+mjdfilebase)
