@@ -3471,7 +3471,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
             #if cmjd == '59186': import pdb; pdb.set_trace()
 
-            pdb.set_trace()
+            #pdb.set_trace()
 
             if len(reports) != 0:
                 # Column 1: Date
