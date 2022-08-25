@@ -3408,7 +3408,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         hem = hem[order[::-1]]
         mjd = mjd[order[::-1]]
 
-        pdb.set_trace()
+
         # Limit to MJDs within mjdmin-mjdmax range
         gd = np.where((mjd >= mjdmin) & (mjd <= mjdmax))
         logs = logs[gd]
@@ -3416,6 +3416,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         mjd = mjd[gd]
         nmjd = len(mjd)
 
+        pdb.set_trace()
         # Open the mjd file html
         mjdfile = qadir+mjdfilebase
         print("----> makeMasterQApages: Creating "+mjdfilebase)
