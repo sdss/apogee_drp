@@ -3454,12 +3454,14 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             # Establish telescope and instrument and setup apLoad depending on telescope.
             telescope = 'apo25m'
             instrument = 'apogee-n'
+            prefix = 'ap'
             datadir = datadirN
             datadir1 = 'data'
             color = 'FFFFF8A'
             if hem[i] == 'S': 
                 telescope = 'lco25m'
                 instrument = 'apogee-s'
+                prefix = 'as'
                 datadir = datadirS
                 datadir1 = 'data2s'
                 color = 'b3ffb3'
@@ -3494,11 +3496,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
             # Column 5: Night QA
-            platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/a*Plan-*'+cmjd+'.yaml'
+            platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/'+prefix+'Plan-*'+cmjd+'.yaml'
             platePlanFiles = np.array(glob.glob(platePlanPaths))
             nplatesall = len(platePlanFiles)
 
-            plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/a*QA-*'+cmjd+'.html'
+            plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/'+prefix+'QA-*'+cmjd+'.html'
             plateQAfiles = np.array(glob.glob(plateQApaths))
             nplates = len(plateQAfiles)
             if nplates >= 1:
@@ -3512,7 +3514,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
                 plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
                 # Check for failed plates
-                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
                 if os.path.exists(plateQAfile):
                     plateQApathPartial = plateQAfile.split(apred+'/')[1]
                     if j < nplatesall:
@@ -3531,13 +3533,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
                 plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
                 # Check for failed plates
-                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
                 if os.path.exists(plateQAfile):
                     plateQApathPartial = plateQAfile.split(apred+'/')[1]
                     if j < nplatesall:
-                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A><BR>\n')
+                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace(prefix+'QA',prefix+'Plate')+'">'+plate+': '+field+'</A><BR>\n')
                     else:
-                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>\n')
+                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace(prefix+'QA',prefix+'Plate')+'">'+plate+': '+field+'</A>\n')
                 else:
                     if j < nplatesall:
                         html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT><BR>\n')
@@ -3550,7 +3552,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
                 plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
                 # Check for failed plates
-                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
                 if os.path.exists(plateQAfile):
                     note = ''
                     if fps:
@@ -3778,7 +3780,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                     isnr[i,1] = str(int(round(plsum3['SN'][0][1])))
                     isnr[i,2] = str(int(round(plsum3['SN'][0][2])))
                 except:
-                    print("----> makeMasterQApages: no 3rd extension in apPlateSum for plate " + iplate[i] + ', MJD ' + imjd[i])
+                    print("----> makeMasterQApages: no 3rd extension in PlateSum for plate " + iplate[i] + ', MJD ' + imjd[i])
             else:
                 print('----> makeMasterQApages: Problem with plate/config ' + iplate[i] + ', MJD ' + imjd[i] + '. PlateSum not found.')
 
