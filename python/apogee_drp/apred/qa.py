@@ -3385,18 +3385,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         logsS = np.array([f for f in logfilesS if os.path.exists(f)])
         nlogsS = len(logsS)
         hemS = np.full(nlogsS, 'S').astype(str)
-        print("----> makeMasterQApages: Found "+str(nlogsS)+" APOGEE-S log files.")
         mjdS = np.empty(nlogsS)
         for i in range(nlogsS): mjdS[i] = int(os.path.basename(logsS[i]).split('.')[0])
-
-        pdb.set_trace()
-
         g, = np.where(mjdS > 59808)
         mdirsS = np.array(mdirsS)[g]
         logfilesS = np.array(logfilesS)[g]
         logsS = logsS[g]
         hemS = hemS[g]
         nlogsS = len(logsS)
+        print("----> makeMasterQApages: Found "+str(nlogsS)+" APOGEE-S log files.")
 
         logs = np.concatenate([logsN,logsS]) 
         hem = np.concatenate([hemN,hemS]) 
