@@ -2001,7 +2001,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
     # DB query for this visit
     db = apogeedb.DBSession()
-    #vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
     vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "' and telescope='" + telescope + "'", fmt='table')
     db.close()
     stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
@@ -2411,7 +2410,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                     apStarRelPath = None
 
                 # DB query to get visit info
-                vcat = db.query('visit_latest', where="apogee_id='" + objid + "'", fmt='table')
+                vcat = db.query('visit_latest', where="apogee_id='" + objid + "' and telescope='"+ telescope + "'", fmt='table')
 
                 # Get visit info from DB
                 cgl = str("%.5f" % round(vcat['glon'][0],5))
