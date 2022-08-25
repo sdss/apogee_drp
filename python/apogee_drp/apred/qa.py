@@ -3418,7 +3418,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         pdb.set_trace()
         # Open the mjd file html
-        mjdfile = qadir+mjdfilebase
+        mjdfile = qadir + mjdfilebase
         print("----> makeMasterQApages: Creating "+mjdfilebase)
 
         now = datetime.datetime.now()
@@ -3471,150 +3471,147 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
 
-            #if cmjd == '59186': import pdb; pdb.set_trace()
+            # Column 1: Date
+            html.write('<TR bgcolor=' + color + ' align="center"><TD>' + date + '\n')
 
-            #pdb.set_trace()
-
+            # Column 2: Observing log
             if len(reports) != 0:
-                # Column 1: Date
-                html.write('<TR bgcolor=' + color + ' align="center"><TD>' + date + '\n')
-                # Column 2: Observing log
-
                 reports.sort()
                 reportfile = reports[0]
                 reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
                 html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
                 #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+            else:
+                html.write('<TD align="center">' + cmjd + ' obs\n')
 
+            # Column 3-4: Exposure log and raw data link
+            logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
+            logFilePath = logFileDir + cmjd + '.log.html'
 
-                # Column 3-4: Exposure log and raw data link
-                logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
-                logFilePath = logFileDir + cmjd + '.log.html'
+            logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
+            logFileDir = os.path.dirname(logFile)
 
-                logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
-                logFileDir = os.path.dirname(logFile)
+            html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
+            html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
-                html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
-                html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
+            # Column 5: Night QA
+            platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/a*Plan-*'+cmjd+'.yaml'
+            platePlanFiles = np.array(glob.glob(platePlanPaths))
+            nplatesall = len(platePlanFiles)
 
-                # Column 5: Night QA
-                platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/apPlan-*'+cmjd+'.yaml'
-                platePlanFiles = np.array(glob.glob(platePlanPaths))
-                nplatesall = len(platePlanFiles)
+            plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/a*QA-*'+cmjd+'.html'
+            plateQAfiles = np.array(glob.glob(plateQApaths))
+            nplates = len(plateQAfiles)
+            if nplates >= 1:
+                html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
+            else:
+                html.write('<TD>\n')
 
-                plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/apQA-*'+cmjd+'.html'
-                plateQAfiles = np.array(glob.glob(plateQApaths))
-                nplates = len(plateQAfiles)
-                if nplates >= 1:
-                    html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
+            # Column 6: Visit QA
+            html.write('<TD align="left">')
+            for j in range(nplatesall):
+                field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                # Check for failed plates
+                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                if os.path.exists(plateQAfile):
+                    plateQApathPartial = plateQAfile.split(apred+'/')[1]
+                    if j < nplatesall:
+                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
+                    else:
+                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                 else:
-                    html.write('<TD>\n')
-
-                # Column 6: Visit QA
-                html.write('<TD align="left">')
-                for j in range(nplatesall):
-                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
-                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
-                    # Check for failed plates
-                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
-                    if os.path.exists(plateQAfile):
-                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
-                        if j < nplatesall:
-                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
-                        else:
-                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
+                    if j < nplatesall:
+                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+' (failed)<BR>\n')
                     else:
-                        if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+' (failed)<BR>\n')
-                        else:
-                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+' (failed)\n')
+                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+' (failed)\n')
 
-                # Column 7: Visit spectra plots
-                html.write('<TD align="left">')
-                for j in range(nplatesall):
-                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
-                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
-                    # Check for failed plates
-                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
-                    if os.path.exists(plateQAfile):
-                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
-                        if j < nplatesall:
-                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A><BR>\n')
-                        else:
-                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>\n')
+            # Column 7: Visit spectra plots
+            html.write('<TD align="left">')
+            for j in range(nplatesall):
+                field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                # Check for failed plates
+                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                if os.path.exists(plateQAfile):
+                    plateQApathPartial = plateQAfile.split(apred+'/')[1]
+                    if j < nplatesall:
+                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A><BR>\n')
                     else:
-                        if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT><BR>\n')
-                        else:
-                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
-
-                # Column 8: Number of skies, telluric, and science targets.
-                html.write('<TD align="left">')
-                for j in range(nplatesall):
-                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
-                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
-                    # Check for failed plates
-                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
-                    if os.path.exists(plateQAfile):
-                        note = ''
-                        if fps:
-                            plsumfile = load.filename('PlateSum', plate=int(plate), mjd=cmjd, fps=fps)
-                            if os.path.exists(plsumfile):
-                                plsum = fits.getdata(plsumfile,2)
-                                try:
-                                    assignedSky, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'SKY'))
-                                    assignedTel, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'HOT_STD'))
-                                    assignedSci, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'STAR'))
-                                    note = '   [' + str(len(assignedSky)).rjust(3) + ', ' + str(len(assignedTel)).rjust(3) + ', ' + str(len(assignedSci)).rjust(3) + ']'
-                                except:
-                                    note = '   [?]'
-                                #if len(assignedFib) < 1: note = ' (ZERO assigned)'
-                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
-                        if j < nplatesall:
-                            html.write('('+str(j+1).rjust(2)+') '+note+'<BR>\n')
-                        else:
-                            html.write('('+str(j+1).rjust(2)+') '+note+'\n')
-                    else:
-                        if j < nplatesall:
-                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT><BR>\n')
-                        else:
-                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT>\n')
-
-
-                # Column 7: Combined files for this night
-                #html.write('<TD>\n')
-
-                # Column 8: Single stars observed for this night
-                #html.write('<TD>\n')
-
-                # Column 9: Dome flats observed for this night
-                #html.write('<TD>\n')
-
-                # Column 9: Summary files
-                visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
-                starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
-                if nplates >= 1: 
-                    html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
-                    html.write('<BR><a href="'+starSumPath+'">allStarMJD</a>\n')
+                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace('apQA','apPlate')+'">'+plate+': '+field+'</A>\n')
                 else:
-                    html.write('<TD>\n')
+                    if j < nplatesall:
+                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT><BR>\n')
+                    else:
+                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
 
-                # Column 10: Mean moon phase
-                bgcolor = '#000000'
-                txtcolor = '#FFFFFF'
-                meanmoonphase = moon_illumination(tt)
-                if meanmoonphase > 0.5: txtcolor = '#000000'
-                if meanmoonphase > 0.1: bgcolor = '#282828'
-                if meanmoonphase > 0.2: bgcolor = '#404040'
-                if meanmoonphase > 0.3: bgcolor = '#606060'
-                if meanmoonphase > 0.4: bgcolor = '#787878'
-                if meanmoonphase > 0.5: bgcolor = '#989898'
-                if meanmoonphase > 0.6: bgcolor = '#B0B0B0'
-                if meanmoonphase > 0.7: bgcolor = '#C8C8C8'
-                if meanmoonphase > 0.8: bgcolor = '#E8E8E8'
-                if meanmoonphase > 0.9: bgcolor = '#FFFFFF'
-                mphase = str(int(round(meanmoonphase*100)))+'%'
-                html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase)
+            # Column 8: Number of skies, telluric, and science targets.
+            html.write('<TD align="left">')
+            for j in range(nplatesall):
+                field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                # Check for failed plates
+                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/apQA-'+plate+'-'+cmjd+'.html'
+                if os.path.exists(plateQAfile):
+                    note = ''
+                    if fps:
+                        plsumfile = load.filename('PlateSum', plate=int(plate), mjd=cmjd, fps=fps)
+                        if os.path.exists(plsumfile):
+                            plsum = fits.getdata(plsumfile,2)
+                            try:
+                                assignedSky, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'SKY'))
+                                assignedTel, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'HOT_STD'))
+                                assignedSci, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'STAR'))
+                                note = '   [' + str(len(assignedSky)).rjust(3) + ', ' + str(len(assignedTel)).rjust(3) + ', ' + str(len(assignedSci)).rjust(3) + ']'
+                            except:
+                                note = '   [?]'
+                            #if len(assignedFib) < 1: note = ' (ZERO assigned)'
+                    plateQApathPartial = plateQAfile.split(apred+'/')[1]
+                    if j < nplatesall:
+                        html.write('('+str(j+1).rjust(2)+') '+note+'<BR>\n')
+                    else:
+                        html.write('('+str(j+1).rjust(2)+') '+note+'\n')
+                else:
+                    if j < nplatesall:
+                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT><BR>\n')
+                    else:
+                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT>\n')
+
+
+            # Column 7: Combined files for this night
+            #html.write('<TD>\n')
+
+            # Column 8: Single stars observed for this night
+            #html.write('<TD>\n')
+
+            # Column 9: Dome flats observed for this night
+            #html.write('<TD>\n')
+
+            # Column 9: Summary files
+            visSumPath = '../summary/'+cmjd+'/allVisitMJD-daily-'+telescope+'-'+cmjd+'.fits'
+            starSumPath = '../summary/'+cmjd+'/allStarMJD-daily-'+telescope+'-'+cmjd+'.fits'
+            if nplates >= 1: 
+                html.write('<TD align="center"><a href="'+visSumPath+'">allVisitMJD</a>\n')
+                html.write('<BR><a href="'+starSumPath+'">allStarMJD</a>\n')
+            else:
+                html.write('<TD>\n')
+
+            # Column 10: Mean moon phase
+            bgcolor = '#000000'
+            txtcolor = '#FFFFFF'
+            meanmoonphase = moon_illumination(tt)
+            if meanmoonphase > 0.5: txtcolor = '#000000'
+            if meanmoonphase > 0.1: bgcolor = '#282828'
+            if meanmoonphase > 0.2: bgcolor = '#404040'
+            if meanmoonphase > 0.3: bgcolor = '#606060'
+            if meanmoonphase > 0.4: bgcolor = '#787878'
+            if meanmoonphase > 0.5: bgcolor = '#989898'
+            if meanmoonphase > 0.6: bgcolor = '#B0B0B0'
+            if meanmoonphase > 0.7: bgcolor = '#C8C8C8'
+            if meanmoonphase > 0.8: bgcolor = '#E8E8E8'
+            if meanmoonphase > 0.9: bgcolor = '#FFFFFF'
+            mphase = str(int(round(meanmoonphase*100)))+'%'
+            html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase)
         html.write('</table>\n')
 
         # Summary calibration data
