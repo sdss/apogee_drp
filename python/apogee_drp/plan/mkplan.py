@@ -197,9 +197,9 @@ def translate_idl_mjd5_script(scriptfile):
     ind,nind = dln.where(lines.strip().lower().find('apsetver')==0)
     telescope = None
     if nind==0:
-        print('No APSERVER line found')
+        print('No APSETVER line found')
         if scriptfile.lower().find('apo25m')>-1: telescope='apo25m'
-        if scriptfile.lower().find('lco25m')>-1: telescope='lcoo25m'
+        if scriptfile.lower().find('lco25m')>-1: telescope='lco25m'
         if telescope is None:
             raise ValueError('Cannot find TELESCOPE')
     else:
@@ -904,7 +904,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     psfdome_exist = np.zeros(len(dome),bool)
     for j in range(len(dome)):
         psffile = load.filename('PSF',num=dome[j],chips=True)
-        psffiles = [psffile.replace('apPSF-','apPSF-'+ch+'-') for ch in chips]
+        psffiles = [psffile.replace(load.prefix+'PSF-',load.prefix+'PSF-'+ch+'-') for ch in chips]
         exist = [os.path.exists(pf) for pf in psffiles]
         if np.sum(np.array(exist))==3:
             psfdome_exist[j] = True
@@ -919,7 +919,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     psfquartz_exist = np.zeros(len(quartz),bool)
     for j in range(len(quartz)):
         psffile = load.filename('PSF',num=quartz[j],chips=True)
-        psffiles = [psffile.replace('apPSF-','apPSF-'+ch+'-') for ch in chips]
+        psffiles = [psffile.replace(load.prefix+'PSF-',load.prefix+'PSF-'+ch+'-') for ch in chips]
         exist = [os.path.exists(pf) for pf in psffiles]
         if np.sum(np.array(exist))==3:
             psfquartz_exist[j] = True
@@ -934,7 +934,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     flux_exist = np.zeros(len(dome),bool)
     for j in range(len(dome)):
         fluxfile = load.filename('Flux',num=dome[j],chips=True)
-        fluxfiles = [fluxfile.replace('apFlux-','apFlux-'+ch+'-') for ch in chips]
+        fluxfiles = [fluxfile.replace(load.prefix+'Flux-',load.prefix+'Flux-'+ch+'-') for ch in chips]
         exist = [os.path.exists(ff) for ff in fluxfiles]
         if np.sum(np.array(exist))==3:
             flux_exist[j] = True
@@ -947,7 +947,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         flux = []
         fluxpluggroup = []
         logger.info('No apFlux files exist')
-
+        
     if len(psfdome)==0 and len(psfquartz)==0:
         logger.info('No apPSF files for this night exist.  They will be created as needed')
     if len(flux)==0:
@@ -959,8 +959,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     # Check that the FPI calibration file exists
     fpi_exist = np.zeros(len(fpinum),bool)
     for j in range(len(fpinum)):
-        fpifile = os.path.dirname(load.filename('Wave',num=0,chips=True))+'/apWaveFPI-%s-%8d.fits' % (str(mjd),fpinum[j])
-        fpifiles = [fpifile.replace('apWaveFPI-','apWaveFPI-'+ch+'-') for ch in chips]
+        fpifile = os.path.dirname(load.filename('Wave',num=0,chips=True))+'/'+load.prefix+'WaveFPI-%s-%8d.fits' % (str(mjd),fpinum[j])
+        fpifiles = [fpifile.replace(load.prefix+'WaveFPI-',load.prefix+'WaveFPI-'+ch+'-') for ch in chips]
         exist = [os.path.exists(ff) for ff in fpifiles]
         if np.sum(np.array(exist))==3:
             fpi_exist[j] = True
@@ -1024,7 +1024,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         else:
             print('Unknown exposure: ',expinfo['num'][i],expinfo['exptype'][i],expinfo['nread'][i],' adding to extra plan file')
             extra.append(int(expinfo['num'][i]))
-
+            
         # End of this plate block
         #  if plateid changed or last exposure
         platechange = expinfo['plateid'][i] != expinfo['plateid'][np.minimum(i+1,nfiles-1)]
@@ -1180,6 +1180,15 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         calplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                    'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':cal, 'fps':fps,
                    'cal':True}
+        # Pick a good apFlux ID for cal sequence
+        if len(flux)>0:
+            if calpsfid in flux:
+                calfluxid = calpsfid
+            else:
+                calfluxid = flux[0]
+        else:
+            calfluxid = calpsfid
+        calplan['fluxid'] = str(calfluxid)
         if waveid:
             calplan['waveid'] = str(waveid)
         if fps:
