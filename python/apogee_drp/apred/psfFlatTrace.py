@@ -449,7 +449,8 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             doutstr['SEEING'][i] =   hdr['SEEING']
         except:
             outstr['SEEING'][i] = -9999.999
-        outstr['AZ'][i] =       hdr['AZ']
+        try: outstr['AZ'][i] =       hdr['AZ']
+        except: pass
         outstr['ALT'][i] =      hdr['ALT']
         outstr['IPA'][i] =      hdr['IPA']
         outstr['FOCUS'][i] =    hdr['FOCUS']
