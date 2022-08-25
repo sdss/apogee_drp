@@ -3367,25 +3367,40 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     if domjd is True:
         # Find all .log.html files, get all MJDs with data
         print("----> makeMasterQApages: Finding log files. Please wait.")
+
         #logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
         mdirsN = glob.glob(datadirN+'/*')
         logfilesN = [d+'/'+os.path.basename(d)+'.log.html' for d in mdirsN]
         logsN = np.array([f for f in logfilesN if os.path.exists(f)])
-        hemN = np.full(len(logsN), 'N').astype(str)
+        nlogsN = len(logsN)
+        hemN = np.full(nlogsN, 'N').astype(str)
+        print("----> makeMasterQApages: Found "+str(nlogsN)+" APOGEE-N log files.")
+        mjdN = np.empty(nlogsN)
+        for i in range(nlogsN): mjdN[i] = int(os.path.basename(logsN[i]).split('.')[0])
+
+
         #logsS = np.array(glob.glob(datadirS+'/*/*.log.html'))
         mdirsS = glob.glob(datadirS+'/*')
         logfilesS = [d+'/'+os.path.basename(d)+'.log.html' for d in mdirsS]
         logsS = np.array([f for f in logfilesS if os.path.exists(f)])
-        hemS = np.full(len(logsN), 'S').astype(str)
+        nlogsS = len(logsS)
+        hemS = np.full(nlogsS, 'S').astype(str)
+        mjdS = np.empty(nlogsS)
+        for i in range(nlogsS): mjdS[i] = int(os.path.basename(logsS[i]).split('.')[0])
+        g, = np.where(mjdS > 59808)
+        mdirsS = np.array(mdirsS)[g]
+        logfilesS = np.array(logfilesS)[g]
+        logsS = logsS[g]
+        hemS = hemS[g]
+        mjdS = mjdS[g]
+        nlogsS = len(logsS)
+        print("----> makeMasterQApages: Found "+str(nlogsS)+" APOGEE-S log files.")
+
         logs = np.concatenate([logsN,logsS]) 
         hem = np.concatenate([hemN,hemS]) 
+        mjd = np.concatenate([mjdN,mjdS])
         nlogs = len(logs)
-        print("----> makeMasterQApages: Found "+str(nlogs)+" log files.")
-
-        # Get array of MJDs and run mkhtml if MJD[i] within mjdmin-mjdmax range
-        mjd = np.empty(nlogs)
-        for i in range(nlogs): 
-            mjd[i] = int(os.path.basename(logs[i]).split('.')[0])
+        print("----> makeMasterQApages: Found "+str(nlogs)+" total log files.")
 
         # Reverse sort the logs and MJDs so that newest MJD will be at the top
         order = np.argsort(mjd)
@@ -3455,6 +3470,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
 
             #if cmjd == '59186': import pdb; pdb.set_trace()
+
+            #pdb.set_trace()
 
             if len(reports) != 0:
                 # Column 1: Date
