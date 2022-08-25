@@ -3392,8 +3392,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         pdb.set_trace()
 
         g, = np.where(mjdS > 59808)
-        mdirsS = mdirsS[g]
-        logfilesS = logfilesS[g]
+        mdirsS = np.array(mdirsS)[g]
+        logfilesS = np.array(logfilesS)[g]
         logsS = logsS[g]
         hemS = hemS[g]
         nlogsS = len(logsS)
