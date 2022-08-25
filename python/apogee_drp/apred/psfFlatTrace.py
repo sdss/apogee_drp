@@ -463,8 +463,10 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
         outstr['TTLMBRD'][i] =  hdr['TTLMBRD']
         outstr['TLSOUTH'][i] =  hdr['TLSOUTH']
         outstr['TLNORTH'][i] =  hdr['TLNORTH']
-        outstr['TLSCAM2'][i] =  hdr['TLSCAM2']
-        outstr['TLSCAM1'][i] =  hdr['TLSCAM1']
+        try: outstr['TLSCAM2'][i] =  hdr['TLSCAM2']
+        except: outstr['TLSCAM2'][i] = -9999.999
+        try: outstr['TLSCAM1'][i] =  hdr['TLSCAM1']
+        except: outstr['TLSCAM1'][i] = -9999.999
         outstr['TLSDETC'][i] =  hdr['TLSDETC']
         outstr['TLSDETB'][i] =  hdr['TLSDETB']
         outstr['TPGVAC'][i] =   hdr['TPGVAC']
