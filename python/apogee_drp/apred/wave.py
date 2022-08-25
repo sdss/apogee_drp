@@ -135,14 +135,14 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
     # This is what apmultiwavecal does
     if verbose:
         print('Solving wavelength solutions simultaneously using all arclamp exposures')
-    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%s.fits' % str(mjd)
-    if os.path.exists(wfile.replace('apWave-','apWave-b-'))==False or clobber:
+    wfile = reduxdir+'cal/'+instrument+'/wave/'+load.prefix+'Wave-%s.fits' % str(mjd)
+    if os.path.exists(wfile.replace(load.prefix+'Wave-',load.prefix+'Wave-b-'))==False or clobber:
         # The previously measured lines in the apLines files will be reused if they exist
         pars,arclinestr = wavecal(arcframes,rows=np.arange(300),name=str(mjd),init=init,
                                   npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
         # npoly=4 gives lower RMS values
         # Check that it's there
-        if os.path.exists(wfile.replace('apWave-','apWave-b-')) is False:
+        if os.path.exists(wfile.replace(load.prefix+'Wave-',load.prefix+'Wave-b-')) is False:
             raise Exception(wfile+' not found')
     else:
         print(wfile+' wavelength calibration file already exists')
