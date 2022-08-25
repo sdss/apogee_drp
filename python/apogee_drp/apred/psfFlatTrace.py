@@ -451,6 +451,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             outstr['SEEING'][i] = -9999.999
         try: outstr['AZ'][i] =       hdr['AZ']
         except: pass
+        pdbs.set_trace()
         outstr['ALT'][i] =      hdr['ALT']
         outstr['IPA'][i] =      hdr['IPA']
         outstr['FOCUS'][i] =    hdr['FOCUS']
