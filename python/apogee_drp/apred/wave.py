@@ -87,7 +87,7 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
     load = apload.ApLoad(apred=apred,instrument=instrument)
-
+    
     # Step 1: Find the arclamp frames for the last week
     #--------------------------------------------------
     print(' ')
@@ -96,7 +96,7 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
 
     # Get nights in range MJD+/-7 days
     mjdlist = os.listdir(datadir)
-    mjds = [m for m in mjdlist if int(m) >= (int(mjd)-10) and int(m)<=(int(mjd)+10) and m.isdigit()]
+    mjds = [m for m in mjdlist if m.isdigit() and int(m) >= (int(mjd)-10) and int(m)<=(int(mjd)+10)]
     # Trim it down to 8 days
     mjds = np.array(mjds).astype(int)
     diff = np.abs(mjds-mjd)
@@ -104,14 +104,16 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
     mjds = mjds[si[0:8]]
     mjds = list(mjds[np.argsort(mjds)])
     print('Using MJDs ('+str(len(mjds))+'): '+','.join(np.char.array(mjds).astype(str)))
+    expinfo = None
     # Get exposure information
     for i,m in enumerate(mjds):
         expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
         nexp = len(expinfo1)
-        if i==0:
-            expinfo = expinfo1
-        else:
-            expinfo = np.hstack((expinfo,expinfo1))
+        if nexp>0:
+            if expinfo is None:
+                expinfo = expinfo1
+            else:
+                expinfo = np.hstack((expinfo,expinfo1))
     # Sort them
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]
