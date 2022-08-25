@@ -112,7 +112,7 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
     swaveid1 = string(waveid[i],format='(i08)')
     allfiles1 = wavedir1+'/'+[dirs.prefix+'Wave-'+chips+'-'+swaveid1+'.fits',dirs.prefix+'Wave-'+swaveid1+'.dat']
     if total(file_test(allfiles1)) eq 4 then begin
-      print,' wave file: ',file, ' already made'
+      print,' wave file: ',dirs.prefix+'Wave-'+swaveid1, ' already made'
       continue
     endif
 
