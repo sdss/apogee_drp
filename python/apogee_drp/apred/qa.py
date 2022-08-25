@@ -3389,6 +3389,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         mjdS = np.empty(nlogsS)
         for i in range(nlogsS): mjdS[i] = int(os.path.basename(logsS[i]).split('.')[0])
 
+        pdb.set_trace()
+
         g, = np.where(mjdS > 59808)
         mdirsS = mdirsS[g]
         logfilesS = logfilesS[g]
