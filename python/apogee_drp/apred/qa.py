@@ -148,7 +148,10 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     # Establish telescope and instrument
     telescope = observatory + '25m'
     instrument = 'apogee-n'
-    if observatory == 'lco': instrument = 'apogee-s'
+    prefix = 'ap'
+    if observatory == 'lco': 
+        instrument = 'apogee-s'
+        prefix = 'as'
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
     # Find the list of plan files
@@ -167,10 +170,10 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     darkplans = []
     for i in range(nplans):
         tmp = plans[i].split('-')
-        if tmp[0] == 'apPlan': 
+        if tmp[0] == prefix+'Plan': 
             if 'sky' not in plans[i]: sciplans.append(plans[i].replace('\n',''))
-        if tmp[0] == 'apCalPlan': calplans.append(plans[i].replace('\n',''))
-        if tmp[0] == 'apDarkPlan': darkplans.append(plans[i].replace('\n',''))
+        if tmp[0] == prefix+'CalPlan': calplans.append(plans[i].replace('\n',''))
+        if tmp[0] == prefix+'DarkPlan': darkplans.append(plans[i].replace('\n',''))
     sciplans = np.array(sciplans)
     nsciplans = len(sciplans)
     calplans = np.array(calplans)
@@ -609,8 +612,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
             d = load.apPlate(int(plate), mjd) 
             cframe = load.apPlate(int(plate), mjd)
             if type(d)!=dict: print("----> makePlateSum: Problem with apPlate!")
-            if os.path.exists(dfile.replace('apPlate-','apPlate-a-')):
-                dhdr = fits.getheader(dfile.replace('apPlate-','apPlate-a-'))
+            if os.path.exists(dfile.replace(prefix+'Plate-',prefix+'Plate-a-')):
+                dhdr = fits.getheader(dfile.replace(prefix+'Plate-',prefix+'Plate-a-'))
             else:
                 print("----> makePlateSum: Problem with apPlate!")
                 return 'bad'
@@ -1998,7 +2001,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
     # DB query for this visit
     db = apogeedb.DBSession()
-    vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
+    #vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "'", fmt='table')
+    vcat = db.query('visit', where="plate='" + plate + "' and mjd='" + mjd + "' and telescope='" + telescope + "'", fmt='table')
     db.close()
     stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
     ustars,uind = np.unique(vcat['apogee_id'][stars], return_index=True)
