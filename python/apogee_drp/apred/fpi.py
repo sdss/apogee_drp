@@ -54,8 +54,8 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     load = apload.ApLoad(apred=apred,instrument=instrument)
 
     # Make daily wavelength solution if it doesn't exist
-    wfile = reduxdir+'cal/'+instrument+'/wave/apWave-%s.fits' % str(mjd5)
-    if os.path.exists(wfile.replace('apWave-','apWave-b-'))==False:
+    wfile = reduxdir+'cal/'+instrument+'/wave/'+load.prefix+'Wave-%s.fits' % str(mjd5)
+    if os.path.exists(wfile.replace(load.prefix+'Wave-',load.prefix+'Wave-b-'))==False:
         wave.dailywave(mjd5,observatory=observatory,apred=apred,verbose=verbose)
 
 
@@ -109,7 +109,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     # but don't include darks
     
     # Get dithering information for this night
-    expinfo = db.query(sql='select * from apogee_drp.exposure where mjd='+str(mjd5))
+    expinfo = db.query(sql="select * from apogee_drp.exposure where mjd="+str(mjd5)+" and observatory='"+load.observatory+"'")
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]
     # Loop over the exposures and mark time periods of constant dither position
@@ -162,7 +162,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     print(' ')
     print('Fit peaks to the full-frame FPI data')
     print('------------------------------------')
-    fpilinesfile = reduxdir+'cal/'+instrument+'/fpi/apFPILines-%8d.fits' % fpinum
+    fpilinesfile = reduxdir+'cal/'+instrument+'/fpi/'+load.prefix+'FPILines-%8d.fits' % fpinum
     if os.path.exists(fpilinesfile) and clobber is False:
         print('Loading previously measured FPI lines for ',fpinum)
         fpilines = Table.read(fpilinesfile)
@@ -202,13 +202,13 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
             continue
         fpiframe = load.ap1D(fpinum1)
         # Check if the file exists already
-        fpiwavefile = reduxdir+'cal/'+instrument+'/wave/apWaveFPI-%5d-%8d.fits' % (mjd5,fpinum1)
+        fpiwavefile = reduxdir+'cal/'+instrument+'/wave/'+load.prefix+'WaveFPI-%5d-%8d.fits' % (mjd5,fpinum1)
         if load.exists('WaveFPI',num=fpinum1) and clobber==False:
             print(fpiwavefile+' already exists and clobber not set')
             continue
         # 1) Fit peaks to the FPI data
         print('  1) Fit peaks to the FPI data')
-        fpilinesfile = reduxdir+'cal/'+instrument+'/fpi/apFPILines-%8d.fits' % fpinum1
+        fpilinesfile = reduxdir+'cal/'+instrument+'/fpi/'+load.prefix+'FPILines-%8d.fits' % fpinum1
         if os.path.exists(fpilinesfile) and clobber is False:
             print('  Loading previously measured FPI lines for ',fpinum1)
             fpilines = Table.read(fpilinesfile)
@@ -597,8 +597,8 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
         
     # Load the wavelength array/solution
     print('loading fpiid wavelengtth solution: ', fpiid)
-    fpiwavefile = reduxdir+'cal/'+instrument+'/wave/apWaveFPI-%5d-%8d.fits' % (mjd,fpiid)
-    waveframe = load._readchip(fpiwavefile,'apWaveFPI')
+    fpiwavefile = reduxdir+'cal/'+instrument+'/wave/'+load.prefix+'WaveFPI-%5d-%8d.fits' % (mjd,fpiid)
+    waveframe = load._readchip(fpiwavefile,load.prefix+'WaveFPI')
     npoly = waveframe['a'][0].header['NPOLY']
     norder = npoly-1
     wcoef = waveframe['a'][1].data
