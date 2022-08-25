@@ -3374,7 +3374,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         logsN = np.array([f for f in logfilesN if os.path.exists(f)])
         nlogsN = len(logsN)
         hemN = np.full(nlogsN, 'N').astype(str)
-        print("----> makeMasterQApages: Found "+str(nlogs)+" APOGEE-N log files.")
+        print("----> makeMasterQApages: Found "+str(nlogsN)+" APOGEE-N log files.")
         mjdN = np.empty(nlogsN)
         for i in range(nlogsN): mjdN[i] = int(os.path.basename(logsN[i]).split('.')[0])
 
@@ -3385,7 +3385,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         logsS = np.array([f for f in logfilesS if os.path.exists(f)])
         nlogsS = len(logsS)
         hemS = np.full(nlogsS, 'S').astype(str)
-        print("----> makeMasterQApages: Found "+str(nlogs)+" APOGEE-S log files.")
+        print("----> makeMasterQApages: Found "+str(nlogsS)+" APOGEE-S log files.")
         mjdS = np.empty(nlogsS)
         for i in range(nlogsS): mjdS[i] = int(os.path.basename(logsS[i]).split('.')[0])
 
