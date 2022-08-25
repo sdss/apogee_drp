@@ -313,7 +313,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
     refpix = ascii.read(datadir + 'refpix' + inst + '.dat')
 
     apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
-    mdir = apodir + '/monitor/'
+    mdir = apodir + 'monitor/'
 
     # Output file name
     outfile = mdir + instrument + imtype + 'Trace-all.fits'
@@ -424,6 +424,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
         if len(twodFiles) < 1:
             twodFiles = glob.glob(expdir5 + str(exp['MJD'][i]) + '/ap2D*' + str(exp['NUM'][i]) + '.fits')
             if len(twodFiles) < 1:
+                pdb.set_trace()
                 print(ttxt + 'PROBLEM: ap2D files not found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
                 continue
         twodFiles.sort()
