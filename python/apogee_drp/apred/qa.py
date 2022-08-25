@@ -3392,6 +3392,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         logfilesS = np.array(logfilesS)[g]
         logsS = logsS[g]
         hemS = hemS[g]
+        mjdS = mjdS[g]
         nlogsS = len(logsS)
         print("----> makeMasterQApages: Found "+str(nlogsS)+" APOGEE-S log files.")
 
