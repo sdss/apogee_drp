@@ -43,7 +43,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     print("----> monitor starting")
 
     telescope = 'apo25m'
-    if instrument == 'apogee-s': telescope = 'lco25m'
+    prefix = 'ap'
+    if instrument == 'apogee-s': 
+        telescope = 'lco25m'
+        prefix = 'as'
 
     chips = np.array(['blue','green','red'])
     nchips = len(chips)
@@ -112,8 +115,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print('----> monitor:     adding data for ' + str(nvis) + ' pre-5 visits.')
 
             for i in range(nvis):
-                plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
-                if instrument == 'apogee-s': plsum = plsum.replace('apPlate', 'asPlate')
+                plsum = specdir4 + 'visit/' + telescope + '/' + uvis[i] + prefix + 'PlateSum-' + uallv4['PLATE'][i] + '-' + str(uallv4['MJD'][i]) + '.fits'
                 plsum = plsum.replace(' ', '')
                 print('(' + str(i+1) + '/' + str(nvis) + '): ' + os.path.basename(plsum))
                 if os.path.exists(plsum):
@@ -152,7 +154,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for i in range(nvis):
                 #badcheck, = np.where((int(uallv5['plate'][i]) == badComObs['CONFIG']) & (uallv5['mjd'][i] == badComObs['MJD']))
                 #if len(badcheck) > 0: continue
-                plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + 'apPlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
+                plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + prefix + 'PlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
                 plsum = plsum.replace(' ', '')
                 p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
                 if (len(p) < 1) & (os.path.exists(plsum)):
@@ -183,7 +185,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         # Get zeropoint info from apPlateSum files
         # Append together the individual apPlateSum files
 
-        files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + 'apPlateSum*.fits')
+        files = glob.glob(specdir5 + 'visit/' + telescope + '/*/*/*/' + prefix + 'PlateSum*.fits')
         if len(files) < 1:
             print("----> monitor: No apPlateSum files!")
         else:
@@ -581,7 +583,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             if len(bd) >= 1: 
                 fibqual = 'low flux'
                 bgcolor = 'yellow'
-
 
         fhtml.write('<TR bgcolor="' + bgcolor + '">')
         fhtml.write('<TD ALIGN=center>' + cfib + '<BR>(' + cblock + ') <TD ALIGN=center>' + fibqual)
