@@ -304,9 +304,11 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
 
     instrument = 'apogee-n'
     inst = 'N'
+    prefix = 'ap'
     if telescope == 'lco25m':
         instrument = 'apogee-s'
         inst = 'S'
+        prefix = 'as'
     fil = os.path.abspath(__file__)
     codedir = os.path.dirname(fil)
     datadir = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/domeflat/'
@@ -420,11 +422,10 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
             continue
 
         # Find the ap2D files for all 3 chips
-        twodFiles = glob.glob(expdir4 + str(exp['MJD'][i]) + '/ap2D*' + str(exp['NUM'][i]) + '.fits')
+        twodFiles = glob.glob(expdir4 + str(exp['MJD'][i]) + '/' + prefix + '2D*' + str(exp['NUM'][i]) + '.fits')
         if len(twodFiles) < 1:
-            twodFiles = glob.glob(expdir5 + str(exp['MJD'][i]) + '/ap2D*' + str(exp['NUM'][i]) + '.fits')
+            twodFiles = glob.glob(expdir5 + str(exp['MJD'][i]) + '/' + prefix + '2D*' + str(exp['NUM'][i]) + '.fits')
             if len(twodFiles) < 1:
-                pdb.set_trace()
                 print(ttxt + 'PROBLEM: ap2D files not found for exposure ' + str(exp['NUM'][i]) + ', MJD ' + str(exp['MJD'][i]))
                 continue
         twodFiles.sort()
