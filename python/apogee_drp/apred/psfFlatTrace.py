@@ -494,6 +494,13 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                         if ichip == 0: pix0g = pix0g - 0.88
                         if ichip == 1: pix0g = pix0g - 0.78
                         if ichip == 2: pix0g = pix0g - 0.74
+                if telecope == 'lco25m':
+                    if (exp['MJD'][i] > 59120) & (d['MJD'][i] <= 59150):
+                        if ichip == 0: pix0g = pix0g - 1
+                        if ichip == 1: pix0g = pix0g - 2
+                        if ichip == 2: pix0g = pix0g - 2
+                    if exp['MJD'][i] > 59150: pix0g = pix0g - 2
+
 
                 # Initial gaussian fit
                 gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0g)
