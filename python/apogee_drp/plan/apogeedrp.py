@@ -1038,6 +1038,10 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
     cols = ','.join(vcols+rvcols)
     allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    # rv_components can sometimes be an object type
+    if allvisit.dtype['rv_components'] == np.object:
+        allvisit = Table(allvisit)
+        allvisit['rv_components'] = np.zeros(len(allvisit),dtype=np.dtype((np.float32,3)))
     allvisitfile = load.filename('allVisit').replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allVisit file to '+allvisitfile)
     logger.info(str(len(allvisit))+' visits')
@@ -1429,6 +1433,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         cal.darkplot(apred=apred,telescope=telescope)
 
+    import pdb; pdb.set_trace()
+    
 
     # I could process the individual flat exposures in parallel first
     # that would dramatically speed things up
@@ -1491,7 +1497,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         cal.flatplot(apred=apred,telescope=telescope)
 
+    import pdb; pdb.set_trace()
 
+    
     # Make BPM in parallel
     #----------------------
     #idl -e "makecal,bpm=1,vers='$vers',telescope='$telescope'" >& log/mkbpm-$telescope.$host.log
@@ -1547,6 +1555,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     del queue    
 
 
+    import pdb; pdb.set_trace()
+    
+
     # Make Littrow in parallel
     #--------------------------
     #idl -e "makecal,littrow=1,vers='$vers',telescope='$telescope'" >& log/mklittrow-$telescope.$host.log
@@ -1601,6 +1612,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         logger.info('No master Littrow calibration files need to be run')
     del queue    
 
+    import pdb; pdb.set_trace()
+    
 
     # Make Response in parallel
     #--------------------------
@@ -1655,6 +1668,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         logger.info('No master Response calibration files need to be run')
     del queue    
 
+    import pdb; pdb.set_trace()
+    
 
     # Make Sparse in parallel
     #--------------------------
@@ -1763,6 +1778,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         logger.info('No master PSF Mode calibration files need to be run')
     del queue    
 
+
+    import pdb; pdb.set_trace()
+    
 
     # Make multiwave cals in parallel
     #--------------------------------
