@@ -503,7 +503,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                     if exp['MJD'][i] > 59150: 
                         if ichip == 0: pix0g = pix0g - 1.680
                         if ichip == 1: pix0g = pix0g - 1.773
-                        if ichip == 2: pix0g = pix0g - 1.877
+                        if ichip == 2: pix0g = pix0g - 1.8
 
 
                 # Initial gaussian fit
@@ -531,6 +531,7 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                 outstr['GAUSS_NPEAKS'][i, ichip] =       len(success)
         except:
             print(' problem with exposure ' + str(exp['NUM'][i]))
+            pdb.set_trace()
             continue
 
     # Either append new results to master file, or create new master file
