@@ -505,7 +505,6 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                         if ichip == 1: pix0g = pix0g - 1.773
                         if ichip == 2: pix0g = pix0g - 1.877
 
-                pdb.set_trace()
                 # Initial gaussian fit
                 gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0g)
 
