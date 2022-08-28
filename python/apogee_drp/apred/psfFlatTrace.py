@@ -449,8 +449,10 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
         except: outstr['AZ'][i] = -9999.999
         try: outstr['ALT'][i] =      hdr['ALT']
         except: outstr['ALT'][i] = -9999.999
-        outstr['IPA'][i] =      hdr['IPA']
-        outstr['FOCUS'][i] =    hdr['FOCUS']
+        try: outstr['IPA'][i] =      hdr['IPA']
+        except: outstr['IPA'][i] = -9999.999
+        try: outstr['FOCUS'][i] =    hdr['FOCUS']
+        except: outstr['FOCUS'][i] = -9999.999
         outstr['DITHPIX'][i] =  hdr['DITHPIX']
         outstr['LN2LEVEL'][i] = hdr['LN2LEVEL']
         outstr['RELHUM'][i] =   hdr['RELHUM']
@@ -493,6 +495,15 @@ def makeLookupTable(apred='daily', telescope='apo25m', imtype='QuartzFlat', medi
                         if ichip == 0: pix0g = pix0g - 0.88
                         if ichip == 1: pix0g = pix0g - 0.78
                         if ichip == 2: pix0g = pix0g - 0.74
+                if telescope == 'lco25m':
+                    if (exp['MJD'][i] > 59120) & (exp['MJD'][i] <= 59150):
+                        if ichip == 0: pix0g = pix0g - 1.113
+                        if ichip == 1: pix0g = pix0g - 1.257
+                        if ichip == 2: pix0g = pix0g - 1.350
+                    if exp['MJD'][i] > 59150: 
+                        if ichip == 0: pix0g = pix0g - 1.680
+                        if ichip == 1: pix0g = pix0g - 1.773
+                        if ichip == 2: pix0g = pix0g - 1.877
 
                 # Initial gaussian fit
                 gpeaks0 = gaussFitAll(infile=twodFiles[ichip], medianrad=medianrad, pix0=pix0g)
