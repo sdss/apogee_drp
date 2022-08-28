@@ -233,7 +233,12 @@ if keyword_set(mapa) then plugdir=datadir+cmjd+'/' else begin
   plugdir = mapper_data+'/'+plugmjd+'/'
 endelse
 if keyword_set(fps) then begin
-  configgrp = string(plate/100,format='(I0)')+'XX'
+  ;; at least 6 characters (0036XX), but potentially more 10036XX
+  if plate gt 999999 then begin
+    configgrp = string(plate/100,format='(I0)')+'XX'
+  endif else begin
+    configgrp = string(plate/100,format='(I04)')+'XX'
+  endelse
   plugdir = getenv('SDSSCORE_DIR')+'/'+observatory+'/summary_files/'+configgrp+'/'
   plugfile = 'confSummary-'+strtrim(plate,2)+'.par'
 endif
