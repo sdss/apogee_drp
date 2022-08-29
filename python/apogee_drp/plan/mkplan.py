@@ -633,6 +633,10 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         if fps==False and (plate!=0) and (plate!=plateid):
             raise ValueError('plateid in header does not match plate!')
 
+    if fps and (configid is None or configid==''):
+        print('configid problem. using input plate value')
+        configid = plate
+        
     # plugmap
     if ap3d==False and ap2d==False:
         logger.info(str(plugid))
