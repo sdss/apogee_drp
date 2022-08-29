@@ -430,6 +430,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                  mapper_data=None, apred=None, onem=None, starfiber=None, starnames=None, 
                  starmag=None, flat=None, fixfiberid=None, badfiberid=None):
 
+    prefix = 'ap'
+    if telescope == 'lco25m': prefix = 'as'
     chips = np.array(['a','b','c'])
     nchips = len(chips)
     
