@@ -305,6 +305,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
                 data = fits.open(files[i])[1].data
+                pdb.set_trace()
                 check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
                 if len(check) > 0:
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
