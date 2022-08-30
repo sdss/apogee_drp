@@ -1739,7 +1739,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             fig = plt.figure(figsize=(30,12))
 
-            g, = np.where(allepsf['CENT']) > 0
+            g, = np.where(allepsf['CENT'] > 0)
             ymax = np.nanmax(allepsf['CENT'][g]) + 1
             ymin = np.nanmin(allepsf['CENT'][g]) - 1
             yspan = ymax - ymin
