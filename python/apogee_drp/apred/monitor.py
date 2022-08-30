@@ -885,8 +885,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig = plt.figure(figsize=(30,12))
 
             g, = np.where(allepsf['CENT'] > 0)
-            ymax = np.nanmax(allepsf['CENT'][g]) + 1
-            ymin = np.nanmin(allepsf['CENT'][g]) - 1
+            ymax = np.nanmax(allepsf['CENT'][g]) + 0.5
+            ymin = np.nanmin(allepsf['CENT'][g]) - 0.5
             yspan = ymax - ymin
 
             caljd = Time(allepsf['MJD'][g], format='mjd').jd - 2.4e6
