@@ -372,9 +372,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     continue
                 else:
                     if os.path.exists(files[i].replace('QAdarkflat', 'QAcal')):
-                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                    newstr = getQAdarkflatStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
+                        print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                        newstr = getQAdarkflatStruct(data)
+                        outstr = np.concatenate([outstr, newstr])
                     
             hdulist = fits.open(outfile)
             hdu1 = fits.table_to_hdu(Table(outstr))
