@@ -89,11 +89,124 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     qtracefile = specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits'
     if os.path.exists(qtracefile): qtrace = fits.getdata(qtracefile)
     else: print(instrument + 'QuartzFlatTrace-all.fits not found')
-    #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
-
+    allepsffile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+    if os.path.exists(allepsffile): allepsf = fits.getdata(allepsffile)
+    else: print(instrument + 'Trace.fits not found')
     #badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
 
     if makesumfiles is True:
+
+        ###########################################################################################
+        # MAKE MASTER TRACE FILE
+        # Append together the individual QAcal files
+        if os.path.exists(allepsffile): 
+            files = glob.glob(specdir5 + 'cal/' + instrument + '/psf/' + prefix + 'EPSF-b-*.fits')
+            if len(files) < 1:
+                print("----> monitor: No apEPSF-b files!")
+            else:
+                outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+                print("----> monitor: Making " + os.path.basename(outfile))
+
+               # Make output structure and fill with APOGEE2 summary file values
+                dt = np.dtype([('NUM',      np.int32),
+                               ('MJD',      np.float64),
+                               ('CENT',     np.float64),
+                               ('LN2LEVEL', np.int32)])
+
+                outstr = np.zeros(len(allepsf['NUM']), dtype=dt)
+
+                outstr['NUM'] =      allepsf['NUM']
+                outstr['MJD'] =      allepsf['MJD']
+                outstr['CENT'] =     allepsf['CENT']
+                outstr['LN2LEVEL'] = allepsf['LN2LEVEL']
+
+                files.sort()
+                files = np.array(files)
+                nfiles = len(files)
+
+                Nadditions = 0
+                print(nfiles)
+                for i in range(nfiles):
+                    num = int(files[i].split('-')[3].split('.')[0])
+                    if num == 2410059: continue
+                    hdr = fits.getheader(files[i])
+                    tmjd = hdr['JD-MID'] - 2400000.5
+                    check, = np.where(tmjd == outstr['MJD'])
+                    if len(check) == 0:
+                        #pdb.set_trace()
+                        print("---->    monitor: reading " + os.path.basename(files[i]))
+                        hdr = fits.getheader(files[i])
+                        struct1 = np.zeros(1, dtype=dt)
+                        struct1['NUM'] = num
+                        struct1['MJD'] = hdr['JD-MID'] - 2400000.5
+                        struct1['LN2LEVEL'] = hdr['LN2LEVEL']
+                        #num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
+                        #if num > 1000:
+                        #    hdr = fits.getheader(files[i])
+                        for j in range(144,156):
+                            data = fits.getdata(files[i],j)
+                            if data['FIBER'][0] == 150: 
+                                struct1['CENT'] = np.squeeze(data['CENT'])[1000]
+                        outstr = np.concatenate([outstr, struct1])
+                        Nadditions += 1
+
+                if Nadditions > 0:
+                    Table(outstr).write(outfile, overwrite=True)
+                    print("----> monitor: Finished making " + os.path.basename(outfile))
+                else:
+                    print("----> monitor: Nothing to add to " + os.path.basename(outfile))
+
+        return
+
+        ###########################################################################################
+        # MAKE MASTER EXP FILE
+        # Get long term trends from dome flats
+        # Append together the individual exp files
+
+        files = glob.glob(specdir5 + 'exposures/' + instrument + '/*/*exp.fits')
+        if len(files) < 1:
+            print("----> monitor: No exp files!")
+        else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+            outstr = getExpStruct(allexp)
+
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+
+            # Loop over SDSS-V files and add them to output structure
+            Nadditions = 0
+            for i in range(nfiles):
+                data = fits.getdata(files[i])
+                nobs = len(data)
+                try:
+                    check, = np.where(data['DATEOBS'][nobs-1] == outstr['DATEOBS'])
+                except:
+                    print('---->    monitor: Problem with missing values in ' + os.path.basename(files[i]))
+                    continue
+                if len(check) < 1:
+                    print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
+                    newstr = getExpStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
+                    Nadditions += 1
+
+                #for j in range(nobs):
+                #    dataj = data[j]
+                #    check, = np.where(dataj['DATEOBS'] == outstr['DATEOBS'])
+                #    if len(check) > 0:
+                        #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                #        continue
+                #    else:
+
+            if Nadditions > 0:
+                Table(outstr).write(outfile, overwrite=True)
+                print("----> monitor: Finished making " + os.path.basename(outfile))
+            else:
+                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
+
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
@@ -158,7 +271,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plsum = plsum.replace(' ', '')
                 p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
                 if (len(p) < 1) & (os.path.exists(plsum)):
-                    data1 = fits.getdata(plsum,1)
+                    data1 = fits.getdata(plsum)
                     data2 = fits.getdata(plsum,2)
                     nexp = len(data1['IM'])
                     totexptime = np.sum(data1['EXPTIME'])
@@ -200,8 +313,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             nfiles=len(files)
 
             # Loop over SDSS-V files and add them to output structure
+            Nadditions = 0
             for i in range(nfiles):
-                data = fits.open(files[i])[1].data
+                data = fits.getdata(files[i])
                 check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
                 if len(check) > 0:
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
@@ -210,9 +324,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                     newstr = getSciStruct(data)
                     outstr = np.concatenate([outstr, newstr])
+                    Nadditions += 1
 
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
+            if Nadditions > 0:
+                Table(outstr).write(outfile, overwrite=True)
+                print("----> monitor: Finished making " + os.path.basename(outfile))
+            else:
+                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER QACAL FILE
@@ -233,19 +351,25 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             nfiles = len(files)
 
             # Loop over SDSS-V files and add them to output structure
+            Nadditions = 0
             for i in range(nfiles):
-                data = fits.open(files[i])[1].data
+                data = fits.getdata(files[i])
                 check, = np.where(data['NAME'][0] == outstr['NAME'])
                 if len(check) > 0:
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
                     continue
                 else:
-                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                    newstr = getQAcalStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
+                    if os.path.exists(files[i].replace('QAcal', 'QAdarkflat')):
+                        print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                        newstr = getQAcalStruct(data)
+                        outstr = np.concatenate([outstr, newstr])
+                        Nadditions += 1
 
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
+            if Nadditions > 0:
+                Table(outstr).write(outfile, overwrite=True)
+                print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
+            else:
+                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
         ###########################################################################################
         # APPEND QADARKFLAT INFO TO MASTER QACAL FILE
@@ -265,119 +389,40 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             nfiles = len(files)
 
             # Loop over SDSS-V files and add them to output structure
+            Nadditions = 0
             for i in range(nfiles):
-                data = fits.open(files[i])[1].data
+                data = fits.getdata(files[i])
                 check, = np.where(data['NAME'][0] == outstr['NAME'])
                 if len(check) > 0:
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
                     continue
                 else:
-                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                    newstr = getQAdarkflatStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
-                    
-            hdulist = fits.open(outfile)
-            hdu1 = fits.table_to_hdu(Table(outstr))
-            hdulist.append(hdu1)
-            hdulist.writeto(outfile, overwrite=True)
-            hdulist.close()
-            print("----> monitor: Finished adding QAdarkflat info to " + os.path.basename(outfile))
-
-        ###########################################################################################
-        # MAKE MASTER EXP FILE
-        # Get long term trends from dome flats
-        # Append together the individual exp files
-
-        files = glob.glob(specdir5 + 'exposures/' + instrument + '/*/*exp.fits')
-        if len(files) < 1:
-            print("----> monitor: No exp files!")
-        else:
-            outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
-            print("----> monitor: Making " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            outstr = getExpStruct(allexp)
-
-            files.sort()
-            files = np.array(files)
-            nfiles = len(files)
-
-            # Loop over SDSS-V files and add them to output structure
-            for i in range(nfiles):
-                data = fits.open(files[i])[1].data
-                if data['DATEOBS'].shape[0] != 0:
-                    check, = np.where(data['DATEOBS'] == outstr['DATEOBS'])
-                    if len(check) > 0:
-                        #print("---->    monitor: skipping " + os.path.basename(files[i]))
-                        continue
-                    else:
+                    if os.path.exists(files[i].replace('QAdarkflat', 'QAcal')):
                         print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                        newstr = getExpStruct(data)
+                        newstr = getQAdarkflatStruct(data)
                         outstr = np.concatenate([outstr, newstr])
+                        Nadditions += 1
 
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
+            if Nadditions > 0:
+                hdulist = fits.open(outfile)
+                hdu1 = fits.table_to_hdu(Table(outstr))
+                hdulist.append(hdu1)
+                hdulist.writeto(outfile, overwrite=True)
+                hdulist.close()
+                print("----> monitor: Finished adding QAdarkflat info to " + os.path.basename(outfile))
+            else:
+                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
-
-        ###########################################################################################
-        # MAKE MASTER TRACE FILE
-        # Append together the individual QAcal files
-
-#        files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
-#        if len(files) < 1:
-#            print("----> monitor: No apEPSF-b files!")
-#        else:
-#            outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
-#            print("----> monitor: Making " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-#            dt = np.dtype([('NUM',      np.int32),
-#                           ('MJD',      np.float64),
-#                           ('CENT',     np.float64),
-#                           ('LN2LEVEL', np.int32)])
-
-#            outstr = np.zeros(len(allepsf['NUM']), dtype=dt)
-
-#            outstr['NUM'] =      allepsf['NUM']
-#            outstr['MJD'] =      allepsf['MJD']
-#            outstr['CENT'] =     allepsf['CENT']
-#            outstr['LN2LEVEL'] = allepsf['LN2LEVEL']
-
-#            files.sort()
-#            files = np.array(files)
-#            nfiles = len(files)
-
-#            for i in range(nfiles):
-#                print("---->    monitor: reading " + os.path.basename(files[i]))
-#                data = fits.open(files[i])[1].data
-#                import pdb; pdb.set_trace()
-#                struct1 = np.zeros(len(data['NUM']), dtype=dt)
-#                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
-#                if num > 1000:
-#                    hdr = fits.getheader(files[i])
-#                    for j in range(147,156):
-#                        data = fits.open(files[i])[j].data
-#                        if a['FIBER'] == 150:
-#                            struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
-#                            struct1['CENT'][i] = data['CENT'][1000]
-#                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
-#                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
-#                            break
-#                if i == 0: outstr = np.concatenate([outstr, struct1])
-#                else:      outstr = np.concatenate([outstr, struct1])
-
-#            Table(outstr).write(outfile, overwrite=True)
-#            print("----> monitor: Finished making " + os.path.basename(outfile))
 
     ###############################################################################################
     # Read in the SDSS-V summary files
-    allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
-    alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
-    allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
-    allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
-    #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
+    allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits')
+    alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits',2)
+    allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits')
+    allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits')
+    allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits')
     # Read in the APOGEE2 Trace.fits file since the columns don't match between APOGEE2 and SDSS-V
-    allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
+    #allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits',1)
 
     ###############################################################################################
     # Find the different cals
@@ -869,6 +914,54 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.close('all')
 
     if makeplots is True:
+        ###########################################################################################
+        # trace.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,12))
+
+            g, = np.where(allepsf['CENT'] > 0)
+            ymax = np.nanmax(allepsf['CENT'][g]) + 0.5
+            ymin = np.nanmin(allepsf['CENT'][g]) - 0.5
+            yspan = ymax - ymin
+
+            caljd = Time(allepsf['MJD'][g], format='mjd').jd - 2.4e6
+
+            ax1 = plt.subplot2grid((2,1), (0,0))
+            ax2 = plt.subplot2grid((2,1), (1,0))
+            axes = [ax1, ax2]
+
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax1.set_xlim(xmin, xmax)
+            ax1.set_xlabel(r'JD - 2,400,000')
+            ax2.set_xlabel(r'LN2 Level')
+            ax1.axvline(x=59146, color='teal', linewidth=2)
+            ax1.axvline(x=59555, color='teal', linewidth=2)
+            ax1.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+            ax1.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax1.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+            for ax in axes:
+                ax.set_ylim(ymin, ymax)
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.set_ylabel(r'Trace Center')
+
+            for iyear in range(nyears):
+                ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+            ax1.scatter(caljd, allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
+            ax2.scatter(allepsf['LN2LEVEL'][g], allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
         ###########################################################################################
         # sciobs.png
         plotfile = specdir5 + 'monitor/' + instrument + '/sciobs.png'
@@ -1725,52 +1818,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     plt.close('all')
 
         ###########################################################################################
-        # trace.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,12))
-            ymax = np.nanmedian(allepsf['CENT']) + 1
-            ymin = np.nanmedian(allepsf['CENT']) - 1
-            yspan = ymax - ymin
-
-            caljd = Time(allepsf['MJD'], format='mjd').jd - 2.4e6
-
-            ax1 = plt.subplot2grid((2,1), (0,0))
-            ax2 = plt.subplot2grid((2,1), (1,0))
-            axes = [ax1, ax2]
-
-            ax1.xaxis.set_major_locator(ticker.MultipleLocator(500))
-            ax1.set_xlim(xmin, xmax)
-            ax1.set_xlabel(r'JD - 2,400,000')
-            ax2.set_xlabel(r'LN2 Level')
-            ax.axvline(x=59146, color='teal', linewidth=2)
-            ax.axvline(x=59555, color='teal', linewidth=2)
-            ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-            ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-            ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
-            for ax in axes:
-                ax.set_ylim(ymin, ymax)
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                ax.set_ylabel(r'Trace Center')
-
-            for iyear in range(nyears):
-                ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-            ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
-            ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-        ###########################################################################################
         # biasmean.png
         plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -2042,7 +2089,7 @@ def getExpStruct(data=None):
                    ('TRACEDIST', np.float32),
                    ('MED',       np.float32, (nchips,300))])
 
-    outstr = np.zeros(len(data['MJD']), dtype=dt)
+    outstr = np.zeros(len(data), dtype=dt)
 
     outstr['MJD'] =       data['MJD']
     outstr['DATEOBS'] =   data['DATEOBS']
