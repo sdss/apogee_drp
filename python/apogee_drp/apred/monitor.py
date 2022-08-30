@@ -117,15 +117,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
                 data = fits.getdata(files[i])
-                #if data['DATEOBS'][i].shape[0] != 0:
-                check, = np.where(data['DATEOBS'] == outstr['DATEOBS'])
-                if len(check) > 0:
-                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
-                    continue
-                else:
-                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                    newstr = getExpStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
+                nobs = len(data)
+                print("---->    monitor: adding " + nobs + " exposures from " + os.path.basename(files[i]) + " to master file")
+                for j in range(nobs):
+                    dataj = data[j]
+                    check, = np.where(dataj['DATEOBS'] == outstr['DATEOBS'])
+                    if len(check) > 0:
+                        #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                        continue
+                    else:
+
+                        newstr = getExpStruct(dataj)
+                        outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
