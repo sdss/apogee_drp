@@ -132,24 +132,26 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     else:
                         print("---->    monitor: reading " + os.path.basename(files[i]))
                         hdr = fits.getheader(files[i])
+                        struct1 = np.zeros(1, dtype=dt)
+                        struct1['NUM'] = num
+                        struct1['MJD'] = hdr['JD-MID'] - 2400000.5
+                        struct1['LN2LEVEL'] = hdr['LN2LEVEL']
                         #num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
                         #if num > 1000:
                         #    hdr = fits.getheader(files[i])
                         for j in range(144,156):
                             data = fits.getdata(files[i],j)
                             if data['FIBER'][0] == 150:
-                                struct1 = np.zeros(1, dtype=dt)
-                                struct1['NUM'] = num
                                 struct1['CENT'] = data['CENT'][1000]
-                                struct1['MJD'] = hdr['JD-MJD'] - 2400000.5
-                                struct1['LN2LEVEL'] = hdr['LN2LEVEL']
-                                break
+                                #break
                         outstr = np.concatenate([outstr, struct1])
                             #if i == 0: outstr = np.concatenate([outstr, struct1])
                             #else:      outstr = np.concatenate([outstr, struct1])
 
                 Table(outstr).write(outfile, overwrite=True)
                 print("----> monitor: Finished making " + os.path.basename(outfile))
+
+        return
 
         ###########################################################################################
         # MAKE MASTER EXP FILE
