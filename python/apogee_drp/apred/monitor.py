@@ -133,7 +133,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     tmjd = hdr['JD-MID'] - 2400000.5
                     check, = np.where(tmjd == outstr['MJD'])
                     if len(check) == 0:
-                        pdb.set_trace()
+                        #pdb.set_trace()
                         print("---->    monitor: reading " + os.path.basename(files[i]))
                         hdr = fits.getheader(files[i])
                         struct1 = np.zeros(1, dtype=dt)
