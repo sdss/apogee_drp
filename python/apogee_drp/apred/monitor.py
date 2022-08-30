@@ -877,6 +877,54 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makeplots is True:
         ###########################################################################################
+        # trace.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,12))
+
+            g, = np.where(allepsf['CENT'] > 0)
+            ymax = np.nanmax(allepsf['CENT'][g]) + 1
+            ymin = np.nanmin(allepsf['CENT'][g]) - 1
+            yspan = ymax - ymin
+
+            caljd = Time(allepsf['MJD'][g], format='mjd').jd - 2.4e6
+
+            ax1 = plt.subplot2grid((2,1), (0,0))
+            ax2 = plt.subplot2grid((2,1), (1,0))
+            axes = [ax1, ax2]
+
+            ax1.xaxis.set_major_locator(ticker.MultipleLocator(500))
+            ax1.set_xlim(xmin, xmax)
+            ax1.set_xlabel(r'JD - 2,400,000')
+            ax2.set_xlabel(r'LN2 Level')
+            ax.axvline(x=59146, color='teal', linewidth=2)
+            ax.axvline(x=59555, color='teal', linewidth=2)
+            ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+            ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+            for ax in axes:
+                ax.set_ylim(ymin, ymax)
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.set_ylabel(r'Trace Center')
+
+            for iyear in range(nyears):
+                ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+            ax1.scatter(caljd, allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
+            ax2.scatter(allepsf['LN2LEVEL'][g], allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
         # sciobs.png
         plotfile = specdir5 + 'monitor/' + instrument + '/sciobs.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
@@ -1730,54 +1778,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
                     plt.savefig(plotfile)
                     plt.close('all')
-
-        ###########################################################################################
-        # trace.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,12))
-
-            g, = np.where(allepsf['CENT'] > 0)
-            ymax = np.nanmax(allepsf['CENT'][g]) + 1
-            ymin = np.nanmin(allepsf['CENT'][g]) - 1
-            yspan = ymax - ymin
-
-            caljd = Time(allepsf['MJD'][g], format='mjd').jd - 2.4e6
-
-            ax1 = plt.subplot2grid((2,1), (0,0))
-            ax2 = plt.subplot2grid((2,1), (1,0))
-            axes = [ax1, ax2]
-
-            ax1.xaxis.set_major_locator(ticker.MultipleLocator(500))
-            ax1.set_xlim(xmin, xmax)
-            ax1.set_xlabel(r'JD - 2,400,000')
-            ax2.set_xlabel(r'LN2 Level')
-            ax.axvline(x=59146, color='teal', linewidth=2)
-            ax.axvline(x=59555, color='teal', linewidth=2)
-            ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-            ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-            ax.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
-            for ax in axes:
-                ax.set_ylim(ymin, ymax)
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                ax.set_ylabel(r'Trace Center')
-
-            for iyear in range(nyears):
-                ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-            ax1.scatter(caljd, allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
-            ax2.scatter(allepsf['LN2LEVEL'][g], allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
 
         ###########################################################################################
         # biasmean.png
