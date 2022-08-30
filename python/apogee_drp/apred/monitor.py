@@ -89,8 +89,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     qtracefile = specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits'
     if os.path.exists(qtracefile): qtrace = fits.getdata(qtracefile)
     else: print(instrument + 'QuartzFlatTrace-all.fits not found')
-    #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
-
+    allepsffile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+    if os.path.exists(allepsffile): allepsf = fits.open(allepsffile)[1].data
+    else: print(instrument + 'Trace.fits not found')
     #badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
 
     if makesumfiles is True:
@@ -323,51 +324,52 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         # MAKE MASTER TRACE FILE
         # Append together the individual QAcal files
 
-#        files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
-#        if len(files) < 1:
-#            print("----> monitor: No apEPSF-b files!")
-#        else:
-#            outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
-#            print("----> monitor: Making " + os.path.basename(outfile))
+        if os.path.exists(allepsffile): 
+            files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
+            if len(files) < 1:
+                print("----> monitor: No apEPSF-b files!")
+            else:
+                outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+                print("----> monitor: Making " + os.path.basename(outfile))
 
-            # Make output structure and fill with APOGEE2 summary file values
-#            dt = np.dtype([('NUM',      np.int32),
-#                           ('MJD',      np.float64),
-#                           ('CENT',     np.float64),
-#                           ('LN2LEVEL', np.int32)])
+               # Make output structure and fill with APOGEE2 summary file values
+                dt = np.dtype([('NUM',      np.int32),
+                               ('MJD',      np.float64),
+                               ('CENT',     np.float64),
+                               ('LN2LEVEL', np.int32)])
 
-#            outstr = np.zeros(len(allepsf['NUM']), dtype=dt)
+                outstr = np.zeros(len(allepsf['NUM']), dtype=dt)
 
-#            outstr['NUM'] =      allepsf['NUM']
-#            outstr['MJD'] =      allepsf['MJD']
-#            outstr['CENT'] =     allepsf['CENT']
-#            outstr['LN2LEVEL'] = allepsf['LN2LEVEL']
+                outstr['NUM'] =      allepsf['NUM']
+                outstr['MJD'] =      allepsf['MJD']
+                outstr['CENT'] =     allepsf['CENT']
+                outstr['LN2LEVEL'] = allepsf['LN2LEVEL']
 
-#            files.sort()
-#            files = np.array(files)
-#            nfiles = len(files)
+                files.sort()
+                files = np.array(files)
+                nfiles = len(files)
 
-#            for i in range(nfiles):
-#                print("---->    monitor: reading " + os.path.basename(files[i]))
-#                data = fits.open(files[i])[1].data
-#                import pdb; pdb.set_trace()
-#                struct1 = np.zeros(len(data['NUM']), dtype=dt)
-#                num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
-#                if num > 1000:
-#                    hdr = fits.getheader(files[i])
-#                    for j in range(147,156):
-#                        data = fits.open(files[i])[j].data
-#                        if a['FIBER'] == 150:
-#                            struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
-#                            struct1['CENT'][i] = data['CENT'][1000]
-#                            struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
-#                            struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
-#                            break
-#                if i == 0: outstr = np.concatenate([outstr, struct1])
-#                else:      outstr = np.concatenate([outstr, struct1])
+                for i in range(nfiles):
+                    pdb.set_trace()
+                    print("---->    monitor: reading " + os.path.basename(files[i]))
+                    data = fits.getdata(files[i],1)
+                    struct1 = np.zeros(len(data['NUM']), dtype=dt)
+                    num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
+                    if num > 1000:
+                        hdr = fits.getheader(files[i])
+                        for j in range(147,156):
+                            data = fits.open(files[i])[j].data
+                            if a['FIBER'] == 150:
+                                struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
+                                struct1['CENT'][i] = data['CENT'][1000]
+                                struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
+                                struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
+                                break
+                    if i == 0: outstr = np.concatenate([outstr, struct1])
+                    else:      outstr = np.concatenate([outstr, struct1])
 
-#            Table(outstr).write(outfile, overwrite=True)
-#            print("----> monitor: Finished making " + os.path.basename(outfile))
+                Table(outstr).write(outfile, overwrite=True)
+                print("----> monitor: Finished making " + os.path.basename(outfile))
 
     ###############################################################################################
     # Read in the SDSS-V summary files
