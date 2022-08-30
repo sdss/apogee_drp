@@ -338,9 +338,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
                     continue
                 else:
-                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                    newstr = getQAcalStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
+                    if os.path.exists(files[i].replace('QAcal', 'QAdarkflat')):
+                        print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                        newstr = getQAcalStruct(data)
+                        outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
@@ -370,6 +371,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
                     continue
                 else:
+                    if os.path.exists(files[i].replace('QAdarkflat', 'QAcal')):
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                     newstr = getQAdarkflatStruct(data)
                     outstr = np.concatenate([outstr, newstr])
