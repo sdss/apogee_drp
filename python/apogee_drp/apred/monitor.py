@@ -131,9 +131,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         continue
                     else:
                         print("---->    monitor: reading " + os.path.basename(files[i]))
-                        data = fits.getdata(files[i])
                         hdr = fits.getheader(files[i])
-                        pdb.set_trace()
                         #num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
                         #if num > 1000:
                         #    hdr = fits.getheader(files[i])
