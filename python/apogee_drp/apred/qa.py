@@ -270,12 +270,12 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
         # Only run makemasterqa, makenightqa, and monitor after the last plate on this mjd
         if i < nsciplans-1:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
+            x = apqa(telescope=telescope, plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
                      makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
                      makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=False, 
                      makenightqa=False, makemonitor=False, clobber=clobber)
         else:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
+            x = apqa(telescope=telescope, plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
                      makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
                      makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=makemasterqa, 
                      makenightqa=makenightqa, makemonitor=makemonitor, clobber=clobber)
@@ -396,7 +396,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the visit plots
         if makevisplots == True:
-            q = apVisitPlots(load=load, plate=plate, mjd=mjd)
+            q = apVisitPlots(load=load, plate=plate, mjd=mjd, telescope=telescope)
 
         # Make mjd.html and fields.html
         if makemasterqa == True: 
@@ -2556,9 +2556,12 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
 
 ###################################################################################################
 ''' APVISITPLOTS: plots of the apVisit spectra '''
-def apVisitPlots(load=None, plate=None, mjd=None):
+def apVisitPlots(load=None, plate=None, mjd=None, telescope=None):
 
     print("----> apVisitPlots: Running plate "+plate+", MJD "+mjd)
+
+    prefix = 'ap'
+    if telescope == 'lco25m': prefix = 'as'
 
     if int(mjd)>59556:
         fps = True
@@ -2611,7 +2614,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
             pcolor = 'k'
             if objtype == 'SKY': pcolor = 'firebrick'
 
-            plotfile = 'apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
+            plotfile = prefix + 'Plate-' + plate + '-' + mjd + '-' + cfiber + '.png'
 
             # Get wavelength and flux arrays
             FluxB = apPlate['a'][1].data[300-fiber,:]
