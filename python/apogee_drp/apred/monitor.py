@@ -124,6 +124,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 files = np.array(files)
                 nfiles = len(files)
 
+                Nadditions = 0
                 for i in range(nfiles):
                     num = int(files[i].split('-')[3].split('.')[0])
                     check, = np.where(num == outstr['NUM'])
@@ -144,9 +145,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                             if data['FIBER'][0] == 150: 
                                 struct1['CENT'] = np.squeeze(data['CENT'])[1000]
                         outstr = np.concatenate([outstr, struct1])
+                        Nadditions += 1
 
-                Table(outstr).write(outfile, overwrite=True)
-                print("----> monitor: Finished making " + os.path.basename(outfile))
+                if Nadditions > 0:
+                    Table(outstr).write(outfile, overwrite=True)
+                    print("----> monitor: Finished making " + os.path.basename(outfile))
+                else:
+                    print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER EXP FILE
@@ -168,6 +173,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             nfiles = len(files)
 
             # Loop over SDSS-V files and add them to output structure
+            Nadditions = 0
             for i in range(nfiles):
                 data = fits.getdata(files[i])
                 nobs = len(data)
@@ -180,6 +186,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
                     newstr = getExpStruct(data)
                     outstr = np.concatenate([outstr, newstr])
+                    Nadditions += 1
+
                 #for j in range(nobs):
                 #    dataj = data[j]
                 #    check, = np.where(dataj['DATEOBS'] == outstr['DATEOBS'])
@@ -188,9 +196,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #        continue
                 #    else:
 
-
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
+            if Nadditions > 0:
+                Table(outstr).write(outfile, overwrite=True)
+                print("----> monitor: Finished making " + os.path.basename(outfile))
+            else:
+                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
@@ -298,6 +308,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             nfiles=len(files)
 
             # Loop over SDSS-V files and add them to output structure
+            Nadditions = 0
             for i in range(nfiles):
                 data = fits.getdata(files[i])
                 check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
@@ -308,9 +319,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                     newstr = getSciStruct(data)
                     outstr = np.concatenate([outstr, newstr])
+                    Nadditions += 1
 
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
+            if Nadditions > 0:
+                Table(outstr).write(outfile, overwrite=True)
+                print("----> monitor: Finished making " + os.path.basename(outfile))
+            else:
+                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER QACAL FILE
@@ -331,6 +346,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             nfiles = len(files)
 
             # Loop over SDSS-V files and add them to output structure
+            Nadditions = 0
             for i in range(nfiles):
                 data = fits.getdata(files[i])
                 check, = np.where(data['NAME'][0] == outstr['NAME'])
@@ -342,9 +358,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                         newstr = getQAcalStruct(data)
                         outstr = np.concatenate([outstr, newstr])
+                        Nadditions += 1
 
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
+            if Nadditions > 0:
+                Table(outstr).write(outfile, overwrite=True)
+                print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
+            else:
+                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
         ###########################################################################################
         # APPEND QADARKFLAT INFO TO MASTER QACAL FILE
@@ -364,6 +384,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             nfiles = len(files)
 
             # Loop over SDSS-V files and add them to output structure
+            Nadditions = 0
             for i in range(nfiles):
                 data = fits.getdata(files[i])
                 check, = np.where(data['NAME'][0] == outstr['NAME'])
@@ -375,13 +396,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                         newstr = getQAdarkflatStruct(data)
                         outstr = np.concatenate([outstr, newstr])
-                    
-            hdulist = fits.open(outfile)
-            hdu1 = fits.table_to_hdu(Table(outstr))
-            hdulist.append(hdu1)
-            hdulist.writeto(outfile, overwrite=True)
-            hdulist.close()
-            print("----> monitor: Finished adding QAdarkflat info to " + os.path.basename(outfile))
+                        Nadditions += 1
+
+            if Nadditions > 0:
+                hdulist = fits.open(outfile)
+                hdu1 = fits.table_to_hdu(Table(outstr))
+                hdulist.append(hdu1)
+                hdulist.writeto(outfile, overwrite=True)
+                hdulist.close()
+                print("----> monitor: Finished adding QAdarkflat info to " + os.path.basename(outfile))
+            else:
+                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
 
     ###############################################################################################
