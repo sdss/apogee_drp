@@ -142,6 +142,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         for j in range(144,156):
                             data = fits.getdata(files[i],j)
                             if data['FIBER'][0] == 150:
+                                pdb.set_trace()
                                 struct1['CENT'] = data['CENT'][1000]
                                 #break
                         outstr = np.concatenate([outstr, struct1])
