@@ -96,6 +96,94 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     if makesumfiles is True:
         ###########################################################################################
+        # MAKE MASTER EXP FILE
+        # Get long term trends from dome flats
+        # Append together the individual exp files
+
+        files = glob.glob(specdir5 + 'exposures/' + instrument + '/*/*exp.fits')
+        if len(files) < 1:
+            print("----> monitor: No exp files!")
+        else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+            outstr = getExpStruct(allexp)
+
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+
+            # Loop over SDSS-V files and add them to output structure
+            for i in range(nfiles):
+                data = fits.getdata(files[i])
+                pdb.set_trace()
+                if data['DATEOBS'].shape[0] != 0:
+                    check, = np.where(data['DATEOBS'] == outstr['DATEOBS'])
+                    if len(check) > 0:
+                        #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                        continue
+                    else:
+                        print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                        newstr = getExpStruct(data)
+                        outstr = np.concatenate([outstr, newstr])
+
+            Table(outstr).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
+
+
+        ###########################################################################################
+        # MAKE MASTER TRACE FILE
+        # Append together the individual QAcal files
+
+        if os.path.exists(allepsffile): 
+            files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/' + prefix + 'EPSF-b-*.fits')
+            if len(files) < 1:
+                print("----> monitor: No apEPSF-b files!")
+            else:
+                outfile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
+                print("----> monitor: Making " + os.path.basename(outfile))
+
+               # Make output structure and fill with APOGEE2 summary file values
+                dt = np.dtype([('NUM',      np.int32),
+                               ('MJD',      np.float64),
+                               ('CENT',     np.float64),
+                               ('LN2LEVEL', np.int32)])
+
+                outstr = np.zeros(len(allepsf['NUM']), dtype=dt)
+
+                outstr['NUM'] =      allepsf['NUM']
+                outstr['MJD'] =      allepsf['MJD']
+                outstr['CENT'] =     allepsf['CENT']
+                outstr['LN2LEVEL'] = allepsf['LN2LEVEL']
+
+                files.sort()
+                files = np.array(files)
+                nfiles = len(files)
+
+                for i in range(nfiles):
+                    pdb.set_trace()
+                    print("---->    monitor: reading " + os.path.basename(files[i]))
+                    data = fits.getdata(files[i])
+                    struct1 = np.zeros(len(data['NUM']), dtype=dt)
+                    num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
+                    if num > 1000:
+                        hdr = fits.getheader(files[i])
+                        for j in range(147,156):
+                            data = fits.open(files[i])[j].data
+                            if a['FIBER'] == 150:
+                                struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
+                                struct1['CENT'][i] = data['CENT'][1000]
+                                struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
+                                struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
+                                break
+                    if i == 0: outstr = np.concatenate([outstr, struct1])
+                    else:      outstr = np.concatenate([outstr, struct1])
+
+                Table(outstr).write(outfile, overwrite=True)
+                print("----> monitor: Finished making " + os.path.basename(outfile))
+
+        ###########################################################################################
         # MAKE MASTER apSNRsum FILE
         # Append together S/N arrays and other metadata from apPlateSum files
 
