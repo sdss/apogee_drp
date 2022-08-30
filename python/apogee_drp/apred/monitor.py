@@ -171,7 +171,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for i in range(nfiles):
                 data = fits.getdata(files[i])
                 nobs = len(data)
-                print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
+                check, = np.where(data['DATEOBS'][len(data)-1] == outstr['DATEOBS'])
+                if len(check) < 1:
+                    print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
+                    newstr = getExpStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
                 #for j in range(nobs):
                 #    dataj = data[j]
                 #    check, = np.where(dataj['DATEOBS'] == outstr['DATEOBS'])
@@ -180,8 +184,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #        continue
                 #    else:
 
-                newstr = getExpStruct(data)
-                outstr = np.concatenate([outstr, newstr])
 
             Table(outstr).write(outfile, overwrite=True)
             print("----> monitor: Finished making " + os.path.basename(outfile))
