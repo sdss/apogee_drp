@@ -270,12 +270,12 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 
         # Only run makemasterqa, makenightqa, and monitor after the last plate on this mjd
         if i < nsciplans-1:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
+            x = apqa(telescope=telescope, plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
                      makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
                      makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=False, 
                      makenightqa=False, makemonitor=False, clobber=clobber)
         else:
-            x = apqa(plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
+            x = apqa(telescope=telescope, plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
                      makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
                      makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=makemasterqa, 
                      makenightqa=makenightqa, makemonitor=makemonitor, clobber=clobber)
@@ -396,7 +396,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the visit plots
         if makevisplots == True:
-            q = apVisitPlots(load=load, plate=plate, mjd=mjd)
+            q = apVisitPlots(load=load, plate=plate, mjd=mjd, telescope=telescope)
 
         # Make mjd.html and fields.html
         if makemasterqa == True: 
@@ -2556,9 +2556,12 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
 
 ###################################################################################################
 ''' APVISITPLOTS: plots of the apVisit spectra '''
-def apVisitPlots(load=None, plate=None, mjd=None):
+def apVisitPlots(load=None, plate=None, mjd=None, telescope=None):
 
     print("----> apVisitPlots: Running plate "+plate+", MJD "+mjd)
+
+    prefix = 'ap'
+    if telescope == 'lco25m': prefix = 'as'
 
     if int(mjd)>59556:
         fps = True
@@ -2611,7 +2614,7 @@ def apVisitPlots(load=None, plate=None, mjd=None):
             pcolor = 'k'
             if objtype == 'SKY': pcolor = 'firebrick'
 
-            plotfile = 'apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
+            plotfile = prefix + 'Plate-' + plate + '-' + mjd + '-' + cfiber + '.png'
 
             # Get wavelength and flux arrays
             FluxB = apPlate['a'][1].data[300-fiber,:]
@@ -3023,11 +3026,15 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
         if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
         if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
-        reports.sort()
-        reportfile = reports[0]
-        reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
-        #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
-        html.write(' <a href="'+reportLink+'"> <H3>' + telescope.upper().replace('25M',' 2.5m') + ' Observing report </H3></a>\n')
+        if len(reports) > 0:
+            reports.sort()
+            reportfile = reports[0]
+            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
+            #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+            html.write(' <a href="'+reportLink+'"> <H3>' + telescope.upper().replace('25M',' 2.5m') + ' Observing report </H3></a>\n')
+        else:
+            print('----> makeNightQA: No observing report found for ' + mjd + '!!!')
+            html.write(telescope.upper().replace('25M',' 2.5m') + ' Observing report (missing?)</H3>\n')
     else:
         print('----> makeNightQA: No observing report found for ' + mjd + '!!!')
         html.write(telescope.upper().replace('25M',' 2.5m') + ' Observing report (missing?)</H3>\n')
