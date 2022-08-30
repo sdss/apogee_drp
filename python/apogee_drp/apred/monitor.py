@@ -129,6 +129,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for i in range(nfiles):
                     num = int(files[i].split('-')[3].split('.')[0])
                     if num == 2410059: continue
+                    pdb.set_trace()
                     hdr = fits.getheader(files[i])
                     tmjd = hdr['JD-MID'] - 2400000.5
                     check, = np.where(tmjd == outstr['MJD'])
