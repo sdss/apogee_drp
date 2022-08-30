@@ -171,8 +171,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for i in range(nfiles):
                 data = fits.getdata(files[i])
                 nobs = len(data)
-                pdb.set_trace()
-                check, = np.where(data['DATEOBS'][nobs-1] == outstr['DATEOBS'])
+                try:
+                    check, = np.where(data['DATEOBS'][nobs-1] == outstr['DATEOBS'])
+                except:
+                    continue
                 if len(check) < 1:
                     print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
                     newstr = getExpStruct(data)
