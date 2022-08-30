@@ -141,7 +141,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         #    hdr = fits.getheader(files[i])
                         for j in range(144,156):
                             data = fits.getdata(files[i],j)
-                            if data['FIBER'][0] == 150: struct1['CENT'] = np.squeeze(data['CENT'][1000])
+                            if data['FIBER'][0] == 150: 
+                                pdb.set_trace()
+                                struct1['CENT'] = np.squeeze(data['CENT'][1000])
                         outstr = np.concatenate([outstr, struct1])
 
                 Table(outstr).write(outfile, overwrite=True)
