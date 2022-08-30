@@ -929,19 +929,27 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             caljd = Time(allepsf['MJD'][g], format='mjd').jd - 2.4e6
 
+
+            minjd1 = np.min(caljd)
+            maxjd1 = np.max(caljd)
+            jdspan1 = maxjd1 - minjd1
+            xmin1 = minjd1 - jdspan1 * 0.01
+            xmax1 = maxjd1 + jdspan1 * 0.055
+            xspan1 = xmax1-xmin1
+
             ax1 = plt.subplot2grid((2,1), (0,0))
             ax2 = plt.subplot2grid((2,1), (1,0))
             axes = [ax1, ax2]
 
             ax1.xaxis.set_major_locator(ticker.MultipleLocator(500))
-            ax1.set_xlim(xmin, xmax)
+            ax1.set_xlim(xmin1, xmax1)
             ax1.set_xlabel(r'JD - 2,400,000')
             ax2.set_xlabel(r'LN2 Level')
             ax1.axvline(x=59146, color='teal', linewidth=2)
             ax1.axvline(x=59555, color='teal', linewidth=2)
-            ax1.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+            ax1.text(59146-xspan1*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
             ax1.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-            ax1.text(59555+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+            ax1.text(59555+xspan1*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
             for ax in axes:
                 ax.set_ylim(ymin, ymax)
                 ax.minorticks_on()
