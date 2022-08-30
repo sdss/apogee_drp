@@ -3023,11 +3023,15 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
         if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
         if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
-        reports.sort()
-        reportfile = reports[0]
-        reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
-        #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
-        html.write(' <a href="'+reportLink+'"> <H3>' + telescope.upper().replace('25M',' 2.5m') + ' Observing report </H3></a>\n')
+        if len(reports) > 0:
+            reports.sort()
+            reportfile = reports[0]
+            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
+            #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+            html.write(' <a href="'+reportLink+'"> <H3>' + telescope.upper().replace('25M',' 2.5m') + ' Observing report </H3></a>\n')
+        else:
+            print('----> makeNightQA: No observing report found for ' + mjd + '!!!')
+            html.write(telescope.upper().replace('25M',' 2.5m') + ' Observing report (missing?)</H3>\n')
     else:
         print('----> makeNightQA: No observing report found for ' + mjd + '!!!')
         html.write(telescope.upper().replace('25M',' 2.5m') + ' Observing report (missing?)</H3>\n')
