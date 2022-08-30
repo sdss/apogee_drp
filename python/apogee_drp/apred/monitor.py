@@ -2048,7 +2048,7 @@ def getExpStruct(data=None):
                    ('TRACEDIST', np.float32),
                    ('MED',       np.float32, (nchips,300))])
 
-    outstr = np.zeros(len(data['MJD']), dtype=dt)
+    outstr = np.zeros(1, dtype=dt)
 
     outstr['MJD'] =       data['MJD']
     outstr['DATEOBS'] =   data['DATEOBS']
