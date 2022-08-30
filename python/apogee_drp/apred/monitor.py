@@ -148,8 +148,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 Table(outstr).write(outfile, overwrite=True)
                 print("----> monitor: Finished making " + os.path.basename(outfile))
 
-        return
-
         ###########################################################################################
         # MAKE MASTER EXP FILE
         # Get long term trends from dome flats
@@ -380,13 +378,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     ###############################################################################################
     # Read in the SDSS-V summary files
-    allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits',1)
+    allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits')
     alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits',2)
-    allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits',1)
-    allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits',1)
-    #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
+    allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits')
+    allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits')
+    allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits')
     # Read in the APOGEE2 Trace.fits file since the columns don't match between APOGEE2 and SDSS-V
-    allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits',1)
+    #allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits',1)
 
     ###############################################################################################
     # Find the different cals
