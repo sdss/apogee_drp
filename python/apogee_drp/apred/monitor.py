@@ -139,7 +139,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         # Append together the individual QAcal files
 
         if os.path.exists(allepsffile): 
-            files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/' + prefix + 'EPSF-b-*.fits')
+            files = glob.glob(specdir5 + 'cal/' + instrument + '/psf/' + prefix + 'EPSF-b-*.fits')
             if len(files) < 1:
                 print("----> monitor: No apEPSF-b files!")
             else:
@@ -164,6 +164,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 nfiles = len(files)
 
                 for i in range(nfiles):
+                    num = files[i].split('-')[3].split('.')[0]
                     pdb.set_trace()
                     print("---->    monitor: reading " + os.path.basename(files[i]))
                     data = fits.getdata(files[i])
