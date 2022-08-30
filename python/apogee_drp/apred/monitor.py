@@ -118,7 +118,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for i in range(nfiles):
                 data = fits.getdata(files[i])
                 nobs = len(data)
-                print("---->    monitor: adding " + nobs + " exposures from " + os.path.basename(files[i]) + " to master file")
+                print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
                 for j in range(nobs):
                     dataj = data[j]
                     check, = np.where(dataj['DATEOBS'] == outstr['DATEOBS'])
