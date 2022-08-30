@@ -140,7 +140,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         hdr = fits.getheader(files[i])
                         struct1 = np.zeros(1, dtype=dt)
                         struct1['NUM'] = num
-                        struct1['MJD'] = hdr['JD-MID'] - 2400000.5
+                        struct1['MJD'] = tmjd
                         struct1['LN2LEVEL'] = hdr['LN2LEVEL']
                         #num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
                         #if num > 1000:
@@ -157,8 +157,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     print("----> monitor: Finished making " + os.path.basename(outfile))
                 else:
                     print("----> monitor: Nothing to add to " + os.path.basename(outfile))
-
-        return
 
         ###########################################################################################
         # MAKE MASTER EXP FILE
