@@ -1368,7 +1368,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
         if int(waveid) < 100000:
             reduxdir = os.environ['APOGEE_REDUX']+'/'+vers+'/'
             wavefile = reduxdir+'cal/'+load.instrument+'/wave/'+load.prefix+'Wave-%5d.fits' % waveid
-            waveframe = load._readchip(wavefile,'apWave')
+            waveframe = load._readchip(wavefile,load.prefix+'Wave')
         else:
             waveframe = load.apWave(waveid)
         npoly = waveframe['a'][0].header['NPOLY']
