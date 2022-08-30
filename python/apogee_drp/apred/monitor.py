@@ -1738,12 +1738,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,12))
-            ymax = np.nanmedian(allepsf['CENT']) + 1
-            ymin = np.nanmedian(allepsf['CENT']) - 1
+
+            g, = np.where(allepsf['CENT']) > 0
+            ymax = np.nanmax(allepsf['CENT'][g]) + 1
+            ymin = np.nanmin(allepsf['CENT'][g]) - 1
             yspan = ymax - ymin
 
-            pdb.set_trace()
-            caljd = Time(allepsf['MJD'], format='mjd').jd - 2.4e6
+            caljd = Time(allepsf['MJD'][g], format='mjd').jd - 2.4e6
 
             ax1 = plt.subplot2grid((2,1), (0,0))
             ax2 = plt.subplot2grid((2,1), (1,0))
@@ -1771,8 +1772,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                 ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
-            ax1.scatter(caljd, allepsf['CENT'], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
-            ax2.scatter(allepsf['LN2LEVEL'], allepsf['CENT'], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
+            ax1.scatter(caljd, allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
+            ax2.scatter(allepsf['LN2LEVEL'][g], allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
             plt.savefig(plotfile)
