@@ -95,49 +95,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
 
     if makesumfiles is True:
-        ###########################################################################################
-        # MAKE MASTER EXP FILE
-        # Get long term trends from dome flats
-        # Append together the individual exp files
-
-        files = glob.glob(specdir5 + 'exposures/' + instrument + '/*/*exp.fits')
-        if len(files) < 1:
-            print("----> monitor: No exp files!")
-        else:
-            outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
-            print("----> monitor: Making " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            outstr = getExpStruct(allexp)
-
-            files.sort()
-            files = np.array(files)
-            nfiles = len(files)
-
-            # Loop over SDSS-V files and add them to output structure
-            for i in range(nfiles):
-                data = fits.getdata(files[i])
-                nobs = len(data)
-                print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
-                #for j in range(nobs):
-                #    dataj = data[j]
-                #    check, = np.where(dataj['DATEOBS'] == outstr['DATEOBS'])
-                #    if len(check) > 0:
-                        #print("---->    monitor: skipping " + os.path.basename(files[i]))
-                #        continue
-                #    else:
-
-                newstr = getExpStruct(data)
-                outstr = np.concatenate([outstr, newstr])
-
-            Table(outstr).write(outfile, overwrite=True)
-            print("----> monitor: Finished making " + os.path.basename(outfile))
-
 
         ###########################################################################################
         # MAKE MASTER TRACE FILE
         # Append together the individual QAcal files
-
+        pdb.set_trace()
         if os.path.exists(allepsffile): 
             files = glob.glob(specdir5 + 'cal/' + instrument + '/psf/' + prefix + 'EPSF-b-*.fits')
             if len(files) < 1:
@@ -185,6 +147,44 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 Table(outstr).write(outfile, overwrite=True)
                 print("----> monitor: Finished making " + os.path.basename(outfile))
+
+        ###########################################################################################
+        # MAKE MASTER EXP FILE
+        # Get long term trends from dome flats
+        # Append together the individual exp files
+
+        files = glob.glob(specdir5 + 'exposures/' + instrument + '/*/*exp.fits')
+        if len(files) < 1:
+            print("----> monitor: No exp files!")
+        else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+            outstr = getExpStruct(allexp)
+
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+
+            # Loop over SDSS-V files and add them to output structure
+            for i in range(nfiles):
+                data = fits.getdata(files[i])
+                nobs = len(data)
+                print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
+                #for j in range(nobs):
+                #    dataj = data[j]
+                #    check, = np.where(dataj['DATEOBS'] == outstr['DATEOBS'])
+                #    if len(check) > 0:
+                        #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                #        continue
+                #    else:
+
+                newstr = getExpStruct(data)
+                outstr = np.concatenate([outstr, newstr])
+
+            Table(outstr).write(outfile, overwrite=True)
+            print("----> monitor: Finished making " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
