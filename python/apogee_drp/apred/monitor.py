@@ -125,8 +125,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 nfiles = len(files)
 
                 Nadditions = 0
+                print(nfiles)
                 for i in range(nfiles):
                     num = int(files[i].split('-')[3].split('.')[0])
+                    pdb.set_trace()
                     check, = np.where(num == outstr['NUM'])
                     if len(check) < 1:
                         continue
