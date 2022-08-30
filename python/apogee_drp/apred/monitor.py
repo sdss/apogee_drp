@@ -99,7 +99,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # MAKE MASTER TRACE FILE
         # Append together the individual QAcal files
-        pdb.set_trace()
         if os.path.exists(allepsffile): 
             files = glob.glob(specdir5 + 'cal/' + instrument + '/psf/' + prefix + 'EPSF-b-*.fits')
             if len(files) < 1:
@@ -126,7 +125,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 nfiles = len(files)
 
                 for i in range(nfiles):
-                    num = files[i].split('-')[3].split('.')[0]
+                    num = int(files[i].split('-')[3].split('.')[0])
                     check, = np.where(num == outstr['NUM'])
                     if len(check) < 1:
                         continue
