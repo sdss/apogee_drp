@@ -986,7 +986,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     else:
         logger.info('Dailywave '+dailywave+' not found')
         waveid = None
-
+        
     # Scan through all files, accumulate IDs of the various types
     dark, cal, exp, exppluggroup, sky, extra, calpsfid = [], [], [], [], [], [], None
     domeused, out, planfiles = [], [], []

@@ -595,7 +595,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     # save results in apWave files
     out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
     if str(name).isnumeric()==False or len(str(name))<8:  # non-ID input
-        out = os.path.dirname(out)+'/apWave-'+str(name)+'.fits'
+        out = os.path.dirname(out)+'/'+load.prefix+'Wave-'+str(name)+'.fits'
     print('Saving to ',out)
     save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,framesgroup=framesgroup,
                 framesdithpix=framesdithpix,rms=rms,sig=sig,allpars=allpars,linestr=linestr)
@@ -1367,7 +1367,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
         print('loading waveid: ', waveid)
         if int(waveid) < 100000:
             reduxdir = os.environ['APOGEE_REDUX']+'/'+vers+'/'
-            wavefile = reduxdir+'cal/'+load.instrument+'/wave/apWave-%5d.fits' % waveid
+            wavefile = reduxdir+'cal/'+load.instrument+'/wave/'+load.prefix+'Wave-%5d.fits' % waveid
             waveframe = load._readchip(wavefile,'apWave')
         else:
             waveframe = load.apWave(waveid)
@@ -1476,7 +1476,7 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
             outname = load.filename('1D',num=int(name),mjd=load.cmjd(int(name)),chips=True)
             for ichip,chip in enumerate(chips) :
                 if int(waveid) < 100000:
-                    chipwavefile = reduxdir+'cal/'+load.instrument+'/wave/apWave-%s-%5d.fits' % (chip,waveid)
+                    chipwavefile = reduxdir+'cal/'+load.instrument+'/wave/'+load.prefix+'Wave-%s-%5d.fits' % (chip,waveid)
                 else:
                     chipwavefile = load.allfile('Wave',num=waveid,chips=True)
                 hdu = fits.HDUList()
