@@ -90,7 +90,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     if os.path.exists(qtracefile): qtrace = fits.getdata(qtracefile)
     else: print(instrument + 'QuartzFlatTrace-all.fits not found')
     allepsffile = specdir5 + 'monitor/' + instrument + 'Trace.fits'
-    if os.path.exists(allepsffile): allepsf = fits.open(allepsffile)[1].data
+    if os.path.exists(allepsffile): allepsf = fits.getdata(allepsffile)
     else: print(instrument + 'Trace.fits not found')
     #badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
 
@@ -159,7 +159,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plsum = plsum.replace(' ', '')
                 p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
                 if (len(p) < 1) & (os.path.exists(plsum)):
-                    data1 = fits.getdata(plsum,1)
+                    data1 = fits.getdata(plsum)
                     data2 = fits.getdata(plsum,2)
                     nexp = len(data1['IM'])
                     totexptime = np.sum(data1['EXPTIME'])
@@ -202,7 +202,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                data = fits.open(files[i])[1].data
+                data = fits.getdata(files[i])
                 check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
                 if len(check) > 0:
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
@@ -235,7 +235,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                data = fits.open(files[i])[1].data
+                data = fits.getdata(files[i])
                 check, = np.where(data['NAME'][0] == outstr['NAME'])
                 if len(check) > 0:
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
@@ -267,7 +267,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                data = fits.open(files[i])[1].data
+                data = fits.getdata(files[i])
                 check, = np.where(data['NAME'][0] == outstr['NAME'])
                 if len(check) > 0:
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
@@ -305,7 +305,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             # Loop over SDSS-V files and add them to output structure
             for i in range(nfiles):
-                data = fits.open(files[i])[1].data
+                data = fits.getdata(files[i])
+                pdb.set_trace()
                 if data['DATEOBS'].shape[0] != 0:
                     check, = np.where(data['DATEOBS'] == outstr['DATEOBS'])
                     if len(check) > 0:
@@ -325,7 +326,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         # Append together the individual QAcal files
 
         if os.path.exists(allepsffile): 
-            files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/apEPSF-b-*.fits')
+            files = glob.glob(specdir5 + '/cal/' + instrument + '/psf/' + prefix + 'EPSF-b-*.fits')
             if len(files) < 1:
                 print("----> monitor: No apEPSF-b files!")
             else:
@@ -352,7 +353,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for i in range(nfiles):
                     pdb.set_trace()
                     print("---->    monitor: reading " + os.path.basename(files[i]))
-                    data = fits.getdata(files[i],1)
+                    data = fits.getdata(files[i])
                     struct1 = np.zeros(len(data['NUM']), dtype=dt)
                     num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
                     if num > 1000:
@@ -373,13 +374,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     ###############################################################################################
     # Read in the SDSS-V summary files
-    allcal =  fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[1].data
-    alldark = fits.open(specdir5 + 'monitor/' + instrument + 'Cal.fits')[2].data
-    allexp =  fits.open(specdir5 + 'monitor/' + instrument + 'Exp.fits')[1].data
-    allsci =  fits.open(specdir5 + 'monitor/' + instrument + 'Sci.fits')[1].data
+    allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits',1)
+    alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits',2)
+    allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits',1)
+    allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits',1)
     #allepsf = fits.open(specdir5 + 'monitor/' + instrument + 'Trace.fits')[1].data
     # Read in the APOGEE2 Trace.fits file since the columns don't match between APOGEE2 and SDSS-V
-    allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
+    allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits',1)
 
     ###############################################################################################
     # Find the different cals
