@@ -1742,6 +1742,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymin = np.nanmedian(allepsf['CENT']) - 1
             yspan = ymax - ymin
 
+            pdb.set_trace()
             caljd = Time(allepsf['MJD'], format='mjd').jd - 2.4e6
 
             ax1 = plt.subplot2grid((2,1), (0,0))
