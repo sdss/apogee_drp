@@ -127,23 +127,28 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for i in range(nfiles):
                     num = files[i].split('-')[3].split('.')[0]
-                    pdb.set_trace()
-                    print("---->    monitor: reading " + os.path.basename(files[i]))
-                    data = fits.getdata(files[i])
-                    struct1 = np.zeros(len(data['NUM']), dtype=dt)
-                    num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
-                    if num > 1000:
+                    check, = np.where(num == outstr['NUM'])
+                    if len(check) < 1:
+                        continue
+                    else:
+                        print("---->    monitor: reading " + os.path.basename(files[i]))
+                        data = fits.getdata(files[i])
                         hdr = fits.getheader(files[i])
-                        for j in range(147,156):
-                            data = fits.open(files[i])[j].data
-                            if a['FIBER'] == 150:
-                                struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
-                                struct1['CENT'][i] = data['CENT'][1000]
-                                struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
-                                struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
-                                break
-                    if i == 0: outstr = np.concatenate([outstr, struct1])
-                    else:      outstr = np.concatenate([outstr, struct1])
+                        pdb.set_trace()
+                        struct1 = np.zeros(len(data['NUM']), dtype=dt)
+                        num = round(int(files[i].split('-b-')[1].split('.')[0]) / 10000)
+                        if num > 1000:
+                            hdr = fits.getheader(files[i])
+                            for j in range(147,156):
+                                data = fits.open(files[i])[j].data
+                                if a['FIBER'] == 150:
+                                    struct1['NUM'][i] = round(int(files[i].split('-b-')[1].split('.')[0]))
+                                    struct1['CENT'][i] = data['CENT'][1000]
+                                    struct1['MJD'][i] = hdr['JD-MJD'] - 2400000.5
+                                    struct1['LN2LEVEL'][i] = hdr['LN2LEVEL']
+                                    break
+                        if i == 0: outstr = np.concatenate([outstr, struct1])
+                        else:      outstr = np.concatenate([outstr, struct1])
 
                 Table(outstr).write(outfile, overwrite=True)
                 print("----> monitor: Finished making " + os.path.basename(outfile))
