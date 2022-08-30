@@ -929,7 +929,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             caljd = Time(allepsf['MJD'][g], format='mjd').jd - 2.4e6
 
-            pdb.set_trace()
             ax1 = plt.subplot2grid((2,1), (0,0))
             ax2 = plt.subplot2grid((2,1), (1,0))
             axes = [ax1, ax2]
