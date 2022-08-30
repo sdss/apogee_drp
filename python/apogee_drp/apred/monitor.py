@@ -101,7 +101,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         # Append together the individual QAcal files
         if os.path.exists(allepsffile): 
             files = glob.glob(specdir5 + 'cal/' + instrument + '/psf/' + prefix + 'EPSF-b-*.fits')
-            pdb.set_trace()
             if len(files) < 1:
                 print("----> monitor: No apEPSF-b files!")
             else:
@@ -153,6 +152,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     print("----> monitor: Finished making " + os.path.basename(outfile))
                 else:
                     print("----> monitor: Nothing to add to " + os.path.basename(outfile))
+
+        return
 
         ###########################################################################################
         # MAKE MASTER EXP FILE
