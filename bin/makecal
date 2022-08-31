@@ -102,7 +102,7 @@ if __name__ == '__main__' :
                     cmd += ','+str(key)+'=0'
                 else:
                     cmd += ','+str(key)+'=1'
-
+                    
     # Run the command
     try:
         subprocess.call(["idl","-e",cmd])

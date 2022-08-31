@@ -89,7 +89,6 @@ endif else begin
 endelse
 chip = ['a','b','c']
 
-
 ;; Perform Processing
 ;;-------------------
 if keyword_set(doproc) or keyword_set(doap3dproc) then begin 
@@ -114,7 +113,7 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
       num = nums[inum]
       if n_elements(cmjd) eq 0 then cmjd=getcmjd(long(num))
       if n_elements(outdir) eq 0 then outdir=dirs.expdir+cmjd+'/'
-      ifile = apogee_filename('R',num=num,chip=chip[ichip],mjd=cmjd)
+      ifile = apogee_filename('R',num=num,chip=chip[ichip],mjd=getcmjd(long(num)))
       ofile = apogee_filename('2D',num=num,chip=chip[ichip])
       if file_test(outdir,/directory) eq 0 then file_mkdir,outdir
       if nfs eq 0 then uptheramp=1 else uptheramp=0

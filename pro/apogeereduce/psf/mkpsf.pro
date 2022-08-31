@@ -38,6 +38,7 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
   file = apogee_filename('PSF',num=psfid[0],chip='c',/base)
   ;; If another process is alreadying make this file, wait!
   ;;  don't use chip in name, apmkpsf.pro makes chip-specific lock files
+  if file_test(psfdir,/directory) eq 0 then file_mkdir,psfdir
   lockfile = psfdir+repstr(file,'-c-','-')+'.lock'
   if not keyword_set(unlock) then begin
     while file_test(lockfile) do apwait,file,10
