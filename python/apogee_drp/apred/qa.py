@@ -379,7 +379,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-        if qcheck == 'bad': return
+        if qcheck == 'bad': 
+            print('plate ' + plate + ', mjd ' + mjd + ' failed to make platesum')
+            return
         #pdb.set_trace()
 
         # Make the observation QA page
