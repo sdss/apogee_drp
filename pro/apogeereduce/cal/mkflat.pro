@@ -245,7 +245,7 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
   ;; Wemove lock file
   file_delete,lockfile,/allow_non
 
-  ;; Cmpile summary web page
-  FLATHTML,caldir
+  ;; Compile summary web page
+  FLATHTML,flatdir
 
 end
