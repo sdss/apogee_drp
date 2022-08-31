@@ -265,6 +265,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                         q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                               mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                               domjd=True, dofields=True)
+                    if makemonitor is True:
+                        q = monitor.monitor(instrument=instrument, apred=apred)
                     continue
                     #sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
 
@@ -291,6 +293,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     start_time = time.time()
 
     print("Starting APQA for plate " + plate + ", MJD " + mjd + "\n")
+
+    instrument = 'apogee-n'
+    if telescope == 'lco25m': instrument = 'apogee-s'
 
     if int(mjd)>59556:
         fps = True
@@ -376,7 +381,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
                              starmag=None,flat=None, fixfiberid=fixfiberid, badfiberid=badfiberid,
                              clobber=clobber)
 
-        if qcheck == 'bad': return
+        if qcheck == 'bad': 
+            print('plate ' + plate + ', mjd ' + mjd + ' failed to make platesum')
+            return
         #pdb.set_trace()
 
         # Make the observation QA page
@@ -416,9 +423,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         if makenightqa == True:
             q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
 
-        # Make the monitor page
-        if makemonitor == True:
-            q = monitor.monitor()
+    # Make the monitor page
+    if makemonitor == True:
+        q = monitor.monitor(instrument=instrument, apred=apred)
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("Done with APQA for plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
