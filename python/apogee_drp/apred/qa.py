@@ -419,9 +419,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         if makenightqa == True:
             q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
 
-        # Make the monitor page
-        if makemonitor == True:
-            q = monitor.monitor(instrument=instrument, apred=apred)
+    # Make the monitor page
+    if makemonitor == True:
+        q = monitor.monitor(instrument=instrument, apred=apred)
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("Done with APQA for plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
