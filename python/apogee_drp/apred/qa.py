@@ -292,6 +292,9 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
     print("Starting APQA for plate " + plate + ", MJD " + mjd + "\n")
 
+    instrument = 'apogee-n'
+    if telescope == 'lco25m': instrument = 'apogee-s'
+
     if int(mjd)>59556:
         fps = True
     else:
@@ -418,7 +421,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make the monitor page
         if makemonitor == True:
-            q = monitor.monitor()
+            q = monitor.monitor(instrument=instrument, apred=apred)
 
     runtime = str("%.2f" % (time.time() - start_time))
     print("Done with APQA for plate " + plate + ", MJD " + mjd + " in " + runtime + " seconds.\n")
