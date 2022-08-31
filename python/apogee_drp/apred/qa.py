@@ -265,6 +265,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                         q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                               mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                               domjd=True, dofields=True)
+                    if makemonitor is True:
+                        q = monitor.monitor(instrument=instrument, apred=apred)
                     continue
                     #sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
 
@@ -357,7 +359,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
     # Get mapper data.
     mapper_data = {'apogee-n':os.environ['MAPPER_DATA_N'],'apogee-s':os.environ['MAPPER_DATA_S']}[instrument]
 
-    pdb.set_trace()
     # Normal plates:
     if platetype == 'normal': 
 
@@ -422,7 +423,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         if makenightqa == True:
             q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
 
-    pdb.set_trace()
     # Make the monitor page
     if makemonitor == True:
         q = monitor.monitor(instrument=instrument, apred=apred)
