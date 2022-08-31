@@ -1355,6 +1355,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                 logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
+        logger.info(str(np.sum(docal))+' Detector files to run')        
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -1417,6 +1418,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                 logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
+        logger.info(str(np.sum(docal))+' Dark files to run')        
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -1433,8 +1435,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     if np.sum(docal)>0:
         cal.darkplot(apred=apred,telescope=telescope)
 
-    import pdb; pdb.set_trace()
-    
 
     # I could process the individual flat exposures in parallel first
     # that would dramatically speed things up
@@ -1481,6 +1481,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                 logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
+        logger.info(str(np.sum(docal))+' Flat files to run')        
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -1496,8 +1497,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     # Make the flat plots
     if np.sum(docal)>0:
         cal.flatplot(apred=apred,telescope=telescope)
-
-    import pdb; pdb.set_trace()
 
     
     # Make BPM in parallel
@@ -1541,6 +1540,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                 logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
+        logger.info(str(np.sum(docal))+' BPM files to run')        
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -1554,9 +1554,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         logger.info('No master BPM calibration files need to be run')
     del queue    
 
-
-    import pdb; pdb.set_trace()
-    
 
     # Make Littrow in parallel
     #--------------------------
@@ -1599,6 +1596,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                 logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
+        logger.info(str(np.sum(docal))+' Littrow files to run')        
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -1612,9 +1610,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         logger.info('No master Littrow calibration files need to be run')
     del queue    
 
-    import pdb; pdb.set_trace()
     
-
     # Make Response in parallel
     #--------------------------
     responsedict = allcaldict['response']
@@ -1655,6 +1651,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                 logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
+        logger.info(str(np.sum(docal))+' Response files to run')        
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -1667,8 +1664,6 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     else:
         logger.info('No master Response calibration files need to be run')
     del queue    
-
-    import pdb; pdb.set_trace()
     
 
     # Make Sparse in parallel
@@ -1711,6 +1706,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                 logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
+        logger.info(str(np.sum(docal))+' Sparse files to run')        
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -1765,6 +1761,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                 logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
+        logger.info(str(np.sum(docal))+' PSFModel files to run')        
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
@@ -1775,11 +1772,8 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         else:
             chkmaster = np.hstack((chkmaster,chkmaster1))
     else:
-        logger.info('No master PSF Mode calibration files need to be run')
+        logger.info('No master PSF Model calibration files need to be run')
     del queue    
-
-
-    import pdb; pdb.set_trace()
     
 
     # Make multiwave cals in parallel
@@ -1827,7 +1821,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     #end
     #wait
 
-    lsfdict = allcaldict['lst']
+    lsfdict = allcaldict['lsf']
     logger.info('')
     logger.info('--------------------------------')
     logger.info('Making master LSFs in parallel')
@@ -1865,6 +1859,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
                 logger.info('Logfile : '+logfile1)
                 queue.append(cmd1, outfile=logfile1,errfile=errfile1)
     if np.sum(docal)>0:
+        logger.info(str(np.sum(docal))+' LSF files to run')        
         queue.commit(hard=True,submit=True)
         logger.info('PBS key is '+queue.key)
         queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete

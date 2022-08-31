@@ -895,7 +895,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             # FPS -> Podium
             else:
                 expinfo['pluggroup'][e] = -1
-
+    # THIS DOES **NOT** WORK FOR LCO, we don't know the gangstate!!!!
+                
     # Get domeflat and quartzflats for this night
     domeind, = np.where((expinfo['exptype']=='DOMEFLAT') & (qachk['okay']==True) )
     dome = list(expinfo['num'][domeind].astype(int))
@@ -1235,7 +1236,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         shutil.copyfile(outfile,outfile2)
     else:
         logger.info(outfile2+' already exists.  NOT overwriting.')
-
+        
     return out, planfiles
 
 
