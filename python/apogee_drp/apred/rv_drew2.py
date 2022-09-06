@@ -89,7 +89,13 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         allvisits = allv[gd]
         sdss4 = True
 
-    #pdb.set_trace()
+    ######## TEMPORARY HACK ################################
+    allv = fits.getdata('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/summary/allVisit-daily-apo25m.fits')
+    gd, = np.where(star == allv['apogee_id'])
+    allvisits = allv[gd]
+    sdss4 = False
+
+    pdb.set_trace()
     # Sometimes "field" has leading spaces
     allvisits['FIELD'] = np.char.array(allvisits['FIELD']).strip()
     nallvisits = len(allvisits)
@@ -99,12 +105,12 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     logger.info('%d visit file(s) found' % nallvisits)
     allvisits = Table(allvisits)
     # Change datatype of STARFLAG to 64-bit
-    allvisits['STARFLAG'] = allvisits['STARFLAG'].astype(np.uint64)
+    allvisits['starflag'] = allvisits['starflag'].astype(np.uint64)
 
     # Get the star version number
     #  this is the largest MJD5 in the FULL list of visits
     if mjd is None:
-        starver = str(np.max(allvisits['MJD'].astype(int)))
+        starver = str(np.max(allvisits['mjd'].astype(int)))
     else:
         # If MJD is input then use that for STARVER
         starver = str(mjd)
@@ -145,8 +151,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['starver'] = starver
     startab['apred_vers'] = apred
     startab['v_apred'] = gitvers
-    startab['mjdbeg'] = np.min(allvisits['MJD'].astype(int))
-    startab['mjdend'] = np.max(allvisits['MJD'].astype(int))    
+    startab['mjdbeg'] = np.min(allvisits['mjd'].astype(int))
+    startab['mjdend'] = np.max(allvisits['mjd'].astype(int))    
     startab['healpix'] = apload.obj2healpix(star)
     startab['nvisits'] = nallvisits
 
@@ -163,9 +169,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                   'targflags']
         for c in tocopy: startab[c] = allvisits[c][0]
     
-    startab['targ_pmra'] = allvisits['PMRA'][0]
-    startab['targ_pmdec'] = allvisits['PMDEC'][0]
-    startab['targ_pm_src'] = allvisits['PM_SRC'][0]
+    startab['targ_pmra'] = allvisits['pmra'][0]
+    startab['targ_pmdec'] = allvisits['pmdec'][0]
+    startab['targ_pm_src'] = allvisits['pm_src'][0]
     # Initialize some parameters in case RV fails
     startab['ngoodvisits'] = 0
     startab['ngoodrvs'] = 0
@@ -179,25 +185,25 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['rv_ccpfwhm'] = np.nan
     startab['rv_autofwhm'] = np.nan
     startab['n_components'] = -1
-    if len(allvisits) > 0: meanfib=(allvisits['FIBERID']*allvisits['SNR']).sum()/allvisits['SNR'].sum()
+    if len(allvisits) > 0: meanfib=(allvisits['fiberid']*allvisits['snr']).sum()/allvisits['snr'].sum()
     else: meanfib = 999999.
-    if len(allvisits) > 1: sigfib=allvisits['FIBERID'].std(ddof=1)
+    if len(allvisits) > 1: sigfib=allvisits['fiberid'].std(ddof=1)
     else: sigfib = 0.
     startab['meanfib'] = meanfib
     startab['sigfib'] = sigfib
     starmask = bitmask.StarBitMask()
     
     # Select good visit spectra
-    gd, = np.where(((allvisits['STARFLAG'] & starmask.badval()) == 0) &
-                   (allvisits['SNR'] > snmin) )
+    gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
+                   (allvisits['snr'] > snmin) )
     # No good visits, but still write to star table
     if len(gd)==0:
         logger.info('No visits passed QA cuts')
         # Add starflag and andflag
         starflag,andflag = np.uint64(0),np.uint64(0)
         for v in allvisits:
-            starflag |= v['STARFLAG'] # bitwise OR
-            andflag &= v['STARFLAG']  # bitwise AND
+            starflag |= v['starflag'] # bitwise OR
+            andflag &= v['starflag']  # bitwise AND
         starflag |= starmask.getval('RV_FAIL')
         andflag |= starmask.getval('RV_FAIL')
         startab['starflag'] = starflag
@@ -216,7 +222,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Add STARVER                                                                                                                                             
     starvisits['starver'] = starver
     # Flag all visits as RV_FAIL to start with, will remove if they worked okay
-    starvisits['STARFLAG'] |= starmask.getval('RV_FAIL')
+    starvisits['starflag'] |= starmask.getval('RV_FAIL')
     # Initialize visit RV tags
     for col in ['vtype','vrel','vrelerr','vheliobary','bc','chisq','rv_teff','rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr']:
         if col == 'vtype':
@@ -227,7 +233,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         starvisits[col] = np.nan
 
     # Add columns for RV components
-    starvisits['N_COMPONENTS'] = -1
+    starvisits['n_components'] = -1
     rv_components = Column(name='rv_components',dtype=float,shape=(3,),length=len(starvisits))
     starvisits.add_column(rv_components)
     rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
@@ -252,10 +258,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         # Match by filename components in case there was an error reading in doppler
         name = os.path.basename(v['filename'])
         if telescope == 'apo1m':
-            vind, = np.where( np.char.strip(starvisits['FILE']).astype(str) == os.path.basename(v['filename'].strip()) )
+            vind, = np.where( np.char.strip(starvisits['file']).astype(str) == os.path.basename(v['filename'].strip()) )
             if len(vind) == 0:
                 # special case for incremental release...yuck
-                vind, = np.where( np.char.strip(starvisits['FILE']).astype(str) == 
+                vind, = np.where( np.char.strip(starvisits['file']).astype(str) == 
                                    os.path.basename(v['filename'].strip()).replace('-r13-','-r12-') )
         else:
             vind, = np.where( starvisits['FILE']==name )
@@ -265,7 +271,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             continue
         visits.append(vind)
         # Remove RV_FAIL that we added above
-        starvisits['STARFLAG'][vind] &= ~starmask.getval('RV_FAIL')
+        starvisits['starflag'][vind] &= ~starmask.getval('RV_FAIL')
         # Add Doppler outputs
         starvisits['vrel'][vind] = v['vrel']
         starvisits['vrelerr'][vind] = v['vrelerr']
@@ -282,11 +288,11 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         starvisits['rv_feh'][vind] = v['feh']
         starvisits['rv_feherr'][vind] = v['feherr']
         if g is None:
-            starvisits['N_COMPONENTS'][vind] = 0
+            starvisits['n_components'][vind] = 0
         else:
-            starvisits['N_COMPONENTS'][vind] = g['N_components']
-        if starvisits['N_COMPONENTS'][vind] > 1 :
-            starvisits['STARFLAG'][vind] |= starmask.getval('MULTIPLE_SUSPECT')
+            starvisits['n_components'][vind] = g['N_components']
+        if starvisits['n_components'][vind] > 1 :
+            starvisits['starflag'][vind] |= starmask.getval('MULTIPLE_SUSPECT')
             n = len(g['best_fit_parameters'])//3
             gd, = np.where(np.array(g['best_fit_parameters'])[0:n] > 0)
             rv_comp = np.array(g['best_fit_parameters'])[2*n+gd]
@@ -301,14 +307,14 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             bd_diff = 50
         print(np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]))
         if (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > bd_diff) :
-            starvisits['STARFLAG'][vind] |= starmask.getval('RV_REJECT')
+            starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
         elif (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > 0) :
-            starvisits['STARFLAG'][vind] |= starmask.getval('RV_SUSPECT')
+            starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
     #import pdb; pdb.set_trace()
 
     # Set STARFLAGS for the visits (successful and failed ones)
     for i in range(len(starvisits)):
-        starvisits['STARFLAGS'][i] = starmask.getname(starvisits['STARFLAG'][i])
+        starvisits['starflags'][i] = starmask.getname(starvisits['starflag'][i])
 
 
     # Compute final star-level values
@@ -325,17 +331,17 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     starflag = startab['starflag']
     andflag = startab['andflag']
     for v in starvisits:
-        starflag |= v['STARFLAG']
-        andflag &= v['STARFLAG']
+        starflag |= v['starflag']
+        andflag &= v['starflag']
     startab['starflags'] = starmask.getname(startab['starflag'])
     startab['andflags'] = starmask.getname(startab['andflag'])
 
     # Initialize meanfib/sigfib using all good visits
     if len(starvisits) > 1:
-        meanfib = (starvisits['FIBERID']*starvisits['SNR']).sum()/starvisits['SNR'].sum()
-        sigfib = starvisits['FIBERID'].std(ddof=1)
+        meanfib = (starvisits['fiberid']*starvisits['snr']).sum()/starvisits['snr'].sum()
+        sigfib = starvisits['fiberid'].std(ddof=1)
     else:
-        meanfib = starvisits['FIBERID'][0]
+        meanfib = starvisits['fiberid'][0]
         sigfib = 0.0
     startab['meanfib'] = meanfib
     startab['sigfib'] = sigfib
@@ -343,13 +349,13 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Average Doppler values for this star
     if len(visits)>0:
         visits = np.array(visits)
-        gdrv, = np.where((starvisits['STARFLAG'][visits] & starmask.getval('RV_REJECT')) == 0)
+        gdrv, = np.where((starvisits['starflag'][visits] & starmask.getval('RV_REJECT')) == 0)
         ngdrv = len(gdrv)
         if ngdrv>0:
             startab['ngoodrvs'] = ngdrv
-            try: startab['n_components'] = starvisits['N_COMPONENTS'][gdrv].max()
+            try: startab['n_components'] = starvisits['n_components'][gdrv].max()
             except: pass
-            startab['vheliobary'] = (starvisits['vheliobary'][gdrv]*starvisits['SNR'][gdrv]).sum() / starvisits['SNR'][gdrv].sum()
+            startab['vheliobary'] = (starvisits['vheliobary'][gdrv]*starvisits['snr'][gdrv]).sum() / starvisits['snr'][gdrv].sum()
             if ngdrv>1:
                 startab['vscatter'] = starvisits['vheliobary'][gdrv].std(ddof=1)
                 startab['verr'] = startab['vscatter'][0]/np.sqrt(ngdrv)
@@ -367,10 +373,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             startab['rv_feherr'] = dopsumstr['feherr']
             # Update meanfib/sigfig only using visits with good RVs
             if ngdrv > 1:
-                meanfib = (starvisits['FIBERID'][gdrv]*starvisits['SNR'][gdrv]).sum()/starvisits['SNR'][gdrv].sum()
-                sigfib = starvisits['FIBERID'][gdrv].std(ddof=1)
+                meanfib = (starvisits['fiberid'][gdrv]*starvisits['snr'][gdrv]).sum()/starvisits['snr'][gdrv].sum()
+                sigfib = starvisits['fiberid'][gdrv].std(ddof=1)
             else:
-                meanfib = starvisits['FIBERID'][gdrv][0]
+                meanfib = starvisits['fiberid'][gdrv][0]
                 sigfib = 0.0
             startab['meanfib'] = meanfib
             startab['sigfib'] = sigfib
