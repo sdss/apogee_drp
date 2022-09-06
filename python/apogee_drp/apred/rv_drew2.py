@@ -723,7 +723,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     if load is None: load = apload.ApLoad(apred=apred,telescope=telescope)
     cspeed = 2.99792458e5  # speed of light in km/s
 
-    logger.info('Doing visitcomb for {:s} '.format(allvisit['APOGEE_ID'][0]))
+    logger.info('Doing visitcomb for {:s} '.format(allvisit['apogee_id'][0]))
 
     wnew = norm.apStarWave()  
     nwave = len(wnew)
@@ -744,8 +744,8 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     if plot : fig,ax=plots.multi(1,2,hspace=0.001)
     for i,visit in enumerate(allvisit) :
 
-        if bconly: vrel = -visit['BC']
-        else: vrel = visit['VREL']
+        if bconly: vrel = -visit['bc']
+        else: vrel = visit['vrel']
 
         # Skip if we don't have an RV
         if np.isfinite(vrel) == False : continue
