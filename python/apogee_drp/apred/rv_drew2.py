@@ -90,10 +90,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         sdss4 = True
 
     ######## TEMPORARY HACK ################################
-    allv = fits.getdata('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/summary/allVisit-daily-apo25m.fits')
-    gd, = np.where(star == allv['apogee_id'])
-    allvisits = allv[gd]
-    sdss4 = False
+    #allv = fits.getdata('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/summary/allVisit-daily-apo25m.fits')
+    #gd, = np.where(star == allv['apogee_id'])
+    #allvisits = allv[gd]
+    #sdss4 = False
 
     #pdb.set_trace()
     # Sometimes "field" has leading spaces
