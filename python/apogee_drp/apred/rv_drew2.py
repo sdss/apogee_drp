@@ -89,12 +89,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         allvisits = allv[gd]
         sdss4 = True
 
-    ######## TEMPORARY HACK ################################
-    #allv = fits.getdata('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/summary/allVisit-daily-apo25m.fits')
-    #gd, = np.where(star == allv['apogee_id'])
-    #allvisits = allv[gd]
-    #sdss4 = False
-
     #pdb.set_trace()
     # Sometimes "field" has leading spaces
     allvisits['field'] = np.char.array(allvisits['field']).strip()
@@ -910,7 +904,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     apstar.header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
     apstar.header['APRED'] = (apred, 'APOGEE reduction version')
     apstar.header['STARVER'] = (starver, 'apStar version')
-    apstar.header['HEALPIX'] = ( apload.obj2healpix(allvisit['APOGEE_ID'][0]), 'HEALPix location')
+    apstar.header['HEALPIX'] = ( apload.obj2healpix(allvisit['apogee_id'][0]), 'HEALPix location')
     try :apstar.header['SNR'] = (np.nanmedian(apstar.flux[0,:]/apstar.err[0,:]), 'Median S/N per apStar pixel')
     except :apstar.header['SNR'] = (0., 'Median S/N per apStar pixel')
     apstar.header['RA'] = (allvisit['ra'].max(), 'right ascension, deg, J2000')
