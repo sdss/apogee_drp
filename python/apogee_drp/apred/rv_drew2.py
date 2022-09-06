@@ -235,9 +235,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Add columns for RV components
     starvisits['n_components'] = -1
     rv_components = Column(name='rv_components',dtype=float,shape=(3,),length=len(starvisits))
-    starvisits.add_column(rv_components)
+    #starvisits.add_column(rv_components)
     rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
-    starvisits.add_column(rvtab)
+    #starvisits.add_column(rvtab)
 
 
     # Run Doppler with dorv() on the good visits
