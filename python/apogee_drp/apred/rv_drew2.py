@@ -264,7 +264,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                 vind, = np.where( np.char.strip(starvisits['file']).astype(str) == 
                                    os.path.basename(v['filename'].strip()).replace('-r13-','-r12-') )
         else:
-            vind, = np.where( starvisits['FILE']==name )
+            vind, = np.where( starvisits['file']==name )
         if len(vind) > 0:
             vind = vind[0]
         else:
@@ -425,13 +425,13 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     else:
         suffix = '_out'
     if obj is None:
-        obj = str(allvisit['APOGEE_ID'][0])
+        obj = str(allvisit['apogee_id'][0])
     if type(obj) is not str:
         obj = obj.decode('UTF-8')
     if apred is None:
         apred = str(allvisit['apred_vers'][0])
     if telescope is None:
-        telescope = str(allvisit['TELESCOPE'][0])
+        telescope = str(allvisit['telescope'][0])
     load = apload.ApLoad(apred=apred,telescope=telescope)
     outfile = load.filename('Star',obj=obj)
     outdir = os.path.dirname(outfile)
@@ -491,11 +491,11 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
 
         # Load all of the visits into doppler Spec1D objects
         if load.telescope == 'apo1m' :
-            visitfile = load.allfile('Visit',plate=allvisit['PLATE'][i],mjd=allvisit['MJD'][i],
-                                     reduction=allvisit['APOGEE_ID'][i],field=allvisit['FIELD'][i])
+            visitfile = load.allfile('Visit',plate=allvisit['plate'][i],mjd=allvisit['mjd'][i],
+                                     reduction=allvisit['apogee_id'][i],field=allvisit['field'][i])
         else :
-            visitfile = load.allfile('Visit',plate=int(allvisit['PLATE'][i]),mjd=allvisit['MJD'][i],
-                                     fiber=allvisit['FIBERID'][i],field=allvisit['FIELD'][i])
+            visitfile = load.allfile('Visit',plate=int(allvisit['plate'][i]),mjd=allvisit['mjd'][i],
+                                     fiber=allvisit['fiberid'][i],field=allvisit['field'][i])
         if sdss4:
             #pdb.set_trace()
             visitfile = visitfile.replace('-apo25m','')
@@ -752,12 +752,12 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
         # Load the visit
         if load.telescope == 'apo1m':
-            apvisit = load.apVisit1m(visit['PLATE'],visit['MJD'],visit['APOGEE_ID'],load=True)
+            apvisit = load.apVisit1m(visit['plate'],visit['mjd'],visit['apogee_id'],load=True)
         else:
-            apvisit = load.apVisit(int(visit['PLATE']),visit['MJD'],visit['FIBERID'],load=True)
+            apvisit = load.apVisit(int(visit['plate']),visit['mjd'],visit['fiberid'],load=True)
         if sdss4:
-            visitfile = load.allfile('Visit',plate=int(visit['PLATE']),mjd=visit['MJD'],
-                                     fiber=visit['FIBERID'],field=visit['FIELD'])
+            visitfile = load.allfile('Visit',plate=int(visit['plate']),mjd=visit['mjd'],
+                                     fiber=visit['fiberid'],field=visit['field'])
             visitfile = visitfile.replace('-apo25m','')
             visitfile = visitfile.replace('/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/', '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/')
             hdulist = fits.open(visitfile)
@@ -841,22 +841,22 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             pdb.set_trace()
 
         # Accumulate for header of combined frame. Turn off visit specific RV flags first
-        visitflag = visit['STARFLAG'] & ~starmask.getval('RV_REJECT') & ~starmask.getval('RV_SUSPECT')
+        visitflag = visit['starflag'] & ~starmask.getval('RV_REJECT') & ~starmask.getval('RV_SUSPECT')
         starflag |= visitflag
         andflag &= visitflag
-        if visit['SURVEY'] == 'apogee' :
-            apogee_target1 |= visit['APOGEE_TARGET1']
-            apogee_target2 |= visit['APOGEE_TARGET2']
+        if visit['survey'] == 'apogee' :
+            apogee_target1 |= visit['apogee_target1']
+            apogee_target2 |= visit['apogee_target2']
             #apogee_target3 |= visit['APOGEE_TARGET3']
-        elif visit['SURVEY'].find('apogee2') >=0  :
-            apogee2_target1 |= visit['APOGEE2_TARGET1']
-            apogee2_target2 |= visit['APOGEE2_TARGET2'] 
-            apogee2_target3 |= visit['APOGEE2_TARGET3']
-            try: apogee2_target4 |= visit['APOGEE2_TARGET4']
+        elif visit['survey'].find('apogee2') >=0  :
+            apogee2_target1 |= visit['apogee2_target1']
+            apogee2_target2 |= visit['apogee2_target2'] 
+            apogee2_target3 |= visit['apogee2_target3']
+            try: apogee2_target4 |= visit['apogee2_target4']
             except: pass
         elif visit['survey'] == 'apo1m' :
-            apogee_target2 |= visit['APOGEE_TARGET2'] 
-            apogee2_target2 |= visit['APOGEE_TARGET2'] 
+            apogee_target2 |= visit['apogee_target2'] 
+            apogee2_target2 |= visit['apogee_target2'] 
         # MWM target flags?
             
 
@@ -906,26 +906,26 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         apstar.telerr[2:,:] = stack.telerr
 
     # Populate header
-    apstar.header['OBJID'] = (allvisit['APOGEE_ID'][0], 'APOGEE object name')
+    apstar.header['OBJID'] = (allvisit['apogee_id'][0], 'APOGEE object name')
     apstar.header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
     apstar.header['APRED'] = (apred, 'APOGEE reduction version')
     apstar.header['STARVER'] = (starver, 'apStar version')
     apstar.header['HEALPIX'] = ( apload.obj2healpix(allvisit['APOGEE_ID'][0]), 'HEALPix location')
     try :apstar.header['SNR'] = (np.nanmedian(apstar.flux[0,:]/apstar.err[0,:]), 'Median S/N per apStar pixel')
     except :apstar.header['SNR'] = (0., 'Median S/N per apStar pixel')
-    apstar.header['RA'] = (allvisit['RA'].max(), 'right ascension, deg, J2000')
-    apstar.header['DEC'] = (allvisit['DEC'].max(), 'declination, deg, J2000')
-    apstar.header['GLON'] = (allvisit['GLON'].max(), 'Galactic longitude')
-    apstar.header['GLAT'] = (allvisit['GLAT'].max(), 'Galactic latitude')
+    apstar.header['RA'] = (allvisit['ra'].max(), 'right ascension, deg, J2000')
+    apstar.header['DEC'] = (allvisit['dec'].max(), 'declination, deg, J2000')
+    apstar.header['GLON'] = (allvisit['glon'].max(), 'Galactic longitude')
+    apstar.header['GLAT'] = (allvisit['glon'].max(), 'Galactic latitude')
 
     if sdss4:
-        apstar.header['JMAG'] = (allvisit['J'].max(), '2MASS J magnitude')
-        apstar.header['JERR'] = (allvisit['J_ERR'].max(), '2MASS J magnitude uncertainty')
-        apstar.header['HMAG'] = (allvisit['H'].max(), '2MASS H magnitude')
-        apstar.header['HERR'] = (allvisit['H_ERR'].max(), '2MASS H magnitude uncertainty')
-        apstar.header['KMAG'] = (allvisit['K'].max(), '2MASS K magnitude')
-        apstar.header['KERR'] = (allvisit['K_ERR'].max(), '2MASS K magnitude uncertainty')
-        try: apstar.header['SRC_H'] = (allvisit['SRC_H'][0], 'source of H magnitude')
+        apstar.header['JMAG'] = (allvisit['jmag'].max(), '2MASS J magnitude')
+        apstar.header['JERR'] = (allvisit['jerr'].max(), '2MASS J magnitude uncertainty')
+        apstar.header['HMAG'] = (allvisit['h'].max(), '2MASS H magnitude')
+        apstar.header['HERR'] = (allvisit['herr'].max(), '2MASS H magnitude uncertainty')
+        apstar.header['KMAG'] = (allvisit['k'].max(), '2MASS K magnitude')
+        apstar.header['KERR'] = (allvisit['kerr'].max(), '2MASS K magnitude uncertainty')
+        try: apstar.header['SRC_H'] = (allvisit['src_h'][0], 'source of H magnitude')
         except KeyError: pass
     else:
         apstar.header['JMAG'] = (allvisit['jmag'].max(), '2MASS J magnitude')
