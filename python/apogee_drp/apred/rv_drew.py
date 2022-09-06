@@ -91,6 +91,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
 
     #pdb.set_trace()
     # Sometimes "field" has leading spaces
+    pdb.set_trace()
     allvisits['FIELD'] = np.char.array(allvisits['FIELD']).strip()
     nallvisits = len(allvisits)
     if nallvisits==0:
