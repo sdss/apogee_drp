@@ -217,7 +217,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     #   for visits that passed the QA cuts
     starvisits = allvisits[gd].copy()
     nvisits = len(gd)
-    if sdss4 is False: del starvisits['created']
+    #if sdss4 is False: del starvisits['created']
     startab['ngoodvisits'] = nvisits   # visits that pass QA cuts
     # Add STARVER                                                                                                                                             
     starvisits['starver'] = starver
