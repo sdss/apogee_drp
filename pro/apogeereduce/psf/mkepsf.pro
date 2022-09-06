@@ -7,8 +7,8 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
   if not keyword_set(outid) then outid=ims[0]
   if not keyword_set(sparseid) then sparseid=0
 
-  dirs=getdir()
-  caldir=dirs.caldir
+  dirs = getdir()
+  caldir = dirs.caldir
 
   ;file=dirs.prefix+string(format='("EPSF-c-",i8.8)',outid)
   file = apogee_filename('EPSF',num=outid,chip='c')
@@ -20,7 +20,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
   endif else begin
     if file_test(lockfile) then file_delete,lockfile,/allow
   endelse
-
+  
   ; does product already exist?
   if not file_test(file) or keyword_set(clobber) then begin
     ; open .lock filea
@@ -28,9 +28,9 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
     free_lun,lock
 
     if keyword_set(cmjd) then $
-      d = approcess(ims,cmjd=cmjd,darkid=darkid,flatid=flatid,nfs=1,/nocr,/doap3dproc,maxread=maxread) $
+      d = approcess(ims,cmjd=cmjd,darkid=darkid,flatid=flatid,nfs=1,/nocr,/doap3dproc,maxread=maxread,unlock=unlock) $
     else $
-      d = approcess(ims,darkid=darkid,flatid=flatid,nfs=1,/nocr,/doap3dproc,maxread=maxread)
+      d = approcess(ims,darkid=darkid,flatid=flatid,nfs=1,/nocr,/doap3dproc,maxread=maxread,unlock=unlock)
 
     for n=0,n_elements(ims)-1 do begin
       ;if keyword_set(cmjd) then frame=apread(ims[n],err,mask,head,cmjd=cmjd,/domask) $
@@ -47,7 +47,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
     red /= n_elements(ims)
 
     if keyword_set(darkims) then begin
-      d = approcess(darkims,darkid=darkid,/nocr,maxread=maxread,/doap3dproc)
+      d = approcess(darkims,darkid=darkid,/nocr,maxread=maxread,/doap3dproc,unlock=unlock)
       for n=0,n_elements(darkims)-1 do begin
         ;frame=apread(darkims[n],err,mask,head,/domask)
         frame = apread('2D',num=darkims[n],/domask)

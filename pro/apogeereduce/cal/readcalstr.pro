@@ -33,7 +33,7 @@ function readcalstr,str,mjd
       gd = gd[ngd-1]
       print,'Multiple cal products found for mjd ', mjd, ' will use last: ',str[gd[0]].name      
     endif
-    return,str[gd[0]].name
+    if valid_num(str[gd[0]].name) then return,long(str[gd[0]].name) else return,str[gd[0]].name
 
   ;; None found, return 0L
   endif else begin

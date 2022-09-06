@@ -33,6 +33,7 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,$
   if n_elements(name) eq 0 then name=string(waveid[0])
   dirs = getdir(apodir,caldir,spectrodir,vers)
   wavedir = apogee_filename('Wave',num=name,chip='a',/dir)
+  if file_test(wavedir,/directory) eq 0 then file_mkdir,wavedir
   file = dirs.prefix+string(format='("Wave-",i8.8)',name)
   lockfile = wavedir+file+'.lock'
 
