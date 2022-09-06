@@ -462,7 +462,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     #    barycentric correction only, use that to get an estimate of systemic
     #    velocity, then do RV determination restricting RVs to within 50 km/s
     #    of estimate. This seems to help significant for faint visits
-    lowsnr_visits, = np.where(allvisit['SNR']<10)
+    lowsnr_visits, = np.where(allvisit['snr']<10)
     hmagkey = 'hmag'
     if sdss4: hmagkey = 'H'
     if (len(lowsnr_visits) > 1) & (len(lowsnr_visits)/len(allvisit) > 0.1) :
