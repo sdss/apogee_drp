@@ -1840,7 +1840,7 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 = 'makecal --vers {0} --telescope {1} --full'.format(apred,telescope)
             cmd1 += ' --lsf '+str(name)+' --unlock'
             if clobber:
                 cmd1 += ' --clobber'
@@ -1873,6 +1873,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
         logger.info('No master LSF calibration files need to be run')
     del queue    
 
+    # make aptellurics here??
+
+    
     return chkmaster
     
     
