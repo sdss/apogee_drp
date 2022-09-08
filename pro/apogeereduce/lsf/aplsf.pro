@@ -213,8 +213,6 @@ lamptype = strupcase(lamptype)
                chipc:{coef:frame1.(2).wcoef,wave:frame1.(2).wavelength, wave2:0.*frame1.(2).wavelength}}
 ;endelse
 
-
-
 ; Get the PSF information
 if n_elements(psfid) gt 0 then begin
 
@@ -269,7 +267,8 @@ print,'WPorder = ',strtrim(wporder,2)
 print,'Wproftype = ',strtrim(wproftype,2)
 print,'Fitmethod = ',strtrim(fitmethod,2),'  ',fitmethod_str
 
-lsfid=file_basename(lampframes[0])
+lsfid = file_basename(lampframes[0])
+
 
 ; DITHER COMBINING
 ;----------------------
@@ -392,7 +391,6 @@ if keyword_set(gauss) then begin
   ADD_TAG,linestr3,'CHIP',3,linestr3
   linestr = [linestr1,linestr2,linestr3]
 
-
   ; Add wavelengths for the lines
   ADD_TAG,linestr,'WAVE',0.0d0,linestr
   ADD_TAG,linestr,'X',0.0,linestr
@@ -407,7 +405,7 @@ if keyword_set(gauss) then begin
     x1[i] = linestr[ind1[i]].gaussx + waveframe.(0).coef[linestr[ind1[i]].fiber,0]
     disp1[i] = pix2wave(linestr[ind1[i]].gaussx+0.5,waveframe.(0).coef[linestr[ind1[i]].fiber,*])-$
                pix2wave(linestr[ind1[i]].gaussx-0.5,waveframe.(0).coef[linestr[ind1[i]].fiber,*])
-  end
+  endfor
   linestr[ind1].wave = w1
   linestr[ind1].x = x1
   linestr[ind1].disp = disp1
@@ -421,7 +419,7 @@ if keyword_set(gauss) then begin
     x2[i] = linestr[ind2[i]].gaussx + waveframe.(1).coef[linestr[ind2[i]].fiber,0]
     disp2[i] = pix2wave(linestr[ind2[i]].gaussx+0.5,waveframe.(1).coef[linestr[ind2[i]].fiber,*])-$
                pix2wave(linestr[ind2[i]].gaussx-0.5,waveframe.(1).coef[linestr[ind2[i]].fiber,*])
-  end
+  endfor
   linestr[ind2].wave = w2
   linestr[ind2].x = x2
   linestr[ind2].disp = disp2
@@ -435,7 +433,7 @@ if keyword_set(gauss) then begin
     x3[i] = linestr[ind3[i]].gaussx + waveframe.(2).coef[linestr[ind3[i]].fiber,0]
     disp3[i] = pix2wave(linestr[ind3[i]].gaussx+0.5,waveframe.(2).coef[linestr[ind3[i]].fiber,*])-$
                pix2wave(linestr[ind3[i]].gaussx-0.5,waveframe.(2).coef[linestr[ind3[i]].fiber,*])
-  end
+  endfor
   linestr[ind3].wave = w3
   linestr[ind3].x = x3
   linestr[ind3].disp = disp3
@@ -455,7 +453,7 @@ if keyword_set(gauss) then begin
     device,file='aplsf.eps',/encap,/color
     plot,linestr.x,linestr.gpar[2],ps=1,xtit='X',ytit='Gaussian Sigma (pixels)',tit='Removing Bad Lines'
   endif
-
+  
   if keyword_set(gauss) then begin
     if keyword_set(pl) then smcolor
     outfile = lsf_dir+dirs.prefix+'LSF-'+lampframeid1+'.dat'
@@ -640,7 +638,7 @@ for ii=0,n_elements(ifibers)-1 do begin
       PUSH,fiberlinestr,ilinestr
 
       BOMB1:
-    End
+    Endfor
     nlines = n_elements(fiberlinestr)
     nspec = n_elements(spec)
     ;y = findgen(nspec)
