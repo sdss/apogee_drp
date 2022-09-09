@@ -2125,7 +2125,10 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     calinfo = expinfo[fpi][ui]
                     si = np.argsort(calinfo['num'])
                     calinfo = calinfo[si]
-
+                else:
+                    calinfo = []
+                    ncal = 0
+                    
             logger.info(str(ncal)+' file(s)')
 
             # Loop over calibration files and check if we need to run them
