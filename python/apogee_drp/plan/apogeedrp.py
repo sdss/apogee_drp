@@ -2032,6 +2032,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
         caltypes = ['psf','flux','arcs','dailywave','fpi']
     else:
         caltypes = [c.lower() for c in caltypes]
+        if 'wave' in caltypes:
+            caltypes.append('arcs')
         
     apred = load.apred
     telescope = load.telescope
