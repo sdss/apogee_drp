@@ -362,7 +362,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         tracestr = fits.getdata(ipsffile,1)
              
         # Fibers to extract
-        if fibers is not None: 
+        if fibers is not None and (extract_type==1 or extract_type==2 or recenterfit): 
             if max(fibers) > len(tracestr)-1: 
                 error = 'max(fibers) is larger than the number of fibers in psf file.' 
                 if not silent: 
