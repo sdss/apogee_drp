@@ -420,7 +420,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       cmjd = getcmjd(flux[0],mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,littrowid=littrowid,waveid=waveid,modelpsf=psfmodel
       ;; Use Model PSF by default
-      if not keyword_set(psf) and not keyword_set(librarypsf) then begin
+      if not keyword_set(psf) and not keyword_set(librarypsf) and keyword_set(psfmodel) then begin
         psfid = 0
         modelpsf = psfmodel
         MAKECAL,modelpsf=modelpsf,unlock=unlock 
