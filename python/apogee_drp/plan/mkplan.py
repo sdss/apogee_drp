@@ -674,10 +674,10 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
                 if fps==False:
                     field,survey,program = apload.apfield(plate,plug['locationid'])
                     out['survey'] = survey
-                    out['field'] = int(field)
+                    out['field'] = field
                 else:
                     out['survey'] = 'SDSS-V'
-                    out['field'] = plug['field']
+                    out['field'] = int(plug['field'])
                 with open(spectro_dir+'fields/'+telescope+'/'+str(loc)+'/plan-'+str(loc)+'.lis','w+') as file:
                     file.write(telescope+'/'+str(plate)+'/'+str(mjd)+'/'+os.path.basename(planfile))
                 file.close()

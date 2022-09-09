@@ -11,6 +11,7 @@ from ..apred import mkcal,cal,qa,monitor
 from ..database import apogeedb
 from . import mkplan,check
 from sdss_access.path import path
+from astropy.time import Time
 from astropy.io import fits
 from astropy.table import Table,hstack,vstack
 from collections import OrderedDict
@@ -56,7 +57,7 @@ def loadmjd(mjd):
         newmjds = list(np.unique(newmjds))
         mjds = newmjds
     else:
-        mjds = np.arange(59146,lastnightmjd()+1)
+        mjds = np.arange(59146,lastnightmjd5()+1)
     return mjds
 
 def loadsteps(steps):
