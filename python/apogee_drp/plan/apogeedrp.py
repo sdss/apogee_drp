@@ -1138,7 +1138,7 @@ def mkvers(apred,logger=None):
         shutil.copyfile(apogee_drp_dir+'etc/sorttable.js',apogee_redux+apred+'/qa/sorttable.js')
 
 
-def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
+def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,logger=None):
     """
     Make the master calibration products for a reduction version and MJD range.
 
@@ -1150,6 +1150,9 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
        List of MJDs to process
     slurmpars : dictionary
        Dictionary of slurmpars settings.
+    caltypes : list, optional
+       List of master calibration types to run.  The default is all 9 of them.
+       ['detector','dark','flat','bpm','littrow','response','sparse','modelpsf','lsf']
     clobber : boolean, optional
        Overwrite any existing files.  Default is False.
     linkvers : str, optional
@@ -1170,6 +1173,11 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     apogee/bin/mkcal used to make these master calibration files.
     """
 
+    if caltypes is None:
+        caltypes = ['detector','dark','flat','bpm','littrow','response','sparse','modelpsf','lsf']
+    else:
+        caltypes = [c.lower() for c in caltypes]
+        
     if logger is None:
         logger = dln.basiclogger()
 
@@ -1318,123 +1326,125 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
 
     # Make Detector and Linearity 
     #----------------------------
-    # MKDET.PRO makes both
-    detdict = allcaldict['det']
-    logger.info('--------------------------------------------')
-    logger.info('Making master Detector/Linearity in parallel')
-    logger.info('============================================')
-    logger.info('Slurm settings: '+str(slurmpars))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkdet', **slurmpars)
-    docal = np.zeros(len(detdict),bool)
-    donames = []
-    logfiles = []
-    for i in range(len(detdict)):
-        name = detdict['name'][i]
-        if np.sum((mjds >= detdict['mjd1'][i]) & (mjds <= detdict['mjd2'][i])) > 0:
-            outfile = load.filename('Detector',num=name,chips=True)
-            logfile1 = os.path.dirname(outfile)+'/mkdet-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-            errfile1 = logfile1.replace('.log','.err')
-            if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-            cmd1 += ' --det '+str(name)+' --unlock'
-            if clobber:
-                cmd1 += ' --clobber'
-            #logfiles.append(logfile1)
-            # Check if files exist already
-            docal[i] = True
-            if clobber is not True:
-                if load.exists('Detector',num=name):
-                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[i] = False
-            if docal[i]:
-                donames.append(name)
-                logfiles.append(logfile1)
-                logger.info('Detector file %d : %s' % (i+1,name))
-                logger.info('Command : '+cmd1)
-                logger.info('Logfile : '+logfile1)
-                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(docal)>0:
-        logger.info(str(np.sum(docal))+' Detector files to run')        
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-        # This should check if the  ran okay and puts the status in the database
-        chkmaster1 = check_mastercals(donames,'Detector',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)        
-        if chkmaster is None:
-            chkmaster = chkmaster1
+    if 'det' in caltypes:
+        # MKDET.PRO makes both
+        detdict = allcaldict['det']
+        logger.info('--------------------------------------------')
+        logger.info('Making master Detector/Linearity in parallel')
+        logger.info('============================================')
+        logger.info('Slurm settings: '+str(slurmpars))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='mkdet', **slurmpars)
+        docal = np.zeros(len(detdict),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(detdict)):
+            name = detdict['name'][i]
+            if np.sum((mjds >= detdict['mjd1'][i]) & (mjds <= detdict['mjd2'][i])) > 0:
+                outfile = load.filename('Detector',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mkdet-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+                cmd1 += ' --det '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                #logfiles.append(logfile1)
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('Detector',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)
+                    logger.info('Detector file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        if np.sum(docal)>0:
+            logger.info(str(np.sum(docal))+' Detector files to run')        
+            queue.commit(hard=True,submit=True)
+            logger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            # This should check if the  ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(donames,'Detector',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)        
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            chkmaster = np.hstack((chkmaster,chkmaster1))
-    else:
-        logger.info('No master Detector calibration files need to be run')
-    del queue    
+            logger.info('No master Detector calibration files need to be run')
+        del queue    
 
 
     # Make darks in parallel
     #-----------------------
-    # they take too much memory to run in parallel
-    #idl -e "makecal,dark=1,vers='$vers',telescope='$telescope'" >& log/mkdark-$telescope.$host.log
-    #darkplot --apred $vers --telescope $telescope
-    darkdict = allcaldict['dark']
-    logger.info('')
-    logger.info('-------------------------------')
-    logger.info('Making master Darks in parallel')
-    logger.info('===============================')
-    # Give each job LOTS of memory
-    slurmpars1 = slurmpars.copy()
-    slurmpars1['nodes'] = 2
-    slurmpars1['cpus'] = 4
-    slurmpars1['mem_per_cpu'] = 20000  # in MB
-    logger.info('Slurm settings: '+str(slurmpars1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkdark', **slurmpars1)
-    docal = np.zeros(len(darkdict),bool)
-    donames = []
-    logfiles = []
-    for i in range(len(darkdict)):
-        name = darkdict['name'][i]
-        if np.sum((mjds >= darkdict['mjd1'][i]) & (mjds <= darkdict['mjd2'][i])) > 0:
-            outfile = load.filename('Dark',num=name,chips=True)
-            logfile1 = os.path.dirname(outfile)+'/mkdark-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-            errfile1 = logfile1.replace('.log','.err')
-            if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-            cmd1 += ' --dark '+str(name)+' --unlock'
-            if clobber:
-                cmd1 += ' --clobber'
-            #logfiles.append(logfile1)
-            # Check if files exist already
-            docal[i] = True
-            if clobber is not True:
-                if load.exists('Dark',num=name):
-                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[i] = False
-            if docal[i]:
-                donames.append(name)
-                logfiles.append(logfile1)                
-                logger.info('Dark file %d : %s' % (i+1,name))
-                logger.info('Command : '+cmd1)
-                logger.info('Logfile : '+logfile1)
-                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(docal)>0:
-        logger.info(str(np.sum(docal))+' Dark files to run')        
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-        # This should check if the  ran okay and puts the status in the database
-        chkmaster1 = check_mastercals(donames,'Dark',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
-        if chkmaster is None:
-            chkmaster = chkmaster1
+    if 'dark' in caltypes:
+        # they take too much memory to run in parallel
+        #idl -e "makecal,dark=1,vers='$vers',telescope='$telescope'" >& log/mkdark-$telescope.$host.log
+        #darkplot --apred $vers --telescope $telescope
+        darkdict = allcaldict['dark']
+        logger.info('')
+        logger.info('-------------------------------')
+        logger.info('Making master Darks in parallel')
+        logger.info('===============================')
+        # Give each job LOTS of memory
+        slurmpars1 = slurmpars.copy()
+        slurmpars1['nodes'] = 2
+        slurmpars1['cpus'] = 4
+        slurmpars1['mem_per_cpu'] = 20000  # in MB
+        logger.info('Slurm settings: '+str(slurmpars1))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='mkdark', **slurmpars1)
+        docal = np.zeros(len(darkdict),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(darkdict)):
+            name = darkdict['name'][i]
+            if np.sum((mjds >= darkdict['mjd1'][i]) & (mjds <= darkdict['mjd2'][i])) > 0:
+                outfile = load.filename('Dark',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mkdark-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+                cmd1 += ' --dark '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                #logfiles.append(logfile1)
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('Dark',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)                
+                    logger.info('Dark file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        if np.sum(docal)>0:
+            logger.info(str(np.sum(docal))+' Dark files to run')        
+            queue.commit(hard=True,submit=True)
+            logger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            # This should check if the  ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(donames,'Dark',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            chkmaster = np.hstack((chkmaster,chkmaster1))
-    else:
-        logger.info('No master Dark calibration files need to be run')
-    del queue    
-    # Make the dark plots
-    if np.sum(docal)>0:
-        cal.darkplot(apred=apred,telescope=telescope)
+            logger.info('No master Dark calibration files need to be run')
+        del queue    
+        # Make the dark plots
+        if np.sum(docal)>0:
+            cal.darkplot(apred=apred,telescope=telescope)
 
 
     # I could process the individual flat exposures in parallel first
@@ -1442,339 +1452,345 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
 
     # Make flats in parallel
     #-------------------------
-    #idl -e "makecal,flat=1,vers='$vers',telescope='$telescope'" >& log/mkflat-$telescope.$host.log
-    #flatplot --apred $vers --telescope $telescope
-    flatdict = allcaldict['flat']
-    logger.info('')
-    logger.info('-------------------------------')
-    logger.info('Making master Flats in parallel')
-    logger.info('===============================')
-    logger.info('Slurm settings: '+str(slurmpars1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkflat', **slurmpars1)
-    docal = np.zeros(len(flatdict),bool)
-    donames = []
-    logfiles = []
-    for i in range(len(flatdict)):
-        name = flatdict['name'][i]
-        if np.sum((mjds >= flatdict['mjd1'][i]) & (mjds <= flatdict['mjd2'][i])) > 0:
-            outfile = load.filename('Flat',num=name,chips=True)
-            logfile1 = os.path.dirname(outfile)+'/mkflat-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-            errfile1 = logfile1.replace('.log','.err')
-            if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-            cmd1 += ' --flat '+str(name)+' --unlock'
-            if clobber:
-                cmd1 += ' --clobber'
-            #logfiles.append(logfile1)
-            # Check if files exist already
-            docal[i] = True
-            if clobber is not True:
-                if load.exists('Flat',num=name):
-                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[i] = False
-            if docal[i]:
-                donames.append(name)
-                logfiles.append(logfile1)                
-                logger.info('Flat file %d : %s' % (i+1,name))
-                logger.info('Command : '+cmd1)
-                logger.info('Logfile : '+logfile1)
-                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(docal)>0:
-        logger.info(str(np.sum(docal))+' Flat files to run')        
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-        # This should check if the  ran okay and puts the status in the database
-        chkmaster1 = check_mastercals(donames,'Flat',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
-        if chkmaster is None:
-            chkmaster = chkmaster1
+    if 'flat' in caltypes:
+        #idl -e "makecal,flat=1,vers='$vers',telescope='$telescope'" >& log/mkflat-$telescope.$host.log
+        #flatplot --apred $vers --telescope $telescope
+        flatdict = allcaldict['flat']
+        logger.info('')
+        logger.info('-------------------------------')
+        logger.info('Making master Flats in parallel')
+        logger.info('===============================')
+        logger.info('Slurm settings: '+str(slurmpars1))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='mkflat', **slurmpars1)
+        docal = np.zeros(len(flatdict),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(flatdict)):
+            name = flatdict['name'][i]
+            if np.sum((mjds >= flatdict['mjd1'][i]) & (mjds <= flatdict['mjd2'][i])) > 0:
+                outfile = load.filename('Flat',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mkflat-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+                cmd1 += ' --flat '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                #logfiles.append(logfile1)
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('Flat',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)                
+                    logger.info('Flat file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        if np.sum(docal)>0:
+            logger.info(str(np.sum(docal))+' Flat files to run')        
+            queue.commit(hard=True,submit=True)
+            logger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            # This should check if the  ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(donames,'Flat',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            chkmaster = np.hstack((chkmaster,chkmaster1))
-    else:
-        logger.info('No master Flat calibration files need to be run')
-    del queue    
-    # Make the flat plots
-    if np.sum(docal)>0:
-        cal.flatplot(apred=apred,telescope=telescope)
+            logger.info('No master Flat calibration files need to be run')
+        del queue    
+        # Make the flat plots
+        if np.sum(docal)>0:
+            cal.flatplot(apred=apred,telescope=telescope)
 
     
     # Make BPM in parallel
     #----------------------
-    #idl -e "makecal,bpm=1,vers='$vers',telescope='$telescope'" >& log/mkbpm-$telescope.$host.log
-    bpmdict = allcaldict['bpm']
-    logger.info('')
-    logger.info('------------------------------')
-    logger.info('Making master BPMs in parallel')
-    logger.info('==============================')
-    logger.info('Slurm settings: '+str(slurmpars))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkbpm', **slurmpars)
-    docal = np.zeros(len(bpmdict),bool)
-    donames = []
-    logfiles = []
-    for i in range(len(bpmdict)):
-        name = bpmdict['name'][i]
-        if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
-            outfile = load.filename('BPM',num=name,chips=True)
-            logfile1 = os.path.dirname(outfile)+'/mkbpm-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-            errfile1 = logfile1.replace('.log','.err')
-            if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-            cmd1 += ' --bpm '+str(name)+' --unlock'
-            if clobber:
-                cmd1 += ' --clobber'
-            #logfiles.append(logfile1)
-            # Check if files exist already
-            docal[i] = True
-            if clobber is not True:
-                if load.exists('BPM',num=name):
-                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[i] = False
-            if docal[i]:
-                donames.append(name)
-                logfiles.append(logfile1)                
-                logger.info('BPM file %d : %s' % (i+1,name))
-                logger.info('Command : '+cmd1)
-                logger.info('Logfile : '+logfile1)
-                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(docal)>0:
-        logger.info(str(np.sum(docal))+' BPM files to run')        
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-        # This should check if the  ran okay and puts the status in the database
-        chkmaster1 = check_mastercals(donames,'BPM',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
-        if chkmaster is None:
-            chkmaster = chkmaster1
+    if 'bpm' in caltypes:
+        #idl -e "makecal,bpm=1,vers='$vers',telescope='$telescope'" >& log/mkbpm-$telescope.$host.log
+        bpmdict = allcaldict['bpm']
+        logger.info('')
+        logger.info('------------------------------')
+        logger.info('Making master BPMs in parallel')
+        logger.info('==============================')
+        logger.info('Slurm settings: '+str(slurmpars))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='mkbpm', **slurmpars)
+        docal = np.zeros(len(bpmdict),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(bpmdict)):
+            name = bpmdict['name'][i]
+            if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
+                outfile = load.filename('BPM',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mkbpm-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+                cmd1 += ' --bpm '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                #logfiles.append(logfile1)
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('BPM',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)                
+                    logger.info('BPM file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        if np.sum(docal)>0:
+            logger.info(str(np.sum(docal))+' BPM files to run')        
+            queue.commit(hard=True,submit=True)
+            logger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            # This should check if the  ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(donames,'BPM',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            chkmaster = np.hstack((chkmaster,chkmaster1))
-    else:
-        logger.info('No master BPM calibration files need to be run')
-    del queue    
+            logger.info('No master BPM calibration files need to be run')
+        del queue    
 
 
     # Make Littrow in parallel
     #--------------------------
-    #idl -e "makecal,littrow=1,vers='$vers',telescope='$telescope'" >& log/mklittrow-$telescope.$host.log
-    littdict = allcaldict['littrow']
-    logger.info('')
-    logger.info('----------------------------------')
-    logger.info('Making master Littrows in parallel')
-    logger.info('==================================')
-    logger.info('Slurm settings: '+str(slurmpars))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mklittrow', **slurmpars)
-    docal = np.zeros(len(littdict),bool)
-    donames = []
-    logfiles = []
-    for i in range(len(littdict)):
-        name = littdict['name'][i]
-        if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
-            outfile = load.filename('Littrow',num=name,chips=True)
-            logfile1 = os.path.dirname(outfile)+'/mklittrow-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-            errfile1 = logfile1.replace('.log','.err')
-            if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-            cmd1 += ' --littrow '+str(name)+' --unlock'
-            if clobber:
-                cmd1 += ' --clobber'
-            #logfiles.append(logfile1)
-            # Check if files exist already
-            docal[i] = True
-            if clobber is not True:
-                if load.exists('Littrow',num=name):
-                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[i] = False
-            if docal[i]:
-                donames.append(name)
-                logfiles.append(logfile1)                
-                logger.info('Littrow file %d : %s' % (i+1,name))
-                logger.info('Command : '+cmd1)
-                logger.info('Logfile : '+logfile1)
-                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(docal)>0:
-        logger.info(str(np.sum(docal))+' Littrow files to run')        
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-        # This should check if the  ran okay and puts the status in the database
-        chkmaster1 = check_mastercals(donames,'Littrow',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
-        if chkmaster is None:
-            chkmaster = chkmaster1
+    if 'littrow' in caltypes:
+        #idl -e "makecal,littrow=1,vers='$vers',telescope='$telescope'" >& log/mklittrow-$telescope.$host.log
+        littdict = allcaldict['littrow']
+        logger.info('')
+        logger.info('----------------------------------')
+        logger.info('Making master Littrows in parallel')
+        logger.info('==================================')
+        logger.info('Slurm settings: '+str(slurmpars))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='mklittrow', **slurmpars)
+        docal = np.zeros(len(littdict),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(littdict)):
+            name = littdict['name'][i]
+            if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
+                outfile = load.filename('Littrow',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mklittrow-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+                cmd1 += ' --littrow '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                #logfiles.append(logfile1)
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('Littrow',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)                
+                    logger.info('Littrow file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        if np.sum(docal)>0:
+            logger.info(str(np.sum(docal))+' Littrow files to run')        
+            queue.commit(hard=True,submit=True)
+            logger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            # This should check if the  ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(donames,'Littrow',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            chkmaster = np.hstack((chkmaster,chkmaster1))
-    else:
-        logger.info('No master Littrow calibration files need to be run')
-    del queue    
+            logger.info('No master Littrow calibration files need to be run')
+        del queue    
 
     
     # Make Response in parallel
     #--------------------------
-    responsedict = allcaldict['response']
-    logger.info('')
-    logger.info('-----------------------------------')
-    logger.info('Making master Responses in parallel')
-    logger.info('===================================')
-    logger.info('Slurm settings: '+str(slurmpars))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkresponse', **slurmpars)
-    docal = np.zeros(len(responsedict),bool)
-    donames = []
-    logfiles = []
-    for i in range(len(responsedict)):
-        name = responsedict['name'][i]
-        if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
-            outfile = load.filename('Response',num=name,chips=True)
-            logfile1 = os.path.dirname(outfile)+'/mkresponse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-            errfile1 = logfile1.replace('.log','.err')
-            if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-            cmd1 += ' --response '+str(name)+' --unlock'
-            if clobber:
-                cmd1 += ' --clobber'
-            #logfiles.append(logfile1)
-            # Check if files exist already
-            docal[i] = True
-            if clobber is not True:
-                if load.exists('Response',num=name):
-                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[i] = False
-            if docal[i]:
-                donames.append(name)
-                logfiles.append(logfile1)
-                logger.info('Response file %d : %s' % (i+1,name))
-                logger.info('Command : '+cmd1)
-                logger.info('Logfile : '+logfile1)
-                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(docal)>0:
-        logger.info(str(np.sum(docal))+' Response files to run')        
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-        # This should check if the  ran okay and puts the status in the database
-        chkmaster1 = check_mastercals(donames,'Response',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
-        if chkmaster is None:
-            chkmaster = chkmaster1
+    if 'response' in caltypes:
+        responsedict = allcaldict['response']
+        logger.info('')
+        logger.info('-----------------------------------')
+        logger.info('Making master Responses in parallel')
+        logger.info('===================================')
+        logger.info('Slurm settings: '+str(slurmpars))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='mkresponse', **slurmpars)
+        docal = np.zeros(len(responsedict),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(responsedict)):
+            name = responsedict['name'][i]
+            if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
+                outfile = load.filename('Response',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mkresponse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+                cmd1 += ' --response '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                #logfiles.append(logfile1)
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('Response',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)
+                    logger.info('Response file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        if np.sum(docal)>0:
+            logger.info(str(np.sum(docal))+' Response files to run')        
+            queue.commit(hard=True,submit=True)
+            logger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            # This should check if the  ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(donames,'Response',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            chkmaster = np.hstack((chkmaster,chkmaster1))
-    else:
-        logger.info('No master Response calibration files need to be run')
-    del queue    
+            logger.info('No master Response calibration files need to be run')
+        del queue    
     
 
     # Make Sparse in parallel
     #--------------------------
-    sparsedict = allcaldict['sparse']
-    logger.info('')
-    logger.info('---------------------------------')
-    logger.info('Making master Sparses in parallel')
-    logger.info('=================================')
-    logger.info('Slurm settings: '+str(slurmpars))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mksparse', **slurmpars)
-    docal = np.zeros(len(sparsedict),bool)
-    donames = []
-    logfiles = []
-    for i in range(len(sparsedict)):
-        name = sparsedict['name'][i]
-        if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
-            outfile = load.filename('Sparse',num=name,chips=True)
-            logfile1 = os.path.dirname(outfile)+'/mksparse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-            errfile1 = logfile1.replace('.log','.err')
-            if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-            cmd1 += ' --sparse '+str(name)+' --unlock'
-            if clobber:
-                cmd1 += ' --clobber'
-            #logfiles.append(logfile1)
-            # Check if files exist already
-            docal[i] = True
-            if clobber is not True:
-                if load.exists('Sparse',num=name):
-                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[i] = False
-            if docal[i]:
-                donames.append(name)
-                logfiles.append(logfile1)                
-                logger.info('Sparse file %d : %s' % (i+1,name))
-                logger.info('Command : '+cmd1)
-                logger.info('Logfile : '+logfile1)
-                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(docal)>0:
-        logger.info(str(np.sum(docal))+' Sparse files to run')        
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-        # This should check if the  ran okay and puts the status in the database
-        chkmaster1 = check_mastercals(donames,'Sparse',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
-        if chkmaster is None:
-            chkmaster = chkmaster1
+    if 'sparse' in caltypes:
+        sparsedict = allcaldict['sparse']
+        logger.info('')
+        logger.info('---------------------------------')
+        logger.info('Making master Sparses in parallel')
+        logger.info('=================================')
+        logger.info('Slurm settings: '+str(slurmpars))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='mksparse', **slurmpars)
+        docal = np.zeros(len(sparsedict),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(sparsedict)):
+            name = sparsedict['name'][i]
+            if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
+                outfile = load.filename('Sparse',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mksparse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+                cmd1 += ' --sparse '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                #logfiles.append(logfile1)
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('Sparse',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)                
+                    logger.info('Sparse file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        if np.sum(docal)>0:
+            logger.info(str(np.sum(docal))+' Sparse files to run')        
+            queue.commit(hard=True,submit=True)
+            logger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            # This should check if the  ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(donames,'Sparse',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            chkmaster = np.hstack((chkmaster,chkmaster1))
-    else:
-        logger.info('No master Sparse calibration files need to be run')
-    del queue    
+            logger.info('No master Sparse calibration files need to be run')
+        del queue    
 
 
     # Make Model PSFs in parallel
     #--------------------------
-    modelpsfdict = allcaldict['modelpsf']
-    logger.info('')
-    logger.info('------------------------------------')
-    logger.info('Making master PSF Models in parallel')
-    logger.info('====================================')
-    logger.info('Slurm settings: '+str(slurmpars))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mkpsfmodel', **slurmpars)
-    docal = np.zeros(len(modelpsfdict),bool)    
-    donames = []
-    logfiles = []
-    for i in range(len(modelpsfdict)):
-        name = modelpsfdict['name'][i]
-        if np.sum((mjds >= modelpsfdict['mjd1'][i]) & (mjds <= modelpsfdict['mjd2'][i])) > 0:
-            outfile = load.filename('PSFModel',num=name,chips=True)
-            logfile1 = os.path.dirname(outfile)+'/mkmpsfodel-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-            errfile1 = logfile1.replace('.log','.err')
-            if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-            cmd1 += ' --modelpsf '+str(name)+' --unlock'
-            if clobber:
-                cmd1 += ' --clobber'
-            #logfiles.append(logfile1)
-            # Check if files exist already
-            docal[i] = True
-            if clobber is not True:
-                if load.exists('PSFModel',num=name):
-                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[i] = False
-            if docal[i]:
-                donames.append(name)
-                logfiles.append(logfile1)                
-                logger.info('PSFModel file %d : %s' % (i+1,name))
-                logger.info('Command : '+cmd1)
-                logger.info('Logfile : '+logfile1)
-                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(docal)>0:
-        logger.info(str(np.sum(docal))+' PSFModel files to run')        
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-        # This should check if the  ran okay and puts the status in the database
-        chkmaster1 = check_mastercals(donames,'PSFModel',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
-        if chkmaster is None:
-            chkmaster = chkmaster1
+    if 'modelpsf' in caltypes:
+        modelpsfdict = allcaldict['modelpsf']
+        logger.info('')
+        logger.info('------------------------------------')
+        logger.info('Making master PSF Models in parallel')
+        logger.info('====================================')
+        logger.info('Slurm settings: '+str(slurmpars))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='mkpsfmodel', **slurmpars)
+        docal = np.zeros(len(modelpsfdict),bool)    
+        donames = []
+        logfiles = []
+        for i in range(len(modelpsfdict)):
+            name = modelpsfdict['name'][i]
+            if np.sum((mjds >= modelpsfdict['mjd1'][i]) & (mjds <= modelpsfdict['mjd2'][i])) > 0:
+                outfile = load.filename('PSFModel',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mkmpsfodel-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+                cmd1 += ' --modelpsf '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                #logfiles.append(logfile1)
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('PSFModel',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)                
+                    logger.info('PSFModel file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        if np.sum(docal)>0:
+            logger.info(str(np.sum(docal))+' PSFModel files to run')        
+            queue.commit(hard=True,submit=True)
+            logger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            # This should check if the  ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(donames,'PSFModel',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            chkmaster = np.hstack((chkmaster,chkmaster1))
-    else:
-        logger.info('No master PSF Model calibration files need to be run')
-    del queue    
+            logger.info('No master PSF Model calibration files need to be run')
+        del queue    
     
 
     # Make multiwave cals in parallel
@@ -1821,58 +1837,58 @@ def mkmastercals(load,mjds,slurmpars,clobber=False,linkvers=None,logger=None):
     #   @ n = $n + 1
     #end
     #wait
-
-    lsfdict = allcaldict['lsf']
-    logger.info('')
-    logger.info('--------------------------------')
-    logger.info('Making master LSFs in parallel')
-    logger.info('================================')
-    logger.info('Slurm settings: '+str(slurmpars))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='mklsf', **slurmpars)
-    docal = np.zeros(len(lsfdict),bool)
-    donames = []
-    logfiles = []
-    for i in range(len(lsfdict)):
-        name = lsfdict['name'][i]
-        if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:
-            outfile = load.filename('LSF',num=name,chips=True)
-            logfile1 = os.path.dirname(outfile)+'/mklsf-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-            errfile1 = logfile1.replace('.log','.err')
-            if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1} --full'.format(apred,telescope)
-            cmd1 += ' --lsf '+str(name)+' --unlock'
-            if clobber:
-                cmd1 += ' --clobber'
-            #logfiles.append(logfile1)
-            # Check if files exist already
-            docal[i] = True
-            if clobber is not True:
-                if load.exists('LSF',num=name):
-                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[i] = False
-            if docal[i]:
-                donames.append(name)
-                logfiles.append(logfile1)
-                logger.info('LSF file %d : %s' % (i+1,name))
-                logger.info('Command : '+cmd1)
-                logger.info('Logfile : '+logfile1)
-                queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-    if np.sum(docal)>0:
-        logger.info(str(np.sum(docal))+' LSF files to run')        
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-        # This should check if the  ran okay and puts the status in the database
-        chkmaster1 = check_mastercals(donames,'LSF',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)
-        if chkmaster is None:
-            chkmaster = chkmaster1
+    if 'lsf' in caltypes:
+        lsfdict = allcaldict['lsf']
+        logger.info('')
+        logger.info('--------------------------------')
+        logger.info('Making master LSFs in parallel')
+        logger.info('================================')
+        logger.info('Slurm settings: '+str(slurmpars))
+        queue = pbsqueue(verbose=True)
+        queue.create(label='mklsf', **slurmpars)
+        docal = np.zeros(len(lsfdict),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(lsfdict)):
+            name = lsfdict['name'][i]
+            if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:
+                outfile = load.filename('LSF',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mklsf-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1} --full'.format(apred,telescope)
+                cmd1 += ' --lsf '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                #logfiles.append(logfile1)
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('LSF',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)
+                    logger.info('LSF file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        if np.sum(docal)>0:
+            logger.info(str(np.sum(docal))+' LSF files to run')        
+            queue.commit(hard=True,submit=True)
+            logger.info('PBS key is '+queue.key)
+            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            # This should check if the  ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(donames,'LSF',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))        
         else:
-            chkmaster = np.hstack((chkmaster,chkmaster1))        
-    else:
-        logger.info('No master LSF calibration files need to be run')
-    del queue    
+            logger.info('No master LSF calibration files need to be run')
+        del queue    
 
     # make aptellurics here??
 
@@ -1977,7 +1993,7 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
     return chk3d
 
 
-def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
+def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
     """
     Run daily calibration frames for a list of MJDs.
 
@@ -1989,6 +2005,9 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
        List of MJDs to process
     slurmpars : dictionary
        Dictionary of slurmpars settings.
+    caltypes : list, optional
+       List of calibration types to run.  The default is all 5 of them.
+       ['psf','flux','arcs','dailywave','fpi']
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -2008,6 +2027,11 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
 
     if logger is None:
         logger = dln.basiclogger()
+
+    if caltypes is None:
+        caltypes = ['psf','flux','arcs','dailywave','fpi']
+    else:
+        caltypes = [c.lower() for c in caltypes]
         
     apred = load.apred
     telescope = load.telescope
@@ -2053,140 +2077,142 @@ def rundailycals(load,mjds,slurmpars,clobber=False,logger=None):
     calnames = ['psf','flux','arcs','dailywave','fpi']
     filecodes = ['PSF','Flux','Wave','Wave','WaveFPI']
     chkcal = None
-    for i,caltype in enumerate(calnames):
-        logger.info('')
-        logger.info('----------------------------------------------')
-        logger.info('Running Calibration Files: '+caltype.upper())
-        logger.info('==============================================')
-        logger.info('')
+    for i,ctype in enumerate(calnames):
+        # Only run for caltypes that we asked for
+        if ctype in caltypes:
+            logger.info('')
+            logger.info('----------------------------------------------')
+            logger.info('Running Calibration Files: '+ctype.upper())
+            logger.info('==============================================')
+            logger.info('')
 
-        # Get data for this calibration type
-        if caltype=='psf':
-            # Domeflats and quartzflats for plates
-            # Quartzflats only for FPS
-            ind, = np.where( (((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT')) & (expinfo['mjd']<59556)) | 
-                             ((expinfo['exptype']=='QUARTZFLAT') & (expinfo['mjd']>=59556)) )
-            ncal = len(ind)
-            if len(ind)>0:
-                calinfo = expinfo[ind]
-        elif caltype=='flux':
-            ind, = np.where(expinfo['exptype']=='DOMEFLAT')
-            ncal = len(ind)
-            if len(ind)>=0:
-                calinfo = expinfo[ind]
-        elif caltype=='arcs':
-            ind, = np.where(expinfo['exptype']=='ARCLAMP')
-            ncal = len(ind)
-            if len(ind)>0:
-                calinfo = expinfo[ind]
-        elif caltype=='dailywave':
-            ncal = len(mjds)
-            calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',(str,20)),('observatory',(str,3)),
-                                                    ('configid',int),('designid',int),('fieldid',int)]))
-            calinfo['num'] = mjds
-            calinfo['mjd'] = mjds
-            calinfo['exptype'] = 'dailywave'
-            calinfo['observatory'] = load.observatory
-        elif caltype=='fpi':
-            # Only FPI exposure number per MJD
-            fpi, = np.where(expinfo['exptype']=='FPI')
-            if len(fpi)>0:
-                # Take the first for each night
-                vals,ui = np.unique(expinfo['mjd'][fpi],return_index=True)
-                ncal = len(ui)
-                calinfo = expinfo[fpi][ui]
-                si = np.argsort(calinfo['num'])
-                calinfo = calinfo[si]
+            # Get data for this calibration type
+            if ctype=='psf':
+                # Domeflats and quartzflats for plates
+                # Quartzflats only for FPS
+                ind, = np.where( (((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT')) & (expinfo['mjd']<59556)) | 
+                                 ((expinfo['exptype']=='QUARTZFLAT') & (expinfo['mjd']>=59556)) )
+                ncal = len(ind)
+                if len(ind)>0:
+                    calinfo = expinfo[ind]
+            elif ctype=='flux':
+                ind, = np.where(expinfo['exptype']=='DOMEFLAT')
+                ncal = len(ind)
+                if len(ind)>=0:
+                    calinfo = expinfo[ind]
+            elif ctype=='arcs':
+                ind, = np.where(expinfo['exptype']=='ARCLAMP')
+                ncal = len(ind)
+                if len(ind)>0:
+                    calinfo = expinfo[ind]
+            elif ctype=='dailywave':
+                ncal = len(mjds)
+                calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',(str,20)),('observatory',(str,3)),
+                                                        ('configid',int),('designid',int),('fieldid',int)]))
+                calinfo['num'] = mjds
+                calinfo['mjd'] = mjds
+                calinfo['exptype'] = 'dailywave'
+                calinfo['observatory'] = load.observatory
+            elif ctype=='fpi':
+                # Only FPI exposure number per MJD
+                fpi, = np.where(expinfo['exptype']=='FPI')
+                if len(fpi)>0:
+                    # Take the first for each night
+                    vals,ui = np.unique(expinfo['mjd'][fpi],return_index=True)
+                    ncal = len(ui)
+                    calinfo = expinfo[fpi][ui]
+                    si = np.argsort(calinfo['num'])
+                    calinfo = calinfo[si]
 
-        logger.info(str(ncal)+' file(s)')
+            logger.info(str(ncal)+' file(s)')
 
-        # Loop over calibration and check if we need to run them
-        docal = np.zeros(ncal,bool)
-        for j in range(ncal):
-            num1 = calinfo['num'][j]
-            mjd1 = calinfo['mjd'][j]
-            # Check if files exist already
-            docal[j] = True
-            if clobber is not True:
-                if caltype=='dailywave':
-                    outfile = load.filename(filecodes[i],num=num1,mjd=mjd1,chips=True)
-                    outfile = outfile[0:-13]+str(mjd1)+'.fits'
-                    allfiles = [outfile.replace('Wave-','Wave-'+ch+'-') for ch in chips]
-                    allexist = [os.path.exists(f) for f in allfiles]
-                    exists = np.sum(allexist)==3
-                else:
-                    outfile = load.filename(filecodes[i],num=num1,mjd=mjd1,chips=True)
-                    exists = load.exists(filecodes[i],num=num1,mjd=mjd1)
-                # WaveFPI files are not getting checked properly!!!!
-                if exists:
-                    logger.info(str(j+1)+'  '+os.path.basename(outfile)+' already exists and clobber==False')
-                    docal[j] = False
-        logger.info(str(np.sum(docal))+' '+caltype.upper()+' to run')
-        # Loop over the calibrations and make the commands for the ones that we will run
-        logfiles = []
-        torun, = np.where(docal==True)
-        ntorun = len(torun)
-        if ntorun>0:
-            slurmpars1 = slurmpars.copy()
-            if ntorun<64:
-                slurmpars1['cpus'] = ntorun
-            slurmpars1['numpy_num_threads'] = 2
-            logger.info('Slurm settings: '+str(slurmpars1))
-            queue = pbsqueue(verbose=True)
-            queue.create(label='makecal-'+calnames[i], **slurmpars1)
-            for j in range(ntorun):
-                num1 = calinfo['num'][torun[j]]
-                mjd1 = calinfo['mjd'][torun[j]]
-                if mjd1>=59556:
-                    fps = True
-                else:
-                    fps = False
-                cmd1 = 'makecal --vers {0} --telescope {1} --unlock'.format(apred,telescope)
-                if clobber: cmd1 += ' --clobber'
-                calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd1))                
-                if caltype=='psf':    # psfs
-                    cmd1 += ' --psf '+str(num1)
-                    logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
-                elif caltype=='flux':   # flux
-                    cmd1 += ' --flux '+str(num1)
-                    #if fps: cmd1 += ' --librarypsf'
-                    logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
-                elif caltype=='arcs':  # arcs
-                    cmd1 += ' --wave '+str(num1)
-                    #if fps: cmd1 += ' --librarypsf'
-                    logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
-                elif caltype=='dailywave':  # dailywave
-                    cmd1 += ' --dailywave '+str(num1)
-                    #if fps: cmd1 += ' --librarypsf'
-                    logfile1 = calplandir+'/apDailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
-                elif caltype=='fpi':  # fpi
-                    cmd1 += ' --fpi '+str(num1)
-                    #if fps: cmd1 += ' --librarypsf'
-                    logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
-                    if os.path.exists(os.path.dirname(logfile1))==False:
-                        os.makedirs(os.path.dirname(logfile1))
-                logfiles.append(logfile1)
-                logger.info('Calibration file %d : %s %d' % (j+1,caltype,num1))
-                logger.info('Command : '+cmd1)
-                logger.info('Logfile : '+logfile1)
-                queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+            # Loop over calibration files and check if we need to run them
+            docal = np.zeros(ncal,bool)
+            for j in range(ncal):
+                num1 = calinfo['num'][j]
+                mjd1 = calinfo['mjd'][j]
+                # Check if files exist already
+                docal[j] = True
+                if clobber is not True:
+                    if ctype=='dailywave':
+                        outfile = load.filename(filecodes[i],num=num1,mjd=mjd1,chips=True)
+                        outfile = outfile[0:-13]+str(mjd1)+'.fits'
+                        allfiles = [outfile.replace('Wave-','Wave-'+ch+'-') for ch in chips]
+                        allexist = [os.path.exists(f) for f in allfiles]
+                        exists = np.sum(allexist)==3
+                    else:
+                        outfile = load.filename(filecodes[i],num=num1,mjd=mjd1,chips=True)
+                        exists = load.exists(filecodes[i],num=num1,mjd=mjd1)
+                    # WaveFPI files are not getting checked properly!!!!
+                    if exists:
+                        logger.info(str(j+1)+'  '+os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[j] = False
+            logger.info(str(np.sum(docal))+' '+ctype.upper()+' to run')
+            # Loop over the calibrations and make the commands for the ones that we will run
+            logfiles = []
+            torun, = np.where(docal==True)
+            ntorun = len(torun)
+            if ntorun>0:
+                slurmpars1 = slurmpars.copy()
+                if ntorun<64:
+                    slurmpars1['cpus'] = ntorun
+                slurmpars1['numpy_num_threads'] = 2
+                logger.info('Slurm settings: '+str(slurmpars1))
+                queue = pbsqueue(verbose=True)
+                queue.create(label='makecal-'+calnames[i], **slurmpars1)
+                for j in range(ntorun):
+                    num1 = calinfo['num'][torun[j]]
+                    mjd1 = calinfo['mjd'][torun[j]]
+                    if mjd1>=59556:
+                        fps = True
+                    else:
+                        fps = False
+                    cmd1 = 'makecal --vers {0} --telescope {1} --unlock'.format(apred,telescope)
+                    if clobber: cmd1 += ' --clobber'
+                    calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd1))                
+                    if ctype=='psf':    # psfs
+                        cmd1 += ' --psf '+str(num1)
+                        logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
+                    elif ctype=='flux':   # flux
+                        cmd1 += ' --flux '+str(num1)
+                        #if fps: cmd1 += ' --librarypsf'
+                        logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
+                    elif ctype=='arcs':  # arcs
+                        cmd1 += ' --wave '+str(num1)
+                        #if fps: cmd1 += ' --librarypsf'
+                        logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
+                    elif ctype=='dailywave':  # dailywave
+                        cmd1 += ' --dailywave '+str(num1)
+                        #if fps: cmd1 += ' --librarypsf'
+                        logfile1 = calplandir+'/apDailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
+                    elif ctype=='fpi':  # fpi
+                        cmd1 += ' --fpi '+str(num1)
+                        #if fps: cmd1 += ' --librarypsf'
+                        logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+                        if os.path.exists(os.path.dirname(logfile1))==False:
+                            os.makedirs(os.path.dirname(logfile1))
+                    logfiles.append(logfile1)
+                    logger.info('Calibration file %d : %s %d' % (j+1,ctype,num1))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
 
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
-        else:
-            logger.info('No '+str(calnames[i])+' calibration files need to be run')
-        # Checks the status and updates the database
-        if ntorun>0:
-            chkcal1 = check_calib(calinfo[torun],logfiles,queue.key,apred,verbose=True,logger=logger)
-            # Summary
-            indcal, = np.where(chkcal1['success']==True)
-            logger.info('%d/%d calibrations successfully processed' % (len(indcal),len(chkcal1)))
-            if chkcal is None:
-                chkcal = chkcal1
+                queue.commit(hard=True,submit=True)
+                logger.info('PBS key is '+queue.key)
+                queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
             else:
-                chkcal = np.hstack((chkcal,chkcal1))
-            del queue
+                logger.info('No '+str(calnames[i])+' calibration files need to be run')
+            # Checks the status and updates the database
+            if ntorun>0:
+                chkcal1 = check_calib(calinfo[torun],logfiles,queue.key,apred,verbose=True,logger=logger)
+                # Summary
+                indcal, = np.where(chkcal1['success']==True)
+                logger.info('%d/%d calibrations successfully processed' % (len(indcal),len(chkcal1)))
+                if chkcal is None:
+                    chkcal = chkcal1
+                else:
+                    chkcal = np.hstack((chkcal,chkcal1))
+                del queue
 
     # make sure to run mkwave on all arclamps needed for daily cals
 
