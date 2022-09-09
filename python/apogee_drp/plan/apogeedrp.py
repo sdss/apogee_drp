@@ -2888,8 +2888,8 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
     email.send(address,subject,message,files=logfile,send_from='noreply.apogeedrp')
     
 
-def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
-        linkvers=None,nodes=5,debug=False):
+def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
+        fresh=False,linkvers=None,nodes=5,debug=False):
     """
     Perform APOGEE Data Release Processing
 
@@ -2908,6 +2908,9 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
        Processing steps to perform.  The full list is:
          ['setup','master','3d','cal','plan','apred','rv','summary','unified','qa']
          By default, all steps are run.
+    caltypes : list, optional
+       Calibration types to run.  This is used to select a subset of the master cals or daily cals
+         to run.  Default is to run all of them.
     clobber : boolean, optional
        Overwrite any existing data.  Default is False.
     fresh : boolean, optional
@@ -3044,7 +3047,7 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
         rootLogger.info('2) Generating master calibration products')
         rootLogger.info('=========================================')
         rootLogger.info('')
-        chkmaster = mkmastercals(load,mjds,linkvers=linkvers,**kws)
+        chkmaster = mkmastercals(load,mjds,caltypes=caltypes,linkvers=linkvers,**kws)
 
     # 3) Process all exposures through ap3d
     #---------------------------------------
@@ -3064,7 +3067,7 @@ def run(observatory,apred,mjd=None,steps=None,clobber=False,fresh=False,
         rootLogger.info('5) Generating daily calibration products')
         rootLogger.info('========================================')
         rootLogger.info('')
-        chkcal = rundailycals(load,mjds,**kws)
+        chkcal = rundailycals(load,mjds,caltypes=caltypes,**kws)
 
     # 5) Make plan files
     #-------------------
