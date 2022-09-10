@@ -21,6 +21,7 @@ import pdb
 import traceback
 from apogee_drp.plan import mkplan
 from apogee_drp.apred import ap2d
+from apogee_drp.utils import apload
 
 if __name__ == '__main__' :
 
@@ -70,7 +71,9 @@ if __name__ == '__main__' :
         num = int(args.num[0])
         apred = args.apred[0]
         telescope = args.telescope[0]
-        if num >= 59556:
+        load = apload.ApLoad(apred=apred,telescope=telescope)
+        mjd = int(load.cmjd(num))
+        if mjd >= 59556:
             fps = True
         else:
             fps = False
