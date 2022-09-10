@@ -326,7 +326,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         ;; Try to find a PSF from this day
         endif else begin
           print,'Trying to automatically find a PSF calibration file'
-          psfid = GETPSFCAL(fpi[0],psflibrary=librarypsf)
+          psfid = GETPSFCAL(fpi[0],psflibrary=librarypsf,unlock=unlock)
         endelse
         MAKECAL,psf=psfid,unlock=unlock
       endelse
@@ -431,7 +431,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         ;; Try to find a PSF from this day
         endif else begin
           print,'Trying to automatically find a PSF calibration file'
-          psfid = GETPSFCAL(flux[0],psflibrary=librarypsf)
+          psfid = GETPSFCAL(flux[0],psflibrary=librarypsf,unlock=unlock)
         endelse
         MAKECAL,psf=psfid,unlock=unlock
       endelse
@@ -506,7 +506,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
           ;; Try to find a PSF from this day
           endif else begin
             print,'Trying to automatically find a PSF calibration file'
-            psfid = GETPSFCAL(ims[0],psflibrary=librarypsf)
+            psfid = GETPSFCAL(ims[0],psflibrary=librarypsf,unlock=unlock)
           endelse
           MAKECAL,psf=psfid,unlock=unlock
         endelse

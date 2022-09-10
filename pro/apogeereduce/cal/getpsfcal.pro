@@ -10,6 +10,7 @@
 ;  /psflibrary  Use the PSF library to find the best PSF to use.
 ;                 Used for FPS data by default.  Otherwise it
 ;                 searches through the apPSF files that are on disk.
+;  /unlock      Remove any lock files and start fresh.
 ;
 ; OUTPUTS:
 ;  psfid  Exposure number of the PSF calibration file.
@@ -20,7 +21,7 @@
 ; By D.Nidever  Feb 2022
 ;-
 
-function getpsfcal,num,psflibrary=psflibrary
+function getpsfcal,num,psflibrary=psflibrary,unlock=unlock
   common apver,ver,telescop,instrume
 
   ;; Not enough inputs
