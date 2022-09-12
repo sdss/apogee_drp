@@ -49,14 +49,14 @@ and fix saturation (as much as possible).  Dark current is removed, linearit cor
 flat fielded.
 
 **AP2D** extracts the 300 fibers to 1D from the 2D images.  The extraction currently uses empiral point spread function (EPSF) profiles that
-are generated from domeflats taken during the night.  During the plate era, a domeflat was taken for each plate.  During the FPS era,
-we are planning to use a domeflat "library" or a more sophisticated model of the PSF.  A relative flux calibration using a daily apFlux
-calibration file (generated from a domeflat) is applied to remove fiber-to-fiber throughput and relative spectral response (see
-`fluxcal <fluxcal.html>`_ for more details). At the end of AP2D, a wavelength solution is "attached"
-to the output ap1D file.  The wavelengths are correct/shifted using night sky emission lines if the exposure was taken on sky.  
-See `FPI <fpi.html>`_ for more information on how the new
-`Fabry-Perot Interferometer <https://en.wikipedia.org/wiki/Fabry%E2%80%93P%C3%A9rot_interferometer>`_
-is used to improve the wavelength solutions.
+are generated from domeflats taken during the night.  During the plate era, a domeflat was taken for each plate and it was used for extraction.  
+To cut down on overhead during the FPS era, these between-exposure domeflats are no longer being taken, and we are instead using a "library"
+"library" of historical flats (also regularly updated with flats taken at the start and end of each observing night) that serves as a more 
+sophisticated model of the PSF.  A relative flux calibration using a daily apFlux calibration file (generated from a domeflat) is applied to 
+remove fiber-to-fiber throughput and relative spectral response (see `fluxcal <fluxcal.html>`_ for more details). At the end of AP2D, a 
+wavelength solution is "attached" to the output ap1D file.  The wavelengths are correct/shifted using night sky emission lines if the exposure 
+was taken on sky.  See `FPI <fpi.html>`_ for more information on how the new `Fabry-Perot Interferometer 
+<https://en.wikipedia.org/wiki/Fabry%E2%80%93P%C3%A9rot_interferometer>`_ is used to improve the wavelength solutions.
 
 **AP1DVISIT** first performs corrections on each exposure and then combines multiple exposure at the end.  Sky fibers are used to remove
 the sky continuum and line emission from each fiber.  Hot star ("telluric") spectra are used to fit a model of the telluric absorption
