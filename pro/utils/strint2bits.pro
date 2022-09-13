@@ -48,6 +48,8 @@ function strint2bits,num
 
   ;; Convert a large number (as a string) into binary bits
 
+  ;; https://indepth.dev/posts/1019/the-simple-math-behind-decimal-binary-conversion-algorithms
+  
   numleft = strtrim(num,2)
   n = 10*strlen(numleft)
   bits = bytarr(n)
