@@ -23,7 +23,7 @@ Main files and directories
 Since there are three APOGEE detectors, the data are almost always split into three files, one per detector:
 a (red), b (green), c (blue).  For example, a 2D image for exposure 40220015 has three files with names
 ``ap2D-a-40220015.fits``, ``ap2D-b-40220015.fits`` and ``ap2D-c-40220015.fits``.  The prefix is ``ap`` for
-APO and ``as``, although ``ap`` is always used for Visit and Star files.
+APO and ``as`` for LCO, although ``ap`` is always used for Visit and Star files.
 
 Here's the directory layout of the main data files.
 
