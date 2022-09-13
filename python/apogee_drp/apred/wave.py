@@ -533,6 +533,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 plt.title('Wavelength residuals - Fiber='+str(row))
                 ax.annotate('RMS = %.4f' % res[gd].std(), xy=(xr[0]+dln.valrange(xr)*0.05, yr[1]-dln.valrange(yr)*0.05),ha='left')
                 plt.savefig(figfile,bbox_inches='tight')
+                plt.close(fig)
                 print('Saving figure to ',figfile)
 
             #if True and ngroup==1 and niter==maxiter-1:

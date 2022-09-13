@@ -70,6 +70,15 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
   expinfo = dbquery("select * from apogee_drp.exposure where mjd>="+strtrim(long(mjd)-10,2)+$
                     " and mjd<="+strtrim(long(mjd)+10,2)+" and exptype='ARCLAMP' and "+$
                     "observatory='"+strmid(dirs.telescope,0,3)+"'")
+  for i=0,n_elements(expinfo)-1 do begin
+    ;; arctype info is missing in the db for early SDSS-V dates
+    if strtrim(expinfo[i].arctype,2) eq '' then begin
+      fil = apogee_filename('R',num=expinfo[i].num,chip='a')  
+      expinfo2 = apfileinfo(fil,/silent)
+      if expinfo2.lampune eq 1 then expinfo[i].arctype='UNE'
+      if expinfo2.lampthar eq 1 then expinfo[i].arctype='THAR'      
+    endif
+  endfor
   expinfo.arctype = strtrim(expinfo.arctype,2)
   gdarc = where(expinfo.arctype eq 'UNE' or expinfo.arctype eq 'THAR',ngdarc)
   if ngdarc eq 0 then begin
