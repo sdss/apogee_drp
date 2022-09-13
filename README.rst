@@ -26,11 +26,12 @@ To install the latest version::
 Documentation
 -------------
 
-.. image:: https://readthedocs.org/projects/sdss-apogee-drp/badge/?version=latest
-        :target: http://sdss-apogee-drp.readthedocs.io/
+.. image:: https://readthedocs.org/projects/apogee-drp/badge/?version=latest
+        :target: http://apogee-drp.readthedocs.io/
 
-See `the documentation <http://sdss-apogee-drp.readthedocs.io>`_ for information on how
+See `the documentation <http://apogee-drp.readthedocs.io>`_ for information on how
 to install and use apogee_drp.
+
 
 License
 -------
