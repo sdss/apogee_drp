@@ -49,7 +49,7 @@ These 5 tables gives the status of the different processing steps:
 - visit_status: Status of visit processes at the plan level.
 - rv_status: Status of RV processing.
   
-The layout of the tables are availabl here:
+The layout of the tables are available here:
 `apogee_drp <https://github.com/sdss/sdssdb/tree/apogee_drp/schema/sdss5db/apogee_drp>`_
 
 
