@@ -5,3 +5,4 @@ astropy
 scipy
 sphinx
 sphinx_astropy
+Jinja2 < 3.1
