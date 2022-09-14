@@ -74,13 +74,16 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;;expinfo.arctype = strtrim(expinfo.arctype,2)
   ;;gdarc = where(expinfo.arctype eq 'UNE' or expinfo.arctype eq 'THAR',ngdarc)
 
-  ;; Process the frames
-  if keyword_set(psfid) then begin
-    cmjd = getcmjd(psfid)
-    MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
+  ;; Process the frame, if necessary
+  chipfiles = apogee_filename('1D',num=waveid,chip=['a','b','c'])
+  if total(file_test(chipfiles)) ne 3 then begin
+    if keyword_set(psfid) then begin
+      cmjd = getcmjd(psfid)
+      MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
+    endif
+    w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,modelpsf=modelpsf,flux=0,/doproc,unlock=unlock)
   endif
-  w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,modelpsf=modelpsf,flux=0,/doproc,unlock=unlock)
-
+      
   ;; New Python version! 
   cmd = ['apmultiwavecal','--name',strtrim(name,2),'--vers',dirs.apred]
   if keyword_set(nofit) then cmd=[cmd,'--nofit']
