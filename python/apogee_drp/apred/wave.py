@@ -483,8 +483,10 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             for igroup in range(ngroup) : 
                 j=np.where(x[2,gd] == igroup)[0]
                 if len(j) <= 0 :
-                  # if any group is missing, things will fail in func_multi_poly to determine correct npoly
-                  raise Exception('missing lines from group: '+str(igroup))
+                    # if any group is missing, things will fail in func_multi_poly to determine correct npoly
+                    print('missing lines from group: '+str(igroup))
+                    #import pdb; pdb.set_trace()
+                    #raise Exception('missing lines from group: '+str(igroup))
             
             # use curve_fit to optimize parameters
             try :
@@ -2033,12 +2035,17 @@ def refine(oldpars,npoly=4) :
         bounds = ( np.zeros(len(pars))-np.inf, np.zeros(len(pars))+np.inf)
         bounds[0][npoly+1] = -1.e-7
         bounds[1][npoly+1] = 1.e-7
-        try :
-            popt,pcov = curve_fit(func_multi_poly,x,y,p0=pars,bounds=bounds)
-        except :
-            print('Solution failed for row: ', row)
-            pdb.set_trace()
+        gd, = np.where((y>1.5e4) & (y<1.8e4))
+        if len(gd):
+            print('no good lines for row: ',row)
             popt = pars*0.
+        else:
+            try :
+                popt,pcov = curve_fit(func_multi_poly,x[:,gd],y[gd],p0=pars,bounds=bounds)
+            except :
+                print('Solution failed for row: ', row)
+                #pdb.set_trace()
+                popt = pars*0.
         newpars.append(popt)
         # calculate wavelength arrays from refined solution
         x = np.zeros([3,2048])
