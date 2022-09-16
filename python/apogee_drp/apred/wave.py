@@ -2036,16 +2036,16 @@ def refine(oldpars,npoly=4) :
         bounds[0][npoly+1] = -1.e-7
         bounds[1][npoly+1] = 1.e-7
         gd, = np.where((y>1.5e4) & (y<1.8e4))
-        if len(gd):
-            print('no good lines for row: ',row)
-            popt = pars*0.
-        else:
+        if len(gd)>0:
             try :
                 popt,pcov = curve_fit(func_multi_poly,x[:,gd],y[gd],p0=pars,bounds=bounds)
             except :
                 print('Solution failed for row: ', row)
                 #pdb.set_trace()
                 popt = pars*0.
+        else:
+            print('no good lines for row: ',row)
+            popt = pars*0.
         newpars.append(popt)
         # calculate wavelength arrays from refined solution
         x = np.zeros([3,2048])
