@@ -802,8 +802,7 @@ print,'no_checksum: ', no_checksum
       ; An error occurred
       if n_elements(errzip) gt 0 then begin
         error = 'ERROR in APUNZIP '+errzip
-        if not keyword_set(silent) then print,'halt: '+error
-        stop
+        if not keyword_set(silent) then print,error
         goto,BOMB
       endif
   
@@ -832,8 +831,7 @@ print,'no_checksum: ', no_checksum
   ; Check that the file exists
   if file_test(file) eq 0 then begin
     error = 'FILE '+file+' NOT FOUND'
-    if not keyword_set(silent) then print,'halt: '+error
-    stop
+    if not keyword_set(silent) then print,error
     goto,BOMB
   endif
  
@@ -841,8 +839,7 @@ print,'no_checksum: ', no_checksum
   head = headfits(file,errmsg=errmsg)
   if errmsg ne '' then begin
     error = 'There was an error loading the HEADER for '+file
-    if not keyword_set(silent) then print,'halt: '+error
-    stop
+    if not keyword_set(silent) then print,error
     goto,BOMB
   endif
   
@@ -851,8 +848,7 @@ print,'no_checksum: ', no_checksum
   FITS_READ,file,dumim,dumhead,exten_no=1,message=read_message,/no_abort
   if naxis ne 3 and read_message ne '' then begin
     error = 'FILE must contain a 3D DATACUBE OR image extensions'
-    if not keyword_set(silent) then print,'halt: '+error
-    stop
+    if not keyword_set(silent) then print,error
     goto,BOMB
   endif
   
@@ -871,8 +867,7 @@ print,'no_checksum: ', no_checksum
   test = file_test(file)
   if file_test(file) eq 0 then begin
     error = file+' NOT FOUND'
-    if not keyword_set(silent) then print,'halt: '+error
-    stop
+    if not keyword_set(silent) then print,error
     goto,BOMB
   endif
   ; DATACUBE
@@ -882,8 +877,7 @@ print,'no_checksum: ', no_checksum
     ; Error opening file
     if message ne '' then begin
       error = message
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       goto,BOMB
     endif
   
@@ -905,8 +899,7 @@ print,'no_checksum: ', no_checksum
     ; Only 1 read
     if nreads lt 2 then begin
       error = 'ONLY 1 read.  Need at least two'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       goto,BOMB
     endif
 
@@ -942,8 +935,7 @@ print,'no_checksum: ', no_checksum
   chip = strtrim(sxpar(head,'CHIP'),2)
   if chip eq '0' then begin
     error = 'CHIP not found in header'
-    if not keyword_set(silent) then print,'halt: '+error
-    stop
+    if not keyword_set(silent) then print,error
     goto,BOMB
   endif
 
@@ -970,16 +962,14 @@ print,'no_checksum: ', no_checksum
     ; DETCORR must be scalar string
     if size(detcorr,/type) ne 7 or n_elements(detcorr) ne 1 then begin
       error = 'DETCORR must be a scalar string with the filename of the DETECTOR file'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
     ; Check that the file exists
     if file_test(detcorr) eq 0 then begin
       error = 'DETCORR file '+detcorr+' NOT FOUND'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
     
@@ -996,8 +986,7 @@ print,'no_checksum: ', no_checksum
     ; Error opening file
     if message1 ne '' or message2 ne '' or message3 ne '' then begin
       error = message1+' '+message2+' '+message3
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1010,8 +999,7 @@ print,'no_checksum: ', no_checksum
     if (szgain[0] eq 2 and (szgain[1] ne 2048 or szgain[2] ne 2048)) or $
        (szgain[0] eq 1 and szgain[1] ne 4) or (gaintype ne 4) then begin
       error = 'GAIN image must be 2048x2048 or 4 FLOAT image'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1028,8 +1016,7 @@ print,'no_checksum: ', no_checksum
     if (sznoise[0] eq 2 and (sznoise[1] ne 2048 or sznoise[2] ne 2048)) or $
        (sznoise[0] eq 1 and sznoise[1] ne 4) or (noisetype ne 4) then begin
       error = 'RDNOISE image must be 2048x2048 or 4 FLOAT image'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1049,8 +1036,7 @@ print,'no_checksum: ', no_checksum
     if (szlin[0] eq 3 and szlin[1] eq 2048 and szlin[2] eq 2048 and szlin[3] eq 3) then linokay=1
     if linokay eq 0 then begin
       error = 'Linearity correction data must be 2048x2048x3 or 4x3'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1065,16 +1051,14 @@ print,'no_checksum: ', no_checksum
     ; BPMCORR must be scalar string
     if size(bpmcorr,/type) ne 7 or n_elements(bpmcorr) ne 1 then begin
       error = 'BPMCORR must be a scalar string with the filename of the BAD PIXEL MASK file'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
     ; Check that the file exists
     if file_test(bpmcorr) eq 0 then begin
       error = 'BPMCORR file '+bpmcorr+' NOT FOUND'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
     
@@ -1085,8 +1069,7 @@ print,'no_checksum: ', no_checksum
     ; Error opening file
     if message ne '' then begin
       error = message
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1100,8 +1083,7 @@ print,'no_checksum: ', no_checksum
     ;if szbpm[0] ne 2 or szbpm[1] ne 2048 or szbpm[2] ne 2048 or nbad gt 0 then begin
     if szbpm[0] ne 2 or szbpm[1] ne 2048 or szbpm[2] ne 2048 then begin
       error = 'BAD PIXEL MASK must be 2048x2048 with 0/1 values'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1115,16 +1097,14 @@ print,'no_checksum: ', no_checksum
     ; LITTROWCORR must be scalar string
     if size(littrowcorr,/type) ne 7 or n_elements(littrowcorr) ne 1 then begin
       error = 'LITTROWCORR must be a scalar string with the filename of the LITTROW MASK file'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
     ; Check that the file exists
     if file_test(littrowcorr) eq 0 then begin
       error = 'LITTROWCORR file '+littrowcorr+' NOT FOUND'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
     
@@ -1135,8 +1115,7 @@ print,'no_checksum: ', no_checksum
     ; Error opening file
     if message ne '' then begin
       error = message
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1149,8 +1128,7 @@ print,'no_checksum: ', no_checksum
     dum = where(littrowim ne 0 and littrowim ne 1,nbad)
     if szlittrow[0] ne 2 or szlittrow[1] ne 2048 or szlittrow[2] ne 2048 or nbad gt 0 then begin
       error = 'LITTROW MASK must be 2048x2048 with 0/1 values'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   endif ; loading littrow file
@@ -1163,16 +1141,14 @@ print,'no_checksum: ', no_checksum
     ; PERSISTCORR must be scalar string
     if size(persistcorr,/type) ne 7 or n_elements(persistcorr) ne 1 then begin
       error = 'PERSISTCORR must be a scalar string with the filename of the PERSIST MASK file'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
     ; Check that the file exists
     if file_test(persistcorr) eq 0 then begin
       error = 'PERSISTCORR file '+persistcorr+' NOT FOUND'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
     
@@ -1183,8 +1159,7 @@ print,'no_checksum: ', no_checksum
     ; Error opening file
     if message ne '' then begin
       error = message
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1196,8 +1171,7 @@ print,'no_checksum: ', no_checksum
     persistokay = 0
     if szpersist[0] ne 2 or szpersist[1] ne 2048 or szpersist[2] ne 2048 then begin
       error = 'PERSISTENCE MASK must be 2048x2048'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   endif ; loading persistence file
@@ -1210,16 +1184,14 @@ print,'no_checksum: ', no_checksum
     ; DARKCORR must be scalar string
     if size(darkcorr,/type) ne 7 or n_elements(darkcorr) ne 1 then begin
       error = 'DARKCORR must be a scalar string with the filename of the dark correction file'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
     ; Check that the file exists
     if file_test(darkcorr) eq 0 then begin
       error = 'DARKCORR file '+darkcorr+' NOT FOUND'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1229,8 +1201,7 @@ print,'no_checksum: ', no_checksum
     ; Error reading header
     if errmsg0 ne '' or errmsg1 ne '' then begin
       error = errmsg0+' '+errmsg1
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1257,8 +1228,7 @@ print,'no_checksum: ', no_checksum
     if nreads_dark lt nreads then begin
       error = 'SUPERDARK file '+darkcorr+' does not have enough READS. Have '+strtrim(nreads_dark,2)+$
               ' but need '+strtrim(nreads,2)
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
     
@@ -1283,7 +1253,7 @@ print,'no_checksum: ', no_checksum
       For k=1,nreads_dark do begin
         FITS_READ,darkcorr,extim,exthead,exten_no=k,message=message,/no_abort 
         darkcube[*,*,k-1] = extim
-      End
+      Endfor
   
     endelse ; extensions
   
@@ -1295,8 +1265,7 @@ print,'no_checksum: ', no_checksum
     szdark = size(darkcube)
     if (szdark[0] ne 3 or szdark[1] lt 2048 or szdark[2] ne 2048) then begin
       error = 'Dark correction data must a 2048x2048xNreads datacube of the dark counts per pixel'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1311,16 +1280,14 @@ print,'no_checksum: ', no_checksum
     ; FLATCORR must be scalar string
     if size(flatcorr,/type) ne 7 or n_elements(flatcorr) ne 1 then begin
       error = 'FLATCORR must be a scalar string with the filename of the flat correction file'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
     ; Check that the file exists
     if file_test(flatcorr) eq 0 then begin
       error = 'FLATCORR file '+flatcorr+' NOT FOUND'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
     
@@ -1331,8 +1298,7 @@ print,'no_checksum: ', no_checksum
     ; Error opening file
     if message ne '' then begin
       error = message
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1342,8 +1308,7 @@ print,'no_checksum: ', no_checksum
     szflat = size(flatim)
     if (szflat[0] ne 2 or szflat[1] ne 2048 or szflat[2] ne 2048) then begin
       error = 'Flat Field correction image must a 2048x2048 image'
-      if not keyword_set(silent) then print,'halt: '+error
-      stop
+      if not keyword_set(silent) then print,error
       return
     endif
   
@@ -1458,7 +1423,7 @@ print,'no_checksum: ', no_checksum
   
   if nbdreads gt (nreads-2) then begin
     error = 'Not enough good reads'
-    if not keyword_set(silent) then print,'halt: '+error
+    if not keyword_set(silent) then print,error
     stop
     return
   endif

@@ -132,6 +132,12 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
     ;; Exposure loop
     for inum=0,n_elements(nums)-1 do begin
       num = nums[inum]
+      ;; Check that the ap2D files exist
+      ifiles = apogee_filename('2D',num=num,chip=['a','b','c'])
+      if total(file_test(ifiles),/integer) ne 3 then begin
+        print,'APPROCESS ERROR - 2D files not found for '+strtrim(num,2)
+        continue
+      endif
       tracefile = apogee_filename('PSF',num=psfid,chip='c',/dir)+string(format='(i8.8)',psfid) 
       wavefile = 0
       if keyword_set(waveid) then begin
