@@ -176,7 +176,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
 
     telescope = {'apogee-n':'apo25m','apogee-s':'lco25m'}[inst]
     load = apload.ApLoad(apred=vers,instrument=inst,telescope=telescope)
-
+    
     nums = np.array(nums)
     if name is None : name = nums[0]
     if test : name = int(name/10000)*10000+9999
@@ -215,6 +215,11 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     framesgroup = []
     framesdithpix = []
     fcnt = 0
+    linestr = None
+    fdt = [('num',int),('okay',bool),('nlines',int),('group',int),('dithpix',float)]
+    frameinfo = np.zeros(len(nums),dtype=np.dtype(fdt))
+    frameinfo['num'] = nums
+    frameinfo['group'] = -1
     for inum,num in enumerate(nums) :
         print(str(inum+1)+'/'+str(len(nums))+' '+str(num))
         # load 1D frame
@@ -227,6 +232,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         out = load.filename('Wave',num=num,chips=True)
         #print(num,frame)
         if frame is not None and frame != 0 :
+            frameinfo['okay'][inum] = True
             # get correct arclines
             if frame['a'][0].header['LAMPUNE']:
                 lampfile = 'UNe.vac.apogee'
@@ -249,11 +255,14 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1,plot=plot)
                 Table(flinestr).write(linesfile,overwrite=True)
             # replace frameid tag with group identification, which must start at 0 for func_multi_poly indexing
-
+            frameinfo['nlines'][inum] = len(flinestr)
+            
             # GROUPS: Frames must be consecutive and at the same dither position to be considered a group
-            framesdithpix.append(frame['a'][0].header['DITHPIX'])
+            frameinfo['dithpix'][inum] = frame['a'][0].header['DITHPIX']
+            #framesdithpix.append(frame['a'][0].header['DITHPIX'])
             #import pdb; pdb.set_trace()
-            if inum > 0 and (abs(num-nums[inum-1]) > 1 or abs(framesdithpix[fcnt]-framesdithpix[fcnt-1])>0.1): maxgroup +=1
+            if inum > 0 and (abs(num-nums[inum-1]) > 1 or abs(frameinfo['dithpix'][fcnt]-frameinfo['dithpix'][fcnt-1])>0.1): maxgroup +=1
+            #if inum > 0 and (abs(num-nums[inum-1]) > 1 or abs(framesdithpix[fcnt]-framesdithpix[fcnt-1])>0.1): maxgroup +=1            
 
             flinestr = Table(flinestr)  # convert temporarily to astropy Table to easily add a column
             flinestr['group'] = -1
@@ -287,17 +296,32 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 print('Setting BAD=1 for ',len(flinestr)-len(gdind),' of ',len(flinestr),' outlier lines')
                 flinestr['bad'] = 1  # bad
                 flinestr['bad'][gdind] = 0  # good
-            framesgroup.append(maxgroup-1)
-            if inum == 0 : linestr = flinestr
+            #framesgroup.append(maxgroup-1)
+            frameinfo['group'][inum] = maxgroup-1
+            if linestr is None : linestr = flinestr
             else : linestr = np.append(linestr,flinestr)
             print(' Frame: {:d}  Nlines: {:d}  '.format(num,len(flinestr)))
-            frames.append(num)
+            #frames.append(num)
             fcnt += 1   # increment good frame counter
         else :
             print('Error reading frame: ', num)
 
     if nofit : return
 
+    if linestr is None or len(linestr)==0:
+        print('No good lines found')
+        return
+
+    # Trim out bad frames
+    bdframe, = np.where(frameinfo['okay']==False)
+    if len(bdframe)==len(frameinfo):
+        print('All frames are bad')
+        return
+    if len(bdframe)>0:
+        print('Removing '+str(len(bdframe))+' bad frames: '+','.join(np.char.array(frameinfo['num'][bdframe]).astype(str)))
+        gdframe, = np.where(frameinfo['okay']==True)        
+        frameinfo = frameinfo[gdframe]
+    
     # do the wavecal fit
     # initial parameter guess for first row, subsequent rows will use guess from previous row
     npars=npoly+3*maxgroup
@@ -436,8 +460,10 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             if abs(nums[1]-nums[0]) > 1 : 
                 raise Exception('for multiple groups, first two frames must be from same group!')
             # Run all exposures of first group
-            group0, = np.where(np.array(framesgroup)==0)
-            num0 = nums[group0]
+            group0, = np.where(np.array(frameinfo['group'])==np.min(groups))
+            num0 = frameinfo['num'][group0]
+            #group0, = np.where(np.array(framesgroup)==0)            
+            #num0 = nums[group0]
             print('running wavecal for first group: ', num0,maxgroup,ngroup,' row: ',row)
             pars0,linestr1 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,reject=reject,init=init,verbose=verbose)
             pars[:npoly] = pars0[:npoly]
@@ -600,8 +626,8 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     if str(name).isnumeric()==False or len(str(name))<8:  # non-ID input
         out = os.path.dirname(out)+'/'+load.prefix+'Wave-'+str(name)+'.fits'
     print('Saving to ',out)
-    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frames=frames,framesgroup=framesgroup,
-                framesdithpix=framesdithpix,rms=rms,sig=sig,allpars=allpars,linestr=linestr)
+    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frameinfo=frameinfo,
+                rms=rms,sig=sig,allpars=allpars,linestr=linestr)
 
     if plot: 
         plot_apWave([name],apred=vers,inst=inst,hard=hard)
@@ -763,8 +789,8 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
       for i in range(4) : plt.close()
 
 
-def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],framesgroup=[],
-                framesdithpix=[],rms=None,sig=None,allpars=None,linestr=None):
+def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frameinfo=[],
+                rms=None,sig=None,allpars=None,linestr=None):
     """ Write the apWave files in standard format given the wavecal parameters
     """
     x = np.zeros([3,2048])
@@ -783,8 +809,8 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],fram
                               np.flip( np.append(np.zeros(8-npoly),polypars)))
             chipwaves[row,:] = func_multi_poly(x,*pars[:,row],npoly=npoly)
         hdu.append(fits.PrimaryHDU())
-        hdu[0].header['NFRAMES']=(len(frames),'number of frames in fit')
-        for i in range(len(frames)) : hdu[0].header['FRAME{:d}'.format(i)] = frames[i]
+        hdu[0].header['NFRAMES']=(len(frameinfo),'number of frames in fit')
+        for i in range(len(frameinfo)) : hdu[0].header['FRAME{:d}'.format(i)] = frameinfo['num'][i]
         hdu[0].header['NPOLY']=(npoly,'polynomial order of fit')
         if allpars is not None : 
             ngroup = int(round((allpars.shape[0]-npoly)/3))
@@ -814,13 +840,11 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frames=[],fram
             hdu.append(fits.ImageHDU(allpars))
         else:
             hdu.append(fits.ImageHDU(None))
-        if len(frames)>0:
-            ftable = np.zeros(len(frames),dtype=np.dtype([('frame',np.str,8),('group',int),('dithpix',float)]))
-            ftable['frame'] = frames
-            if len(framesgroup)>0:
-                ftable['group'] = framesgroup
-            if len(framesdithpix)>0:
-                ftable['dithpix'] = framesdithpix
+        if len(frameinfo)>0:
+            ftable = np.zeros(len(frameinfo),dtype=np.dtype([('frame',np.str,8),('group',int),('dithpix',float)]))
+            ftable['frame'] = frameinfo['num']
+            ftable['group'] = frameinfo['group']
+            ftable['dithpix'] = frameinfo['dithpix']
             hdu.append(fits.table_to_hdu(Table(ftable)))
         else:
             hdu.append(fits.ImageHDU(None))
