@@ -151,25 +151,27 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
 
 def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npoly=4,reject=3,
             plot=False,hard=True,verbose=False,clobber=False,init=False,nofit=False,test=False) :
-    """ APOGEE wavelength calibration
+    """ 
+    APOGEE wavelength calibration
 
     Solves for wavelength calibration given input frameid(s) allowing for a single polynomial
     wavelength solution with offsets for each chip and each group of wavecals
 
-    Args:
-        nums (list of ints): list of input frame ids
-        name (int) : name for output ID (default = first frame from list of nums)
-        vers (str) : apred version (defaut='current')
-        inst (str) : instrument (default='apogee-n')
-        rows (list of ints): list of rows to get solutions at
-        npoly (int) : order of polynomial fit (default=4)
-        reject (float) : factor for line rejection
-        plot verbose (bool)  plot fits (default=False)
-        verbose (bool) :  plot fits (default=False)
-        clobber (bool) : forces remeasuring lines
-        init (bool) : if true, use simple quadratic estimate for first guess (default=False)
-        nofit (bool) : only find lines, skip fit (default=False)
-        test (bool) : if True, use polynomial from first set, only let centers shift for all other sets
+    Parameters
+    ----------
+    nums (list of ints): list of input frame ids
+    name (int) : name for output ID (default = first frame from list of nums)
+    vers (str) : apred version (defaut='current')
+    inst (str) : instrument (default='apogee-n')
+    rows (list of ints): list of rows to get solutions at
+    npoly (int) : order of polynomial fit (default=4)
+    reject (float) : factor for line rejection
+    plot verbose (bool)  plot fits (default=False)
+    verbose (bool) :  plot fits (default=False)
+    clobber (bool) : forces remeasuring lines
+    init (bool) : if true, use simple quadratic estimate for first guess (default=False)
+    nofit (bool) : only find lines, skip fit (default=False)
+    test (bool) : if True, use polynomial from first set, only let centers shift for all other sets
     """
 
     start = time.time()
@@ -205,20 +207,20 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         pars0 = [ 1.19138048e-10,-1.03101159e-05,-2.84129914e-01,1.61531282e+04,
                  -1.49566344e+02,-9.99666738e-11, 1.58164526e+02]
 
-    # find lines
-    print('finding lines with initial wavelength guess: ',coef0)
+    # Find lines
+    print('Finding lines with initial wavelength guess: ',coef0)
     waves = {}
     pixels = np.arange(2048)
     for chip in chips : waves[chip] = np.tile(np.polyval(coef0[chip],pixels),(300,1))
-    maxgroup=1
-    frames=[]
+    maxgroup = 1
+    frames = []
     framesgroup = []
     framesdithpix = []
-    fcnt = 0
+    fcnt = 0     # count for "good" exposures
     linestr = None
+    # table of information on "good" exposures
     fdt = [('num',int),('okay',bool),('nlines',int),('group',int),('dithpix',float)]
     frameinfo = np.zeros(len(nums),dtype=np.dtype(fdt))
-    frameinfo['num'] = nums
     frameinfo['group'] = -1
     for inum,num in enumerate(nums) :
         print(str(inum+1)+'/'+str(len(nums))+' '+str(num))
@@ -232,8 +234,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         out = load.filename('Wave',num=num,chips=True)
         #print(num,frame)
         if frame is not None and frame != 0 :
-            frameinfo['okay'][inum] = True
-            # get correct arclines
+            # Get correct arclines
             if frame['a'][0].header['LAMPUNE']:
                 lampfile = 'UNe.vac.apogee'
                 lamptype = 'UNE'
@@ -241,11 +242,9 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 lampfile = 'tharne.lines.vac.apogee'
                 lamptype = 'THARNE'
             else:
-                raise ValueError('This is NOT a UNe or THARNE exposure')
+                raise ValueError('This is NOT a UNE or THARNE exposure')
             arclines = ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
-            #j=np.where(arclines['USEWAVE'])[0]  # this is now down in findlines()
-            #arclines=arclines[j]
-            # find lines or use previous found lines
+            # Find lines or use previous found lines
             linesfile = out.replace('Wave','Lines')
             if os.path.exists(linesfile) and not clobber :
                 print('Reading existing Lines data',num)
@@ -254,15 +253,16 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 print('Finding lines: ', num)
                 flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1,plot=plot)
                 Table(flinestr).write(linesfile,overwrite=True)
-            # replace frameid tag with group identification, which must start at 0 for func_multi_poly indexing
-            frameinfo['nlines'][inum] = len(flinestr)
+                
+            frameinfo['num'][fcnt] = num
+            frameinfo['okay'][fcnt] = True                
+            frameinfo['nlines'][fcnt] = len(flinestr)
+
+            # Replace frameid tag with group identification, which must start at 0 for func_multi_poly indexing
             
             # GROUPS: Frames must be consecutive and at the same dither position to be considered a group
-            frameinfo['dithpix'][inum] = frame['a'][0].header['DITHPIX']
-            #framesdithpix.append(frame['a'][0].header['DITHPIX'])
-            #import pdb; pdb.set_trace()
-            if inum > 0 and (abs(num-nums[inum-1]) > 1 or abs(frameinfo['dithpix'][fcnt]-frameinfo['dithpix'][fcnt-1])>0.1): maxgroup +=1
-            #if inum > 0 and (abs(num-nums[inum-1]) > 1 or abs(framesdithpix[fcnt]-framesdithpix[fcnt-1])>0.1): maxgroup +=1            
+            frameinfo['dithpix'][fcnt] = frame['a'][0].header['DITHPIX']
+            if inum > 0 and fcnt > 0 and (abs(num-nums[inum-1]) > 1 or abs(frameinfo['dithpix'][fcnt]-frameinfo['dithpix'][fcnt-1])>0.1): maxgroup +=1
 
             flinestr = Table(flinestr)  # convert temporarily to astropy Table to easily add a column
             flinestr['group'] = -1
@@ -296,12 +296,10 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 print('Setting BAD=1 for ',len(flinestr)-len(gdind),' of ',len(flinestr),' outlier lines')
                 flinestr['bad'] = 1  # bad
                 flinestr['bad'][gdind] = 0  # good
-            #framesgroup.append(maxgroup-1)
-            frameinfo['group'][inum] = maxgroup-1
+            frameinfo['group'][fcnt] = maxgroup-1
             if linestr is None : linestr = flinestr
             else : linestr = np.append(linestr,flinestr)
             print(' Frame: {:d}  Nlines: {:d}  '.format(num,len(flinestr)))
-            #frames.append(num)
             fcnt += 1   # increment good frame counter
         else :
             print('Error reading frame: ', num)
@@ -311,42 +309,43 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     if linestr is None or len(linestr)==0:
         print('No good lines found')
         return
-
-    # Trim out bad frames
+    
+    # Trim out extra rows in frameinfo because of "bad" exposures
     bdframe, = np.where(frameinfo['okay']==False)
     if len(bdframe)==len(frameinfo):
         print('All frames are bad')
         return
     if len(bdframe)>0:
-        print('Removing '+str(len(bdframe))+' bad frames: '+','.join(np.char.array(frameinfo['num'][bdframe]).astype(str)))
+        print(str(len(bdframe))+' frames were bad')
         gdframe, = np.where(frameinfo['okay']==True)        
         frameinfo = frameinfo[gdframe]
     
-    # do the wavecal fit
+    # Do the wavecal fit
     # initial parameter guess for first row, subsequent rows will use guess from previous row
-    npars=npoly+3*maxgroup
+    npars = npoly+3*maxgroup
     pars = np.zeros(npars)
 
-    # initial quadratic relation from chip b and initial chip offsets or better guess if we have it
+    # Initial quadratic relation from chip b and initial chip offsets or better guess if we have it
     if init :pars[npoly-3:npoly] = coef0['b']
     else : 
         pars[npoly-4:npoly] = pars0[0:4]
         for igroup in range(maxgroup): pars[npoly+igroup*3:npoly+(igroup+1)*3] = pars0[4:7]
     initpars=copy.copy(pars)
  
-    # set up output arrays for all 300 fibers
-    allpars=np.zeros([npars,300])
-    chipa=np.zeros([300,maxgroup])
-    chipb=np.zeros([300,maxgroup])
-    chipc=np.zeros([300,maxgroup])
-    rms=np.zeros([300,maxgroup])
-    sig=np.zeros([300,maxgroup])
+    # Set up output arrays for all 300 fibers
+    allpars = np.zeros([npars,300])
+    chipa = np.zeros([300,maxgroup])
+    chipb = np.zeros([300,maxgroup])
+    chipc = np.zeros([300,maxgroup])
+    rms = np.zeros([300,maxgroup])
+    sig = np.zeros([300,maxgroup])
     if plot : 
         fig,ax=plots.multi(1,3,hspace=0.001,wspace=0.001)
         fig2,ax2=plots.multi(1,3,hspace=0.001,wspace=0.001)
 
 
     # Get improved initial guesses and prune out bad lines
+    print(' ')
     print('Getting improved initial estimates and pruning out bad lines using all fibers')
     # Check each set of frameid-chip lines
     # only check the GOOD lines
@@ -432,10 +431,12 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     linestr['xglobal'] = 999999.
     linestr = np.array(linestr)
 
-    # loop over requested rows
+    # Loop over requested rows
+    print(' ')
+    print('Looping over '+str(len(rows))+' rows')
     for irow,row in enumerate(rows) :
-        print('---',str(irow+1)+'/'+str(len(rows)),'row='+str(row),'---')
-        # set up independent variable array with pixel, chip, groupid, and dependent variable (wavelength)
+        print('--- Row',str(irow+1)+'/'+str(len(rows)),'row='+str(row),'---')
+        # Set up independent variable array with pixel, chip, groupid, and dependent variable (wavelength)
         thisrow = np.where((linestr['row'] == row) & (linestr['peak'] > 100) & (linestr['pixel']>=0) &
                            (linestr['pixel']<=2047) & (linestr['bad']==0))[0]
         linestr['used'][thisrow] = 0    # initialize to not used
@@ -452,7 +453,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         # if we don't have any groups, skip this row
         if ngroup<= 0: continue
         
-        npars=npoly+3*ngroup
+        npars = npoly+3*ngroup
         pars = np.zeros(npars)
         # if we have more than one group, get starting polynomial guess from first group, to help
         #   to avoid local minima
@@ -462,9 +463,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             # Run all exposures of first group
             group0, = np.where(np.array(frameinfo['group'])==np.min(groups))
             num0 = frameinfo['num'][group0]
-            #group0, = np.where(np.array(framesgroup)==0)            
-            #num0 = nums[group0]
-            print('running wavecal for first group: ', num0,maxgroup,ngroup,' row: ',row)
+            print('Running wavecal for first group only: ', num0,maxgroup,ngroup,' row: ',row)
             pars0,linestr1 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,reject=reject,init=init,verbose=verbose)
             pars[:npoly] = pars0[:npoly]
             for igroup in range(ngroup): pars[npoly+igroup*3:npoly+(igroup+1)*3] = pars0[npoly:npoly+3]
@@ -477,16 +476,16 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         if irow == 0 : maxiter=7
         else : maxiter=7
         for niter in range(maxiter) :
-            # initialize bounds (to no bounds)
+            # Initialize bounds (to no bounds)
             bounds = ( np.zeros(len(pars))-np.inf, np.zeros(len(pars))+np.inf)
-            # lock the middle chip position if we have one group, else the central wavelength
+            # Lock the middle chip position if we have one group, else the central wavelength
             if ngroup==1 :
                 bounds[0][npoly+1] = -1.e-7
                 bounds[1][npoly+1] = 1.e-7
             else :
                 bounds[0][npoly-1] = pars[npoly-1]-1.e-7*abs(pars[npoly-1])
                 bounds[1][npoly-1] = pars[npoly-1]+1.e-7*abs(pars[npoly-1])
-                # if we have multiple groups, only fit for chip locations during first iterations and every 3rd thereafter
+                # If we have multiple groups, only fit for chip locations during first iterations and every 3rd thereafter
                 if test or niter<3 or niter%3 == 1 : 
                     for i in range(npoly) : 
                         if pars[i]!=0.0:
@@ -496,7 +495,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                             bounds[0][i] = -1.e-7
                             bounds[1][i] = +1.e-7
 
-            ## reject lines with bad residuals
+            ## Reject lines with bad residuals
             # sometimes the initial guess from the first group is quite off for other groups
             #  allow one fitting before pruning
             if niter>0:
@@ -505,7 +504,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             else:
                 gd = np.arange(len(res))
 
-            # calculate rms in each group and make sure we have lines in all groups
+            # Calculate rms in each group and make sure we have lines in all groups
             for igroup in range(ngroup) : 
                 j=np.where(x[2,gd] == igroup)[0]
                 if len(j) <= 0 :
@@ -514,7 +513,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                     #import pdb; pdb.set_trace()
                     #raise Exception('missing lines from group: '+str(igroup))
             
-            # use curve_fit to optimize parameters
+            # Use curve_fit to optimize parameters
             try :
                 if verbose: 
                     print('Niter: ', niter, 'row: ', row, 'ngroup: ', ngroup, 'nlines: ', len(thisrow), 'gd: ', len(gd))
@@ -574,7 +573,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             #    import pdb; pdb.set_trace()
 
 
-            # plot individual line residuals if requested. Get rid of maxiter-1 if you want to see plots at each iteration
+            # Plot individual line residuals if requested. Get rid of maxiter-1 if you want to see plots at each iteration
             if plot and niter == maxiter-1 :
                 for ichip in range(3) :
                     gdplt = np.where(x[1,gd] == ichip+1)[0]
@@ -592,6 +591,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                     import pdb; pdb.set_trace()
 
         # Final fit values
+        print('Final values:')
         print('res: ',np.median(res),res[gd].std())
         print('pars: ',pars)
 
@@ -602,13 +602,13 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         linestr['xglobal'][thisrow] = xglobal
         
         allrms = res[gd].std()
-        # throw out bad solutions
+        # Throw out bad solutions
         #if allrms > 0.1: popt = pars*0.
         if allrms < 0.1: initpars = copy.copy(pars)
         if verbose: print(row,pars)
         allpars[0:npoly,row] = popt[0:npoly]
         ref = allpars[npoly+1,row]
-        # save final fits in allpars. For chip locations, transform to chip offsets
+        # Save final fits in allpars. For chip locations, transform to chip offsets
         for jgroup in range(ngroup) :
             igroup=groups[jgroup]
             for ichip in range(3): allpars[npoly+igroup*3+ichip,row] = popt[npoly+jgroup*3+ichip]
@@ -616,12 +616,15 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             rms[row,igroup] = res[gd[j]].std()
             sig[row,igroup] = np.median(np.abs(res[gd[j]]))
 
-    # now refine the solution by averaging zeropoint across all groups and
+    # Now refine the solution by averaging zeropoint across all groups and
     # by fitting across different rows to require a smooth solution
-    if ngroup > 1: newpars,newwaves = refine(allpars)
-    else: newpars = allpars
+    if ngroup > 1:
+        print('Refining the solution')
+        newpars,newwaves = refine(allpars)
+    else:
+        newpars = allpars
 
-    # save results in apWave files
+    # Save results in apWave files
     out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
     if str(name).isnumeric()==False or len(str(name))<8:  # non-ID input
         out = os.path.dirname(out)+'/'+load.prefix+'Wave-'+str(name)+'.fits'
