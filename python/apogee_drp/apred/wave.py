@@ -139,8 +139,8 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
     wfile = reduxdir+'cal/'+instrument+'/wave/'+load.prefix+'Wave-%s.fits' % str(mjd)
     if os.path.exists(wfile.replace(load.prefix+'Wave-',load.prefix+'Wave-b-'))==False or clobber:
         # The previously measured lines in the apLines files will be reused if they exist
-        pars,arclinestr = wavecal(arcframes,rows=np.arange(300),name=str(mjd),init=init,
-                                  npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
+        pars,arclinestr,frameinfo = wavecal(arcframes,rows=np.arange(300),name=str(mjd),init=init,
+                                            npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
         # npoly=4 gives lower RMS values
         # Check that it's there
         if os.path.exists(wfile.replace(load.prefix+'Wave-',load.prefix+'Wave-b-')) is False:
@@ -150,7 +150,7 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
 
 
 def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npoly=4,reject=3,
-            plot=False,hard=True,verbose=False,clobber=False,init=False,nofit=False,test=False) :
+            plot=False,hard=True,verbose=False,clobber=False,init=False,nofit=False,test=False,nosave=False):
     """ 
     APOGEE wavelength calibration
 
@@ -159,19 +159,49 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
 
     Parameters
     ----------
-    nums (list of ints): list of input frame ids
-    name (int) : name for output ID (default = first frame from list of nums)
-    vers (str) : apred version (defaut='current')
-    inst (str) : instrument (default='apogee-n')
-    rows (list of ints): list of rows to get solutions at
-    npoly (int) : order of polynomial fit (default=4)
-    reject (float) : factor for line rejection
+    nums : list of ints
+        List of input frame ids
+    name : int
+       Name for output ID (default = first frame from list of nums).
+    vers : str
+       apred version (defaut='daily').
+    inst : str
+       Instrument (default='apogee-n').
+    rows : list of ints
+       List of rows to get solutions at.  Default is [150].
+    npoly : int, optional
+       Order of polynomial fit (default=4).
+    reject : float, optional
+       Factor for line rejection.  Default is 3.
     plot verbose (bool)  plot fits (default=False)
-    verbose (bool) :  plot fits (default=False)
-    clobber (bool) : forces remeasuring lines
-    init (bool) : if true, use simple quadratic estimate for first guess (default=False)
-    nofit (bool) : only find lines, skip fit (default=False)
-    test (bool) : if True, use polynomial from first set, only let centers shift for all other sets
+    verbose : boolean, optional
+       Plot fits (default=False)
+    clobber : boolean, optional
+       Forces remeasuring lines. 
+    init : boolean, optional
+       If true, use simple quadratic estimate for first guess (default=False)
+    nofit : boolean, optional
+       Only find lines, skip fit (default=False)
+    test : boolean, optional
+       If True, use polynomial from first set, only let centers shift for all other sets
+    nosave : boolean, optional
+       Do not save the results to a file, only return them.  Useful when doing multi-frame fits
+         and using wavecal() on the first group to get an initial guess.  Default is False.
+
+    Returns
+    -------
+    pars : numpy array
+       Array of best-fit parameter values.
+    linestr : table
+       Final table of lines used.
+    frameinfo : table
+       Information about the frames used.
+
+    Example
+    -------
+
+    pars,linestr,frameinfo = wavecal([2420038])
+
     """
 
     start = time.time()
@@ -464,7 +494,8 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             group0, = np.where(np.array(frameinfo['group'])==np.min(groups))
             num0 = frameinfo['num'][group0]
             print('Running wavecal for first group only: ', num0,maxgroup,ngroup,' row: ',row)
-            pars0,linestr1 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,reject=reject,init=init,verbose=verbose)
+            pars0,linestr1,frameinfo1 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,
+                                                reject=reject,init=init,verbose=verbose,nosave=True)
             pars[:npoly] = pars0[:npoly]
             for igroup in range(ngroup): pars[npoly+igroup*3:npoly+(igroup+1)*3] = pars0[npoly:npoly+3]
         else :
@@ -625,12 +656,13 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         newpars = allpars
 
     # Save results in apWave files
-    out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
-    if str(name).isnumeric()==False or len(str(name))<8:  # non-ID input
-        out = os.path.dirname(out)+'/'+load.prefix+'Wave-'+str(name)+'.fits'
-    print('Saving to ',out)
-    save_apWave(newpars,out=out,npoly=npoly,rows=rows,frameinfo=frameinfo,
-                rms=rms,sig=sig,allpars=allpars,linestr=linestr)
+    if nosave==False:
+        out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
+        if str(name).isnumeric()==False or len(str(name))<8:  # non-ID input
+            out = os.path.dirname(out)+'/'+load.prefix+'Wave-'+str(name)+'.fits'
+        print('Saving to ',out)
+        save_apWave(newpars,out=out,npoly=npoly,rows=rows,frameinfo=frameinfo,
+                    rms=rms,sig=sig,allpars=allpars,linestr=linestr)
 
     if plot: 
         plot_apWave([name],apred=vers,inst=inst,hard=hard)
@@ -642,7 +674,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
 
     print("elapsed: %0.1f sec." % (time.time()-start))
 
-    return pars,linestr
+    return pars,linestr,frameinfo
 
 def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
 
