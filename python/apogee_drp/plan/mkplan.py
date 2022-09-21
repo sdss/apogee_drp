@@ -844,7 +844,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
 
     # Get the exposures and info about them
     expinfo = info.expinfo(observatory=observatory,mjd5=mjd)
-    if expinfo is None:
+    if expinfo is None or len(expinfo)==0:
         logger.info('No exposures for MJD='+str(mjd))
         return [],[]
     expinfo = expinfo[np.argsort(expinfo['num'])]   # sort
