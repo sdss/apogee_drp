@@ -143,7 +143,6 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
         else:
             flatTable1 = flatTablePlates
 
-        pdb.set_trace()
         # Run findBestFlatExposure on this exposure
         flatnums[i], flatmjds[i], rms[i] = findBestFlatExposure(flatTable=flatTable1, imtype=imtype, refpix=refpix, 
                                                                 twodfiles=twodfiles, medianrad=medianrad,
