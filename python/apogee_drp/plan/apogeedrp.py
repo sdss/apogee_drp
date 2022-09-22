@@ -1224,6 +1224,9 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 elif d=='darkcorr' or d=='flatcorr':
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
                     subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
+                elif d=='lsf':
+                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    subprocess.run(['ln -s '+srcdir+'/*.sav .'],shell=True)                    
                 elif d=='fiber':
                     # Create symlinks for all the fiber cal files, PSF, EPSF, ETrace
                     caldict = mkcal.readcal(caldir+obs+'.par')
