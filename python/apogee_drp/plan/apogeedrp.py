@@ -319,7 +319,7 @@ def getplanfiles(load,mjds,exist=False,logger=None):
     
     # Get plan files from the database
     db = apogeedb.DBSession()
-    plans = db.query('plan',where="mjd>='%s' and mjd<='%s' and telescope='%s'" % (mjdstart,mjdstop,load.telescope))
+    plans = db.query('plan',where="mjd>='%s' and mjd<='%s' and apred_vers='%s' and telescope='%s'" % (mjdstart,mjdstop,load.apred,load.telescope))
     db.close()
     # No plan files for these MJDs
     if len(plans)==0:
@@ -2360,7 +2360,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
     if len(expinfo)==0:
         logger.info('No exposures')
         return None,None
-
+    
     # Loop over planfiles and see if the outputs exist already
     dorun = np.zeros(len(planfiles),bool)
     for i,pf in enumerate(planfiles):    
@@ -2368,8 +2368,14 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
         # Check if files exist already
         dorun[i] = True
         if clobber is not True:
+            # Sky plan
+            if pfbase.startswith(load.prefix+'Plan') and pfbase.find('sky') > -1:
+                # apPlan-15404-59381sky.yaml
+                config1,mjd1 = pfbase.split('sky')[0].split('-')[1:3]
+                outexists = False                
+                outfile = pf+' output files'
             # apPlan
-            if pfbase.startswith(load.prefix+'Plan'):
+            elif pfbase.startswith(load.prefix+'Plan'):
                 # apPlan-3370-59623.yaml
                 config1,mjd1 = pfbase.split('.')[0].split('-')[1:3]
                 # check for apVisitSum file
