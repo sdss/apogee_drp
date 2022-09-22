@@ -80,7 +80,6 @@ if __name__ == '__main__' :
         else:
             # Absolute path to planfile option
             if planfile != '':
-                print('$$$$$$$$$$$$ ' + planfile[0] + ' $$$$$$$$$$$$$$$$$$$$')
                 planstr = plan.load(planfile[0], np=True)
                 gd, = np.where(planstr['APEXP']['flavor'] == 'object')
                 ims = planstr['APEXP']['name'][gd]
