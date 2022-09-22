@@ -129,6 +129,8 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
     flatmjds = np.empty(n_ims).astype(int)
     rms =      np.empty(n_ims)
 
+    pdb.set_trace()
+
     for i in range(n_ims):
         # Find the ap2D files for this exposure
         file2d = load_exp.filename('2D', mjd=mjd, num=ims[i], chips='c')
