@@ -72,7 +72,7 @@ if __name__ == '__main__' :
         if mjdplate != '':
             mjd = mjdplate[0].split('-')[0]
             plate = mjdplate[0].split('-')[1]
-            lioad = apload.ApLoad(apred=apred, telescope=telescope)
+            load = apload.ApLoad(apred=apred, telescope=telescope)
             planfile = load.filename('Plan', plate=int(plate), mjd=mjd)
             planstr = plan.load(planfile, np=True)
             gd, = np.where(planstr['APEXP']['flavor'] == 'object')
@@ -80,6 +80,7 @@ if __name__ == '__main__' :
         else:
             # Absolute path to planfile option
             if planfile != '':
+                print('$$$$$$$$$$$$ ' + planfile[0] + ' $$$$$$$$$$$$$$$$$$$$')
                 planstr = plan.load(planfile[0], np=True)
                 gd, = np.where(planstr['APEXP']['flavor'] == 'object')
                 ims = planstr['APEXP']['name'][gd]
