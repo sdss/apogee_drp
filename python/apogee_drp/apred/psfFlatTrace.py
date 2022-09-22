@@ -98,8 +98,8 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
     gd, = np.where((flatTable['MJD'] > 0) & (np.sum(flatTable['GAUSS_NPEAKS'], axis=1) > 870))
     flatTable = flatTable[gd]
     # separate into plates and FPS era
-    gdplates = np.where(flatTable['MJD']<fpsStart)
-    gdfps = np.where(flatTable['MJD']>=fpsStart)
+    gdplates, = np.where(flatTable['MJD']<fpsStart)
+    gdfps, = np.where(flatTable['MJD']>=fpsStart)
 
     flatTablePlates = None
     flatTableFPS = None
