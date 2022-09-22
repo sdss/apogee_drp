@@ -63,10 +63,12 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
     instrument = 'apogee-n'
     inst = 'N'
     telescope = 'apo25m'
+    fpsStart = 59556
     if observatory == 'lco':
         instrument = 'apogee-s'
         inst = 'S'
         telescope = 'lco25m'
+        fpsStart = 59808
 
     # Set up apload
     load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -96,16 +98,13 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
     gd, = np.where((flatTable['MJD'] > 0) & (np.sum(flatTable['GAUSS_NPEAKS'], axis=1) > 870))
     flatTable = flatTable[gd]
     # separate into plates and FPS era
-    if inst == 'N': 
-        gdplates = np.where(flatTable['MJD']<59556)
-        gdfps = np.where(flatTable['MJD']>=59556)
-    else:
-        gdplates = np.where(flatTable['MJD']<59808)
-        gdfps = np.where(flatTable['MJD']>=59808)
-    
-    flatTablePlates = flatTable[gdplates]
-    flatTableFPS = flatTable[gdfps]
-    #if medianrad != 100: flatTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits')
+    gdplates = np.where(flatTable['MJD']<fpsStart)
+    gdfps = np.where(flatTable['MJD']>=fpsStart)
+
+    flatTablePlates = None
+    flatTableFPS = None
+    if len(gdplates) > 1: flatTablePlates = flatTable[gdplates]
+    if len(gdfps) > 1: flatTableFPS = flatTable[gdfps]
 
     if ims is None:
         # Load planfile into structure.
@@ -129,8 +128,6 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
     flatmjds = np.empty(n_ims).astype(int)
     rms =      np.empty(n_ims)
 
-    pdb.set_trace()
-
     for i in range(n_ims):
         # Find the ap2D files for this exposure
         file2d = load_exp.filename('2D', mjd=mjd, num=ims[i], chips='c')
@@ -140,8 +137,9 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
 
         # Use plate-era flats for plate exposures and and FPS-era flats for FPS exposures
         mjd = int(load.cmjd(ims[i]))
-        if mjd>=59556:
+        if mjd>=fpsStart:
             flatTable1 = flatTableFPS
+            if flatTableFPS is None: flatTable1 = flatTablePlates
         else:
             flatTable1 = flatTablePlates
         
