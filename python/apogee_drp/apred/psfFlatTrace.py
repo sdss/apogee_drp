@@ -78,7 +78,7 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
     datadir = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/domeflat/'
 
     # Need to make pixel reference file for lco25m
-    if inst == 'S': sys.exit('Problem! Reference pixel file for LCO 2.5m does not exist yet')
+    #if inst == 'S': sys.exit('Problem! Reference pixel file for LCO 2.5m does not exist yet')
     refpix = ascii.read(datadir + 'refpix' + inst + '.dat')
 
     # Establish directories.

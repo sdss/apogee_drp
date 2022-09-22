@@ -33,8 +33,6 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
 
-# import pdb; pdb.set_trace()
-
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True,
             makeplots=True, makedomeplots=True, makequartzplots=True,
