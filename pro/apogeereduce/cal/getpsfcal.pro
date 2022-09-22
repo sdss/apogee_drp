@@ -97,6 +97,7 @@ function getpsfcal,num,psflibrary=psflibrary,unlock=unlock
   endif else begin
     print,'No PSF calibration file found for MJD=',cmjd,'. Trying to make one.'
     ;; Try to make a PSF file
+    stop
     psfinfo = dbquery("select * from apogee_drp.exposure where mjd="+cmjd+$
                       " and exptype='DOMEFLAT' or exptype='QUARTZFLAT'"+$
                       " and observatory='"+strmid(dirs.telescope,0,3)+"'",count=npsfinfo)
