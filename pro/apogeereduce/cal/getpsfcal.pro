@@ -100,7 +100,7 @@ function getpsfcal,num,psflibrary=psflibrary,unlock=unlock
     stop
     psfinfo = dbquery("select * from apogee_drp.exposure where mjd="+cmjd+$
                       " and exptype='DOMEFLAT' or exptype='QUARTZFLAT'"+$
-                      " and observatory='"+strmid(dirs.telescope,0,3)+"'",count=npsfinfo)
+                      " and observatory='"+telescop+"'",count=npsfinfo)
     if npsfinfo eq 0 then begin
       print,'No DOMEFLAT or QUARTZFLAT exposure for MJD=',cmjd
       return, -1
