@@ -2375,8 +2375,14 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
             if pfbase.startswith(load.prefix+'Plan') and pfbase.find('sky') > -1:
                 # apPlan-15404-59381sky.yaml
                 config1,mjd1 = pfbase.split('sky')[0].split('-')[1:3]
-                outexists = False                
-                outfile = pf+' output files'
+                outlog = glob(pf.replace('.yaml','_pbs.??????????????.log'))
+                outexists = False
+                outfile = pf+' output files '
+                if len(outlog)>0:                
+                    outlog = np.flip(np.sort(outlog))
+                    loglines = dln.readlines(outlog[0])
+                    if loglines[-1]=='apred completed successfully':
+                        outexists = True                
             # apPlan
             elif pfbase.startswith(load.prefix+'Plan'):
                 # apPlan-3370-59623.yaml
@@ -2389,29 +2395,47 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
                 # apCalPlan-apogee-n-59640.yaml
                 # It will take too long to load all of the plan files and check all of
                 #  the output files.  Default is to redo them.
+                outlog = glob(pf.replace('.yaml','_pbs.??????????????.log'))
                 outexists = False
                 outfile = pf+' output files '
+                if len(outlog)>0:                
+                    outlog = np.flip(np.sort(outlog))
+                    loglines = dln.readlines(outlog[0])
+                    if loglines[-1]=='apred completed successfully':
+                        outexists = True
             # apDarkPlan
             elif pfbase.startswith(load.prefix+'DarkPlan'):
                 # apDarkPlan-apogee-n-59640.yaml
                 # It will take too long to load all of the plan files and check all of
                 #  the output files.  Default is to redo them.
+                outlog = glob(pf.replace('.yaml','_pbs.??????????????.log'))
                 outexists = False
                 outfile = pf+' output files '
+                if len(outlog)>0:                
+                    outlog = np.flip(np.sort(outlog))
+                    loglines = dln.readlines(outlog[0])
+                    if loglines[-1]=='apred completed successfully':
+                        outexists = True
             # apExtraPlan
             elif pfbase.startswith(load.prefix+'ExtraPlan'):
                 # apExtraPlan-apogee-n-59629.yaml
                 # It will take too long to load all of the plan files and check all of
                 #  the output files.  Default is to redo them.
+                outlog = glob(pf.replace('.yaml','_pbs.??????????????.log'))
                 outexists = False
                 outfile = pf+' output files '
+                if len(outlog)>0:                
+                    outlog = np.flip(np.sort(outlog))
+                    loglines = dln.readlines(outlog[0])
+                    if loglines[-1]=='apred completed successfully':
+                        outexists = True
             else:
                 outexists = False
             if outexists:
                 logger.info(str(i+1)+' '+os.path.basename(outfile)+' already exists and clobber==False')
                 dorun[i] = False
     logger.info(str(np.sum(dorun))+' planfiles to run')
-
+    
     # Loop over the planfiles and make the commands for the ones that we will run
     torun, = np.where(dorun==True)
     ntorun = len(torun)
