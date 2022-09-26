@@ -63,10 +63,12 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
     instrument = 'apogee-n'
     inst = 'N'
     telescope = 'apo25m'
+    fpsStart = 59556
     if observatory == 'lco':
         instrument = 'apogee-s'
         inst = 'S'
         telescope = 'lco25m'
+        fpsStart = 59808
 
     # Set up apload
     load = apload.ApLoad(apred=apred, telescope=telescope)
@@ -78,7 +80,7 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
     datadir = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/domeflat/'
 
     # Need to make pixel reference file for lco25m
-    if inst == 'S': sys.exit('Problem! Reference pixel file for LCO 2.5m does not exist yet')
+    #if inst == 'S': sys.exit('Problem! Reference pixel file for LCO 2.5m does not exist yet')
     refpix = ascii.read(datadir + 'refpix' + inst + '.dat')
 
     # Establish directories.
@@ -96,11 +98,13 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
     gd, = np.where((flatTable['MJD'] > 0) & (np.sum(flatTable['GAUSS_NPEAKS'], axis=1) > 870))
     flatTable = flatTable[gd]
     # separate into plates and FPS era
-    gdplates = np.where(flatTable['MJD']<59556)
-    flatTablePlates = flatTable[gdplates]
-    gdfps = np.where(flatTable['MJD']>=59556)
-    flatTableFPS = flatTable[gdfps]
-    #if medianrad != 100: flatTable = fits.getdata(mdir + instrument + 'DomeFlatTrace-all_medrad' + str(medianrad) + '.fits')
+    gdplates, = np.where(flatTable['MJD']<fpsStart)
+    gdfps, = np.where(flatTable['MJD']>=fpsStart)
+
+    flatTablePlates = None
+    flatTableFPS = None
+    if len(gdplates) > 1: flatTablePlates = flatTable[gdplates]
+    if len(gdfps) > 1: flatTableFPS = flatTable[gdfps]
 
     if ims is None:
         # Load planfile into structure.
@@ -133,11 +137,12 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
 
         # Use plate-era flats for plate exposures and and FPS-era flats for FPS exposures
         mjd = int(load.cmjd(ims[i]))
-        if mjd>=59556:
+        if mjd>=fpsStart:
             flatTable1 = flatTableFPS
+            if flatTableFPS is None: flatTable1 = flatTablePlates
         else:
             flatTable1 = flatTablePlates
-        
+
         # Run findBestFlatExposure on this exposure
         flatnums[i], flatmjds[i], rms[i] = findBestFlatExposure(flatTable=flatTable1, imtype=imtype, refpix=refpix, 
                                                                 twodfiles=twodfiles, medianrad=medianrad,
