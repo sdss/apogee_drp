@@ -255,6 +255,11 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         loc = pdata['locationId']
         platedata['locationid'] = loc
 
+        # Sometimes TMASS_ID in "p" is 2MASS-J23580454-0007415
+        for i in range(len(ph)):
+            if ph['tmass_id'][i].astype(str).find('2MASS-J') > -1:
+                ph['tmass_id'][i] = ph['tmass_id'][i].astype(str).replace('2MASS-J','2M')
+                
         # Fix telluric catalogIDs
         # There is a problem with some of the telluric catalogIDs due to
         # overflow.  We need to add 2**32 to them.
