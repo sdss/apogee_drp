@@ -223,6 +223,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             if makemonitor == True:
                 q = monitor.monitor()
 
+    pdb.set_trace()
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
     for i in range(nsciplans):
@@ -405,11 +406,6 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         if makevisplots == True:
             q = apVisitPlots(load=load, plate=plate, mjd=mjd, telescope=telescope)
 
-        # Make mjd.html and fields.html
-        if makemasterqa == True: 
-            q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True,
-                                  mjdfilebase='mjd.html',fieldfilebase='fields.html')
-
         if os.path.exists(platesum):
             # Make the star level html pages
             if makestarhtml == True:
@@ -419,9 +415,14 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
             if makestarplots == True:
                 q = apStarPlots(load=load, plate=plate, mjd=mjd, apred=apred, telescope=telescope)
 
-        # Make the nightly QA page
-        if makenightqa == True:
-            q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
+    # Make mjd.html and fields.html
+    if makemasterqa == True: 
+        q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True,
+                              mjdfilebase='mjd.html',fieldfilebase='fields.html')
+
+    # Make the nightly QA page
+    if makenightqa == True:
+        q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
 
     # Make the monitor page
     if makemonitor == True:
