@@ -223,6 +223,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             if makemonitor == True:
                 q = monitor.monitor()
 
+    pdb.set_trace()
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
     for i in range(nsciplans):
@@ -270,7 +271,6 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                     continue
                     #sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
 
-        pdb.set_trace()
         # Only run makemasterqa, makenightqa, and monitor after the last plate on this mjd
         if i < nsciplans-1:
             x = apqa(telescope=telescope, plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
