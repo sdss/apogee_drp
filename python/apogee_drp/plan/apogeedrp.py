@@ -683,7 +683,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkexp1['fieldid'] = planstr['fieldid']
             field = planstr['fieldid']
         else:
-            field,survey,program = apload.apfield(planstr['plate'])
+            field,survey,program = apload.apfield(planstr['plateid'])
         chkexp1['proctype'] = 'AP3D'
         chkexp1['pbskey'] = pbskey
         chkexp1['checktime'] = str(datetime.now())
@@ -2564,11 +2564,11 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     if len(bd)>0:
         vcat = np.delete(vcat,bd)
     logger.info(str(len(vcat))+' stars to run')
-
+    
     # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
     if daily==False:
         vcat['mjd'] = vcat['maxmjd']    
-
+        
     # Loop over the stars and figure out the ones that need to be run
     dorv = np.zeros(len(vcat),bool)
     for i,obj in enumerate(vcat['apogee_id']):
@@ -2588,7 +2588,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
                 logger.info(str(i+1)+' '+os.path.basename(apstarfile)+' already exists and clobber==False')
                 dorv[i] = False
     logger.info(str(np.sum(dorv))+' objects to run')
-
+    
     # Loop over the objects and make the commands for the ones that we will run
     torun, = np.where(dorv==True)
     ntorun = len(torun)
