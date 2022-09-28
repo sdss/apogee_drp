@@ -243,6 +243,8 @@ if keyword_set(fps) then begin
   plugfile = 'confSummary-'+strtrim(plate,2)+'.par'
 endif
 
+stop
+
 ;; Does the plugfile exist? If so, load it
 if file_test(plugdir+'/'+plugfile) then APLOADPLUGMAP,plugdir+'/'+plugfile,plugmap,fixfiberid=fixfiberid else $
    if keyword_set(skip) then return,0 else stop,'halt: cannot find plugmap file '+plugdir+'/'+plugfile
