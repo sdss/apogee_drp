@@ -425,9 +425,7 @@ FOR i=0L,nplanfiles-1 do begin
         plots_dir=plots_dir,error=telerror,/save,/preconv,visitstr=visitstr,$
         test=test,force=force
 
-    print,frame_skysub
-    print,plugmap
-    print,frame_telluric
+    print,frame
 
 stop
       tellstar.im=planstr.apexp[j].name
