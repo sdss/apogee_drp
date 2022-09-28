@@ -381,6 +381,8 @@ FOR i=0L,nplanfiles-1 do begin
         writelog,logfile,'  wavecal '+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
       endif else frame_wave = frame_shift
 
+stop
+
       ;if keyword_set(dithonly) then goto, BOMB1
       if keyword_set(stp) then stop
 
@@ -426,7 +428,6 @@ FOR i=0L,nplanfiles-1 do begin
         test=test,force=force
 
 
-stop
       tellstar.im=planstr.apexp[j].name
       ADD_TAG,frame_telluric,'TELLSTAR',tellstar,frame_telluric
       if n_elements(alltellstar) eq 0 then alltellstar=tellstar else alltellstar=[alltellstar,tellstar]
