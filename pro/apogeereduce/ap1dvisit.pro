@@ -424,6 +424,8 @@ FOR i=0L,nplanfiles-1 do begin
         maxtellstars=maxtellstars,tellzones=tellzones,specfitopt=1,$
         plots_dir=plots_dir,error=telerror,/save,/preconv,visitstr=visitstr,$
         test=test,force=force
+
+stop
       tellstar.im=planstr.apexp[j].name
       ADD_TAG,frame_telluric,'TELLSTAR',tellstar,frame_telluric
       if n_elements(alltellstar) eq 0 then alltellstar=tellstar else alltellstar=[alltellstar,tellstar]
