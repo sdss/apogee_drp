@@ -2859,6 +2859,7 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
                   clobber=None,debug=False):   
     """ Send a summary email."""
 
+    urlbase = 'https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/'
     mjds = loadmjd(mjd)
     nmjd = len(mjds)
     mjdstart = np.min(mjds)
@@ -2883,7 +2884,7 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
     if slurmpars:
         message += 'Slurm settings: '+str(slurmpars)+'<br>\n'
     message += '<p>\n'
-    message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/'+str(apred)+'/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
+    message += '<a href="'+urlbase+str(apred)+'/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
 
     # Master Cals step
     if 'master' in steps and chkmaster is not None:
@@ -2914,6 +2915,14 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
         ind, = np.where(chkrv['success']==True)
         message += 'RV: %d/%d RV+visit combination successfully processed<br> \n' % (len(ind),len(chkrv))
 
+    # Link to logfile
+    url = urlbase+logfile[logfile.find('/redux/')+7:]
+    message += '\n\n Logfile: <a href="'+url+'">'+os.path.basename(logfile)+'</a>\n'
+
+    #   If logfile is too large (>1MB), then do not attach the file    
+    if os.path.getsize(logfile)>1e6:
+        message += 'Log file is too large to attach\n'
+        
     message += """\
                  </p>
                  </body>
@@ -2921,7 +2930,11 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
                """
 
     # Send the message
-    email.send(address,subject,message,files=logfile,send_from='noreply.apogeedrp')
+    #   If logfile is too large (>1MB), then do not attach the file
+    if os.path.getsize(logfile)>1e7:
+        email.send(address,subject,message,send_from='noreply.apogeedrp')
+    else:
+        email.send(address,subject,message,files=logfile,send_from='noreply.apogeedrp')    
     
 
 def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
