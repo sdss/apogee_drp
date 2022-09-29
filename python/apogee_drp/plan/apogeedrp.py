@@ -1037,8 +1037,37 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
              'starflags','dateobs','jd']
     rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
-    cols = ','.join(vcols+rvcols)
-    allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    
+
+
+    # Straight join query of visit and rv_visit
+    cols = np.hstack(('v.'+np.char.array(vcols),'rv.'+np.char.array(rvcols)))
+    sql = 'select '+','.join(cols)+' from apogee_drp.visit as v LEFT JOIN apogee_drp.rv_visit as rv ON rv.visit_pk=v.pk'
+    sql += " where v.apred_vers='"+apred+"' and v.telescope='"+telescope+"'"
+    allvisit = db.query(sql=sql)
+
+    # Fix bad STARVER values
+    bdstarver, = np.where(np.char.array(allvisit['starver']) == '')
+    if len(bdstarver)>0:
+        allvisit['starver'][bdstarver] = allvisit['mjd'][bdstarver]
+    # Check for duplicate STARVER for each star
+    idindex = dln.create_index(allvisit['apogee_id'])
+    duplicate = np.zeros(len(allvisit),bool)
+    for i in range(len(idindex['value'])):
+        ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
+        allv = allvisit[ind]
+        if np.min(allv['starver'].astype(int)) != np.max(allv['starver'].astype(int)):
+            # Only keep rows for the maximum STARVER per star
+            maxstarver = np.max(allv['starver'].astype(int))
+            bd1, = np.where(allv['starver'].astype(int) != maxstarver)
+            duplicate[ind[bd1]] = True
+    torem, = np.where(duplicate==True)
+    if len(torem)>0:
+        allvisit = np.delete(allvisit,torem)
+                
+    # Use visit_latest, this can sometimes take forever
+    #cols = ','.join(vcols+rvcols)        
+    #allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     # rv_components can sometimes be an object type
     if allvisit.dtype['rv_components'] == np.object:
         allvisit = Table(allvisit)
