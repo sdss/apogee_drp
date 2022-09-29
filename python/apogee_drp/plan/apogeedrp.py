@@ -2946,7 +2946,7 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
 
     # Link to logfile
     url = urlbase+logfile[logfile.find('/redux/')+7:]
-    message += '\n\n Logfile: <a href="'+url+'">'+os.path.basename(logfile)+'</a>\n'
+    message += '\n\n Logfile: <a href="'+url+'">'+os.path.basename(logfile)+'</a><br>\n'
 
     #   If logfile is too large (>1MB), then do not attach the file    
     if os.path.getsize(logfile)>1e6:
