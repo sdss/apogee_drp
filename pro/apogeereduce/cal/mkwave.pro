@@ -83,7 +83,33 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
     endif
     w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,modelpsf=modelpsf,flux=0,/doproc,unlock=unlock)
   endif
-      
+
+  ;; Check that the data is okay
+  chfile = apogee_filename('2D',num=waveid,chip='b')
+  head0 = headfits(chfile,exten=0)
+  FITS_READ,chfile,im1,head1
+  ;; UNE, bright line at X=1452
+  if strtrim(sxpar(head0,'LAMPUNE'),2) eq 'true' then begin
+    sub = im1[1452-100:1452+100,*]
+    thresh = 40
+  ;; THARNE, bright line at X=1566 
+  endif else if strtrim(sxpar(head0,'LAMPTHAR'),2) eq 'true' then begin
+    sub = im1[1566-100:1566+100,*]
+    thresh = 1000
+  endif else begin
+    sub = im1[900:1100,*]
+    thresh = 10
+  endelse
+  smsub = medfilt2d(sub,7,dim=1)                            ;; smooth in spectral axis
+  resmsub = REBIN(smsub[*,0:(2048/8)*8-1],[201,2048/8])*8  ;; rebin in spatial axis
+  peakflux = MAX(resmsub,dim=1)                             ;; peak flux feature in spectral dim.
+  avgpeakflux = median(peakflux)
+  ;; Check the line flux
+  if avgpeakflux/sxpar(head0,'nread') lt thresh then begin
+    print,'Not enough flux in ',chfile
+    return
+  endif
+  
   ;; New Python version! 
   cmd = ['apmultiwavecal','--name',strtrim(name,2),'--vers',dirs.apred]
   if keyword_set(nofit) then cmd=[cmd,'--nofit']
