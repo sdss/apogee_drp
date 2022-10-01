@@ -1227,7 +1227,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     if linkvers:
         logger.info('Creating calibration product symlinks to version >>'+str(linkvers)+'<<')
         cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','sparse','fiber','modelpsf']:
+        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','sparse','fiber','modelpsf','fpi']:
             for obs in ['apogee-n','apogee-s']:
                 if obs=='apogee-n':
                     prefix = 'ap'
@@ -1253,9 +1253,14 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 elif d=='darkcorr' or d=='flatcorr':
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
                     subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
+                elif d=='detector':
+                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    subprocess.run(['ln -s '+srcdir+'/*.dat .'],shell=True)                    
                 elif d=='lsf':
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
-                    subprocess.run(['ln -s '+srcdir+'/*.sav .'],shell=True)                    
+                    subprocess.run(['ln -s '+srcdir+'/*.sav .'],shell=True)
+                elif d=='fpi':
+                    subprocess.run(['ln -s '+srcdir+'/fpi_peaks.fits .'],shell=True)
                 elif d=='fiber':
                     # Create symlinks for all the fiber cal files, PSF, EPSF, ETrace
                     caldict = mkcal.readcal(caldir+obs+'.par')

@@ -452,7 +452,7 @@ def check_arclamp(num,apred,telescope):
         if avgpeakflux/expinfo['nread']<thresh:
             mask |= 2**4
         #print('arclamp',med/expinfo['nread'])
-
+        
     return mask
 
 
