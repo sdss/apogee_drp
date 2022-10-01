@@ -29,6 +29,7 @@ from scipy.special import erf, erfc
 from scipy.signal import medfilt, convolve, boxcar
 from ..database import apogeedb
 from ..utils import apload, yanny, plan, info
+from ..plan import check
 from holtztools import plots, html
 from astropy.table import Table
 #from pyvista import tv
@@ -279,7 +280,12 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             if os.path.exists(linesfile) and not clobber :
                 print('Reading existing Lines data',num)
                 flinestr = fits.open(linesfile)[1].data
-            else :
+            else:
+                # Check that the data is okay
+                mask = check.check_arclamp(num,vers,telescope)
+                if mask != 0:
+                    print(num,' has problems')
+                    continue
                 print('Finding lines: ', num)
                 flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1,plot=plot)
                 Table(flinestr).write(linesfile,overwrite=True)
@@ -308,7 +314,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             for i,fibch in enumerate(fchindex['value']):
                 ind1 = fchindex['index'][fchindex['lo'][i]:fchindex['hi'][i]+1]
                 flinestr1 = flinestr[ind1]
-                gdlines, = np.where(flinestr1['failed']==0)
+                gdlines, = np.where((flinestr1['failed']==0) & (flinestr1['pixelerr']<1))
                 if len(gdlines)>0:
                     coef1,absdev = ladfit.ladfit(flinestr1['pixel'][gdlines],flinestr1['dpixel'][gdlines])
                     yfit = np.poly1d(np.flip(coef1))(flinestr1['pixel'])
@@ -320,7 +326,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                         gdind = np.append(gdind,ind1[gd1])
                 else:
                     # all lines failed
-                    gd1 = np.array([],int)
+                    gdind = np.array([],int)
                     
             if len(gdind)<len(flinestr):
                 print('Setting BAD=1 for ',len(flinestr)-len(gdind),' of ',len(flinestr),' outlier lines')
@@ -370,8 +376,8 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     rms = np.zeros([300,maxgroup])
     sig = np.zeros([300,maxgroup])
     if plot : 
-        fig,ax=plots.multi(1,3,hspace=0.001,wspace=0.001)
-        fig2,ax2=plots.multi(1,3,hspace=0.001,wspace=0.001)
+        fig,ax = plots.multi(1,3,hspace=0.001,wspace=0.001)
+        fig2,ax2 = plots.multi(1,3,hspace=0.001,wspace=0.001)
 
 
     # Get improved initial guesses and prune out bad lines
@@ -426,7 +432,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         sig3 = dln.mad(res4)
         bd3, = np.where((np.abs(res4)>4*allsig) | (linestr1['pixel']<0) | (linestr1['pixel']>2047))
         nbad += len(bd3)
-        print('chip-frameid: ',fibch,len(ind),len(bd3))
+        print('chip-frameid: %d  %d  %d  %5.4f' % (fibch,len(ind),len(bd3),sig3))
         if len(bd3)>0:
             linestr1['bad'][bd3] = 2
         linestr[ind] = linestr1
@@ -664,7 +670,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         save_apWave(newpars,out=out,npoly=npoly,rows=rows,frameinfo=frameinfo,
                     rms=rms,sig=sig,allpars=allpars,linestr=linestr)
 
-    if plot: 
+    if plot and nosave==False: 
         plot_apWave([name],apred=vers,inst=inst,hard=hard)
         # individual lines from last row
         #if hard :
@@ -931,9 +937,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
             chlineind, = np.where((lines['CHIPNUM'] == ichip+1) & (lines['USEWAVE']==1))
             dpixel = np.zeros(len(chlineind),float)+np.nan
             rowind = np.zeros(len(chlineind),int)
-            #dpixel=[]
-            #rowind=[]
-            # for dummy row, open up the search window by a factor of two
+            # For dummy row, open up the search window by a factor of two
             if irow == 0 : estsig0=2*estsig
             else : estsig0=estsig
             for ll,iline in enumerate(chlineind):
@@ -2059,91 +2063,96 @@ def allshape() :
         grid.append(['../'+out])
     html.htmltab(grid,file='html/shape.html')
 
-def refine(oldpars,npoly=4) :
-    ''' Refine wavelength solution by averaging over groups,and smoothing over rows
+def refine(oldpars,npoly=4,verbose=False):
+    ''' Refine wavelength solution by averaging over groups, and smoothing over rows
     '''
-    # copy parameters so as not to replace
-    allpars=copy.copy(oldpars)
+    # Copy parameters so as not to replace
+    allpars = copy.copy(oldpars)
 
-    # average the offsets for all of the groups. To do so, we first need to remove
+    # Average the offsets for all of the groups. To do so, we first need to remove
     # the trends from the dither shifts, i.e. with a four-parameter fit of slope and chip offsets
-    # do this relative to first group
-    nframes=(allpars.shape[0]-npoly)//3
-    for iframe in range(1,nframes) :
-        design=np.zeros([900,4])
-        y=np.zeros(900)
-        # offset of each chip relative to first frame
-        for ichip in range(3) :
-            # global slope with rows
+    # Do this relative to first group
+    nframes = (allpars.shape[0]-npoly)//3
+    for iframe in range(1,nframes):
+        design = np.zeros([900,4])
+        y = np.zeros(900)
+        # Offset of each chip relative to first frame
+        for ichip in range(3):
+            # Global slope with rows
             design[ichip*300+np.arange(300),0] = np.arange(300)
             design[ichip*300+np.arange(300),ichip+1] = 1.
-            gd = np.where(allpars[npoly+iframe*3+ichip,:] != 0.)[0]
+            gd, = np.where(allpars[npoly+iframe*3+ichip,:] != 0.)
             y[ichip*300+np.arange(300)[gd]] = allpars[npoly+iframe*3+ichip,gd]-allpars[npoly+ichip,gd]
-        # reject bad fibers
-        gd=np.where((abs(y) > 1.e-5) & (abs(y) < 200.))[0]
-        design=design[gd,:]
-        y=y[gd]
-        # solve and replace offsets with offsets adjusted to first group dither position
-        try : 
+        # Reject bad fibers
+        gd1, = np.where((np.abs(y) > 1.e-5) & (np.abs(y) < 200.))
+        medy = np.median(y[gd1])
+        sigy = dln.mad(y[gd1])
+        gd, = np.where((np.abs(y) > 1.e-5) & (np.abs(y) < 200.) & (np.abs(y-medy) < 4*sigy)) 
+        design = design[gd,:]
+        y = y[gd]
+        if verbose:
+            print('Frame '+str(iframe)+': '+str(len(y)-len(gd))+'/'+str(len(y))+' are bad')
+        # Solve and replace offsets with offsets adjusted to first group dither position
+        try: 
             w = np.linalg.solve(np.dot(design.T,design), np.dot(design.T, y))
             for ichip in range(3) : 
-                gd = np.where(allpars[npoly+iframe*3+ichip,:] != 0.)[0]
+                gd, = np.where(allpars[npoly+iframe*3+ichip,:] != 0.)
                 allpars[npoly+iframe*3+ichip,gd] -= (w[0]*np.arange(300)[gd] + w[ichip+1])
-        except : 
+        except: 
             print('fit failed ....frame:',iframe)
             pdb.set_trace()
-    # replace chip offsets of first group with average chip offsets
-    # then calculate wavelength array for all chips and rows with this fit
-    # also calculate smoothed wavelength array (across rows at each column). We will use this for a new fit
-    waves={}
-    swaves={}
-    newwaves={}
+    # Replace chip offsets of first group with average chip offsets
+    # Then calculate wavelength array for all chips and rows/fibers with this fit
+    # Also calculate smoothed wavelength array (across rows/fibers at each column). We will use this for a new fit
+    waves = {}
+    swaves = {}
+    newwaves = {}
     x = np.zeros([3,2048])
-    for ichip,chip in enumerate(chips) : 
-        # loop over rows so we can do outlier-rejected mean
+    for ichip,chip in enumerate(chips): 
+        # Loop over rows/fibers so we can do outlier-rejected mean
         x[0,:] = np.arange(2048)
         x[1,:] = ichip+1
         x[2,:] = 0
-        waves[chip]=np.zeros([300,2048])
-        swaves[chip]=np.zeros([300,2048])
-        newwaves[chip]=np.zeros([300,2048])
-        for row in range(300) :
-            y=allpars[4+ichip::3,row]
-            # skip missing groups
-            y=y[np.where(y != 0.)[0]]
-            # reject outliers
-            gd=np.where(abs(y-np.median(y)) < 0.1)[0]
-            if len(gd) > 0 : allpars[4+ichip,row] = np.mean(y[gd])
+        waves[chip] = np.zeros([300,2048])
+        swaves[chip] = np.zeros([300,2048])
+        newwaves[chip] = np.zeros([300,2048])
+        for row in range(300):
+            y = allpars[4+ichip::3,row]
+            # Skip missing groups
+            y = y[np.where(y != 0.)[0]]
+            # Reject outliers
+            gd, = np.where(np.abs(y-np.median(y)) < 0.1)
+            if len(gd) > 0: allpars[4+ichip,row] = np.mean(y[gd])
             waves[chip][row,:] = func_multi_poly(x,*allpars[:,row],npoly=npoly)
-        # to reduce noise further, fit relative wavelengths across rows and use the fit values for smoothed array
-        rows=np.arange(300)
-        for col in range(2048) :
-            try :
-                # don't include bad rows! i.e. from missing fibers
-                gd = np.where( np.isfinite(waves[chip][:,col]-waves[chip][:,1024]) & (waves[chip][:,col] > 0.) )[0]
+        # To reduce noise further, fit relative wavelengths across rows/fibers and use the fit values for smoothed array
+        rows = np.arange(300)
+        for col in range(2048):
+            try:
+                # Don't include bad rows! i.e. from missing fibers
+                gd, = np.where( np.isfinite(waves[chip][:,col]-waves[chip][:,1024]) & (waves[chip][:,col] > 0.) )
                 pfit = np.polyfit(rows[gd],waves[chip][gd,col]-waves[chip][gd,1024],3)
                 swaves[chip][gd,col] = np.polyval(pfit,rows[gd]) + waves[chip][gd,1024]
-            except :
+            except:
                 print('fit across rows failed, col: ',col)
                 pdb.set_trace()
 
-    # now refit the full wavelength solutions using swaves as input
-    newpars=[]
-    for row in range(300) :
-        if allpars[4,row] == 0. : 
-            # if this was a bad row before, keep it bad
+    # Now refit the full wavelength solutions using swaves as input
+    newpars = []
+    for row in range(300):
+        if allpars[4,row] == 0.: 
+            # If this was a bad row before, keep it bad
             popt = pars*0.
             newpars.append(popt)
             continue
 
         x = np.zeros([3,2048*3])
         y = np.zeros([2048*3])
-        for ichip,chip in enumerate(chips) : 
+        for ichip,chip in enumerate(chips): 
             x[0,ichip*2048:(ichip+1)*2048] = np.arange(2048)
             x[1,ichip*2048:(ichip+1)*2048] = ichip+1
             x[2,ichip*2048:(ichip+1)*2048] = 0
             y[ichip*2048:(ichip+1)*2048] = swaves[chip][row,:]
-        # we will fix the central chip position at 0, and allow wavelength to float
+        # We will fix the central chip position at 0, and allow wavelength to float
         pars = allpars[0:npoly+3,row]
         pars[npoly+1] = 0.
         bounds = ( np.zeros(len(pars))-np.inf, np.zeros(len(pars))+np.inf)
@@ -2151,9 +2160,9 @@ def refine(oldpars,npoly=4) :
         bounds[1][npoly+1] = 1.e-7
         gd, = np.where((y>1.5e4) & (y<1.8e4))
         if len(gd)>0:
-            try :
+            try:
                 popt,pcov = curve_fit(func_multi_poly,x[:,gd],y[gd],p0=pars,bounds=bounds)
-            except :
+            except:
                 print('Solution failed for row: ', row)
                 #pdb.set_trace()
                 popt = pars*0.
@@ -2161,13 +2170,13 @@ def refine(oldpars,npoly=4) :
             print('no good lines for row: ',row)
             popt = pars*0.
         newpars.append(popt)
-        # calculate wavelength arrays from refined solution
+        # Calculate wavelength arrays from refined solution
         x = np.zeros([3,2048])
-        for ichip,chip in enumerate(chips) : 
+        for ichip,chip in enumerate(chips): 
             x[0,:] = np.arange(2048)
             x[1,:] = ichip+1
             x[2,:] = 0
             newwaves[chip][row,:] = func_multi_poly(x,*popt,npoly=npoly)
-    # return new parameters and wavelength array
+    # Return new parameters and wavelength array
     return np.array(newpars).T,newwaves
     
