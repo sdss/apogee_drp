@@ -900,6 +900,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
         frame (dict) : dictionary with ['a','b','c'] keys for each chip containing HDULists with flux, error, and mask
         rows (list) : list of rows to look for lines in
         waves (list)  : list of wavelength arrays to be used to get initial pixel guess for input lines
+                          this should have the wavelengths for all three detectors and all 300 fibers
         lines :  table with desired lines, must have at least CHIPNUM and WAVE tags
         out= (str) : optional name of output ASCII file for lines (default=None)
 
@@ -928,12 +929,14 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                 continue
             chlineallind, = np.where(lines['CHIPNUM'] == ichip+1)
             chlineind, = np.where((lines['CHIPNUM'] == ichip+1) & (lines['USEWAVE']==1))
-            dpixel=[]
-            rowind=[]
+            dpixel = np.zeros(len(chlineind),float)+np.nan
+            rowind = np.zeros(len(chlineind),int)
+            #dpixel=[]
+            #rowind=[]
             # for dummy row, open up the search window by a factor of two
             if irow == 0 : estsig0=2*estsig
             else : estsig0=estsig
-            for iline in chlineind:
+            for ll,iline in enumerate(chlineind):
                 wave = lines['WAVE'][iline]
                 linestr['chip'][nline] = ichip+1
                 linestr['row'][nline] = row
@@ -951,9 +954,9 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                     # find peak in median-filtered subtracted spectrum
                     pars,perror = peakfit(medspec,pix0,estsig=estsig0,plot=plot,
                                           sigma=frame[chip][2].data[row,:],mask=frame[chip][3].data[row,:])
-                    if lines['USEWAVE'][iline] == 1 : dpixel.append(pars[1]-pix0)
-                    if irow > 0 :
-                        rowind.append(nline)
+                    if lines['USEWAVE'][iline] == 1 : dpixel[ll] = pars[1]-pix0
+                    if irow > 0 :    # irow==0 is the "test" row, it gets repeated
+                        rowind[ll] = nline
                         linestr['peak'][nline] = pars[0]
                         linestr['pixel'][nline] = pars[1]
                         linestr['pixelerr'][nline] = perror[1]
@@ -974,7 +977,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                     if DEBUG:
                         traceback.print_exc()
                         import pdb; pdb.set_trace()
-                    rowind.append(nline)
+                    rowind[ll] = nline
                     linestr['pixel'][nline] = 999999.
                     linestr['pixelerr'][nline] = 999999.
                     linestr['peak'][nline] = 999999.
@@ -983,9 +986,10 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                     linestr['dpixel'][nline] = 999999.
                     linestr['wave_found'][nline] = 999999.
                     linestr['failed'][nline] = 1
-
+                    dpixel[ll] = np.nan
+                    
                 if irow==0: linestr['dummy'][nline]=1  # dummy row
-                nline+=1  # increment counter
+                nline += 1  # increment counter
 
             # Refitting failed lines and fitting groups
             doextra = False
@@ -1024,10 +1028,12 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                             linestr['dpixel'][nline1] = pars[1]-pix0  # note this pix0 was determined differently from above
                             linestr['wave_found'][nline1] = pix2wave(pars[1],waves[chip][row,:])
                             linestr['failed'][nline1] = 0
+                            if lines['USEWAVE'][iline] == 1 : dpixel[-1] = pars[1]-pix0                            
                             if verbose:
                                 print('{:5d}{:5d}{:12.3f}{:12.3f}{:12.3f}{:12.3f}{:12d}'.format(
                                     ichip+1,row,linestr['wave'][nline1],pars[0],pars[1],pars[1]-pix0,num))
                         except:
+                            if lines['USEWAVE'][iline] == 1: dpixel[-1] = np.nan
                             if verbose : print('failed: ',num,row,chip,wave)
                             if DEBUG:
                                 traceback.print_exc()
@@ -1099,7 +1105,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                             linestr['failed'][nline1] = 1
                             
 
-            if len(dpixel) > 10 : dpixel_median = np.median(np.array(dpixel))
+            if len(dpixel) > 10 : dpixel_median = np.nanmedian(dpixel)
             if verbose: print('median offset: ',row,chip,dpixel_median)
 
     # Trim out extra rows at the end
@@ -1113,6 +1119,55 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
     # Leave in failed lines so we can keep track of issues with lines
     #  they should be ignored in other parts of the wavelength solution programs
 
+    # Reprocess rows that have lots of scatter in dpixel
+    #---------------------------------------------------
+    if len(rows)>100:
+        print('Checking for bad rows')
+        badrows = []
+        # Check each chip separately
+        for ichip,chip in enumerate(chips):
+            sig = np.zeros(len(rows),float)+999999.
+            med = np.zeros(len(rows),float)+999999.
+            for irow,row in enumerate(rows):
+                g1, = np.where((linestr['chip']==ichip+1) & (linestr['row']==row) & (linestr['failed']==0))
+                if len(g1)>0:
+                    med[irow] = np.nanmedian(linestr['dpixel'][g1])
+                    sig[irow] = dln.mad(linestr['dpixel'][g1])
+            # Look at median and sigmal in "sig"
+            medsig = np.nanmedian(sig)
+            sigsig = dln.mad(sig)
+            bd, = np.where(np.abs(sig-medsig) > 3*sigsig)
+            if len(badrows)==0:
+                badrows = rows[bd]
+            else:
+                badrows = np.hstack((badrows,rows[bd]))
+        # Some bad rows to reprocess
+        if len(badrows)>0:
+            # Get unique bad rows
+            badrows = np.unique(badrows)
+            print(str(len(badrows))+' to reprocess: '+','.join(np.char.array(badrows).astype(str)))
+            # Get new robust wavelength solution
+            coef1 = {}
+            for ichip,chip in enumerate(chips):
+                gg1, = np.where((linestr['chip']==ichip+1) & (linestr['failed']==0))
+                cf1 = robust.polyfit(linestr['pixel'][gg1],linestr['wave'][gg1],2)
+                ww = np.polyval(cf1,linestr['pixel'])
+                diff = np.abs(linestr['wave']-ww)
+                med = np.median(diff)
+                sig = dln.mad(diff)
+                gg, = np.where((linestr['chip']==ichip+1) & (linestr['failed']==0) & (np.abs(diff)-med < 3.5*sig))
+                cf = robust.polyfit(linestr['pixel'][gg],linestr['wave'][gg],2)    
+                coef1[chip] = cf
+            # Get new wavelengths
+            waves1 = {}
+            pixels = np.arange(2048)
+            for chip in chips: waves1[chip] = np.tile(np.polyval(coef1[chip],pixels),(300,1))
+            # Rerun each bad row separately
+            for ibad,badrow in enumerate(badrows):
+                newlinestr = findlines(frame,badrow,waves1,arclines,verbose=False,estsig=1,plot=False)
+                ind, = np.where(linestr['row']==badrow)
+                linestr[ind] = newlinestr   # number of lines should be identical
+    
     print('dt = ',time.time()-t0,' seconds')
     
     return linestr
