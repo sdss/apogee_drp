@@ -124,7 +124,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                          ('cadence','U50'),('program','U50'),('category','U50'),
                          ('targflags','U132'),('nvisits',int),('ngoodvisits',int),('ngoodrvs',int),
                          ('starflag',np.uint64),('starflags','U132'),('andflag',np.uint64),('andflags','U132'),
-                         ('vheliobary',float),('vscatter',float),('verr',float),('vmederr',float),('chisq',float),
+                         ('vrad',float),('vscatter',float),('verr',float),('vmederr',float),('chisq',float),
                          ('rv_teff',float),('rv_tefferr',float),('rv_logg',float),('rv_loggerr',float),('rv_feh',float),
                          ('rv_feherr',float),('rv_ccpfwhm',float),('rv_autofwhm',float),
                          ('n_components',int),('meanfib',float),('sigfib',float)
@@ -154,7 +154,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Initialize some parameters in case RV fails
     startab['ngoodvisits'] = 0
     startab['ngoodrvs'] = 0
-    startab['vheliobary'] = np.nan
+    startab['vrad'] = np.nan
     startab['vscatter'] = np.nan
     startab['verr'] = np.nan
     startab['vmederr'] = np.nan
@@ -203,12 +203,12 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Flag all visits as RV_FAIL to start with, will remove if they worked okay
     starvisits['starflag'] |= starmask.getval('RV_FAIL')
     # Initialize visit RV tags
-    for col in ['vtype','vrel','vrelerr','vheliobary','bc','chisq','rv_teff','rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr']:
+    for col in ['vtype','vrel','vrelerr','vrad','bc','chisq','rv_teff','rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr']:
         if col == 'vtype':
             starvisits[col] = 0
         else:
             starvisits[col] = np.nan
-    for col in ['xcorr_vrel','xcorr_vrelerr','xcorr_vheliobary','bc']:
+    for col in ['xcorr_vrel','xcorr_vrelerr','xcorr_vrad','bc']:
         starvisits[col] = np.nan
 
     # Add columns for RV components
@@ -253,10 +253,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         # Add Doppler outputs
         starvisits['vrel'][vind] = v['vrel']
         starvisits['vrelerr'][vind] = v['vrelerr']
-        starvisits['vheliobary'][vind] = v['vhelio']
+        starvisits['vrad'][vind] = v['vhelio']
         starvisits['xcorr_vrel'][vind] = v['xcorr_vrel']
         starvisits['xcorr_vrelerr'][vind] = v['xcorr_vrelerr']
-        starvisits['xcorr_vheliobary'][vind] = v['xcorr_vhelio']
+        starvisits['xcorr_vrad'][vind] = v['xcorr_vhelio']
         starvisits['bc'][vind] = v['bc']
         starvisits['chisq'][vind] = v['chisq']
         starvisits['rv_teff'][vind] = v['teff']
@@ -283,9 +283,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             if starvisits['rv_logg'][vind] > 3.8: bd_diff = 20
         else:
             bd_diff = 50
-        if (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > bd_diff) :
+        if (np.abs(starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind]) > bd_diff) :
             starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
-        elif (np.abs(starvisits['vheliobary'][vind]-starvisits['xcorr_vheliobary'][vind]) > 0) :
+        elif (np.abs(starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind]) > 0) :
             starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
 
     # Set STARFLAGS for the visits (successful and failed ones)
@@ -331,9 +331,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             startab['ngoodrvs'] = ngdrv
             try: startab['n_components'] = starvisits['n_components'][gdrv].max()
             except: pass
-            startab['vheliobary'] = (starvisits['vheliobary'][gdrv]*starvisits['snr'][gdrv]).sum() / starvisits['snr'][gdrv].sum()
+            startab['vrad'] = (starvisits['vrad'][gdrv]*starvisits['snr'][gdrv]).sum() / starvisits['snr'][gdrv].sum()
             if ngdrv>1:
-                startab['vscatter'] = starvisits['vheliobary'][gdrv].std(ddof=1)
+                startab['vscatter'] = starvisits['vrad'][gdrv].std(ddof=1)
                 startab['verr'] = startab['vscatter'][0]/np.sqrt(ngdrv)
                 startab['vmederr'] = np.median(starvisits['vrelerr'])
             else:
@@ -917,8 +917,8 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
     try: apstar.header['N_COMP'] = (allvisit['n_components'].max(),'Maximum number of components in RV CCFs')
     except: pass
-    apstar.header['VHBARY'] = ((allvisit['vheliobary']*allvisit['snr']).sum() / allvisit['snr'].sum(),'S/N weighted mean barycentric RV')
-    if len(allvisit) > 1 : apstar.header['vscatter'] = (allvisit['vheliobary'].std(ddof=1), 'standard deviation of visit RVs')
+    apstar.header['VRAD'] = ((allvisit['vrad']*allvisit['snr']).sum() / allvisit['snr'].sum(),'S/N weighted mean barycentric RV')
+    if len(allvisit) > 1 : apstar.header['vscatter'] = (allvisit['vrad'].std(ddof=1), 'standard deviation of visit RVs')
     else: apstar.header['VSCATTER'] = (0., 'standard deviation of visit RVs')
     apstar.header['VERR'] = (0.,'unused')
     apstar.header['RV_TEFF'] = (allvisit['rv_teff'].max(),'Effective temperature from RV fit')
@@ -946,7 +946,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         apstar.header['CHISQ{:d}'.format(i)] = (visit['chisq'],' Chi-squared fit of Cannon model, visit {:d}'.format(i))
         apstar.header['VRAD{:d}'.format(i)] = (visit['vrel'],' Doppler shift (km/s) of visit {:d}'.format(i))
         #apstar.header['VERR%d'.format(i)] = 
-        apstar.header['VHBARY{:d}'.format(i)] = (visit['vheliobary'],' Barycentric velocity (km/s), visit {:d}'.format(i))
+        apstar.header['VRAD{:d}'.format(i)] = (visit['vrad'],' Barycentric velocity (km/s), visit {:d}'.format(i))
         apstar.header['SNRVIS{:d}'.format(i)] = (visit['snr'],' Signal/Noise ratio, visit {:d}'.format(i))
         apstar.header['FLAG{:d}'.format(i)] = (visit['starflag'],' STARFLAG for visit {:d}'.format(i))
         apstar.header.insert('SFILE{:d}'.format(i),('COMMENT','VISIT {:d} INFORMATION'.format(i)))

@@ -2459,14 +2459,14 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         datafile = 'rvparams_plateVSfps.fits'
         if remake:
             gd, = np.where((allv5['MJD'] > 59580) & 
-                           (np.isnan(allv5['vheliobary']) == False) & 
-                           (np.absolute(allv5['vheliobary']) < 400) & 
+                           (np.isnan(allv5['vrad']) == False) & 
+                           (np.absolute(allv5['vrad']) < 400) & 
                            (np.isnan(allv5['SNR']) == False) & 
                            (allv5['SNR'] > 10))
             allv5fps = allv5[gd]
 
-            gd, = np.where((np.isnan(allv4['VHELIO']) == False) &
-                           (np.absolute(allv4['VHELIO']) < 400) &
+            gd, = np.where((np.isnan(allv4['VRAD']) == False) &
+                           (np.absolute(allv4['VRAD']) < 400) &
                            (np.isnan(allv4['SNR']) == False) & 
                            (allv4['SNR'] > 10))
             allv4g = allv4[gd]
@@ -2484,8 +2484,8 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
                            ('NVIS',      np.int32, 2),
                            ('SNRTOT',    np.float64, 2),
                            ('SNRAVG',    np.float64, 2),
-                           ('VHELIO',    np.float64, 2),
-                           ('EVHELIO',   np.float64, 2),
+                           ('VRAD',      np.float64, 2),
+                           ('EVRAD',     np.float64, 2),
                            ('TEFF',      np.float64, 2),
                            ('ETEFF',     np.float64, 2),
                            ('LOGG',      np.float64, 2),
@@ -2507,10 +2507,10 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
                 gdata['SNRTOT'][i,1] = np.nansum(allv5fps['SNR'][p5])
                 gdata['SNRAVG'][i,0] = np.nanmean(allv4g['SNR'][p4])
                 gdata['SNRAVG'][i,1] = np.nanmean(allv5fps['SNR'][p5])
-                gdata['VHELIO'][i,0] = np.nanmean(allv4g['VHELIO'][p4])
-                gdata['VHELIO'][i,1] = np.nanmean(allv5fps['vheliobary'][p5])
-                gdata['EVHELIO'][i,0] = np.nanmean(allv4g['VRELERR'][p4])
-                gdata['EVHELIO'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
+                gdata['VRAD'][i,0] = np.nanmean(allv4g['VRAD'][p4])
+                gdata['VRAD'][i,1] = np.nanmean(allv5fps['vrad'][p5])
+                gdata['EVRAD'][i,0] = np.nanmean(allv4g['VRELERR'][p4])
+                gdata['EVRAD'][i,1] = np.nanmean(allv5fps['vrelerr'][p5])
                 gdata['TEFF'][i,0] = np.nanmean(allv4g['RV_TEFF'][p4])
                 gdata['TEFF'][i,1] = np.nanmean(allv5fps['rv_teff'][p5])
                 gdata['ETEFF'][i,0] = np.nanstd(allv4g['RV_TEFF'][p4])
@@ -2566,8 +2566,8 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         symsz = 40
 
         g, = np.where((np.isnan(gdata['TEFF'][:,0]) == False) & (np.isnan(gdata['TEFF'][:,1]) == False) & (gdata['TEFF'][:,0] < 7500))
-        x = gdata['VHELIO'][:,0][g]
-        y = gdata['VHELIO'][:,0][g] - gdata['VHELIO'][:,1][g]
+        x = gdata['VRAD'][:,0][g]
+        y = gdata['VRAD'][:,0][g] - gdata['VRAD'][:,1][g]
         #ax1.text(0.05, 0.95, str(len(g)) + ' stars', transform=ax1.transAxes, va='top')
         ax1.scatter(x, y, marker=symbol, c=gdata['HMAG'][g], cmap='plasma', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
 
@@ -2907,7 +2907,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         ax3.set_ylim(-0.5, 0.5)
         ax4.set_xlim(-2.5, 1.0)
         ax4.set_ylim(-0.5, 0.5)
-        ax1.set_xlabel(r'DR17 $V_{\rm helio}$ (km$\,$s$^{-1}$)')
+        ax1.set_xlabel(r'DR17 $V_{\rm rad}$ (km$\,$s$^{-1}$)')
         ax1.set_ylabel(r'DR17 $-$ FPS')
         ax2.set_xlabel(r'DR17 RV $T_{\rm eff}$ (kK)')
         ax3.set_xlabel(r'DR17 RV log$\,g$')
@@ -2950,7 +2950,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         symbol = 'o'
         symsz = 70
 
-        ax1.scatter(vh17, vh17-vcat['vheliobary'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax1.scatter(vh17, vh17-vcat['vrad'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax2.scatter(teff17/1000, teff17/1000-vcat['rv_teff']/1000, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax3.scatter(logg17, logg17-vcat['rv_logg'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax4.scatter(feh17, feh17-vcat['rv_feh'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
@@ -3452,7 +3452,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         symbol = 'o'
         symsz = 70
 
-        ax1.scatter(vh17, vh17-vcat['vheliobary'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax1.scatter(vh17, vh17-vcat['vrad'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax2.scatter(teff17/1000, teff17/1000-vcat['rv_teff']/1000, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax3.scatter(logg17, logg17-vcat['rv_logg'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax4.scatter(feh17, feh17-vcat['rv_feh'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
@@ -3567,7 +3567,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         symbol = 'o'
         symsz = 70
 
-        ax1.scatter(vh17, vcat['vheliobary'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
+        ax1.scatter(vh17, vcat['vrad'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax2.scatter(teff17/1000, vcat['rv_teff']/1000, marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax3.scatter(logg17, vcat['rv_logg'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)
         ax4.scatter(feh17, vcat['rv_feh'], marker=symbol, c=vcat['hmag'], cmap='gnuplot', s=symsz, edgecolors='k', alpha=0.75, zorder=10)

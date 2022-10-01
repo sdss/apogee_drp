@@ -2070,7 +2070,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<P>Click the column headers to sort.</p>\n')
     vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>Hmag <TH>Raw<BR>J - K <TH>Targ<BR>Type <TH>Target & Data Flags')
-    vishtml.write('<TH>Obs.<BR>S/N <TH>Rel.<BR>S/N <TH>Dflat<BR>Tput  <TH>Vhelio<BR>(km/s) <TH>Ncomp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g)')
+    vishtml.write('<TH>Obs.<BR>S/N <TH>Rel.<BR>S/N <TH>Dflat<BR>Tput  <TH>Vrad<BR>(km/s) <TH>Ncomp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g)')
     vishtml.write('<TH>RV<BR>[Fe/H] <TH>Phot.<BR>Teff <TH>J-K_0 <TH>apVisit Plot\n')
 
     # Make text file giving ratio of observed S/N over linear fit S/N
@@ -2134,7 +2134,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             # Establish html table row background color and spectrum plot color
             bgcolor = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): bgcolor = '#D2B4DE'
-            vhelio = -999.9
+            vrad = -999.9
             ncomp = -1
             rvteff = -9999.9
             rvlogg = -9.999
@@ -2166,7 +2166,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     apstarfile = load.filename('Star', obj=objid)
                     if os.path.exists(apstarfile):
                         apstarheader = fits.getheader(apstarfile)
-                        vhelio = apstarheader['VHBARY']
+                        vrad = apstarheader['VRAD']
                         ncomp = apstarheader['N_COMP']
                         rvteff = apstarheader['RV_TEFF']
                         rvlogg = apstarheader['RV_LOGG']
@@ -2242,8 +2242,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center">' + firstcarton)
                 vishtml.write('<BR><BR>' + starflags)
                 vcol = 'black'
-                if vhelio is not None:
-                    if np.absolute(vhelio) > 400: vcol = 'red'
+                if vrad is not None:
+                    if np.absolute(vrad) > 400: vcol = 'red'
                 vishtml.write('<TD align ="center">' + str("%.1f" % round(snr,1)))
                 # Relative S/N (ratio of obs S/N over linear fit S/N)
                 if len(notsky) > 10:
@@ -2277,7 +2277,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 else:
                     vishtml.write('<TD align ="center" BGCOLOR="grey">-1%\n')
 
-                vishtml.write('<TD align ="center">' + str("%.1f" % round(vhelio,1)))
+                vishtml.write('<TD align ="center">' + str("%.1f" % round(vrad,1)))
                 vishtml.write('<TD align ="center">' + str(ncomp))
                 vishtml.write('<TD align ="center">' + str(int(round(rvteff))))
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(rvlogg,3)))
@@ -2442,11 +2442,11 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                 simbadlink = txt1 + txt2
 
                 nvis = len(vcat)
-                cvhelio = '----';  cvscatter = '----'
-                gd, = np.where(np.absolute(vcat['vheliobary']) < 400)
+                cvrad = '----';  cvscatter = '----'
+                gd, = np.where(np.absolute(vcat['vrad']) < 400)
                 if len(gd) > 0:
-                    vels = vcat['vheliobary'][gd]
-                    cvhelio = str("%.2f" % round(np.mean(vels),2))
+                    vels = vcat['vrad'][gd]
+                    cvrad = str("%.2f" % round(np.mean(vels),2))
                     cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
 
                 rvteff = '----'; rvlogg = '----'; rvfeh = '---'
@@ -2474,12 +2474,12 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                 starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT')
                 starHTML.write('<TH bgcolor="#E6FFE6">2MASS<BR>J<BR>(mag) <TH bgcolor="#E6FFE6">2MASS<BR>H<BR>(mag) <TH bgcolor="#E6FFE6">2MASS<BR>K<BR>(mag) <TH bgcolor="#E6FFE6">Raw J-K')
                 starHTML.write('<TH bgcolor="#FFFFE6">Gaia DR2<BR>PMRA<BR>(mas) <TH bgcolor="#FFFFE6">Gaia DR2<BR>PMDEC<BR>(mas) <TH bgcolor="#FFFFE6">Gaia DR2<BR>G<BR>(mag)') 
-                starHTML.write('<TH bgcolor="#E6F2FF">Mean<BR>Vhelio<BR>(km/s) <TH bgcolor="#E6F2FF">Min-max<BR>Vhelio<BR>(km/s) <TH bgcolor="#E6F2FF">RV Teff<BR>(K)')
+                starHTML.write('<TH bgcolor="#E6F2FF">Mean<BR>Vrad<BR>(km/s) <TH bgcolor="#E6F2FF">Min-max<BR>Vrad<BR>(km/s) <TH bgcolor="#E6F2FF">RV Teff<BR>(K)')
                 starHTML.write('<TH bgcolor="#E6F2FF">RV logg <TH bgcolor="#E6F2FF">RV [Fe/H] \n')
                 starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
                 starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
                 starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
-                starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag + '<TD ALIGN=right>' + cvhelio)
+                starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag + '<TD ALIGN=right>' + cvrad)
                 starHTML.write('<TD ALIGN=right>' + cvscatter)
                 starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
                 starHTML.write('</TABLE>\n<BR>\n')
@@ -2498,7 +2498,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                 starHTML.write('<P><B>MJD links:</B> QA page for the plate+MJD of the visit.<BR><B>Date-Obs links:</B> apVisit file download.</P>\n')
                 starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
                 starHTML.write('<TR bgcolor="'+thcolor+'">')
-                starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vhelio <TH>Spectrum Plot </TR>\n')
+                starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vrad <TH>Spectrum Plot </TR>\n')
                 for k in range(nvis):
                     mjd = vcat['mjd'][k]
                     fps = True
@@ -2516,7 +2516,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                         ccart = str(platetab['CART'][0])
                     
                     csnr = str("%.1f" % round(vcat['snr'][k],1))
-                    cvhelio = str("%.2f" % round(vcat['vheliobary'][k],2))
+                    cvrad = str("%.2f" % round(vcat['vrad'][k],2))
                     visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
                     visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
                     visplot = visplotpath + visplotname
@@ -2536,8 +2536,8 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                     if float(csnr) < 20: fcol='red'
                     starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + csnr + '</FONT>\n')
                     fcol='black'  
-                    if np.absolute(float(cvhelio)) > 300: fcol='red'
-                    starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + cvhelio + '</FONT>\n')
+                    if np.absolute(float(cvrad)) > 300: fcol='red'
+                    starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + cvrad + '</FONT>\n')
                     starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
                 starHTML.write('</TABLE>\n<BR>\n')
                 starHTML.write('<HR>\n')
@@ -4381,8 +4381,8 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
                  'gaiadr2_pmdec', 'gaiadr2_pmdec_error', 'gaiadr2_gmag', 'gaiadr2_gerr', 'gaiadr2_bpmag', 'gaiadr2_bperr',
                  'gaiadr2_rpmag', 'gaiadr2_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
                  'starflags','dateobs','jd']
-        rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vheliobary', 'chisq', 'rv_teff', 'rv_feh',
-                  'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vheliobary', 'n_components', 'rv_components']
+        rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
+                  'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'n_components', 'rv_components']
         cols = ','.join('v.'+np.char.array(vcols)) +','+ ','.join('rv.'+np.char.array(rvcols))
         allV = db.query(sql="select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "+\
                         "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"' and v.mjd="+str(mjd)+" and rv.starver='"+str(mjd)+"'")
@@ -4422,7 +4422,7 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
     vishtml.write('<P>Click the column headers to sort.</p>\n')
     vishtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
     vishtml.write('<TR bgcolor="' + thcolor + '"><TH>Fiber<BR>(MTP) <TH>APOGEE ID <TH>H<BR>mag <TH>Raw<BR>J - K <TH>Target<BR>Type <TH>Target & Data Flags')
-    vishtml.write('<TH>S/N <TH>Vhelio<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
+    vishtml.write('<TH>S/N <TH>Vrad<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
 #    vishtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
     tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
@@ -4545,13 +4545,13 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
             vishtml.write('<TD align="left">' + targflagtxt)
             vishtml.write('<BR><BR>' + starflagtxt)
 
-            # Vhelio, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
+            # Vrad, N_components, RV_TEFF, RV_LOGG, and RV_FEH from allVisitMJD
             if os.path.exists(allVpath):
                 gd, = np.where((objid == allV['APOGEE_ID']) & (allV['PLATE'] == plate))
                 if len(gd) == 1:
                     try:
-                        vhelio = allV['VHELIOBARY'][gd][0]
-                        if type(vhelio) != str: vhelio = str("%.3f" % round(vhelio,3))
+                        vrad = allV['VRAD'][gd][0]
+                        if type(vrad) != str: vrad = str("%.3f" % round(vrad,3))
                         ncomp = str(allV['N_COMPONENTS'][gd][0])
                         rvteff = allV['RV_TEFF'][gd][0]
                         if type(rvteff) != str: rvteff = str(int(round(rvteff)))
@@ -4560,16 +4560,16 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
                         rvfeh = allV['RV_FEH'][gd][0]
                         if type(rvfeh) != str: rvfeh = str("%.3f" % round(rvfeh,3))
                         vcol = 'black'
-                        if np.absolute(float(vhelio)) > 400: vcol = 'red'
+                        if np.absolute(float(vrad)) > 400: vcol = 'red'
                     except:
-                        vhelio = '???'
+                        vrad = '???'
                         ncomp = '?'
                         rvteff = '???'
                         rvlogg = '???'
                         rvfeh = '???'
                         vcol = 'red'
                     vishtml.write('<TD align ="center">' + snratio)
-                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + vhelio + '</FONT>')
+                    vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + vrad + '</FONT>')
                     vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + ncomp + '</FONT>')
                     vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvteff + '</FONT>')
                     vishtml.write('<TD align ="center"><FONT COLOR="' + vcol + '">' + rvlogg + '</FONT>')
