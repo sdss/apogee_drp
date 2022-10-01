@@ -89,11 +89,11 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   head0 = headfits(chfile,exten=0)
   FITS_READ,chfile,im1,head1
   ;; UNE, bright line at X=1452
-  if strtrim(sxpar(head0,'LAMPUNE'),2) eq 'true' then begin
+  if sxpar(head0,'LAMPUNE') then begin
     sub = im1[1452-100:1452+100,*]
     thresh = 40
   ;; THARNE, bright line at X=1566 
-  endif else if strtrim(sxpar(head0,'LAMPTHAR'),2) eq 'true' then begin
+  endif else if sxpar(head0,'LAMPTHAR') then begin
     sub = im1[1566-100:1566+100,*]
     thresh = 1000
   endif else begin
@@ -107,6 +107,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;; Check the line flux
   if avgpeakflux/sxpar(head0,'nread') lt thresh then begin
     print,'Not enough flux in ',chfile
+    stop 
     return
   endif
   
