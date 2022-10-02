@@ -922,13 +922,15 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                        ('chip','i4'), ('row','i4'),('id',np.str,5),('wave',float), ('peak','f4'), ('xpix0','f4'),('pixel','f4'),
                        ('pixelerr','f4'),('sigma','f4'),('yoffset','f4'),('dpixel','f4'), ('wave_found',float),
                        ('frameid','i4'),('failed','i4'),('dummy','i4')])
-    nline=0
+    # Chip loop
+    nline = 0
     for ichip,chip in enumerate(['a','b','c']):
         # Use median offset of previous row for starting guess
         # Add a dummy first row to get starting guess offset for the first row
         dpixel_median = 0.
+        # Row/fiber loop
         for irow,row in enumerate(np.append([rows[0]],rows)) :
-            # subtract off median-filtered spectrum to remove background
+            # Subtract off median-filtered spectrum to remove background
             medspec = frame[chip][1].data[row,:]-medfilt(frame[chip][1].data[row,:],101)
             if np.max(medspec)-np.min(medspec)==0:
                 print('row ',irow,' Bad spectrum. skipping')
@@ -959,7 +961,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                     pars,perror = peakfit(medspec,pix0,estsig=estsig0,plot=plot,
                                           sigma=frame[chip][2].data[row,:],mask=frame[chip][3].data[row,:])
                     if lines['USEWAVE'][iline] == 1 : dpixel[ll] = pars[1]-pix0
-                    if irow > 0 :    # irow==0 is the "test" row, it gets repeated
+                    if irow > 0:    # irow==0 is the "test" row, it gets repeated
                         rowind[ll] = nline
                         linestr['peak'][nline] = pars[0]
                         linestr['pixel'][nline] = pars[1]
@@ -981,16 +983,17 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                     if DEBUG:
                         traceback.print_exc()
                         import pdb; pdb.set_trace()
-                    rowind[ll] = nline
-                    linestr['pixel'][nline] = 999999.
-                    linestr['pixelerr'][nline] = 999999.
-                    linestr['peak'][nline] = 999999.
-                    linestr['sigma'][nline] = 999999.
-                    linestr['yoffset'][nline] = 999999.
-                    linestr['dpixel'][nline] = 999999.
-                    linestr['wave_found'][nline] = 999999.
-                    linestr['failed'][nline] = 1
-                    dpixel[ll] = np.nan
+                    if irow > 0:
+                        rowind[ll] = nline
+                        linestr['pixel'][nline] = 999999.
+                        linestr['pixelerr'][nline] = 999999.
+                        linestr['peak'][nline] = 999999.
+                        linestr['sigma'][nline] = 999999.
+                        linestr['yoffset'][nline] = 999999.
+                        linestr['dpixel'][nline] = 999999.
+                        linestr['wave_found'][nline] = 999999.
+                        linestr['failed'][nline] = 1
+                        dpixel[ll] = np.nan
                     
                 if irow==0: linestr['dummy'][nline]=1  # dummy row
                 nline += 1  # increment counter
@@ -1115,7 +1118,8 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
     # Trim out extra rows at the end
     linestr = linestr[0:nline]  # trim out extra lines
     # Trim out dummy rows
-    dummy, = np.where(linestr['dummy']==1)
+    good, = np.where(linestr['dummy']==0)
+    linestr = linestr[good]
     # remove "dummy" column
     linestr = Table(linestr)
     linestr.remove_column('dummy')
@@ -1168,7 +1172,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
             for chip in chips: waves1[chip] = np.tile(np.polyval(coef1[chip],pixels),(300,1))
             # Rerun each bad row separately
             for ibad,badrow in enumerate(badrows):
-                newlinestr = findlines(frame,badrow,waves1,arclines,verbose=False,estsig=1,plot=False)
+                newlinestr = findlines(frame,[badrow],waves1,lines,verbose=False,estsig=1,plot=False)
                 ind, = np.where(linestr['row']==badrow)
                 linestr[ind] = newlinestr   # number of lines should be identical
     
