@@ -206,6 +206,9 @@ for j=0,nkeywords-1 do begin
   if min(valid_num(value)) eq 1 and max(len) ge 7 then type=5
   if min(valid_num(value,/integer)) eq 1 then type=3   ; use min in case value is an array
 
+  ;; Make sure apogee_drp_vers and apogee_vers are strings
+  if strlowcase(keywords[j]) eq 'apogee_drp_ver' or strlowcase(keywords[j]) eq 'apred_vers' then type=7
+  
   ; Use STRING for calIDs
   ;calkeys = ['DETID','BPMID','LITTROWID','PERSISTID','PERSISTMODELID','HISTID','DARKID','FLATID','SPARSEID','FIBERID','PSFID','FLUXID','RESPONSEID','WAVEID','LSFID','PLATEID']
   ;dum = where(calkeys eq strupcase(keywords[j]),ncalid)
