@@ -390,6 +390,7 @@ FOR i=0L,nplanfiles-1 do begin
       ;----------------------------------
       print,'STEP 3: Airglow Subtraction with APSKYSUB'
       APSKYSUB,frame_wave,plugmap,frame_skysub,subopt=1,error=skyerror,force=force
+stop
       if n_elements(skyerror) gt 0 and planstr.platetype ne 'twilight' then begin
         stop,'halt: APSKYSUB Error: ',skyerror
         apgundef,frame_wave,frame_skysub,skyerror
@@ -401,7 +402,6 @@ FOR i=0L,nplanfiles-1 do begin
       if tag_exist(planstr,'platetype') then $
         if planstr.platetype ne 'normal' and planstr.platetype ne 'single' and planstr.platetype ne 'twilight' then goto,BOMB1
 
-stop
 
       ;----------------------------------
       ; STEP 4:  Telluric Correction
