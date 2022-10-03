@@ -295,6 +295,7 @@ FOR i=0L,nplanfiles-1 do begin
   ;;  fpi or sky lines
   ;; This used to call "apskywavecal", "ap1dwavecal" now handles
   ;; both cases (sky lines and FPI lines)
+  stop
   if waveid gt 0 or fpiid gt 0 then begin
     cmd = ['ap1dwavecal',planfile]
 
@@ -330,6 +331,8 @@ FOR i=0L,nplanfiles-1 do begin
     ;; if skywave then spawn,['apskywavecal',planfile],/noshell $
     ;; else  spawn,['apskywavecal',planfile,'--nosky'],/noshell
   endif
+
+  stop
 
   BOMB:
 
