@@ -402,7 +402,6 @@ FOR i=0L,nplanfiles-1 do begin
         if planstr.platetype ne 'normal' and planstr.platetype ne 'single' and planstr.platetype ne 'twilight' then goto,BOMB1
 
 
-stop
 
       ;----------------------------------
       ; STEP 4:  Telluric Correction
@@ -442,6 +441,7 @@ stop
       apgundef,frame_skysub  ; free up memory
       writelog,logfile,'  telluric '+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
 
+stop
       ;-----------------------
       ; Output apCframe files
       ;-----------------------
