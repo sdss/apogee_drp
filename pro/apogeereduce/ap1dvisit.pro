@@ -427,7 +427,7 @@ FOR i=0L,nplanfiles-1 do begin
         maxtellstars=maxtellstars,tellzones=tellzones,specfitopt=1,$
         plots_dir=plots_dir,error=telerror,/save,/preconv,visitstr=visitstr,$
         test=test,force=force
-
+stop
 
       tellstar.im=planstr.apexp[j].name
       ADD_TAG,frame_telluric,'TELLSTAR',tellstar,frame_telluric
@@ -441,7 +441,7 @@ FOR i=0L,nplanfiles-1 do begin
       apgundef,frame_skysub  ; free up memory
       writelog,logfile,'  telluric '+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
 
-stop
+
       ;-----------------------
       ; Output apCframe files
       ;-----------------------
