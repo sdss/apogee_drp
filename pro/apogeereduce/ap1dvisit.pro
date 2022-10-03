@@ -390,11 +390,9 @@ FOR i=0L,nplanfiles-1 do begin
       ;----------------------------------
       print,'STEP 3: Airglow Subtraction with APSKYSUB'
       APSKYSUB,frame_wave,plugmap,frame_skysub,subopt=1,error=skyerror,force=force
-stop
       if n_elements(skyerror) gt 0 and planstr.platetype ne 'twilight' then begin
         stop,'halt: APSKYSUB Error: ',skyerror
         apgundef,frame_wave,frame_skysub,skyerror
-stop
       endif
       apgundef,frame_wave  ; free up memory
       writelog,logfile,'  airglow '+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)

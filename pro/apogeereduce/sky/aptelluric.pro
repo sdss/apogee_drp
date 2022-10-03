@@ -71,9 +71,6 @@ for i=0,n_elements(needtags1)-1 do begin
     return
   end
 end
-
-stop
-
 needtags2 = ['HEADER','FLUX','ERR','MASK','WAVELENGTH','SKY','SKYERR','LSFCOEF','WCOEF']
 for i=0,2 do begin
   tags2 = tag_names(frame.(i))
@@ -84,8 +81,6 @@ for i=0,2 do begin
     end
   end
 end
-
-stop
 
 sz = size(frame.chipa.flux)
 npix = sz[1]
