@@ -302,7 +302,7 @@ FOR i=0L,nplanfiles-1 do begin
       endfor
       apgundef,frame0   ; free up memory
       if keyword_set(stp) then stop
-stop
+
       ;----------------------------------
       ; STEP 1:  Measure dither Shift
       ;----------------------------------
@@ -363,7 +363,7 @@ stop
 
       if tag_exist(planstr,'platetype') then $
         if planstr.platetype ne 'normal' and planstr.platetype ne 'single' and planstr.platetype ne 'twilight' then goto,BOMB1
-stop
+
       ;----------------------------------
       ; STEP 2:  Wavelength Calibrate
       ;----------------------------------
