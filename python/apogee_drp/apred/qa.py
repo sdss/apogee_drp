@@ -1209,7 +1209,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
 ###################################################################################################
 ''' MAKEOBSPLOTS: plots for the plate QA page '''
-def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, instrument=None,
+def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, instrument=None, telescope=None,
                    apred=None, flat=None, fluxid=None, survey=None, clobber=None): 
 
     print("----> makeObsPlots: Running plate "+plate+", MJD "+mjd)
