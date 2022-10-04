@@ -46,6 +46,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
     if (mjd5 is not None and expnum is not None):
         raise ValueError('Input either observatory+mjd5 or observatory+expnum')
 
+    
     load = apload.ApLoad(apred='daily',telescope='apo25m')
 
     # Get the exposures info for this MJD5        
@@ -75,7 +76,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
             files.append(file1)
         files = np.array(files)
         files = files[np.argsort(files)]  # sort        
-
+        
     nfiles = len(files)
     dtype = np.dtype([('num',int),('nread',int),('exptype',np.str,20),('arctype',np.str,20),('plateid',np.str,20),
                       ('configid',np.str,50),('designid',np.str,50),('fieldid',np.str,50),('exptime',float),
@@ -138,7 +139,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
                     tab['calshutter'][i] = 'Open'
                 else:
                     tab['calshutter'][i] = 'Closed'
-
+                    
     return tab
 
 

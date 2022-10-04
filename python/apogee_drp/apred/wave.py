@@ -423,6 +423,20 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 fibmed[j] = np.median(res2[ind1])
                 fibsig[j] = dln.mad(res3[ind1])
                 allsig[ind1] = fibsig[j]
+        # Deal with outlier fibers
+        medfibmed = np.median(fibmed)
+        sigfibmed = dln.mad(fibmed)
+        bdfib, = np.where(np.abs(fibmed-np.median(fibmed)) > 3.5*dln.mad(fibmed))
+        for j in range(len(bdfib)):
+            bdfib1 = bdfib[j]
+            ind1 = fibindex['index'][fibindex['lo'][bdfib1]:fibindex['hi'][bdfib1]+1]
+            # Robust fibmed and fibsig values of neighboring fibers
+            med1 = np.median(fibmed[max(0,bdfib1-5):min(bdfib1+5,len(fibmed))])
+            sig1 = np.median(fibsig[max(0,bdfib1-5):min(bdfib1+5,len(fibsig))])            
+            res3[ind1] = res2[ind1] - med1  # fix the residuals
+            fibmed[bdfib1] = med1
+            fibsig[bdfib1] = sig1
+            allsig[ind1] = sig1
         # One final fit to the residuals
         sig2 = dln.mad(res3)
         gd2, = np.where(np.abs(res3)<3*sig2)
@@ -436,7 +450,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         if len(bd3)>0:
             linestr1['bad'][bd3] = 2
         linestr[ind] = linestr1
-
+        
     # Stuff back in to the full list
     linestr_all[gdlines] = linestr
     linestr = linestr_all
@@ -519,9 +533,16 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             if ngroup==1 :
                 bounds[0][npoly+1] = -1.e-7
                 bounds[1][npoly+1] = 1.e-7
-            else :
+                ## Constrain chip gaps to reasonable values
+                #bounds[0][npoly:] = -1000
+                #bounds[1][npoly:] = 1000                
+            else:
+                # Lock the wavelength for mulitple groups
                 bounds[0][npoly-1] = pars[npoly-1]-1.e-7*abs(pars[npoly-1])
                 bounds[1][npoly-1] = pars[npoly-1]+1.e-7*abs(pars[npoly-1])
+                ## Constrain chip gaps to reasonable values
+                #bounds[0][npoly:] = -1000
+                #bounds[1][npoly:] = 1000
                 # If we have multiple groups, only fit for chip locations during first iterations and every 3rd thereafter
                 if test or niter<3 or niter%3 == 1 : 
                     for i in range(npoly) : 
@@ -557,6 +578,19 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                     print(pars)
                 popt,pcov = curve_fit(func_multi_poly,x[:,gd],y[gd],p0=pars,bounds=bounds)
                 pars = copy.copy(popt)
+                # Sometimes the chip gaps are horrible off for some groups
+                #  replace these with "average" values, so we can better remove the outlier points
+                bdchip1, = np.where(np.abs(pars[npoly::3]) > 1000)
+                gdchip1, = np.where(np.abs(pars[npoly::3]) < 1000)                
+                if len(bdchip1)>0:
+                    print(str(len(bdchip1))+' chip gaps1 are bad',bdchip1)
+                    pars[npoly+3*bdchip1] = np.median(pars[npoly::3][gdchip1])
+                bdchip2, = np.where(np.abs(pars[npoly+2::3]) > 1000)
+                gdchip2, = np.where(np.abs(pars[npoly+2::3]) < 1000)                
+                if len(bdchip2)>0:
+                    print(str(len(bdchip2))+' chip gaps1 are bad',bdchip2)                    
+                    pars[npoly+2+3*bdchip2] = np.median(pars[npoly+2::3][gdchip2])
+                # Now calculate the residuals
                 res = y-func_multi_poly(x,*pars)
                 if verbose: 
                     print('res: ',len(gd),np.median(res),np.median(np.abs(res)),res[gd].std())
@@ -626,7 +660,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                     plt.show()
                 if not hard :
                     import pdb; pdb.set_trace()
-
+                    
         # Final fit values
         print('Final values:')
         print('res: ',np.median(res),res[gd].std())
@@ -661,6 +695,26 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     else:
         newpars = allpars
 
+    # Fill in values for "missing" fibers
+    missing, = np.where(newpars[3,:]==0)
+    if len(missing)>0:
+        print('Filling in values for '+str(len(missing))+' missing fibers: '+','.join(np.char.array(rows[missing]).astype(str)))
+    for m in missing:
+        if m==0:
+            newpars1 = (newpars[:,m+1]+newpars[:,m+2])*0.5
+        elif m==len(rows)-1:
+            newpars1 = (newpars[:,m-2]+newpars[:,m-1])*0.5
+        else:
+            newpars1 = (newpars[:,m-1]+newpars[:,m+1])*0.5
+        newpars[:,m] = newpars1
+        # Calculate wavelength arrays from refined solution
+        x = np.zeros([3,2048])
+        for ichip,chip in enumerate(chips): 
+            x[0,:] = np.arange(2048)
+            x[1,:] = ichip+1
+            x[2,:] = 0
+            newwaves[chip][m,:] = func_multi_poly(x,*newpars1,npoly=npoly)
+    
     # Save results in apWave files
     if nosave==False:
         out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
