@@ -232,6 +232,12 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       endif
       MKEPSF,ims,darkid=darkid,flatid=flatid,darkims=darkims,dmax=sparsestr[i].dmax,$
              maxread=maxread,clobber=clobber,/filter,thresh=0.2,scat=2,unlock=unlock
+      ;; This creates apSparse and apEPSF files
+      ;; Make empty apPSF files to indicate to makecal.pro that this
+      ;;  PSF file was already made
+      ssparse = string(sparse,format='(i08)')
+      psffiles = psfdir+'/'+[dirs.prefix+'PSF-'+chips+'-'+ssparse+'.fits']
+      TOUCHZERO,psffiles
     endif
   endif
 

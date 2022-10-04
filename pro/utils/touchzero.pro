@@ -28,15 +28,10 @@ endif
 
 ; Loop through the files
 FOR i=0,nfiles-1 do begin
-
   OPENW,unit,/get_lun,files[i]
   CLOSE,unit
   FREE_LUN,unit
-
-END
-
-
-;stop
+ENDFOR
 
 if keyword_set(stp) then stop
 
