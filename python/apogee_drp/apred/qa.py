@@ -818,6 +818,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         secz = 0
         seeing = 0
         if ims[0] != 0: 
+            pdb.set_trace()
             secz = 1. / np.cos((90. - dhdr['ALT']) * (math.pi/180.))
             seeing = dhdr['SEEING']
             if str(seeing).lower().find('nan') != -1: seeing=np.nan
