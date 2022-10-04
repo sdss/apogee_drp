@@ -274,9 +274,10 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         return
       endif
       cmjd = getcmjd(psf,mjd=mjd)
-      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid,bpmid=bpmid
       MAKECAL,littrow=littrowid,unlock=unlock
-      MKPSF,psf,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,littrowid=littrowid,clobber=clobber,unlock=unlock
+      MKPSF,psf,bpmid=bpmid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
+            littrowid=littrowid,clobber=clobber,unlock=unlock
     endif
   endif
 

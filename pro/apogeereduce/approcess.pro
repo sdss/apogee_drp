@@ -12,6 +12,7 @@
 ;  /onedclobber    Overwrite any existing 1D files.  If /clobber is
 ;                    set then /onedclobber is set automatically. 
 ;  =detid          Detector calibration frame to be used in reduction.
+;  =bpmid          BPM calibration frame to be used in reduction.
 ;  =darkid         Dark calibration frame to be used in reduction.
 ;  =flatid         Flat calibration frame to be used in reduction.
 ;  =traceid        Trace calibration frame to be used in reduction.
@@ -51,7 +52,7 @@
 
 ; approcess reduces a sequence of images, all 3 chips, and writes out
 function approcess,nums,cmjd=cmjd,clobber=clobber,onedclobber=onedclobber,detid=detid,$
-                   darkid=darkid,flatid=flatid,traceid=traceid,psfid=psfid,modelpsf=modelpsf,$
+                   bpmid=bpmid,darkid=darkid,flatid=flatid,traceid=traceid,psfid=psfid,modelpsf=modelpsf,$
                    fluxid=fluxid,waveid=waveid,littrowid=littrowid,persistid=persistid,$
                    nocr=nocr,stp=stp,jchip=jchip,nfs=nfs,nofs=nofs,doproc=doproc,$
                    doap3dproc=doap3dproc,doap2dproc=doap2dproc,logfile=logfile,outdir=outdir,$
@@ -67,6 +68,7 @@ if n_elements(nocr) eq 0 then nocr=0
 if n_elements(nofs) eq 0 then nofs=0
 if n_elements(nfs) eq 0 then nfs=0
 if n_elements(detid) eq 0 then detid=0
+if n_elements(bpmid) eq 0 then bpmid=0
 if n_elements(darkid) eq 0 then darkid=0
 if n_elements(flatid) eq 0 then flatid=0
 if n_elements(littrowid) eq 0 then littrowid=0
@@ -97,8 +99,8 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
   ; use approcess as front end for ap3dproc and ap2dproc only 
   for ichip=j1,j2 do begin
     ; set up calibration file names
-    if darkid gt 0 then $
-      bpmcorr = apogee_filename('BPM',num=darkid,chip=chip[ichip])
+    if bpmid gt 0 then $
+      bpmcorr = apogee_filename('BPM',num=bpmid,chip=chip[ichip])
     if darkid gt 0 then $
       darkcorr = apogee_filename('Dark',num=darkid,chip=chip[ichip])
     if flatid gt 0 then $
