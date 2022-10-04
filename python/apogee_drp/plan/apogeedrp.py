@@ -281,7 +281,7 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     expinfo = np.array(expinfo)
 
     db.close()
-
+    
     return expinfo
 
 def getplanfiles(load,mjds,exist=False,logger=None):
@@ -568,7 +568,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
             base = load.filename('2D',num=num,mjd=mjd,chips=True)
             chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
             exists = [os.path.exists(chf) for chf in chfiles]
-            if exists[0]==True:  # get V_APRED (git version) from file
+            if exists[0]==True and os.path.getsize(chfiles[0])>0:  # get V_APRED (git version) from file
                 chead = fits.getheader(chfiles[0])
                 chkcal['v_apred'][i] = chead.get('V_APRED')
             if np.sum(exists)==3:
@@ -597,7 +597,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         chkcal['calfile'][i] = base
         chfiles = [base.replace(filecode+'-',filecode+'-'+ch+'-') for ch in ['a','b','c']]
         exists = [os.path.exists(chf) for chf in chfiles]
-        if exists[0]==True:  # get V_APRED (git version) from file
+        if exists[0]==True and os.path.getsize(chfiles[0])>0:  # get V_APRED (git version) from file
             chead = fits.getheader(chfiles[0])
             chkcal['v_apred'][i] = chead.get('V_APRED')
         # Overall success
@@ -3041,7 +3041,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     walltime = '336:00:00'
     # Only set cpus if you want to use less than 64 cpus
     slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn,
-             'walltime':walltime, 'notification':False}
+                 'walltime':walltime, 'notification':False}
     
     # Get software version (git hash)
     gitvers = plan.getgitvers()
