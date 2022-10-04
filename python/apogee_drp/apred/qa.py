@@ -950,14 +950,19 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         fps = True
     else:
         fps = False
+    prefix = 'ap'
+
+    if telescope == 'lco25m':
+        if int(mjd)>59808:
+            fps = True
+        else:
+            fps = False
+        prefix = 'as'
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
     n_exposures = len(ims)
-
-    prefix = 'ap'
-    if telescope == 'lco25m': prefix = 'as'
 
     # Check for existence of plateSum file
     platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps) 
@@ -1213,6 +1218,14 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         fps = True
     else:
         fps = False
+    prefix = 'ap'
+
+    if telescope == 'lco25m':
+        if int(mjd)>59808:
+            fps = True
+        else:
+            fps = False
+        prefix = 'as'
 
     n_exposures = len(ims)
     chips = np.array(['a','b','c'])
@@ -1980,6 +1993,14 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
         fps = True
     else:
         fps = False
+    prefix = 'ap'
+
+    if telescope == 'lco25m':
+        if int(mjd)>59808:
+            fps = True
+        else:
+            fps = False
+        prefix = 'as'
 
     apodir = os.environ.get('APOGEE_REDUX') + '/'
 
@@ -1999,7 +2020,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     try:
         data = apPlate['a'][11].data[::-1]
     except:
-        print("----> makeVisHTML: PROBLEM! apPlate not found for plate " + plate + ", MJD " + mjd)
+        print("----> makeVisHTML: PROBLEM! " + prefix + "Plate not found for plate " + plate + ", MJD " + mjd)
         return
     nfiber = len(data)
 
@@ -2118,7 +2139,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
         sdata['apogee_id'] = apID
         sdata['relSNR'] = ratio
         platesum = load.filename('PlateSum', plate=int(plate), mjd=mjd, fps=fps)
-        snroutfile = platesum.replace('apPlateSum', 'relSNR').replace('.fits', '.dat')
+        snroutfile = platesum.replace(prefix + 'PlateSum', 'relSNR').replace('.fits', '.dat')
         ascii.write(sdata, snroutfile, overwrite=True)
 
     # Loop over the fibers
@@ -2130,7 +2151,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             cblock = str(np.ceil(fiber / 30).astype(int))
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
-            visitplotfile = '../plots/apPlate-' + plate + '-' + mjd + '-' + cfiber + '.png'
+            visitplotfile = '../plots/' + prefix + 'Plate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             # Establish html table row background color and spectrum plot color
             bgcolor = 'white'
             if (objtype == 'SPECTROPHOTO_STD') | (objtype == 'HOT_STD'): bgcolor = '#D2B4DE'
@@ -2328,6 +2349,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
             tmp2 = plotdir + os.path.basename(visitplotfile)
             if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS'):# & (os.path.exists(tmp2)):
+                pdb.set_trace()
                 vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
             else:
                 vishtml.write('<TD align="center">')
