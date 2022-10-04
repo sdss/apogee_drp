@@ -1657,7 +1657,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #------------------------------------------------------------------------------------------
             # PLOTS 8: 3 panel mag/SNR plots for each exposure
             #----------------------------------------------------------------------------------------------
-            plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_magplots.png'
+            plotfile = prefix+'1D-'+str(plSum1['IM'][ii])+'_magplots.png'
             if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsPlots: Making "+plotfile)
 
@@ -1764,7 +1764,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #------------------------------------------------------------------------------------------
             # PLOT 9: spatial residuals for each exposure
             #----------------------------------------------------------------------------------------------
-            plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_spatialresid.png'
+            plotfile = prefix+'1D-'+str(plSum1['IM'][ii])+'_spatialresid.png'
             if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsPlots: Making "+plotfile)
 
@@ -1826,7 +1826,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             # PLOT 10: spatial sky line emission
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025sky.jpg
             #------------------------------------------------------------------------------------------
-            plotfile = 'ap1D-'+str(plSum1['IM'][gd][0])+'_skyemission.png'
+            plotfile = prefix+'1D-'+str(plSum1['IM'][gd][0])+'_skyemission.png'
             if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsPlots: Making "+plotfile)
 
@@ -1928,7 +1928,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             # PLOT 11: spatial continuum emission
             # https://data.sdss.org/sas/apogeework/apogee/spectro/redux/current/plates/5583/56257/plots/ap1D-06950025skycont.jpg
             #------------------------------------------------------------------------------------------
-            plotfile = 'ap1D-'+str(plSum1['IM'][ii])+'_skycontinuum.png'
+            plotfile = prefix+'1D-'+str(plSum1['IM'][ii])+'_skycontinuum.png'
             if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
                 print("----> makeObsPlots: Making "+plotfile)
 
