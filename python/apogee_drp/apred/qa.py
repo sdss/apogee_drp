@@ -394,7 +394,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
         # Make plots for the observation QA pages
         if makeobsplots == True:
-            q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, 
+            q = makeObsPlots(load=load, ims=ims, plate=plate, mjd=mjd, instrument=instrument, telescope=telescope,
                              survey=survey, apred=apred, flat=None, fluxid=fluxid, clobber=clobber)
 
         # Make the visit level pages
