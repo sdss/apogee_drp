@@ -708,12 +708,13 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             newpars1 = (newpars[:,m-1]+newpars[:,m+1])*0.5
         newpars[:,m] = newpars1
         # Calculate wavelength arrays from refined solution
-        x = np.zeros([3,2048])
-        for ichip,chip in enumerate(chips): 
-            x[0,:] = np.arange(2048)
-            x[1,:] = ichip+1
-            x[2,:] = 0
-            newwaves[chip][m,:] = func_multi_poly(x,*newpars1,npoly=npoly)
+        if ngroup > 1:
+            x = np.zeros([3,2048])
+            for ichip,chip in enumerate(chips): 
+                x[0,:] = np.arange(2048)
+                x[1,:] = ichip+1
+                x[2,:] = 0
+                newwaves[chip][m,:] = func_multi_poly(x,*newpars1,npoly=npoly)
     
     # Save results in apWave files
     if nosave==False:
