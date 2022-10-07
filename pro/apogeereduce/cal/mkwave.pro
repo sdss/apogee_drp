@@ -107,7 +107,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;; Check the line flux
   if avgpeakflux/sxpar(head0,'nread') lt thresh then begin
     print,'Not enough flux in ',chfile
-    stop 
+    ;;stop 
     return
   endif
   
