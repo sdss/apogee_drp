@@ -704,25 +704,27 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         newpars = allpars
 
     # Fill in values for "missing" fibers
-    missing, = np.where(newpars[3,:]==0)
-    if len(missing)>0:
-        print('Filling in values for '+str(len(missing))+' missing fibers: '+','.join(np.char.array(rows[missing]).astype(str)))
-    for m in missing:
-        if m==0:
-            newpars1 = (newpars[:,m+1]+newpars[:,m+2])*0.5
-        elif m==len(rows)-1:
-            newpars1 = (newpars[:,m-2]+newpars[:,m-1])*0.5
-        else:
-            newpars1 = (newpars[:,m-1]+newpars[:,m+1])*0.5
-        newpars[:,m] = newpars1
-        # Calculate wavelength arrays from refined solution
-        if ngroup > 1:
-            x = np.zeros([3,2048])
-            for ichip,chip in enumerate(chips): 
-                x[0,:] = np.arange(2048)
-                x[1,:] = ichip+1
-                x[2,:] = 0
-                newwaves[chip][m,:] = func_multi_poly(x,*newpars1,npoly=npoly)
+    if ngroup>1:
+        missing, = np.where(newpars[3,:]==0)
+        notmissing, = np.where(newpars[3,:] != 0)    
+        if len(missing)>0 and len(notmissing)>100:
+            print('Filling in values for '+str(len(missing))+' missing fibers: '+','.join(np.char.array(rows[missing]).astype(str)))
+            for m in missing:
+                if m==0:
+                    newpars1 = (newpars[:,m+1]+newpars[:,m+2])*0.5
+                elif m==len(rows)-1:
+                    newpars1 = (newpars[:,m-2]+newpars[:,m-1])*0.5
+                else:
+                    newpars1 = (newpars[:,m-1]+newpars[:,m+1])*0.5
+                newpars[:,m] = newpars1
+                # Calculate wavelength arrays from refined solution
+                if ngroup > 1:
+                    x = np.zeros([3,2048])
+                    for ichip,chip in enumerate(chips): 
+                        x[0,:] = np.arange(2048)
+                        x[1,:] = ichip+1
+                        x[2,:] = 0
+                        newwaves[chip][m,:] = func_multi_poly(x,*newpars1,npoly=npoly)
     
     # Save results in apWave files
     if nosave==False:
