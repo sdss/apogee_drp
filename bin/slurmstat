@@ -77,7 +77,7 @@ if __name__ == '__main__' :
             print(t.script)
             print(t.outfile)
             nrunning += 1
-    print(str(nrunning),' tasks still running')
+    print(str(nrunning)+' of '+str(ljob.ntask)+' tasks still running')
     
     #import pdb; pdb.set_trace()
     
