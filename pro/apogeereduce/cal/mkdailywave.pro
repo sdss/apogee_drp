@@ -127,6 +127,10 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
 
     ;; Check that the data is okay
     chfile = apogee_filename('2D',num=waveid[i],chip='b')
+    if file_test(chfile) eq 0 then begin
+      print,chfile,' NOT FOUND'
+      continue
+    endif
     head0 = headfits(chfile,exten=0)
     FITS_READ,chfile,im1,head1
     ;; UNE, bright line at X=1452
@@ -150,7 +154,7 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
       print,'Not enough flux in ',chfile
       continue
     endif
-
+      
     MAKECAL,wave=waveid[i],file=dirs.libdir+'cal/'+dirs.instrument+'-wave.par',$
             /nofit,unlock=unlock,librarypsf=psflibrary,modelpsf=modelpsf
   endfor

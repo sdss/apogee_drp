@@ -576,20 +576,28 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 if verbose: 
                     print('Niter: ', niter, 'row: ', row, 'ngroup: ', ngroup, 'nlines: ', len(thisrow), 'gd: ', len(gd))
                     print(pars)
-                popt,pcov = curve_fit(func_multi_poly,x[:,gd],y[gd],p0=pars,bounds=bounds)
+                estimates = copy.copy(pars)
+                popt,pcov = curve_fit(func_multi_poly,x[:,gd],y[gd],p0=estimates,bounds=bounds)
                 pars = copy.copy(popt)
                 # Sometimes the chip gaps are horrible off for some groups
                 #  replace these with "average" values, so we can better remove the outlier points
-                bdchip1, = np.where(np.abs(pars[npoly::3]) > 1000)
-                gdchip1, = np.where(np.abs(pars[npoly::3]) < 1000)                
-                if len(bdchip1)>0:
-                    print(str(len(bdchip1))+' chip gaps1 are bad',bdchip1)
-                    pars[npoly+3*bdchip1] = np.median(pars[npoly::3][gdchip1])
-                bdchip2, = np.where(np.abs(pars[npoly+2::3]) > 1000)
-                gdchip2, = np.where(np.abs(pars[npoly+2::3]) < 1000)                
-                if len(bdchip2)>0:
-                    print(str(len(bdchip2))+' chip gaps1 are bad',bdchip2)                    
-                    pars[npoly+2+3*bdchip2] = np.median(pars[npoly+2::3][gdchip2])
+                if ngroup>1:
+                    bdchip1, = np.where(np.abs(pars[npoly::3]) > 1000)
+                    gdchip1, = np.where(np.abs(pars[npoly::3]) < 1000)                
+                    if len(bdchip1)>0:
+                        print(str(len(bdchip1))+' chip gaps1 are bad',bdchip1)
+                        if len(gdchip1)>0:
+                            pars[npoly+3*bdchip1] = np.median(pars[npoly::3][gdchip1])
+                        else:
+                            pars[npoly+3*bdchip1] = pars0[4]                        
+                    bdchip2, = np.where(np.abs(pars[npoly+2::3]) > 1000)
+                    gdchip2, = np.where(np.abs(pars[npoly+2::3]) < 1000)                
+                    if len(bdchip2)>0:
+                        print(str(len(bdchip2))+' chip gaps1 are bad',bdchip2)
+                        if len(gdchip2)>0:
+                            pars[npoly+2+3*bdchip2] = np.median(pars[npoly+2::3][gdchip2])
+                        else:
+                            pars[npoly+2+3*bdchip2] = pars0[6]
                 # Now calculate the residuals
                 res = y-func_multi_poly(x,*pars)
                 if verbose: 
@@ -696,25 +704,27 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         newpars = allpars
 
     # Fill in values for "missing" fibers
-    missing, = np.where(newpars[3,:]==0)
-    if len(missing)>0:
-        print('Filling in values for '+str(len(missing))+' missing fibers: '+','.join(np.char.array(rows[missing]).astype(str)))
-    for m in missing:
-        if m==0:
-            newpars1 = (newpars[:,m+1]+newpars[:,m+2])*0.5
-        elif m==len(rows)-1:
-            newpars1 = (newpars[:,m-2]+newpars[:,m-1])*0.5
-        else:
-            newpars1 = (newpars[:,m-1]+newpars[:,m+1])*0.5
-        newpars[:,m] = newpars1
-        # Calculate wavelength arrays from refined solution
-        if ngroup > 1:
-            x = np.zeros([3,2048])
-            for ichip,chip in enumerate(chips): 
-                x[0,:] = np.arange(2048)
-                x[1,:] = ichip+1
-                x[2,:] = 0
-                newwaves[chip][m,:] = func_multi_poly(x,*newpars1,npoly=npoly)
+    if ngroup>1:
+        missing, = np.where(newpars[3,:]==0)
+        notmissing, = np.where(newpars[3,:] != 0)    
+        if len(missing)>0 and len(notmissing)>100:
+            print('Filling in values for '+str(len(missing))+' missing fibers: '+','.join(np.char.array(rows[missing]).astype(str)))
+            for m in missing:
+                if m==0:
+                    newpars1 = (newpars[:,m+1]+newpars[:,m+2])*0.5
+                elif m==len(rows)-1:
+                    newpars1 = (newpars[:,m-2]+newpars[:,m-1])*0.5
+                else:
+                    newpars1 = (newpars[:,m-1]+newpars[:,m+1])*0.5
+                newpars[:,m] = newpars1
+                # Calculate wavelength arrays from refined solution
+                if ngroup > 1:
+                    x = np.zeros([3,2048])
+                    for ichip,chip in enumerate(chips): 
+                        x[0,:] = np.arange(2048)
+                        x[1,:] = ichip+1
+                        x[2,:] = 0
+                        newwaves[chip][m,:] = func_multi_poly(x,*newpars1,npoly=npoly)
     
     # Save results in apWave files
     if nosave==False:
@@ -1059,12 +1069,19 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                 # Fit robust line to the offsets, and try to refit the outliers with better guess
                 rowind = np.array(rowind)
                 gdind, = np.where(linestr['failed'][rowind]==0)
-                coef1,absdev = ladfit.ladfit(linestr['xpix0'][rowind[gdind]],linestr['pixel'][rowind[gdind]])
-                yfit = np.poly1d(np.flip(coef1))(linestr['xpix0'][rowind])
-                res1 = linestr['pixel'][rowind]-yfit
-                sig1 = dln.mad(res1)
-                gd1, = np.where((np.abs(res1) <= 3.5*sig1) & (linestr['failed'][rowind]==0))
-                bd1, = np.where((np.abs(res1) > 3.5*sig1) | (linestr['failed'][rowind]==1))
+                if len(gdind)>0:
+                    coef1,absdev = ladfit.ladfit(linestr['xpix0'][rowind[gdind]],linestr['pixel'][rowind[gdind]])
+                    yfit = np.poly1d(np.flip(coef1))(linestr['xpix0'][rowind])
+                    res1 = linestr['pixel'][rowind]-yfit
+                    sig1 = dln.mad(res1)
+                    gd1, = np.where((np.abs(res1) <= 3.5*sig1) & (linestr['failed'][rowind]==0))
+                    bd1, = np.where((np.abs(res1) > 3.5*sig1) | (linestr['failed'][rowind]==1))                    
+                else:
+                    res1 = linestr['pixel'][rowind]*0.0
+                    sig1 = 999999.
+                    coef1 = [np.nan,np.nan]
+                    gd1 = []
+                    bd1 = []
                 # Refit outliers with better guesses
                 if len(bd1)>0:
                     if verbose: print('Refitting ',len(bd1),'outliers with better initial guesses')
@@ -1108,7 +1125,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                 if 'WAVEGROUP' in lines.dtype.names:
                     grplineind, = np.where((lines['CHIPNUM'] == ichip+1) & (lines['USEWAVE']==1) & (lines['WAVEGROUP']>-1))
                 else: grplineind=[]
-                if len(grplineind)>0:
+                if len(grplineind)>0 and np.isfinite(coef1[0]):
                     if verbose: print('Refitting ',len(grplineind),' lines that are in groups with peakfit_multi()')
                     for k in range(len(grplineind)):
                         iline = grplineind[k]
@@ -1227,9 +1244,15 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
             for chip in chips: waves1[chip] = np.tile(np.polyval(coef1[chip],pixels),(300,1))
             # Rerun each bad row separately
             for ibad,badrow in enumerate(badrows):
-                newlinestr = findlines(frame,[badrow],waves1,lines,verbose=False,estsig=1,plot=False)
-                ind, = np.where(linestr['row']==badrow)
-                linestr[ind] = newlinestr   # number of lines should be identical
+                try:
+                    newlinestr = findlines(frame,[badrow],waves1,lines,verbose=False,estsig=1,plot=False)
+                    ind, = np.where(linestr['row']==badrow)
+                    linestr[ind] = newlinestr   # number of lines should be identical                    
+                except:
+                    traceback.print_exc()
+                    print('problems in refitting bad rows')
+                    import pdb; pdb.set_trace()
+
     
     print('dt = ',time.time()-t0,' seconds')
     
