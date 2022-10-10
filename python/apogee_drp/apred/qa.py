@@ -2186,6 +2186,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     apstarfile = load.filename('Star', obj=objid)
                     if os.path.exists(apstarfile):
                         apstarheader = fits.getheader(apstarfile)
+                        pdb.set_trace()
                         vrad = apstarheader['VRAD']
                         ncomp = apstarheader['N_COMP']
                         rvteff = apstarheader['RV_TEFF']
