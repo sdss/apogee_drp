@@ -98,7 +98,7 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
   ;; Check that the calibration file was successfully created
   tellfiles = apogee_filename('Telluric',num=tellid,chip=chips)
   if total(file_test(outfile),/int) eq 3 then begin
-    print,'Telluric file apTelluric-'+strtrim(tellid,2)++' completely successfully'
+    print,'Telluric file apTelluric-'+strtrim(tellid,2)+' completely successfully'
     openw,lock,/get_lun,telldir+file+'.dat'
     free_lun,lock
   endif else print,'PROBLEMS with apTelluric-'+strtrim(tellid,2)+' files'

@@ -209,7 +209,6 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     """
     Get all exposure for the MJDs.
 
-
     Parameters
     ----------
     load : ApLoad object
@@ -1227,7 +1226,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     if linkvers:
         logger.info('Creating calibration product symlinks to version >>'+str(linkvers)+'<<')
         cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','telluric','sparse','fiber','modelpsf','fpi']:
+        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','sparse','fiber','modelpsf','fpi']:
             for obs in ['apogee-n','apogee-s']:
                 if obs=='apogee-n':
                     prefix = 'ap'
@@ -1925,11 +1924,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))        
         else:
             logger.info('No master LSF calibration files need to be run')
-        del queue    
-
-    # make aptellurics here??
-
-    
+        del queue
+        
     return chkmaster
     
     
@@ -2077,6 +2073,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
     observatory = telescope[0:3]
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     chips = ['a','b','c']
+    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
+    calfile = caldir+load.instrument+'.par' 
     
     # Get exposures
     logger.info('Getting exposure information')
@@ -2113,8 +2111,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
             os.makedirs(calplandir)
 
     # Loop over calibration types
-    calnames = ['psf','flux','arcs','dailywave','fpi']
-    filecodes = ['PSF','Flux','Wave','Wave','WaveFPI']
+    calnames = ['psf','flux','arcs','dailywave','fpi','telluric']
+    filecodes = ['PSF','Flux','Wave','Wave','WaveFPI','Telluric']
     chkcal = None
     for i,ctype in enumerate(calnames):
         # Only run for caltypes that we asked for
@@ -2165,15 +2163,31 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 else:
                     calinfo = []
                     ncal = 0
-            elif ctype=='telluric'::
+            elif ctype=='telluric':
                 ncal = len(mjds)
-                calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',(str,20)),('observatory',(str,3)),
+                calinfo = np.zeros(ncal,dtype=np.dtype([('num',(str,100)),('mjd',int),('exptype',(str,20)),('observatory',(str,3)),
                                                         ('configid',int),('designid',int),('fieldid',int)]))
-                calinfo['num'] = mjds
                 calinfo['mjd'] = mjds
                 calinfo['exptype'] = 'telluric'
-                calinfo['observatory'] = load.observatory
+                calinfo['observatory'] = load.observatory                
+                for m in mjds:
+                    caldata = mkcal.getcal(calfile,m)
+                    lsfid = caldata['lsf']
+                    if lsfid is None:
+                        logger.info('No LSF calibration file for MJD='+str(m))
+                        continue
+                    calinfo['num'][i] = str(m)+'-'+str(lsfid)
+                # Remove nights with no issues
+                goodtell, = np.where(calinfo['num']!='')
+                if len(goodtell)==0:
+                    logger.info('No telluric calibration files to run')
+                    calinfo = []
+                    ncal = 0
+                else:
+                    calinfo = calinfo[goodtell]
+                    ncal = len(calinfo)
 
+            import pdb; pdb.set_trace()
                     
             logger.info(str(ncal)+' file(s)')
 
