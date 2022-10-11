@@ -223,7 +223,6 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             if makemonitor == True:
                 q = monitor.monitor()
 
-    pdb.set_trace()
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
     for i in range(nsciplans):
@@ -2187,7 +2186,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     apstarfile = load.filename('Star', obj=objid)
                     if os.path.exists(apstarfile):
                         apstarheader = fits.getheader(apstarfile)
-                        vrad = apstarheader['VRAD']
+                        try: vrad = apstarheader['VRAD']
+                        except: vrad = apstarheader['VHBARY']
                         ncomp = apstarheader['N_COMP']
                         rvteff = apstarheader['RV_TEFF']
                         rvlogg = apstarheader['RV_LOGG']
