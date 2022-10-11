@@ -516,7 +516,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
                       ('instrument',(str,20)),('telescope',(str,10)),('mjd',int),('caltype',(str,30)),
                       ('plate',int),('configid',(str,20)),('designid',(str,20)),('fieldid',(str,20)),
                       ('pbskey',(str,50)),('checktime',(str,100)),
-                      ('num',int),('calfile',(str,300)),('success3d',bool),('success2d',bool),('success',bool)])
+                      ('num',(str,100)),('calfile',(str,300)),('success3d',bool),('success2d',bool),('success',bool)])
     chkcal = np.zeros(ncal,dtype=dtype)
 
     # Loop over the files
@@ -2170,13 +2170,13 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 calinfo['mjd'] = mjds
                 calinfo['exptype'] = 'telluric'
                 calinfo['observatory'] = load.observatory                
-                for m in mjds:
-                    caldata = mkcal.getcal(calfile,m)
+                for j,m in enumerate(mjds):
+                    caldata = mkcal.getcal(calfile,m,verbose=False)
                     lsfid = caldata['lsf']
                     if lsfid is None:
                         logger.info('No LSF calibration file for MJD='+str(m))
                         continue
-                    calinfo['num'][i] = str(m)+'-'+str(lsfid)
+                    calinfo['num'][j] = str(m)+'-'+str(lsfid)
                 # Remove nights with no issues
                 goodtell, = np.where(calinfo['num']!='')
                 if len(goodtell)==0:
@@ -2186,8 +2186,6 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 else:
                     calinfo = calinfo[goodtell]
                     ncal = len(calinfo)
-
-            import pdb; pdb.set_trace()
                     
             logger.info(str(ncal)+' file(s)')
 
@@ -2261,7 +2259,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                         #if fps: cmd1 += ' --librarypsf'
                         logfile1 = calplandir+'/apTelluric-'+str(num1)+'_pbs.'+logtime+'.log' 
                     logfiles.append(logfile1)
-                    logger.info('Calibration file %d : %s %d' % (j+1,ctype,num1))
+                    logger.info('Calibration file %d : %s %s' % (j+1,ctype,str(num1)))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
                     queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))

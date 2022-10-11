@@ -194,20 +194,21 @@ def readcal(calfile):
     return caldict
 
 
-def parsecaldict(caldict,mjd):
+def parsecaldict(caldict,mjd,verbose=True):
     """ Small helper function for getcal() to select the entry in a calibration
     dictionary that is valid for a MJD."""
     gd,ngd = dln.where( (mjd >= caldict['mjd1']) & (mjd <= caldict['mjd2']) )
     if ngd>0:
        if ngd>1:
           gd = gd[-1]
-          print('Multiple cal products found for mjd '+str(mjd)+' will use last: '+caldict['name'][gd])
+          if verbose:
+             print('Multiple cal products found for mjd '+str(mjd)+' will use last: '+caldict['name'][gd])
        return caldict['name'][gd]
     else:
        return None
 
 
-def getcal(calfile,mjd):
+def getcal(calfile,mjd,verbose=True):
     """ Return the needed calibration products for a given night."""
 
     #caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
@@ -220,7 +221,7 @@ def getcal(calfile,mjd):
     caldict = OrderedDict()
     for caltype in allcaldict.keys():
        if allcaldict[caltype] is not None:
-          val = parsecaldict(allcaldict[caltype],mjd)
+          val = parsecaldict(allcaldict[caltype],mjd,verbose=verbose)
           if (caltype=='fixfiber') or (caltype=='badfiber'):
              val = getnums(val)  # expand list
           if type(val) is np.ndarray:
