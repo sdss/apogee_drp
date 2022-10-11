@@ -2044,7 +2044,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
        Dictionary of slurmpars settings.
     caltypes : list, optional
        List of calibration types to run.  The default is all 5 of them.
-       ['psf','flux','arcs','dailywave','fpi']
+       ['psf','flux','arcs','dailywave','fpi','telluric']
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -2066,7 +2066,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
         logger = dln.basiclogger()
 
     if caltypes is None:
-        caltypes = ['psf','flux','arcs','dailywave','fpi']
+        caltypes = ['psf','flux','arcs','dailywave','fpi','telluric']
     else:
         caltypes = [c.lower() for c in caltypes]
         if 'wave' in caltypes:
@@ -2165,6 +2165,15 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 else:
                     calinfo = []
                     ncal = 0
+            elif ctype=='telluric'::
+                ncal = len(mjds)
+                calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',(str,20)),('observatory',(str,3)),
+                                                        ('configid',int),('designid',int),('fieldid',int)]))
+                calinfo['num'] = mjds
+                calinfo['mjd'] = mjds
+                calinfo['exptype'] = 'telluric'
+                calinfo['observatory'] = load.observatory
+
                     
             logger.info(str(ncal)+' file(s)')
 
@@ -2233,6 +2242,10 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                         logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
                         if os.path.exists(os.path.dirname(logfile1))==False:
                             os.makedirs(os.path.dirname(logfile1))
+                    elif ctype=='telluric':  # dailywave
+                        cmd1 += ' --telluric '+str(num1)
+                        #if fps: cmd1 += ' --librarypsf'
+                        logfile1 = calplandir+'/apTelluric-'+str(num1)+'_pbs.'+logtime+'.log' 
                     logfiles.append(logfile1)
                     logger.info('Calibration file %d : %s %d' % (j+1,ctype,num1))
                     logger.info('Command : '+cmd1)

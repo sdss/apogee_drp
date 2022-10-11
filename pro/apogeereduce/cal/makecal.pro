@@ -41,7 +41,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
             response=response,mjd=mjd,full=full,newwave=newwave,nskip=nskip,$
             average=average,clobber=clobber,vers=vers,telescope=telescope,$
             nofit=nofit,pl=pl,unlock=unlock,fpi=fpi,librarypsf=librarypsf,$
-            dailywave=dailywave,modelpsf=modelpsf
+            dailywave=dailywave,telluric=telluric,modelpsf=modelpsf
 
   if keyword_set(vers) and keyword_set(telescope) then apsetver,vers=vers,telescope=telescope
   dirs = getdir(apo_dir,cal_dir,spectro_dir,apo_vers,lib_dir)
@@ -605,6 +605,29 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     endif
   endif
 
+  ;; Make daily telluric calibration file
+  ;;-------------------------------------
+  if keyword_set(telluric) then begin
+    print,'makecal telluric: ', telluric
+    dir = apogee_filename('Telluric',num=telluric,/nochip,/dir)
+    file = dir+dirs.prefix+'Telluric-'+strtrim(telluric,2)+'.fits'
+    allfiles = dir+dirs.prefix+'Telluric-'+chips+'-'+telluric+'.fits'
+    allfiles = [allfiles,dir+dirs.prefix+'Telluric-'+telluric+'.dat']
+    if total(file_test(allfiles)) eq 4 and not keyword_set(clobber) then begin
+      print,' telluric file: ',file,' already made'
+      return
+    endif
+    waveid = long((strsplit(telluric,'-',/extract))[0])
+    lsfid = long((strsplit(telluric,'-',/extract))[1])
+    if waveid lt 1e7 then begin
+       MAKECAL,dailywave=waveid,unlock=unlock
+    endif else begin
+       MAKECAL,wave=waveid,unlock=unlock
+    endelse
+    MAKECAL,lsf=lsfid,unlock=unlock
+    MKTELLURIC,telluric,clobber=clobber,unlock=unlock
+  endif
+  
   ;; Make LSF calibration file
   ;;--------------------------
   if keyword_set(lsf) then begin

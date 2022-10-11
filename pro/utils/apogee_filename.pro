@@ -26,7 +26,6 @@ if n_elements(keywords) gt 0 then if tag_exist(keywords,'plate') and not tag_exi
    keywords=create_struct(keywords,'FIELD',apogee_field(0,keywords.plate))
 
 if keyword_set(nochip) then chip='-asdf'
-
 if n_elements(chip) le 1 then begin
   files=sdss_filename(sdsstype,prefix=prefix,chip=chip,num=num,mjd=mjd,apred=dirs.apred,telescope=dirs.telescope,instrument=dirs.instrument,_EXTRA=keywords)
   if keyword_set(nochip) then begin

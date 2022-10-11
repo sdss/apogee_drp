@@ -1,4 +1,5 @@
-function aptelluric_convolve,frame,fiber=fiber,clobber=clobber,convonly=convonly,chip=chip
+function aptelluric_convolve,frame,fiber=fiber,clobber=clobber,$
+                             convonly=convonly,chip=chip,unlock=unlock
 
 ;+
 ;
@@ -52,8 +53,15 @@ chips=['a','b','c']
 outfile=cal_dir+'telluric/'+dirs.prefix+'Telluric-'+chips+'-'+waveid+'-'+lsfid+'.fits'
 
 ; wait if another process is already working on this frame
-lockfile=cal_dir+'telluric/'+dirs.prefix+'Telluric-'+waveid+'-'+lsfid+'.lock'
-while file_test(lockfile) do apwait,lockfile,10
+lockfile = cal_dir+'telluric/'+dirs.prefix+'Telluric-'+waveid+'-'+lsfid+'.lock'
+if not keyword_set(unlock) then begin
+  while file_test(lockfile) do begin
+    if keyword_set(nowait) then return,1
+    apwait,lockfile,10
+  endwhile
+endif else begin
+  if file_test(lockfile) then file_delete,lockfile,/allow
+endelse
 
 ; does convolved telluric file already exist? If not, make it!
 if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
@@ -118,9 +126,16 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
   endelse
   for j=j1,j2 do begin
 
-    ; wait if another process is already working on this frame
-    while file_test(outfile[j]+'.lock') do apwait,outfile[j]+'.lock',10
-
+    ;; wait if another process is already working on this frame
+    lockfile1 = outfile[j]+'.lock'
+    if not keyword_set(unlock) then begin
+      while file_test(lockfile1) do begin
+        apwait,lockfile1,10
+      endwhile
+    endif else begin
+       if file_test(lockfile1) then file_delete,lockfile1,/allow
+    endelse
+    
     ; Does the output file already exist?
     if not keyword_set(nowrite) and file_test(outfile[j]) eq 1 and not keyword_set(clobber) then begin
       error = outfile[j]+' already exists and CLOBBER=0'
@@ -129,7 +144,7 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
     endif
 
     ; open lock file to prevent multiple processes from working on same frame
-    openw,lock,/get_lun,outfile[j]+'.lock'
+    openw,lock,/get_lun,lockfile1
     free_lun,lock
  
     ; get frame size 
@@ -242,7 +257,7 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
 
     endfor  ; end airmass
     ; remove lock file
-    file_delete,outfile[j]+'.lock'
+    file_delete,lockfile1
 
     nextchip:
   endfor
