@@ -16,9 +16,9 @@ from __future__ import unicode_literals
 import argparse
 import os
 import sys
-import subprocess
 import pdb
 import slurm as slurm
+import numpy as np
 from slurm import queue as pbsqueue
 from slurm.models import Job,Member
 from os import getlogin, getuid, getgid, makedirs, chdir
@@ -31,7 +31,8 @@ if __name__ == '__main__' :
         prog=os.path.basename(sys.argv[0]),
         description='Check status of slurm jobs')
     parser.add_argument('-u','--user', type=str, nargs=1, help='Username')
-    parser.add_argument('--key', type=str, nargs=1, help='Job key')
+    parser.add_argument('-l','--latest', action='store_true', help='Show results of latest job')
+    parser.add_argument('-k','--key', type=str, nargs=1, default='', help='Job key')
     args = parser.parse_args()
     
     # Get the username
@@ -62,22 +63,48 @@ if __name__ == '__main__' :
     # status
     # status = ['created','uncommitted', 'committed', 'submitted', 'running', 'complete']
 
-    # I'm looking for 4
-    job = Job.query.filter(Job.member_id==member.id).filter(Job.status==4).all()
-    ljob = job[-1]  # last job
-    print('Job: ',ljob.key)
-    print('Label: ',ljob.label)
-    print('Created: ',ljob.created)
-    print('Ntasks: ',ljob.ntask)
+    # I'm looking for 4, which means it's still running
+    job0 = Job.query.filter(Job.member_id==member.id).filter(Job.status==4).all()
+    # sort by time
+    timestamp = [j.created.timestamp() for j in job0]
+    si = np.argsort(np.array(timestamp))
+    job = []
+    for i in range(len(job0)):
+        job.append(job0[si[i]])
+    
+    # Show all active jobs
+    if args.latest==False and args.key=='':
+        print(str(len(job))+' active jobs')
+        print(' Number  Label                                 Key                         Date Created          Ntasks Nrunning  Perc. Complete')
+        for i in range(len(job)):
+            job1 = job[i]
+            tstatus = [t.status for t in job1.tasks]
+            nrunning = np.sum(np.array(tstatus)==4)
+            pcomplete = ((job1.ntask-nrunning)/job1.ntask)*100
+            print('{:5d}   {:20s} {:40s} {:25s} {:6d} {:6d} {:7.1f}'.format(i+1,job1.label,job1.key,job1.created.ctime(),job1.ntask,nrunning,pcomplete))
+        sys.exit()
+
+    # Selecting job with key input
+    if args.key != '':
+        keys = [j.key for j in job]
+        ind, = np.where(np.array(keys)==args.key)
+        job1 = job[ind[0]]
+    else:
+        job1 = job[-1]  # last job
+        
+    print('Job: ',job1.key)
+    print('Label: ',job1.label)
+    print('Created: ',job1.created)
+    print('Ntasks: ',job1.ntask)
     nrunning = 0
-    for i in range(len(ljob.tasks)):
-        t = ljob.tasks[i]
+    for i in range(len(job1.tasks)):
+        t = job1.tasks[i]
         if t.status==4:
             print(i+1,t.id)
             print(t.script)
             print(t.outfile)
             nrunning += 1
-    print(str(nrunning)+' of '+str(ljob.ntask)+' tasks still running')
+    print(str(nrunning)+' of '+str(job1.ntask)+' tasks still running')
     
     #import pdb; pdb.set_trace()
     
