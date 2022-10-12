@@ -10,6 +10,39 @@ from . import apload
 from astropy.io import fits
 
 
+def file_status(filename):
+    """
+    Check on a file's status: exists, size, mtime, okay (not currupted/truncated)
+    """
+
+    if type(filename) is str:
+        files = [filename]
+    else:
+        files = filename
+    nfiles = len(files)
+    out = np.zeros(nfiles,dtype=np.dtype([('name',(str,500)),('exists',bool),('mtime',int),('size',int),('okay',bool)]))
+    out['name'] = files
+    for i in range(nfiles):
+        fil = files[i]
+        exists = os.path.exists(fil)
+        out['exists'][i] = exists
+        if exists:
+            out['size'][i] = os.path.getsize(fil)
+            out['mtime'][i] = os.path.getmtime(fil)
+            if fil.endswith('fits'):
+                try:
+                    hdu = fits.open(fil,checksum=True)
+                    v = hdu.verify(option='exception')
+                    hdu.close()
+                    out['okay'][i] = True
+                except:
+                    out['okay'][i] = False
+            else:
+                # Not sure how to check non-FITS files
+                out['okay'][i] = True
+
+    return out
+                
 def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
     """
     Get header information about raw APOGEE files.

@@ -400,8 +400,8 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
             chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-b-')]
         else:
             chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-'+ch+'-') for ch in ['a','b','c']]
-        exists = [os.path.exists(chf) for chf in chfiles]
-        if exists[0]==True:  # get V_APRED (git version) from file
+        chinfo = info.file_status(chfiles)
+        if chinfo['okay'][0]:  # get V_APRED (git version) from file
             chead = fits.getheader(chfiles[0])
             chkmaster['v_apred'][i] = chead.get('V_APRED')
         # Overall success
@@ -469,8 +469,8 @@ def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=Non
         planfile = os.path.dirname(outfile)+'/logs/'+os.path.basename(outfile)
         planfile = outfile.replace('2D','3DPlan').replace('.fits','.yaml')
         chk3d['planfile'][i] = planfile
-        exist = [os.path.exists(o) for o in outfiles]
-        if exist[0]:
+        outinfo = info.file_status(outfiles)
+        if outinfo['okay'][0]:
             head = fits.getheader(outfiles[0])
             chk3d['v_apred'][i] = head.get('V_APRED')
             head = fits.getheader(outfiles[0])
@@ -566,11 +566,11 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         if caltype != 'DailyWave':
             base = load.filename('2D',num=num,mjd=mjd,chips=True)
             chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
-            exists = [os.path.exists(chf) for chf in chfiles]
-            if exists[0]==True and os.path.getsize(chfiles[0])>0:  # get V_APRED (git version) from file
+            chinfo3 = info.file_status(chfiles)
+            if chinfo3['okay'][0] and chinfo3['size'][0]>0: # get V_APRED (git version) from file 
                 chead = fits.getheader(chfiles[0])
                 chkcal['v_apred'][i] = chead.get('V_APRED')
-            if np.sum(exists)==3:
+            if np.sum(chinfo3['okay'])==3:
                 chkcal['success3d'][i] = True
         else:
             chkcal['success3d'][i] = True
@@ -579,8 +579,8 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         if caltype != 'DailyWave':
             base = load.filename('1D',num=num,mjd=mjd,chips=True)
             chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
-            exists = [os.path.exists(chf) for chf in chfiles]
-            if np.sum(exists)==3:
+            chinfo2 = info.file_status(chfiles)
+            if np.sum(chinfo2['okay'])==3:
                 chkcal['success2d'][i] = True
         else:
             chkcal['success2d'][i] = True
@@ -595,12 +595,12 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
             base = load.filename(caltype,num=num,chips=True)
         chkcal['calfile'][i] = base
         chfiles = [base.replace(filecode+'-',filecode+'-'+ch+'-') for ch in ['a','b','c']]
-        exists = [os.path.exists(chf) for chf in chfiles]
-        if exists[0]==True and os.path.getsize(chfiles[0])>0:  # get V_APRED (git version) from file
+        chinfo = info.file_status(chfiles)
+        if chinfo['okay'][0] and chinfo['size'][0]>0:   # get V_APRED (git version) from file
             chead = fits.getheader(chfiles[0])
             chkcal['v_apred'][i] = chead.get('V_APRED')
         # Overall success
-        if np.sum(exists)==3:
+        if np.sum(chinfo['okay'])==3:
             chkcal['success'][i] = True
 
         if verbose:
@@ -698,12 +698,12 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkexp1['proctype'][cnt] = 'AP3D'
             base = load.filename('2D',num=num,mjd=mjd,chips=True)
             chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
-            exists = [os.path.exists(chf) for chf in chfiles]
-            if exists[0]==True:  # get V_APRED (git version) from file
+            chinfo3 = info.file_status(chfiles)
+            if chinfo3['okay'][0]:  # get V_APRED (git version) from file
                 chead = fits.getheader(chfiles[0])
                 chkexp1['v_apred'][cnt] = chead.get('V_APRED')
             chkexp1['checktime'][cnt] = str(datetime.now())
-            if np.sum(exists)==3:
+            if np.sum(chinfo3['okay'])==3:
                 chkexp1['success'][cnt] = True
             cnt += 1  # increment counter
             # AP2D
@@ -714,11 +714,11 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 chkexp1['proctype'][cnt] = 'AP2D'
                 base = load.filename('1D',num=num,mjd=mjd,chips=True)
                 chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
-                exists = [os.path.exists(chf) for chf in chfiles]
-                if exists[0]==True:  # get V_APRED (git version) from file
+                chinfo2 = info.file_status(chfiles)
+                if chinfo2['okay'][0]:  # get V_APRED (git version) from file
                     chead = fits.getheader(chfiles[0])
                     chkexp1['v_apred'][cnt] = chead.get('V_APRED')
-                if np.sum(exists)==3:
+                if np.sum(chinfo2['okay'])==3:
                     chkexp1['success'][cnt] = True
                 cnt += 1  # increment counter
             # APCframe
@@ -729,11 +729,11 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
                 chkexp1['proctype'][cnt] = 'APCFRAME'
                 base = load.filename('Cframe',num=num,mjd=mjd,plate=plate,chips=True,field=field)
                 chfiles = [base.replace('Cframe-','Cframe-'+ch+'-') for ch in ['a','b','c']]
-                exists = [os.path.exists(chf) for chf in chfiles]
-                if exists[0]==True:  # get V_APRED (git version) from file
+                chinfo = info.file_status(chfiles)
+                if chinfo['okay'][0]:  # get V_APRED (git version) from file
                     chead = fits.getheader(chfiles[0])
                     chkexp1['v_apred'][cnt] = chead.get('V_APRED')
-                if np.sum(exists)==3:
+                if np.sum(chinfo['okay'])==3:
                     chkexp1['success'][cnt] = True
                 cnt += 1  # increment counter
         # Trim extra elements
@@ -785,11 +785,11 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkap1['applate_success'] = False
             base = load.filename('Plate',plate=plate,mjd=mjd,chips=True,field=field)
             chfiles = [base.replace('Plate-','Plate-'+ch+'-') for ch in ['a','b','c']]
-            exists = [os.path.exists(chf) for chf in chfiles]
-            if exists[0]==True:  # get V_APRED (git version) from file
+            chinfo = info.file_status(chfiles)
+            if chinfo['okay'][0]:  # get V_APRED (git version) from file
                 chead = fits.getheader(chfiles[0])
                 chkap1['v_apred'] = chead.get('V_APRED')
-            if np.sum(exists)==3:
+            if np.sum(chinfo['okay'])==3:
                 chkap1['applate_success'] = True
             # apVisit
             base = load.filename('Visit',plate=plate,mjd=mjd,fiber=1,field=field) 
