@@ -2965,9 +2965,11 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
         message += 'Plan: %d plan files successfully made<br> \n' % len(planfiles)
 
     # APRED step
-    if 'apred' in steps and chkapred is not None:
-        ind, = np.where(chkapred['success']==True)
-        message += 'APRED: %d/%d visits successfully processed<br> \n' % (len(ind),len(chkapred))
+    if 'apred' in steps and chkexp is not None and chkvisit is not None:
+        inde, = np.where(chexp['success']==True)
+        message += 'APRED: %d/%d exposures successfully processed<br> \n' % (len(inde),len(chkexp))
+        indv, = np.where(chkvisit['success']==True)
+        message += 'APRED: %d/%d visits successfully processed<br> \n' % (len(indv),len(chkvisit))
 
     # RV step
     if 'rv' in steps and chkrv is not None:
