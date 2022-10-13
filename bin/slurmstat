@@ -87,7 +87,10 @@ if __name__ == '__main__' :
     # Selecting job with key input
     if args.key != '':
         keys = [j.key for j in job]
-        ind, = np.where(np.array(keys)==args.key)
+        ind, = np.where(np.array(keys)==args.key[0])
+        if len(ind)==0:
+            print('key '+args.key[0]+' not found in active jobs')
+            sys.exit()
         job1 = job[ind[0]]
     else:
         job1 = job[-1]  # last job
