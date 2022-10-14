@@ -2600,9 +2600,9 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     #    sql = "SELECT * from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
 
     if len(mjds)>1:
-        sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope)        
+        sql = "SELECT apogee_id,mjd,apred_vers,telescope from apogee_drp.visit WHERE apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope)        
     else:
-        sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
+        sql = "SELECT apogee_id,mjd,apred_vers,telescope from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
     db = apogeedb.DBSession()
     allvisit = db.query(sql=sql)
     db.close()
@@ -2629,13 +2629,16 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     # Get MAXMJD for each unique star
     if len(mjds)>1:
         star_index = dln.create_index(allvisit['apogee_id'])
-        vcat = np.zeros(len(star_index['value']),dtype=np.dtype([('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int)]))
+        dtype = [('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int),('apred_vers',(str,50)),('telescope',(str,50))]
+        vcat = np.zeros(len(star_index['value']),dtype=np.dtype(dtype))
         vcat['apogee_id'] = star_index['value']
         vcat['nvisits'] = star_index['num']
         for i in range(len(star_index)):
             ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
             maxmjd = np.max(allvisit['mjd'][ind])
             vcat['maxmjd'][i] = maxmjd
+            vcat['apred_vers'][i] = allvisit['apred_vers'][ind][0]
+            vcat['telescope'][i] = allvisit['telescope'][ind][0]            
     else:
         vcat = allvisit
             
