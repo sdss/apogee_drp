@@ -2590,44 +2590,61 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
 
     # Get the stars that were observed in the MJD range and the MAXIMUM MJD for each star
-    if daily==False:
-        sql = "WITH mv as (SELECT apogee_id, apred_vers, telescope, max(mjd) as maxmjd FROM apogee_drp.visit"
-        sql += " WHERE apred_vers='%s' and telescope='%s'" % (apred,telescope)
-        sql += " GROUP BY apogee_id, apred_vers, telescope)"
-        sql += " SELECT v.*,mv.maxmjd from apogee_drp.visit AS v LEFT JOIN mv on mv.apogee_id=v.apogee_id"
-        sql += " Where v.apred_vers='%s' and v.mjd>=%d and v.mjd<=%d and v.telescope='%s'" % (apred,mjdstart,mjdstop,telescope)
-    else:
-        sql = "SELECT * from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
+    #if daily==False:
+    #    sql = "WITH mv as (SELECT apogee_id, apred_vers, telescope, max(mjd) as maxmjd FROM apogee_drp.visit"
+    #    sql += " WHERE apred_vers='%s' and telescope='%s'" % (apred,telescope)
+    #    sql += " GROUP BY apogee_id, apred_vers, telescope)"
+    #    sql += " SELECT v.*,mv.maxmjd from apogee_drp.visit AS v LEFT JOIN mv on mv.apogee_id=v.apogee_id"
+    #    sql += " Where v.apred_vers='%s' and v.mjd>=%d and v.mjd<=%d and v.telescope='%s'" % (apred,mjdstart,mjdstop,telescope)
+    #else:
+    #    sql = "SELECT * from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
 
+    if len(mjds)>1:
+        sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope)        
+    else:
+        sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
     db = apogeedb.DBSession()
-    vcat = db.query(sql=sql)
+    allvisit = db.query(sql=sql)
     db.close()
-    if len(vcat)==0:
+    if len(allvisit)==0:
         logger.info('No visits found for MJDs')
         return None
+
+    # Remove rows with missing or blank apogee_ids
+    bd, = np.where((allvisit['apogee_id']=='') | (allvisit['apogee_id']=='None') | (allvisit['apogee_id']=='2MNone') | (allvisit['apogee_id']=='2M'))
+    if len(bd)>0:
+        allvisit = np.delete(allvisit,bd)
+    
     # Pick on the MJDs we want
     ind = []
     for m in mjds:
-        gd, = np.where(vcat['mjd']==m)
+        gd, = np.where(allvisit['mjd']==m)
         if len(gd)>0: ind += list(gd)
     ind = np.array(ind)
     if len(ind)==0:
         logger.info('No visits found for MJDs')
         return None
-    vcat = vcat[ind]
-    # Get unique stars
-    objects,ui = np.unique(vcat['apogee_id'],return_index=True)
-    vcat = vcat[ui]
-    # Remove rows with missing or blank apogee_ids
-    bd, = np.where((vcat['apogee_id']=='') | (vcat['apogee_id']=='None') | (vcat['apogee_id']=='2MNone') | (vcat['apogee_id']=='2M'))
-    if len(bd)>0:
-        vcat = np.delete(vcat,bd)
+    allvisit = allvisit[ind]
+
+    # Get MAXMJD for each unique star
+    if len(mjds)>1:
+        star_index = dln.create_index(allvisit['apogee_id'])
+        vcat = np.zeros(len(star_index['value']),dtype=np.dtype([('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int)]))
+        vcat['apogee_id'] = star_index['value']
+        vcat['nvisits'] = star_index['num']
+        for i in range(len(star_index)):
+            ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
+            maxmjd = np.max(allvisit['mjd'][ind])
+            vcat['maxmjd'][i] = maxmjd
+    else:
+        vcat = allvisit
+            
     logger.info(str(len(vcat))+' stars to run')
     
     # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
     if daily==False:
         vcat['mjd'] = vcat['maxmjd']    
-        
+
     # Loop over the stars and figure out the ones that need to be run
     dorv = np.zeros(len(vcat),bool)
     for i,obj in enumerate(vcat['apogee_id']):
