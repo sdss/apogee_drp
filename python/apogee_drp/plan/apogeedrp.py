@@ -3013,7 +3013,7 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
 
     # Send the message
     #   If logfile is too large (>1MB), then do not attach the file
-    if os.path.getsize(logfile)>1e7:
+    if os.path.getsize(logfile)>1e6 or len(mjds)>1:
         email.send(address,subject,message,send_from='noreply.apogeedrp')
     else:
         email.send(address,subject,message,files=logfile,send_from='noreply.apogeedrp')    
