@@ -1013,7 +1013,26 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     #                   "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\
     #                   "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
     # Using STAR_LATEST seems much faster
-    allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    #allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    vstar = db.query('star',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    # Deal with multiple STARVER versions per star
+    star_index = dln.create_index(vstar['apogee_id'])
+    ndups = np.sum(star_index['num']>1)
+    if ndups>0:
+        allstar = np.zeros(len(star_index['value']),dtype=vstar.dtype)
+        for i,obj in enumerate(star_index['value']):
+            if star_index['num']>1:
+                ind = star_index['index'][star_index['lo'][i]]
+                allstar[i] = vstar[ind]
+            else:
+                ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
+                starver = vstar['starver'][ind]
+                si = np.argsort(starver)
+                useind = ind[si[-1]]   # use last/largest STARVER
+                allstar[i] = vstar[useind]
+    else:
+        allstar = vstar
+    
     allstarfile = load.filename('allStar').replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allStar file to '+allstarfile)
     logger.info(str(len(allstar))+' stars')
