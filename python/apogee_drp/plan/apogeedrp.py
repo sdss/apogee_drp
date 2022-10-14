@@ -2633,9 +2633,10 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         vcat = np.zeros(len(star_index['value']),dtype=np.dtype(dtype))
         vcat['apogee_id'] = star_index['value']
         vcat['nvisits'] = star_index['num']
-        for i in range(len(star_index)):
+        for i in range(len(star_index['value'])):
             ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
             maxmjd = np.max(allvisit['mjd'][ind])
+            vcat['mjd'][i] = maxmjd
             vcat['maxmjd'][i] = maxmjd
             vcat['apred_vers'][i] = allvisit['apred_vers'][ind][0]
             vcat['telescope'][i] = allvisit['telescope'][ind][0]            
@@ -2647,7 +2648,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
     if daily==False:
         vcat['mjd'] = vcat['maxmjd']    
-
+        
     # Loop over the stars and figure out the ones that need to be run
     dorv = np.zeros(len(vcat),bool)
     for i,obj in enumerate(vcat['apogee_id']):
