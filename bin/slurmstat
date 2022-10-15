@@ -100,10 +100,11 @@ if __name__ == '__main__' :
     print('Created: ',job1.created)
     print('Ntasks: ',job1.ntask)
     nrunning = 0
+    status = ['created','uncommitted', 'committed', 'submitted', 'running', 'complete']   
     for i in range(len(job1.tasks)):
         t = job1.tasks[i]
         if t.status==4:
-            print(i+1,t.id)
+            print(i+1,t.id,status[t.status])
             print(t.script)
             print(t.outfile)
             nrunning += 1
