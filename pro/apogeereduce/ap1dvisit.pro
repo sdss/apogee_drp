@@ -380,8 +380,7 @@ FOR i=0L,nplanfiles-1 do begin
         apgundef,frame  ; free up memory
         writelog,logfile,'  wavecal '+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
       endif else frame_wave = frame_shift
-
-
+      
       ;if keyword_set(dithonly) then goto, BOMB1
       if keyword_set(stp) then stop
 
@@ -401,8 +400,7 @@ FOR i=0L,nplanfiles-1 do begin
 
       if tag_exist(planstr,'platetype') then $
         if planstr.platetype ne 'normal' and planstr.platetype ne 'single' and planstr.platetype ne 'twilight' then goto,BOMB1
-
-
+      
       ;----------------------------------
       ; STEP 4:  Telluric Correction
       ;----------------------------------
@@ -440,7 +438,6 @@ FOR i=0L,nplanfiles-1 do begin
       endif
       apgundef,frame_skysub  ; free up memory
       writelog,logfile,'  telluric '+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
-
 
       ;-----------------------
       ; Output apCframe files

@@ -570,6 +570,7 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
             dirname = os.path.dirname(planfile)
         telescope = p['telescope']
         instrument = p['instrument']
+        vers = p['apred_vers']
     # single exposure, make fake plan file dictionary
     else:
         p={}
@@ -735,7 +736,8 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
             hdu.append(fits.ImageHDU(newwaves[ichip,:,:]))      # wavelength array
             hdu.append(fits.ImageHDU(newchippars[ichip,:,:]))   # wave coefficients
             hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
-
+            hdu.close()
+            
         # Plots
         plot = None
         if plot is not None:
