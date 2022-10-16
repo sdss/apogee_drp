@@ -657,8 +657,16 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
 
         # Load the plugmap information
         if platetype=='normal' and str(plate) != '0':
-            plugmap = platedata.getdata(plate,mjd,apred_vers,telescope,plugid=planstr['plugmap'])
-            fiberdata = plugmap['fiberdata']
+            #plugmap = platedata.getdata(plate,mjd,apred_vers,telescope,plugid=planstr['plugmap'])
+            #fiberdata = plugmap['fiberdata']
+            # This is very slow, get it directly from apPlate file
+            base = load.filename('Plate',plate=plate,mjd=mjd,chips=True,field=field)
+            chfiles = [base.replace('Plate-','Plate-'+ch+'-') for ch in ['a','b','c']]
+            chinfo = info.file_status(chfiles)
+            if chinfo['okay'][0]:
+                fiberdata = Table.read(chfiles[0],11)
+            else:
+                fiberdata = None
         else:
             fiberdata = None
 
@@ -765,7 +773,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkap1['designid'] = planstr['designid']
             chkap1['fieldid'] = planstr['fieldid']
         if platetype=='normal' and fiberdata is not None:
-            chkap1['nobj'] = np.sum(fiberdata['objtype']!='SKY')  # stars and tellurics
+            chkap1['nobj'] = np.sum((fiberdata['fiberid']>-1) & (fiberdata['objtype']!='SKY'))  # stars and tellurics
         chkap1['pbskey'] = pbskey
         chkap1['checktime'] = str(datetime.now())
         # ap3D, ap2D, apCframe success
