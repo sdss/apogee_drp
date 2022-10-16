@@ -24,6 +24,7 @@ from slurm.models import Job,Member
 from os import getlogin, getuid, getgid, makedirs, chdir
 from pwd import getpwuid
 from grp import getgrgid
+from datetime import datetime,timezone
 
 if __name__ == '__main__' :
 
@@ -105,8 +106,14 @@ if __name__ == '__main__' :
         t = job1.tasks[i]
         if t.status==4:
             print(i+1,t.id,status[t.status])
-            print(t.script)
-            print(t.outfile)
+            print('  command:',t.script)
+            print('  outfile:',t.outfile)
+            if os.path.exists(t.outfile):
+                mtime = os.path.getmtime(t.outfile)
+                modified = datetime.fromtimestamp(mtime, tz=timezone.utc)
+                print('  outfile last modified %s, %d seconds ago' % (modified.ctime(),datetime.now().timestamp()-modified.timestamp()))
+            else:
+                print('  outfile NOT found')
             nrunning += 1
     print(str(nrunning)+' of '+str(job1.ntask)+' tasks still running')
     
