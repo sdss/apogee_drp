@@ -103,10 +103,11 @@ if __name__ == '__main__' :
     print('Created: ',job1.created)
     print('Ntasks: ',job1.ntask)
     nrunning = 0
+    ntodo = 0
     status = ['created','uncommitted', 'committed', 'submitted', 'running', 'complete']   
     for i in range(len(job1.tasks)):
         t = job1.tasks[i]
-        if t.status==4:
+        if t.status==3 or t.status==4:
             print(i+1,' id:',t.id,' status:',status[t.status],' node:',t.node_number,' proc:',t.proc_number)
             print('  command:',t.script)
             print('  outfile:',t.outfile)
@@ -121,9 +122,11 @@ if __name__ == '__main__' :
                     res = subprocess.run(['slurm_queue','--status','complete','-i',user,'-k',job1.key,'-t',str(t.task_number)])
             else:
                 print('  outfile NOT found')
-                
-            nrunning += 1
-    print(str(nrunning)+' of '+str(job1.ntask)+' tasks still running')
+            ntodo += 1   
+            if t.status==4: nrunning += 1
+    print(str(nrunning)+' of '+str(job1.ntask)+' tasks still running')            
+    print(str(ntodo)+' of '+str(job1.ntask)+' tasks left to finish')
+
     
     #import pdb; pdb.set_trace()
     
