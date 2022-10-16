@@ -19,6 +19,7 @@ import sys
 import pdb
 import slurm as slurm
 import numpy as np
+import subprocess
 from slurm import queue as pbsqueue
 from slurm.models import Job,Member
 from os import getlogin, getuid, getgid, makedirs, chdir
@@ -34,6 +35,7 @@ if __name__ == '__main__' :
     parser.add_argument('-u','--user', type=str, nargs=1, help='Username')
     parser.add_argument('-l','--latest', action='store_true', help='Show results of latest job')
     parser.add_argument('-k','--key', type=str, nargs=1, default='', help='Job key')
+    parser.add_argument('--clear', type=int, nargs='?', const='3600', help='Clear dormant jobs after this delay.')    
     args = parser.parse_args()
     
     # Get the username
@@ -105,15 +107,21 @@ if __name__ == '__main__' :
     for i in range(len(job1.tasks)):
         t = job1.tasks[i]
         if t.status==4:
-            print(i+1,t.id,status[t.status])
+            print(i+1,' id:',t.id,' status:',status[t.status],' node:',t.node_number,' proc:',t.proc_number)
             print('  command:',t.script)
             print('  outfile:',t.outfile)
             if os.path.exists(t.outfile):
                 mtime = os.path.getmtime(t.outfile)
                 modified = datetime.fromtimestamp(mtime, tz=timezone.utc)
-                print('  outfile last modified %s, %d seconds ago' % (modified.ctime(),datetime.now().timestamp()-modified.timestamp()))
+                dt = datetime.now().timestamp()-modified.timestamp()
+                print('  outfile last modified %s, %d seconds ago' % (modified.ctime(),dt))
+                # slurm_queue --status complete -i u0914350 -k 184f3610-4cb7-11ed-af14-2cea7ff4461c -t 3248
+                if args.clear and dt>args.clear:
+                    print('  clearing task:',t.task_number)
+                    res = subprocess.run(['slurm_queue','--status','complete','-i',user,'-k',job1.key,'-t',str(t.task_number)])
             else:
                 print('  outfile NOT found')
+                
             nrunning += 1
     print(str(nrunning)+' of '+str(job1.ntask)+' tasks still running')
     
