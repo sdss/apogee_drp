@@ -6,7 +6,7 @@ from glob import glob
 import pdb
 
 from dlnpyutils import utils as dln
-from ..utils import spectra,yanny,apload,platedata,plan,email,info
+from ..utils import spectra,yanny,apload,platedata,plan,email,info,slurm as slrm
 from ..apred import mkcal,cal,qa,monitor
 from ..database import apogeedb
 from . import mkplan,check
@@ -2704,9 +2704,12 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         if ntorun<64:
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
+        del slurmpars1['ppn']
         logger.info('Slurm settings: '+str(slurmpars1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='rv', **slurmpars1)
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='rv', **slurmpars1)
         for i in range(ntorun):
             obj = vcat['apogee_id'][torun[i]]
             # We are going to run RV on ALL the visits
@@ -2732,14 +2735,21 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             logger.info('rv %d : %s' % (i+1,obj))
             logger.info('Command : '+cmd)
             logger.info('Logfile : '+logfile)
-            queue.append(cmd,outfile=logfile,errfile=errfile)
+            tasks['cmd'][i] = cmd
+            tasks['outfile'][i] = logfile
+            tasks['errfile'][i] = errfile
+            tasks['dir'][i] = os.path.dirname(logfile) 
+            #queue.append(cmd,outfile=logfile,errfile=errfile)
         logger.info('Running RV on '+str(ntorun)+' stars')
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+        key,jobid = slrm.submit(tasks,label='rv',verbose=True,**slurmpars1)
+        logger.info('PBS key is '+key)
+        slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logg=logger) # wait for jobs to complete  
+        #queue.commit(hard=True,submit=True)
+        #logger.info('PBS key is '+queue.key)
+        #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This checks the status and puts it into the database
-        chkrv = check_rv(vcat[torun],queue.key,logger=logger,verbose=False)
-        del queue
+        chkrv = check_rv(vcat[torun],key,logger=logger,verbose=False)
+        #del queue
     else:
         logger.info('No RVs need to be run')
         chkrv = None
