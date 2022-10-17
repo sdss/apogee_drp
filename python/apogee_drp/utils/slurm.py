@@ -383,36 +383,90 @@ class Task(object):
         self.errfile = errfile
         self.directory = directory
         self.id = None
-
+        self.done = None
+        
 class Queue(object):
 
-    def __init__(self,label,alloc='sdss-np',shared=True,nodes=5,verbose=True):
+    def __init__(self,label,nodes=5,alloc='sdss-np',shared=True,walltime='336:00:00',
+                 notification=False,memory=7500,numpy_num_threads=2,verbose=True,logger=None):
         self.label = label
-	self.verbose = verbose
+        self.nodes = nodes        
         self.tasks = []
-	self.alloc = alloc
-	self.shared = shared
-	self.nodes = nodes
-	# Generated key
-	self.key = genkey()
+        self.alloc = alloc
+        self.shared = shared
+        self.walltime = walltime
+        self.notification = notification
+        self.memory = memory
+        self.numpy_num_thread = numpy_num_thread
+        self.verbose = verbose
+        if logger is None:
+            logger = dln.basiclogger()
+        self.logger = logger
+        username = getpwuid(getuid())[0]
+        self.user = username
+        self.slurmdir = SLURMDIR+username+'/slurm/'
+        self.jobid = None
+        self.jobdir = None        
+        self.submitted = False
+        # Generated key
+        self.key = genkey()
 
+    def __repr__(self):
+        self.logger.info('label = %d' % self.label)
+        self.logger.info('user = %d' % self.user)
+        self.logger.info('key = %s' % self.key)        
+        self.logger.info('nodes = %d' % self.nodes)
+        self.logger.info('alloc = %s' % self.alloc)
+        self.logger.info('shared = %s' % self.shared)
+        self.logger.info('walltime = %s' % self.walltime)
+        self.logger.info('notification = %s' % self.notification)
+        self.logger.info('memory = %s' % str(self.memory))
+        self.logger.info('numpy_num_thread = %s' % str(self.numpy_num_thread))
+        self.logger.info('verbose = %s' % self.verbose)
+        self.logger.info('Ntasks = %d' % self.ntasks)
+        self.logger.info('submitted = %s' $ self.submitted)
+        if self.submitted:
+            self.logger.info('jobid = %d' % self.jobid)
+            self.logger.info('jobdir = %s' % self.jobdir)
+        
     @property
     def ntasks(self):
         return len(self.tasks)
 
     def append(self,cmd,outfile,errfile,directory=None):
         t = Task(cmd,outfile,errfile,directory=directory)
-	t.id = self.ntasks+1
-	self.tasks.append(t)
+        t.id = self.ntasks+1
+        self.tasks.append(t)
 
     def submit(self):
         pass
 
+    def taskstatus(self):
+        if self.submitted==False:
+            print('Not submitted yet')
+            return None
+        tstatus = taskstatus(self.label,self.key)
+        ntask = len(tstatus)
+        ndone = np.sum(tstatus['done'])
+        percent = 100*ndone/ntask
+        return ndone, percent
+        
     def slurmstatus(self):
-        pass
-
+        if self.submitted==False:
+            print('Not submitted yet')
+            return None
+        state = slurmstatus(self.label,self.jobid)
+        node = len(state)
+        ndone = np.sum(state['done'])
+        noderunning = node-ndone
+        percent = 100*noderunning/node
+        return ndone, percent
+        
     def status(self):
-        pass
+        if self.submitted==False:
+            print('Not submitted yet')
+            return None
+        return status(self.label,self.key,self.jobid)
 
     def kill(self):
         """ Kill the slurm jobs"""
