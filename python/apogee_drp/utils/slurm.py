@@ -135,7 +135,7 @@ def status(label,key,jobid):
     percent = 100*ncomplete/ntasks
     return noderunning,taskrunning,percent
     
-def queue_wait(label,key,jobid,sleeptime=60,logger=None):
+def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
     """
     Wait until the job is done
     """
@@ -171,7 +171,8 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None):
         ncomplete = len(tstatus)
         taskrunning = ntasks-ncomplete
         percent = 100*ncomplete/ntasks
-        logger.info('percent complete = %2d   %d / %d tasks' % (percent,ntasks-taskrunning,ntasks))
+        if verbose:
+            logger.info('percent complete = %2d   %d / %d tasks' % (percent,ntasks-taskrunning,ntasks))
         # Are we done
         if noderunning==0 and taskrunning==0:
             done = True
