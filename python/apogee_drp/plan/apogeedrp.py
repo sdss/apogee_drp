@@ -2741,7 +2741,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             tasks['dir'][i] = os.path.dirname(logfile) 
             #queue.append(cmd,outfile=logfile,errfile=errfile)
         logger.info('Running RV on '+str(ntorun)+' stars')
-        key,jobid = slrm.submit(tasks,label='rv',verbose=True,**slurmpars1)
+        key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
         logger.info('PBS key is '+key)
         slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
         #queue.commit(hard=True,submit=True)
