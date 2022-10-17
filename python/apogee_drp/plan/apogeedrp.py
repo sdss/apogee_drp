@@ -2743,7 +2743,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         logger.info('Running RV on '+str(ntorun)+' stars')
         key,jobid = slrm.submit(tasks,label='rv',verbose=True,**slurmpars1)
         logger.info('PBS key is '+key)
-        slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logg=logger) # wait for jobs to complete  
+        slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
         #queue.commit(hard=True,submit=True)
         #logger.info('PBS key is '+queue.key)
         #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
