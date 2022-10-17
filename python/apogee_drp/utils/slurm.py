@@ -20,6 +20,7 @@ from grp import getgrgid
 from datetime import datetime,timezone
 import string
 import random
+import traceback
 
 SLURMDIR = '/scratch/general/nfs1/'
 
@@ -39,7 +40,11 @@ def slurmstatus(label,jobid):
     # Check if the slurm job is still running
     #  this will throw an exception if the job finished already
     #  slurm_load_jobs error: Invalid job id specified
-    res = subprocess.check_output(['sacct','-u',username,'-j',str(jobid)])
+    try:
+        res = subprocess.check_output(['sacct','-u',username,'-j',str(jobid)])
+    except:
+        traceback.print_exc()
+        return []
     if type(res)==bytes: res=res.decode()
     lines = res.split('\n')
     # remove first two lines
@@ -122,6 +127,8 @@ def status(label,key,jobid):
     
     # Check if the slurm job is still running
     state = slurmstatus(label,jobid)
+    if len(stat)==0:
+        return None,None,None
     node = len(state)
     ndone = np.sum(state['done'])
     noderunning = node-ndone
@@ -158,21 +165,23 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
         time.sleep(sleeptime)
         # Check that state
         noderunning,taskrunning,percent = status(label,key,jobid)
-        # Check if the slurm job is still running
-        state = slurmstatus(label,jobid)
-        node = len(state)
-        ndone = np.sum(state['done'])
-        noderunning = node-ndone
-        # Get number of tasks
-        ntasks = dln.readlines(jobdir+label+'.ntasks')
-        ntasks = int(ntasks[0])
-        # Check how many tasks have completed
-        tstatus = taskstatus(label,key)
-        ncomplete = len(tstatus)
-        taskrunning = ntasks-ncomplete
-        percent = 100*ncomplete/ntasks
-        if verbose:
-            logger.info('percent complete = %2d   %d / %d tasks' % (percent,ntasks-taskrunning,ntasks))
+        if nodrunning is not None:
+            # Check if the slurm job is still running
+            state = slurmstatus(label,jobid)
+            node = len(state)
+            ndone = np.sum(state['done'])
+            noderunning = node-ndone
+            # Get number of tasks
+            ntasks = dln.readlines(jobdir+label+'.ntasks')
+            ntasks = int(ntasks[0])
+            # Check how many tasks have completed
+            tstatus = taskstatus(label,key)
+            ncomplete = len(tstatus)
+            taskrunning = ntasks-ncomplete
+            percent = 100*ncomplete/ntasks
+            if verbose:
+                logger.info('percent complete = %2d   %d / %d tasks' % (percent,ntasks-taskrunning,ntasks))
+                
         # Are we done
         if noderunning==0 and taskrunning==0:
             done = True
@@ -365,4 +374,46 @@ def submit(tasks,label,nodes=5,alloc='sdss-np',shared=True,walltime='336:00:00',
         
     return key,jobid
 
-    
+
+class Task(object):
+
+    def __init__(self,cmd,outfile,errfile,directory=None):
+        self.cmd = cmd
+        self.outfile = outfile
+        self.errfile = errfile
+        self.directory = directory
+        self.id = None
+
+class Queue(object):
+
+    def __init__(self,label,alloc='sdss-np',shared=True,nodes=5,verbose=True):
+        self.label = label
+	self.verbose = verbose
+        self.tasks = []
+	self.alloc = alloc
+	self.shared = shared
+	self.nodes = nodes
+	# Generated key
+	self.key = genkey()
+
+    @property
+    def ntasks(self):
+        return len(self.tasks)
+
+    def append(self,cmd,outfile,errfile,directory=None):
+        t = Task(cmd,outfile,errfile,directory=directory)
+	t.id = self.ntasks+1
+	self.tasks.append(t)
+
+    def submit(self):
+        pass
+
+    def slurmstatus(self):
+        pass
+
+    def status(self):
+        pass
+
+    def kill(self):
+        """ Kill the slurm jobs"""
+        pass    
