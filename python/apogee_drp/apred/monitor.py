@@ -154,6 +154,50 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
         ###########################################################################################
+        # APPEND QADARKFLAT INFO TO MASTER QACAL FILE
+        # Append together the individual QAdarkflat files
+
+        files = glob.glob(specdir5 + 'cal/' + instrument + '/qa/*/*QAdarkflat*.fits')
+        if len(files) < 1:
+            print("----> monitor: No QAdarkflat files!")
+        else:
+            print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+            outstr = getQAdarkflatStruct(alldark)
+
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+
+            # Loop over SDSS-V files and add them to output structure
+            Nadditions = 0
+            for i in range(nfiles):
+                data = fits.getdata(files[i])
+                check, = np.where(data['NAME'][0] == outstr['NAME'])
+                if len(check) > 0:
+                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                    continue
+                else:
+                    #if os.path.exists(files[i].replace('QAdarkflat', 'QAcal')):
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getQAdarkflatStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
+                    Nadditions += 1
+
+            if Nadditions > 0:
+                hdulist = fits.open(outfile)
+                hdu1 = fits.table_to_hdu(Table(outstr))
+                hdulist.append(hdu1)
+                hdulist.writeto(outfile, overwrite=True)
+                hdulist.close()
+                print("----> monitor: Finished adding QAdarkflat info to " + os.path.basename(outfile))
+            else:
+                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
+
+
+        pdb.set_trace()
+        ###########################################################################################
         # MAKE MASTER EXP FILE
         # Get long term trends from dome flats
         # Append together the individual exp files
@@ -387,49 +431,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 print("----> monitor: Finished making " + os.path.basename(outfile))
             else:
                 print("----> monitor: Nothing to add to " + os.path.basename(outfile))
-
-        ###########################################################################################
-        # APPEND QADARKFLAT INFO TO MASTER QACAL FILE
-        # Append together the individual QAdarkflat files
-
-        files = glob.glob(specdir5 + 'cal/' + instrument + '/qa/*/*QAdarkflat*.fits')
-        if len(files) < 1:
-            print("----> monitor: No QAdarkflat files!")
-        else:
-            print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            outstr = getQAdarkflatStruct(alldark)
-
-            files.sort()
-            files = np.array(files)
-            nfiles = len(files)
-
-            # Loop over SDSS-V files and add them to output structure
-            Nadditions = 0
-            for i in range(nfiles):
-                data = fits.getdata(files[i])
-                check, = np.where(data['NAME'][0] == outstr['NAME'])
-                if len(check) > 0:
-                    #print("---->    monitor: skipping " + os.path.basename(files[i]))
-                    continue
-                else:
-                    if os.path.exists(files[i].replace('QAdarkflat', 'QAcal')):
-                        print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                        newstr = getQAdarkflatStruct(data)
-                        outstr = np.concatenate([outstr, newstr])
-                        Nadditions += 1
-
-            if Nadditions > 0:
-                hdulist = fits.open(outfile)
-                hdu1 = fits.table_to_hdu(Table(outstr))
-                hdulist.append(hdu1)
-                hdulist.writeto(outfile, overwrite=True)
-                hdulist.close()
-                print("----> monitor: Finished adding QAdarkflat info to " + os.path.basename(outfile))
-            else:
-                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
-
 
     ###############################################################################################
     # Read in the SDSS-V summary files
