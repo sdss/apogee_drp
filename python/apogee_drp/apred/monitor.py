@@ -140,7 +140,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 try:
                     check, = np.where(data['DATEOBS'][nobs-1] == outstr['DATEOBS'])
                 except:
-                pdb.set_trace()
+                    pdb.set_trace()
                     print('---->    monitor: Problem with missing values in ' + os.path.basename(files[i]))
                     continue
                 if len(check) < 1:
