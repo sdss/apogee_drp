@@ -33,6 +33,24 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
 
+###############################################################################################
+# Set up some basic plotting parameters
+matplotlib.use('agg')
+fontsize = 24;   fsz = fontsize * 0.75
+matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
+bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
+axwidth = 1.5
+axmajlen = 7
+axminlen = 3.5
+alf = 0.6
+markersz = 1
+colors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange'])[::-1]
+colors1 = np.array(['k', 'b', 'r', 'gold'])
+colors2 = np.array(['dodgerblue', 'seagreen', 'orange'])
+fibers = np.array([10, 80, 150, 220, 290])[::-1]
+nplotfibs = len(fibers)
+
+###############################################################################################
 ''' MONITOR: Instrument monitoring plots and html '''
 def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True,
             makeplots=True, makedomeplots=True, makequartzplots=True,
@@ -69,8 +87,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
     #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
-    allexp4 =  fits.open(specdir4 + instrument + 'Exp.fits')[1].data
-    allsci4 =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
+    allexp4 =  fits.getdata(specdir4 + instrument + 'Exp.fits')
+    allsci4 =  fits.getdata(specdir4 + instrument + 'Sci.fits')
     #allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
 
     # Read in the master summary files
@@ -79,6 +97,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
     allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
     allsnrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
+
     if os.path.exists(allsnrfile): allsnr = fits.getdata(allsnrfile)
     else: print(instrument + 'SNR.fits not found')
     dtracefile = specdir5 + 'monitor/' + instrument + 'DomeFlatTrace-all.fits'
@@ -93,6 +112,56 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #badComObs = ascii.read(sdir5 + 'commisData2ignore.dat')
 
     if makesumfiles is True:
+
+        ###########################################################################################
+        # MAKE MASTER EXP FILE
+        # Get long term trends from dome flats
+        # Append together the individual exp files
+
+        files = glob.glob(specdir5 + 'exposures/' + instrument + '/*/*exp.fits')
+        if len(files) < 1:
+            print("----> monitor: No exp files!")
+        else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
+            print("----> monitor: Making " + os.path.basename(outfile))
+
+            # Make output structure and fill with APOGEE2 summary file values
+            outstr = getExpStruct(allexp)
+
+            files.sort()
+            files = np.array(files)
+            nfiles = len(files)
+
+            # Loop over SDSS-V files and add them to output structure
+            Nadditions = 0
+            for i in range(nfiles):
+                data = fits.getdata(files[i])
+                nobs = len(data)
+                try:
+                    check, = np.where(data['DATEOBS'][nobs-1] == outstr['DATEOBS'])
+                except:
+                pdb.set_trace()
+                    print('---->    monitor: Problem with missing values in ' + os.path.basename(files[i]))
+                    continue
+                if len(check) < 1:
+                    print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
+                    newstr = getExpStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
+                    Nadditions += 1
+
+                #for j in range(nobs):
+                #    dataj = data[j]
+                #    check, = np.where(dataj['DATEOBS'] == outstr['DATEOBS'])
+                #    if len(check) > 0:
+                        #print("---->    monitor: skipping " + os.path.basename(files[i]))
+                #        continue
+                #    else:
+
+            if Nadditions > 0:
+                Table(outstr).write(outfile, overwrite=True)
+                print("----> monitor: Finished making " + os.path.basename(outfile))
+            else:
+                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER TRACE FILE
@@ -133,7 +202,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     tmjd = hdr['JD-MID'] - 2400000.5
                     check, = np.where(tmjd == outstr['MJD'])
                     if len(check) == 0:
-                        #pdb.set_trace()
                         print("---->    monitor: reading " + os.path.basename(files[i]))
                         hdr = fits.getheader(files[i])
                         struct1 = np.zeros(1, dtype=dt)
@@ -155,55 +223,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     print("----> monitor: Finished making " + os.path.basename(outfile))
                 else:
                     print("----> monitor: Nothing to add to " + os.path.basename(outfile))
-
-        ###########################################################################################
-        # MAKE MASTER EXP FILE
-        # Get long term trends from dome flats
-        # Append together the individual exp files
-
-        files = glob.glob(specdir5 + 'exposures/' + instrument + '/*/*exp.fits')
-        if len(files) < 1:
-            print("----> monitor: No exp files!")
-        else:
-            outfile = specdir5 + 'monitor/' + instrument + 'Exp.fits'
-            print("----> monitor: Making " + os.path.basename(outfile))
-
-            # Make output structure and fill with APOGEE2 summary file values
-            outstr = getExpStruct(allexp)
-
-            files.sort()
-            files = np.array(files)
-            nfiles = len(files)
-
-            # Loop over SDSS-V files and add them to output structure
-            Nadditions = 0
-            for i in range(nfiles):
-                data = fits.getdata(files[i])
-                nobs = len(data)
-                try:
-                    check, = np.where(data['DATEOBS'][nobs-1] == outstr['DATEOBS'])
-                except:
-                    print('---->    monitor: Problem with missing values in ' + os.path.basename(files[i]))
-                    continue
-                if len(check) < 1:
-                    print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
-                    newstr = getExpStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
-                    Nadditions += 1
-
-                #for j in range(nobs):
-                #    dataj = data[j]
-                #    check, = np.where(dataj['DATEOBS'] == outstr['DATEOBS'])
-                #    if len(check) > 0:
-                        #print("---->    monitor: skipping " + os.path.basename(files[i]))
-                #        continue
-                #    else:
-
-            if Nadditions > 0:
-                Table(outstr).write(outfile, overwrite=True)
-                print("----> monitor: Finished making " + os.path.basename(outfile))
-            else:
-                print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
         ###########################################################################################
         # MAKE MASTER apSNRsum FILE
@@ -268,12 +287,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plsum = specdir5 + 'visit/' + telescope + '/' + uvis[i] + prefix + 'PlateSum-' + uallv5['plate'][i] + '-' + str(uallv5['mjd'][i]) + '.fits'
                 plsum = plsum.replace(' ', '')
                 p, = np.where(os.path.basename(plsum) == allsnr['SUMFILE'])
-                if (len(p) < 1) & (os.path.exists(plsum)):
+                if len(p) < 1 and os.path.exists(plsum):
                     data1 = fits.getdata(plsum)
                     data2 = fits.getdata(plsum,2)
                     nexp = len(data1['IM'])
                     totexptime = np.sum(data1['EXPTIME'])
-                    if (nexp > 1) & (totexptime > 900):
+                    if nexp > 1 and totexptime > 900:
                         print("----> monitor: adding " + os.path.basename(plsum) + " (" + str(i+1) + "/" + str(nvis) + ")")
                         field = plsum.split(data1['TELESCOPE'][0] + '/')[1].split('/')[0]
                         for iexp in range(nexp):
@@ -697,23 +716,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 #        check = glob.glob('flatflux/' + gplot)
 #        if len(check) < 1: subprocess.call(['scp', pfiles[i], sdir5 + 'flatflux/'])
 
-    ###############################################################################################
-    # Set up some basic plotting parameters
-    matplotlib.use('agg')
-    fontsize = 24;   fsz = fontsize * 0.75
-    matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
-    bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
-    axwidth = 1.5
-    axmajlen = 7
-    axminlen = 3.5
-    alf = 0.6
-    markersz = 1
-    colors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange'])[::-1]
-    colors1 = np.array(['k', 'b', 'r', 'gold'])
-    colors2 = np.array(['dodgerblue', 'seagreen', 'orange'])
-    fibers = np.array([10, 80, 150, 220, 290])[::-1]
-    nplotfibs = len(fibers)
-    #years = np.array([2011, 2012, 2013, 2014
 
     tmp = allcal[qrtz]
     caljd = tmp['JD'] - 2.4e6
