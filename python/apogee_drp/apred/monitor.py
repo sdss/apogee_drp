@@ -1015,7 +1015,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 else:
                     ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='k', label='exposures')
                     ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='r', label='visits')
-
+            pdb.set_trace()
             #ax.scatter(umjd, nexp, marker='o', s=markersz, c='grey', alpha=alf, label='exposures')
             #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
 
