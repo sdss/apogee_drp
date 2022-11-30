@@ -161,6 +161,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if len(files) < 1:
             print("----> monitor: No QAdarkflat files!")
         else:
+            outfile = specdir5 + 'monitor/' + instrument + 'Cal.fits'
             print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
@@ -350,7 +351,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         print("----> monitor: Making " + os.path.basename(outfile))
 
         if allv5 is None:
-            allv5path = specdir5 + 'summary/allVisit-daily-apo25m.fits'
+            allv5path = specdir5 + 'summary/allVisit-daily-'+telescope+'.fits'
             allv5 = fits.getdata(allv5path)
 
         #gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])) & ((allv5['mjd'] < 59558) | (allv5['mjd'] >= 59595)))
@@ -462,10 +463,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     current_date = today.strftime("%B %d, %Y")
     
     html = open(outfile, 'w')
-    tit = 'APOGEE-N Instrument Monitor'
-    if instrument != 'apogee-n': tit = 'APOGEE-S Instrument Monitor'
-    html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
-    html.write('<H1>' + tit + '</H1>\n')
+    html.write('<HTML><HEAD><title>' + instrument.upper() + ' Instrument Monitor</title></head><BODY>\n')
+    html.write('<H1>' + instrument.upper() + ' Instrument Monitor</H1>\n')
     html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
     html.write('<HR>\n')
     html.write('<ul>\n')
