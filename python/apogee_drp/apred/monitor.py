@@ -1082,6 +1082,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 xvals = allsnrg['JD']
                 yvals = np.nanmedian(allsnrg['MEDSNBINS'][:, snbins[0]:snbins[1], 2-ichip], axis=1) / np.sqrt((allsnrg['EXPTIME'] / 60))
                 yvals = np.nanmedian(allsnrg['MEDSNBINS'][:, snbins[0]:snbins[1], 2-ichip], axis=1)**2 / (allsnrg['EXPTIME'] / 60)
+                fpsi, = np.where(xvals > 59807)
+                pdb.set_trace()
                 g, = np.where(yvals > 0)
                 xvals = xvals[g]
                 yvals = yvals[g]
@@ -1092,7 +1094,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if instrument == 'apogee-s':
                     plate, = np.where(xvals < 59807)
                     fpsi, = np.where(xvals > 59807)
-                pdb.set_trace()
                 print('  snbins = ' + str(snbins[0]) + ':' + str(snbins[1]))
                 print('  S/N Plate (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[plate]),3)))
                 if len(fpsi) > 0: print('  S/N FPS (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
