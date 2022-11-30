@@ -118,7 +118,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         # Append together the individual QAcal files
 
         files = glob.glob(specdir5 + 'cal/' + instrument + '/qa/*/*QAcal*.fits')
-        pdb.set_trace()
         if len(files) < 1:
             print("----> monitor: No QAcal files!")
         else:
@@ -147,6 +146,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         outstr = np.concatenate([outstr, newstr])
                         Nadditions += 1
 
+            pdb.set_trace()
             if Nadditions > 0:
                 Table(outstr).write(outfile, overwrite=True)
                 print("----> monitor: Finished adding QAcal info to " + os.path.basename(outfile))
