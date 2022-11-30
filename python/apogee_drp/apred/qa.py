@@ -4205,7 +4205,10 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
 
     # Establish raw data directory
     rawdir = os.environ['APOGEE_DATA_N'] + '/' + mjd + '/'
-    if instrument == 'apogee-s': rawdir = os.environ['APOGEE_DATA_S'] + '/' + mjd + '/'
+    prefix = 'ap'
+    if instrument == 'apogee-s': 
+        rawdir = os.environ['APOGEE_DATA_S'] + '/' + mjd + '/'
+        prefix = 'as'
 
     expdir = apodir + apred + '/exposures/' + instrument + '/' + mjd + '/'
     outfile = expdir + mjd + 'exp.fits'
@@ -4215,7 +4218,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
 
         if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
 
-        ims = glob.glob(rawdir + 'apR-a-*')
+        ims = glob.glob(rawdir + prefix+'R-a-*')
         ims.sort()
         ims = np.array(ims)
         n_exposures = len(ims)
