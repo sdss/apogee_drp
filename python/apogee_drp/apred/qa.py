@@ -4192,7 +4192,7 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
                     struct['SIG'][i, iquad, ichip] = np.nanstd(sm)
                     i1 += 512
                     i2 += 512
-
+        pdb.set_trace()
         Table(struct).write(outfile, overwrite=True)
 
         print("Done with MAKEDARKFITS for MJD " + mjd)
