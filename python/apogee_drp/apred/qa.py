@@ -4168,6 +4168,7 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
             twoDflux = np.array([twoD[0].flux, twoD[1].flux, twoD[2].flux])
             twoDhdr = twoD[0].header
 
+            pdb.set_trace()
             struct['NAME'][i] =    ims[i]
             struct['MJD'][i] =     mjd
             struct['JD'][i] =      twoDhdr['JD-MID']
