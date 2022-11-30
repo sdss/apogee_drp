@@ -452,6 +452,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     qrtzexp, = np.where(allexp['IMAGETYP'] == 'QuartzFlat')
     dark, = np.where(alldark['EXPTYPE'] == 'DARK')
 
+    pdb.set_trace()
+
     ###############################################################################################
     # MAKE THE MONITOR HTML
     outfile = specdir5 + 'monitor/' + instrument + '-monitor.html'
@@ -477,8 +479,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=#qfwhm>Quartz lamp trace FWHM</a>\n')
     html.write('<li> <a href=#dflux>Dome flat median brightness</a>\n')
     html.write('<li> <a href=#dfwhm>Dome flat trace FWHM</a>\n')
-    html.write('<li> <a href=' + instrument + '/qfiber/fiber_qrtz.html target="_blank">Fiber throughput from quartz lamp</a>\n')
-    html.write('<li> <a href=' + instrument + '/dfiber/fiber.html target="_blank">Fiber throughput from dome flats</a>\n')
+    html.write('<li> <a href=' + instrument + '/fiber/fiber_qrtz.html target="_blank">Fiber throughput from quartz lamp</a>\n')
+    html.write('<li> <a href=' + instrument + '/fiber/fiber.html target="_blank">Fiber throughput from dome flats</a>\n')
     html.write('<li> <a href=#tharflux> Cal channel ThAr</a>\n')
     html.write('<li> <a href=#uneflux> Cal channel UNe</a>\n')
     html.write('<li> <a href=#zero>Plate zeropoints</a>\n')
@@ -610,8 +612,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
     if os.path.exists(fibdir) is False: os.mkdir(fibdir)
     fhtml = open(fibdir + 'fiber.html', 'w')
-    tit = 'APOGEE-N Fiber Throughput (Dome Flat)'
-    if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput (Dome Flat)'
     fhtml.write('<HTML><HEAD><script src="../../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
     fhtml.write('<HR>\n')
@@ -659,8 +659,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     fibdir = specdir5 + 'monitor/' + instrument + '/fiber/'
     if os.path.exists(fibdir) is False: os.mkdir(fibdir)
     fhtml = open(fibdir + 'fiber_qrtz.html', 'w')
-    tit = 'APOGEE-N Fiber Throughput (Quartz)'
-    if instrument != 'apogee-n': tit = 'APOGEE-S Fiber Throughput (Quartz)'
+    tit = instrument.upper()+' Fiber Throughput (Quartz)'
     fhtml.write('<HTML><HEAD><script src="../../../../sorttable.js"></script><title>' + tit + '</title></head><BODY>\n')
     fhtml.write('<H1>' + tit + '</H1>\n')
     fhtml.write('<HR>\n')
@@ -1105,7 +1104,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
                     pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
 
-                    ax.legend(loc='upper center', labelspacing=0.5, handletextpad=0.2, markerscale=1, 
+                    ax.legend(loc='lower center', labelspacing=0.5, handletextpad=0.2, markerscale=1, 
                               fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.3)
 
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
