@@ -92,6 +92,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
 
     # Read in the master summary files
+    
     allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
     alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
     allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
@@ -140,11 +141,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
                     continue
                 else:
-                    if os.path.exists(files[i].replace('QAcal', 'QAdarkflat')):
-                        print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
-                        newstr = getQAcalStruct(data)
-                        outstr = np.concatenate([outstr, newstr])
-                        Nadditions += 1
+                    #if os.path.exists(files[i].replace('QAcal', 'QAdarkflat')):
+                    print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    newstr = getQAcalStruct(data)
+                    outstr = np.concatenate([outstr, newstr])
+                    Nadditions += 1
 
             if Nadditions > 0:
                 Table(outstr).write(outfile, overwrite=True)
