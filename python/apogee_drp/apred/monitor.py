@@ -196,8 +196,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             else:
                 print("----> monitor: Nothing to add to " + os.path.basename(outfile))
 
-
-        pdb.set_trace()
         ###########################################################################################
         # MAKE MASTER EXP FILE
         # Get long term trends from dome flats
