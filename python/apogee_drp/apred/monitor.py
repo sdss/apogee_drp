@@ -1015,7 +1015,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 else:
                     ax.plot([umjd[i],umjd[i]], [0,nexp[i]], c='k', label='exposures')
                     ax.plot([umjd[i],umjd[i]], [0,nvis[i]], c='r', label='visits')
-            pdb.set_trace()
             #ax.scatter(umjd, nexp, marker='o', s=markersz, c='grey', alpha=alf, label='exposures')
             #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
 
@@ -1090,6 +1089,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 plate, = np.where(xvals < 59500)
                 fpsi, = np.where(xvals > 59500)
+                if instrument == 'apogee-s':
+                    plate, = np.where(xvals < 59807)
+                    fpsi, = np.where(xvals > 59807)
                 print('  snbins = ' + str(snbins[0]) + ':' + str(snbins[1]))
                 print('  S/N Plate (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[plate]),3)))
                 if len(fpsi) > 0: print('  S/N FPS (' + chip + '):  ' + str("%.3f" % round(np.nanmedian(yvals[fpsi]),3)))
