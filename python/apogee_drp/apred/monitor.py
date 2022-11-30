@@ -1043,7 +1043,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             if instrument == 'apogee-n':
                 part2, = np.where((fpsfield > 100000) & (fpsfield < 110000))
                 allsnrfps = allsnr[part1][part2]
-            else: allsnrfps = allsnr[part1][part2]
+            else: allsnrfps = allsnr[part1]
             allsnrg = vstack([Table(allsnrplate), Table(allsnrfps)])
             g, = np.where(np.nanmedian(allsnrg['NSNBINS'][:,snbins[0]:snbins[1]], axis=1) > 5)
             allsnrg = allsnrg[g]
