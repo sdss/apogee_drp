@@ -140,6 +140,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
                     continue
                 else:
+                    pdb.set_trace()
                     if os.path.exists(files[i].replace('QAcal', 'QAdarkflat')):
                         print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                         newstr = getQAcalStruct(data)
