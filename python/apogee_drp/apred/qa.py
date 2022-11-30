@@ -200,7 +200,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             planstr = plan.load(planfile, np=True)
             mjd = darkplans[i].split('-')[3].split('.')[0]
             all_ims = planstr['APEXP']['name']
-            x = makeDarkFits(load=load, ims=all_ims, mjd=mjd, clobber=clobber)
+            x = makeDarkFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument, clobber=clobber)
         print("Done with APQAMJD for " + str(ndarkplans) + " dark plans from MJD " + mjd + "\n")
 
         # Make the MJDexp fits file for this MJD
@@ -4123,9 +4123,12 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
 
 ###################################################################################################
 ''' MAKEDARKFITS: Make FITS file for darks (get mean/stddev of column-medianed quadrants) '''
-def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
+def makeDarkFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
 
-    outfile = load.filename('QAcal', mjd=mjd).replace('apQAcal','apQAdarkflat')
+    prefix = 'ap'
+    if instrument == 'apogee-s': prefix = 'as'
+
+    outfile = load.filename('QAcal', mjd=mjd).replace(prefix+'QAcal',prefix+'QAdarkflat')
     if (os.path.exists(outfile) is False) | (clobber is True):
         print("--------------------------------------------------------------------")
         print("Running MAKEDARKFITS for MJD "+mjd)
@@ -4159,7 +4162,7 @@ def makeDarkFits(load=None, ims=None, mjd=None, clobber=None):
             try:
                 twoD = load.apread('2D', num=ims[i])
             except:
-                print('----> makeDarkFits: ap2D not found for exposure ' + str(ims[i]))
+                print('----> makeDarkFits: '+prefix+'2D not found for exposure ' + str(ims[i]))
                 continue
 
             print("----> makeDarkFits: running exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
