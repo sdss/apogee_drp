@@ -452,8 +452,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     qrtzexp, = np.where(allexp['IMAGETYP'] == 'QuartzFlat')
     dark, = np.where(alldark['EXPTYPE'] == 'DARK')
 
-    pdb.set_trace()
-
     ###############################################################################################
     # MAKE THE MONITOR HTML
     outfile = specdir5 + 'monitor/' + instrument + '-monitor.html'
@@ -463,10 +461,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     today = date.today()
     current_time = now.strftime("%H:%M:%S")
     current_date = today.strftime("%B %d, %Y")
-    
+
+    tit = instrument.upper() + ' Instrument Monitor'
     html = open(outfile, 'w')
-    html.write('<HTML><HEAD><title>' + instrument.upper() + ' Instrument Monitor</title></head><BODY>\n')
-    html.write('<H1>' + instrument.upper() + ' Instrument Monitor</H1>\n')
+    html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
+    html.write('<H1>' + tit + '</H1>\n')
     html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
     html.write('<HR>\n')
     html.write('<ul>\n')
