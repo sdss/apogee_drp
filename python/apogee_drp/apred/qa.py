@@ -4305,7 +4305,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
                         med = np.nanmedian(flux,axis=1)
                         struct['MED'][i,ichip,:] = med
 
-        pdb.set_trace()
+        if mjd == '59814': pdb.set_trace()
         Table(struct).write(outfile, overwrite=True)
 
         print("Done with MAKEEXPFITS for MJD " + mjd)
