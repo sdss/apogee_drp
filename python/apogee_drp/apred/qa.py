@@ -4128,7 +4128,7 @@ def makeDarkFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
     prefix = 'ap'
     if instrument == 'apogee-s': prefix = 'as'
 
-    outfile = load.filename('QAcal', mjd=mjd).replace(prefix+'QAcal',prefix+'QAdarkflat')
+    outfile = load.filename('QAcal', mjd=mjd).replace('QAcal','QAdarkflat')
     if (os.path.exists(outfile) is False) | (clobber is True):
         print("--------------------------------------------------------------------")
         print("Running MAKEDARKFITS for MJD "+mjd)
@@ -4298,7 +4298,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
 
             # Get median fluxes from Dome Flats
             if struct['IMAGETYP'][i] == 'DomeFlat':
-                fluxfile = load.filename('Flux', num=int(imnum), chips=True).replace('apFlux-', 'apFlux-c-')
+                fluxfile = load.filename('Flux', num=int(imnum), chips=True).replace('Flux-', 'Flux-c-')
                 if os.path.exists(fluxfile):
                     tmp = load.apFlux(int(imnum))
                     for ichip in range(nchips):
