@@ -142,6 +142,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 else:
                     #if os.path.exists(files[i].replace('QAcal', 'QAdarkflat')):
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
+                    pdb.set_trace()
                     newstr = getQAcalStruct(data)
                     outstr = np.concatenate([outstr, newstr])
                     Nadditions += 1
