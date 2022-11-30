@@ -4223,7 +4223,6 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
         ims = np.array(ims)
         n_exposures = len(ims)
 
-        if mjd == '59814': pdb.set_trace()
         chips=np.array(['a','b','c'])
         nchips = len(chips)
 
