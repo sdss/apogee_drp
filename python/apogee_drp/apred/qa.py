@@ -4037,7 +4037,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
             try:
                 oneD = load.apread('1D', num=ims[i])
             except:
-                print('----> makeCalFits: ap1D not found for exposure ' + str(ims[i]))
+                print('----> makeCalFits: '+prefix+'1D not found for exposure ' + str(ims[i]))
                 continue
 
             oneDflux = np.array([oneD[0].flux, oneD[1].flux, oneD[2].flux])
