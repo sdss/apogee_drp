@@ -2362,6 +2362,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None): 
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
+    prefix = 'ap'
+    if telescope == 'lco25m': prefix = 'as'
 
     if objid is None:
         print("----> makeStarHTML: Running plate "+plate+", MJD "+mjd)
@@ -2538,11 +2540,11 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                     
                     csnr = str("%.1f" % round(vcat['snr'][k],1))
                     cvrad = str("%.2f" % round(vcat['vrad'][k],2))
-                    visplotname = 'apPlate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
+                    visplotname = prefix+'Plate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
                     visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
                     visplot = visplotpath + visplotname
                     apvispath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
-                    apqahtml = apvispath + '/html/apQA-' + cplate + '-' + cmjd + '.html'
+                    apqahtml = apvispath + '/html/' + prefix + 'QA-' + cplate + '-' + cmjd + '.html'
                     apvisfile = 'apVisit-' + apred + '-' + telescope + '-' + cplate + '-' + cmjd + '-' + cfib + '.fits'
                     apvis = apvispath + apvisfile
 
