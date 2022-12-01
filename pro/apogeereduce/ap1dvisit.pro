@@ -119,6 +119,7 @@ FOR i=0L,nplanfiles-1 do begin
   endif else if planstr.platetype eq 'cal' then begin
     print,'no plugmap for cal frames'
   endif else begin
+  stop
     plugfile = planstr.plugmap
     plugmap = getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),plugid=planstr.plugmap,$
                            fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data)
