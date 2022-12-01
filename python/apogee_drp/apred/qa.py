@@ -1389,7 +1389,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             plt.close('all')
 
     #----------------------------------------------------------------------------------------------
-    # PLOTS 3-6: flat field flux and fiber blocks... previously done by plotflux.pro
+    # PLOTS 3-7: flat field flux and fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
     fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
     flux = load.apFlux(fluxid)
@@ -1539,6 +1539,56 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         
     oldplotfile = fluxfile.replace('Flux-', 'Flux-block-').replace('.fits', '.png')
     if os.path.exists(plotsdir + oldplotfile): os.remove(plotsdir + oldplotfile)
+
+    #----------------------------------------------------------------------------------------------
+    # PLOTS 8: throughput histograms
+    #----------------------------------------------------------------------------------------------
+
+    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    flux = load.apFlux(fluxid)
+    ypos = 300 - platesum2['FIBERID']
+    block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
+
+    plotfile = fluxfile.replace('.fits', '.png').replace('Flux','Tput')
+    if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+        print("----> makeObsPlots: Making "+plotfile)
+
+        fig=plt.figure(figsize=(35,8))
+        xmin = 0
+        xmax = 301
+        ymin = 0
+        ymax = 1.05
+        xspan = xmax-xmin
+        yspan = ymax-ymin
+        nbins = 300
+
+        ax = plt.subplot2grid((1,1), (0,0))
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin,ymax)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(15))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        ax.minorticks_on()
+        ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+        ax.tick_params(axis='both',which='major',length=axmajlen)
+        ax.tick_params(axis='both',which='minor',length=axminlen)
+        ax.tick_params(axis='both',which='both',width=axwidth)
+        for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
+        ax.set_xlabel(r'Fiber')
+        ax.set_ylabel(r'Flux / Max Flux')
+
+        for ichip in range(nchips):
+            chip = chips[ichip]
+            med = np.nanmedian(flux[chip][1].data, axis=1)
+            tput = med[ypos] / np.nanmax(med[ypos])
+
+            ax.hist(tput, bins=300, histtype='step', label=chiplab[ichip]+'\n'+'chip')
+
+        ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
+
+        fig.subplots_adjust(left=0.03,right=0.99,bottom=0.098,top=0.90,hspace=0.09,wspace=0.07)
+        plt.savefig(plotsdir+plotfile)
+        plt.close('all')
+    pdb.set_trace()
 
     #----------------------------------------------------------------------------------------------
     # PLOTS 7: sky, telluric, science fiber positions, colored by Hmag
