@@ -2788,7 +2788,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
     matplotlib.rcParams["mathtext.fontset"] = "dejavuserif"
     bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
-    axwidth=1.5
+    axwidth=2
     axmajlen=7
     axminlen=3.5
     lwidth = 1.5
@@ -2928,6 +2928,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axwidth)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
                     if ii % 2 == 0: ax.text(-0.04, 0.50, r'$F_{\lambda}$ / $F_{\rm cont.}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
                     if ii % 2 == 1: ax.text(-0.04, 0.50, r'Resid.', transform=ax.transAxes, rotation=90, ha='right', va='center')
                     if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
