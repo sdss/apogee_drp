@@ -3864,7 +3864,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             html.write('<TD>' + itel[i]) 
             html.write('<TD>' + iassigned[i]) 
             html.write('<TD> --- ')
-            qalink = '../visit/' + itel[i] + '/' + iname[i] + '/' + iplate[i] + '/' + imjd[i] + '/html/apQA-' + iplate[i] + '-' + imjd[i] + '.html'
+            qalink = '../visit/' + itel[i] + '/' + iname[i] + '/' + iplate[i] + '/' + imjd[i] + '/html/' + prefix + 'QA-' + iplate[i] + '-' + imjd[i] + '.html'
             html.write('<TD align="center"><A HREF="' + qalink + '" target="_blank">' + iplate[i] + '</A>')
             html.write('<TD align="center"><A HREF="../exposures/' + inst[i] + '/' + imjd[i] + '/html/' + imjd[i] + '.html">' + imjd[i] + '</A>') 
             html.write('<TD align="center">' + iloc[i])
