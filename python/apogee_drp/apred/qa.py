@@ -1564,7 +1564,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         yspan = ymax-ymin
         nbins = 300
 
-        mtpLabelPos = np.arange(0,300,30)+15
+        mtpLabelPos = np.arange(0,300,30)
         xarr = np.arange(0,300,1)+1
         for ichip in range(nchips):
             ax = plt.subplot2grid((3,1), (ichip,0))
@@ -1593,7 +1593,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip], width=1, zorder=10)
             if ichip == 0:
                 for imtp in range(len(mtpLabelPos)):
-                    ax.text(mtpLabelPos[imtp], 1.04, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
+                    ax.text(mtpLabelPos[imtp]+15, 1.10, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
 
 
         fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.15,wspace=0.07)
