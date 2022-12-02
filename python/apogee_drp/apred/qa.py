@@ -1738,6 +1738,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     minH = np.nanmin(hmagarr);  maxH = np.nanmax(hmagarr)
                 except:
                     minH = 6;  maxH = 14
+                spanH = maxH-minH
                 xmin = minH - spanH * 0.05;      xmax = maxH + spanH * 0.05
 
                 fig=plt.figure(figsize=(11,14))
