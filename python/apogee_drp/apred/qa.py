@@ -1587,7 +1587,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             chip = chips[ichip]
             med = np.nanmedian(oneD[chip][1].data, axis=1)
             tput = med / np.nanmax(med)
-            ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip], zorder=10)
+            ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip], width=1, zorder=10)
             #ax.hist(tput, bins=10, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
 
         #ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
