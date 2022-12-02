@@ -1555,7 +1555,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(20,12))
+        fig=plt.figure(figsize=(20,10))
         xmin = -2
         xmax = 301
         ymin = 0
@@ -1596,7 +1596,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
         #ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
-        fig.subplots_adjust(left=0.04,right=0.99,bottom=0.098,top=0.90,hspace=0.0,wspace=0.07)
+        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.07,top=0.94,hspace=0.06,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
     pdb.set_trace()
