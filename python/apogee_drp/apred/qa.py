@@ -1594,7 +1594,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=c, width=1, zorder=10)
             for imtp in range(len(mtpLabelPos-1)):
                 if ichip == 0: ax.text(mtpLabelPos[imtp]+15, 1.25, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
-                g, = np.where((np.isfinite(tput)) & (tput > 0.2) & (xarr > mtpLabelPos[imtp]) & (xarr <= mtpLabelPos[imtp]))
+                g, = np.where((np.isfinite(tput)) & (tput > 0.2) & (xarr > mtpLabelPos[imtp]) & (xarr <= mtpLabelPos[imtp+1]))
                 tputPercentage = str(int(round(np.nanmean(tput[g]*100))))+'%'
                 ax.text(mtpLabelPos[imtp]+15, 1.15, tputPercentage, ha='center', color=c, fontsize=fontsize*0.75)
 
