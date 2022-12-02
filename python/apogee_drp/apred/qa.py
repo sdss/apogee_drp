@@ -1424,10 +1424,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             if ichip == 0: ax.set_ylabel(r'Eta (deg.)')
             if ichip != 0: ax.axes.yaxis.set_ticklabels([])
 
-            med = np.nanmedian(flux[chip][1].data, axis=1)
-            tput = med[ypos] / np.nanmax(med[ypos])
-            gd, = np.where((ypos > 60) & (ypos < 90))
-            sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=tput, edgecolors='k', cmap='afmhot', alpha=1, vmin=0.01, vmax=0.99)
+            try:
+                med = np.nanmedian(flux[chip][1].data, axis=1)
+                tput = med[ypos] / np.nanmax(med[ypos])
+                gd, = np.where((ypos > 60) & (ypos < 90))
+                sc = ax.scatter(platesum2['Zeta'], platesum2['Eta'], marker='o', s=100, c=tput, edgecolors='k', cmap='afmhot', alpha=1, vmin=0.01, vmax=0.99)
+            except: continue
 
             ax.text(0.03, 0.97, chiplab[ichip]+'\n'+'chip', transform=ax.transAxes, ha='left', va='top', color=chiplab[ichip])
 
