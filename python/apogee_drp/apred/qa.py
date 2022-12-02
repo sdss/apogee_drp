@@ -1556,8 +1556,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         print("----> makeObsPlots: Making "+plotfile)
 
         fig=plt.figure(figsize=(20,10))
-        xmin = -2
-        xmax = 301
+        xmin = -1
+        xmax = 302
         ymin = 0
         ymax = 1.08
         xspan = xmax-xmin
@@ -1566,7 +1566,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
 
 
-        xarr = np.arange(0,300,1)
+        xarr = np.arange(0,300,1)+1
         for ichip in range(nchips):
             ax = plt.subplot2grid((3,1), (ichip,0))
             ax.set_xlim(xmin,xmax)
@@ -1582,17 +1582,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             if ichip == nchips-1: ax.set_xlabel(r'Fiber #')
             if ichip == 1: ax.set_ylabel(r'Flux / Max Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-            ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey')
+            ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
 
             chip = chips[ichip]
             med = np.nanmedian(oneD[chip][1].data, axis=1)
             tput = med / np.nanmax(med)
-            #pdb.set_trace()
-            #for i in range(300):
-            #    ax.plot([xarr[i],xarr[i]], [tput[i],tput[i]],
-
-            #ax.scatter(xarr, tput, marker='o', s=5, c=chiplab[ichip], label=chiplab[ichip]+'\n'+'chip')
-            ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])#, edgecolor=chiplab[ichip], linewidth=2)
+            ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip], zorder=10)
             #ax.hist(tput, bins=10, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
 
         #ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
