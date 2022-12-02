@@ -1582,11 +1582,11 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
-            if ichip == nchips-1: ax.set_xlabel(r'Fiber #')
+            if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
             if ichip == 1: ax.set_ylabel(r'Flux / Max Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
             #ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
-            ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=2, linestyles='dashed', zorder=11)
+            ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=1, linestyles='dashed', zorder=11)
 
             chip = chips[ichip]
             med = np.nanmedian(oneD[chip][1].data, axis=1)[::-1]
