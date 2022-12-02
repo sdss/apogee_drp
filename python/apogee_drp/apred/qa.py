@@ -1564,9 +1564,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         yspan = ymax-ymin
         nbins = 300
 
-        mtpLabelPos = np.arange(0,300,30)
+        mtpLabelPos = np.arange(0,330,30)
         xarr = np.arange(0,300,1)+1
         for ichip in range(nchips):
+            c = chiplab[ichip]
             ax = plt.subplot2grid((3,1), (ichip,0))
             ax.minorticks_on()
             ax.grid(True)
@@ -1590,13 +1591,15 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             chip = chips[ichip]
             med = np.nanmedian(oneD[chip][1].data, axis=1)
             tput = med / np.nanmax(med)
-            ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip], width=1, zorder=10)
-            if ichip == 0:
-                for imtp in range(len(mtpLabelPos)):
-                    ax.text(mtpLabelPos[imtp]+15, 1.10, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
+            ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=c, width=1, zorder=10)
+            for imtp in range(len(mtpLabelPos-1)):
+                if ichip == 0: ax.text(mtpLabelPos[imtp]+15, 1.25, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
+                g, = np.where((tput > 0.2) & (xarr > mtpLabelPos[imtp]) & (xarr <= mtpLabelPos[imtp]))
+                tputPercentage = str(int(round(np.mean(tput[g]*100))))+'%'
+                ax.text(mtpLabelPos[imtp]+15, 1.15, tputPercentage, ha='center', color=c, fontsize=fontsize*0.75)
 
 
-        fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.15,wspace=0.07)
+        fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.2,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
     pdb.set_trace()
