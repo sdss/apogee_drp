@@ -1590,12 +1590,12 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             chip = chips[ichip]
             med = np.nanmedian(oneD[chip][1].data, axis=1)
             tput = med / np.nanmax(med)
-            ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color='white', edgecolor=chiplab[ichip], linewidth=3, width=1, zorder=10)
+            ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip], width=1, zorder=10)
             #ax.hist(tput, bins=10, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
 
         #ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
-        fig.subplots_adjust(left=0.06,right=0.98,bottom=0.08,top=0.92,hspace=0.15,wspace=0.07)
+        fig.subplots_adjust(left=0.055,right=0.985,bottom=0.08,top=0.92,hspace=0.15,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
     pdb.set_trace()
