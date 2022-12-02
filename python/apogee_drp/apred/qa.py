@@ -1593,6 +1593,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip], width=1, zorder=10)
             if ichip == 0:
                 for imtp in len(mtpLabelPos):
+                    pdb.set_trace()
                     ax.text(mtpLabelPos[imtp], 1.04, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
 
 
