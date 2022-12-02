@@ -1559,7 +1559,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         xmin = -2
         xmax = 301
         ymin = 0
-        ymax = 1.05
+        ymax = 1.08
         xspan = xmax-xmin
         yspan = ymax-ymin
         nbins = 300
@@ -1580,8 +1580,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.tick_params(axis='both',which='both',width=axwidth)
             for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
             if ichip == nchips-1: ax.set_xlabel(r'Fiber')
-            ax.set_ylabel(r'Flux / Max Flux')
+            if ichip == 1: ax.set_ylabel(r'Flux / Max Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            ax.axhline(1, linestyle='dashed', c='grey')
 
             chip = chips[ichip]
             med = np.nanmedian(oneD[chip][1].data, axis=1)
@@ -1596,7 +1597,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
         #ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
-        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.07,top=0.94,hspace=0.06,wspace=0.07)
+        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.075,top=0.92,hspace=0.1,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
     pdb.set_trace()
