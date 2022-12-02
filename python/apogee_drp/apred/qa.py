@@ -1544,11 +1544,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     # PLOTS 8: throughput histograms
     #----------------------------------------------------------------------------------------------
 
-    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
-    oneDfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
-    flux = load.apFlux(fluxid)
+    #fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    #oneDfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
+    #flux = load.apFlux(fluxid)
     oneD = load.ap1D(fluxid)
-    pdb.set_trace()
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
 
@@ -1582,7 +1581,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         xarr = np.arange(0,300,1)
         for ichip in range(nchips):
             chip = chips[ichip]
-            med = np.nanmedian(flux[chip][1].data, axis=1)
+            med = np.nanmedian(oneD[chip][1].data, axis=1)
             tput = med / np.nanmax(med)
             #pdb.set_trace()
             #for i in range(300):
