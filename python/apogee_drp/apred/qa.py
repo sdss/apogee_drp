@@ -1588,7 +1588,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #    ax.plot([xarr[i],xarr[i]], [tput[i],tput[i]],
 
             #ax.scatter(xarr, tput, marker='o', s=5, c=chiplab[ichip], label=chiplab[ichip]+'\n'+'chip')
-            ax.hist(tput, bins=300, normed=True, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
+            ax.bar(xarr, tput, , label=chiplab[ichip]+'\n'+'chip', color='white', edgecolor=chiplab[ichip], linewidth=2)
+            #ax.hist(tput, bins=10, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
 
         ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
