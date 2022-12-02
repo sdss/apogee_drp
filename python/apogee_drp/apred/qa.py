@@ -1029,8 +1029,9 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         html.write('<H3>Fiber Throughput:</H3>\n')
         html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
-        html.write('<BR>\n')
-        html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','Tput')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','Tput')+' WIDTH=1200></A>')
+        html.write('<BR><BR>\n')
+        html.write('<P><b>Note:</b> Percentages above each panel give the mean throughput of each MTP for each chip <BR>(excluding chronically low throughput, broken, and FPI fibers).</P>\n')
+        html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','Tput')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','Tput')+' WIDTH=800></A>')
         html.write('<HR>\n')
 
     # Fiber location plots.
