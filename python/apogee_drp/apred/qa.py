@@ -1589,9 +1589,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=2, linestyles='dashed', zorder=11)
 
             chip = chips[ichip]
-            med = np.nanmedian(oneD[chip][1].data, axis=1)
+            med = np.nanmedian(oneD[chip][1].data, axis=1)[::-1]
             tput = med / np.nanmax(med)
-            ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=c, width=1, zorder=10)
+            ax.bar(xarr, tput, label=chiplab[ichip]+'\n'+'chip', color=c, width=1, zorder=10)
             for imtp in range(len(mtpLabelPos)-1):
                 if ichip == 0: ax.text(mtpLabelPos[imtp]+15, 1.25, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
                 g, = np.where((np.isfinite(tput)) & (tput > 0.2) & (xarr > mtpLabelPos[imtp]) & (xarr <= mtpLabelPos[imtp+1]))
