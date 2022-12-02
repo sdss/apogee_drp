@@ -1556,8 +1556,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         print("----> makeObsPlots: Making "+plotfile)
 
         fig=plt.figure(figsize=(20,10))
-        xmin = -1
-        xmax = 302
+        xmin = 0
+        xmax = 301
         ymin = 0
         ymax = 1.08
         xspan = xmax-xmin
@@ -1574,7 +1574,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
             ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True,labelsize=fontsize*0.75)
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,labelsize=fontsize*0.75)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
