@@ -1555,8 +1555,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        fig=plt.figure(figsize=(20,14))
-        xmin = 0
+        fig=plt.figure(figsize=(20,12))
+        xmin = -2
         xmax = 301
         ymin = 0
         ymax = 1.05
@@ -1574,7 +1574,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
             ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True,labelsize=fontsize*0.75)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
@@ -1596,7 +1596,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
         #ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
-        fig.subplots_adjust(left=0.04,right=0.99,bottom=0.098,top=0.90,hspace=0.09,wspace=0.07)
+        fig.subplots_adjust(left=0.04,right=0.99,bottom=0.098,top=0.90,hspace=0.0,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
     pdb.set_trace()
