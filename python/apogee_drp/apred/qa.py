@@ -1556,8 +1556,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         print("----> makeObsPlots: Making "+plotfile)
 
         fig=plt.figure(figsize=(20,10))
-        xmin = 0
-        xmax = 301
+        xmin = 1
+        xmax = 300
         ymin = 0
         ymax = 1.08
         xspan = xmax-xmin
@@ -1573,8 +1573,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.set_ylim(ymin,ymax)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
             ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+            ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
             ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,labelsize=fontsize*0.75)
+            ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True,labelsize=fontsize*0.75)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
@@ -1592,7 +1594,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
         #ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
-        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.075,top=0.92,hspace=0.1,wspace=0.07)
+        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.075,top=0.92,hspace=0.15,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
     pdb.set_trace()
