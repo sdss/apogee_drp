@@ -1576,12 +1576,16 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         ax.set_xlabel(r'Fiber')
         ax.set_ylabel(r'Flux / Max Flux')
 
+        xarr = np.arange(0,300,1)
         for ichip in range(nchips):
             chip = chips[ichip]
             med = np.nanmedian(flux[chip][1].data, axis=1)
-            tput = med[ypos] / np.nanmax(med[ypos])
+            tput = med / np.nanmax(med)
+            #for i in range(300):
+            #    ax.plot([xarr[i],xarr[i]], [tput[i],tput[i]],
 
-            ax.hist(tput, bins=10, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
+            #ax.plot([x
+            ax.hist(tput, bins=300, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
 
         ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
