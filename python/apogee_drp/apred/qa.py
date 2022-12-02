@@ -1545,7 +1545,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     #----------------------------------------------------------------------------------------------
 
     fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    oneDfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
     flux = load.apFlux(fluxid)
+    oneD = load.ap1D(fluxid)
+    pdb.set_trace()
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
 
