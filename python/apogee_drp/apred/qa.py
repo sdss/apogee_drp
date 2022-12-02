@@ -1581,7 +1581,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             med = np.nanmedian(flux[chip][1].data, axis=1)
             tput = med[ypos] / np.nanmax(med[ypos])
 
-            ax.hist(tput, bins=300, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
+            ax.hist(tput, bins=10, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
 
         ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
