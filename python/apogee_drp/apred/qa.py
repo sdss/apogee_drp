@@ -1579,10 +1579,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axwidth)
             for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
-            if ichip == nchips-1: ax.set_xlabel(r'Fiber')
+            if ichip == nchips-1: ax.set_xlabel(r'Fiber #')
             if ichip == 1: ax.set_ylabel(r'Flux / Max Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-            ax.axhline(1, linestyle='dashed', c='grey')
+            ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey')
 
             chip = chips[ichip]
             med = np.nanmedian(oneD[chip][1].data, axis=1)
@@ -1592,7 +1592,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #    ax.plot([xarr[i],xarr[i]], [tput[i],tput[i]],
 
             #ax.scatter(xarr, tput, marker='o', s=5, c=chiplab[ichip], label=chiplab[ichip]+'\n'+'chip')
-            ax.bar(xarr, tput, label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])#, edgecolor=chiplab[ichip], linewidth=2)
+            ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])#, edgecolor=chiplab[ichip], linewidth=2)
             #ax.hist(tput, bins=10, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
 
         #ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
