@@ -1393,7 +1393,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     #----------------------------------------------------------------------------------------------
     # PLOTS 3-7: flat field flux and fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
-    #fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
     #flux = load.apFlux(fluxid)
     flux = load.ap1D(fluxid)
     ypos = 300 - platesum2['FIBERID']
