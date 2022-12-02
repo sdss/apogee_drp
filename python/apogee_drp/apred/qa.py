@@ -109,7 +109,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
     print("\nDone with dostars for " + str(nfields) + " unique fields...")
 
 ###################################################################################################
-'''APQAALL: Wrapper for running apqa for ***ALL*** plates '''
+'''APQAALL: Wrapper for running apqa for ***ALL*** plates. Runs in reverse chronological order. '''
 def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False,
             makenightqa=True, makemasterqa=True, makeqafits=True, makemonitor=True, clobber=True):
@@ -1030,7 +1030,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
         html.write('<BR><BR>\n')
-        html.write('<P><b>Note:</b> Percentages above each panel give the mean throughput of each MTP for each chip <BR>(excluding chronically low throughput, broken, and FPI fibers).</P>\n')
+        html.write('<P><b>Note:</b> Percentages above each panel give the mean throughput of each MTP for each chip (excluding chronically low throughput, broken, and FPI fibers).</P>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','Tput')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','Tput')+' WIDTH=800></A>')
         html.write('<HR>\n')
 
@@ -1587,14 +1587,16 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=1, linestyles='dashed', zorder=11)
 
             chip = chips[ichip]
-            med = np.nanmedian(oneD[chip][1].data, axis=1)[::-1]
-            tput = med / np.nanmax(med)
-            ax.bar(xarr, tput, label=chiplab[ichip]+'\n'+'chip', color=c, width=1, zorder=10)
-            for imtp in range(len(mtpLabelPos)-1):
-                if ichip == 0: ax.text(mtpLabelPos[imtp]+15, 1.28, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
-                g, = np.where((np.isfinite(tput)) & (tput > 0.2) & (xarr > mtpLabelPos[imtp]) & (xarr <= mtpLabelPos[imtp+1]))
-                tputPercentage = str(int(round(np.nanmean(tput[g]*100))))+'%'
-                ax.text(mtpLabelPos[imtp]+15, 1.12, tputPercentage, ha='center', color=c, fontsize=fontsize*0.75)
+            try:
+                med = np.nanmedian(oneD[chip][1].data, axis=1)[::-1]
+                tput = med / np.nanmax(med)
+                ax.bar(xarr, tput, label=chiplab[ichip]+'\n'+'chip', color=c, width=1, zorder=10)
+                for imtp in range(len(mtpLabelPos)-1):
+                    if ichip == 0: ax.text(mtpLabelPos[imtp]+15, 1.28, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
+                    g, = np.where((np.isfinite(tput)) & (tput > 0.2) & (xarr > mtpLabelPos[imtp]) & (xarr <= mtpLabelPos[imtp+1]))
+                    tputPercentage = str(int(round(np.nanmean(tput[g]*100))))+'%'
+                    ax.text(mtpLabelPos[imtp]+15, 1.12, tputPercentage, ha='center', color=c, fontsize=fontsize*0.75)
+            except: continue
 
 
         fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.2,wspace=0.07)
