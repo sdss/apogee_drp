@@ -1563,8 +1563,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         nbins = 300
 
         ax = plt.subplot2grid((1,1), (0,0))
-        ax.set_xlim(xmin,xmax)
-        ax.set_ylim(ymin,ymax)
+        #ax.set_xlim(xmin,xmax)
+        #ax.set_ylim(ymin,ymax)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(15))
         ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax.minorticks_on()
@@ -1581,7 +1581,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             chip = chips[ichip]
             med = np.nanmedian(flux[chip][1].data, axis=1)
             tput = med / np.nanmax(med)
-            pdb.set_trace()
+            #pdb.set_trace()
             #for i in range(300):
             #    ax.plot([xarr[i],xarr[i]], [tput[i],tput[i]],
 
