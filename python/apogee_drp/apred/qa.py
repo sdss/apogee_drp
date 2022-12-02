@@ -1586,7 +1586,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             if ichip == 1: ax.set_ylabel(r'Flux / Max Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
             #ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
-            ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=2, zorder=11)
+            ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=2, linestyles='dashed', zorder=11)
 
             chip = chips[ichip]
             med = np.nanmedian(oneD[chip][1].data, axis=1)
@@ -1596,7 +1596,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
         #ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
-        fig.subplots_adjust(left=0.055,right=0.985,bottom=0.08,top=0.92,hspace=0.15,wspace=0.07)
+        fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.15,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
     pdb.set_trace()
