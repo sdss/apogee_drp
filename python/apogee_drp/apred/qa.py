@@ -1564,8 +1564,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         yspan = ymax-ymin
         nbins = 300
 
-
-
+        mtpLabelPos = np.arange(0,300,30)+15
         xarr = np.arange(0,300,1)+1
         for ichip in range(nchips):
             ax = plt.subplot2grid((3,1), (ichip,0))
@@ -1574,7 +1573,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.set_xlim(xmin,xmax)
             ax.set_ylim(ymin,ymax)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
-            ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
             ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
             ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.2))
             ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True,labelsize=fontsize*0.75)
@@ -1592,9 +1591,10 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             med = np.nanmedian(oneD[chip][1].data, axis=1)
             tput = med / np.nanmax(med)
             ax.bar(xarr, tput[::-1], label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip], width=1, zorder=10)
-            #ax.hist(tput, bins=10, histtype='step', label=chiplab[ichip]+'\n'+'chip', color=chiplab[ichip])
+            if ichip == 0:
+                for imtp in len(mtpLabelPos):
+                    ax.text(mtpLabelPos[imtp], 1.04, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
 
-        #ax.legend(loc='upper left', labelspacing=0.5, handletextpad=-0.1, facecolor='lightgrey', fontsize=fontsize*0.75)
 
         fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.15,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
