@@ -1583,7 +1583,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             chip = chips[ichip]
             med = np.nanmedian(oneD[chip][1].data, axis=1)
             tput = med / np.nanmax(med)
-            #pdb.set_trace()
+            pdb.set_trace()
             #for i in range(300):
             #    ax.plot([xarr[i],xarr[i]], [tput[i],tput[i]],
 
