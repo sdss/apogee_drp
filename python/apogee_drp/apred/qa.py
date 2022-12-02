@@ -1029,11 +1029,13 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         html.write('<H3>Fiber Throughput:</H3>\n')
         html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
+        html.write('<BR>\n')
+        html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','Tput')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','Tput')+' WIDTH=1200></A>')
         html.write('<HR>\n')
 
     # Fiber location plots.
     html.write('<H3>Fiber Positions:</H3>\n')
-    html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','FibLoc')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','FibLoc')+' WIDTH=900></A>')
+    html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','FibLoc')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','FibLoc')+' WIDTH=700></A>')
     html.write('<HR>\n')
 
     # Table of individual exposures.
@@ -1391,8 +1393,9 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     #----------------------------------------------------------------------------------------------
     # PLOTS 3-7: flat field flux and fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
-    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
-    flux = load.apFlux(fluxid)
+    #fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    #flux = load.apFlux(fluxid)
+    flux = load.ap1D(fluxid)
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
 
@@ -1544,13 +1547,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     # PLOTS 8: throughput histograms
     #----------------------------------------------------------------------------------------------
 
-    #fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
-    #oneDfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
-    #flux = load.apFlux(fluxid)
     oneD = load.ap1D(fluxid)
-    ypos = 300 - platesum2['FIBERID']
-    block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
-
     plotfile = fluxfile.replace('.fits', '.png').replace('Flux','Tput')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
@@ -1602,7 +1599,6 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.2,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
-    pdb.set_trace()
 
     #----------------------------------------------------------------------------------------------
     # PLOTS 7: sky, telluric, science fiber positions, colored by Hmag
