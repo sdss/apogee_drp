@@ -1576,6 +1576,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
             ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
             ax.minorticks_on()
+            ax.grid(True)
             ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True,labelsize=fontsize*0.75)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
@@ -1584,7 +1585,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             if ichip == nchips-1: ax.set_xlabel(r'Fiber #')
             if ichip == 1: ax.set_ylabel(r'Flux / Max Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-            ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
+            #ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
 
             chip = chips[ichip]
             med = np.nanmedian(oneD[chip][1].data, axis=1)
