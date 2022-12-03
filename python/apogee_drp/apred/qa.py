@@ -140,9 +140,9 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
                             makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
                             makemonitor=makemonitor, clobber=clobber)
             except:
-                out.write(umjd[ii]+'\n')
+                outtxt.write(umjd[ii]+'\n')
                 continue
-    out.close()
+    outtxt.close()
 
 ###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
