@@ -130,13 +130,19 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
 
+    outtxt = open('failedQaMJDs_'+observatory+'.txt', 'w')
     for ii in range(nmjd):
         if umjd[ii][0:1] != 'a':
-            x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
-                        makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
-                        makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
-                        makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
-                        makemonitor=makemonitor, clobber=clobber)
+            try:
+                x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
+                            makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
+                            makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
+                            makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
+                            makemonitor=makemonitor, clobber=clobber)
+            except:
+                out.write(umjd[ii]+'\n')
+                continue
+    out.close()
 
 ###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
