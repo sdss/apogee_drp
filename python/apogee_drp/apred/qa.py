@@ -1012,13 +1012,13 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 #;    pairstr = mrdfits(platefile,14,status=status)
 
     if status < 0:
-        html.write('<FONT COLOR=red> ERROR READING apPlate FILE\n')
+        html.write('<FONT COLOR=red> ERROR READING ' + prefix + 'Plate FILE\n')
         html.write('</BODY></HTML>\n')
         html.close()
         return
 
     # Link to combined spectra page.
-    html.write('<H3> Plots of apVisit spectra ---> <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html>apPlate-'+plate+'-'+mjd+'</a></H3>\n')
+    html.write('<H3> Plots of apVisit spectra ---> <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html>' + prefix + 'Plate-'+plate+'-'+mjd+'</a></H3>\n')
     html.write('<HR>\n')
 
     # SNR plots
@@ -3046,10 +3046,24 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     # HTML header background color
     thcolor = '#DCDCDC'
 
-    if int(mjd)>59556:
-        fps = True
-    else:
-        fps = False
+    # Establish instrument and directories
+    if telescope == 'apo25m':
+        instrument = 'apogee-n'
+        prefix = 'ap'
+        if int(mjd)>59556:
+            fps = True
+        else:
+            fps = False
+    if telescope == 'lco25m':
+        instrument = 'apogee-s'
+        prefix = 'as'
+        if int(mjd)>59808:
+            fps = True
+        else:
+            fps = False
+
+    datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
+               'lco25m':os.environ['APOGEE_DATA_S']}[telescope] + '/'
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
@@ -3065,12 +3079,6 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     chips = np.array(['a','b','c'])
     nchips = len(chips)
-
-    # Establish instrument and directories
-    instrument = 'apogee-n'
-    if telescope == 'lco25m': instrument = 'apogee-s'
-    datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
-               'lco25m':os.environ['APOGEE_DATA_S']}[telescope] + '/'
 
     apodir =     os.environ.get('APOGEE_REDUX') + '/'
     spectrodir = apodir + apred + '/'
@@ -3156,12 +3164,12 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     for i in range(nchips):
         html.write('<FONT color=red>\n')
         for j in range(nuExposures):
-            checkfile = datadir + mjd + '/apR-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz'
+            checkfile = datadir + mjd + '/' + prefix + 'R-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz'
             if os.path.exists(checkfile) == False:
                 if (i != nchips) & (uExposures[j] != lastExposure):
-                    html.write('apR-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz, ')
+                    html.write(prefix+'R-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz, ')
                 else:
-                    html.write('apR-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz')
+                    html.write(prefix+'R-' + chips[i] + '-' + str(int(round(uExposures[j]))) + '.apz')
                 nmiss += 1
         html.write('</font>\n')
     if nmiss == 0: html.write('<font color=green> NONE</font>\n')
@@ -3195,7 +3203,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             imtype = 'unknown'
             color = 'white'
 
-            rawfile = load.filename('R', num=n, mjd=mjd, chips='a').replace('apR-', 'apR-c-')
+            rawfile = load.filename('R', num=n, mjd=mjd, chips='a').replace('R-', 'R-c-')
             if os.path.exists(rawfile):
                 rawdata = load.apR(n)
                 head = rawdata['a'][1].header
