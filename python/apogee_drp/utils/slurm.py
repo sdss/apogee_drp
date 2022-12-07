@@ -424,7 +424,7 @@ class Queue(object):
         self.logger.info('numpy_num_thread = %s' % str(self.numpy_num_thread))
         self.logger.info('verbose = %s' % self.verbose)
         self.logger.info('Ntasks = %d' % self.ntasks)
-        self.logger.info('submitted = %s' $ self.submitted)
+        self.logger.info('submitted = %s' % self.submitted)
         if self.submitted:
             self.logger.info('jobid = %d' % self.jobid)
             self.logger.info('jobdir = %s' % self.jobdir)
