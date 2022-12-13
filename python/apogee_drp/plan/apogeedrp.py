@@ -1029,7 +1029,7 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     if ndups>0:
         allstar = np.zeros(len(star_index['value']),dtype=vstar.dtype)
         for i,obj in enumerate(star_index['value']):
-            if star_index['num']>1:
+            if star_index['num'][i]>1:
                 ind = star_index['index'][star_index['lo'][i]]
                 allstar[i] = vstar[ind]
             else:
