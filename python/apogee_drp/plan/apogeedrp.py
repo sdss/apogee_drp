@@ -480,8 +480,7 @@ def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=Non
             head = fits.getheader(outfiles[0])
             chk3d['v_apred'][i] = head.get('V_APRED')
         chk3d['checktime'][i] = str(datetime.now())
-        import pdb; pdb.set_trace()
-        chk3d['success'][i] = np.sum(exist)==3
+        chk3d['success'][i] = np.sum(outinfo['exists'])==3
 
         if verbose:
             logger.info('%5d %20s %9s' % (i+1,num,chk3d['success'][i]))
