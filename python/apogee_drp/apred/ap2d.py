@@ -304,7 +304,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             os.remove(lockfile)
 
     if os.path.exists(os.path.dirname(lockfile))==False:
-        os.mkdirs(os.path.dirname(lockfile))
+        os.makedirs(os.path.dirname(lockfile))
     open(lockfile,'w').close()
                          
     # Since final ap1dwavecal requires simultaneous fit of all three chips, and
