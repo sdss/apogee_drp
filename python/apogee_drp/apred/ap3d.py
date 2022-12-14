@@ -1143,7 +1143,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
                     os.remove(lockfile)
 
             if os.path.exists(os.path.dirname(lockfile))==False:
-                os.mkdirs(os.path.dirname(lockfile))
+                os.makedirs(os.path.dirname(lockfile))
             open(lockfile,'w').close()
 
 
